@@ -1,7 +1,7 @@
+import { smartDueSourceSql } from "@/lib/services/smart-due-access";
 import { NextRequest } from "next/server";
-import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
-import { apiOk, handleApiError } from "@/lib/api/response";
-import { requireErpSession } from "@/lib/auth/session";
+import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
+import { getCurrentErpSession, ErpAuthError } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeJoinedNames } from "@/lib/i18n/localize-records";
@@ -34,7 +34,8 @@ export type DueItem = {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession();
+    const session = await getCurrentErpSession();
+    if (!session) throw new ErpAuthError();
     const params = request.nextUrl.searchParams;
 
     const urgencyFilter = params.get("urgency") || "all";
@@ -48,36 +49,17 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * pageSize;
 
     // Build scope filter arrays from session
-    let scopeCountryIds: string[] = [];
-    let scopeCountryBranchIds: string[] = [];
-    let scopeCityBranchIds: string[] = [];
-    if (!session.isSuperAdmin) {
-      scopeCountryIds = [...new Set(session.countryIds)];
-      scopeCountryBranchIds = [...new Set(session.countryBranchIds)];
-      scopeCityBranchIds = [...new Set(session.cityBranchIds)];
-    }
-
     const isShipping = session.isShippingScoped;
 
     const result = await withLocalPg(async (sql) => {
-      // Scope WHERE fragment reused across count sub-queries (no JOINs, so bare column names are safe).
-      // For the main rows query, use mkScopeWhere(alias) to avoid ambiguous column refs in JOINed CTEs.
-      // One scope rule (sessionSqlScope): branch users → own city branch, country roles → country.
-      const sqlScope = sessionSqlScope(session);
-      const scopeWhere = sqlScopeCondition(sql, sqlScope, "");
-
-      // Qualified scope WHERE for JOINed CTEs (table alias prefix prevents ambiguous column references
-      // when joined tables like country_branches also have a country_id column).
-      const mkScopeWhere = (tableAlias: string) => sqlScopeCondition(sql, sqlScope, tableAlias);
-
       // Explicit scope narrow (from query params)
-      const explicitWhere = cityBranchId
-        ? sql`city_branch_id = ${cityBranchId}`
-        : countryBranchId
-          ? sql`country_branch_id = ${countryBranchId}`
-          : countryId
-            ? sql`country_id = ${countryId}`
-            : sql`true`;
+      const mkExplicitWhere = (alias = "") => {
+        const col = (name: string) => sql.unsafe(alias ? `${alias}.${name}` : name);
+        return cityBranchId ? sql`${col("city_branch_id")} = ${cityBranchId}::uuid`
+          : countryBranchId ? sql`${col("country_branch_id")} = ${countryBranchId}::uuid`
+          : countryId ? sql`${col("country_id")} = ${countryId}::uuid` : sql`TRUE`;
+      };
+      const explicitWhere = mkExplicitWhere();
 
       // Resolve translated text helper: maps lang to column name
       const textCol = (alias: string) => {
@@ -136,8 +118,8 @@ export async function GET(request: NextRequest) {
           LEFT JOIN public.country_branches cb ON cb.id = t.country_branch_id
           WHERE t.deleted_at IS NULL
             AND t.status NOT IN ('cleared','dishonored')
-            AND (${mkScopeWhere('t')})
-            AND (${explicitWhere})
+            AND (${smartDueSourceSql(sql, session, "cheques", "t")})
+            AND (${mkExplicitWhere("t")})
         )
         , purchases AS (
           SELECT
@@ -172,8 +154,8 @@ export async function GET(request: NextRequest) {
           WHERE po.deleted_at IS NULL
             AND po.payment_status::text NOT IN ('completed','cancelled')
             AND po.remaining_due > 0
-            AND (${mkScopeWhere('po')})
-            AND (${explicitWhere})
+            AND (${smartDueSourceSql(sql, session, "purchases", "po")})
+            AND (${mkExplicitWhere("po")})
         )
         , sales AS (
           SELECT
@@ -207,8 +189,8 @@ export async function GET(request: NextRequest) {
           WHERE so.deleted_at IS NULL
             AND so.payment_status NOT IN ('completed','paid','cancelled')
             AND so.remaining_amount > 0
-            AND (${mkScopeWhere('so')})
-            AND (${explicitWhere})
+            AND (${smartDueSourceSql(sql, session, "sales", "so")})
+            AND (${mkExplicitWhere("so")})
         )
         , shipping_bl AS (
           SELECT
@@ -244,8 +226,8 @@ export async function GET(request: NextRequest) {
           LEFT JOIN public.country_branches cb ON cb.id = bl.country_branch_id
           WHERE bl.deleted_at IS NULL
             AND bl.shipment_status NOT IN ('delivered','completed')
-            AND (${mkScopeWhere('bl')})
-            AND (${explicitWhere})
+            AND (${smartDueSourceSql(sql, session, "shipping_bl", "bl")})
+            AND (${mkExplicitWhere("bl")})
         )
         , shipping_line AS (
           SELECT
@@ -281,8 +263,8 @@ export async function GET(request: NextRequest) {
           LEFT JOIN public.country_branches cb ON cb.id = sl.country_branch_id
           WHERE sl.deleted_at IS NULL
             AND sl.shipment_status NOT IN ('delivered','completed')
-            AND (${mkScopeWhere('sl')})
-            AND (${explicitWhere})
+            AND (${smartDueSourceSql(sql, session, "shipping_line", "sl")})
+            AND (${mkExplicitWhere("sl")})
         )
         , followups AS (
           SELECT
@@ -318,7 +300,7 @@ export async function GET(request: NextRequest) {
           LEFT JOIN public.country_branches cb2 ON cb2.id = f.country_branch_id
           LEFT JOIN public.profiles p2 ON p2.id = f.assigned_to
           WHERE f.deleted_at IS NULL AND f.status != 'closed'
-            AND (${mkScopeWhere('f')})
+            AND (${smartDueSourceSql(sql, session, "followups", "f")}) AND (${mkExplicitWhere("f")})
         )
         , approvals AS (
           SELECT
@@ -345,7 +327,7 @@ export async function GET(request: NextRequest) {
           LEFT JOIN public.country_branches cba ON cba.id = a.country_branch_id
           LEFT JOIN public.profiles pa ON pa.id = a.requested_by
           WHERE a.deleted_at IS NULL AND a.status = 'pending'
-            AND (${mkScopeWhere('a')})
+            AND (${smartDueSourceSql(sql, session, "approvals", "a")}) AND (${mkExplicitWhere("a")})
         )
         , tasks AS (
           SELECT
@@ -379,7 +361,7 @@ export async function GET(request: NextRequest) {
           LEFT JOIN public.country_branches cbt ON cbt.id = ut.country_branch_id
           LEFT JOIN public.profiles pt ON pt.id = ut.assigned_to
           WHERE ut.deleted_at IS NULL AND ut.status NOT IN ('completed','verified','cancelled')
-            AND (${mkScopeWhere('ut')})
+            AND (${smartDueSourceSql(sql, session, "tasks", "ut")}) AND (${mkExplicitWhere("ut")})
         )
         , combined AS (
           ${isShipping
@@ -417,35 +399,35 @@ export async function GET(request: NextRequest) {
         WITH scope_filter AS (SELECT 1)
         , cheques AS (
           SELECT 'cheque' AS source_type, CASE WHEN status IN ('cleared','dishonored') THEN 'completed' WHEN due_date IS NULL THEN 'pending' WHEN due_date < CURRENT_DATE THEN 'overdue' WHEN due_date = CURRENT_DATE THEN 'due_today' WHEN due_date = CURRENT_DATE + 1 THEN 'due_tomorrow' ELSE 'upcoming' END AS urgency_class
-          FROM public.bank_cheque_transactions WHERE deleted_at IS NULL AND status NOT IN ('cleared','dishonored') AND (${scopeWhere}) AND (${explicitWhere})
+          FROM public.bank_cheque_transactions WHERE deleted_at IS NULL AND status NOT IN ('cleared','dishonored') AND (${smartDueSourceSql(sql, session, "cheques")}) AND (${explicitWhere})
         )
         , purchases AS (
           SELECT 'purchase' AS source_type, 'pending' AS urgency_class
-          FROM public.purchase_orders WHERE deleted_at IS NULL AND payment_status::text NOT IN ('completed','cancelled') AND remaining_due > 0 AND (${scopeWhere}) AND (${explicitWhere})
+          FROM public.purchase_orders WHERE deleted_at IS NULL AND payment_status::text NOT IN ('completed','cancelled') AND remaining_due > 0 AND (${smartDueSourceSql(sql, session, "purchases")}) AND (${explicitWhere})
         )
         , sales AS (
           SELECT 'sales' AS source_type, 'pending' AS urgency_class
-          FROM public.sales_orders WHERE deleted_at IS NULL AND payment_status NOT IN ('completed','paid','cancelled') AND remaining_amount > 0 AND (${scopeWhere}) AND (${explicitWhere})
+          FROM public.sales_orders WHERE deleted_at IS NULL AND payment_status NOT IN ('completed','paid','cancelled') AND remaining_amount > 0 AND (${smartDueSourceSql(sql, session, "sales")}) AND (${explicitWhere})
         )
         , shipping_bl AS (
           SELECT 'shipping_bl' AS source_type, CASE WHEN shipment_status IN ('delivered','completed') THEN 'completed' WHEN eta IS NULL THEN 'pending' WHEN eta < CURRENT_DATE THEN 'overdue' WHEN eta = CURRENT_DATE THEN 'due_today' WHEN eta = CURRENT_DATE + 1 THEN 'due_tomorrow' ELSE 'upcoming' END AS urgency_class
-          FROM public.shipping_bl_records WHERE deleted_at IS NULL AND shipment_status NOT IN ('delivered','completed') AND (${scopeWhere}) AND (${explicitWhere})
+          FROM public.shipping_bl_records WHERE deleted_at IS NULL AND shipment_status NOT IN ('delivered','completed') AND (${smartDueSourceSql(sql, session, "shipping_bl")}) AND (${explicitWhere})
         )
         , shipping_line AS (
           SELECT 'shipping_line' AS source_type, CASE WHEN shipment_status IN ('delivered','completed') THEN 'completed' WHEN eta IS NULL THEN 'pending' WHEN eta < CURRENT_DATE THEN 'overdue' WHEN eta = CURRENT_DATE THEN 'due_today' WHEN eta = CURRENT_DATE + 1 THEN 'due_tomorrow' ELSE 'upcoming' END AS urgency_class
-          FROM public.shipping_line_records WHERE deleted_at IS NULL AND shipment_status NOT IN ('delivered','completed') AND (${scopeWhere}) AND (${explicitWhere})
+          FROM public.shipping_line_records WHERE deleted_at IS NULL AND shipment_status NOT IN ('delivered','completed') AND (${smartDueSourceSql(sql, session, "shipping_line")}) AND (${explicitWhere})
         )
         , followups AS (
           SELECT 'followup' AS source_type, CASE WHEN status = 'closed' THEN 'completed' WHEN due_at IS NULL THEN 'pending' WHEN due_at::date < CURRENT_DATE THEN 'overdue' WHEN due_at::date = CURRENT_DATE THEN 'due_today' WHEN due_at::date = CURRENT_DATE + 1 THEN 'due_tomorrow' ELSE 'upcoming' END AS urgency_class
-          FROM public.communication_center_followups WHERE deleted_at IS NULL AND status != 'closed' AND (${scopeWhere})
+          FROM public.communication_center_followups WHERE deleted_at IS NULL AND status != 'closed' AND (${smartDueSourceSql(sql, session, "followups")}) AND (${explicitWhere})
         )
         , approvals AS (
           SELECT 'approval' AS source_type, 'pending' AS urgency_class
-          FROM public.approval_requests WHERE deleted_at IS NULL AND status = 'pending' AND (${scopeWhere})
+          FROM public.approval_requests WHERE deleted_at IS NULL AND status = 'pending' AND (${smartDueSourceSql(sql, session, "approvals")}) AND (${explicitWhere})
         )
         , tasks AS (
           SELECT 'task' AS source_type, CASE WHEN status IN ('completed','verified','cancelled') THEN 'completed' WHEN due_at IS NULL THEN 'pending' WHEN due_at::date < CURRENT_DATE THEN 'overdue' WHEN due_at::date = CURRENT_DATE THEN 'due_today' WHEN due_at::date = CURRENT_DATE + 1 THEN 'due_tomorrow' ELSE 'upcoming' END AS urgency_class
-          FROM public.user_tasks WHERE deleted_at IS NULL AND status NOT IN ('completed','verified','cancelled') AND (${scopeWhere})
+          FROM public.user_tasks WHERE deleted_at IS NULL AND status NOT IN ('completed','verified','cancelled') AND (${smartDueSourceSql(sql, session, "tasks")}) AND (${explicitWhere})
         )
         , combined AS (
           ${isShipping
@@ -505,9 +487,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    if (!result) {
-      return apiOk({ items: [], total: 0, page, pageSize, counts: { overdue: 0, dueToday: 0, dueTomorrow: 0, upcoming: 0, pending: 0 } });
-    }
+    if (!result) throw new ApiClientError("Database unavailable", { status: 503, code: "DATABASE_UNAVAILABLE" });
 
     const uiLang = await getRequestLanguage(lang);
     try {

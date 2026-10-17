@@ -39,7 +39,7 @@ export function aiCallStatusReport() {
   return {
     provider: aiCallProvider(),
     configured: aiCallConfigured(),
-    signingSecret: Boolean(aiCallSigningSecret()),
+    signingSecret: Boolean((process.env.AI_CALL_AUTH_TOKEN || "").trim()),
     llmTier: aiCallLlmConfigured(),
     ownerActionRequired: aiCallConfigured()
       ? []
@@ -48,7 +48,7 @@ export function aiCallStatusReport() {
           "Set AI_CALL_ACCOUNT_SID",
           "Set AI_CALL_AUTH_TOKEN",
           "Set AI_CALL_NUMBER (E.164, the answering number)",
-          "Set AI_CALL_SIGNING_SECRET (webhook signature verification)",
+          "Set AI_CALL_WEBHOOK_URL to the exact public webhook URL when using a reverse proxy",
           "Optional: AI_CALL_LLM_PROVIDER + AI_CALL_LLM_API_KEY for free-form answers",
         ],
   };

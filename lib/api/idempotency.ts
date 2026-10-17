@@ -150,9 +150,9 @@ export async function acquireIdempotencyLock(options: IdempotencyOptions): Promi
     }
 
     if (insertError.code !== "23505") {
-      // Unexpected DB error (not a conflict) — fail open rather than block business operations.
+      // A failed lock store cannot authorize a financial/stock mutation. Fail closed.
       console.error("[Idempotency] Unexpected insert error:", insertError);
-      return { acquired: true, isReplayed: false, idempotencyKey: key, tenantHash };
+      return { acquired: false, isReplayed: false, idempotencyKey: key, tenantHash };
     }
 
     // Someone else holds (or held) this key. Inspect it.
@@ -206,8 +206,8 @@ export async function acquireIdempotencyLock(options: IdempotencyOptions): Promi
     return { acquired: false, isReplayed: false, idempotencyKey: key, tenantHash };
   } catch (err) {
     console.error("[Idempotency] Failed to acquire lock:", err);
-    // On unexpected error, permit processing to avoid blocking business operations
-    return { acquired: true, isReplayed: false, idempotencyKey: key, tenantHash };
+    // No verified lock means no authorization to process the mutation.
+    return { acquired: false, isReplayed: false, idempotencyKey: key, tenantHash };
   }
 }
 

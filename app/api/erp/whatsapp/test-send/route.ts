@@ -1,9 +1,12 @@
+import { scopedSessionForPermission } from "@/lib/permissions/scoped-session";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
-import { requireErpSession } from "@/lib/auth/session";
+import { getCurrentErpSession, ErpAuthError } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getSystemMetaConfig } from "@/lib/services/meta-whatsapp-config";
+import { recordInHierarchyScope } from "@/lib/api/scope-middleware";
+import { ApiClientError } from "@/lib/api/response";
+import { ErpPermissionError } from "@/lib/permissions/middleware";
 
 // Uses cookies() via requireErpSession — must be dynamic
 export const dynamic = "force-dynamic";
@@ -37,22 +40,26 @@ function toMetaE164(phone: string): string {
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession();
+    let session = await getCurrentErpSession();
+    if (!session) throw new ErpAuthError();
+    session = scopedSessionForPermission(session, "whatsapp", "create");
     const parsed = testSendSchema.parse(await request.json());
     const admin = createSupabaseAdminClient();
 
     // Look up the real Meta credentials from the database for this sender number
     const { data: account } = await admin
       .from("whatsapp_accounts")
-      .select("phone_number_id, access_token, waba_id, display_name, is_active")
+      .select("id, phone_number_id, access_token, waba_id, display_name, is_active, country_id, country_branch_id, city_branch_id")
       .eq("phone_number", parsed.senderNumber)
       .eq("is_active", true)
+      .is("deleted_at", null)
       .maybeSingle();
 
-    // Also check system default credentials as fallback
-    const { token: sysToken, phoneNumberId: sysPnid } = await getSystemMetaConfig();
-    const token = (account?.access_token && account.access_token.length > 20) ? account.access_token : sysToken;
-    const phoneNumberId = (account?.phone_number_id && account.phone_number_id.length > 5) ? account.phone_number_id : sysPnid;
+    if (!account) throw new ApiClientError("WhatsApp sender account not found.", { status: 404, code: "NOT_FOUND" });
+    if (!recordInHierarchyScope(session, account)) throw new ErpPermissionError("WhatsApp sender is outside your authorized scope.");
+    // Never borrow a different branch's global/default sender credentials.
+    const token = account.access_token;
+    const phoneNumberId = account.phone_number_id;
 
     // Reject if no real credentials exist or if they look like placeholder values
     const isFakeToken = !token || token.includes("SECURE_TOKEN") || token.includes("PNID-") || token.length < 20;
@@ -98,11 +105,11 @@ export async function POST(request: NextRequest) {
       // Only NOW write the message to the database with real WAMID
       let conversationId: string | null = null;
 
-      const { data: existingConv } = await admin
-        .from("communication_conversations")
-        .select("id")
-        .eq("contact_identifier", parsed.recipientNumber)
-        .maybeSingle();
+      let conversationQuery = admin.from("communication_conversations").select("id")
+        .eq("channel", "whatsapp").eq("contact_identifier", parsed.recipientNumber);
+      conversationQuery = account.country_id ? conversationQuery.eq("country_id", account.country_id) : conversationQuery.is("country_id", null);
+      conversationQuery = account.city_branch_id ? conversationQuery.eq("city_branch_id", account.city_branch_id) : conversationQuery.is("city_branch_id", null);
+      const { data: existingConv } = await conversationQuery.maybeSingle();
 
       if (existingConv) {
         conversationId = existingConv.id;
@@ -111,6 +118,8 @@ export async function POST(request: NextRequest) {
           .from("communication_conversations")
           .insert({
             channel: "whatsapp",
+            country_id: account.country_id,
+            city_branch_id: account.city_branch_id,
             contact_identifier: parsed.recipientNumber,
             sender_name: `WhatsApp Contact (${parsed.recipientNumber})`,
             sender_type: "customer",

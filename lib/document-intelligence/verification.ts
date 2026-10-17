@@ -19,7 +19,7 @@
  */
 import type { ErpSession } from "@/lib/auth/session";
 import { withReadPg } from "@/lib/db/local-postgres";
-import { rowInScope, type IntakeScope } from "@/lib/document-intelligence/scope";
+import { rowInScope, jobScopeWhere, type IntakeScope } from "@/lib/document-intelligence/scope";
 import { recordInSessionScope } from "@/lib/api/scope-middleware";
 import { roznamchaIntakePreviewService } from "@/lib/services/roznamcha-intake-preview-service";
 
@@ -57,8 +57,8 @@ export async function verifyIntakeJob(jobId: string, scope: IntakeScope, session
     // ── against other documents ────────────────────────────────────────────
     const twins = (await sql`
       SELECT id, job_no, status, matched_source_module, matched_source_id, country_id, country_branch_id, city_branch_id, clearing_agent_id, operational_domain
-      FROM public.document_intake_jobs
-      WHERE file_sha256 = ${job.file_sha256} AND id <> ${jobId}::uuid AND deleted_at IS NULL AND status <> 'cancelled'
+      FROM public.document_intake_jobs j
+      WHERE ${jobScopeWhere(sql, scope)} AND file_sha256 = ${job.file_sha256} AND id <> ${jobId}::uuid AND deleted_at IS NULL AND status <> 'cancelled'
       LIMIT 20
     `) as any[];
     const visibleTwins = twins.filter((t) => rowInScope(scope, t));
@@ -67,14 +67,16 @@ export async function verifyIntakeJob(jobId: string, scope: IntakeScope, session
       : { code: "duplicate_document", status: "pass" });
 
     const consumed = (await sql`
-      SELECT d.draft_no, d.consumed_source_module, d.consumed_source_id, j.job_no
+      SELECT d.draft_no, d.consumed_source_module, d.consumed_source_id, j.job_no,
+             j.country_id, j.country_branch_id, j.city_branch_id, j.clearing_agent_id, j.operational_domain
       FROM public.document_intake_drafts d JOIN public.document_intake_jobs j ON j.id = d.job_id
-      WHERE d.status = 'consumed' AND d.deleted_at IS NULL
+      WHERE d.status = 'consumed' AND d.deleted_at IS NULL AND j.deleted_at IS NULL AND ${jobScopeWhere(sql, scope)}
         AND (d.job_id = ${jobId}::uuid OR j.file_sha256 = ${job.file_sha256})
       LIMIT 5
     `) as any[];
-    add(consumed.length
-      ? { code: "already_used_document", status: "fail", found: consumed.map((c) => `${c.job_no} → ${c.consumed_source_module ?? ""}`).join(", ") }
+    const visibleConsumed = consumed.filter((c) => rowInScope(scope, c));
+    add(visibleConsumed.length
+      ? { code: "already_used_document", status: "fail", found: visibleConsumed.map((c) => `${c.job_no} → ${c.consumed_source_module ?? ""}`).join(", ") }
       : { code: "already_used_document", status: "pass" });
 
     const inv = (f.invoice_number ?? "").trim();
@@ -82,7 +84,7 @@ export async function verifyIntakeJob(jobId: string, scope: IntakeScope, session
       const invJobs = (await sql`
         SELECT j.job_no, j.country_id, j.country_branch_id, j.city_branch_id, j.clearing_agent_id, j.operational_domain
         FROM public.document_intake_fields fl JOIN public.document_intake_jobs j ON j.id = fl.job_id
-        WHERE fl.field_key = 'invoice_number' AND lower(coalesce(fl.corrected_value, fl.normalized_value, fl.raw_value)) = lower(${inv})
+        WHERE ${jobScopeWhere(sql, scope)} AND fl.field_key = 'invoice_number' AND lower(coalesce(fl.corrected_value, fl.normalized_value, fl.raw_value)) = lower(${inv})
           AND j.id <> ${jobId}::uuid AND j.deleted_at IS NULL AND j.status <> 'cancelled' AND j.file_sha256 <> ${job.file_sha256}
         LIMIT 10
       `) as any[];

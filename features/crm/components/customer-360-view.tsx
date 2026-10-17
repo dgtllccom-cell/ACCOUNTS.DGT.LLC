@@ -73,8 +73,8 @@ export function Customer360View() {
   const [selectedBranch, setSelectedBranch] = useState("all");
   const [selectedUser, setSelectedUser] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [startDate, setStartDate] = useState("2026-09-01");
-  const [endDate, setEndDate] = useState("2026-09-30");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>({});
@@ -302,6 +302,7 @@ export function Customer360View() {
     followUpsMeetings: 0,
     followUpsOthers: 0,
     receivableDue: 0,
+    receivableDueByCurrency: [],
     receivableDueCurrency: "AED",
     receivableDueTrend: "—",
     customerHealth: 0,
@@ -640,7 +641,9 @@ export function Customer360View() {
           </div>
           <div className="flex items-baseline gap-1.5">
             <span className="text-lg font-black text-slate-900 dark:text-slate-100 truncate">
-              {kpis.receivableDueCurrency} {Number(kpis.receivableDue).toLocaleString()}
+              {kpis.receivableDueByCurrency.length ? kpis.receivableDueByCurrency.map((balance) => (
+                <div key={balance.currency}>{balance.currency} {balance.amount.toLocaleString()}</div>
+              )) : "—"}
             </span>
           </div>
           <span className="text-[10.5px] font-bold text-rose-600 mt-1 block">
