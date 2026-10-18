@@ -186,14 +186,6 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
         {/* 1. TOP BREADCRUMB & HEADER */}
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-1 font-bold text-slate-600 hover:text-blue-600 dark:text-slate-300 transition"
-            >
-              <span className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-                {s.isRtl ? "→" : "←"} {s.tGlobal("common.back", "Back")}
-              </span>
-            </Link>
             <span className="text-slate-400">{s.tGlobal("common.dashboard", "Dashboard")}</span>
             <span className="text-slate-300 dark:text-slate-700">{s.isRtl ? "<" : ">"}</span>
             <span className="font-semibold text-blue-600 dark:text-blue-400">{s.t("title", "Business Edit Invoice")}</span>

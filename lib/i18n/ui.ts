@@ -1136,6 +1136,13 @@ export type UiKey =
   // Account profile A4 report (acct.*)
   | "acct.report_title" | "acct.report_subtitle" | "acct.overview" | "acct.sec_account_info"
   | "acct.sec_customer_info" | "acct.sec_company_details" | "acct.sec_bank_details"
+  | "vm.grid"
+  | "vm.list"
+  | "vm.switch"
+  | "lgdash.new_shipment"
+  | "lgdash.customer_order"
+  | "lgdash.register_truck"
+  | "pbjr.confirm_post"
   | "acct.sec_tax_info" | "acct.sec_audit_info" | "acct.account_name" | "acct.account_code"
   | "acct.account_group" | "acct.currency" | "acct.as_on" | "acct.status" | "acct.time"
   | "acct.report_type" | "acct.last_updated" | "acct.opening_balance" | "acct.current_balance"
@@ -4684,6 +4691,8 @@ export type UiKey =
   | "report.show_all_columns"
   | "report.loading"
   | "report.error"
+  | "report.no_reports_available"
+  | "report.open_shipping_reports"
   | "report.desc_cash_entry"
   | "report.desc_receipts"
   | "report.desc_payments"
@@ -36302,6 +36311,33 @@ const en: Dict = {
   "sbr.official": "Official ERP System Generated Document",
   "sbr.col_unit": "Unit",
   "sbr.col_warehouse": "Warehouse",
+  "report.no_reports_available": "No reports are available for your login on this page. Your Shipping Line reports are in Shipping & Clearing Reports.",
+  "report.open_shipping_reports": "Open Shipping & Clearing Reports",
+  "acct.sec_warehouse_details": "Warehouse Details",
+  "acct.warehouse_name": "Warehouse",
+  "acct.warehouse_location": "Location",
+  "acct.warehouse_code": "Code",
+  "pbjr.confirm_post": "Post booking {no} to the ledger now? This creates the Debit / Credit entries once and cannot be repeated.",
+  "lgdash.new_shipment": "New Shipment / BL",
+  "lgdash.customer_order": "Customer Order",
+  "lgdash.register_truck": "Register Truck",
+  "vm.grid": "Grid view",
+  "vm.list": "List view",
+  "vm.switch": "Switch view",
+  "shtrk.progress": "Journey progress",
+  "shtrk.connected_records": "Connected ERP records",
+  "shtrk.open_customer_order": "Open customer order",
+  "shtrk.open_bl_entry": "Open BL entry",
+  "shtrk.open_truck_register": "Open truck register",
+  "shtrk.back_to_list": "Back",
+  "shtrk.lbl_goods": "Goods",
+  "shtrk.lbl_weight": "Gross weight",
+  "shtrk.lbl_last_update": "Last update",
+  "shtrk.kpi_hint": "Tap a figure to filter the list.",
+  "shtrk.data_source_note": "Milestones are recorded by your team from carrier, port and driver updates. No automatic live feed is shown.",
+  "shtrk.eta_overdue": "ETA passed",
+  "shtrk.clear_search": "Clear search",
+  "shtrk.timeline_short": "Timeline",
 };
 
 const ur: Dict = {
@@ -60854,6 +60890,33 @@ const ur: Dict = {
   "sbr.official": "سرکاری ERP سسٹم سے تیار کردہ دستاویز",
   "sbr.col_unit": "یونٹ",
   "sbr.col_warehouse": "گودام",
+  "report.no_reports_available": "اس صفحے پر آپ کے لاگ اِن کے لیے کوئی رپورٹ دستیاب نہیں۔ آپ کی شپنگ لائن رپورٹس «شپنگ اور کلیئرنگ رپورٹس» میں ہیں۔",
+  "report.open_shipping_reports": "شپنگ اور کلیئرنگ رپورٹس کھولیں",
+  "acct.sec_warehouse_details": "گودام کی تفصیلات",
+  "acct.warehouse_name": "گودام",
+  "acct.warehouse_location": "مقام",
+  "acct.warehouse_code": "کوڈ",
+  "pbjr.confirm_post": "بکنگ {no} ابھی لیجر میں پوسٹ کریں؟ اس سے ڈیبٹ / کریڈٹ اندراجات ایک ہی بار بنیں گے اور دوبارہ نہیں بن سکیں گے۔",
+  "lgdash.new_shipment": "نئی شپمنٹ / بی ایل",
+  "lgdash.customer_order": "کسٹمر آرڈر",
+  "lgdash.register_truck": "ٹرک رجسٹر کریں",
+  "vm.grid": "گرڈ ویو",
+  "vm.list": "لسٹ ویو",
+  "vm.switch": "ویو تبدیل کریں",
+  "shtrk.progress": "سفر کی پیش رفت",
+  "shtrk.connected_records": "منسلک ERP ریکارڈز",
+  "shtrk.open_customer_order": "کسٹمر آرڈر کھولیں",
+  "shtrk.open_bl_entry": "بی ایل اندراج کھولیں",
+  "shtrk.open_truck_register": "ٹرک رجسٹر کھولیں",
+  "shtrk.back_to_list": "واپس",
+  "shtrk.lbl_goods": "سامان",
+  "shtrk.lbl_weight": "کل وزن",
+  "shtrk.lbl_last_update": "آخری اپڈیٹ",
+  "shtrk.kpi_hint": "فہرست فلٹر کرنے کے لیے کسی عدد پر ٹیپ کریں۔",
+  "shtrk.data_source_note": "سنگ میل آپ کی ٹیم کیریئر، بندرگاہ اور ڈرائیور کی اطلاع سے درج کرتی ہے۔ کوئی خودکار لائیو فیڈ نہیں دکھائی جاتی۔",
+  "shtrk.eta_overdue": "متوقع آمد گزر چکی",
+  "shtrk.clear_search": "تلاش صاف کریں",
+  "shtrk.timeline_short": "ٹائم لائن",
 };
 
 const ar: Dict = {
@@ -85407,6 +85470,33 @@ const ar: Dict = {
   "sbr.official": "مستند رسمي صادر عن نظام ERP",
   "sbr.col_unit": "الوحدة",
   "sbr.col_warehouse": "المستودع",
+  "report.no_reports_available": "لا توجد تقارير متاحة لحسابك في هذه الصفحة. تقارير خط الشحن الخاصة بك موجودة في «تقارير الشحن والتخليص».",
+  "report.open_shipping_reports": "فتح تقارير الشحن والتخليص",
+  "acct.sec_warehouse_details": "تفاصيل المستودع",
+  "acct.warehouse_name": "المستودع",
+  "acct.warehouse_location": "الموقع",
+  "acct.warehouse_code": "الرمز",
+  "pbjr.confirm_post": "هل تريد ترحيل الحجز {no} إلى الدفتر الآن؟ سيُنشئ ذلك قيود المدين / الدائن مرة واحدة فقط ولا يمكن تكراره.",
+  "lgdash.new_shipment": "شحنة جديدة / بوليصة شحن",
+  "lgdash.customer_order": "طلب العميل",
+  "lgdash.register_truck": "تسجيل شاحنة",
+  "vm.grid": "عرض الشبكة",
+  "vm.list": "عرض القائمة",
+  "vm.switch": "تبديل العرض",
+  "shtrk.progress": "تقدم الرحلة",
+  "shtrk.connected_records": "سجلات ERP المرتبطة",
+  "shtrk.open_customer_order": "فتح طلب العميل",
+  "shtrk.open_bl_entry": "فتح إدخال بوليصة الشحن",
+  "shtrk.open_truck_register": "فتح سجل الشاحنات",
+  "shtrk.back_to_list": "رجوع",
+  "shtrk.lbl_goods": "البضائع",
+  "shtrk.lbl_weight": "الوزن الإجمالي",
+  "shtrk.lbl_last_update": "آخر تحديث",
+  "shtrk.kpi_hint": "اضغط على رقم لتصفية القائمة.",
+  "shtrk.data_source_note": "يسجّل فريقكم المراحل من تحديثات الناقل والميناء والسائق. لا يُعرض أي بث مباشر تلقائي.",
+  "shtrk.eta_overdue": "تجاوز الوصول المتوقع",
+  "shtrk.clear_search": "مسح البحث",
+  "shtrk.timeline_short": "الجدول الزمني",
 };
 
 const fa: Dict = {
@@ -109959,6 +110049,33 @@ const fa: Dict = {
   "sbr.official": "سند رسمی تولیدشده توسط سیستم ERP",
   "sbr.col_unit": "واحد",
   "sbr.col_warehouse": "انبار",
+  "report.no_reports_available": "هیچ گزارشی برای ورود شما در این صفحه در دسترس نیست. گزارش‌های خط کشتیرانی شما در «گزارش‌های حمل و ترخیص» است.",
+  "report.open_shipping_reports": "باز کردن گزارش‌های حمل و ترخیص",
+  "acct.sec_warehouse_details": "جزئیات انبار",
+  "acct.warehouse_name": "انبار",
+  "acct.warehouse_location": "مکان",
+  "acct.warehouse_code": "کد",
+  "pbjr.confirm_post": "رزرو {no} هم‌اکنون در دفتر ثبت شود؟ این کار ثبت‌های بدهکار / بستانکار را فقط یک‌بار ایجاد می‌کند و قابل تکرار نیست.",
+  "lgdash.new_shipment": "محموله جدید / بارنامه",
+  "lgdash.customer_order": "سفارش مشتری",
+  "lgdash.register_truck": "ثبت کامیون",
+  "vm.grid": "نمای شبکه‌ای",
+  "vm.list": "نمای فهرست",
+  "vm.switch": "تغییر نما",
+  "shtrk.progress": "پیشرفت مسیر",
+  "shtrk.connected_records": "رکوردهای مرتبط ERP",
+  "shtrk.open_customer_order": "باز کردن سفارش مشتری",
+  "shtrk.open_bl_entry": "باز کردن ثبت بارنامه",
+  "shtrk.open_truck_register": "باز کردن دفتر کامیون‌ها",
+  "shtrk.back_to_list": "بازگشت",
+  "shtrk.lbl_goods": "کالا",
+  "shtrk.lbl_weight": "وزن ناخالص",
+  "shtrk.lbl_last_update": "آخرین به‌روزرسانی",
+  "shtrk.kpi_hint": "برای فیلتر کردن فهرست روی یک عدد بزنید.",
+  "shtrk.data_source_note": "نقاط عطف را تیم شما از اطلاعات خط حمل، بندر و راننده ثبت می‌کند. هیچ فید زندهٔ خودکاری نمایش داده نمی‌شود.",
+  "shtrk.eta_overdue": "موعد ورود گذشته",
+  "shtrk.clear_search": "پاک کردن جستجو",
+  "shtrk.timeline_short": "خط زمانی",
 };
 
 const ps: Dict = {
@@ -134518,6 +134635,33 @@ const ps: Dict = {
   "sbr.official": "د ERP سیستم رسمي جوړ شوی سند",
   "sbr.col_unit": "واحد",
   "sbr.col_warehouse": "ګودام",
+  "report.no_reports_available": "پدې پاڼه کې ستاسو د ننوتلو لپاره هېڅ راپور نشته. ستاسو د کښتۍ کرښې راپورونه په «د لېږد او ترخیص راپورونو» کې دي.",
+  "report.open_shipping_reports": "د لېږد او ترخیص راپورونه خلاصول",
+  "acct.sec_warehouse_details": "د ګودام تفصیلات",
+  "acct.warehouse_name": "ګودام",
+  "acct.warehouse_location": "ځای",
+  "acct.warehouse_code": "کوډ",
+  "pbjr.confirm_post": "ایا اوس د بکنګ {no} په لیجر کې ثبت کړئ؟ دا به د ډیبېټ / کریډېټ ثبتونه یوازې یو ځل جوړ کړي او بیا نه شي تکرارېدلی.",
+  "lgdash.new_shipment": "نوې لېږد / BL",
+  "lgdash.customer_order": "د پیرودونکي امر",
+  "lgdash.register_truck": "ټرک ثبتول",
+  "vm.grid": "د ګرید لید",
+  "vm.list": "د لیست لید",
+  "vm.switch": "لید بدل کړئ",
+  "shtrk.progress": "د سفر پرمختګ",
+  "shtrk.connected_records": "تړلي ERP ریکارډونه",
+  "shtrk.open_customer_order": "د پېرېدونکي امر پرانیستل",
+  "shtrk.open_bl_entry": "د بي ایل ثبت پرانیستل",
+  "shtrk.open_truck_register": "د ټرک ثبت پرانیستل",
+  "shtrk.back_to_list": "شاته",
+  "shtrk.lbl_goods": "توکي",
+  "shtrk.lbl_weight": "ناخالص وزن",
+  "shtrk.lbl_last_update": "وروستی تازه معلومات",
+  "shtrk.kpi_hint": "د لیست د فلټر کولو لپاره پر یوې شمېرې کلیک وکړئ.",
+  "shtrk.data_source_note": "مرحلې ستاسو ټیم د کیریر، بندر او چلوونکي له معلوماتو ثبتوي. کوم اتومات ژوندی فیډ نه ښودل کېږي.",
+  "shtrk.eta_overdue": "د رسېدو وخت تېر شوی",
+  "shtrk.clear_search": "لټون پاکول",
+  "shtrk.timeline_short": "مهال کرښه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

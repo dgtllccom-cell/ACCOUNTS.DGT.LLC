@@ -379,6 +379,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
                      then coalesce(final_cost, purchase_cost, 0)
                      else 0 end as credit_amount,
                 case when lower(coalesce(payment_mode, '')) like '%credit%' and coalesce(remaining_balance, 0) <= 0
+                          and exists (select 1 from purchase_order_payments p0 where p0.local_purchase_id = local_purchases.id and p0.deleted_at is null)
+                     then 0
+                     when lower(coalesce(payment_mode, '')) like '%credit%' and coalesce(remaining_balance, 0) <= 0
                      then coalesce(final_cost, purchase_cost, 0)
                      when coalesce(remaining_balance, 0) > 0 then remaining_balance
                      else greatest(0, coalesce(final_cost, purchase_cost, 0) - coalesce(advance_amount, 0))
@@ -535,7 +538,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const effectiveRoznamchaExchangeRate = bodyRate;
 
     if (orderRow.order_type === "local_purchase") {
-      const { paymentId } = (await withLocalPg(async (sql) => {
+      // ONE transaction: journal entry + payment row + balance update succeed or fail together (they used to be three separate auto-commits,
+      // so a failure midway could leave a posted journal with no payment record).
+      const { paymentId } = (await withLocalPg(async (pg) => pg.begin(async (sql) => {
         let rozType = "super_admin";
         if (orderRow.city_branch_id) rozType = "branch";
         else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
@@ -612,7 +617,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
             ${resolvedDebitLedgerId}::uuid,
             ${resolvedCreditLedgerId}::uuid,
             ${roznamchaEntryId}::uuid,
-            'posted'::purchase_order_payment_status,
+            'posted'::document_status,
             ${postingReferenceNo},
             ${postingNarration},
             'local_purchase',
@@ -628,12 +633,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         `;
         const paymentId = idRows[0]?.id;
 
-        try {
-          const s = await allocateFormSerials("payment_purchase", { countryId: orderRow.country_id, branchKey: orderRow.country_branch_id ?? orderRow.city_branch_id ?? null });
-          await sql`update purchase_order_payments set super_admin_serial = ${s.superAdminSerial}, country_serial = ${s.countrySerial}, branch_serial = ${s.branchSerial}, entry_serial = ${s.entrySerial} where id = ${paymentId}::uuid`;
-        } catch { /* non-fatal */ }
 
-        const paidAmt = Number(body.amount);
+        // Reduce the balance by the payment expressed in the bill's own currency (bodyAmountPur, already computed for the overpayment check) —
+        // for a same-currency payment this equals body.amount; for a local-currency payment on a foreign-currency bill the raw amount was wrong.
+        const paidAmt = Math.round(bodyAmountPur * 10000) / 10000;
         const isAdvance = body.kind === "advance";
         await sql`
           update local_purchases
@@ -641,6 +644,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
             advance_amount = case when ${isAdvance} then coalesce(advance_amount, 0) + ${paidAmt} else advance_amount end,
             remaining_balance = greatest(0, (
               case when lower(coalesce(payment_mode, '')) like '%credit%' and coalesce(remaining_balance, 0) <= 0
+                        and exists (select 1 from purchase_order_payments p0 where p0.local_purchase_id = local_purchases.id and p0.deleted_at is null and p0.id <> ${paymentId}::uuid)
+                   then 0
+                   when lower(coalesce(payment_mode, '')) like '%credit%' and coalesce(remaining_balance, 0) <= 0
                    then coalesce(final_cost, purchase_cost, 0)
                    when coalesce(remaining_balance, 0) > 0
                    then remaining_balance
@@ -652,7 +658,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         `;
 
         return { paymentId };
-      })) as { paymentId: string };
+      }))) as { paymentId: string };
+
+      // 4-level serial: non-fatal and outside the posting transaction, so it can never abort or roll back the posting
+      try {
+        const s = await allocateFormSerials("payment_purchase", { countryId: orderRow.country_id, branchKey: orderRow.country_branch_id ?? orderRow.city_branch_id ?? null });
+        await withLocalPg((sql2) => sql2`update purchase_order_payments set super_admin_serial = ${s.superAdminSerial}, country_serial = ${s.countrySerial}, branch_serial = ${s.branchSerial}, entry_serial = ${s.entrySerial} where id = ${paymentId}::uuid`);
+      } catch { /* non-fatal */ }
 
       await writeAuditLog({
         action: "create",

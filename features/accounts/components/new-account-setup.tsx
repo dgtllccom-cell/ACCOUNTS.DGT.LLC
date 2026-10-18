@@ -1,5 +1,6 @@
 "use client";
 
+import { accountSectionsFor, isPersonalSubType } from "@/lib/accounts/account-type-sections";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
@@ -517,6 +518,13 @@ export function NewAccountSetup({
   const [bankRequired, setBankRequired] = useState(false);
   const [warehouseRequired, setWarehouseRequired] = useState(false);
   const [linkedMastersMenuOpen, setLinkedMastersMenuOpen] = useState(false);
+
+  // A private person (Personal Account / Personal Bank) has no company entity behind it — don't require or show one by default.
+  // New accounts only: an existing account keeps the links it was saved with.
+  useEffect(() => {
+    if (initialAccountId) return;
+    setCompanyRequired(!isPersonalSubType(subType));
+  }, [subType, initialAccountId]);
   const linkedMastersRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -1515,6 +1523,10 @@ export function NewAccountSetup({
         customerDetail,
         companyDetail,
         bankDetail,
+        warehouseDetail,
+        companyRequired,
+        bankRequired,
+        warehouseRequired,
         shippingLineName: shippingLineDetail?.name || linkedShippingLineName || undefined,
         linkedCountriesNames: linkedCountries.map((id) => countries.find((c) => c.id === id)?.name || id),
         selectedCountryName: selectedCountry?.name,

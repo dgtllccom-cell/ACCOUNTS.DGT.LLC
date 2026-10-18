@@ -1,6 +1,7 @@
 "use client";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { newIdempotencyKey } from "@/lib/api/idempotency-client";
 import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -283,7 +284,7 @@ function getCurrencySymbol(c: string) {
     try {
       const res = await fetch(`/api/erp/sales/orders/${d.id}/transfer`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": newIdempotencyKey("sb-transfer", String(d.id)) },
         body: JSON.stringify({
           paymentKind: paymentRoute.paymentKind,
           paymentType: form.paymentType || paymentRoute.paymentLabel,

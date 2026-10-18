@@ -1,5 +1,6 @@
 "use client";
 
+import { newIdempotencyKey } from "@/lib/api/idempotency-client";
 import { pl } from "@/lib/reports/print-label";
 import { openLoadingRecordsPrintReport } from "@/lib/reports/open-loading-records-print-report";
 import { openPurchaseBookingOrderPrintReport } from "@/lib/reports/open-purchase-booking-print-report";
@@ -1500,12 +1501,31 @@ export function PurchaseBookingJournalReportView({
     }
     
     const form = reportToTransfer.form_data?.form || {};
+    const orderNoForConfirm = reportToTransfer.purchaseBookingOrderNumber || (reportToTransfer as any).purchase_order_no || "";
+
+    // Re-read the CURRENT state first: the list on screen can be stale (another tab / user may have posted it already), and a stale "Not transferred"
+    // row must not start a second posting.
+    try {
+      const fresh = await fetch(`/api/erp/purchases/orders/${reportToTransfer.id}`, { cache: "no-store" });
+      if (fresh.ok) {
+        const fj = await fresh.json().catch(() => null);
+        const o = fj?.data?.order ?? fj?.data ?? null;
+        if (o && String(o.ledger_posting_status || "").toLowerCase() === "posted" && !o.is_edited_since_transfer) {
+          alert(trUi("This booking has already been transferred."));
+          return;
+        }
+      }
+    } catch { /* the server check below is authoritative */ }
+
+    // Financial posting needs a human confirmation.
+    if (typeof window !== "undefined" && !window.confirm(tt("confirm_post", "Post booking {no} to the ledger now? This creates the Debit / Credit entries once and cannot be repeated.").replace("{no}", String(orderNoForConfirm)))) return;
 
     setTransferring(true);
     try {
       const transferResponse = await fetch(`/api/erp/purchases/orders/${reportToTransfer.id}/transfer`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        // One key per user action: a double click / retry replays the first result instead of posting again.
+        headers: { "Content-Type": "application/json", "Idempotency-Key": newIdempotencyKey("pb-transfer", String(reportToTransfer.id)) },
         body: JSON.stringify({ paymentType: form.paymentType })
       });
 

@@ -17,6 +17,7 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { localizeUom } from "@/lib/i18n/uom";
 import { printStore } from "@/lib/store/print-store";
+import { useErpPageMenu } from "@/components/layout/erp-page-menu";
 import { resolveDocumentBranding } from "@/lib/reports/resolve-document-branding";
 import { buildStockBalanceHtml, type ReportInput, type ReportKind } from "@/lib/reports/stock-balance/build-report-html";
 import type { BalanceBill, BalanceCards, BalanceSale, BalanceTreatment, Perms } from "@/lib/services/stock-balance-report-service";
@@ -459,6 +460,16 @@ export function StockBalanceReport({ session, initialTab = "bills" }: { session?
     ["stock", s.t("x_stock", "Country / Company / Branch Stock Report — PDF / Excel"), true], ["payments", s.t("x_payments", "Payment Report — PDF / Excel"), true], ["treatments", s.t("x_treatments", "Treatment Report — PDF / Excel"), true],
   ];
 
+  // ONE ⋮ menu: the report kinds live in the global page-actions menu (no second menu inside the page). Print / PDF / Excel for the
+  // CURRENT view stay as the header buttons, so the generic Print / PDF / Edit / Refresh entries are hidden here.
+  useErpPageMenu(
+    kindMenu.filter(([, , on]) => on).flatMap(([k, label], idx) => [
+      { key: "pdf-" + k, label: label.split(" — ")[0] + " — PDF", icon: <FileText className="h-4 w-4" aria-hidden />, onSelect: () => void printCurrent(k), hidden: !perms.print, separatorBefore: idx === 0 },
+      { key: "xls-" + k, label: label.split(" — ")[0] + " — Excel", icon: <FileText className="h-4 w-4 text-green-700" aria-hidden />, onSelect: () => exportExcel(k), hidden: !perms.export }
+    ]),
+    { hideDefaults: ["print", "pdf", "edit", "refresh"] }
+  );
+
   return (
     <div dir={s.dir} data-testid="stock-balance-report" className="mx-auto max-w-[1920px] space-y-3 p-3 sm:p-5">
       {/* banner */}
@@ -470,14 +481,6 @@ export function StockBalanceReport({ session, initialTab = "bills" }: { session?
           {perms.print && <button type="button" data-testid="sbr-print" disabled={busyPrint} onClick={() => void printCurrent()} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-blue-700 px-3 text-[13px] font-bold text-white hover:bg-blue-800"><Printer className="h-4 w-4" />{s.t("print", "Print")}</button>}
           {perms.print && <button type="button" data-testid="sbr-pdf" disabled={busyPrint} onClick={() => void printCurrent()} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border-2 border-blue-700 px-3 text-[13px] font-bold text-blue-800 hover:bg-blue-50"><FileText className="h-4 w-4" />PDF</button>}
           {perms.export && <button type="button" data-testid="sbr-excel" onClick={() => exportExcel(billRef ? "bill" : tab === "bills" ? "journal" : tab)} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-green-700 px-3 text-[13px] font-bold text-white hover:bg-green-800"><FileSpreadsheet className="h-4 w-4" />Excel</button>}
-          <div className="relative">
-            <button type="button" data-testid="sbr-more" onClick={() => setMenuOpen((v) => !v)} aria-label={s.t("more", "More reports")} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border hover:bg-slate-50"><MoreVertical className="h-4 w-4" /></button>
-            {menuOpen && <div className="absolute end-0 top-11 z-40 w-80 rounded-xl border bg-white p-1.5 shadow-xl dark:bg-slate-900" onMouseLeave={() => setMenuOpen(false)}>
-              {kindMenu.filter(([, , on]) => on).map(([k, label]) => (
-                <div key={k} className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800"><span className="text-[12px] font-semibold">{label}</span><span className="flex gap-1"><button type="button" onClick={() => { setMenuOpen(false); void printCurrent(k); }} className="rounded-md border px-1.5 py-1 text-[11px] font-bold">PDF</button>{perms.export ? <button type="button" onClick={() => { setMenuOpen(false); exportExcel(k); }} className="rounded-md border px-1.5 py-1 text-[11px] font-bold text-green-700">XLS</button> : null}</span></div>
-              ))}
-            </div>}
-          </div>
         </div>
       </header>
 

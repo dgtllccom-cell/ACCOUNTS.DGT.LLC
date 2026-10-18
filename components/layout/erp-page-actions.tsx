@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
+  ChevronRight,
   Edit3,
   Mail,
   MessageCircle,
@@ -22,6 +23,9 @@ import { t, type UiKey } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { sidebarTree, type SidebarNode } from "@/lib/navigation/sidebar";
+import { DAMAN_SIDEBAR_ITEMS } from "@/components/layout/digital-dock-premium-sidebar";
+import { useErpPageMenuState } from "@/components/layout/erp-page-menu";
+import { ViewModeToggle } from "@/components/layout/view-mode-toggle";
 
 // Route → nav labelKey, so the page header reuses the fully-translated (and
 // i18n-guard-enforced) `nav.*` dictionary instead of a humanised URL segment.
@@ -65,6 +69,27 @@ function titleFromPath(pathname: string, lang: string) {
   return translateHeader(lang, humanized);
 }
 
+type Crumb = { label: string; href?: string };
+
+/** Home › Group › Page — built from the same menu the user sees, so every crumb is translated and every link is a real route. */
+function breadcrumbFor(pathname: string, lang: string): Crumb[] {
+  const path = pathname.replace(/\?.*$/, "").replace(/\/$/, "") || "/dashboard";
+  const home: Crumb = { label: translateHeader(lang, "Dashboard"), href: "/dashboard" };
+  type N = { label: string; href?: string; children?: N[] };
+  const walk = (nodes: N[], acc: N[]): N[] | null => {
+    for (const n of nodes) {
+      const next = [...acc, n];
+      if (n.href === path) return next;
+      if (n.children) { const r = walk(n.children, next); if (r) return r; }
+    }
+    return null;
+  };
+  const trail = walk(DAMAN_SIDEBAR_ITEMS as unknown as N[], []);
+  if (!trail) return [home];
+  const items = trail.filter((n) => n.href !== "/dashboard");
+  return [home, ...items.map((n, i) => ({ label: translateHeader(lang, n.label), href: i < items.length - 1 ? n.href : undefined }))];
+}
+
 function currentUrl() {
   if (typeof window === "undefined") return "";
   return window.location.href;
@@ -89,7 +114,25 @@ function parentPathFor(pathname: string) {
   const parts = pathname.split("/").filter(Boolean);
   if (parts.length <= 1) return "/dashboard";
   if (parts.length === 2 && parts[0] === "dashboard") return "/dashboard";
-  return `/${parts.slice(0, -1).join("/")}`;
+  // The nearest ancestor that is a REAL page: first a menu destination, never a bare path segment that has no page (404).
+  const known = knownMenuHrefs();
+  for (let n = parts.length - 1; n >= 2; n--) {
+    const candidate = `/${parts.slice(0, n).join("/")}`;
+    if (known.has(candidate)) return candidate;
+  }
+  return "/dashboard";
+}
+
+let KNOWN_HREFS: Set<string> | null = null;
+function knownMenuHrefs() {
+  if (KNOWN_HREFS) return KNOWN_HREFS;
+  const set = new Set<string>();
+  const walk = (nodes: Array<{ href?: string; children?: unknown[] }>) => {
+    for (const n of nodes) { if (n.href) set.add(n.href); if (n.children) walk(n.children as Array<{ href?: string; children?: unknown[] }>); }
+  };
+  walk(DAMAN_SIDEBAR_ITEMS as unknown as Array<{ href?: string; children?: unknown[] }>);
+  KNOWN_HREFS = set;
+  return set;
 }
 
 type ErpPageActionsProps = {
@@ -105,6 +148,28 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
   const lang = useActiveLanguage();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const { items: pageItems, hideDefaults } = useErpPageMenuState();
+
+  // Has the user navigated inside the app yet? Then "Back" is the real previous page; a deep link opened directly goes to the parent.
+  const firstPath = useRef<string | null>(null);
+  const navigatedInApp = useRef(false);
+  useEffect(() => {
+    if (firstPath.current === null) { firstPath.current = pathname; return; }
+    if (pathname !== firstPath.current) navigatedInApp.current = true;
+  }, [pathname]);
+
+  // A page that draws its OWN complete header (Back + actions) marks it with data-page-chrome; the global bar then steps aside so the
+  // user never sees two Back buttons or two ⋮ menus. (The hard-coded isReportPage list below stays for pages that predate the marker.)
+  const [pageOwnsChrome, setPageOwnsChrome] = useState(false);
+  useEffect(() => {
+    let raf = 0;
+    const check = () => { raf = 0; setPageOwnsChrome(Boolean(document.querySelector("[data-page-chrome]"))); };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(check); };
+    check();
+    const mo = new MutationObserver(schedule);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => { mo.disconnect(); if (raf) cancelAnimationFrame(raf); };
+  }, [pathname]);
 
   // Report pages, documents manager, KYC reports, and specialized studio pages render their own dedicated toolbar directly.
   // NOTE: this is computed but the early return MUST come after every hook below — a conditional
@@ -148,7 +213,8 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
     pathname?.startsWith("/dashboard/settings/customers");
 
   const title = titleOverride || titleFromPath(pathname || "/dashboard", lang);
-  const subtitle = subtitleOverride || t(lang, "pa.subtitle", "Standard ERP navigation and page actions");
+  const crumbs = breadcrumbFor(pathname || "/dashboard", lang);
+  const subtitle = subtitleOverride || crumbs.map((c) => c.label).join(" › ");
 
   useEffect(() => {
     if (!open) return;
@@ -196,11 +262,11 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
       router.push(backLink as any);
       return;
     }
-    if (typeof window !== "undefined" && window.history.length > 1) {
+    if (navigatedInApp.current && typeof window !== "undefined" && window.history.length > 1) {
       router.back();
       return;
     }
-    router.push("/dashboard");
+    router.push(parentPathFor(pathname || "/dashboard") as any);
   }
 
   function closePage() {
@@ -235,7 +301,7 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
   }
 
   // Early return is safe here — every hook above has already run unconditionally.
-  if (isReportPage) return null;
+  if (isReportPage || pageOwnsChrome) return null;
 
   return (
     <section data-erp-page-actions className="no-print mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3.5 py-1.5 shadow-xs transition-all dark:border-slate-800 dark:bg-slate-900/90 sm:px-4">
@@ -256,12 +322,28 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
         <div id="erp-page-title-slot" className="min-w-0 empty:hidden" />
         <div className="flex min-w-0 flex-col justify-center leading-tight default-title">
           <h1 className="truncate text-xs font-black leading-tight tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">{title}</h1>
-          <p className="mt-0.5 hidden truncate text-[9.5px] font-medium leading-tight text-slate-400 sm:block">{subtitle}</p>
+          {subtitleOverride ? (
+            <p className="mt-0.5 hidden truncate text-[9.5px] font-medium leading-tight text-slate-400 sm:block">{subtitle}</p>
+          ) : (
+            <nav aria-label="Breadcrumb" data-testid="erp-breadcrumb" className="mt-0.5 hidden min-w-0 items-center gap-0.5 truncate text-[10px] font-medium leading-tight text-slate-400 sm:flex">
+              {crumbs.map((c, i) => (
+                <span key={i} className="flex min-w-0 items-center gap-0.5">
+                  {i > 0 && <ChevronRight className="h-2.5 w-2.5 shrink-0 rtl:rotate-180" aria-hidden />}
+                  {c.href ? (
+                    <a href={c.href} onClick={(e) => { e.preventDefault(); router.push(c.href as any); }} className="truncate hover:text-blue-600 hover:underline">{c.label}</a>
+                  ) : (
+                    <span className="truncate text-slate-500" aria-current={i === crumbs.length - 1 ? "page" : undefined}>{c.label}</span>
+                  )}
+                </span>
+              ))}
+            </nav>
+          )}
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
         <div id="erp-page-actions-slot" className="flex flex-wrap items-center gap-1.5 empty:hidden" />
+        <ViewModeToggle />
         {!pathname?.startsWith("/dashboard/purchase/new-purchase-booking-order") && !pathname?.startsWith("/dashboard/purchase/purchase-order") && (
           <div ref={menuRef} className="relative">
             <Button
@@ -278,39 +360,65 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
             </Button>
 
             {open ? (
-              <div className={cn("absolute right-0 top-full z-40 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900")}>
-                <button type="button" onClick={() => closeAndRun(() => { void printPageContent(); })} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                  <Printer className="h-4 w-4" aria-hidden />
-                  {t(lang, "pa.print", "Print")}
-                </button>
-                <button type="button" onClick={() => closeAndRun(() => { void printPageContent(); })} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                  <DownloadActionIcon className="h-4 w-4" aria-hidden />
-                  {t(lang, "pa.pdf_download", "PDF Download")}
-                </button>
-                <button type="button" onClick={() => closeAndRun(emailPage)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                  <Mail className="h-4 w-4" aria-hidden />
-                  {t(lang, "pa.email", "Email")}
-                </button>
-                <button type="button" onClick={() => closeAndRun(whatsAppShare)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                  <Send className="h-4 w-4" aria-hidden />
-                  {t(lang, "pa.whatsapp_share", "WhatsApp Share")}
-                </button>
-                <button type="button" onClick={() => closeAndRun(shareToConnect)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                  <MessageCircle className="h-4 w-4" aria-hidden />
-                  {t(lang, "dgtc.title", "DGT Connect")}
-                </button>
-                <button type="button" onClick={() => closeAndRun(editCurrentRecord)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                  <Edit3 className="h-4 w-4" aria-hidden />
-                  {t(lang, "pa.edit", "Edit")}
-                </button>
-                <button type="button" onClick={() => closeAndRun(() => window.location.reload())} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                  <RefreshCw className="h-4 w-4" aria-hidden />
-                  {t(lang, "common.refresh", "Refresh")}
-                </button>
-                <button type="button" onClick={() => closeAndRun(() => navigator.clipboard?.writeText(currentUrl()))} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                  <Share2 className="h-4 w-4" aria-hidden />
-                  {t(lang, "pa.copy_link", "Copy Link")}
-                </button>
+              <div role="menu" data-testid="erp-page-menu" className={cn("absolute end-0 top-full z-40 mt-1.5 w-56 max-h-[70vh] overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900")}>
+                {pageItems.filter((it) => !it.hidden).map((it) => (
+                  <div key={it.key}>
+                    {it.separatorBefore && <div className="my-0.5 border-t border-slate-100 dark:border-slate-800" />}
+                    <button type="button" role="menuitem" disabled={it.disabled} onClick={() => closeAndRun(it.onSelect)} className="flex w-full items-center gap-2 px-3 py-2 text-start text-xs font-bold hover:bg-slate-50 disabled:opacity-50 dark:hover:bg-slate-800">
+                      {it.icon}
+                      {it.label}
+                    </button>
+                  </div>
+                ))}
+                {pageItems.some((it) => !it.hidden) && <div className="my-0.5 border-t border-slate-100 dark:border-slate-800" />}
+                {!hideDefaults.has("print") && (
+                  <button type="button" role="menuitem" onClick={() => closeAndRun(() => { void printPageContent(); })} className="flex w-full items-center gap-2 px-3 py-2 text-start text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <Printer className="h-4 w-4" aria-hidden />
+                    {t(lang, "pa.print", "Print")}
+                  </button>
+                )}
+                {!hideDefaults.has("pdf") && (
+                  <button type="button" role="menuitem" onClick={() => closeAndRun(() => { void printPageContent(); })} className="flex w-full items-center gap-2 px-3 py-2 text-start text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <DownloadActionIcon className="h-4 w-4" aria-hidden />
+                    {t(lang, "pa.pdf_download", "PDF Download")}
+                  </button>
+                )}
+                {!hideDefaults.has("email") && (
+                  <button type="button" role="menuitem" onClick={() => closeAndRun(emailPage)} className="flex w-full items-center gap-2 px-3 py-2 text-start text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <Mail className="h-4 w-4" aria-hidden />
+                    {t(lang, "pa.email", "Email")}
+                  </button>
+                )}
+                {!hideDefaults.has("whatsapp") && (
+                  <button type="button" role="menuitem" onClick={() => closeAndRun(whatsAppShare)} className="flex w-full items-center gap-2 px-3 py-2 text-start text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <Send className="h-4 w-4" aria-hidden />
+                    {t(lang, "pa.whatsapp_share", "WhatsApp Share")}
+                  </button>
+                )}
+                {!hideDefaults.has("connect") && (
+                  <button type="button" role="menuitem" onClick={() => closeAndRun(shareToConnect)} className="flex w-full items-center gap-2 px-3 py-2 text-start text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <MessageCircle className="h-4 w-4" aria-hidden />
+                    {t(lang, "dgtc.title", "DGT Connect")}
+                  </button>
+                )}
+                {!hideDefaults.has("edit") && (
+                  <button type="button" role="menuitem" onClick={() => closeAndRun(editCurrentRecord)} className="flex w-full items-center gap-2 px-3 py-2 text-start text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <Edit3 className="h-4 w-4" aria-hidden />
+                    {t(lang, "pa.edit", "Edit")}
+                  </button>
+                )}
+                {!hideDefaults.has("refresh") && (
+                  <button type="button" role="menuitem" onClick={() => closeAndRun(() => window.location.reload())} className="flex w-full items-center gap-2 px-3 py-2 text-start text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <RefreshCw className="h-4 w-4" aria-hidden />
+                    {t(lang, "common.refresh", "Refresh")}
+                  </button>
+                )}
+                {!hideDefaults.has("copy") && (
+                  <button type="button" role="menuitem" onClick={() => closeAndRun(() => navigator.clipboard?.writeText(currentUrl()))} className="flex w-full items-center gap-2 px-3 py-2 text-start text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <Share2 className="h-4 w-4" aria-hidden />
+                    {t(lang, "pa.copy_link", "Copy Link")}
+                  </button>
+                )}
               </div>
             ) : null}
           </div>

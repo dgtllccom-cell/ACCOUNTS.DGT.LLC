@@ -1,3 +1,4 @@
+import { accountSectionsFor } from "@/lib/accounts/account-type-sections";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { openMasterProfileReportWindow, type MProfileRow } from "@/lib/reports/open-master-profile-report-window";
@@ -21,6 +22,10 @@ export type AccountReportData = {
   totalDebit?: number;
   totalCredit?: number;
   customerDetail?: any;
+  companyRequired?: boolean;
+  bankRequired?: boolean;
+  warehouseRequired?: boolean;
+  warehouseDetail?: any;
   companyDetail?: any;
   bankDetail?: any;
   shippingLineName?: string;
@@ -44,6 +49,12 @@ export function openAccountA4ReportWindow(input: {
   const lang = (input.lang || "en") as SupportedLanguage;
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const b = input.accountData;
+  const has = (o: any) => Boolean(o && typeof o === "object" && Object.values(o).some((v) => v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0)));
+  const show = accountSectionsFor({
+    accountTitle: b.accountTitle, subType: b.subType, category: b.category,
+    companyRequired: b.companyRequired, bankRequired: b.bankRequired, warehouseRequired: b.warehouseRequired,
+    hasCustomer: has(b.customerDetail?.customer), hasCompany: has(b.companyDetail), hasBank: has(b.bankDetail), hasWarehouse: has(b.warehouseDetail)
+  });
 
   const now = new Date();
   const stamp = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}`;
@@ -99,42 +110,57 @@ export function openAccountA4ReportWindow(input: {
         ...(b.linkedCountriesNames && b.linkedCountriesNames.length > 0 ? [r(tt("acct.linked_countries", "Inter-Country Linkage (لین دین)"), `${b.linkedCountriesNames.join(", ")} (${b.linkedCountriesNames.length})`)] : []),
         r(tt("acct.as_on", "Date / As On"), stamp)
       ]},
-      { title: tt("acct.sec_customer_info", "Customer Information"), rows: [
-        r(tt("acct.customer_name", "Customer Name"), custObj?.customer_name),
-        r(tt("acct.company_name", "Company Name"), custObj?.company_name),
-        r(tt("acct.customer_code", "Customer Code"), custObj?.id ? compactCode(custObj.id, `CUS-${b.selectedCountryCode || "AE"}`) : ""),
-        r(tt("acct.phone", "Phone"), custObj?.mobile),
-        r(tt("acct.email", "Email"), custObj?.email),
-        r(tt("acct.address", "Address"), custObj?.address),
-        r(tt("acct.city", "City"), b.selectedBranchName?.split(" - ")[0]),
-        r(tt("acct.country", "Country"), b.selectedCountryName)
-      ]},
-      { title: tt("acct.sec_company_details", "Company Details"), rows: [
-        r(tt("acct.company_name", "Company Name"), b.companyDetail?.companyName || b.companyDetail?.name),
-        r(tt("acct.company_code", "Company Code"), b.companyDetail?.id ? compactCode(b.companyDetail.id, "COMP") : ""),
-        r(tt("acct.business_type", "Business Type"), b.companyDetail?.businessName || b.companyDetail?.legal_name),
-        r(tt("acct.registration_no", "Registration No."), reg("registration") || reg("license") || reg("trade")),
-        r(tt("acct.address", "Address"), b.companyDetail?.address),
-        r(tt("acct.country", "Country"), b.companyDetail?.country),
-        r(tt("acct.phone", "Phone"), contact("phone") || contact("mobile") || contact("number")),
-        r(tt("acct.email", "Email"), contact("email"))
-      ]},
-      { title: tt("acct.sec_bank_details", "Bank Details"), rows: [
-        r(tt("acct.bank_name", "Bank Name"), b.bankDetail?.bank_name || b.bankDetail?.name),
-        r(tt("acct.branch_name", "Branch Name"), b.bankDetail?.branch_name),
-        r(tt("acct.account_title", "Account Title"), b.bankDetail?.account_title || b.accountName),
-        r(tt("acct.bank_account_no", "Bank Account Number"), b.bankDetail?.account_number),
-        r(tt("acct.iban", "IBAN"), b.bankDetail?.iban_number),
-        r(tt("acct.swift", "Swift Code"), b.bankDetail?.swift_bic),
-        r(tt("acct.currency", "Currency"), b.bankDetail?.currency || b.currency)
-      ]},
-      { title: tt("acct.sec_tax_info", "Tax Information"), rows: [
-        r(tt("acct.tax_status", "Tax Status"), (taxReg || ntnGst) ? tt("acct.registered", "Registered") : tt("acct.not_registered", "Not Registered")),
-        r(tt("acct.tax_registration_no", "Tax Registration No."), taxReg),
-        r(tt("acct.ntn", "NTN"), reg("ntn")),
-        r(tt("acct.gst_vat", "GST / VAT No."), reg("gst") || reg("vat")),
-        r(tt("acct.currency", "Currency"), b.currency)
-      ]},
+      ...(show.customer ? [
+        { title: tt("acct.sec_customer_info", "Customer Information"), rows: [
+          r(tt("acct.customer_name", "Customer Name"), custObj?.customer_name),
+          r(tt("acct.company_name", "Company Name"), custObj?.company_name),
+          r(tt("acct.customer_code", "Customer Code"), custObj?.id ? compactCode(custObj.id, `CUS-${b.selectedCountryCode || "AE"}`) : ""),
+          r(tt("acct.phone", "Phone"), custObj?.mobile),
+          r(tt("acct.email", "Email"), custObj?.email),
+          r(tt("acct.address", "Address"), custObj?.address),
+          r(tt("acct.city", "City"), b.selectedBranchName?.split(" - ")[0]),
+          r(tt("acct.country", "Country"), b.selectedCountryName)
+        ]}
+        ] : []),
+      ...(show.company ? [
+        { title: tt("acct.sec_company_details", "Company Details"), rows: [
+          r(tt("acct.company_name", "Company Name"), b.companyDetail?.companyName || b.companyDetail?.name),
+          r(tt("acct.company_code", "Company Code"), b.companyDetail?.id ? compactCode(b.companyDetail.id, "COMP") : ""),
+          r(tt("acct.business_type", "Business Type"), b.companyDetail?.businessName || b.companyDetail?.legal_name),
+          r(tt("acct.registration_no", "Registration No."), reg("registration") || reg("license") || reg("trade")),
+          r(tt("acct.address", "Address"), b.companyDetail?.address),
+          r(tt("acct.country", "Country"), b.companyDetail?.country),
+          r(tt("acct.phone", "Phone"), contact("phone") || contact("mobile") || contact("number")),
+          r(tt("acct.email", "Email"), contact("email"))
+        ]}
+        ] : []),
+      ...(show.bank ? [
+        { title: tt("acct.sec_bank_details", "Bank Details"), rows: [
+          r(tt("acct.bank_name", "Bank Name"), b.bankDetail?.bank_name || b.bankDetail?.name),
+          r(tt("acct.branch_name", "Branch Name"), b.bankDetail?.branch_name),
+          r(tt("acct.account_title", "Account Title"), b.bankDetail?.account_title || b.accountName),
+          r(tt("acct.bank_account_no", "Bank Account Number"), b.bankDetail?.account_number),
+          r(tt("acct.iban", "IBAN"), b.bankDetail?.iban_number),
+          r(tt("acct.swift", "Swift Code"), b.bankDetail?.swift_bic),
+          r(tt("acct.currency", "Currency"), b.bankDetail?.currency || b.currency)
+        ]}
+        ] : []),
+      ...(show.warehouse ? [
+        { title: tt("acct.sec_warehouse_details", "Warehouse Details"), rows: [
+          r(tt("acct.warehouse_name", "Warehouse"), b.warehouseDetail?.warehouse_name || b.warehouseDetail?.name),
+          r(tt("acct.warehouse_location", "Location"), b.warehouseDetail?.city_name || b.warehouseDetail?.location || b.warehouseDetail?.address || b.warehouseDetail?.full_address),
+          r(tt("acct.warehouse_code", "Code"), b.warehouseDetail?.code)
+        ]}
+      ] : []),
+      ...(show.tax ? [
+        { title: tt("acct.sec_tax_info", "Tax Information"), rows: [
+          r(tt("acct.tax_status", "Tax Status"), (taxReg || ntnGst) ? tt("acct.registered", "Registered") : tt("acct.not_registered", "Not Registered")),
+          r(tt("acct.tax_registration_no", "Tax Registration No."), taxReg),
+          r(tt("acct.ntn", "NTN"), reg("ntn")),
+          r(tt("acct.gst_vat", "GST / VAT No."), reg("gst") || reg("vat")),
+          r(tt("acct.currency", "Currency"), b.currency)
+        ]}
+        ] : []),
       { title: tt("acct.sec_audit_info", "System / Audit Information"), rows: [
         r(tt("acct.created_by", "Created By"), b.createdBy),
         r(tt("acct.created_on", "Created On"), stamp),

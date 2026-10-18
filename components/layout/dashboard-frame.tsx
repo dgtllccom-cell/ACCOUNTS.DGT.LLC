@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, Suspense } from "react";
 import Link from "next/link";
 import { 
   ArrowLeftRight,
@@ -56,6 +56,7 @@ import { dashboardForRoles } from "@/lib/permissions/enterprise-roles";
 import { isUserManager } from "@/lib/permissions/user-management-scope";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { ErpPageActions } from "@/components/layout/erp-page-actions";
+import { TableCardViewController } from "@/components/layout/table-card-view-controller";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { ActiveRecordProvider } from "@/lib/support/active-record-context";
@@ -805,6 +806,7 @@ export function DashboardFrame({
 
         <main data-erp-content className="w-full min-w-0 flex-1 overflow-x-hidden p-3 sm:p-4 lg:p-6 pb-24 lg:pb-6 bg-background">
           <ErpPageActions />
+          <Suspense fallback={null}><TableCardViewController /></Suspense>
           {isRouteBlocked ? (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 bg-card rounded-2xl border border-border shadow-xs my-4 animate-in fade-in zoom-in-95 duration-150">
               <div className="h-16 w-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 shadow-inner">

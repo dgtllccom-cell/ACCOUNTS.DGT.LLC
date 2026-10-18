@@ -1,5 +1,6 @@
 "use client";
 
+import { useErpPageMenu } from "@/components/layout/erp-page-menu";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -207,6 +208,13 @@ export function SalesModuleWorkspace({
   const [dateTo, setDateTo] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+
+  // ONE ⋮ menu: these report actions live in the global page-actions menu (no second ⋮ in the page).
+  useErpPageMenu([
+    { key: "xls", label: t(lang, "purchase.pmw_export_excel", "Export Excel"), icon: <FileSpreadsheet className="h-4 w-4 text-emerald-500" aria-hidden />, onSelect: () => exportCsv(rows, title) },
+    { key: "print", label: t(lang, "purchase.pmw_print_pdf", "Print / PDF"), icon: <Printer className="h-4 w-4 text-cyan-500" aria-hidden />, onSelect: () => { import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => { openGenericErpReport({ title: title || "Sales Report", lang, orientation: "landscape", columns: columns.map(c => ({ key: c.key, label: c.label })), rows: rows as Record<string, unknown>[] }); }); } },
+    { key: "csv", label: t(lang, "purchase.pmw_download_csv", "Download CSV"), icon: <Download className="h-4 w-4 text-slate-400" aria-hidden />, onSelect: () => exportCsv(rows, title) }
+  ], { hideDefaults: ["print", "pdf", "edit"] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reportNow, setReportNow] = useState<{ date: string; time: string } | null>(null);
@@ -378,24 +386,6 @@ export function SalesModuleWorkspace({
             <span className="hidden h-10 items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 text-xs font-bold text-slate-600 dark:text-slate-400 lg:inline-flex">
               <CalendarDays className="h-4 w-4 text-emerald-500" /> {reportNow ? `${reportNow.date}, ${reportNow.time}` : "-"}
             </span>
-            <div className="relative">
-              <Button type="button" variant="outline" size="icon" className="h-10 w-10 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 rounded-xl" onClick={() => setActionsOpen((value) => !value)} aria-label={t(lang, "common.actions", "Actions")}>
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-              {actionsOpen ? (
-                <div className="absolute right-0 z-20 mt-1 w-48 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-1.5 text-xs shadow-xl text-slate-800 dark:text-slate-200 font-medium">
-                  <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => exportCsv(rows, title)}>
-                    <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> {t(lang, "purchase.pmw_export_excel", "Export Excel")}
-                  </button>
-                  <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => { import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => { openGenericErpReport({ title: title || "Sales Report", lang, orientation: "landscape", columns: columns.map(c => ({ key: c.key, label: c.label })), rows: rows as Record<string, unknown>[] }); }); }}>
-                    <Printer className="h-4 w-4 text-cyan-500" /> {t(lang, "purchase.pmw_print_pdf", "Print / PDF")}
-                  </button>
-                  <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => exportCsv(rows, title)}>
-                    <Download className="h-4 w-4 text-slate-400" /> {t(lang, "purchase.pmw_download_csv", "Download CSV")}
-                  </button>
-                </div>
-              ) : null}
-            </div>
           </div>
         </div>
 

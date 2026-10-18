@@ -333,17 +333,10 @@ export function VipRegisterEmployeeView() {
       {/* ── 1. Top Navigation & Breadcrumbs (Matching Image 1) ── */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 transition"
-          >
-            <span className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs font-bold text-[11px]">&larr; Back</span>
-            <div className="text-left">
+          <div className="text-left">
               <span className="block text-xs font-black text-slate-900 dark:text-white leading-tight">Employee Management</span>
               <span className="block text-[10px] text-slate-400 font-medium">Manage all company employees across branches and departments</span>
             </div>
-          </button>
         </div>
 
         <nav className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
