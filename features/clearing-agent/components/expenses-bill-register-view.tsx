@@ -360,6 +360,8 @@ const DICT = {
     per_page: "۱۰ / پاڼه",
     lang_auto_note: "د ژبې په بدلولو سره، تڼۍ، انتخابي لستونه، فلټرونه او د پاڼې لوری په خپله بدلیږي."
   }
+};
+
 const CUSTOMER_FILTER_OPTIONS = ["Al Noor Trading LLC", "Faisal Enterprises", "Kabul Star Ltd"];
 const EXPENSE_TYPE_FILTER_OPTIONS = ["Travel Expense", "Marketing Expense", "Fuel Expense", "Maintenance Expense"];
 
