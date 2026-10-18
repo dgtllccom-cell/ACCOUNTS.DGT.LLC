@@ -588,6 +588,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    const rawPatchBody = await request.json();
     const body = z.object({
       userId: z.string().trim(),
       userCode: z.string().trim().optional(),
@@ -621,7 +622,13 @@ export async function PATCH(request: NextRequest) {
       clearingAgentId: optionalUuidSchema,
       ledgerVisibility: z.enum(["scoped", "shipping_only", "full"]).optional(),
       ...assignmentAccessFields
-    }).parse(await request.json());
+    }).parse(rawPatchBody);
+    // optionalUuidSchema turns an ABSENT key into null; for a PATCH an absent scope key must stay absent, otherwise every edit that
+    // only touches permissions / status (the Users screen "save rules", a deactivation) nulls the user's country / branch columns and
+    // the scope CHECK constraint rejects it (500) - or, for an unscoped role, silently wipes the scope.
+    for (const key of ["companyId", "countryId", "countryBranchId", "cityBranchId", "employeeId", "personMasterId", "clearingAgentId"] as const) {
+      if (!Object.prototype.hasOwnProperty.call(rawPatchBody ?? {}, key)) (body as Record<string, unknown>)[key] = undefined;
+    }
 
     if (body.mobileProfile === "mobile_field") {
       throw new ApiClientError(

@@ -256,10 +256,20 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       nextStatus === "cancelled" ||
       current.target_table === "enterprise_accounts"
     ) {
-      await service.unlockRecord(session, {
-        recordTable: current.target_table,
-        recordId: current.target_id
-      });
+      if (chain) {
+        // The stage approver was already authorised for this exact request (canDecideChainStage); an Operations Country Admin holds no
+        // generic approvals:approve token (financial resource), so the lock is released directly instead of through the generic gate.
+        await new SupabaseApprovalsRepository().unlockRecord({
+          recordTable: current.target_table,
+          recordId: current.target_id,
+          unlockedBy: session.userId
+        });
+      } else {
+        await service.unlockRecord(session, {
+          recordTable: current.target_table,
+          recordId: current.target_id
+        });
+      }
     }
 
     await auditApiAction(request, {

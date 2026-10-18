@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { enterpriseRolePermissions, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
-import { BUSINESS_ONLY_ROUTE_PREFIXES, SHIPPING_ONLY_ROUTE_PREFIXES, evaluateRouteAccess } from "@/lib/navigation/route-policy";
+import { BUSINESS_ONLY_ROUTE_PREFIXES, ROUTE_PERMISSION_MAP, SHIPPING_ONLY_ROUTE_PREFIXES, evaluateRouteAccess } from "@/lib/navigation/route-policy";
 import { visibleMenuHrefsFor } from "@/components/layout/digital-dock-premium-sidebar";
 import { cityBranchInDomains } from "@/lib/auth/session";
 import { allowedRowDomains, rowInSessionDomain, sessionDomainFilter } from "@/lib/permissions/domain-scope";
@@ -127,5 +127,33 @@ describe("domain row helpers", () => {
     expect(assignmentBranchDomainError("both", "business")).toBeNull();
     expect(assignmentBranchDomainError("business", null)).toBeNull();
     expect(assignmentBranchDomainError("shipping", null)).toMatch(/Shipping Line user/);
+  });
+});
+
+describe("master rule: ONE granted permission never unlocks a module, country, branch or domain", () => {
+  // a login holding exactly one token (no role template, no wildcard) must only be offered / allowed the pages that token maps to
+  const TOKENS = ["accounts:read", "ledgers:read", "customers:read", "shipping_records:read", "purchases:read", "users:read", "reports:read", "expenses:read"];
+  const grants = (token: string, path: string) => {
+    const map = ROUTE_PERMISSION_MAP[path.split("?")[0]];
+    if (!map) return false;
+    const [resource] = token.split(":");
+    return map.some((p) => p === token || p === `${resource}:*`);
+  };
+  for (const domain of ["business", "shipping"] as const) {
+    for (const token of TOKENS) {
+      it(`${domain} login holding only ${token}: every menu entry is mapped to that token`, () => {
+        const hrefs = visibleMenuHrefsFor(["staff_user"], [token], { operationalDomains: [domain], canViewFinancials: true });
+        const stray = hrefs.filter((h) => h.split("?")[0] !== "/dashboard" && !grants(token, h));
+        expect(stray, `${domain}/${token} also got ${stray.join(", ")}`).toEqual([]);
+      });
+    }
+  }
+  it("one token never crosses the domain: purchases:read in the Shipping domain opens no Purchase page, shipping_records:read in the Business domain opens no Shipping page", () => {
+    const can = (token: string, domain: "business" | "shipping", path: string) =>
+      evaluateRouteAccess({ pathname: path, permissions: [token], roles: ["staff_user"], operationalDomains: [domain], canViewFinancials: true }).allowed;
+    expect(can("purchases:read", "shipping", "/dashboard/purchase/new-purchase-booking-order")).toBe(false);
+    expect(can("shipping_records:read", "business", "/dashboard/logistics")).toBe(false);
+    expect(can("shipping_records:read", "shipping", "/dashboard/logistics")).toBe(true);
+    expect(can("purchases:read", "business", "/dashboard/purchase/new-purchase-booking-order")).toBe(true);
   });
 });

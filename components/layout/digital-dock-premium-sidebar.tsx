@@ -942,7 +942,15 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
       .filter((it: any) => ALLOWED_SHIPPING_KEYS.has(it.key) && (it.key === "dashboard" || isPermitted(it)))
       .map((it: any) => {
         if (it.key === "dashboard") {
-          return { ...it, href: "/dashboard/logistics" };
+          // the Logistics dashboard is the Shipping home only for a login that may open it; one unrelated token must not unlock it
+          const logisticsAllowed = evaluateRouteAccess({
+            pathname: "/dashboard/logistics",
+            permissions: [...userPermissions],
+            roles: [...userRoles],
+            operationalDomains: shippingContext?.operationalDomains ?? null,
+            canViewFinancials: shippingContext?.canViewFinancials ?? null,
+          }).allowed;
+          return { ...it, href: logisticsAllowed ? "/dashboard/logistics" : "/dashboard" };
         }
         if (it.key === "shipping-cleaning") {
           return { ...it, defaultOpen: true, children: filterTree(it.children || []) };

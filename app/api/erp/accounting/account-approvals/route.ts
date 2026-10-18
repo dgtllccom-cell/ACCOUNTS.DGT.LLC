@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         left join public.profiles p on p.id = ar.requested_by
         left join public.city_branches cb on cb.id = ar.city_branch_id
         where ar.target_table = 'enterprise_accounts' and ar.deleted_at is null
-          and ar.after_data ? 'approvalChain'
+          and (case when jsonb_typeof(ar.after_data) = 'string' then (ar.after_data #>> '{}')::jsonb else ar.after_data end) ? 'approvalChain'
           and (${status === "all" ? sql`true` : sql`ar.status::text = ${status}`})
         order by ar.created_at desc
         limit 200

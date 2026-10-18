@@ -1,6 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sqlHierarchyScopeCondition } from "@/lib/api/scope-middleware";
-import { allowedRowDomains } from "@/lib/permissions/domain-scope";
+import { allowedRowDomains, sessionDomainFilter } from "@/lib/permissions/domain-scope";
 import { withReadPg } from "@/lib/db/local-postgres";
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -983,6 +983,14 @@ export class LedgerReportService {
         rozQuery = rozQuery.in("roznamcha_entries.country_id", input.session.countryIds);
         priorRozQuery = priorRozQuery.in("roznamcha_entries.country_id", input.session.countryIds);
       }
+    }
+
+    // Business-only login on a SHARED ("both") account: Shipping-tagged roznamcha activity is never part of its statement or its
+    // opening balance (the mirror of the Shipping-only domain filter of the Shipping statement).
+    if (sessionDomainFilter(input.session) === "business") {
+      const notShipping = "operational_domain.is.null,operational_domain.neq.shipping";
+      rozQuery = rozQuery.or(notShipping, { foreignTable: "roznamcha_entries" });
+      priorRozQuery = priorRozQuery.or(notShipping, { foreignTable: "roznamcha_entries" });
     }
 
     const [batchRes, rozRes, jlRes, priorBatchRes, priorRozRes] = await Promise.all([

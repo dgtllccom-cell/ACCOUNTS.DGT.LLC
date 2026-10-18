@@ -917,7 +917,7 @@ export async function POST(request: NextRequest) {
               'enterprise_accounts', ${accountId}::uuid,
               ${validCountryId}::uuid, ${validCountryBranchId}::uuid, ${validCityBranchId}::uuid, ${validActorId}::uuid,
               ${chainState ? "Shipping Line account: Country Admin approval, then Operations Country Admin approval, before activation." : "New account requires Operations Admin approval before activation."},
-              ${JSON.stringify({
+              ${tx.json({
                 accountId,
                 accountCode: issuedCode,
                 name: body.name,
@@ -934,7 +934,7 @@ export async function POST(request: NextRequest) {
                 cityBranchId: validCityBranchId,
                 ledgerId,
                 ...(chainState ?? {})
-              })}::jsonb
+              } as never)}::jsonb
             )
             returning id;
           `;
