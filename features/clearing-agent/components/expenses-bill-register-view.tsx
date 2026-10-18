@@ -41,8 +41,16 @@ const DICT = {
     other_summary: "Other Expense Summary",
     country_wise_expenses: "Country Wise Expenses",
     country_wise_customer: "Country Wise Customer Expenses",
+    country_wise_truck: "Country Wise Truck Expenses",
+    country_wise_customs: "Country Wise Custom Bills",
+    country_wise_other: "Country Wise Other Expenses",
     country_wise_ledger: "Country Wise Ledger Transfer (USD)",
+    country_wise_ledger_balance: "Country Wise Ledger Transfer & Balance (USD)",
     total_expenses: "Total Expenses",
+    total_bills: "Total Bills",
+    transferred_to_ledger: "Transferred to Ledger",
+    pending_review: "Pending Review",
+    remaining_balance: "Remaining Balance",
     approved: "Approved",
     pending: "Pending",
     rejected: "Rejected",
@@ -90,8 +98,14 @@ const DICT = {
     col_currency: "Currency",
     col_status: "Status",
     col_actions: "Actions",
-    col_total_usd: "Total (USD)",
-    col_total_transfer: "Total Transfer (USD)",
+    col_total_usd: "Total Bills",
+    col_total_transfer: "Total (USD)",
+    col_transferred: "Transferred",
+    col_pending: "Pending",
+    col_remaining: "Remaining",
+    col_total_amount: "Total (USD)",
+    col_transfer_ledger: "Transfer Ledger",
+    col_ledger_remaining: "Remaining Balance",
     showing: "Showing 1 to 10 of 125 records",
     per_page: "10 / page",
     lang_auto_note: "Language switched: layout, buttons, dropdowns, and filters automatically follow active language direction."
@@ -107,8 +121,16 @@ const DICT = {
     other_summary: "دیگر اخراجات کا خلاصہ",
     country_wise_expenses: "ملک کے حساب سے اخراجات",
     country_wise_customer: "ملک کے حساب سے کسٹمر اخراجات",
+    country_wise_truck: "ملک کے حساب سے ٹرک اخراجات",
+    country_wise_customs: "ملک کے حساب سے کسٹم بلز",
+    country_wise_other: "ملک کے حساب سے دیگر اخراجات",
     country_wise_ledger: "ملک کے حساب سے لیجر ٹرانسفر (امریکی ڈالر)",
+    country_wise_ledger_balance: "ملک کے حساب سے لیجر ٹرانسفر و بیلنس (امریکی ڈالر)",
     total_expenses: "کل اخراجات",
+    total_bills: "کل بلز",
+    transferred_to_ledger: "لیجر میں ٹرانسفر شدہ",
+    pending_review: "زیر التواء",
+    remaining_balance: "بقایا بیلنس",
     approved: "منظور شدہ",
     pending: "زیر التواء",
     rejected: "مسترد",
@@ -156,25 +178,39 @@ const DICT = {
     col_currency: "کرنسی",
     col_status: "حالت",
     col_actions: "اعمالیات",
-    col_total_usd: "کل اخراجات (USD)",
-    col_total_transfer: "کل ٹرانسفر (USD)",
-    showing: "125 میں سے 1 تا 10 ریکارڈ دکھائے جا رہے ہیں",
+    col_total_usd: "کل بلز",
+    col_total_transfer: "کل رقم (USD)",
+    col_transferred: "ٹرانسفر شدہ",
+    col_pending: "زیر التواء",
+    col_remaining: "بقایا رقم",
+    col_total_amount: "کل رقم (USD)",
+    col_transfer_ledger: "ٹرانسفر لیجر",
+    col_ledger_remaining: "بقایا بیلنس",
+    showing: "125 میں سے 1 سے 10 ریکارڈ دکھائے جا رہے ہیں",
     per_page: "10 / صفحہ",
     lang_auto_note: "زبان تبدیل کرنے پر تمام بٹن، ڈراپ ڈاؤن، فلٹرز اور لے آؤٹ کی سمت خودکار طور پر تبدیل ہو جاتی ہے۔"
   },
   fa: {
     customer_title: "ثبت هزینه‌های مشتری",
-    truck_title: "ثبت هزینه‌های کامیون",
-    customs_title: "ثبت فاکتورهای گمرک",
+    truck_title: "ثبت هزینه‌های موتر",
+    customs_title: "ثبت صورتحساب‌های گمرک",
     other_title: "ثبت سایر هزینه‌ها",
     customer_summary: "خلاصه هزینه‌های مشتری",
-    truck_summary: "خلاصه هزینه‌های کامیون",
-    customs_summary: "خلاصه فاکتورهای گمرک",
+    truck_summary: "خلاصه هزینه‌های موتر",
+    customs_summary: "خلاصه صورتحساب‌های گمرک",
     other_summary: "خلاصه سایر هزینه‌ها",
     country_wise_expenses: "هزینه‌ها به تفکیک کشور",
     country_wise_customer: "هزینه‌های مشتری به تفکیک کشور",
+    country_wise_truck: "هزینه‌های موتر به تفکیک کشور",
+    country_wise_customs: "صورتحساب‌های گمرک به تفکیک کشور",
+    country_wise_other: "سایر هزینه‌ها به تفکیک کشور",
     country_wise_ledger: "انتقال حساب به تفکیک کشور (دلار آمریکا)",
+    country_wise_ledger_balance: "انتقال به دفتر کل و مانده به تفکیک کشور (دلار)",
     total_expenses: "کل هزینه‌ها",
+    total_bills: "کل صورتحساب‌ها",
+    transferred_to_ledger: "انتقال به دفتر کل",
+    pending_review: "در انتظار بررسی",
+    remaining_balance: "مانده باقیمانده",
     approved: "تأیید شده",
     pending: "در انتظار",
     rejected: "رد شده",
@@ -222,8 +258,14 @@ const DICT = {
     col_currency: "ارز",
     col_status: "وضعیت",
     col_actions: "عملیات",
-    col_total_usd: "مجموع (دلار)",
+    col_total_usd: "مجموع صورتحساب",
     col_total_transfer: "مبلغ انتقال کل (دلار)",
+    col_transferred: "تأیید و انتقال",
+    col_pending: "در انتظار",
+    col_remaining: "مانده باقیمانده",
+    col_total_amount: "مبلغ کل (دلار)",
+    col_transfer_ledger: "انتقال به دفتر کل",
+    col_ledger_remaining: "مانده باقیمانده",
     showing: "نمایش ۱ تا ۱۰ از ۱۲۵ رکورد",
     per_page: "۱۰ / صفحه",
     lang_auto_note: "با تغییر زبان، دکمه‌ها، منوهای کشویی، فیلترها و جهت چیدمان به صورت خودکار به‌روزرسانی می‌شوند."
@@ -239,8 +281,16 @@ const DICT = {
     other_summary: "ملخص المصاريف الأخرى",
     country_wise_expenses: "المصاريف حسب الدولة",
     country_wise_customer: "مصاريف العملاء حسب الدولة",
+    country_wise_truck: "مصاريف الشاحنات حسب الدولة",
+    country_wise_customs: "فواتير الجمارك حسب الدولة",
+    country_wise_other: "المصاريف الأخرى حسب الدولة",
     country_wise_ledger: "تحويلات الأستاذ حسب الدولة (دولار أمريكي)",
+    country_wise_ledger_balance: "تحويلات الأستاذ والرصيد المتبقي حسب الدولة (دولار)",
     total_expenses: "إجمالي المصروفات",
+    total_bills: "إجمالي الفواتير",
+    transferred_to_ledger: "المحول لدفتر الأستاذ",
+    pending_review: "قيد المراجعة",
+    remaining_balance: "الرصيد المتبقي",
     approved: "المعتمد",
     pending: "قيد المراجعة",
     rejected: "المرفوض",
@@ -288,8 +338,14 @@ const DICT = {
     col_currency: "العملة",
     col_status: "الحالة",
     col_actions: "الإجراءات",
-    col_total_usd: "الإجمالي (دولار أمريكي)",
+    col_total_usd: "إجمالي الفواتير",
     col_total_transfer: "إجمالي التحويل (دولار أمريكي)",
+    col_transferred: "المحول للأستاذ",
+    col_pending: "قيد الانتظار",
+    col_remaining: "الرصيد المتبقي",
+    col_total_amount: "إجمالي المبلغ (دولار)",
+    col_transfer_ledger: "المحول للأستاذ",
+    col_ledger_remaining: "الرصيد المتبقي",
     showing: "عرض 1 إلى 10 من أصل 125 سجل",
     per_page: "10 / صفحة",
     lang_auto_note: "عند تغيير اللغة، سيتم تحديث الأزرار والقوائم المنسدلة والفلاتر واتجاه الصفحة تلقائياً."
@@ -305,8 +361,16 @@ const DICT = {
     other_summary: "د نورو لګښتونو لنډیز",
     country_wise_expenses: "د هیواد له مخې لګښتونه",
     country_wise_customer: "د هیواد له مخې د پیرودونکي لګښتونه",
+    country_wise_truck: "د هیوادونو له مخې د موټرو لګښتونه",
+    country_wise_customs: "د هیوادونو له مخې د ګمرک بلونه",
+    country_wise_other: "د هیوادونو له مخې نور لګښتونه",
     country_wise_ledger: "د هیواد له مخې لیجر لیږد (امریکایي ډالر)",
+    country_wise_ledger_balance: "د هیواد له مخې د لیجر لیږد او پاتې بیلانس (ډالر)",
     total_expenses: "ټول لګښتونه",
+    total_bills: "ټول بلونه",
+    transferred_to_ledger: "لیجر ته لیږدول شوی",
+    pending_review: "تر کتنې لاندې",
+    remaining_balance: "پاتې بیلانس",
     approved: "منظور شوی",
     pending: "پاتې",
     rejected: "رد شوی",
@@ -354,16 +418,44 @@ const DICT = {
     col_currency: "اسعار",
     col_status: "حالت",
     col_actions: "عملیات",
-    col_total_usd: "ټول لګښت (ډالر)",
+    col_total_usd: "ټول بلونه",
     col_total_transfer: "د لیږد ټول مقدار (ډالر)",
+    col_transferred: "لیږدول شوی",
+    col_pending: "ځنډول شوی",
+    col_remaining: "پاتې رقم",
+    col_total_amount: "ټول مقدار (ډالر)",
+    col_transfer_ledger: "لیجر ته لیږدول",
+    col_ledger_remaining: "پاتې بیلانس",
     showing: "له ۱۲۵ ریکارډونو څخه ۱ تر ۱۰ ښودل کیږي",
     per_page: "۱۰ / پاڼه",
     lang_auto_note: "د ژبې په بدلولو سره، تڼۍ، انتخابي لستونه، فلټرونه او د پاڼې لوری په خپله بدلیږي."
   }
 };
 
-const CUSTOMER_FILTER_OPTIONS = ["Al Noor Trading LLC", "Faisal Enterprises", "Kabul Star Ltd"];
-const EXPENSE_TYPE_FILTER_OPTIONS = ["Travel Expense", "Marketing Expense", "Fuel Expense", "Maintenance Expense"];
+const CUSTOMER_FILTER_OPTIONS = [
+  "Al Noor Trading LLC",
+  "Faisal Enterprises",
+  "Kabul Star Ltd",
+  "Chaman Logistics Group",
+  "Kandahar Transit Services"
+];
+const EXPENSE_TYPE_FILTER_OPTIONS = [
+  "Customs Clearance",
+  "Border Transport Fee",
+  "Travel Expense",
+  "Marketing Expense",
+  "Fuel Expense",
+  "Maintenance Expense",
+  "Port Handling & Terminal"
+];
+const BRANCH_FILTER_OPTIONS = [
+  "Chaman / چمن (Shipping Branch)",
+  "Dubai / دبئی (Port & Al Ras)",
+  "Kandahar / قندھار (Shipping Branch)",
+  "Quetta / کوئٹہ",
+  "Karachi / کراچی",
+  "Kabul / کابل"
+];
 
 export function ExpensesBillRegisterView({ category, onOpenEntryForm }: ExpensesBillRegisterViewProps) {
   const activeLang = useActiveLanguage();
@@ -404,9 +496,18 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
       ? t.customs_summary
       : t.other_summary;
 
+  const countryWiseCategoryTitle =
+    category === "customer"
+      ? t.country_wise_customer
+      : category === "truck"
+      ? t.country_wise_truck
+      : category === "customs"
+      ? t.country_wise_customs
+      : t.country_wise_other;
+
   const partyHeader = category === "customer" ? t.col_customer : t.col_party;
 
-  // Master demo data matching screenshot precisely
+  // Master demo data matching real database branches (UAE, Pakistan Chaman, Afghanistan Kandahar)
   const rawRows = useMemo(() => {
     const prefix = category === "customer" ? "CE" : category === "truck" ? "TE" : category === "customs" ? "CB" : "OE";
 
@@ -418,12 +519,12 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         countryCode: "AE",
         countryName: t.uae,
         flag: "🇦🇪",
-        branch: lang === "en" ? "Dubai" : lang === "ur" ? "دبئی" : lang === "fa" ? "دبی" : "دبي",
+        branch: lang === "en" ? "Dubai (Al Ras)" : lang === "ur" ? "دبئی (الراس)" : lang === "fa" ? "دبی (الراس)" : "دبي (الراس)",
         entryUser: lang === "en" ? "Ali Khan" : lang === "ur" ? "علی خان" : lang === "fa" ? "علی خان" : "علي خان",
         party:
           category === "customer"
             ? lang === "en" ? "Al Noor Trading LLC" : lang === "ur" ? "النور ٹریڈنگ ایل ایل سی" : lang === "fa" ? "شرکت النور تجارت" : "النور للتجارة ذ.م.م"
-            : category === "truck" ? "TRK-7865 / Ahmad Khan" : category === "customs" ? "Kabul Customs Border" : "SGS Inspection Services",
+            : category === "truck" ? "TRK-7865 / Ahmad Khan" : category === "customs" ? "Dubai Port Customs" : "SGS Inspection Services",
         expenseType: lang === "en" ? "Travel Expense" : lang === "ur" ? "سفری اخراجات" : lang === "fa" ? "هزینه سفر" : "مصاريف السفر",
         creditAcc: "4000-1001",
         debitAcc: "5100-2003",
@@ -438,7 +539,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         countryCode: "PK",
         countryName: t.pakistan,
         flag: "🇵🇰",
-        branch: lang === "en" ? "Karachi" : "کراچی",
+        branch: lang === "en" ? "Karachi Port" : "کراچی پورٹ",
         entryUser: lang === "en" ? "Sara Ahmed" : lang === "ur" ? "سارہ احمد" : "سارة أحمد",
         party:
           category === "customer"
@@ -475,21 +576,21 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         id: 4,
         expenseNo: `${prefix}-2024-0004`,
         date: "2024-09-04",
-        countryCode: "UZ",
-        countryName: t.uzbekistan,
-        flag: "🇺🇿",
-        branch: lang === "en" ? "Tashkent" : lang === "ur" ? "تاشقند" : "طشقند",
-        entryUser: lang === "en" ? "Nuriddin" : "نور الدین",
+        countryCode: "PK",
+        countryName: t.pakistan,
+        flag: "🇵🇰",
+        branch: lang === "en" ? "Chaman Shipping Branch" : lang === "ur" ? "چمن شپنگ برانچ" : lang === "fa" ? "شعبه باربری چمن" : "فرع شحن چمن",
+        entryUser: lang === "en" ? "Abdul Raziq" : "عبد الرازق",
         party:
           category === "customer"
-            ? lang === "en" ? "Tashkent Motors" : lang === "ur" ? "تاشقند موٹرز" : lang === "fa" ? "تاشکند موتورز" : "طشقند موتورز"
-            : category === "truck" ? "TRK-2234 / Sherzod" : category === "customs" ? "Tashkent Customs Cargo" : "Legal & Notary Fee",
-        expenseType: lang === "en" ? "Office Supplies" : lang === "ur" ? "دفتر کا سامان" : lang === "fa" ? "لوازم اداری" : "مستلزمات مكتبية",
+            ? lang === "en" ? "Chaman Logistics Group" : lang === "ur" ? "چمن لاجسٹکس گروپ" : "گروه لجستیک چمن"
+            : category === "truck" ? "TRK-2234 / Sherzod" : category === "customs" ? "Chaman Border Customs" : "Border Crossing Clearance",
+        expenseType: lang === "en" ? "Customs Clearance" : lang === "ur" ? "کسٹم کلیئرنس" : lang === "fa" ? "ترخیص گمرکی" : "التخليص الجمركي",
         creditAcc: "4000-4001",
         debitAcc: "5100-5001",
-        amount: "430.00",
+        amount: "1,430.00",
         currency: "USD",
-        status: "rejected"
+        status: "approved"
       },
       {
         id: 5,
@@ -498,12 +599,12 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         countryCode: "AE",
         countryName: t.uae,
         flag: "🇦🇪",
-        branch: lang === "en" ? "Abu Dhabi" : "ابوظہبی",
+        branch: lang === "en" ? "Dubai Port" : "دبئی پورٹ",
         entryUser: lang === "en" ? "Fatima Noor" : "فاطمہ نور",
         party:
           category === "customer"
             ? lang === "en" ? "Desert Line LLC" : lang === "ur" ? "ڈیزرٹ لائنز ایل ایل سی" : lang === "fa" ? "دیسرت لاین لیمیتد" : "ديزرت لاين ذ.م.م"
-            : category === "truck" ? "TRK-8812 / Bilal Khan" : category === "customs" ? "Abu Dhabi Customs Port" : "Storage & Warehousing",
+            : category === "truck" ? "TRK-8812 / Bilal Khan" : category === "customs" ? "Dubai Port Customs" : "Storage & Warehousing",
         expenseType: lang === "en" ? "Maintenance Expense" : lang === "ur" ? "مینٹیننس اخراجات" : lang === "fa" ? "هزینه نگهداری" : "مصاريف الصيانة",
         creditAcc: "4000-1003",
         debitAcc: "5100-2001",
@@ -518,12 +619,12 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         countryCode: "PK",
         countryName: t.pakistan,
         flag: "🇵🇰",
-        branch: lang === "en" ? "Lahore" : "لاہور",
+        branch: lang === "en" ? "Quetta" : "کوئٹہ",
         entryUser: lang === "en" ? "Imran Sheikh" : "عمران شیخ",
         party:
           category === "customer"
             ? lang === "en" ? "Royal Traders" : lang === "ur" ? "رائل ٹریڈرز" : "رویال تریدرز"
-            : category === "truck" ? "TRK-3310 / Tariq Mehmood" : category === "customs" ? "Lahore Dry Port Customs" : "Freight Brokerage",
+            : category === "truck" ? "TRK-3310 / Tariq Mehmood" : category === "customs" ? "Quetta Dry Port Customs" : "Freight Brokerage",
         expenseType: lang === "en" ? "Fuel Expense" : lang === "ur" ? "فیول اخراجات" : lang === "fa" ? "هزینه سوخت" : "مصاريف الوقود",
         creditAcc: "4000-2001",
         debitAcc: "5100-3003",
@@ -538,13 +639,13 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         countryCode: "AF",
         countryName: t.afghanistan,
         flag: "🇦🇫",
-        branch: lang === "en" ? "Mazar-i-Sharif" : "مزار شریف",
+        branch: lang === "en" ? "Kandahar Shipping Branch" : lang === "ur" ? "قندھار شپنگ برانچ" : lang === "fa" ? "شعبه باربری قندهار" : "فرع شحن قندهار",
         entryUser: lang === "en" ? "Zainab Malik" : "زینب ملک",
         party:
           category === "customer"
-            ? lang === "en" ? "Balkh Trading Co" : lang === "ur" ? "بلخ ٹریڈنگ کمپنی" : "بلخ تریدینگ"
-            : category === "truck" ? "TRK-5541 / Jan Agha" : category === "customs" ? "Hairatan Border Customs" : "Security Escort Fee",
-        expenseType: lang === "en" ? "Travel Expense" : lang === "ur" ? "سفری اخراجات" : lang === "fa" ? "هزینه سفر" : "مصاريف السفر",
+            ? lang === "en" ? "Kandahar Transit Services" : lang === "ur" ? "قندھار ٹرانزٹ سروسز" : "خدمات ترانزیت قندهار"
+            : category === "truck" ? "TRK-5541 / Jan Agha" : category === "customs" ? "Spin Boldak Border" : "Security Escort Fee",
+        expenseType: lang === "en" ? "Border Transport Fee" : lang === "ur" ? "بارڈر ٹرانسپورٹ فیس" : lang === "fa" ? "کرایه حمل مرزی" : "رسوم نقل الحدود",
         creditAcc: "4000-3002",
         debitAcc: "5100-4001",
         amount: "980.00",
@@ -555,21 +656,21 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         id: 8,
         expenseNo: `${prefix}-2024-0008`,
         date: "2024-09-08",
-        countryCode: "UZ",
-        countryName: t.uzbekistan,
-        flag: "🇺🇿",
-        branch: lang === "en" ? "Samarkand" : "سمرقند",
-        entryUser: lang === "en" ? "Javlon Karimov" : "جاوید کریم",
+        countryCode: "PK",
+        countryName: t.pakistan,
+        flag: "🇵🇰",
+        branch: lang === "en" ? "Chaman Shipping Branch" : lang === "ur" ? "چمن شپنگ برانچ" : lang === "fa" ? "شعبه باربری چمن" : "فرع شحن چمن",
+        entryUser: lang === "en" ? "Tariq Mehmood" : "طارق محمود",
         party:
           category === "customer"
-            ? lang === "en" ? "UzAuto Parts" : lang === "ur" ? "ازبک پارٹنرز" : "اوزیک اکسپیم"
-            : category === "truck" ? "TRK-1120 / Timur" : category === "customs" ? "Termez Port Customs" : "Loading Crane Hire",
+            ? lang === "en" ? "Balkh Trading Co" : lang === "ur" ? "بلخ ٹریڈنگ کمپنی" : "بلخ تریدینگ"
+            : category === "truck" ? "TRK-1120 / Timur" : category === "customs" ? "Chaman Terminal Customs" : "Loading Crane Hire",
         expenseType: lang === "en" ? "Marketing Expense" : lang === "ur" ? "مارکیٹنگ اخراجات" : lang === "fa" ? "هزینه بازاریابی" : "مصاريف التسويق",
         creditAcc: "4000-4002",
         debitAcc: "5100-5002",
         amount: "1,340.00",
         currency: "USD",
-        status: "rejected"
+        status: "approved"
       },
       {
         id: 9,
@@ -578,12 +679,12 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         countryCode: "AE",
         countryName: t.uae,
         flag: "🇦🇪",
-        branch: lang === "en" ? "Sharjah" : "شارجہ",
+        branch: lang === "en" ? "Dubai (Al Ras)" : lang === "ur" ? "دبئی (الراس)" : "دبي (الراس)",
         entryUser: lang === "en" ? "Omar Abdullah" : "عمر عبداللہ",
         party:
           category === "customer"
             ? lang === "en" ? "Bright General Trading" : lang === "ur" ? "برائٹ جنرل ٹریڈنگ" : "برایت جنرال تریدینگ"
-            : category === "truck" ? "TRK-6677 / Khalid" : category === "customs" ? "Hamriyah Port Customs" : "Software & IT Gateway",
+            : category === "truck" ? "TRK-6677 / Khalid" : category === "customs" ? "Dubai Customs Port" : "Software & IT Gateway",
         expenseType: lang === "en" ? "Software & IT" : lang === "ur" ? "سافٹ ویئر و آئی ٹی" : lang === "fa" ? "نرم‌افزار و IT" : "برمجيات وتقنية معلومات",
         creditAcc: "4000-1002",
         debitAcc: "5100-2004",
@@ -736,7 +837,6 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
                         <option value="AE">{t.uae}</option>
                         <option value="PK">{t.pakistan}</option>
                         <option value="AF">{t.afghanistan}</option>
-                        <option value="UZ">{t.uzbekistan}</option>
                       </select>
                     </div>
 
@@ -749,10 +849,9 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
                         className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                       >
                         <option value="all">{t.select_branch}</option>
-                        <option value="Dubai">Dubai / دبئی</option>
-                        <option value="Karachi">Karachi / کراچی</option>
-                        <option value="Kabul">Kabul / کابل</option>
-                        <option value="Tashkent">Tashkent / تاشقند</option>
+                        {BRANCH_FILTER_OPTIONS.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -889,177 +988,168 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
           UPPER 3 PANELS: Summary Cards + Country Analytics Tables
          ───────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-          {/* Card 1: 4 Colored KPI Cards */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
-            <div className="flex items-center gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
-              <FileText className="h-4 w-4 text-blue-600" />
-              <h3 className="font-bold text-xs text-slate-900 dark:text-white">{summaryTitle}</h3>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {/* Blue: Total Expenses */}
-              <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-2.5 flex items-center justify-between dark:border-blue-900 dark:bg-blue-950/40">
-                <div>
-                  <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.total_expenses}</span>
-                  <span className="font-mono font-black text-blue-950 dark:text-blue-200 text-sm">$ 124,580</span>
-                  <span className="text-[10px] text-slate-400 block">125 {t.records}</span>
-                </div>
-                <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
-                  <DollarSign className="h-4 w-4" />
-                </div>
-              </div>
-
-              {/* Green: Approved */}
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-2.5 flex items-center justify-between dark:border-emerald-900 dark:bg-emerald-950/40">
-                <div>
-                  <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.approved}</span>
-                  <span className="font-mono font-black text-emerald-900 dark:text-emerald-200 text-sm">$ 89,230</span>
-                  <span className="text-[10px] text-slate-400 block">72 {t.records}</span>
-                </div>
-                <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="h-4 w-4" />
-                </div>
-              </div>
-
-              {/* Red: Rejected */}
-              <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-2.5 flex items-center justify-between dark:border-rose-900 dark:bg-rose-950/40">
-                <div>
-                  <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.rejected}</span>
-                  <span className="font-mono font-black text-rose-900 dark:text-rose-200 text-sm">$ 13,900</span>
-                  <span className="text-[10px] text-slate-400 block">15 {t.records}</span>
-                </div>
-                <div className="h-8 w-8 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0">
-                  <XCircle className="h-4 w-4" />
-                </div>
-              </div>
-
-              {/* Orange/Yellow: Pending */}
-              <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-2.5 flex items-center justify-between dark:border-amber-900 dark:bg-amber-950/40">
-                <div>
-                  <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.pending}</span>
-                  <span className="font-mono font-black text-amber-900 dark:text-amber-200 text-sm">$ 21,450</span>
-                  <span className="text-[10px] text-slate-400 block">38 {t.records}</span>
-                </div>
-                <div className="h-8 w-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
-                  <Clock className="h-4 w-4" />
-                </div>
-              </div>
-            </div>
+        {/* Card 1: 4 Colored KPI Cards */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
+          <div className="flex items-center gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
+            <FileText className="h-4 w-4 text-blue-600" />
+            <h3 className="font-bold text-xs text-slate-900 dark:text-white">{summaryTitle}</h3>
           </div>
 
-          {/* Card 2: Country Wise Expenses Breakdown Table */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between overflow-hidden">
-            <div className="flex items-center gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
-              <span className="h-2 w-2 rounded-full bg-blue-600" />
-              <h3 className="font-bold text-xs text-slate-900 dark:text-white">{t.country_wise_customer}</h3>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {/* Blue: Total Bills */}
+            <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-2.5 flex items-center justify-between dark:border-blue-900 dark:bg-blue-950/40">
+              <div>
+                <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.total_bills}</span>
+                <span className="font-mono font-black text-blue-950 dark:text-blue-200 text-sm">$ 124,580</span>
+                <span className="text-[10px] text-slate-400 block">125 {t.records}</span>
+              </div>
+              <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
+                <DollarSign className="h-4 w-4" />
+              </div>
             </div>
 
-            <div className="overflow-x-auto text-[11px]">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
-                    <th className="pb-1.5">{t.country}</th>
-                    <th className="pb-1.5 text-right">{t.col_total_usd}</th>
-                    <th className="pb-1.5 text-right">{t.approved}</th>
-                    <th className="pb-1.5 text-right">{t.pending}</th>
-                    <th className="pb-1.5 text-right">{t.rejected}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60 font-mono">
-                  <tr>
-                    <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                      <span>🇦🇪</span>
-                      <span>{t.uae}</span>
-                    </td>
-                    <td className="py-1 text-right font-bold">$ 52,430</td>
-                    <td className="py-1 text-right text-emerald-600">$ 38,120</td>
-                    <td className="py-1 text-right text-amber-600">$ 9,210</td>
-                    <td className="py-1 text-right text-rose-600">$ 5,100</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                      <span>🇵🇰</span>
-                      <span>{t.pakistan}</span>
-                    </td>
-                    <td className="py-1 text-right font-bold">$ 34,250</td>
-                    <td className="py-1 text-right text-emerald-600">$ 24,680</td>
-                    <td className="py-1 text-right text-amber-600">$ 6,400</td>
-                    <td className="py-1 text-right text-rose-600">$ 3,170</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                      <span>🇦🇫</span>
-                      <span>{t.afghanistan}</span>
-                    </td>
-                    <td className="py-1 text-right font-bold">$ 22,560</td>
-                    <td className="py-1 text-right text-emerald-600">$ 16,230</td>
-                    <td className="py-1 text-right text-amber-600">$ 4,980</td>
-                    <td className="py-1 text-right text-rose-600">$ 1,350</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                      <span>🇺🇿</span>
-                      <span>{t.uzbekistan}</span>
-                    </td>
-                    <td className="py-1 text-right font-bold">$ 15,340</td>
-                    <td className="py-1 text-right text-emerald-600">$ 10,200</td>
-                    <td className="py-1 text-right text-amber-600">$ 880</td>
-                    <td className="py-1 text-right text-rose-600">$ 4,260</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Card 3: Country Wise Ledger Transfer (USD) Table */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between overflow-hidden">
-            <div className="flex items-center gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
-              <ArrowRightLeft className="h-4 w-4 text-blue-600" />
-              <h3 className="font-bold text-xs text-slate-900 dark:text-white">{t.country_wise_ledger}</h3>
+            {/* Green: Transferred to Ledger */}
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-2.5 flex items-center justify-between dark:border-emerald-900 dark:bg-emerald-950/40">
+              <div>
+                <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.transferred_to_ledger}</span>
+                <span className="font-mono font-black text-emerald-900 dark:text-emerald-200 text-sm">$ 89,230</span>
+                <span className="text-[10px] text-slate-400 block">72 {t.records}</span>
+              </div>
+              <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                <CheckCircle2 className="h-4 w-4" />
+              </div>
             </div>
 
-            <div className="overflow-x-auto text-[11px]">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
-                    <th className="pb-1.5">{t.country}</th>
-                    <th className="pb-1.5 text-right">{t.col_total_transfer}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60 font-mono">
-                  <tr>
-                    <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                      <span>🇦🇪</span>
-                      <span>{t.uae}</span>
-                    </td>
-                    <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">$ 41,500</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                      <span>🇵🇰</span>
-                      <span>{t.pakistan}</span>
-                    </td>
-                    <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">$ 28,300</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                      <span>🇦🇫</span>
-                      <span>{t.afghanistan}</span>
-                    </td>
-                    <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">$ 17,950</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                      <span>🇺🇿</span>
-                      <span>{t.uzbekistan}</span>
-                    </td>
-                    <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">$ 11,600</td>
-                  </tr>
-                </tbody>
-              </table>
+            {/* Amber: Pending Review */}
+            <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-2.5 flex items-center justify-between dark:border-amber-900 dark:bg-amber-950/40">
+              <div>
+                <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.pending_review}</span>
+                <span className="font-mono font-black text-amber-900 dark:text-amber-200 text-sm">$ 21,450</span>
+                <span className="text-[10px] text-slate-400 block">38 {t.records}</span>
+              </div>
+              <div className="h-8 w-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
+                <Clock className="h-4 w-4" />
+              </div>
+            </div>
+
+            {/* Rose: Remaining Balance */}
+            <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-2.5 flex items-center justify-between dark:border-rose-900 dark:bg-rose-950/40">
+              <div>
+                <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.remaining_balance}</span>
+                <span className="font-mono font-black text-rose-900 dark:text-rose-200 text-sm">$ 13,900</span>
+                <span className="text-[10px] text-slate-400 block">15 {t.records}</span>
+              </div>
+              <div className="h-8 w-8 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0">
+                <ArrowRightLeft className="h-4 w-4" />
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Card 2: Country Wise Expenses Breakdown Table */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between overflow-hidden">
+          <div className="flex items-center gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
+            <span className="h-2 w-2 rounded-full bg-blue-600" />
+            <h3 className="font-bold text-xs text-slate-900 dark:text-white">{countryWiseCategoryTitle}</h3>
+          </div>
+
+          <div className="overflow-x-auto text-[11px]">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
+                  <th className="pb-1.5">{t.country}</th>
+                  <th className="pb-1.5 text-right">{t.col_total_usd}</th>
+                  <th className="pb-1.5 text-right">{t.col_transferred}</th>
+                  <th className="pb-1.5 text-right">{t.col_pending}</th>
+                  <th className="pb-1.5 text-right">{t.col_remaining}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60 font-mono">
+                <tr>
+                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
+                    <span>🇦🇪</span>
+                    <span>{t.uae}</span>
+                  </td>
+                  <td className="py-1 text-right font-bold">$ 52,430</td>
+                  <td className="py-1 text-right text-emerald-600 font-semibold">$ 38,120</td>
+                  <td className="py-1 text-right text-amber-600 font-semibold">$ 9,210</td>
+                  <td className="py-1 text-right text-rose-600 font-semibold">$ 5,100</td>
+                </tr>
+                <tr>
+                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
+                    <span>🇵🇰</span>
+                    <span>{t.pakistan}</span>
+                  </td>
+                  <td className="py-1 text-right font-bold">$ 46,590</td>
+                  <td className="py-1 text-right text-emerald-600 font-semibold">$ 34,880</td>
+                  <td className="py-1 text-right text-amber-600 font-semibold">$ 7,280</td>
+                  <td className="py-1 text-right text-rose-600 font-semibold">$ 4,430</td>
+                </tr>
+                <tr>
+                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
+                    <span>🇦🇫</span>
+                    <span>{t.afghanistan}</span>
+                  </td>
+                  <td className="py-1 text-right font-bold">$ 25,560</td>
+                  <td className="py-1 text-right text-emerald-600 font-semibold">$ 16,230</td>
+                  <td className="py-1 text-right text-amber-600 font-semibold">$ 4,960</td>
+                  <td className="py-1 text-right text-rose-600 font-semibold">$ 4,370</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Card 3: Country Wise Ledger Transfer & Balance Table */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between overflow-hidden">
+          <div className="flex items-center gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
+            <ArrowRightLeft className="h-4 w-4 text-blue-600" />
+            <h3 className="font-bold text-xs text-slate-900 dark:text-white">{t.country_wise_ledger_balance}</h3>
+          </div>
+
+          <div className="overflow-x-auto text-[11px]">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
+                  <th className="pb-1.5">{t.country}</th>
+                  <th className="pb-1.5 text-right">{t.col_total_amount}</th>
+                  <th className="pb-1.5 text-right">{t.col_transfer_ledger}</th>
+                  <th className="pb-1.5 text-right">{t.col_ledger_remaining}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60 font-mono">
+                <tr>
+                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
+                    <span>🇦🇪</span>
+                    <span>{t.uae}</span>
+                  </td>
+                  <td className="py-1 text-right font-bold text-slate-800 dark:text-slate-100">$ 52,430</td>
+                  <td className="py-1 text-right font-bold text-emerald-600">$ 38,120</td>
+                  <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">$ 14,310</td>
+                </tr>
+                <tr>
+                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
+                    <span>🇵🇰</span>
+                    <span>{t.pakistan}</span>
+                  </td>
+                  <td className="py-1 text-right font-bold text-slate-800 dark:text-slate-100">$ 46,590</td>
+                  <td className="py-1 text-right font-bold text-emerald-600">$ 34,880</td>
+                  <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">$ 11,710</td>
+                </tr>
+                <tr>
+                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
+                    <span>🇦🇫</span>
+                    <span>{t.afghanistan}</span>
+                  </td>
+                  <td className="py-1 text-right font-bold text-slate-800 dark:text-slate-100">$ 25,560</td>
+                  <td className="py-1 text-right font-bold text-emerald-600">$ 16,230</td>
+                  <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">$ 9,330</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
       {/* ─────────────────────────────────────────────────────────────
           COUNTRY FILTER TABS (Pills with Flags)
@@ -1087,7 +1177,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
           }`}
         >
           <span>🇦🇪</span>
-          <span>{t.uae} (42)</span>
+          <span>{t.uae} (52)</span>
         </button>
 
         <button
@@ -1100,7 +1190,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
           }`}
         >
           <span>🇵🇰</span>
-          <span>{t.pakistan} (31)</span>
+          <span>{t.pakistan} (45)</span>
         </button>
 
         <button
@@ -1114,19 +1204,6 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         >
           <span>🇦🇫</span>
           <span>{t.afghanistan} (28)</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setSelectedCountryTab("UZ")}
-          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition whitespace-nowrap ${
-            selectedCountryTab === "UZ"
-              ? "bg-blue-600 text-white shadow-2xs"
-              : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-          }`}
-        >
-          <span>🇺🇿</span>
-          <span>{t.uzbekistan} (24)</span>
         </button>
       </div>
 
