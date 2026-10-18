@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ArrowRight,
   ChevronDown,
@@ -72,12 +72,6 @@ export function LoginForm({
   const [showBiometricModal, setShowBiometricModal] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [biometricFeedback, setBiometricFeedback] = useState<string | null>(null);
-  // The store apps (DGT.llc B / BS) tag their web view's User-Agent. This screen has no working biometric sign-in (the button only probes
-  // the device), so it must not be offered inside a store app — App Review rejects controls that do nothing.
-  const [inStoreApp, setInStoreApp] = useState(false);
-  useEffect(() => {
-    setInStoreApp(/\bDGTllc-BS?\/\d/i.test(navigator.userAgent));
-  }, []);
 
   const currentLangObj = LANGUAGES.find((l) => l.code === lang) || LANGUAGES[0];
 
@@ -292,7 +286,6 @@ export function LoginForm({
         </button>
 
         {/* 5. Secondary Biometric Button: Face ID / Fingerprint */}
-        {!inStoreApp && (
         <button
           type="button"
           onClick={handleBiometricAuth}
@@ -301,7 +294,6 @@ export function LoginForm({
           <Fingerprint className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
           <span>{t.faceIdFingerprint}</span>
         </button>
-        )}
       </form>
 
       {/* ── 6. Centered Language Selector Dropdown ── */}
