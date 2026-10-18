@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -8,6 +9,7 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     const { id } = await context.params;
     const body = await req.json();
 
@@ -91,6 +93,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     const { id } = await context.params;
 
     const existingForScope = await withLocalPg(async (sql) => {

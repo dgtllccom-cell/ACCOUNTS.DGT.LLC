@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sqlHierarchyScopeCondition } from "@/lib/api/scope-middleware";
+import { allowedRowDomains, sessionDomainFilter } from "@/lib/permissions/domain-scope";
 import { withReadPg } from "@/lib/db/local-postgres";
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -238,7 +239,18 @@ export class LedgerReportService {
     // this change, dominated by connection overhead against the remote pooler).
     const viaPg = await withReadPg((sql) => this.listLedgersViaPg(sql, input));
     if (viaPg) return viaPg;
-    return this.listLedgersViaSupabase(input);
+    const rows = await this.listLedgersViaSupabase(input);
+    // The Postgres path filters by operational domain in SQL; this fallback must give the same answer.
+    const domains = allowedRowDomains(input.session);
+    if (!domains) return rows;
+    if (!rows.length) return rows;
+    const admin = createSupabaseAdminClient() as any;
+    const { data: led } = await admin.from("ledgers").select("id, enterprise_account_id").in("id", rows.map((r) => r.ledgerId));
+    const entByLedger = new Map<string, string | null>((led ?? []).map((l: any) => [l.id, l.enterprise_account_id ?? null]));
+    const entIds = [...new Set([...entByLedger.values()].filter(Boolean))] as string[];
+    const { data: ents } = entIds.length ? await admin.from("enterprise_accounts").select("id, operational_domain").in("id", entIds) : { data: [] };
+    const dom = new Map<string, string>((ents ?? []).map((d: any) => [d.id, d.operational_domain ?? "business"]));
+    return rows.filter((r) => { const e = entByLedger.get(r.ledgerId); return !e || domains.includes(dom.get(e) ?? "business"); });
   }
 
   private async listLedgersViaPg(sql: any, input: ListLedgersInput): Promise<LedgerLookupRow[]> {
@@ -276,11 +288,18 @@ export class LedgerReportService {
         )`
       : sql`true`;
 
+    // Business ↔ Shipping Line separation: a ledger belongs to the operational domain of its enterprise account (legacy
+    // account-only ledgers are Business). A single-domain login never lists the other domain's ledgers.
+    const allowedDomains = allowedRowDomains(session);
+    const domainCond = allowedDomains
+      ? sql`coalesce((SELECT ea.operational_domain FROM public.enterprise_accounts ea WHERE ea.id = ledgers.enterprise_account_id), 'business') = ANY(${allowedDomains}::text[])`
+      : sql`true`;
+
     const ledgerRows = await sql`
       SELECT id, scope, country_id, country_branch_id, city_branch_id, account_id, enterprise_account_id,
              code, name, currency, normal_balance, current_balance, debit_total, credit_total, is_active, created_at
       FROM public.ledgers
-      WHERE deleted_at IS NULL AND ${scopeCond} AND ${idCond} AND ${countryCond} AND ${countryBranchCond} AND ${cityBranchCond} AND ${scopeTabCond} AND ${shippingCond}
+      WHERE deleted_at IS NULL AND ${scopeCond} AND ${idCond} AND ${countryCond} AND ${countryBranchCond} AND ${cityBranchCond} AND ${scopeTabCond} AND ${shippingCond} AND ${domainCond}
       ORDER BY code ASC
       LIMIT ${limit}
     `;
@@ -964,6 +983,14 @@ export class LedgerReportService {
         rozQuery = rozQuery.in("roznamcha_entries.country_id", input.session.countryIds);
         priorRozQuery = priorRozQuery.in("roznamcha_entries.country_id", input.session.countryIds);
       }
+    }
+
+    // Business-only login on a SHARED ("both") account: Shipping-tagged roznamcha activity is never part of its statement or its
+    // opening balance (the mirror of the Shipping-only domain filter of the Shipping statement).
+    if (sessionDomainFilter(input.session) === "business") {
+      const notShipping = "operational_domain.is.null,operational_domain.neq.shipping";
+      rozQuery = rozQuery.or(notShipping, { foreignTable: "roznamcha_entries" });
+      priorRozQuery = priorRozQuery.or(notShipping, { foreignTable: "roznamcha_entries" });
     }
 
     const [batchRes, rozRes, jlRes, priorBatchRes, priorRozRes] = await Promise.all([

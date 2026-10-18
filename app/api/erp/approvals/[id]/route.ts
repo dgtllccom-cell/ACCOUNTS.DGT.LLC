@@ -6,6 +6,8 @@ import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { SupabaseApprovalsRepository } from "@/lib/api/approval-repository";
 import { requireErpSession } from "@/lib/auth/session";
 import { ApprovalService } from "@/lib/services/approval-service";
+import { advanceChain, canDecideChainStage, chainOf } from "@/lib/approval/account-approval-chain";
+import { ApiClientError } from "@/lib/api/response";
 
 type ApprovalRow = {
   id: string;
@@ -19,6 +21,7 @@ type ApprovalRow = {
   before_data?: any;
   action?: string;
   requested_by?: string;
+  country_branch_id?: string | null;
 };
 
 /** Apply the account-master side effects after the generic approval record is
@@ -128,13 +131,59 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     const nextStatus = statusByAction[body.action];
 
-    await service.decide(session, {
-      approvalRequestId,
-      status: nextStatus,
-      countryId: body.countryId ?? current.country_id,
-      cityBranchId: body.cityBranchId ?? current.city_branch_id,
-      note: body.note
-    });
+    // Shipping Line accounts opened by a branch-level login go through a two-stage chain recorded on THIS approval request
+    // (Country Admin, then Operations Country Admin). Each stage is decided only by its own role inside the request's country.
+    const chain = current.target_table === "enterprise_accounts" && current.status === "pending" ? chainOf(current.after_data) : null;
+    if (chain) {
+      const stage = Number(chain.approvalStage ?? 1);
+      const stageDef = (chain.approvalChain ?? []).find((s) => s.stage === stage);
+      if (!stageDef || !canDecideChainStage(session, stageDef.role, { ...current, operational_domain: (chain as { operationalDomain?: string }).operationalDomain ?? "shipping" })) {
+        throw new ApiClientError(
+          `This account is waiting for stage ${stage} (${stageDef?.label ?? "approver"}). You are not allowed to decide this stage.`,
+          { status: 403, code: "APPROVAL_STAGE_FORBIDDEN" }
+        );
+      }
+      if (body.action === "approve") {
+        const { done, next } = advanceChain(chain, session.userId, body.note);
+        if (!done) {
+          const upd = await supabase.from("approval_requests").update({ after_data: next }).eq("id", approvalRequestId).eq("status", "pending");
+          if (upd.error) throw new Error(upd.error.message);
+          const hist = await supabase.from("approval_status_history").insert({
+            approval_request_id: approvalRequestId,
+            from_status: "pending",
+            to_status: "pending",
+            actor_id: session.userId,
+            note: `Stage ${stage} approved (${stageDef.label}). Waiting for stage ${stage + 1}.${body.note ? " " + body.note : ""}`
+          });
+          if (hist.error) throw new Error(hist.error.message);
+          await auditApiAction(request, {
+            action: "approval.stage_approved",
+            entityTable: "approval_requests",
+            entityId: approvalRequestId,
+            before: current,
+            after: { stage, nextStage: stage + 1, note: body.note ?? null }
+          });
+          return apiOk({ approvalRequestId, requestNo: current.request_no, action: body.action, status: "pending", stage, nextStage: stage + 1, stageApprovals: next.stageApprovals });
+        }
+        // last stage approved: record it on the request, then fall through to the normal approval (account becomes Active)
+        await supabase.from("approval_requests").update({ after_data: next }).eq("id", approvalRequestId);
+      }
+      // reject / cancel by an eligible stage approver falls through to the normal decision (account archived, ledger stays inactive)
+      await new SupabaseApprovalsRepository().updateStatus({
+        approvalRequestId,
+        status: nextStatus,
+        actorId: session.userId,
+        note: body.note
+      });
+    } else {
+      await service.decide(session, {
+        approvalRequestId,
+        status: nextStatus,
+        countryId: body.countryId ?? current.country_id,
+        cityBranchId: body.cityBranchId ?? current.city_branch_id,
+        note: body.note
+      });
+    }
 
     if (current.target_table === "enterprise_accounts") {
       await applyEnterpriseAccountDecision(supabase, current, nextStatus, session.userId);
@@ -207,10 +256,20 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       nextStatus === "cancelled" ||
       current.target_table === "enterprise_accounts"
     ) {
-      await service.unlockRecord(session, {
-        recordTable: current.target_table,
-        recordId: current.target_id
-      });
+      if (chain) {
+        // The stage approver was already authorised for this exact request (canDecideChainStage); an Operations Country Admin holds no
+        // generic approvals:approve token (financial resource), so the lock is released directly instead of through the generic gate.
+        await new SupabaseApprovalsRepository().unlockRecord({
+          recordTable: current.target_table,
+          recordId: current.target_id,
+          unlockedBy: session.userId
+        });
+      } else {
+        await service.unlockRecord(session, {
+          recordTable: current.target_table,
+          recordId: current.target_id
+        });
+      }
     }
 
     await auditApiAction(request, {

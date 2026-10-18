@@ -100,6 +100,7 @@ export async function POST(req: NextRequest) {
     }
 
     let billId = header.id;
+    let createdNewHeader = false;
 
     if (billId) {
       // Check if bill exists and is not transferred
@@ -150,6 +151,7 @@ export async function POST(req: NextRequest) {
 
       if (billError) throw new Error("Failed to insert bill header: " + billError.message);
       billId = billData.id;
+      createdNewHeader = true;
       if (header.billTitle && billId) void translateMasterRecord("expenses_bills", billId, { bill_title: header.billTitle }, session.preferredLanguage ?? "en", session.userId || null);
     }
 
@@ -172,7 +174,11 @@ export async function POST(req: NextRequest) {
     }));
 
     const { error: linesError } = await supabase.from("expenses_bill_lines").insert(linesToInsert);
-    if (linesError) throw new Error("Failed to insert bill lines: " + linesError.message);
+    if (linesError) {
+      // never leave a header without lines behind (the header and its lines are saved as one bill)
+      if (createdNewHeader && billId) await supabase.from("expenses_bills").delete().eq("id", billId);
+      throw new Error("Failed to insert bill lines: " + linesError.message);
+    }
 
     const resPayload = { success: true, billId };
     if (idempotencyKey && tenantHash) {

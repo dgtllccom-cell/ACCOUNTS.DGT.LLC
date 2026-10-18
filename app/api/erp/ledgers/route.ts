@@ -4,6 +4,7 @@ import { ledgerPostingSchema } from "@/lib/api/erp-validation";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { authorizeApiScope, getScopeFromSearchParams, sqlHierarchyScopeCondition } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
+import { allowedRowDomains } from "@/lib/permissions/domain-scope";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
@@ -23,6 +24,12 @@ export async function GET(request: NextRequest) {
 
     const viaPg = await withLocalPg(async (sql) => {
       let rows: any[] = [];
+      // Business <-> Shipping separation: a ledger belongs to the operational domain of its enterprise account (legacy account-only
+      // ledgers are Business); a single-domain login never lists the other domain's ledgers, whatever the branch scope says.
+      const allowedDomains = allowedRowDomains(session);
+      const domainCond = allowedDomains
+        ? sql`coalesce((select ea.operational_domain from public.enterprise_accounts ea where ea.id = ledgers.enterprise_account_id), 'business') = any(${allowedDomains}::text[])`
+        : sql`true`;
 
       if (!session.isSuperAdmin) {
         const cityIds = session.cityBranchIds ?? [];
@@ -37,6 +44,7 @@ export async function GET(request: NextRequest) {
           from public.ledgers
           where deleted_at is null
             and ${sqlHierarchyScopeCondition(sql, session, "")}
+            and ${domainCond}
             and (${scope.countryId ? sql`country_id = ${scope.countryId}` : sql`true`})
             and (${scope.countryBranchId ? sql`country_branch_id = ${scope.countryBranchId}` : sql`true`})
             and (${scope.cityBranchId ? sql`city_branch_id = ${scope.cityBranchId}` : sql`true`})

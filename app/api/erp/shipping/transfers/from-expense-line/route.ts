@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -17,6 +18,7 @@ import { createShippingTransfer } from "@/lib/services/shipping-transfer-service
 export async function POST(req: NextRequest) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     const body = await req.json();
     const { orderId, expenseLineId, note } = body ?? {};
     if (!orderId) return NextResponse.json({ success: false, error: "orderId is required" }, { status: 400 });

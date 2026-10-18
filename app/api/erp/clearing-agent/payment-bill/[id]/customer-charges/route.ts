@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -14,6 +15,7 @@ import { listChargesForBill, createBillCustomerCharge } from "@/lib/services/cle
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     authorizeApiScope(session, { resource: "clearing_bill_customer_charges", action: "read" });
     if (!sessionInDomain(session, "shipping")) {
       return NextResponse.json({ success: false, error: "This action requires shipping domain access." }, { status: 403 });
@@ -39,6 +41,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     authorizeApiScope(session, { resource: "clearing_bill_customer_charges", action: "create" });
     if (!sessionInDomain(session, "shipping")) {
       return NextResponse.json({ success: false, error: "This action requires shipping domain access." }, { status: 403 });

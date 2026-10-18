@@ -430,6 +430,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: nt("Custom Bills"), href: "/dashboard/clearing-agent/customs-expenses", icon: Landmark },
           { label: nt("Truck Expenses Bills"), href: "/dashboard/clearing-agent/truck-expenses", icon: Truck },
+          { label: nt("Truck Freight / Rent Bills"), href: "/dashboard/clearing-agent/truck-freight-bill", icon: Truck },
           { label: nt("Customer Expenses Bills"), href: "/dashboard/clearing-agent/customer-bill?type=expenses", icon: Receipt },
           { label: nt("Other Expenses Bills"), href: "/dashboard/clearing-agent/other-expenses", icon: Receipt },
         ],
@@ -462,6 +463,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: nt("Clearing Workspace"), href: "/dashboard/clearing-agent/clearing-workspace", icon: FileCheck2 },
       { label: nt("Logistics Tracking Dashboard"), href: "/dashboard/logistics", icon: BarChart3 },
       { label: nt("Shipping Account Access"), href: "/dashboard/shipping-line/account-access", icon: Wallet },
+      { label: nt("Shipping Account Approvals"), href: "/dashboard/shipping-line/account-approvals", icon: ShieldCheck },
       { label: nt("Shipping Accounts Setup"), href: "/dashboard/accounts/setup?domain=shipping", icon: BookOpen, upgraded: true },
     ],
   },
@@ -809,13 +811,18 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
   // 3. OR operationalDomains contains "shipping" but neither "business" nor "both"
   // 4. OR role is agent_user / shipping_user
   // AND not holding higher broad administrative roles (country_admin, main_branch_admin, super_admin, accountant)
-  const isShippingOnly =
-    !isSuper &&
+  // The operational DOMAIN decides which world a login lives in, whatever administrative role it holds: a Country / Branch admin
+  // whose assignment is in the Shipping domain gets the Shipping Line menu only (never Purchase, Sales, Finance ...), exactly like
+  // a Shipping Super Admin. The legacy flags (clearing-agent bound, shipping_only ledger, agent_user) keep their old meaning for
+  // logins that carry no domain information.
+  const domainShippingOnly =
+    Boolean(shippingContext?.operationalDomains?.length) &&
+    shippingContext!.operationalDomains!.includes("shipping") &&
+    !shippingContext!.operationalDomains!.includes("business") &&
+    !shippingContext!.operationalDomains!.includes("both");
+  const legacyShippingOnly =
     (Boolean(shippingContext?.isShippingScoped) ||
       shippingContext?.ledgerVisibility === "shipping_only" ||
-      (shippingContext?.operationalDomains?.includes("shipping") &&
-        !shippingContext?.operationalDomains?.includes("business") &&
-        !shippingContext?.operationalDomains?.includes("both")) ||
       userRoles.has("agent_user") ||
       userRoles.has("shipping_user")) &&
     !userRoles.has("country_admin") &&
@@ -824,6 +831,7 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     !userRoles.has("city_branch_admin") &&
     !userRoles.has("accountant") &&
     !userRoles.has("cashier");
+  const isShippingOnly = !isSuper && (domainShippingOnly || legacyShippingOnly);
 
   // -----------------------------------------------------------------------
   // BUSINESS-ONLY domain: A pure Business Admin (operational_domain='business')
@@ -934,7 +942,15 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
       .filter((it: any) => ALLOWED_SHIPPING_KEYS.has(it.key) && (it.key === "dashboard" || isPermitted(it)))
       .map((it: any) => {
         if (it.key === "dashboard") {
-          return { ...it, href: "/dashboard/logistics" };
+          // the Logistics dashboard is the Shipping home only for a login that may open it; one unrelated token must not unlock it
+          const logisticsAllowed = evaluateRouteAccess({
+            pathname: "/dashboard/logistics",
+            permissions: [...userPermissions],
+            roles: [...userRoles],
+            operationalDomains: shippingContext?.operationalDomains ?? null,
+            canViewFinancials: shippingContext?.canViewFinancials ?? null,
+          }).allowed;
+          return { ...it, href: logisticsAllowed ? "/dashboard/logistics" : "/dashboard" };
         }
         if (it.key === "shipping-cleaning") {
           return { ...it, defaultOpen: true, children: filterTree(it.children || []) };
@@ -1689,6 +1705,18 @@ export default DigitalDockPremiumSidebar;
  * The menu a given role / permission set ACTUALLY receives — the same filter the live sidebar runs, so the User Profile's
  * effective-access summary can never disagree with what the user will see.
  */
+/** Every menu href (sub-items and deep children included) a login ACTUALLY receives — used by the domain-separation harness. */
+export function visibleMenuHrefsFor(
+  roles: readonly string[],
+  permissions: readonly string[],
+  ctx?: ShippingContext
+): string[] {
+  const out: string[] = [];
+  const walk = (list: any[]) => { for (const it of list) { if (it.href) out.push(String(it.href)); if (it.children) walk(it.children); } };
+  walk(filterByRolesAndPermissions(DAMAN_SIDEBAR_ITEMS, new Set(roles.map(String)), new Set(permissions.map(String)), ctx));
+  return out;
+}
+
 export function visibleMenuFor(
   roles: readonly string[],
   permissions: readonly string[],

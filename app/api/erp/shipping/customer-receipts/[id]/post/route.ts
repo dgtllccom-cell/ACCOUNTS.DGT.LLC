@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   let tenantHash = "";
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     authorizeApiScope(session, { resource: "customer_receipts", action: "post" });
     if (!sessionInDomain(session, "shipping")) {
       return NextResponse.json({ success: false, error: "This action requires shipping domain access." }, { status: 403 });

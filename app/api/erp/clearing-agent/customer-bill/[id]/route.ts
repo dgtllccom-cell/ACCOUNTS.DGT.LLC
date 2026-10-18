@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -29,6 +30,7 @@ export async function GET(
 ) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     authorizeApiScope(session, { resource: "shipping_records", action: "read" });
     const { id } = await context.params;
     const bill = await getCustomerBillById(id);
@@ -54,6 +56,7 @@ export async function PATCH(
 ) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     authorizeApiScope(session, { resource: "shipping_records", action: "update" });
     const { id } = await context.params;
     const body = await req.json();

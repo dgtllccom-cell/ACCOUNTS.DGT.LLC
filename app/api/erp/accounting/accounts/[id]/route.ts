@@ -4,7 +4,7 @@ import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
-import { isShippingDomainOnly } from "@/lib/permissions/shipping-explicit-gate";
+import { rowInSessionDomain } from "@/lib/permissions/domain-scope";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { ledgerScopeSchema, optionalUuidSchema, scopeSchema, supportedLanguageSchema } from "@/lib/api/erp-validation";
@@ -279,7 +279,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       return apiOk({ account: null }, { status: 404 });
     }
 
-    if (isShippingDomainOnly(session) && (account.operational_domain ?? "business") === "business") {
+    if (!rowInSessionDomain(session, account.operational_domain)) {
       return apiOk({ account: null }, { status: 404 });
     }
 
@@ -364,7 +364,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     const current = await loadAccount(id);
 
-    if (!current || current.deleted_at) {
+    if (!current || current.deleted_at || !rowInSessionDomain(session, current.operational_domain)) {
       return apiOk({ account: null }, { status: 404 });
     }
 
@@ -598,7 +598,7 @@ export async function DELETE(_request: NextRequest, context: { params: Promise<{
 
     const current = await loadAccount(id);
 
-    if (!current || current.deleted_at) {
+    if (!current || current.deleted_at || !rowInSessionDomain(session, current.operational_domain)) {
       return apiOk({ deleted: false }, { status: 404 });
     }
 

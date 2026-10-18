@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -27,6 +28,7 @@ const actionSchema = z.discriminatedUnion("action", [
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     const { id } = await context.params;
     const transferId = uuidSchema.parse(id);
     const body = actionSchema.parse(await request.json());

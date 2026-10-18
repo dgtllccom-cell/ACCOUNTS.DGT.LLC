@@ -4,6 +4,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { allowedRowDomains, rowInSessionDomain, sessionDomainFilter, sqlRowDomainCondition } from "@/lib/permissions/domain-scope";
+import { orgRowInSessionScope } from "@/lib/api/scope-middleware";
 
 const selectColumns =
   "id,country_id,country_branch_id,city_name,name,code,local_currency,status,is_business_branch,operational_domain,state_province_id,district_id,city_id,area_location_id,address,phone,email,whatsapp_number,company_id,owner_name,contacts,documents,created_at,updated_at";
@@ -16,7 +18,10 @@ export async function GET(request: Request) {
     const countryBranchId = url.searchParams.get("countryBranchId");
     const operationalDomain = url.searchParams.get("operationalDomain");
     // scope: business (default — hides agent/shipping branches), agent, or all (admin views).
-    const scope = (url.searchParams.get("scope") || "business").toLowerCase();
+    // A Shipping-domain login's own branches are the Shipping Line branches, so the business-branch filter never applies to it
+    // (the domain filter below is what separates the two worlds).
+    const requestedScope = (url.searchParams.get("scope") || "business").toLowerCase();
+    const scope = sessionDomainFilter(session) === "shipping" ? "all" : requestedScope;
 
     let cityBranchesRaw: any[] = [];
     const viaPg = await withLocalPg(async (sql) => {
@@ -39,6 +44,7 @@ export async function GET(request: Request) {
           and (${countryId ? sql`country_id = ${countryId}` : sql`true`})
           and (${!countryId && !session.isSuperAdmin ? sql`country_id = any(${session.countryIds})` : sql`true`})
           and (${countryBranchId ? sql`country_branch_id = ${countryBranchId}` : sql`true`})
+          and ${sqlRowDomainCondition(sql, session, "")}
         order by created_at asc
       `;
       return { cityBranches: rows as any[] };
@@ -78,6 +84,8 @@ export async function GET(request: Request) {
       if (countryBranchId) {
         query = query.eq("country_branch_id", countryBranchId);
       }
+      const domains = allowedRowDomains(session);
+      if (domains) query = query.in("operational_domain", domains);
 
       const { data, error } = await query;
       if (error) {
@@ -85,6 +93,12 @@ export async function GET(request: Request) {
       }
       cityBranchesRaw = data ?? [];
     }
+
+    // Domain + hierarchy trim (defence in depth over both query paths): a Business login never receives a Shipping Line
+    // branch and vice versa; a branch user receives its own branch only, never a sibling of the same country.
+    cityBranchesRaw = cityBranchesRaw.filter(
+      (b) => rowInSessionDomain(session, b.operational_domain) && (session.isSuperAdmin || orgRowInSessionScope(session, "cityBranch", { id: b.id, country_id: b.country_id, country_branch_id: b.country_branch_id }))
+    );
 
     // City-branch name / city_name / owner_name / address follow the active language
     // (city_branches is a registered translatable table); codes / ids stay canonical.
