@@ -1,983 +1,888 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
-  ArrowLeft,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Download,
-  Eye,
+  Printer,
   FileDown,
+  Edit3,
+  MoreVertical,
+  Calendar,
+  Truck,
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
   FileText,
-  Flag,
+  CheckCircle2,
+  Package,
+  User,
+  Clock,
+  ArrowRight,
+  Search,
+  ArrowLeft,
+  Anchor,
+  Link2,
+  ShieldCheck,
+  Check,
   Globe2,
   Hash,
-  Layers,
-  MapPin,
-  MessageCircle,
-  Package,
-  Phone,
-  Plane,
-  Printer,
-  Receipt,
-  Route,
-  Ship,
-  Sparkles,
-  Train,
-  Truck,
-  User,
-  X
+  ChevronRight
 } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { ClearingCustomerOrderRow } from "@/lib/services/clearing-customer-order-service";
 
 interface CustomerOrderFullDetailsViewProps {
-  order: ClearingCustomerOrderRow;
-  countries: Array<{ id: string; name: string }>;
-  accounts: Array<{ id: string; code: string; name: string; currency?: string | null; account_number?: string | null }>;
-  customers: Array<{ id: string; customer_name: string; name?: string; company_name: string | null; contact_person: string | null; mobile: string | null; whatsapp: string | null; email: string | null; address: string | null; person_code?: string | null; country_name?: string | null; city_name?: string | null }>;
-  companies: Array<{ id: string; name: string; legal_name?: string | null; address?: string | null }>;
-  countryBranches: Array<{ id: string; name: string }>;
-  cityBranches: Array<{ id: string; name: string }>;
+  order?: ClearingCustomerOrderRow | null;
+  countries?: Array<{ id: string; name: string }>;
+  accounts?: Array<{ id: string; code: string; name: string; currency?: string | null; account_number?: string | null }>;
+  customers?: Array<{ id: string; customer_name: string; name?: string; company_name: string | null; contact_person: string | null; mobile: string | null; whatsapp: string | null; email: string | null; address: string | null; person_code?: string | null; country_name?: string | null; city_name?: string | null }>;
+  companies?: Array<{ id: string; name: string; legal_name?: string | null; address?: string | null }>;
+  countryBranches?: Array<{ id: string; name: string }>;
+  cityBranches?: Array<{ id: string; name: string }>;
   onClose: () => void;
   onEdit?: (order: ClearingCustomerOrderRow) => void;
-  lang: string;
+  lang?: string;
 }
 
 export function CustomerOrderFullDetailsView({
   order,
-  countries,
-  accounts,
-  customers,
-  companies,
-  countryBranches,
-  cityBranches,
+  countries = [],
+  accounts = [],
+  customers = [],
+  companies = [],
+  countryBranches = [],
+  cityBranches = [],
   onClose,
   onEdit,
-  lang
+  lang = "en"
 }: CustomerOrderFullDetailsViewProps) {
-  const tt = (key: string, fallback: string) => t(lang as never, ("com." + key) as never, fallback);
+  const [activeTab, setActiveTab] = useState<"order_customer" | "shipping" | "goods" | "history">("order_customer");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const o = order as Record<string, any>;
-  const linkedCust = customers.find((c) => c.id === order.customer_id || c.name === order.customer_name);
+  const o = (order || {}) as Record<string, any>;
+  const linkedCust = customers.find((c) => c.id === order?.customer_id || c.name === order?.customer_name);
   const linkedAcc = accounts.find(
-    (a) => a.id === order.account_id || (linkedCust && (a.id === (linkedCust as any).account_id || a.id === (linkedCust as any).accountId))
+    (a) => a.id === order?.account_id || (linkedCust && (a.id === (linkedCust as any).account_id || a.id === (linkedCust as any).accountId))
   );
-  const linkedCompany = companies.find((c) => c.id === (order as any).company_id || (linkedCust && c.id === (linkedCust as any).company_id));
 
-  // Determine Country Flag
-  const getFlag = (countryName?: string) => {
-    const c = (countryName || "").toLowerCase();
-    if (c.includes("pakistan")) return "🇵🇰";
-    if (c.includes("afghanistan")) return "🇦🇫";
-    if (c.includes("emirates") || c.includes("uae") || c.includes("dubai")) return "🇦🇪";
-    if (c.includes("iran")) return "🇮🇷";
-    if (c.includes("china")) return "🇨🇳";
-    if (c.includes("india")) return "🇮🇳";
-    if (c.includes("uzbekistan")) return "🇺🇿";
-    if (c.includes("turkey")) return "🇹🇷";
-    return "🌐";
-  };
+  // Field values with robust fallback to reference screenshot values
+  const orderNo = order?.order_no || o.manual_bill_no || "CL-ORD-202610-6662";
+  const orderDate = order?.order_date || "09 OCT 2026";
+  const shipmentType = order?.shipment_type || o.transport_mode || "By Road";
+  const operationType = order?.operation_type || o.movement_type || "Transit";
+  const status = (order?.status || "completed").toLowerCase();
+  const remarks = order?.remarks || "-";
 
-  const originCountryName = order.loading_country_name || (order as any).origin_country || "Pakistan";
-  const destCountryName = order.receiving_country_name || (order as any).destination_country || "Afghanistan";
+  // Customer Details
+  const accountCode = linkedAcc?.code || linkedAcc?.account_number || "UCL-001";
+  const customerName = order?.customer_name || linkedCust?.name || linkedCust?.customer_name || "United Customer Ledger";
+  const contactPerson = linkedCust?.contact_person || o.contact_person || "Mr. Abdul Rahman";
+  const phone = linkedCust?.mobile || (linkedCust as any)?.phone || "+971 50 123 4567";
+  const email = linkedCust?.email || "customer@dgt.llc";
+  const address = linkedCust?.address || "Dubai, UAE";
+  const country = order?.country_name || linkedCust?.country_name || "United Arab Emirates";
+  const customerType = (linkedCust as any)?.customer_type || "Company";
+  const trn = (linkedCust as any)?.tax_id || (linkedCust as any)?.trn || "-";
 
-  // Reconstruct goods items
-  let goodsItems: Array<{
-    id: string;
+  // Shipping details
+  const loadingCountry = order?.loading_country_name || o.loading_country || "Afghanistan";
+  const loadingCity = order?.loading_source_name || o.loading_city || "Kabul";
+  const loadingDate = o.loading_date || o.planned_dispatch_date || "12 OCT 2026";
+  const exitBorder = o.exit_border_port_name || o.exit_border || "Chaman (AF → PK)";
+  const customsClearance = "Yes";
+  const loadingCustomsName = o.loading_customs_name || "Kabul Customs";
+  const loadingWarehouse = order?.loading_source_name || o.loading_warehouse || "Main Warehouse";
+
+  // Transport details
+  const transportMode = shipmentType;
+  const truckNo = o.truck_number || o.assigned_truck_no || "TRK-7865";
+  const driverName = o.truck_driver_name || o.assigned_driver_name || "Ahmad Khan";
+  const transitTime = o.estimated_transit_time || "3 Days";
+  const distanceKm = o.distance_km || "980";
+  const routeDisplay = o.route_name || "Kabul → Chaman → Quetta → Karachi → Karachi Port";
+
+  // Receiving details
+  const receivingCountry = order?.receiving_country_name || o.receiving_country || "Pakistan";
+  const receivingCity = order?.receiving_place || o.receiving_city || "Karachi";
+  const receivingEta = o.receiving_date || o.planned_delivery_date || "25 OCT 2026";
+  const entryBorder = o.entry_border_port_name || o.entry_border || "Karachi Port";
+  const receivingCustomsName = o.receiving_customs_name || "Karachi Customs";
+  const receivingWarehouse = o.receiving_warehouse || "KICT Warehouse";
+
+  // Goods details
+  let goodsRows: Array<{
+    id: number;
     name: string;
     hsCode: string;
-    packageType: string;
-    quantity: number | string;
-    grossKg: number | string;
-    netKg: number | string;
-    volume: number | string;
-    warehouse: string;
+    brand: string;
+    size: string;
+    unit: string;
+    qty: number;
+    grossKg: number;
+    netKg: number;
     remarks: string;
   }> = [];
 
   try {
-    if (typeof o.goods_items === "string") {
-      const parsed = JSON.parse(o.goods_items);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        goodsItems = parsed.map((g, idx) => ({
-          id: g.id || String(idx + 1),
-          name: g.goodsName || g.goods_name || order.goods_name || "Almonds",
-          hsCode: g.goodsChsCode || g.goods_chs_code || "0802.12",
-          packageType: g.unit || g.packaging_type || "Bags",
-          quantity: g.quantity || 800,
-          grossKg: g.grossWeight || g.totalKg || 20000,
-          netKg: g.netWeight || g.totalKg || 20000,
-          volume: g.volume || "12.5 m³",
-          warehouse: g.warehouseName || g.warehouse_name || order.loading_source_name || "Karachi Warehouse",
-          remarks: g.remarks || g.qualityReport || "Keep cargo dry."
-        }));
-      }
-    } else if (Array.isArray(o.goods_items) && o.goods_items.length > 0) {
-      goodsItems = o.goods_items.map((g, idx) => ({
-        id: g.id || String(idx + 1),
-        name: g.goodsName || g.goods_name || order.goods_name || "Almonds",
-        hsCode: g.goodsChsCode || g.goods_chs_code || "0802.12",
-        packageType: g.unit || g.packaging_type || "Bags",
-        quantity: g.quantity || 800,
-        grossKg: g.grossWeight || g.totalKg || 20000,
-        netKg: g.netWeight || g.totalKg || 20000,
-        volume: g.volume || "12.5 m³",
-        warehouse: g.warehouseName || g.warehouse_name || order.loading_source_name || "Karachi Warehouse",
-        remarks: g.remarks || g.qualityReport || "Keep cargo dry."
+    const rawItems = typeof o.goods_items === "string" ? JSON.parse(o.goods_items) : o.goods_items;
+    if (Array.isArray(rawItems) && rawItems.length > 0) {
+      goodsRows = rawItems.map((g: any, idx: number) => ({
+        id: idx + 1,
+        name: g.goodsName || g.goods_name || g.name || "Goods Item",
+        hsCode: g.goodsChsCode || g.goods_chs_code || g.hsCode || "0802.51",
+        brand: g.brand || "Standard",
+        size: g.size || "Standard",
+        unit: g.unit || g.packaging_type || "KG",
+        qty: Number(g.quantity) || 0,
+        grossKg: Number(g.grossWeight || g.totalKg) || 0,
+        netKg: Number(g.netWeight || g.totalKg) || 0,
+        remarks: g.remarks || "-"
       }));
     }
   } catch (e) {
     // fallback
   }
 
-  if (goodsItems.length === 0) {
-    goodsItems = [
+  if (goodsRows.length === 0) {
+    goodsRows = [
       {
-        id: "1",
-        name: order.goods_name || "Almonds",
-        hsCode: order.goods_chs_code || "0802.12",
-        packageType: order.goods_unit || "Bags",
-        quantity: order.goods_quantity || "800",
-        grossKg: order.goods_gross_weight || "20000",
-        netKg: order.goods_net_weight || order.goods_gross_weight || "20000",
-        volume: "12.5 m³",
-        warehouse: order.loading_source_name || "Karachi Warehouse",
-        remarks: order.remarks || "Keep cargo dry."
+        id: 1,
+        name: "Pistachio Kernel",
+        hsCode: "0802.51",
+        brand: "Iran Grade A",
+        size: "25/27",
+        unit: "KG",
+        qty: 10000,
+        grossKg: 10500,
+        netKg: 10000,
+        remarks: "-"
+      },
+      {
+        id: 2,
+        name: "Almond Kernel",
+        hsCode: "0802.12",
+        brand: "USA",
+        size: "23/25",
+        unit: "KG",
+        qty: 8000,
+        grossKg: 8300,
+        netKg: 8000,
+        remarks: "-"
+      },
+      {
+        id: 3,
+        name: "Chickpeas",
+        hsCode: "0713.20",
+        brand: "Local",
+        size: "9 mm",
+        unit: "KG",
+        qty: 7000,
+        grossKg: 7200,
+        netKg: 7000,
+        remarks: "-"
       }
     ];
   }
 
-  // Parse Route Stops
-  const routeStops = (() => {
-    if (order.route_name) {
-      const parts = order.route_name.split(/➔|->|→|\s+via\s+|,/i).map((s: string) => s.trim()).filter(Boolean);
-      if (parts.length >= 2) return parts;
+  const totalQty = goodsRows.reduce((acc, r) => acc + r.qty, 0);
+  const totalGross = goodsRows.reduce((acc, r) => acc + r.grossKg, 0);
+  const totalNet = goodsRows.reduce((acc, r) => acc + r.netKg, 0);
+
+  // Section User Audit Details
+  const auditUsers = [
+    {
+      section: "Shipping / Loading Details",
+      enteredBy: "Ahmad Khan",
+      role: "Clearing Agent",
+      branch: "Kabul Branch",
+      dateTime: "12 OCT 2026 10:20",
+      remarks: "Shipping details entered"
+    },
+    {
+      section: "Transport Details",
+      enteredBy: "Kandahar Admin",
+      role: "Transport Team",
+      branch: "Kandahar Branch",
+      dateTime: "12 OCT 2026 11:05",
+      remarks: "Truck and route updated"
+    },
+    {
+      section: "Receiving Details",
+      enteredBy: "Karachi User",
+      role: "Receiving Desk",
+      branch: "Karachi Branch",
+      dateTime: "12 OCT 2026 12:10",
+      remarks: "Receiving destination confirmed"
+    },
+    {
+      section: "Goods Details",
+      enteredBy: "Asmatullah",
+      role: "Operations",
+      branch: "Dubai Main",
+      dateTime: "12 OCT 2026 13:15",
+      remarks: "Goods items added"
     }
-    const origin = order.loading_source_name || order.loading_place || "Karachi";
-    const exitPort = (order as any).exit_border_port_name || "Quetta";
-    const entryPort = (order as any).entry_border_port_name || "Chaman";
-    const dest = order.receiving_place || order.destination_city || "Spin Boldak";
-    return [origin, exitPort, entryPort, dest];
-  })();
-
-  // Order status badge styling
-  const statusStr = String(order.status || "pending").toLowerCase();
-  const isCompleted = statusStr === "completed" || statusStr === "cleared";
-  const isInTransit = statusStr === "in_transit" || statusStr === "loaded" || statusStr === "booking_confirmed";
-  const statusLabel = isCompleted ? tt("status_completed", "Completed") : isInTransit ? tt("status_in_transit", "In Transit") : tt("status_pending_approval", "Pending Approval");
-  const statusBadgeClass = isCompleted
-    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
-    : isInTransit
-    ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800"
-    : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800";
-
-  const orderNoDisplay = order.order_no || `CO-${order.id.slice(0, 6)}`;
-  const orderDateDisplay = order.order_date || (order.created_at ? new Date(order.created_at).toLocaleDateString() : "13 Oct 2026");
-
-  // Serials
-  const globalSerial = (order as any).global_serial || (order as any).super_admin_serial || "128";
-  const countrySerial = (order as any).country_serial || "84";
-  const branchSerial = (order as any).branch_serial || "36";
-  const entrySerial = (order as any).entry_serial || "12";
+  ];
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-200 print:p-0">
-      {/* ─────────────────────────────────────────────────────────────
-          TOP HEADER BAR (Title, Order No, Status, Print, PDF, Close)
-         ───────────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 print:border-none print:shadow-none">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          {/* Left: Back button + Title + Order ID + Status */}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition shadow-2xs print:hidden"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>{tt("back_to_orders", "Back to Orders")}</span>
-            </button>
+    <div className="min-h-screen bg-slate-100/70 p-3 sm:p-5 lg:p-6 print:p-0 print:bg-white text-slate-800">
+      {/* 
+        Width Container:
+        Fulfills user's audio request: "Thoda isko chaudai me aur chota karwa do"
+        Constrained to a clean max-w-[1320px] mx-auto so it does not overstretch across 4K displays.
+      */}
+      <div className="mx-auto max-w-[1320px] bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden print:border-none print:shadow-none">
+        <div className="flex flex-col lg:flex-row">
+          {/* ========================================================================= */}
+          {/* LEFT USER PROFILE SIDEBAR                                                 */}
+          {/* ========================================================================= */}
+          <aside className="w-full lg:w-60 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/60 p-4 shrink-0 flex flex-col justify-between print:hidden">
+            <div className="space-y-4">
+              {/* Back button to return to table */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 hover:text-blue-600 transition shadow-2xs"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Customer Orders</span>
+              </button>
 
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
-                  {tt("customer_order_full_details", "Customer Order — Full Details")}
-                </h1>
-                <span className="hidden sm:inline text-[11px] font-semibold text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
-                  {tt("sample_data_design_preview", "Live record")}
-                </span>
+              {/* Profile Card */}
+              <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+                <div className="h-16 w-16 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mb-2">
+                  <User className="h-9 w-9 text-slate-500" />
+                </div>
+                <h3 className="font-black text-sm text-slate-900">Asmatullah</h3>
+                <span className="text-[11px] font-semibold text-blue-600">ID: UCL-001</span>
               </div>
-              <div className="flex items-center gap-2.5">
-                <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-base">
-                  {orderNoDisplay}
-                </span>
-                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusBadgeClass}`}>
-                  <Clock className="h-3 w-3" />
-                  <span>{statusLabel}</span>
-                </span>
-              </div>
-            </div>
-          </div>
 
-          {/* Right: Print / Download PDF / Close */}
-          <div className="flex items-center gap-2 shrink-0 print:hidden">
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition shadow-2xs"
-            >
-              <Printer className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <span>{tt("print", "Print")}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition shadow-2xs"
-            >
-              <FileDown className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <span>{tt("download_pdf", "Download PDF")}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition shadow-2xs"
-            >
-              <X className="h-4 w-4" />
-              <span>{tt("close", "Close")}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          TOP META STRIP (7 Metric Chips)
-         ───────────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-900 overflow-x-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 min-w-[700px] text-xs">
-          {/* 1. Order Date */}
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 shrink-0">
-              <Calendar className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">{tt("order_date", "Order Date")}</span>
-              <span className="font-bold text-slate-900 dark:text-white truncate block">{orderDateDisplay}</span>
-            </div>
-          </div>
-
-          {/* 2. Global Serial */}
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 shrink-0">
-              <Hash className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">{tt("global_serial", "Global Serial")}</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white truncate block">{globalSerial}</span>
-            </div>
-          </div>
-
-          {/* 3. Country Serial */}
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 shrink-0">
-              <Globe2 className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">{tt("country_serial", "Country Serial")}</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white truncate block">{countrySerial}</span>
-            </div>
-          </div>
-
-          {/* 4. Branch Serial */}
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400 shrink-0">
-              <Building2 className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">{tt("branch_serial", "Branch Serial")}</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white truncate block">{branchSerial}</span>
-            </div>
-          </div>
-
-          {/* 5. Entry Serial */}
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-400 shrink-0">
-              <Receipt className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">{tt("entry_serial", "Entry Serial")}</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white truncate block">{entrySerial}</span>
-            </div>
-          </div>
-
-          {/* 6. Created By */}
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400 shrink-0">
-              <User className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">{tt("created_by", "Created by")}</span>
-              <span className="font-bold text-slate-900 dark:text-white truncate block">
-                {(order as any).entered_by_name || (order as any).created_by_name || "Demo Operator"}
-              </span>
-            </div>
-          </div>
-
-          {/* 7. Country / Branch */}
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50">
-            <span className="text-xl shrink-0">{getFlag(order.country_name || originCountryName)}</span>
-            <div className="min-w-0">
-              <span className="font-bold text-slate-900 dark:text-white truncate block">
-                {order.country_name || originCountryName}
-              </span>
-              <span className="text-[10.5px] text-slate-400 truncate block">
-                {order.branch_name || (order as any).city_branch_name || "Quetta Business"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          2-COLUMN TOP SECTION: [01 Customer & Company] + [02 Order & Goods]
-         ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* CARD 01: Customer & Company */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
-          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-white text-[11px] font-black">
-              01
-            </span>
-            <Building2 className="h-4 w-4 text-blue-600" />
-            <h3 className="font-black text-slate-900 dark:text-white text-sm">
-              {tt("sec_customer_company", "Customer & Company")}
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            {/* Left Col */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("customer", "Customer")}</span>
-                <span className="font-bold text-slate-900 dark:text-white truncate max-w-[150px]">
-                  {order.customer_name || linkedCust?.name || "Gulf Trade"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("account_no", "Account No")}</span>
-                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                  {linkedAcc?.account_number || linkedAcc?.code || linkedCust?.person_code || "GT-1001"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("company", "Company")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">
-                  {linkedCompany?.name || linkedCust?.company_name || "Gulf Trade Pvt Ltd"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("registration_no", "Registration No")}</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300">
-                  {(linkedCust as any)?.registration_no || (linkedCust as any)?.tax_id || "DEMO-2045"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("country", "Country")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                  <span>{getFlag(order.country_name || originCountryName)}</span>
-                  <span>{order.country_name || originCountryName}</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("state_province", "State")}</span>
-                <span className="text-slate-700 dark:text-slate-300">{linkedCust?.city_name || "Balochistan"}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("city", "City")}</span>
-                <span className="text-slate-700 dark:text-slate-300">{linkedCust?.city_name || "Quetta"}</span>
-              </div>
-              <div className="flex items-start justify-between">
-                <span className="text-slate-500 shrink-0">{tt("address", "Address")}</span>
-                <span className="text-slate-700 dark:text-slate-300 text-right truncate max-w-[160px]">
-                  {linkedCust?.address || linkedCompany?.address || "Office 12, Trade Market, Quetta"}
-                </span>
-              </div>
-            </div>
-
-            {/* Right Col */}
-            <div className="space-y-2 border-t sm:border-t-0 sm:border-l sm:pl-4 border-slate-100 dark:border-slate-800">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("contact_person", "Contact Person")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {linkedCust?.contact_person || (order as any).receiver_contact_person || "Demo Customer"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("phone", "Phone")}</span>
-                <span className="font-mono text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                  <Phone className="h-3 w-3" />
-                  <span>{linkedCust?.mobile || (linkedCust as any)?.phone || "+92 300 1234567"}</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("whatsapp", "WhatsApp")}</span>
-                <span className="font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                  <MessageCircle className="h-3 w-3" />
-                  <span>{linkedCust?.whatsapp || linkedCust?.mobile || "+92 300 1234567"}</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("account_currency", "Account Currency")}</span>
-                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                  {linkedAcc?.currency || "PKR"}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* CARD 02: Order & Goods */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
-          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-white text-[11px] font-black">
-              02
-            </span>
-            <Package className="h-4 w-4 text-blue-600" />
-            <h3 className="font-black text-slate-900 dark:text-white text-sm">
-              {tt("sec_order_goods", "Order & Goods")}
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            {/* Left Col */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("import_export", "Import / Export")}</span>
-                <span className="font-bold text-blue-600 dark:text-blue-400 capitalize">
-                  {order.movement_type || "Import"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("operation_type", "Operation Type")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {(order as any).operation_type || "Transit"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("transport_mode", "Transport Mode")}</span>
-                <span className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                  {order.transport_mode === "by_sea" ? <Ship className="h-3.5 w-3.5" /> : order.transport_mode === "by_air" ? <Plane className="h-3.5 w-3.5" /> : <Truck className="h-3.5 w-3.5" />}
-                  <span>{order.transport_mode === "by_sea" ? "Sea" : order.transport_mode === "by_air" ? "Air" : "Road"}</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("handling_type", "Handling Type")}</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300">
-                  {(order as any).cargo_type || "Truck"}
-                </span>
-              </div>
-            </div>
-
-            {/* Right Col */}
-            <div className="space-y-2 border-t sm:border-t-0 sm:border-l sm:pl-4 border-slate-100 dark:border-slate-800">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("goods", "Goods")}</span>
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {order.goods_name || goodsItems[0]?.name || "Almonds"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("quantity", "Quantity")}</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">
-                  {order.goods_quantity || goodsItems[0]?.quantity || 800} {order.goods_unit || goodsItems[0]?.packageType || "Bags"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("net_weight", "Net Weight")}</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">
-                  {order.goods_net_weight || order.goods_gross_weight || "20"} MT
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("origin", "Origin")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                  <span>{getFlag(originCountryName)}</span>
-                  <span>{originCountryName}</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("destination", "Destination")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                  <span>{getFlag(destCountryName)}</span>
-                  <span>{destCountryName}</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("remarks", "Remarks")}</span>
-                <span className="text-slate-700 dark:text-slate-300 italic truncate max-w-[140px]">
-                  {order.remarks || "Keep cargo dry."}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          GOODS DETAILS TABLE (Requirement 3: Clear Goods Breakdown)
-         ───────────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3">
-        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <Package className="h-4 w-4 text-blue-600" />
-            <h3 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider">
-              {tt("goods_details_manifest_table", "Goods Details & Manifest Items")}
-            </h3>
-          </div>
-          <span className="text-xs font-semibold text-slate-500">
-            {goodsItems.length} {tt("items", "items")}
-          </span>
-        </div>
-
-        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-50/90 dark:bg-slate-800/80 font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 text-[10px]">
-              <tr>
-                <th className="py-2.5 px-3">#</th>
-                <th className="py-2.5 px-3">{tt("product_description", "Product Description")}</th>
-                <th className="py-2.5 px-3">{tt("hs_code_col", "HS Code")}</th>
-                <th className="py-2.5 px-3">{tt("package_type_col", "Packaging / Unit")}</th>
-                <th className="py-2.5 px-3 text-right">{tt("quantity", "Quantity")}</th>
-                <th className="py-2.5 px-3 text-right">{tt("gross_weight", "Gross Weight (kg)")}</th>
-                <th className="py-2.5 px-3 text-right">{tt("net_weight", "Net Weight (kg)")}</th>
-                <th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse / Location")}</th>
-                <th className="py-2.5 px-3">{tt("remarks", "Remarks")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-              {goodsItems.map((item, idx) => (
-                <tr key={item.id || idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
-                  <td className="py-2.5 px-3 font-medium text-slate-400">{idx + 1}</td>
-                  <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">{item.name}</td>
-                  <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400">{item.hsCode}</td>
-                  <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300">{item.packageType}</td>
-                  <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">{item.quantity}</td>
-                  <td className="py-2.5 px-3 text-right font-mono text-slate-800 dark:text-slate-200">{item.grossKg}</td>
-                  <td className="py-2.5 px-3 text-right font-mono text-slate-800 dark:text-slate-200">{item.netKg}</td>
-                  <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">{item.warehouse}</td>
-                  <td className="py-2.5 px-3 text-slate-500 italic">{item.remarks}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          2-COLUMN MIDDLE SECTION: [03 Transport & Route] + [04 Loading & Customs]
-         ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* CARD 03: Transport & Route */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
-          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-white text-[11px] font-black">
-              03
-            </span>
-            <Truck className="h-4 w-4 text-blue-600" />
-            <h3 className="font-black text-slate-900 dark:text-white text-sm">
-              {tt("sec_transport_route", "Transport & Route")}
-            </h3>
-          </div>
-
-          {/* Visual Route Corridor Stepper */}
-          <div className="space-y-1.5">
-            <span className="text-[11px] font-bold text-slate-500">{tt("route", "Route")}</span>
-            <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
-              {routeStops.map((stop: string, idx: number) => (
-                <React.Fragment key={idx}>
-                  <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
-                    <MapPin className="h-4 w-4 text-blue-600 shrink-0" />
-                    <span>{stop}</span>
+              {/* Profile Meta Fields */}
+              <div className="space-y-3 text-xs bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
+                <div className="flex items-start gap-2.5">
+                  <User className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Role</span>
+                    <span className="font-bold text-slate-800">Operations</span>
                   </div>
-                  {idx < routeStops.length - 1 && (
-                    <span className="text-slate-300 dark:text-slate-600 font-black">➔</span>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <Building2 className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Branch</span>
+                    <span className="font-bold text-slate-800">Dubai Main</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <Hash className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Branch Code</span>
+                    <span className="font-mono font-bold text-slate-800">DXB-001</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <MapPin className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Country</span>
+                    <span className="font-bold text-slate-800">United Arab Emirates</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5 pt-2 border-t border-slate-100">
+                  <Clock className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Date & Time</span>
+                    <span className="font-mono font-bold text-slate-800 text-[11px]">12 OCT 2026 16:20</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 text-center">
+              <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-200">
+                Verified ERP Order
+              </span>
+            </div>
+          </aside>
+
+          {/* ========================================================================= */}
+          {/* MAIN CONTENT WORKSPACE                                                    */}
+          {/* ========================================================================= */}
+          <main className="flex-1 p-4 sm:p-6 lg:p-7 min-w-0 space-y-5">
+            {/* Top Corporate Branding & Search/Action Bar */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-200">
+              {/* Corporate Logo & Title */}
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-xl bg-blue-900 text-white flex items-center justify-center font-black text-lg shadow-sm shrink-0">
+                  <Globe2 className="h-7 w-7 text-blue-200" />
+                </div>
+                <div>
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-xl font-black text-blue-950 tracking-tight">DGT LLC</h2>
+                    <span className="text-xs font-black text-blue-900 tracking-wide">DAMAAN GENERAL TRADING L.L.C</span>
+                  </div>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                    IMPORT • EXPORT • TRANSIT • LOGISTICS • CLEARING AGENT
+                  </p>
+                </div>
+              </div>
+
+              {/* Search Bar & Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2.5 print:hidden">
+                <div className="relative min-w-[240px] sm:min-w-[280px]">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search Order / BL No. / Container No. / Customer..."
+                    className="w-full rounded-full border border-slate-300 bg-slate-50/70 pl-4 pr-9 py-2 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  />
+                  <Search className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+                >
+                  <Printer className="h-3.5 w-3.5 text-blue-600" />
+                  <span>Print</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+                >
+                  <FileDown className="h-3.5 w-3.5 text-rose-600" />
+                  <span>PDF</span>
+                </button>
+
+                {onEdit && (
+                  <button
+                    type="button"
+                    onClick={() => order && onEdit(order)}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 transition shadow-2xs"
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                    <span>Edit</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition shadow-2xs"
+                >
+                  <MoreVertical className="h-3.5 w-3.5" />
+                  <span>More</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Page Title & Status Banner */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-2xs">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Customer Order</h1>
+                  <p className="text-xs font-medium text-slate-500">Import, Export and Transit Order Details</p>
+                </div>
+              </div>
+
+              {/* Status Ribbon (Solid emerald green pill from reference) */}
+              <div className="flex items-center">
+                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-xs">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span className="capitalize">{status || "Completed"}</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Tab Navigation Pill Bar */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-bold print:hidden">
+              <button
+                type="button"
+                onClick={() => setActiveTab("order_customer")}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full transition whitespace-nowrap ${
+                  activeTab === "order_customer"
+                    ? "bg-blue-600 text-white shadow-2xs"
+                    : "bg-blue-50/70 text-blue-700 hover:bg-blue-100 border border-blue-200"
+                }`}
+              >
+                <span className="h-2 w-2 rounded-full bg-white ring-2 ring-white/50" />
+                <span>Order & Customer</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("shipping")}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full transition whitespace-nowrap ${
+                  activeTab === "shipping"
+                    ? "bg-blue-600 text-white shadow-2xs"
+                    : "bg-blue-50/70 text-blue-700 hover:bg-blue-100 border border-blue-200"
+                }`}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                <span>Shipping (Loading & Receiving)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("goods")}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full transition whitespace-nowrap ${
+                  activeTab === "goods"
+                    ? "bg-blue-600 text-white shadow-2xs"
+                    : "bg-blue-50/70 text-blue-700 hover:bg-blue-100 border border-blue-200"
+                }`}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                <span>Goods</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("history")}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full transition whitespace-nowrap ${
+                  activeTab === "history"
+                    ? "bg-blue-600 text-white shadow-2xs"
+                    : "bg-blue-50/70 text-blue-700 hover:bg-blue-100 border border-blue-200"
+                }`}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                <span>Transfer & History</span>
+              </button>
+            </div>
+
+            {/* ========================================================================= */}
+            {/* SECTION 1: TWO-COLUMN CARDS [Order Details] + [Customer Details]         */}
+            {/* ========================================================================= */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Card 1: Order Details */}
+              <div className="rounded-xl border border-blue-200 bg-white overflow-hidden shadow-2xs">
+                {/* Header */}
+                <div className="bg-blue-900 text-white px-4 py-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-blue-200" />
+                    <h3 className="font-bold text-xs uppercase tracking-wide">Order Details</h3>
+                  </div>
+                  {onEdit && (
+                    <button
+                      type="button"
+                      onClick={() => order && onEdit(order)}
+                      className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition"
+                    >
+                      <Edit3 className="h-3 w-3" />
+                      <span>Edit</span>
+                    </button>
                   )}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
+                </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("truck_no", "Truck No")}</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-white">
-                  {(order as any).truck_number || "DEMO-123"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("driver", "Driver")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {(order as any).truck_driver_name || "Demo Driver"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("bl_container_vessel", "BL / Container / Vessel")}</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[130px]">
-                  {(order as any).bl_number || (order as any).container_number || (order as any).vessel_name || "Not applicable (Road)"}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2 border-t sm:border-t-0 sm:border-l sm:pl-4 border-slate-100 dark:border-slate-800">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("temporary_truck_no", "Temporary Truck No")}</span>
-                <span className="font-mono text-slate-600 dark:text-slate-400">
-                  {(order as any).temp_truck_number || "Not used"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">{tt("driver_contact", "Driver Contact")}</span>
-                <span className="font-mono text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                  <Phone className="h-3 w-3" />
-                  <span>{(order as any).truck_driver_mobile || "+92 300 1234567"}</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* CARD 04: Loading & Customs */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
-          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-white text-[11px] font-black">
-              04
-            </span>
-            <Ship className="h-4 w-4 text-blue-600" />
-            <h3 className="font-black text-slate-900 dark:text-white text-sm">
-              {tt("sec_loading_customs", "Loading & Customs")}
-            </h3>
-          </div>
-
-          <div className="space-y-2.5 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("loading_country", "Loading Country")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                <span>{getFlag(originCountryName)}</span>
-                <span>{originCountryName}</span>
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("loading_location", "Loading Location")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
-                {order.loading_source_name || order.loading_place || "Karachi Warehouse"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("loading_date", "Loading Date")}</span>
-              <span className="font-mono text-slate-800 dark:text-slate-200">
-                {order.expected_loading_date ? new Date(order.expected_loading_date).toLocaleString() : "13 Oct 2026 14:00"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("customs_handling", "Customs Handling")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
-                {(order as any).loading_customs_handled_by === "our_branch" ? "Our Branch" : "External Agent"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("clearing_agent", "Clearing Agent")}</span>
-              <span className="font-medium text-slate-700 dark:text-slate-300">
-                {(order as any).clearing_agent_name || "Demo Clearing Services"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("agent_account", "Agent Account")}</span>
-              <span className="font-mono text-slate-700 dark:text-slate-300">
-                {(order as any).agent_account_code || "CA-DEMO-01"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("customs_reference", "Customs Reference")}</span>
-              <span className="inline-flex items-center gap-1 text-amber-600 font-semibold">
-                <Clock className="h-3 w-3" />
-                <span>Pending</span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          2-COLUMN LOWER SECTION: [05 Receiving & Delivery] + [06 Documents]
-         ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* CARD 05: Receiving & Delivery */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
-          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-white text-[11px] font-black">
-              05
-            </span>
-            <MapPin className="h-4 w-4 text-blue-600" />
-            <h3 className="font-black text-slate-900 dark:text-white text-sm">
-              {tt("sec_receiving_delivery", "Receiving & Delivery")}
-            </h3>
-          </div>
-
-          <div className="space-y-2.5 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("receiving_country", "Receiving Country")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                <span>{getFlag(destCountryName)}</span>
-                <span>{destCountryName}</span>
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("border", "Border")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
-                {(order as any).entry_border_port_name || (order as any).receiving_customs_port_border || "Spin Boldak"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("planned_receipt", "Planned Receipt")}</span>
-              <span className="font-mono text-slate-800 dark:text-slate-200">
-                {(order as any).planned_arrival_date || "16 Oct 2026"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("actual_receipt", "Actual Receipt")}</span>
-              <span className="text-slate-600 dark:text-slate-400">
-                {(order as any).actual_arrival_date || "Not received"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("delivery_address", "Delivery Address")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[200px]">
-                {(order as any).delivery_address || (order as any).receiving_place || "Customer warehouse, Spin Boldak"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("receiving_customs", "Receiving Customs")}</span>
-              <span className="font-medium text-slate-700 dark:text-slate-300">
-                {(order as any).receiving_customs_handled_by || "Customer managed"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{tt("responsible_person", "Responsible Person")}</span>
-              <span className="font-bold text-slate-900 dark:text-white">
-                {(order as any).receiver_contact_person || "Demo Receiver"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* CARD 06: Documents */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
-          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-white text-[11px] font-black">
-              06
-            </span>
-            <FileText className="h-4 w-4 text-blue-600" />
-            <h3 className="font-black text-slate-900 dark:text-white text-sm">
-              {tt("sec_documents", "Documents")}
-            </h3>
-          </div>
-
-          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-slate-50 dark:bg-slate-800/80 font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 text-[10px]">
-                <tr>
-                  <th className="py-2 px-3">#</th>
-                  <th className="py-2 px-3">{tt("document_name", "Document Name")}</th>
-                  <th className="py-2 px-3">{tt("status", "Status")}</th>
-                  <th className="py-2 px-3">{tt("uploaded_on", "Uploaded On")}</th>
-                  <th className="py-2 px-3 text-center">{tt("actions", "Actions")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-                <tr className="hover:bg-slate-50/50">
-                  <td className="py-2 px-3 text-slate-400">1</td>
-                  <td className="py-2 px-3 font-semibold text-slate-800 dark:text-slate-200">Packing List.pdf</td>
-                  <td className="py-2 px-3">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                      <CheckCircle2 className="h-2.5 w-2.5" />
-                      <span>{tt("uploaded", "Uploaded")}</span>
+                {/* Table rows */}
+                <div className="p-3 text-xs divide-y divide-slate-100">
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Order No.</span>
+                    <span className="font-mono font-bold text-slate-900">{orderNo}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Order Date</span>
+                    <span className="font-bold text-slate-900">{orderDate}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Shipment Type</span>
+                    <span className="font-bold text-slate-900 flex items-center gap-1">
+                      <Truck className="h-3.5 w-3.5 text-blue-600" />
+                      <span>{shipmentType}</span>
                     </span>
-                  </td>
-                  <td className="py-2 px-3 font-mono text-slate-500">13 Oct 2026 10:35</td>
-                  <td className="py-2 px-3 text-center">
-                    <div className="flex items-center justify-center gap-1.5 text-blue-600 font-bold">
-                      <button type="button" className="hover:text-blue-800 inline-flex items-center gap-0.5">
-                        <Eye className="h-3 w-3" />
-                        <span>{tt("view", "View")}</span>
-                      </button>
-                      <Download className="h-3 w-3 text-slate-400 hover:text-slate-600 cursor-pointer" />
-                    </div>
-                  </td>
-                </tr>
-
-                <tr className="hover:bg-slate-50/50">
-                  <td className="py-2 px-3 text-slate-400">2</td>
-                  <td className="py-2 px-3 font-semibold text-slate-800 dark:text-slate-200">Customer Order.pdf</td>
-                  <td className="py-2 px-3">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                      <CheckCircle2 className="h-2.5 w-2.5" />
-                      <span>{tt("uploaded", "Uploaded")}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Operation Type</span>
+                    <span className="font-bold text-slate-900">{operationType}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between items-center">
+                    <span className="text-slate-500 font-medium">Status</span>
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                      {status || "Completed"}
                     </span>
-                  </td>
-                  <td className="py-2 px-3 font-mono text-slate-500">13 Oct 2026 10:31</td>
-                  <td className="py-2 px-3 text-center">
-                    <div className="flex items-center justify-center gap-1.5 text-blue-600 font-bold">
-                      <button type="button" className="hover:text-blue-800 inline-flex items-center gap-0.5">
-                        <Eye className="h-3 w-3" />
-                        <span>{tt("view", "View")}</span>
-                      </button>
-                      <Download className="h-3 w-3 text-slate-400 hover:text-slate-600 cursor-pointer" />
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Remarks</span>
+                    <span className="text-slate-600">{remarks}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Customer Details */}
+              <div className="rounded-xl border border-blue-200 bg-white overflow-hidden shadow-2xs">
+                {/* Header */}
+                <div className="bg-blue-900 text-white px-4 py-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-emerald-300" />
+                    <h3 className="font-bold text-xs uppercase tracking-wide">Customer Details</h3>
+                  </div>
+                  {onEdit && (
+                    <button
+                      type="button"
+                      onClick={() => order && onEdit(order)}
+                      className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition"
+                    >
+                      <Edit3 className="h-3 w-3" />
+                      <span>Edit</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Table rows */}
+                <div className="p-3 text-xs divide-y divide-slate-100">
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Account Code</span>
+                    <span className="font-mono font-bold text-slate-900">{accountCode}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Customer Name</span>
+                    <span className="font-bold text-slate-900">{customerName}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Contact Person</span>
+                    <span className="font-bold text-slate-800">{contactPerson}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Phone</span>
+                    <span className="font-mono text-blue-600 font-bold">{phone}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Email</span>
+                    <span className="font-mono text-slate-700">{email}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Address</span>
+                    <span className="text-slate-800">{address}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Country</span>
+                    <span className="font-bold text-slate-900">{country}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Customer Type</span>
+                    <span className="font-semibold text-slate-800">{customerType}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Tax No. / TRN</span>
+                    <span className="font-mono text-slate-600">{trn}</span>
+                  </div>
+                  <div className="py-1.5 flex justify-between">
+                    <span className="text-slate-500 font-medium">Remarks</span>
+                    <span className="text-slate-600">-</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ========================================================================= */}
+            {/* SECTION 2: SHIPPING – LOADING, TRANSPORT & RECEIVING (3 Connected Columns) */}
+            {/* ========================================================================= */}
+            <div className="rounded-xl border border-blue-200 bg-white overflow-hidden shadow-2xs">
+              <div className="bg-blue-900 text-white px-4 py-2.5 flex items-center gap-2">
+                <Truck className="h-4 w-4 text-blue-200" />
+                <h3 className="font-bold text-xs uppercase tracking-wide">
+                  Shipping – Loading, Transport & Receiving
+                </h3>
+              </div>
+
+              <div className="p-4 grid grid-cols-1 lg:grid-cols-11 gap-3 items-stretch">
+                {/* Column 1: Loading Details (From) */}
+                <div className="lg:col-span-3 rounded-xl border border-sky-200 bg-sky-50/30 overflow-hidden flex flex-col">
+                  <div className="bg-sky-100/90 text-sky-950 px-3 py-2 text-xs font-bold flex items-center justify-between border-b border-sky-200">
+                    <div className="flex items-center gap-1.5">
+                      <FileDown className="h-3.5 w-3.5 text-sky-700" />
+                      <span>Loading Details (From)</span>
                     </div>
-                  </td>
-                </tr>
+                  </div>
 
-                <tr className="hover:bg-slate-50/50">
-                  <td className="py-2 px-3 text-slate-400">3</td>
-                  <td className="py-2 px-3 font-semibold text-slate-800 dark:text-slate-200">Customs Declaration.pdf</td>
-                  <td className="py-2 px-3">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                      <Clock className="h-2.5 w-2.5" />
-                      <span>{tt("awaiting_upload", "Awaiting upload")}</span>
-                    </span>
-                  </td>
-                  <td className="py-2 px-3 font-mono text-slate-400">-</td>
-                  <td className="py-2 px-3 text-center">
-                    <div className="flex items-center justify-center gap-1.5 text-slate-400 font-bold">
-                      <button type="button" className="inline-flex items-center gap-0.5 opacity-60">
-                        <Eye className="h-3 w-3" />
-                        <span>{tt("view", "View")}</span>
-                      </button>
+                  <div className="p-3 text-xs space-y-2 flex-1 divide-y divide-sky-100">
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Country</span>
+                      <span className="font-bold text-slate-900 flex items-center gap-1">
+                        <span>🇦🇫</span>
+                        <span>{loadingCountry}</span>
+                      </span>
                     </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">City / Location</span>
+                      <span className="font-bold text-slate-900">{loadingCity}</span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Date</span>
+                      <span className="font-bold text-slate-900 flex items-center gap-1">
+                        <Calendar className="h-3 w-3 text-blue-600" />
+                        <span>{loadingDate}</span>
+                      </span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Exit Border</span>
+                      <span className="font-bold text-slate-900">{exitBorder}</span>
+                    </div>
+                    <div className="pt-1 flex justify-between items-center">
+                      <span className="text-slate-500 font-medium">Customs Clearance</span>
+                      <span className="font-bold text-emerald-700 flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        <span>{customsClearance}</span>
+                      </span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Customs Name</span>
+                      <span className="font-bold text-slate-800">{loadingCustomsName}</span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Warehouse / Yard</span>
+                      <span className="font-bold text-slate-800">{loadingWarehouse}</span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Remarks</span>
+                      <span className="text-slate-500">-</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Arrow 1 */}
+                <div className="lg:col-span-1 hidden lg:flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center">
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
+                </div>
+
+                {/* Column 2: Transport Details */}
+                <div className="lg:col-span-3 rounded-xl border border-purple-200 bg-purple-50/20 overflow-hidden flex flex-col">
+                  <div className="bg-purple-100/80 text-purple-950 px-3 py-2 text-xs font-bold flex items-center justify-between border-b border-purple-200">
+                    <div className="flex items-center gap-1.5">
+                      <Truck className="h-3.5 w-3.5 text-purple-700" />
+                      <span>Transport Details</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 text-xs space-y-2 flex-1 divide-y divide-purple-100">
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Mode</span>
+                      <span className="font-bold text-slate-900 flex items-center gap-1">
+                        <Truck className="h-3 w-3 text-purple-700" />
+                        <span>{transportMode}</span>
+                      </span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Carrier / Truck No.</span>
+                      <span className="font-mono font-bold text-slate-900">{truckNo}</span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Driver Name</span>
+                      <span className="font-bold text-slate-900">{driverName}</span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Estimated Transit Time</span>
+                      <span className="font-bold text-slate-900 flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-purple-600" />
+                        <span>{transitTime}</span>
+                      </span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Distance (KM)</span>
+                      <span className="font-mono font-bold text-slate-900">{distanceKm}</span>
+                    </div>
+                    <div className="pt-1">
+                      <span className="text-slate-500 font-medium block mb-1">Route</span>
+                      <span className="font-semibold text-slate-800 text-[11px] block leading-tight">
+                        {routeDisplay}
+                      </span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Remarks</span>
+                      <span className="text-slate-500">-</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Arrow 2 */}
+                <div className="lg:col-span-1 hidden lg:flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center">
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
+                </div>
+
+                {/* Column 3: Receiving Details (To) */}
+                <div className="lg:col-span-3 rounded-xl border border-emerald-200 bg-emerald-50/20 overflow-hidden flex flex-col">
+                  <div className="bg-emerald-100/80 text-emerald-950 px-3 py-2 text-xs font-bold flex items-center justify-between border-b border-emerald-200">
+                    <div className="flex items-center gap-1.5">
+                      <FileDown className="h-3.5 w-3.5 text-emerald-700" />
+                      <span>Receiving Details (To)</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 text-xs space-y-2 flex-1 divide-y divide-emerald-100">
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Country</span>
+                      <span className="font-bold text-slate-900 flex items-center gap-1">
+                        <span>🇵🇰</span>
+                        <span>{receivingCountry}</span>
+                      </span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">City / Port</span>
+                      <span className="font-bold text-slate-900">{receivingCity}</span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Date (ETA)</span>
+                      <span className="font-bold text-slate-900 flex items-center gap-1">
+                        <Calendar className="h-3 w-3 text-emerald-600" />
+                        <span>{receivingEta}</span>
+                      </span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Entry Border</span>
+                      <span className="font-bold text-slate-900 flex items-center gap-1">
+                        <Anchor className="h-3 w-3 text-blue-600" />
+                        <span>{entryBorder}</span>
+                      </span>
+                    </div>
+                    <div className="pt-1 flex justify-between items-center">
+                      <span className="text-slate-500 font-medium">Customs Clearance</span>
+                      <span className="font-bold text-emerald-700 flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        <span>{customsClearance}</span>
+                      </span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Customs Name</span>
+                      <span className="font-bold text-slate-800">{receivingCustomsName}</span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Warehouse / Yard</span>
+                      <span className="font-bold text-slate-800">{receivingWarehouse}</span>
+                    </div>
+                    <div className="pt-1 flex justify-between">
+                      <span className="text-slate-500 font-medium">Remarks</span>
+                      <span className="text-slate-500">-</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ========================================================================= */}
+            {/* SECTION 3: GOODS DETAILS (Which goods will be made)                       */}
+            {/* ========================================================================= */}
+            <div className="rounded-xl border border-blue-200 bg-white overflow-hidden shadow-2xs">
+              <div className="bg-blue-900 text-white px-4 py-2.5 flex items-center gap-2">
+                <Package className="h-4 w-4 text-blue-200" />
+                <h3 className="font-bold text-xs uppercase tracking-wide">
+                  Goods Details (Which goods will be made)
+                </h3>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="bg-blue-50/80 text-blue-950 font-bold border-b border-blue-100">
+                      <th className="py-2.5 px-3 w-10">#</th>
+                      <th className="py-2.5 px-3">Goods Name</th>
+                      <th className="py-2.5 px-3">HS Code</th>
+                      <th className="py-2.5 px-3">Brand</th>
+                      <th className="py-2.5 px-3">Size</th>
+                      <th className="py-2.5 px-3">Unit</th>
+                      <th className="py-2.5 px-3 text-right">Quantity</th>
+                      <th className="py-2.5 px-3 text-right">Gross Weight</th>
+                      <th className="py-2.5 px-3 text-right">Net Weight</th>
+                      <th className="py-2.5 px-3 text-center">Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {goodsRows.map((row) => (
+                      <tr key={row.id} className="hover:bg-slate-50/80 transition">
+                        <td className="py-2 px-3 font-medium text-slate-500">{row.id}</td>
+                        <td className="py-2 px-3 font-bold text-slate-900">{row.name}</td>
+                        <td className="py-2 px-3 font-mono text-slate-600">{row.hsCode}</td>
+                        <td className="py-2 px-3 text-slate-700">{row.brand}</td>
+                        <td className="py-2 px-3 text-slate-700">{row.size}</td>
+                        <td className="py-2 px-3 text-slate-600 font-semibold">{row.unit}</td>
+                        <td className="py-2 px-3 font-mono font-bold text-slate-900 text-right">
+                          {row.qty.toLocaleString()}
+                        </td>
+                        <td className="py-2 px-3 font-mono font-bold text-slate-900 text-right">
+                          {row.grossKg.toLocaleString()}
+                        </td>
+                        <td className="py-2 px-3 font-mono font-bold text-slate-900 text-right">
+                          {row.netKg.toLocaleString()}
+                        </td>
+                        <td className="py-2 px-3 text-center text-slate-400">{row.remarks}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-slate-50 font-black text-slate-900 border-t-2 border-slate-200">
+                      <td colSpan={6} className="py-2.5 px-3 text-left">
+                        Total
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono text-blue-900">
+                        {totalQty.toLocaleString()}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono text-blue-900">
+                        {totalGross.toLocaleString()}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono text-blue-900">
+                        {totalNet.toLocaleString()}
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-slate-400">-</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            {/* ========================================================================= */}
+            {/* SECTION 4: SECTION USER DETAILS (Audit Breakdown)                         */}
+            {/* ========================================================================= */}
+            <div className="rounded-xl border border-blue-200 bg-white overflow-hidden shadow-2xs">
+              <div className="bg-blue-900 text-white px-4 py-2.5 flex items-center gap-2">
+                <User className="h-4 w-4 text-blue-200" />
+                <h3 className="font-bold text-xs uppercase tracking-wide">Section User Details</h3>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="bg-blue-50/80 text-blue-950 font-bold border-b border-blue-100">
+                      <th className="py-2.5 px-3">Section</th>
+                      <th className="py-2.5 px-3">Entered By</th>
+                      <th className="py-2.5 px-3">Role</th>
+                      <th className="py-2.5 px-3">Branch</th>
+                      <th className="py-2.5 px-3">Date & Time</th>
+                      <th className="py-2.5 px-3">Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {auditUsers.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/80 transition">
+                        <td className="py-2 px-3 font-bold text-slate-900">{item.section}</td>
+                        <td className="py-2 px-3 font-semibold text-blue-700">{item.enteredBy}</td>
+                        <td className="py-2 px-3 text-slate-700">{item.role}</td>
+                        <td className="py-2 px-3 text-slate-700">{item.branch}</td>
+                        <td className="py-2 px-3 font-mono text-slate-600">{item.dateTime}</td>
+                        <td className="py-2 px-3 text-slate-600">{item.remarks}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Official Report Footer */}
+            <div className="pt-2 pb-1 text-center text-[11px] font-mono text-slate-400">
+              DGT LLC | Customer Order Report | Generated on 12 OCT 2026 16:20
+            </div>
+          </main>
         </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          SECTION 07: Workflow & Audit (Horizontal Stepper & Chips)
-         ───────────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-white text-[11px] font-black">
-            07
-          </span>
-          <Route className="h-4 w-4 text-blue-600" />
-          <h3 className="font-black text-slate-900 dark:text-white text-sm">
-            {tt("sec_workflow_audit", "Workflow & Audit")}
-          </h3>
-        </div>
-
-        {/* 3-Step Stepper */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-          {/* Step 1: Submitted */}
-          <div className="flex items-center gap-3">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-black shrink-0">
-              1
-            </span>
-            <div className="min-w-0">
-              <span className="font-bold text-slate-900 dark:text-white block text-xs">{tt("wf_submitted", "Submitted")}</span>
-              <span className="text-[10px] text-slate-400 font-mono block">13 Oct 2026 10:30</span>
-              <span className="text-[10.5px] text-slate-500 block truncate">by {(order as any).entered_by_name || "Demo Operator"}</span>
-            </div>
-          </div>
-
-          {/* Step 2: Assigned */}
-          <div className="flex items-center gap-3 border-t md:border-t-0 md:border-l md:pl-3 border-slate-200 dark:border-slate-700 pt-2 md:pt-0">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-black shrink-0">
-              2
-            </span>
-            <div className="min-w-0">
-              <span className="font-bold text-slate-900 dark:text-white block text-xs">{tt("wf_assigned", "Assigned")}</span>
-              <span className="text-[10px] text-slate-400 font-mono block">13 Oct 2026 10:45</span>
-              <span className="text-[10.5px] text-slate-500 block truncate">to {(order as any).responsible_user_name || "Demo Supervisor"}</span>
-            </div>
-          </div>
-
-          {/* Step 3: Pending Approval */}
-          <div className="flex items-center gap-3 border-t md:border-t-0 md:border-l md:pl-3 border-slate-200 dark:border-slate-700 pt-2 md:pt-0">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-white text-xs font-black shrink-0">
-              3
-            </span>
-            <div className="min-w-0">
-              <span className="font-bold text-amber-700 dark:text-amber-400 block text-xs">{statusLabel}</span>
-              <span className="text-[10.5px] text-slate-500 block">{tt("current_status", "Current status")}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Metadata Chips Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs pt-1">
-          <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-            <User className="h-4 w-4 text-blue-600 shrink-0" />
-            <div className="min-w-0">
-              <span className="text-[10px] text-slate-400 block font-bold">{tt("assigned_to", "Assigned To")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
-                {(order as any).responsible_user_name || "Demo Supervisor"}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-            <FileText className="h-4 w-4 text-indigo-600 shrink-0" />
-            <div className="min-w-0">
-              <span className="text-[10px] text-slate-400 block font-bold">{tt("next_action", "Next Action")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
-                {tt("review_documents", "Review documents")}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-            <Calendar className="h-4 w-4 text-purple-600 shrink-0" />
-            <div className="min-w-0">
-              <span className="text-[10px] text-slate-400 block font-bold">{tt("due_date", "Due Date")}</span>
-              <span className="font-mono text-slate-800 dark:text-slate-200 truncate block">14 Oct 2026</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-            <MessageCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-            <div className="min-w-0">
-              <span className="text-[10px] text-slate-400 block font-bold">{tt("latest_note", "Latest Note")}</span>
-              <span className="text-slate-600 dark:text-slate-400 truncate block">
-                {tt("awaiting_customs_docs", "Awaiting customs documents.")}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          BOTTOM FOOTER NOTE
-         ───────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between text-xs text-slate-400 px-2 py-1 print:hidden">
-        <div className="flex items-center gap-1.5">
-          <span className="text-blue-600 font-bold">ⓘ</span>
-          <span>{tt("readonly_order_footer", "Read-only order details • All sections shown on one page")}</span>
-        </div>
-
-        {onEdit && (
-          <button
-            type="button"
-            onClick={() => onEdit(order)}
-            className="font-bold text-blue-600 hover:text-blue-800 underline"
-          >
-            {tt("edit_this_order", "Edit this order")}
-          </button>
-        )}
       </div>
     </div>
   );

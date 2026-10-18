@@ -112,7 +112,19 @@ const migrations = [
   { name: "20260912_shipping_leg_cross_border_truck_rule", path: "supabase/migrations/20260912_shipping_leg_cross_border_truck_rule.sql" },
   { name: "20261129_canonical_shipment_tracking_timeline", path: "supabase/migrations/20261129_canonical_shipment_tracking_timeline.sql" },
   { name: "20261010_purchase_sales_transfer_currency_and_serials", path: "supabase/migrations/20261010_purchase_sales_transfer_currency_and_serials.sql" },
-  { name: "20261223_enterprise_accounts_multilink_companies_banks", path: "supabase/migrations/20261223_enterprise_accounts_multilink_companies_banks.sql" }
+  { name: "20261223_enterprise_accounts_multilink_companies_banks", path: "supabase/migrations/20261223_enterprise_accounts_multilink_companies_banks.sql" },
+  { name: "20261120_shipping_customer_order_upgrade", path: "supabase/migrations/20261120_shipping_customer_order_upgrade.sql" },
+  { name: "20261121_shipping_order_truck_vessel_translation_fields", path: "supabase/migrations/20261121_shipping_order_truck_vessel_translation_fields.sql" },
+  { name: "20261122_shipping_billing_receipts_approval", path: "supabase/migrations/20261122_shipping_billing_receipts_approval.sql" },
+  { name: "20261124_shipping_transfers_order_link", path: "supabase/migrations/20261124_shipping_transfers_order_link.sql" },
+  { name: "20261126_shipping_clearing_pipeline", path: "supabase/migrations/20261126_shipping_clearing_pipeline.sql" },
+  { name: "20261128_clearing_customer_bills", path: "supabase/migrations/20261128_clearing_customer_bills.sql" },
+  { name: "20261130_customer_bill_order_links", path: "supabase/migrations/20261130_customer_bill_order_links.sql" },
+  { name: "20261212_customer_order_external_partner_bills", path: "supabase/migrations/20261212_customer_order_external_partner_bills.sql" },
+  { name: "20261218_customer_order_insurance", path: "supabase/migrations/20261218_customer_order_insurance.sql" },
+  { name: "20261219_customer_order_insurance_bill_link", path: "supabase/migrations/20261219_customer_order_insurance_bill_link.sql" },
+  { name: "20261223_customer_order_goods_items_and_jsonb_normalize", path: "supabase/migrations/20261223_customer_order_goods_items_and_jsonb_normalize.sql" },
+  { name: "20261224_customer_order_import_scenario_and_reexport", path: "supabase/migrations/20261224_customer_order_import_scenario_and_reexport.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });
