@@ -8,14 +8,14 @@ set -euo pipefail
 : "${APPLE_TEAM_ID:?Set APPLE_TEAM_ID to your Apple Developer Team ID}"
 which=${1:-all}
 cd "$(dirname "$0")/.."
-npm ci   # the iOS project uses Swift Package Manager (ios/App/CapApp-SPM): no CocoaPods and no .xcworkspace — build with -project
+npm ci
 node scripts/mobile-env.mjs production --release
 mkdir -p build/ios
 build_one() {
   key=$1; name=$2; bundle=$3; icon=$4
   cp "mobile/generated/capacitor.${key}.json" capacitor.config.json
   npx cap sync ios
-  xcodebuild archive -project ios/App/App.xcodeproj -scheme App -configuration Release \
+  xcodebuild archive -workspace ios/App/App.xcworkspace -scheme App -configuration Release \
     -archivePath "build/ios/${key}.xcarchive" -destination 'generic/platform=iOS' \
     DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CODE_SIGN_STYLE=Automatic -allowProvisioningUpdates \
     PRODUCT_BUNDLE_IDENTIFIER="$bundle" APP_DISPLAY_NAME="$name" ASSETCATALOG_COMPILER_APPICON_NAME="$icon"

@@ -4,7 +4,7 @@ The Xcode project is ready in `ios/` (display name driven by `APP_DISPLAY_NAME`,
 
 ## You need
 1. **A Mac** (Apple silicon or Intel) on a current macOS, or a cloud Mac / CI that provides one (MacStadium, Codemagic, Xcode Cloud, GitHub Actions macOS runner).
-2. **Xcode** (current stable, free from the Mac App Store) + command-line tools; **Node 20+** (no CocoaPods: the project uses Swift Package Manager, which downloads `capacitor-swift-pm` on first build — the Mac needs internet).
+2. **Xcode** (current stable, free from the Mac App Store) + command-line tools; **Node 20+** and **CocoaPods** (`sudo gem install cocoapods` or `brew install cocoapods`).
 3. **Apple Developer Program organisation membership** (USD 99/year) — see `accounts-guide.md`.
 4. **Certificates and profiles** (Xcode "Automatic signing" creates them for the team): *Apple Distribution* certificate and two *App Store* provisioning profiles (one per bundle id). Optional: an APNs key (`.p8`) for push notifications.
 5. The company **Team ID** (10 characters, in the developer account → Membership).
