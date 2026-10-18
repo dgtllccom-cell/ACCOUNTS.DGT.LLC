@@ -360,7 +360,8 @@ const DICT = {
     per_page: "۱۰ / پاڼه",
     lang_auto_note: "د ژبې په بدلولو سره، تڼۍ، انتخابي لستونه، فلټرونه او د پاڼې لوری په خپله بدلیږي."
   }
-};
+const CUSTOMER_FILTER_OPTIONS = ["Al Noor Trading LLC", "Faisal Enterprises", "Kabul Star Ltd"];
+const EXPENSE_TYPE_FILTER_OPTIONS = ["Travel Expense", "Marketing Expense", "Fuel Expense", "Maintenance Expense"];
 
 export function ExpensesBillRegisterView({ category, onOpenEntryForm }: ExpensesBillRegisterViewProps) {
   const activeLang = useActiveLanguage();
@@ -371,7 +372,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
   // States
   const [selectedCountryTab, setSelectedCountryTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFiltersPanel, setShowFiltersPanel] = useState(true);
+  const [showFiltersPanel, setShowFiltersPanel] = useState(false);
 
   // Form filters
   const [filterCountry, setFilterCountry] = useState("all");
@@ -690,15 +691,164 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
               />
             </div>
 
-            {/* Filter Toggle Button (Blue) */}
-            <button
-              type="button"
-              onClick={() => setShowFiltersPanel(!showFiltersPanel)}
-              className="inline-flex items-center gap-1.5 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-3.5 text-xs font-bold shadow-2xs transition"
-            >
-              <Filter className="h-3.5 w-3.5" />
-              <span>{t.filter_btn}</span>
-            </button>
+            {/* Filter Toggle Button (Blue) with Dropdown Popover Menu */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowFiltersPanel(!showFiltersPanel)}
+                className="inline-flex items-center gap-1.5 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-3.5 text-xs font-bold shadow-2xs transition"
+              >
+                <Filter className="h-3.5 w-3.5" />
+                <span>{t.filter_btn}</span>
+                <ChevronDown className="h-3.5 w-3.5 ml-0.5" />
+              </button>
+
+              {/* Floating Dropdown Filter Card */}
+              {showFiltersPanel && (
+                <div
+                  className={`absolute top-full mt-2 ${
+                    isRtl ? "left-0" : "right-0"
+                  } z-50 w-72 sm:w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-800 dark:bg-slate-900 space-y-3.5 animate-in fade-in zoom-in-95 duration-150`}
+                >
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                    <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{t.filters_header}</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowFiltersPanel(false)}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5 text-xs">
+                    {/* Country */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.country}</label>
+                      <select
+                        value={filterCountry}
+                        onChange={(e) => setFilterCountry(e.target.value)}
+                        className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="all">{t.select_country}</option>
+                        <option value="AE">{t.uae}</option>
+                        <option value="PK">{t.pakistan}</option>
+                        <option value="AF">{t.afghanistan}</option>
+                        <option value="UZ">{t.uzbekistan}</option>
+                      </select>
+                    </div>
+
+                    {/* Branch */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.branch}</label>
+                      <select
+                        value={filterBranch}
+                        onChange={(e) => setFilterBranch(e.target.value)}
+                        className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="all">{t.select_branch}</option>
+                        <option value="Dubai">Dubai / دبئی</option>
+                        <option value="Karachi">Karachi / کراچی</option>
+                        <option value="Kabul">Kabul / کابل</option>
+                        <option value="Tashkent">Tashkent / تاشقند</option>
+                      </select>
+                    </div>
+
+                    {/* User */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.user}</label>
+                      <select
+                        value={filterUser}
+                        onChange={(e) => setFilterUser(e.target.value)}
+                        className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="all">{t.select_user}</option>
+                        <option value="Ali Khan">Ali Khan / علی خان</option>
+                        <option value="Sara Ahmed">Sara Ahmed / سارہ احمد</option>
+                        <option value="Mohammad Iqbal">Mohammad Iqbal / محمد اقبال</option>
+                      </select>
+                    </div>
+
+                    {/* Customer / Party */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1">{partyHeader}</label>
+                      <select
+                        value={filterCustomer}
+                        onChange={(e) => setFilterCustomer(e.target.value)}
+                        className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="all">{category === "customer" ? t.select_customer : t.select_party}</option>
+                        {CUSTOMER_FILTER_OPTIONS.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Expense Type */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.expense_type}</label>
+                      <select
+                        value={filterExpenseType}
+                        onChange={(e) => setFilterExpenseType(e.target.value)}
+                        className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="all">{t.select_expense_type}</option>
+                        {EXPENSE_TYPE_FILTER_OPTIONS.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Voucher Number */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.voucher_number}</label>
+                      <input
+                        type="text"
+                        value={filterVoucher}
+                        onChange={(e) => setFilterVoucher(e.target.value)}
+                        placeholder={t.enter_voucher}
+                        className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+
+                    {/* Status */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.status}</label>
+                      <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="all">{t.select_status}</option>
+                        <option value="approved">{t.approved}</option>
+                        <option value="pending">{t.pending}</option>
+                        <option value="rejected">{t.rejected}</option>
+                      </select>
+                    </div>
+
+                    {/* Action Buttons: Apply Filter & Clear */}
+                    <div className="pt-2 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowFiltersPanel(false)}
+                        className="flex-1 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-2xs transition inline-flex items-center justify-center gap-1.5"
+                      >
+                        <Filter className="h-3 w-3" />
+                        <span>{t.apply_filter}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleResetFilters}
+                        className="h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-3 font-semibold text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition inline-flex items-center gap-1"
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        <span>{t.clear}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Bill Date Button (Purple) */}
             <button
@@ -736,150 +886,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
       {/* ─────────────────────────────────────────────────────────────
           UPPER 3 PANELS: Summary Cards + Country Analytics Tables
          ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-3.5">
-        {/* Left Filter Sidebar Panel (when opened) */}
-        {showFiltersPanel && (
-          <div className="xl:col-span-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-              <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{t.filters_header}</span>
-              <button
-                type="button"
-                onClick={() => setShowFiltersPanel(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              {/* Country */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.country}</label>
-                <select
-                  value={filterCountry}
-                  onChange={(e) => setFilterCountry(e.target.value)}
-                  className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
-                  <option value="all">{t.select_country}</option>
-                  <option value="AE">{t.uae}</option>
-                  <option value="PK">{t.pakistan}</option>
-                  <option value="AF">{t.afghanistan}</option>
-                  <option value="UZ">{t.uzbekistan}</option>
-                </select>
-              </div>
-
-              {/* Branch */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.branch}</label>
-                <select
-                  value={filterBranch}
-                  onChange={(e) => setFilterBranch(e.target.value)}
-                  className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
-                  <option value="all">{t.select_branch}</option>
-                  <option value="Dubai">Dubai / دبئی</option>
-                  <option value="Karachi">Karachi / کراچی</option>
-                  <option value="Kabul">Kabul / کابل</option>
-                  <option value="Tashkent">Tashkent / تاشقند</option>
-                </select>
-              </div>
-
-              {/* User */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.user}</label>
-                <select
-                  value={filterUser}
-                  onChange={(e) => setFilterUser(e.target.value)}
-                  className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
-                  <option value="all">{t.select_user}</option>
-                  <option value="Ali Khan">Ali Khan / علی خان</option>
-                  <option value="Sara Ahmed">Sara Ahmed / سارہ احمد</option>
-                  <option value="Mohammad Iqbal">Mohammad Iqbal / محمد اقبال</option>
-                </select>
-              </div>
-
-              {/* Customer / Party */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-1">{partyHeader}</label>
-                <select
-                  value={filterCustomer}
-                  onChange={(e) => setFilterCustomer(e.target.value)}
-                  className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
-                  <option value="all">{category === "customer" ? t.select_customer : t.select_party}</option>
-                  <option value="Al Noor Trading LLC">Al Noor Trading LLC</option>
-                  <option value="Faisal Enterprises">Faisal Enterprises</option>
-                  <option value="Kabul Star Ltd">Kabul Star Ltd</option>
-                </select>
-              </div>
-
-              {/* Expense Type */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.expense_type}</label>
-                <select
-                  value={filterExpenseType}
-                  onChange={(e) => setFilterExpenseType(e.target.value)}
-                  className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
-                  <option value="all">{t.select_expense_type}</option>
-                  <option value="Travel Expense">Travel Expense</option>
-                  <option value="Marketing Expense">Marketing Expense</option>
-                  <option value="Fuel Expense">Fuel Expense</option>
-                  <option value="Maintenance Expense">Maintenance Expense</option>
-                </select>
-              </div>
-
-              {/* Voucher Number */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.voucher_number}</label>
-                <input
-                  type="text"
-                  value={filterVoucher}
-                  onChange={(e) => setFilterVoucher(e.target.value)}
-                  placeholder={t.enter_voucher}
-                  className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-1">{t.status}</label>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
-                  <option value="all">{t.select_status}</option>
-                  <option value="approved">{t.approved}</option>
-                  <option value="pending">{t.pending}</option>
-                  <option value="rejected">{t.rejected}</option>
-                </select>
-              </div>
-
-              {/* Action Buttons: Apply Filter & Clear */}
-              <div className="pt-2 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {}}
-                  className="flex-1 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-2xs transition"
-                >
-                  {t.apply_filter}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleResetFilters}
-                  className="h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-3 font-semibold text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition"
-                >
-                  {t.clear}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Center / Right 3 Analytics Cards */}
-        <div className={`${showFiltersPanel ? "xl:col-span-9" : "xl:col-span-12"} grid grid-cols-1 md:grid-cols-3 gap-3.5`}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
           {/* Card 1: 4 Colored KPI Cards */}
           <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
             <div className="flex items-center gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
@@ -1051,7 +1058,6 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             </div>
           </div>
         </div>
-      </div>
 
       {/* ─────────────────────────────────────────────────────────────
           COUNTRY FILTER TABS (Pills with Flags)
