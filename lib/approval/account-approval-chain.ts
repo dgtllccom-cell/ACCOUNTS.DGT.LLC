@@ -57,7 +57,7 @@ function safeParse(v: string) {
  * request they raised themselves.
  */
 export function canDecideChainStage(
-  session: Pick<ErpSession, "isSuperAdmin" | "roles" | "countryIds" | "userId"> & { operationalDomains?: readonly string[] },
+  session: Pick<ErpSession, "isSuperAdmin" | "countryIds" | "userId"> & { roles: readonly string[]; operationalDomains?: readonly string[] },
   stageRole: string,
   request: { country_id: string | null; requested_by?: string | null; operational_domain?: string | null }
 ): boolean {
@@ -70,7 +70,7 @@ export function canDecideChainStage(
   if (stageRole === "country_operations_admin") {
     return session.roles.includes("global_operations_admin") || (session.roles.includes("country_operations_admin") && inCountry);
   }
-  return session.roles.includes(stageRole) && inCountry;
+  return (session.roles as readonly string[]).includes(stageRole) && inCountry;
 }
 
 /** Record an approved stage. `done` = that was the last stage (the caller then activates the account). */

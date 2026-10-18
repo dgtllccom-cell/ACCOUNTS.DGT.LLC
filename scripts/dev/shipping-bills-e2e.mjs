@@ -13,7 +13,7 @@ const chaman = await loginAsUser(await lookupUserId("chaman.shipping@dgt.llc"));
 const quetta = await loginAsUser(await lookupUserId("quetta.accountant@dgt.llc"));
 const stamp = Date.now().toString(36).toUpperCase();
 const today = new Date().toISOString().slice(0, 10);
-const line = (n, d) => ({ rowSerial: n, details: d, qty: 1, unitPrice: 1500, amount: 1500, currency: "PKR", operation: "multiply", exchangeRate: 1, finalAmount: 1500, taxOn: false, taxPct: 0, taxAmt: 0, grandAmount: 1500 });
+const line = (n, d) => ({ rowSerial: n, details: d, qty: 1, unitPrice: 1500, amount: 1500, currency: "PKR", operation: "*", exchangeRate: 1, finalAmount: 1500, taxOn: false, taxPct: 0, taxAmt: 0, grandAmount: 1500 });
 
 for (const [label, title] of [["Truck Expense Bill", "truck_expenses"], ["Truck Freight / Rent Bill", "truck_freight_rent"]]) {
   const save = await chaman.req("POST", "/api/erp/expenses", { header: { billSerial: "AUTO", branch: IDS.CHAMAN_SHIP, billDate: today, billMode: "new", billTitle: title, referenceNo: `E2E-${stamp}` }, entries: [line(1, `[E2E TEST] ${label} ${stamp}`)] });

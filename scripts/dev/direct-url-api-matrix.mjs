@@ -1,6 +1,6 @@
 /**
  * DEV-only: direct-URL (pasted /dashboard/... address) and API access matrix per persona.
- *   BASE=http://127.0.0.1:3540 node scripts/dev/direct-url-api-matrix.mjs [persona,persona]
+ *   BASE=http://127.0.0.1:3540 node scripts/dev/direct-url-api-matrix.mjs [persona,persona|all] [page|api]
  * A page the policy forbids must answer 403 (server-side route gate), a page the persona owns must NOT be 403, and the
  * Business-confidential / Shipping-only APIs must answer 403 for the wrong domain.
  */
@@ -8,7 +8,8 @@ import { PERSONAS, login, client, tally } from "./_rbac-lib.mjs";
 import { loginAsUser, lookupUserId } from "./_rbac-users.mjs";
 
 const T = tally();
-const only = process.argv[2]?.split(",");
+const only = process.argv[2] && process.argv[2] !== "all" ? process.argv[2].split(",") : null;
+const onlyKind = process.argv[3] || null; // "page" | "api" (a dev server compiles each page on first hit - run pages in small groups)
 
 // [persona, kind, path, expectation]  expectation: "403" | "allowed" (anything except 401/403/5xx)
 const CASES = [
@@ -77,6 +78,7 @@ async function sessionFor(p) {
 
 for (const [persona, kind, path, expect] of CASES) {
   if (only && !only.includes(persona)) continue;
+  if (onlyKind && kind !== onlyKind) continue;
   const c = await sessionFor(persona);
   const r = await c.get(path);
   const forbidden = r.status === 403;

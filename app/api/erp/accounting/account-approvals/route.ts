@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const status = request.nextUrl.searchParams.get("status") ?? "pending";
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const data = await withLocalPg(async (sql) => {
       const reqs = (await sql`

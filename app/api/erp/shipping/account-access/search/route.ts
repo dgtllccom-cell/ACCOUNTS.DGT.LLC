@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -19,6 +20,7 @@ const querySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     const query = querySchema.parse({
       q: request.nextUrl.searchParams.get("q") ?? undefined,
       countryId: request.nextUrl.searchParams.get("countryId") ?? undefined,

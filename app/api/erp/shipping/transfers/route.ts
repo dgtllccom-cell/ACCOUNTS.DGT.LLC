@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
@@ -31,6 +32,7 @@ const createSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     const status = request.nextUrl.searchParams.get("status");
     const rows = await withLocalPg(async (sql) => {
       // Scope: super admin sees all; a shipping-only login sees ONLY its clearing agent's transfers;
@@ -61,6 +63,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     const body = createSchema.parse(await request.json());
     // The creator must be authorized on the ORIGIN scope (they own the source bill/expense).
     authorizeApiScope(session, {

@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
@@ -9,6 +10,7 @@ export async function POST(
 ) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     const { id } = await context.params;
 
     const result = await postCustomerBillToLedger(id, session.userId);
