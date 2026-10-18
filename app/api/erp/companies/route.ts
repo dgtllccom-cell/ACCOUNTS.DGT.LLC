@@ -3,7 +3,8 @@ import { assertCompanyTypeRules, findCompanyDuplicates, setCompanyBranchLinks } 
 import { apiCreated, apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, recordInHierarchyScope } from "@/lib/api/scope-middleware";
+import { rowInSessionDomain } from "@/lib/permissions/domain-scope";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { companyCreateSchema } from "@/lib/api/erp-validation";
 import { companiesService } from "@/lib/services/companies-service";
@@ -51,6 +52,24 @@ export async function GET(request: NextRequest) {
     });
 
     let companies: any[] = (result as any).companies ?? [];
+    // A company filed under a city branch belongs to that branch's domain and hierarchy: no Shipping Line branch company for a
+    // Business login (and the reverse), and never a sibling branch's company. Country-level companies (no city branch) are the
+    // shared company master and stay visible inside the login's country scope.
+    if (!session.isSuperAdmin && companies.length > 0) {
+      const branchIds = [...new Set(companies.map((c) => c.cityBranchId ?? c.city_branch_id).filter(Boolean))] as string[];
+      if (branchIds.length > 0) {
+        const domains = await withLocalPg(async (sql) => {
+          const rows = (await sql`select id, operational_domain from public.city_branches where id = any(${branchIds}::uuid[])`) as unknown as any[];
+          return new Map<string, string>(rows.map((r) => [r.id, r.operational_domain]));
+        });
+        companies = companies.filter((c) => {
+          const cb = c.cityBranchId ?? c.city_branch_id;
+          if (!cb) return true;
+          return rowInSessionDomain(session, domains?.get(cb) ?? "business") &&
+            recordInHierarchyScope(session, { country_id: c.countryId ?? c.country_id, country_branch_id: c.countryBranchId ?? c.country_branch_id, city_branch_id: cb });
+        });
+      }
+    }
     if (Array.isArray(companies) && companies.length > 0) {
       // One batched call (one connection, one translations query) instead of six —
       // the per-field variant reconnected to the pooler each time (~12 s total).

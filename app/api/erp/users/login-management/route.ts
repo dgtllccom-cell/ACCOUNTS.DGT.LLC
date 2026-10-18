@@ -6,6 +6,7 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import { isUserManager, userInManagerScope } from "@/lib/permissions/user-management-scope";
 import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
+import { rowInSessionDomain } from "@/lib/permissions/domain-scope";
 
 type CountryRow = {
   id: string;
@@ -171,7 +172,7 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>, s
   return await withLocalPg(async (sql) => {
     const countryRowsRaw = await sql<CountryRow[]>`select id, name, iso2, iso3, currency_code, is_active from countries where deleted_at is null order by name asc`;
     const branchRowsRaw = await sql<CountryBranchRow[]>`select id, country_id, name, code, local_currency, status, is_main, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at from country_branches where deleted_at is null order by name asc`;
-    const cityRowsRaw = await sql<CityBranchRow[]>`select id, country_id, country_branch_id, city_name, name, code, local_currency, status, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at from city_branches where deleted_at is null order by city_name asc`;
+    const cityRowsRaw = await sql<CityBranchRow[]>`select id, country_id, country_branch_id, city_name, name, code, local_currency, status, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at, operational_domain from city_branches where deleted_at is null order by city_name asc`;
     const clearingAgentRowsRaw = await sql<any[]>`select id, name, code, head_office_country_id from clearing_agents where deleted_at is null`;
     const clearingBranchRowsRaw = await sql<any[]>`select id, name, code, clearing_agent_id, branch_level from clearing_agent_branches where deleted_at is null`;
     const authUserRowsRaw = await sql<any[]>`select id, email from auth.users`;
@@ -222,6 +223,10 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>, s
     if (session && !session.isSuperAdmin && domainSuperAdminDomain(session.roles)) {
       const allowedCities = new Set(session.cityBranchIds);
       cityRows = cityRows.filter((cb) => allowedCities.has(cb.id));
+    }
+    // Business <-> Shipping separation for EVERY manager: a single-domain login never receives a branch of the other domain.
+    if (session && !session.isSuperAdmin) {
+      cityRows = cityRows.filter((cb) => rowInSessionDomain(session, (cb as { operational_domain?: string | null }).operational_domain));
     }
     const profileRows = profileRowsLocalized;
     const permissionRows = permissionRowsRaw as PermissionSetRow[];

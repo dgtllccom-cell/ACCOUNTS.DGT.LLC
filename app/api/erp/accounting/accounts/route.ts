@@ -10,7 +10,8 @@ import { getSupabasePublicKey, getSupabaseSecretKey } from "@/lib/supabase/confi
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
-import { isShippingDomainOnly } from "@/lib/permissions/shipping-explicit-gate";
+import { allowedRowDomains, sqlRowDomainCondition } from "@/lib/permissions/domain-scope";
+import { accountNeedsApprovalChain, initialChainState } from "@/lib/approval/account-approval-chain";
 
 function isUuid(value: string | null | undefined) {
   return Boolean(
@@ -56,8 +57,11 @@ function hasRealServiceRoleKey() {
  * request.  The check is deliberately permission based so new countries and
  * roles inherit the same rule without hard-coded geography.
  */
-function requiresAccountApproval(session: Awaited<ReturnType<typeof requireErpSession>>) {
+function requiresAccountApproval(session: Awaited<ReturnType<typeof requireErpSession>>, domain: string = "business") {
   if (session.isSuperAdmin) return false;
+  // Shipping Line account opened by a branch-level login: always pending until the Country Admin AND the Operations Country Admin
+  // have approved it (see lib/approval/account-approval-chain.ts).
+  if (accountNeedsApprovalChain(session.roles ?? [], session.isSuperAdmin, domain)) return true;
   const roles = new Set(session.roles ?? []);
   if (
     roles.has("business_super_admin") ||
@@ -114,7 +118,7 @@ async function buildAccountListViaLocalPg(
         ea.created_at
       from public.enterprise_accounts ea
       where ea.deleted_at is null
-        ${isShippingDomainOnly(session) ? sql`and ea.operational_domain in ('shipping','both')` : sql``}
+        and ${sqlRowDomainCondition(sql, session, "ea")}
         and (
           (
             -- one scope rule (hierarchy form): own branch + parent-level accounts, never a sibling branch's
@@ -392,7 +396,8 @@ export async function GET(request: NextRequest) {
       )
       .is("deleted_at", null)
       .order("code", { ascending: true });
-    if (isShippingDomainOnly(session)) query = query.in("operational_domain", ["shipping", "both"]);
+    const accountDomains = allowedRowDomains(session);
+    if (accountDomains) query = query.in("operational_domain", accountDomains);
 
     if (!session.isSuperAdmin) {
       // Global "super admin scope" accounts (country_id null AND scope=super_admin)
@@ -537,7 +542,9 @@ export async function POST(request: NextRequest) {
       throw new ApiClientError("A valid logged-in user ID is required to create an account. Account creation requires a valid user reference.");
     }
 
-    const approvalRequired = requiresAccountApproval(session);
+    const approvalRequired = requiresAccountApproval(session, requestedDomain);
+    // Two-stage chain state travels in approval_requests.after_data (one request, no second approval system).
+    const chainState = approvalRequired && accountNeedsApprovalChain(session.roles ?? [], session.isSuperAdmin, requestedDomain) ? initialChainState() : null;
     // Never allow an entry user to smuggle `status: active` through the API.
     // Their request is persisted as pending until an authorised approver
     // accepts it.
@@ -909,7 +916,7 @@ export async function POST(request: NextRequest) {
               ${accountApprovalRequestNo(issuedCode)}, 'create', 'pending',
               'enterprise_accounts', ${accountId}::uuid,
               ${validCountryId}::uuid, ${validCountryBranchId}::uuid, ${validCityBranchId}::uuid, ${validActorId}::uuid,
-              ${"New account requires Operations Admin approval before activation."},
+              ${chainState ? "Shipping Line account: Country Admin approval, then Operations Country Admin approval, before activation." : "New account requires Operations Admin approval before activation."},
               ${JSON.stringify({
                 accountId,
                 accountCode: issuedCode,
@@ -925,7 +932,8 @@ export async function POST(request: NextRequest) {
                 countryId: validCountryId,
                 countryBranchId: validCountryBranchId,
                 cityBranchId: validCityBranchId,
-                ledgerId
+                ledgerId,
+                ...(chainState ?? {})
               })}::jsonb
             )
             returning id;
@@ -1165,7 +1173,8 @@ export async function POST(request: NextRequest) {
             countryId: body.countryId ?? null,
             countryBranchId: body.countryBranchId ?? null,
             cityBranchId: body.cityBranchId ?? null,
-            ledgerId
+            ledgerId,
+            ...(chainState ?? {})
           }
         })
         .select("id")

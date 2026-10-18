@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { recordInHierarchyScope, recordInSessionScope } from "@/lib/api/scope-middleware";
+import { rowInSessionDomain, sessionDomainFilter } from "@/lib/permissions/domain-scope";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { resolveReportScope } from "@/lib/permissions/middleware";
@@ -143,13 +144,13 @@ export async function GET(request: NextRequest) {
         order by name
       `;
       const cityBranches = await sql`
-        select id, name, code, country_id, country_branch_id, city_name, local_currency, status
+        select id, name, code, country_id, country_branch_id, city_name, local_currency, status, operational_domain
         from public.city_branches
         where deleted_at is null
         order by name
       `;
       const assignments = (await sql`
-        select user_id, country_id, country_branch_id, city_branch_id
+        select user_id, country_id, country_branch_id, city_branch_id, operational_domain
         from public.user_role_assignments
         where is_active = true and deleted_at is null
       `) as any[];
@@ -192,12 +193,16 @@ export async function GET(request: NextRequest) {
       // strict form for transactional project names).
       if (!session.isSuperAdmin && !session.roles?.includes("super_admin_reports")) {
         const inPlace = (r: any) => recordInHierarchyScope(session, r);
-        const scopedAssignments = assignments.filter((a: any) => inPlace(a) || recordInSessionScope(session, a));
+        // Business ↔ Shipping separation: a single-domain login lists only the users / branches of its own operational domain.
+        const viewerDomain = sessionDomainFilter(session);
+        const scopedAssignments = assignments.filter(
+          (a: any) => (inPlace(a) || recordInSessionScope(session, a)) && (!viewerDomain || (a.operational_domain ?? "business") === viewerDomain)
+        );
         const allowedUsers = new Set(scopedAssignments.map((a: any) => a.user_id));
         return {
           countries: (countries as any[]).filter((c: any) => session.countryIds.includes(c.id)),
           mainBranches: (mainBranches as any[]).filter((b: any) => inPlace({ country_id: b.country_id, country_branch_id: b.id })),
-          cityBranches: (cityBranches as any[]).filter((b: any) => inPlace({ country_id: b.country_id, country_branch_id: b.country_branch_id, city_branch_id: b.id })),
+          cityBranches: (cityBranches as any[]).filter((b: any) => rowInSessionDomain(session, b.operational_domain) && inPlace({ country_id: b.country_id, country_branch_id: b.country_branch_id, city_branch_id: b.id })),
           assignments: scopedAssignments,
           users: users.filter((u: any) => allowedUsers.has(u.id)),
           projects: [...projectMap.values()].filter((p: any) => recordInSessionScope(session, p))

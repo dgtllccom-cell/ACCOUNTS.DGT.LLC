@@ -13,6 +13,8 @@ import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
  */
 type ManagerSession = {
   isSuperAdmin: boolean;
+  /** Operational domains of the manager; absent = not domain-limited (legacy callers / tests). */
+  operationalDomains?: readonly string[];
   roles: readonly string[];
   countryIds: readonly string[];
   countryBranchIds: readonly string[];
@@ -44,12 +46,22 @@ function inDomainManagerScope(session: ManagerSession, domain: "business" | "shi
   return domain === "business" && Boolean(a.country_branch_id && session.countryBranchIds.includes(a.country_branch_id));
 }
 
+/** The single operational domain a (non-super) manager is limited to, or null when it spans both. */
+function managerSingleDomain(session: ManagerSession): "business" | "shipping" | null {
+  const d = session.operationalDomains;
+  if (!d || d.length === 0 || d.includes("both") || (d.includes("business") && d.includes("shipping"))) return null;
+  return d.includes("shipping") ? "shipping" : "business";
+}
+
 /** A manager may open / edit / archive this user. Fails closed for unassigned users and anything outside scope. */
 export function userInManagerScope(session: ManagerSession, assignment: AssignmentLike | null | undefined): boolean {
   if (session.isSuperAdmin) return true;
   if (!assignment) return false;
   const domain = domainSuperAdminDomain(session.roles);
   if (domain) return inDomainManagerScope(session, domain, assignment);
+  // a Country / Main Branch Admin limited to ONE operational domain manages that domain's users only (never 'both', never the other)
+  const own = managerSingleDomain(session);
+  if (own && (assignment.operational_domain ?? "business") !== own) return false;
   if (!assignment.country_id || !session.countryIds.includes(assignment.country_id)) return false;
   if (session.roles.includes("country_admin")) return true;
   return Boolean(assignment.country_branch_id && session.countryBranchIds.includes(assignment.country_branch_id));
@@ -76,4 +88,18 @@ export function domainManagerTargetError(
   }
   if (domain === "business" && target.countryBranchId && session.countryBranchIds.includes(target.countryBranchId)) return null;
   return domain === "shipping" ? "A Shipping Line user must be assigned to a Shipping Line branch." : "A branch assignment inside your scope is required.";
+}
+
+/**
+ * Branch ↔ domain consistency, for EVERY creator (Global Super Admin included): a Business user may only be assigned to a
+ * Business branch, a Shipping Line user only to a Shipping Line branch. A user explicitly assigned to 'both' domains may sit in a
+ * branch of either; a branch tagged 'both' hosts either. Returns an error message, or null when consistent.
+ */
+export function assignmentBranchDomainError(userDomain: string | null | undefined, branchDomain: string | null | undefined): string | null {
+  const u = userDomain || "business";
+  const b = branchDomain || "business";
+  if (u === "both" || b === "both" || u === b) return null;
+  return u === "shipping"
+    ? "A Shipping Line user must be assigned to a Shipping Line branch — this branch belongs to the Business domain."
+    : "A Business user must be assigned to a Business branch — this branch belongs to the Shipping Line domain.";
 }

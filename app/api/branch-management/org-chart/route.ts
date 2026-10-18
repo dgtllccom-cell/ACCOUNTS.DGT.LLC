@@ -3,6 +3,9 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { orgRowInSessionScope, recordInHierarchyScope } from "@/lib/api/scope-middleware";
+import { rowInSessionDomain } from "@/lib/permissions/domain-scope";
+import type { ErpSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +25,12 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(_request: NextRequest) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
 
-    const viaPg = await withLocalPg((sql) => loadViaPg(sql));
+    const viaPg = await withLocalPg((sql) => loadViaPg(sql, session));
     if (viaPg) return apiOk(viaPg);
 
-    return apiOk(await loadViaSupabase());
+    return apiOk(await loadViaSupabase(session));
   } catch (error) {
     return handleApiError(error);
   }
@@ -158,7 +161,26 @@ function buildTree(
   };
 }
 
-async function loadViaPg(sql: any) {
+/**
+ * The org chart is a directory of the caller's OWN hierarchy: countries / branches / employees inside its scope, and only the
+ * branches of its operational domain (a Business login never receives a Shipping Line branch or its employees, and the reverse).
+ */
+function scopeOrgInputs(session: ErpSession, countries: any[], countryBranches: any[], cityBranches: any[], employees: EmployeeRow[]) {
+  if (session.isSuperAdmin) return { countries, countryBranches, cityBranches, employees };
+  const city = cityBranches.filter((b) => rowInSessionDomain(session, b.operational_domain) && orgRowInSessionScope(session, "cityBranch", b));
+  const cityIds = new Set(city.map((b) => b.id));
+  return {
+    countries: countries.filter((c) => orgRowInSessionScope(session, "country", c)),
+    countryBranches: countryBranches.filter((b) => orgRowInSessionScope(session, "countryBranch", b)),
+    cityBranches: city,
+    // an employee filed under a city branch follows that branch (domain + scope); branch-less employees follow the hierarchy scope
+    employees: employees.filter((e) =>
+      e.cityBranchId ? cityIds.has(e.cityBranchId) : recordInHierarchyScope(session, { country_id: e.countryId, country_branch_id: e.countryBranchId, city_branch_id: null })
+    ),
+  };
+}
+
+async function loadViaPg(sql: any, session: ErpSession) {
   const countries = await sql`
     select id, name, iso2, currency_code
     from public.countries
@@ -174,7 +196,7 @@ async function loadViaPg(sql: any) {
   `;
 
   const cityBranches = await sql`
-    select id, country_id, country_branch_id, name, code, city_name, status
+    select id, country_id, country_branch_id, name, code, city_name, status, operational_domain
     from public.city_branches
     where deleted_at is null
     order by name
@@ -203,10 +225,11 @@ async function loadViaPg(sql: any) {
     cityBranchId: e.city_branch_id
   }));
 
-  return buildTree(countries, countryBranches, cityBranches, employees);
+  const scoped = scopeOrgInputs(session, countries, countryBranches, cityBranches, employees);
+  return buildTree(scoped.countries, scoped.countryBranches, scoped.cityBranches, scoped.employees);
 }
 
-async function loadViaSupabase() {
+async function loadViaSupabase(session: ErpSession) {
   const admin = createSupabaseAdminClient();
 
   const { data: countries } = await admin
@@ -223,7 +246,7 @@ async function loadViaSupabase() {
 
   const { data: cityBranches } = await admin
     .from("city_branches")
-    .select("id, country_id, country_branch_id, name, code, city_name, status")
+    .select("id, country_id, country_branch_id, name, code, city_name, status, operational_domain")
     .is("deleted_at", null)
     .order("name");
 
@@ -250,5 +273,6 @@ async function loadViaSupabase() {
     cityBranchId: e.city_branch_id
   }));
 
-  return buildTree(countries ?? [], countryBranches ?? [], cityBranches ?? [], employees);
+  const scoped = scopeOrgInputs(session, countries ?? [], countryBranches ?? [], cityBranches ?? [], employees);
+  return buildTree(scoped.countries, scoped.countryBranches, scoped.cityBranches, scoped.employees);
 }

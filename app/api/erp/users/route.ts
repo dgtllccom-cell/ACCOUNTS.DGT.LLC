@@ -14,7 +14,7 @@ import { MOBILE_PROFILE_ALLOWED, capPermissionsToProfile, normalizeMobileProfile
 import { issueNextUserCode, normalizeUserCode } from "@/lib/services/user-identity-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
-import { SUPER_ADMIN_ONLY_ROLES, domainManagerTargetError, isUserManager, userInManagerScope } from "@/lib/permissions/user-management-scope";
+import { SUPER_ADMIN_ONLY_ROLES, assignmentBranchDomainError, domainManagerTargetError, isUserManager, userInManagerScope } from "@/lib/permissions/user-management-scope";
 import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
 import { assertNoDuplicateAssignment, assertNoDuplicateUser } from "@/lib/branch-network/duplicate-guard";
 
@@ -160,6 +160,14 @@ async function loadScopePermissionLimit(
 }
 
 
+/** Fails when a city-branch assignment contradicts the user's operational domain (Business user ↔ Shipping branch and back). */
+async function assertBranchMatchesDomain(admin: any, cityBranchId: string | null | undefined, userDomain: string | null | undefined) {
+  if (!cityBranchId) return;
+  const { data } = await admin.from("city_branches").select("operational_domain").eq("id", cityBranchId).maybeSingle();
+  const error = assignmentBranchDomainError(userDomain, data?.operational_domain ?? null);
+  if (error) throw new ApiClientError(error, { status: 422, code: "BRANCH_DOMAIN_MISMATCH" });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
@@ -220,7 +228,7 @@ export async function POST(request: NextRequest) {
       );
       const creatorHasBoth = creatorDomains.has("both");
       if (!creatorHasBoth && !creatorDomains.has(domain) && domain !== "both") {
-        throw new Error(`You cannot create a ${domain === "shipping" ? "Clearing Agent / Shipping" : "Business"} user — it is outside your operational domain.`);
+        throw new ApiClientError(`You cannot create a ${domain === "shipping" ? "Clearing Agent / Shipping" : "Business"} user — it is outside your operational domain.`, { status: 403, code: "DOMAIN_FORBIDDEN" });
       }
     }
     if (domain === "shipping" && body.role === "agent_user" && !body.clearingAgentId) {
@@ -233,6 +241,7 @@ export async function POST(request: NextRequest) {
       body.ledgerVisibility ?? (domain === "shipping" ? "shipping_only" : "scoped");
 
     const admin = createSupabaseAdminClient() as any;
+    await assertBranchMatchesDomain(admin, body.cityBranchId, domain);
 
     const issuedUserCode = normalizeUserCode(
       body.userCode ?? (await issueNextUserCode(admin, { role: body.role, countryId: body.countryId ?? null }))
@@ -862,6 +871,14 @@ export async function PATCH(request: NextRequest) {
         .maybeSingle();
 
       if (currentAssign) {
+        // only when the branch or the domain is being changed — an unrelated edit of an already mis-assigned user must not be blocked
+        if (body.cityBranchId !== undefined || body.operationalDomain !== undefined) {
+          await assertBranchMatchesDomain(
+            admin,
+            body.cityBranchId !== undefined ? body.cityBranchId : currentAssign.city_branch_id ?? null,
+            body.operationalDomain !== undefined ? body.operationalDomain : currentAssign.operational_domain ?? null
+          );
+        }
         // A role / scope / domain change (or re-activation) must not collide with another live assignment.
         const nextActive = body.isActive !== undefined ? !!body.isActive : currentAssign.is_active !== false;
         const scopeTouched =

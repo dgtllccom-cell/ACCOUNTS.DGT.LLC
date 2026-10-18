@@ -99,6 +99,9 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/clearing-agent/truck-registration": ["shipping_records:read", "clearing_agents:read", "route:/dashboard/clearing-agent/truck-registration"],
   "/dashboard/shipping-line/handover-inbox": ["shipping_records:read", "shipping_transfers:read", "route:/dashboard/shipping-line/handover-inbox"],
   "/dashboard/shipping-line/account-access": ["accounts:read", "route:/dashboard/shipping-line/account-access"],
+  // approval queue of Shipping Line accounts (Country Admin -> Operations Country Admin); the API decides who may act on each stage
+  "/dashboard/shipping-line/account-approvals": ["accounts:read", "accounts:create", "approvals:read", "country_admin", "country_operations_admin", "global_operations_admin", "route:/dashboard/shipping-line/account-approvals"],
+  "/dashboard/clearing-agent/truck-freight-bill": ["expenses:read", "expenses:create", "route:/dashboard/clearing-agent/truck-freight-bill"],
   "/dashboard/settings/bank": ["banks:read", "route:/dashboard/settings/bank"],
   "/dashboard/roznamcha/reports/bank": ["banks:read", "roznamcha:read", "route:/dashboard/roznamcha/reports/bank"],
   "/dashboard/roznamcha/money-exchange": ["exchange_rates:read", "route:/dashboard/roznamcha/money-exchange"],
@@ -292,6 +295,29 @@ export const AMOUNT_ROUTE_PREFIXES: readonly string[] = [
   "/dashboard/purchase/purchase-payments", "/dashboard/temp-bills", "/dashboard/super-admin", "/dashboard/all-release-entries", "/dashboard/crm"
 ];
 
+/**
+ * Pages that exist only in the SHIPPING LINE world. A Business-only login (operational domain 'business') never opens them —
+ * the sidebar hides them and the server-side route gate answers 403 for a pasted URL. (A login that really works in both
+ * worlds holds a 'both' assignment.)
+ */
+export const SHIPPING_ONLY_ROUTE_PREFIXES: readonly string[] = [
+  "/dashboard/shipping-clearing", "/dashboard/shipping", "/dashboard/shipping-line", "/dashboard/shipping-lines",
+  "/dashboard/clearing", "/dashboard/clearing-agent", "/dashboard/bl-entry", "/dashboard/manifest", "/dashboard/customs-clearance",
+  "/dashboard/logistics", "/dashboard/reports/shipping"
+];
+
+/**
+ * Pages that exist only in the BUSINESS (commercial trade / corporate finance) world. A Shipping-only login never opens them.
+ * The Business-confidential reports match the APIs, which already refuse a Shipping-only login (assertNotShippingOnly).
+ */
+export const BUSINESS_ONLY_ROUTE_PREFIXES: readonly string[] = [
+  "/dashboard/purchase", "/dashboard/sales", "/dashboard/temp-bills", "/dashboard/consignment", "/dashboard/journal",
+  "/dashboard/business-edit-invoice", "/dashboard/bill-cost-profit", "/dashboard/inventory",
+  "/dashboard/tax-einvoicing", "/dashboard/tax",
+  "/dashboard/general-office/payroll", "/dashboard/general-office/wps-sif", "/dashboard/general-office/gratuity",
+  "/dashboard/reports/payments", "/dashboard/reports/financial-statements", "/dashboard/reports/journal", "/dashboard/reports/exchange-rate"
+];
+
 export type RouteAccessInput = {
   pathname: string;
   permissions: readonly string[] | null | undefined;
@@ -326,24 +352,12 @@ export function evaluateRouteAccess(input: RouteAccessInput): RouteDecision {
   // a business-only login never opens the Shipping & Clearing area
   const domains = input.operationalDomains ?? null;
   if (domains && domains.length > 0 && domains.includes("business") && !domains.includes("shipping") && !domains.includes("both")) {
-    const BLOCKED = ["/dashboard/shipping-clearing", "/dashboard/shipping", "/dashboard/clearing", "/dashboard/bl-entry", "/dashboard/manifest", "/dashboard/customs-clearance", "/dashboard/shipping-lines", "/dashboard/logistics"];
-    if (BLOCKED.some((b) => matchesPrefix(path, b))) return { allowed: false, reason: "domain_blocked" };
+    if (SHIPPING_ONLY_ROUTE_PREFIXES.some((b) => matchesPrefix(path, b))) return { allowed: false, reason: "domain_blocked" };
   }
 
   // a shipping-only login never opens commercial trade booking (purchases, sales, consignment, corporate tax)
   if (domains && domains.length > 0 && domains.includes("shipping") && !domains.includes("business") && !domains.includes("both")) {
-    const COMMERCIAL_BLOCKED = [
-      "/dashboard/purchase",
-      "/dashboard/sales",
-      "/dashboard/temp-bills",
-      "/dashboard/consignment",
-      "/dashboard/tax-einvoicing",
-      "/dashboard/tax",
-      "/dashboard/general-office/payroll",
-      "/dashboard/general-office/wps-sif",
-      "/dashboard/general-office/gratuity"
-    ];
-    if (COMMERCIAL_BLOCKED.some((b) => matchesPrefix(path, b))) return { allowed: false, reason: "domain_blocked" };
+    if (BUSINESS_ONLY_ROUTE_PREFIXES.some((b) => matchesPrefix(path, b))) return { allowed: false, reason: "domain_blocked" };
   }
 
   const strict = isStrictLogin(input.roles);
