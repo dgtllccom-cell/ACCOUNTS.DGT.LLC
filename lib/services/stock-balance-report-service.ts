@@ -312,7 +312,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       : [];
 
     const payments = poIds.length || lpIds.length
-      ? await sql`select pay.id, pay.purchase_order_id, pay.local_purchase_id, pay.kind, pay.entry_date, pay.amount, pay.currency_code, pay.exchange_rate, pay.status::text as status, pay.reference_no,
+      ? await sql`select pay.id, pay.purchase_order_id, pay.local_purchase_id, pay.kind, pay.entry_date, pay.amount, pay.base_currency_amount, pay.currency_code, pay.exchange_rate, pay.status::text as status, pay.reference_no,
                          coalesce(ea.name, l.name) as method
                   from public.purchase_order_payments pay
                   left join public.ledgers l on l.id = pay.credit_ledger_id left join public.enterprise_accounts ea on ea.id = l.enterprise_account_id
@@ -387,11 +387,21 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       b.totals.remaining = remainingOf(b.totals.purchased, b.totals.sold, b.totals.transferred, b.totals.adjusted);
     }
     b.payments = rawPayments.map((p: any) => ({ id: p.id, date: dateOnly(p.entry_date), kind: str(p.kind), method: str(p.method), amount: money ? num(p.amount) : 0, currency: str(p.currency_code), exchangeRate: p.exchange_rate == null ? null : num(p.exchange_rate), status: str(p.status), referenceNo: p.reference_no ?? null }));
-    const posted = rawPayments.filter((p: any) => str(p.status) === "posted");
-    const cur = new Set(posted.map((p: any) => str(p.currency_code)).filter(Boolean));
-    b.mixedCurrency = cur.size > 1 || (cur.size === 1 && billCurrency !== "" && !cur.has(billCurrency));
+    // 'booking' is the accrual posting of the purchase itself (DR purchase / CR supplier), not a settlement — it is never "paid".
+    // Settlements are expressed in the BILL's currency: a payment made in another currency (e.g. AED on a USD bill) is converted through its
+    // posted base amount and the bill's own exchange rate, exactly as the payment screens do, so 76,899.375 AED on a USD bill at 3.675 = 20,925 USD.
+    const posted = rawPayments.filter((p: any) => str(p.status) === "posted" && str(p.kind) !== "booking");
+    const billRate = Number(b.exchangeRate) || 0;
+    const inBillCcy = (p: any): number | null => {
+      const pc = str(p.currency_code);
+      if (!billCurrency || !pc || pc === billCurrency) return num(p.amount);
+      if (billRate > 0) return num(p.base_currency_amount != null ? p.base_currency_amount : num(p.amount) * (num(p.exchange_rate) || 1)) / billRate;
+      return null; // cannot be converted safely
+    };
+    const converted = posted.map(inBillCcy);
+    b.mixedCurrency = converted.some((x) => x == null);
     b.amount = money ? billAmount : null;
-    b.paid = money ? q4(posted.reduce((s: number, p: any) => s + num(p.amount), 0)) : null;
+    b.paid = money ? q4(converted.reduce<number>((sum, x) => sum + (x ?? 0), 0)) : null;
     b.pending = money && billAmount != null && !b.mixedCurrency ? Math.max(0, q4(billAmount - (b.paid ?? 0))) : null;
     b.paymentStatus = paymentStatus;
     b.currency = billCurrency || b.currency;
@@ -545,7 +555,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       branchName: lp.city_name || lp.country_branch_name || "", originCountry: str(lp.origin_country_name) || entries[0]?.origin || "", currency, exchangeRate: lp.exchange_rate == null ? null : num(lp.exchange_rate), remarks: str(lp.remarks),
       amount: null, totals: totalsOf([]), entries, sales, unallocatedSales: zero(), payments: [], paid: null, pending: null, mixedCurrency: false, treatments: [], paymentStatus: "",
     };
-    const paidAll = (payByLp.get(lp.id) ?? []).filter((p: any) => str(p.status) === "posted").reduce((s: number, p: any) => s + num(p.amount), 0);
+    const paidAll = (payByLp.get(lp.id) ?? []).filter((p: any) => str(p.status) === "posted" && str(p.kind) !== "booking").reduce((s: number, p: any) => s + num(p.amount), 0);
     const cost = num(lp.final_cost);
     bills.push(finishBill(bill, trByLp.get(lp.id) ?? [], payByLp.get(lp.id) ?? [], cost > 0 ? cost : null, currency, cost > 0 && paidAll + 0.005 >= cost ? "paid" : paidAll > 0 ? "partial" : "unpaid"));
   }
