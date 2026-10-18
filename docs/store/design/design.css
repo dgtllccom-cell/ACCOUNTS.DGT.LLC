@@ -62,7 +62,8 @@
 .tile .trend{position:absolute;inset-block-start:12px;inset-inline-end:12px;font-size:11px;font-weight:700;color:hsl(var(--tone))}
 .dev[data-mode=night] .tile{box-shadow:inset 0 1px 0 hsl(0 0% 100% / .08),inset 0 -4px 0 hsl(var(--tone) / .4),0 14px 22px -10px hsl(0 0% 0% / .6)}
 .t-primary{--tone:var(--primary)}.t-green{--tone:152 45% 38%}.t-amber{--tone:38 92% 46%}.t-red{--tone:0 72% 52%}.t-teal{--tone:174 70% 38%}.t-violet{--tone:262 70% 56%}.t-sky{--tone:199 85% 44%}
-.gem{--tone:var(--primary);width:var(--size-gem);height:var(--size-gem);border-radius:14px;display:grid;place-items:center;color:#fff;
+:where(.gem){--tone:var(--primary)}
+.gem{width:var(--size-gem);height:var(--size-gem);border-radius:14px;display:grid;place-items:center;color:#fff;
   background:linear-gradient(145deg,hsl(var(--tone) / .78) 0%,hsl(var(--tone)) 55%,hsl(var(--tone) / .86) 100%);
   box-shadow:inset 0 2px 3px hsl(0 0% 100% / .55),inset 0 -3px 4px hsl(0 0% 0% / .18),0 8px 14px -6px hsl(var(--tone) / .6)}
 .gem svg{width:22px;height:22px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}.gem.sm{width:34px;height:34px;border-radius:11px}.gem.sm svg{width:18px;height:18px}
@@ -155,3 +156,22 @@
 .dev.comp{border:1px solid hsl(var(--border));box-shadow:0 10px 24px -16px rgba(2,6,23,.4)}
 .dev.comp .kpis{grid-template-columns:1fr 1fr}.dev.comp.wide .kpis{grid-template-columns:repeat(4,1fr)}
 .dev.comp .hero{margin-bottom:6px}
+
+.tile .gem{--tone:inherit}
+.tb a span,.rail a span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-inline:2px}
+
+.tabs{overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tabs a{flex:1 0 auto;text-align:center;padding-inline:10px;font-size:12.5px}
+
+/* full-length view: the whole screen is visible (device frame height grows); frame view keeps the exact device size */
+.full .dev.phone,.full .dev.phone360{height:auto;min-height:780px}.full .dev.tablet{height:auto;min-height:1180px}
+.full .dev .scroll{overflow:visible;flex:none}.full .dev .shell{min-height:0}.full .tb{margin-top:auto}
+.full .dev{border-radius:36px}
+
+.tblw{overflow-x:auto;border-radius:var(--radius-lg)}.tblw .tbl{min-width:560px}
+.tablet .scroll>*{min-width:0}
+.kpis .tile:last-child:nth-child(odd){grid-column:1/-1}.tablet .kpis .tile:last-child:nth-child(odd){grid-column:auto}
+.dg-bar{position:static}
+.dev.comp,.full .dev.comp{height:auto!important;min-height:0!important}
+.hero svg.art{width:min(58%,230px)}
+.cap{direction:ltr}

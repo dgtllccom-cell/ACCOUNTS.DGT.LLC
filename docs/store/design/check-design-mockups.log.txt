@@ -1,0 +1,122 @@
+PASS  mockups b phone en: 35 frames, no errors, no missing translations
+PASS  mockups b phone en: no horizontal overflow, dir correct
+PASS  mockups b phone ur: 35 frames, no errors, no missing translations
+PASS  mockups b phone ur: no horizontal overflow, dir correct
+PASS  mockups b phone ar: 35 frames, no errors, no missing translations
+PASS  mockups b phone ar: no horizontal overflow, dir correct
+PASS  mockups b phone fa: 35 frames, no errors, no missing translations
+PASS  mockups b phone fa: no horizontal overflow, dir correct
+PASS  mockups b phone ps: 35 frames, no errors, no missing translations
+PASS  mockups b phone ps: no horizontal overflow, dir correct
+PASS  mockups b phone360 en: 35 frames, no errors, no missing translations
+PASS  mockups b phone360 en: no horizontal overflow, dir correct
+PASS  mockups b phone360 ur: 35 frames, no errors, no missing translations
+PASS  mockups b phone360 ur: no horizontal overflow, dir correct
+PASS  mockups b phone360 ar: 35 frames, no errors, no missing translations
+PASS  mockups b phone360 ar: no horizontal overflow, dir correct
+PASS  mockups b phone360 fa: 35 frames, no errors, no missing translations
+PASS  mockups b phone360 fa: no horizontal overflow, dir correct
+PASS  mockups b phone360 ps: 35 frames, no errors, no missing translations
+PASS  mockups b phone360 ps: no horizontal overflow, dir correct
+PASS  mockups b tablet en: 35 frames, no errors, no missing translations
+PASS  mockups b tablet en: no horizontal overflow, dir correct
+PASS  mockups b tablet ur: 35 frames, no errors, no missing translations
+PASS  mockups b tablet ur: no horizontal overflow, dir correct
+PASS  mockups b tablet ar: 35 frames, no errors, no missing translations
+PASS  mockups b tablet ar: no horizontal overflow, dir correct
+PASS  mockups b tablet fa: 35 frames, no errors, no missing translations
+PASS  mockups b tablet fa: no horizontal overflow, dir correct
+PASS  mockups b tablet ps: 35 frames, no errors, no missing translations
+PASS  mockups b tablet ps: no horizontal overflow, dir correct
+PASS  mockups bs phone en: 37 frames, no errors, no missing translations
+PASS  mockups bs phone en: no horizontal overflow, dir correct
+PASS  mockups bs phone ur: 37 frames, no errors, no missing translations
+PASS  mockups bs phone ur: no horizontal overflow, dir correct
+PASS  mockups bs phone ar: 37 frames, no errors, no missing translations
+PASS  mockups bs phone ar: no horizontal overflow, dir correct
+PASS  mockups bs phone fa: 37 frames, no errors, no missing translations
+PASS  mockups bs phone fa: no horizontal overflow, dir correct
+PASS  mockups bs phone ps: 37 frames, no errors, no missing translations
+PASS  mockups bs phone ps: no horizontal overflow, dir correct
+PASS  mockups bs phone360 en: 37 frames, no errors, no missing translations
+PASS  mockups bs phone360 en: no horizontal overflow, dir correct
+PASS  mockups bs phone360 ur: 37 frames, no errors, no missing translations
+PASS  mockups bs phone360 ur: no horizontal overflow, dir correct
+PASS  mockups bs phone360 ar: 37 frames, no errors, no missing translations
+PASS  mockups bs phone360 ar: no horizontal overflow, dir correct
+PASS  mockups bs phone360 fa: 37 frames, no errors, no missing translations
+PASS  mockups bs phone360 fa: no horizontal overflow, dir correct
+PASS  mockups bs phone360 ps: 37 frames, no errors, no missing translations
+PASS  mockups bs phone360 ps: no horizontal overflow, dir correct
+PASS  mockups bs tablet en: 37 frames, no errors, no missing translations
+PASS  mockups bs tablet en: no horizontal overflow, dir correct
+PASS  mockups bs tablet ur: 37 frames, no errors, no missing translations
+PASS  mockups bs tablet ur: no horizontal overflow, dir correct
+PASS  mockups bs tablet ar: 37 frames, no errors, no missing translations
+PASS  mockups bs tablet ar: no horizontal overflow, dir correct
+PASS  mockups bs tablet fa: 37 frames, no errors, no missing translations
+PASS  mockups bs tablet fa: no horizontal overflow, dir correct
+PASS  mockups bs tablet ps: 37 frames, no errors, no missing translations
+PASS  mockups bs tablet ps: no horizontal overflow, dir correct
+PASS  components b phone en: 20 frames, no errors, no missing translations
+PASS  components b phone en: no horizontal overflow, dir correct
+PASS  components b phone ur: 20 frames, no errors, no missing translations
+PASS  components b phone ur: no horizontal overflow, dir correct
+PASS  components b phone ar: 20 frames, no errors, no missing translations
+PASS  components b phone ar: no horizontal overflow, dir correct
+PASS  components b phone fa: 20 frames, no errors, no missing translations
+PASS  components b phone fa: no horizontal overflow, dir correct
+PASS  components b phone ps: 20 frames, no errors, no missing translations
+PASS  components b phone ps: no horizontal overflow, dir correct
+PASS  components b phone360 en: 20 frames, no errors, no missing translations
+PASS  components b phone360 en: no horizontal overflow, dir correct
+PASS  components b phone360 ur: 20 frames, no errors, no missing translations
+PASS  components b phone360 ur: no horizontal overflow, dir correct
+PASS  components b phone360 ar: 20 frames, no errors, no missing translations
+PASS  components b phone360 ar: no horizontal overflow, dir correct
+PASS  components b phone360 fa: 20 frames, no errors, no missing translations
+PASS  components b phone360 fa: no horizontal overflow, dir correct
+PASS  components b phone360 ps: 20 frames, no errors, no missing translations
+PASS  components b phone360 ps: no horizontal overflow, dir correct
+PASS  components b tablet en: 20 frames, no errors, no missing translations
+PASS  components b tablet en: no horizontal overflow, dir correct
+PASS  components b tablet ur: 20 frames, no errors, no missing translations
+PASS  components b tablet ur: no horizontal overflow, dir correct
+PASS  components b tablet ar: 20 frames, no errors, no missing translations
+PASS  components b tablet ar: no horizontal overflow, dir correct
+PASS  components b tablet fa: 20 frames, no errors, no missing translations
+PASS  components b tablet fa: no horizontal overflow, dir correct
+PASS  components b tablet ps: 20 frames, no errors, no missing translations
+PASS  components b tablet ps: no horizontal overflow, dir correct
+PASS  components bs phone en: 20 frames, no errors, no missing translations
+PASS  components bs phone en: no horizontal overflow, dir correct
+PASS  components bs phone ur: 20 frames, no errors, no missing translations
+PASS  components bs phone ur: no horizontal overflow, dir correct
+PASS  components bs phone ar: 20 frames, no errors, no missing translations
+PASS  components bs phone ar: no horizontal overflow, dir correct
+PASS  components bs phone fa: 20 frames, no errors, no missing translations
+PASS  components bs phone fa: no horizontal overflow, dir correct
+PASS  components bs phone ps: 20 frames, no errors, no missing translations
+PASS  components bs phone ps: no horizontal overflow, dir correct
+PASS  components bs phone360 en: 20 frames, no errors, no missing translations
+PASS  components bs phone360 en: no horizontal overflow, dir correct
+PASS  components bs phone360 ur: 20 frames, no errors, no missing translations
+PASS  components bs phone360 ur: no horizontal overflow, dir correct
+PASS  components bs phone360 ar: 20 frames, no errors, no missing translations
+PASS  components bs phone360 ar: no horizontal overflow, dir correct
+PASS  components bs phone360 fa: 20 frames, no errors, no missing translations
+PASS  components bs phone360 fa: no horizontal overflow, dir correct
+PASS  components bs phone360 ps: 20 frames, no errors, no missing translations
+PASS  components bs phone360 ps: no horizontal overflow, dir correct
+PASS  components bs tablet en: 20 frames, no errors, no missing translations
+PASS  components bs tablet en: no horizontal overflow, dir correct
+PASS  components bs tablet ur: 20 frames, no errors, no missing translations
+PASS  components bs tablet ur: no horizontal overflow, dir correct
+PASS  components bs tablet ar: 20 frames, no errors, no missing translations
+PASS  components bs tablet ar: no horizontal overflow, dir correct
+PASS  components bs tablet fa: 20 frames, no errors, no missing translations
+PASS  components bs tablet fa: no horizontal overflow, dir correct
+PASS  components bs tablet ps: 20 frames, no errors, no missing translations
+PASS  components bs tablet ps: no horizontal overflow, dir correct
+
+==== 120 PASS / 0 FAIL ====

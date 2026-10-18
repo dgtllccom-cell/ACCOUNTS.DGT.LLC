@@ -77,7 +77,7 @@
   }
 
   // ---- state + translation ----
-  const S = { lang: "en", app: "b", device: "phone", mode: "day" };
+  const S = { lang: "en", app: "b", device: "phone", mode: "day", view: "full" };
   const D = () => window.DG_DATA;
   const RTL = { ur: 1, ar: 1, fa: 1, ps: 1 };
   const miss = new Set();
@@ -116,7 +116,7 @@
       const head = b.cols.map((c) => "<th>" + t(c) + "</th>").join("") + (b.status ? "<th>" + t("Status") + "</th>" : "") + (b.actions ? "<th></th>" : "");
       const rows = Array.from({ length: b.rows || 5 }, (_, r) => "<tr>" + b.cols.map((c, i) => "<td>" + sk(["w75", "w60", "w90", "w45"][(r + i) % 4]) + "</td>").join("") +
         (b.status ? "<td>" + pill(b.status[r % b.status.length][0], b.status[r % b.status.length][1]) + "</td>" : "") + (b.actions ? '<td><div class="acts">' + b.actions.map((a) => "<i>" + ico(a) + "</i>").join("") + "</div></td>" : "") + "</tr>").join("");
-      return (b.title ? B.sec({ title: b.title, link: b.link }) : "") + '<table class="tbl"><thead><tr>' + head + "</tr></thead><tbody>" + rows + "</tbody></table>";
+      return (b.title ? B.sec({ title: b.title, link: b.link }) : "") + '<div class="tblw"><table class="tbl"><thead><tr>' + head + "</tr></thead><tbody>" + rows + "</tbody></table></div>";
     },
     form: (b) => '<div class="card">' + (b.title ? "<h3>" + (b.icon ? '<span class="gem sm">' + ico(b.icon) + "</span>" : "") + t(b.title) + "</h3>" : "") + '<div class="fgrid">' + b.fields.map((f) => {
       const k = f.t || "text";
@@ -128,15 +128,15 @@
     route: (b) => '<div class="card"><div class="route"><div class="pt">' + t(b.from) + sk("w75") + '</div><div class="ln"></div><div class="pt">' + t(b.to) + sk("w75") + "</div></div></div>",
     kv: (b) => '<div class="card">' + (b.title ? "<h3>" + t(b.title) + "</h3>" : "") + '<div class="kvl">' + b.items.map((l) => "<div><span class='k'>" + t(l) + "</span>" + sk("w30") + "</div>").join("") + "</div></div>",
     notice: (b) => '<div class="notice ' + (b.tone || "info") + '">' + ico(b.tone === "warn" ? "warn" : b.tone === "ok" ? "check" : b.tone === "bad" ? "x" : "info") + "<div>" + t(b.text) + "</div></div>",
-    chart: (b) => '<div class="card"><h3>' + t(b.title) + '</h3><div class="chart3d">' + [40, 62, 48, 80, 58, 72].map((h) => '<i style="height:' + h + '%"></i>').join("") + '</div><div class="cap">#,###</div></div>",
+    chart: (b) => '<div class="card"><h3>' + t(b.title) + '</h3><div class="chart3d">' + [40, 62, 48, 80, 58, 72].map((h) => '<i style="height:' + h + '%"></i>').join("") + '</div><div class="cap">#,###</div></div>',
     card: (b) => '<div class="card"><h3>' + (b.icon ? '<span class="gem sm ' + tone(b.tone) + '">' + ico(b.icon) + "</span>" : "") + t(b.title) + (b.link ? "<small>" + t(b.link) + "</small>" : "") + "</h3>" + (b.body || []).map(renderBlock).join("") + "</div>",
     otp: () => '<div class="otp">' + [1, 2, 3, 4, 5, 6].map((i) => '<i class="' + (i === 1 ? "on" : "") + '">•</i>').join("") + "</div>",
     state: (b) => '<div class="state"><span class="gem ' + (b.kind === "error" ? "t-red" : b.kind === "offline" ? "t-amber" : "") + '">' + ico(b.kind === "error" ? "warn" : b.kind === "offline" ? "wifi" : b.kind === "loading" ? "refresh" : "inbox") + "</span><h3>" + t(b.title) + "</h3><p>" + t(b.text) + "</p>" + (b.action ? '<div class="btn p sm">' + t(b.action) + "</div>" : "") + "</div>",
     menu: (b) => '<div class="card menu">' + b.groups.map((g) => (g.g ? '<div class="grp">' + t(g.g) + "</div>" : "") + g.items.map((i) => "<a" + (i.cur ? " aria-current" : "") + ">" + ico(i.icon || "list") + t(i.l) + ico("chev", "chev") + "</a>").join("")).join("") + "</div>",
     profile: () => '<div class="card"><div class="drawer-head" style="border-radius:16px;margin:-2px"><div class="av">AB</div><div><div style="font-weight:800">' + sk("w75", "l").replace("sk", "sk") + '</div><div style="font-size:12px;opacity:.85">' + t("Role") + " · " + t("Branch") + "</div></div></div></div>",
     lang: () => '<div class="sheet"><div class="grab"></div><b>' + t("Language") + "</b>" + [["en", "English", "LTR"], ["ur", "اردو", "RTL"], ["ar", "العربية", "RTL"], ["fa", "فارسی", "RTL"], ["ps", "پښتو", "RTL"]].map((l) => '<div class="lang-row' + (l[0] === S.lang ? " on" : "") + '"><span>' + l[1] + "</span><small>" + l[2] + "</small>" + (l[0] === S.lang ? ico("check") : "") + "</div>").join("") + "</div>",
-    pills: (b) => '<div class="chips">' + b.items.map((i) => pill(i[0], i[1])).join("") + "</div>",
-    gems: (b) => '<div class="chips">' + b.items.map((n, i) => '<span class="gem ' + tone(["primary", "green", "amber", "red", "teal", "violet", "sky", "primary"][i % 8]) + '">' + ico(n) + "</span>").join("") + "</div>",
+    pills: (b) => '<div class="chips">' + b.pairs.map((i) => pill(i[0], i[1])).join("") + "</div>",
+    gems: (b) => '<div class="chips">' + b.icons.map((n, i) => '<span class="gem ' + tone(["primary", "green", "amber", "red", "teal", "violet", "sky", "primary"][i % 8]) + '">' + ico(n) + "</span>").join("") + "</div>",
     appbar: (b) => '<header class="ab" style="border-radius:16px"><span class="ibtn">' + ico("menu", "flip") + "</span><h1>" + t(b.title) + '</h1><span class="lang">' + ({ en: "EN", ur: "اردو", ar: "ع", fa: "فا", ps: "پښ" })[S.lang] + '</span><span class="ibtn">' + ico("bell") + "</span></header>",
     tabbar: () => tabbar(0).replace('<nav class="tb">', '<nav class="tb" style="border:1px solid hsl(var(--border));border-radius:16px">'),
     railbar: () => '<div style="display:flex;height:360px;border:1px solid hsl(var(--border));border-radius:16px;overflow:hidden">' + rail(0) + "</div>",
@@ -149,7 +149,7 @@
   // ---- navigation ----
   const TABS = {
     b: [["Home", "home", "/dashboard"], ["Purchase", "cart"], ["Sales", "tag"], ["Accounts", "book"], ["More", "grid"]],
-    bs: [["Home", "home"], ["Tracking", "ship"], ["Customer Order", "box"], ["Inbox", "inbox"], ["More", "grid"]]
+    bs: [["Home", "home"], ["Tracking", "ship"], ["Orders", "box"], ["Inbox", "inbox"], ["More", "grid"]]
   };
   const tabbar = (cur) => '<nav class="tb">' + TABS[S.app].map((x, i) => "<a" + (i === cur ? " aria-current" : "") + ">" + ico(x[1]) + "<span>" + t(x[0]) + "</span></a>").join("") + "</nav>";
   const rail = (cur) => '<nav class="rail">' + TABS[S.app].map((x, i) => "<a" + (i === cur ? " aria-current" : "") + ">" + ico(x[1]) + "<span>" + t(x[0]) + "</span></a>").join("") + "</nav>";

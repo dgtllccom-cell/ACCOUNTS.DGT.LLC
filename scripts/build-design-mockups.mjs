@@ -71,16 +71,16 @@ const LIST_KEYS = new Set(["items", "cols", "fields"]);
 const labels = new Set();
 (function walk(o, key) {
   if (typeof o === "string") { if (LABEL_KEYS.has(key)) labels.add(o); return; }
-  if (Array.isArray(o)) { for (const x of o) { if (typeof x === "string") { if (LIST_KEYS.has(key)) labels.add(x); } else walk(x, key); } return; }
+  if (Array.isArray(o)) { for (const x of o) { if (typeof x === "string") { if (LIST_KEYS.has(key)) labels.add(x); } else if (Array.isArray(x) && (key === "status" || key === "pairs") && typeof x[0] === "string") labels.add(x[0]); else walk(x, key); } return; }
   if (o && typeof o === "object") for (const [k, v] of Object.entries(o)) walk(v, k);
 })(spec.screens);
 (function walkC(o, key) {
   if (typeof o === "string") { if (LABEL_KEYS.has(key)) labels.add(o); return; }
-  if (Array.isArray(o)) { for (const x of o) { if (typeof x === "string") { if (LIST_KEYS.has(key)) labels.add(x); } else walkC(x, key); } return; }
+  if (Array.isArray(o)) { for (const x of o) { if (typeof x === "string") { if (LIST_KEYS.has(key)) labels.add(x); } else if (Array.isArray(x) && (key === "status" || key === "pairs") && typeof x[0] === "string") labels.add(x[0]); else walkC(x, key); } return; }
   if (o && typeof o === "object") for (const [k, v] of Object.entries(o)) walkC(v, k);
 })(spec.components);
 // labels the renderer itself uses
-["Status", "Role", "Branch", "Language"].forEach((x) => labels.add(x));
+["Status", "Role", "Branch", "Language", "Home", "Purchase", "Sales", "Accounts", "More", "Tracking", "Orders", "Inbox"].forEach((x) => labels.add(x));
 const unresolved = [];
 for (const l of labels) if (!resolvePlain(l)) unresolved.push(l);
 
@@ -89,7 +89,18 @@ const routeErr = [];
 for (const s of spec.screens) for (const r of s.routes || []) {
   if (!r.startsWith("/")) continue;
   const p = r.split("?")[0];
-  const ok = ["page.tsx", "page.jsx", "page.ts"].some((f) => fs.existsSync(path.join(ROOT, "app", p, f))) || fs.existsSync(path.join(ROOT, "app", p.replace(/\/[^/]+$/, ""), "[...slug]"));
+  // walk segments; a segment may match a literal folder, a [param] folder or a [...catchall] folder
+  const segs = p.split("/").filter(Boolean);
+  let dirs = [path.join(ROOT, "app")];
+  for (const sg of segs) {
+    const next = [];
+    for (const d of dirs) {
+      if (!fs.existsSync(d)) continue;
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) if (e.isDirectory() && (e.name === sg || /^\[.+\]$/.test(e.name) || /^\(.+\)$/.test(e.name))) next.push(path.join(d, e.name));
+    }
+    dirs = next;
+  }
+  const ok = dirs.some((d) => ["page.tsx", "page.jsx", "page.ts"].some((f) => fs.existsSync(path.join(d, f))));
   if (!ok) routeErr.push(`${s.id}: route ${r} has no app${p}/page.tsx`);
 }
 
@@ -141,11 +152,12 @@ const toolbar = (extra) => `<div class="dg-bar"><b>DGT.llc B / BS</b>
 <span class="grp"><span class="lbl">App</span><button data-k="app" data-v="b">DGT.llc B</button><button data-k="app" data-v="bs">DGT.llc BS</button></span>
 <span class="grp"><span class="lbl">Device</span><button data-k="device" data-v="phone">Phone 390</button><button data-k="device" data-v="phone360">Phone 360</button><button data-k="device" data-v="tablet">Tablet 820</button></span>
 <span class="grp"><span class="lbl">Language</span><button data-k="lang" data-v="en">English</button><button data-k="lang" data-v="ur">اردو</button><button data-k="lang" data-v="ar">العربية</button><button data-k="lang" data-v="fa">فارسی</button><button data-k="lang" data-v="ps">پښتو</button></span>
+<span class="grp"><span class="lbl">View</span><button data-k="view" data-v="full">Full length</button><button data-k="view" data-v="frame">Device frame</button></span>
 <span class="grp"><span class="lbl">Theme</span><button data-k="mode" data-v="day">Light</button><button data-k="mode" data-v="night">Dark</button></span>${extra || ""}</div>`;
 const boot = (render) => `<script>
-(function(){var q=new URLSearchParams(location.search),S=DG.S;["app","device","lang","mode"].forEach(function(k){if(q.get(k))S[k]=q.get(k)});
+(function(){var q=new URLSearchParams(location.search),S=DG.S;["app","device","lang","mode","view"].forEach(function(k){if(q.get(k))S[k]=q.get(k)});
 function sync(){document.querySelectorAll('.dg-bar button').forEach(function(b){b.setAttribute('aria-pressed',String(S[b.dataset.k]===b.dataset.v))});
- var u=new URL(location.href);["app","device","lang","mode"].forEach(function(k){u.searchParams.set(k,S[k])});history.replaceState(null,'',u)}
+ var u=new URL(location.href);["app","device","lang","mode","view"].forEach(function(k){u.searchParams.set(k,S[k])});document.getElementById("root").className=S.view==="full"?"dg-wrap full":"dg-wrap";history.replaceState(null,'',u)}
 document.querySelectorAll('.dg-bar button').forEach(function(b){b.onclick=function(){S[b.dataset.k]=b.dataset.v;${render};sync()}});
 ${render};sync()})();
 </script>`;

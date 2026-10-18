@@ -21,7 +21,6 @@ export function buildSpec(K, L) {
 
   const S = [];
   const add = (s) => S.push(Object.assign({ apps: ["b", "bs"], nav: 0 }, s));
-  const placeholder = "Placeholder";
 
   // ───────────────────────── 1. access ─────────────────────────
   add({ id: "a1", group: "access", layout: "splash", routes: ["(native splash)"], note: "Native splash in the app's own colour (B #0f3ea8, BS #0a2a4f), icon centred, ≤1.5 s." });
@@ -38,8 +37,8 @@ export function buildSpec(K, L) {
     { k: "notice", tone: "warn", text: K("appch.body_b") }, { k: "notice", tone: "info", text: K("appch.contact") }, { k: "actions", items: [{ l: K("appch.sign_out"), v: "s", i: "logout" }] }], note: "Wrong-app notice: a shipping-only login opened in B (and vice-versa) is told which app to use." });
   add({ id: "a7", group: "access", title: K("mdev.adm_title"), nav: 4, routes: ["/dashboard/super-admin/mobile-devices"], note: "Super Admin approves phones. Tablet-first (table); phone shows cards.", blocks: [
     { k: "seg", items: [K("mdev.f_all"), K("mdev.st_pending"), K("mdev.st_approved"), K("mdev.st_active"), K("mdev.st_revoked")] },
-    { k: "table", cols: [K("mdev.col_person"), K("mdev.col_login"), K("mdev.col_app"), K("mdev.col_device"), K("mdev.col_requested")], rows: 5, status: [[K("mdev.st_pending"), "warn"], [K("mdev.st_active"), "ok"], [K("mdev.st_revoked"), "bad"]], actions: ["check", "x", "lock"], span: "main" },
-    { k: "card", title: K("mdev.rp_title"), icon: "shield", span: "aside", body: [
+    { k: "table", cols: [K("mdev.col_person"), K("mdev.col_login"), K("mdev.col_app"), K("mdev.col_device"), K("mdev.col_requested")], rows: 5, status: [[K("mdev.st_pending"), "warn"], [K("mdev.st_active"), "ok"], [K("mdev.st_revoked"), "bad"]], actions: ["check", "x", "lock"], span: "full" },
+    { k: "card", title: K("mdev.rp_title"), icon: "shield", span: "half", body: [
       { k: "form", fields: [{ l: K("mdev.rp_name") }, { l: K("mdev.rp_identifier") }, { l: K("mdev.rp_days") }, { l: K("mdev.rp_max") }], actions: [{ l: K("mdev.rp_create"), v: "p", i: "plus" }] }] }] });
 
   // ───────────────────────── 2. dashboards ─────────────────────────
@@ -54,14 +53,14 @@ export function buildSpec(K, L) {
     { k: "kpis", items: [{ l: K("dash.total_sales"), icon: "chart", tone: "green" }, { l: K("dash.total_purchase"), icon: "cart", tone: "primary" }, { l: K("dash.ledger_balance"), icon: "book", tone: "teal" }, { l: K("dash.active_users"), icon: "users", tone: "violet" }] },
     { k: "list", title: K("dash.recent_transactions"), n: 3, fields: ["Date", "Account", "Amount"], status: [["Completed", "ok"], ["Pending", "warn"]], icon: "receipt", tone: "primary", span: "main" },
     { k: "card", title: K("dash.currency_rates"), icon: "money", tone: "amber", span: "aside", body: [{ k: "kv", items: ["Currency", "Date"] }] }] });
-  add({ id: "d3", group: "dash", apps: ["bs"], title: K("shtrk.title"), routes: ["/dashboard/shipping-line"], blocks: [
+  add({ id: "d3", group: "dash", apps: ["bs"], title: "Dashboard", routes: ["/dashboard/shipping-line"], blocks: [
     { k: "hero", title: K("shtrk.live_tracking"), sub: K("shtrk.subtitle"), art: "ship" },
     { k: "kpis", items: [{ l: K("shtrk.lbl_total_shipments"), icon: "ship", tone: "teal" }, { l: K("shtrk.lbl_total_containers"), icon: "box", tone: "primary" }, { l: K("shtrk.lbl_in_transit"), icon: "route", tone: "sky" }, { l: K("shtrk.lbl_delayed"), icon: "clock", tone: "amber" }] },
     { k: "card", title: K("shtrk.card_status"), icon: "chart", tone: "teal", span: "half", body: [{ k: "chips", items: [K("shtrk.lbl_booking_confirmed"), K("shtrk.lbl_loaded_gate_in"), K("shtrk.lbl_in_transit"), K("shtrk.lbl_arrived_dest"), K("shtrk.lbl_delayed")], on: 2 }] },
     { k: "list", title: K("shtrk.list_title"), n: 3, fields: [K("shtrk.col_container_no"), K("shtrk.col_vessel_voyage"), K("shtrk.col_eta")], status: [[K("shtrk.lbl_in_transit"), "info"], [K("shtrk.st_completed"), "ok"], [K("shtrk.lbl_delayed"), "warn"]], icon: "ship", tone: "teal", span: "half" }] });
   add({ id: "d4", group: "dash", apps: ["bs"], title: "Clearing Agent", routes: ["/dashboard/clearing-agent"], note: "Quick-access tiles are the real clearing modules (no invented KPIs).", blocks: [
     { k: "hero", title: "Clearing Workspace", sub: "Shipping & Clearing", art: "containers" },
-    { k: "qa", items: [{ l: "New Customer Order", icon: "box", tone: "primary" }, { l: "Customer Bills", icon: "receipt", tone: "green" }, { l: "Truck Register", icon: "truck", tone: "amber" }, { l: "Agent List", icon: "users", tone: "violet" }, { l: "Custom Bills", icon: "file", tone: "red" }, { l: "Transfer & Handover Center", icon: "inbox", tone: "teal" }, { l: "Track Shipment (Clearing & Cargo)", icon: "route", tone: "sky" }, { l: "Reports", icon: "chart", tone: "primary" }] }] });
+    { k: "qa", items: [{ l: "New Customer Order", icon: "box", tone: "primary" }, { l: "Customer Bills", icon: "receipt", tone: "green" }, { l: "Truck Register", icon: "truck", tone: "amber" }, { l: "Agent List", icon: "users", tone: "violet" }, { l: "Custom Bills", icon: "file", tone: "red" }, { l: "Transfer & Handover Center", icon: "inbox", tone: "teal" }, { l: K("shtrk.live_tracking"), icon: "route", tone: "sky" }, { l: "Reports", icon: "chart", tone: "primary" }] }] });
   add({ id: "d5", group: "dash", apps: ["bs"], title: "Logistics Tracking Dashboard", routes: ["/dashboard/logistics"], blocks: [
     { k: "hero", title: K("shtrk.card_movement"), sub: K("shtrk.list_desc"), art: "containers" },
     { k: "kpis", items: [{ l: K("shtrk.lbl_total_shipments"), icon: "ship", tone: "teal" }, { l: K("shtrk.lbl_in_transit"), icon: "route", tone: "sky" }, { l: K("shtrk.lbl_arrived_dest"), icon: "anchor", tone: "green" }, { l: K("shtrk.lbl_pending"), icon: "clock", tone: "amber" }] },
@@ -79,13 +78,13 @@ export function buildSpec(K, L) {
     { g: "Daily Payment Entry", items: [m("Daily Cash Entry (Roznamcha)", "money"), m("Ledgers", "book")] },
     { g: "Purchase, Sales & Trade", items: [m("Purchase Booking", "cart"), m("Sales Booking", "tag")] },
     { g: "Finance", items: [m("Reports and All Reporting Page", "chart")] }] }] });
-  add({ id: "n3", group: "nav", layout: "drawer", apps: ["bs"], role: "Shipping Super Admin", routes: ["components/layout/digital-dock-premium-sidebar.tsx"], note: "Shipping domain: the Shipping & Clearing accordion is the core; business-only groups are hidden by the domain rule.", blocks: [{ k: "menu", groups: [
+  add({ id: "n3", group: "nav", layout: "drawer", apps: ["bs"], role: "Super Admin", routes: ["components/layout/digital-dock-premium-sidebar.tsx"], note: "Shipping domain: the Shipping & Clearing accordion is the core; business-only groups are hidden by the domain rule.", blocks: [{ k: "menu", groups: [
     { items: [m("Dashboard", "home", true), m("Smart Operations", "tasks")] },
-    { g: "Shipping & Clearing", items: [m("New Customer Order", "box"), m("Customer Bills", "receipt"), m("Clearing Agent", "users"), m("Clearing Truck", "truck"), m("Shipping Lines", "ship"), m("BL Entry", "file"), m("Track Shipment (Container & Vessel)", "route")] },
+    { g: "Shipping & Clearing", items: [m("New Customer Order", "box"), m("Customer Bills", "receipt"), m("Clearing Agent", "users"), m("Clearing Truck", "truck"), m("Shipping Lines", "ship"), m("BL Entry", "file"), m(K("shtrk.title"), "route")] },
     { items: [m("Transfer & Handover Center", "inbox"), m("Ledgers", "book"), m("Reports and All Reporting Page", "chart")] }] }] });
   add({ id: "n4", group: "nav", layout: "drawer", apps: ["bs"], role: "Agent", routes: ["components/layout/digital-dock-premium-sidebar.tsx"], note: "Agent / shipping-scoped login: only its own shipping modules and its own ledger.", blocks: [{ k: "menu", groups: [
     { items: [m("Dashboard", "home", true), m("Smart Operations", "tasks")] },
-    { g: "Shipping & Clearing", items: [m("New Customer Order", "box"), m("Customer Bills", "receipt"), m("Track Shipment (Clearing & Cargo)", "route")] },
+    { g: "Shipping & Clearing", items: [m("New Customer Order", "box"), m("Customer Bills", "receipt"), m(K("shtrk.live_tracking"), "route")] },
     { items: [m("Transfer & Handover Center", "inbox"), m("Detailed Ledger Statement", "book")] }] }] });
   add({ id: "n5", group: "nav", title: "More", nav: 4, routes: ["(bottom tab 'More')"], note: "More tab: module tiles for everything not in the bottom bar (role-filtered).", blocks: [
     { k: "search", ph: "Search", filter: false },
@@ -173,10 +172,10 @@ export function buildSpec(K, L) {
   // ───────────────────────── 8. settings & profile ─────────────────────────
   add({ id: "p1", group: "set", nav: 4, title: "Profile", routes: ["/dashboard/settings/profile"], blocks: [
     { k: "profile" }, { k: "menu", groups: [{ items: [m("Language", "globe"), m(K("nav.theme_mode"), "sun"), m("Settings", "settings")] }] },
-    { k: "actions", items: [{ l: "Logout", v: "s", i: "logout" }] }] });
+    { k: "actions", items: [{ l: K("appch.sign_out"), v: "s", i: "logout" }] }] });
   add({ id: "p2", group: "set", nav: 4, title: "Language", routes: ["(language sheet)"], note: "Five languages; choosing one flips the whole screen (dir) and persists.", blocks: [{ k: "lang" }] });
   add({ id: "p3", group: "set", nav: 4, title: K("nav.theme_mode"), routes: ["/dashboard/settings/template-color", "(theme modes)"], blocks: [
-    { k: "seg", items: [K("nav.theme_day"), K("nav.theme_soft"), K("nav.theme_night")], on: 0 }, { k: "notice", tone: "info", text: placeholder }] });
+    { k: "seg", items: [K("nav.theme_day"), K("nav.theme_soft"), K("nav.theme_night")], on: 0 }] });
 
   // ───────────────────────── 9. states ─────────────────────────
   add({ id: "x1", group: "states", title: "Dashboard", routes: ["(empty list)"], blocks: [{ k: "state", kind: "empty", title: "No records found.", text: K("shtrk.adjust_filters"), action: "Clear filters" }] });
@@ -191,9 +190,9 @@ export function buildSpec(K, L) {
   cadd("c2", "Input/Text · Select · Date · Password · Textarea · Error", [{ k: "form", fields: [{ l: "Customer" }, { l: "Country", t: "select" }, { l: "Date", t: "date" }, { l: L("passwordPlaceholder"), t: "pass" }, { l: "Remarks", t: "textarea" }, { l: "Amount", err: true, hint: K("mdev.err_generic") }] }]);
   cadd("c3", "Input/OTP (activation code, always LTR) · Search", [{ k: "otp" }, { k: "search", ph: "Search" }]);
   cadd("c4", "Chip/Filter · Tabs/Underline · Tabs/Segmented", [{ k: "chips", items: ["All", "Pending", "Approved", "Completed"], on: 0 }, { k: "tabs", items: ["Advance Payment", "Remaining Payment", "Final Payment"], on: 0 }, { k: "seg", items: ["Inbox", "Pending", "Completed"], on: 1 }]);
-  cadd("c5", "Pill/Status — success · warning · danger · info · neutral (icon + label, never colour alone)", [{ k: "pills", items: [["Completed", "ok"], ["Pending", "warn"], ["Rejected", "bad"], ["Approved", "info"], ["Draft", "neu"]] }]);
+  cadd("c5", "Pill/Status — success · warning · danger · info · neutral (icon + label, never colour alone)", [{ k: "pills", pairs: [["Completed", "ok"], ["Pending", "warn"], ["Rejected", "bad"], ["Approved", "info"], ["Draft", "neu"]] }]);
   cadd("c6", "Card/KPI-3D (tinted base edge, gem chip, tabular numbers)", [{ k: "kpis", items: [{ l: K("dash.total_sales"), icon: "chart", tone: "green" }, { l: K("dash.total_purchase"), icon: "cart", tone: "primary" }, { l: K("dash.total_receivables"), icon: "wallet", tone: "amber" }, { l: K("dash.total_payables"), icon: "money", tone: "red" }] }]);
-  cadd("c7", "Icon/Gem — tones: primary · green · amber · red · teal · violet · sky", [{ k: "gems", items: ["home", "cart", "tag", "ship", "box", "truck", "inbox", "book"] }]);
+  cadd("c7", "Icon/Gem — tones: primary · green · amber · red · teal · violet · sky", [{ k: "gems", icons: ["home", "cart", "tag", "ship", "box", "truck", "inbox", "book"] }]);
   cadd("c8", "Card/Hero-3D — isometric art: ledger · ship · containers · bars", [{ k: "hero", title: K("dash.financial_overview_live"), sub: K("dash.live_db_overview_subtitle"), art: "ledger" }, { k: "hero", title: K("shtrk.live_tracking"), sub: K("shtrk.subtitle"), art: "ship" }, { k: "hero", title: K("shtrk.card_movement"), sub: K("shtrk.list_desc"), art: "containers" }, { k: "hero", title: K("dash.sales_vs_purchase"), sub: K("dash.live_db_overview_subtitle"), art: "bars" }], { wide: true });
   cadd("c9", "Card/Chart-3D (placeholder bars) · Card/Detail (key-value)", [{ k: "chart", title: K("dash.sales_vs_purchase") }, { k: "kv", title: K("shtrk.multi_leg_title"), items: [K("shtrk.lbl_vessel"), K("shtrk.lbl_voyage"), K("shtrk.lbl_container")] }]);
   cadd("c10", "Card/List-Item (phone card form of a table row)", [{ k: "list", n: 2, fields: [K("shtrk.col_container_no"), K("shtrk.col_bl_no"), K("shtrk.col_vessel_voyage"), K("shtrk.col_eta")], status: [[K("shtrk.lbl_in_transit"), "info"], [K("shtrk.st_completed"), "ok"]], icon: "ship", tone: "teal", actions: ["eye", "edit", "print"] }]);

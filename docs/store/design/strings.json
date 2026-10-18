@@ -1,0 +1,1698 @@
+{
+ "Account": {
+  "en": "Account",
+  "ur": "اکاؤنٹ",
+  "ar": "الحساب",
+  "fa": "حساب",
+  "ps": "حساب",
+  "source": "HEADER"
+ },
+ "Accountant": {
+  "en": "Accountant",
+  "ur": "اکاؤنٹنٹ",
+  "ar": "محاسب",
+  "fa": "حسابدار",
+  "ps": "محاسب",
+  "source": "ui:cbs.role_accountant"
+ },
+ "Accounts": {
+  "en": "Accounts",
+  "ur": "اکاؤنٹس",
+  "ar": "الحسابات",
+  "fa": "حساب‌ها",
+  "ps": "حسابونه",
+  "source": "HEADER"
+ },
+ "Activate": {
+  "en": "Activate",
+  "ur": "فعال کریں",
+  "ar": "تفعيل",
+  "fa": "فعال‌سازی",
+  "ps": "فعال کړئ",
+  "source": "ui:mdev.activate"
+ },
+ "Activate this device": {
+  "en": "Activate this device",
+  "ur": "اس ڈیوائس کو فعال کریں",
+  "ar": "تفعيل هذا الجهاز",
+  "fa": "فعال‌سازی این دستگاه",
+  "ps": "دا وسیله فعال کړئ",
+  "source": "ui:mdev.title"
+ },
+ "Active": {
+  "en": "Active",
+  "ur": "فعال",
+  "ar": "نشط",
+  "fa": "فعال",
+  "ps": "فعال",
+  "source": "ui:mdev.st_active"
+ },
+ "Active Users": {
+  "en": "Active Users",
+  "ur": "فعال صارفین",
+  "ar": "المستخدمون النشطون",
+  "fa": "کاربران فعال",
+  "ps": "فعال کاروونکي",
+  "source": "ui:dash.active_users"
+ },
+ "Advance Payment": {
+  "en": "Advance Payment",
+  "ur": "پیشگی ادائیگی",
+  "ar": "الدفعة المقدمة",
+  "fa": "پیش‌پرداخت",
+  "ps": "مخکینۍ تادیه",
+  "source": "HEADER"
+ },
+ "Agent": {
+  "en": "Agent",
+  "ur": "ایجنٹ",
+  "ar": "الوكيل",
+  "fa": "نماینده",
+  "ps": "ایجنټ",
+  "source": "HEADER"
+ },
+ "Agent List": {
+  "en": "Agent List",
+  "ur": "ایجنٹس کی فہرست",
+  "ar": "قائمة الوكلاء",
+  "fa": "فهرست ترخیص‌کاران",
+  "ps": "د وکیلانو لست",
+  "source": "HEADER"
+ },
+ "AI Business Assistant": {
+  "en": "AI Business Assistant",
+  "ur": "اے آئی بزنس اسسٹنٹ",
+  "ar": "مساعد الأعمال الذكي",
+  "fa": "دستیار هوشمند تجاری",
+  "ps": "د سوداګرۍ هوښیار همکار",
+  "source": "HEADER"
+ },
+ "All": {
+  "en": "All",
+  "ur": "سب",
+  "ar": "الكل",
+  "fa": "همه",
+  "ps": "ټول",
+  "source": "ui:mdev.f_all"
+ },
+ "All shipments, containers and vessels with current status and location.": {
+  "en": "All shipments, containers and vessels with current status and location.",
+  "ur": "تمام شپمنٹس، کنٹینرز اور جہاز، موجودہ حالت اور مقام کے ساتھ۔",
+  "ar": "جميع الشحنات والحاويات والسفن مع الحالة والموقع الحاليين.",
+  "fa": "همه محموله‌ها، کانتینرها و کشتی‌ها با وضعیت و موقعیت فعلی.",
+  "ps": "ټولې محمولې، کانټینرونه او بېړۍ د اوسني حالت او موقعیت سره.",
+  "source": "ui:shtrk.list_desc"
+ },
+ "Amount": {
+  "en": "Amount",
+  "ur": "رقم",
+  "ar": "المبلغ",
+  "fa": "مبلغ",
+  "ps": "اندازه",
+  "source": "HEADER"
+ },
+ "App": {
+  "en": "App",
+  "ur": "ایپ",
+  "ar": "التطبيق",
+  "fa": "برنامه",
+  "ps": "اپلیکیشن",
+  "source": "ui:mdev.col_app"
+ },
+ "Approved": {
+  "en": "Approved",
+  "ur": "منظور شدہ",
+  "ar": "معتمد",
+  "fa": "تأییدشده",
+  "ps": "تصویب شوی",
+  "source": "HEADER"
+ },
+ "Approved — code issued": {
+  "en": "Approved — code issued",
+  "ur": "منظور — کوڈ جاری",
+  "ar": "تمت الموافقة — صدر الرمز",
+  "fa": "تأیید شد — کد صادر شد",
+  "ps": "تایید شو — کوډ ورکړل شو",
+  "source": "ui:mdev.st_approved"
+ },
+ "Arrived": {
+  "en": "Arrived",
+  "ur": "پہنچ گئی",
+  "ar": "وصلت",
+  "fa": "رسیده",
+  "ps": "رسېدلې",
+  "source": "ui:shtrk.st_destination_review"
+ },
+ "Arrived at Destination": {
+  "en": "Arrived at Destination",
+  "ur": "منزل پر پہنچ گئی",
+  "ar": "وصلت إلى الوجهة",
+  "fa": "به مقصد رسیده",
+  "ps": "منزل ته رسېدلې",
+  "source": "ui:shtrk.lbl_arrived_dest"
+ },
+ "attempts left": {
+  "en": "attempts left",
+  "ur": "کوششیں باقی",
+  "ar": "محاولات متبقية",
+  "fa": "تلاش باقی‌مانده",
+  "ps": "پاتې هڅې",
+  "source": "ui:mdev.attempts_left"
+ },
+ "Back": {
+  "en": "Back",
+  "ur": "پیچھے",
+  "ar": "السابق",
+  "fa": "قبلی",
+  "ps": "شاته",
+  "source": "HEADER"
+ },
+ "Balance": {
+  "en": "Balance",
+  "ur": "بیلنس",
+  "ar": "الرصيد",
+  "fa": "مانده",
+  "ps": "بیلانس",
+  "source": "HEADER"
+ },
+ "Banks & Bank Accounts": {
+  "en": "Banks & Bank Accounts",
+  "ur": "بینک اور بینک اکاؤنٹس",
+  "ar": "البنوك والحسابات المصرفية",
+  "fa": "بانک‌ها و حساب‌های بانکی",
+  "ps": "بانکونه او بانکي حسابونه",
+  "source": "HEADER"
+ },
+ "BL Entry": {
+  "en": "BL Entry",
+  "ur": "بی ایل انٹری (بارنامہ)",
+  "ar": "إدخال بوليصة الشحن (BL)",
+  "fa": "ثبت بارنامه دریایی (BL)",
+  "ps": "د بی ایل داخله",
+  "source": "HEADER"
+ },
+ "BL No": {
+  "en": "BL No",
+  "ur": "بی ایل نمبر",
+  "ar": "رقم بوليصة الشحن",
+  "fa": "شماره بارنامه",
+  "ps": "د بار لیک نمبر",
+  "source": "ui:shtrk.col_bl_no"
+ },
+ "Blocked": {
+  "en": "Blocked",
+  "ur": "بلاک",
+  "ar": "محظور",
+  "fa": "مسدود",
+  "ps": "بند شوی",
+  "source": "ui:mdev.st_revoked"
+ },
+ "Booked": {
+  "en": "Booked",
+  "ur": "بک ہو گیا",
+  "ar": "محجوز",
+  "fa": "رزرو شد",
+  "ps": "بک شو",
+  "source": "ui:slstage.status_booked"
+ },
+ "Booking Confirmed": {
+  "en": "Booking Confirmed",
+  "ur": "بکنگ کی تصدیق",
+  "ar": "تأكيد الحجز",
+  "fa": "تأیید رزرو",
+  "ps": "د بکنګ تایید",
+  "source": "ui:shtrk.lbl_booking_confirmed"
+ },
+ "Branch": {
+  "en": "Branch",
+  "ur": "برانچ",
+  "ar": "الفرع",
+  "fa": "شعبه",
+  "ps": "څانګه",
+  "source": "HEADER"
+ },
+ "Branch Reports": {
+  "en": "Branch Reports",
+  "ur": "برانچ رپورٹس",
+  "ar": "تقارير الفروع",
+  "fa": "گزارش‌های شعب",
+  "ps": "د څانګې راپورونه",
+  "source": "HEADER"
+ },
+ "Cancel": {
+  "en": "Cancel",
+  "ur": "منسوخ کریں",
+  "ar": "إلغاء",
+  "fa": "لغو",
+  "ps": "لغوه کول",
+  "source": "HEADER"
+ },
+ "Check status": {
+  "en": "Check status",
+  "ur": "اسٹیٹس چیک کریں",
+  "ar": "تحقق من الحالة",
+  "fa": "بررسی وضعیت",
+  "ps": "حالت وګورئ",
+  "source": "ui:mdev.check_now"
+ },
+ "Clear filters": {
+  "en": "Clear filters",
+  "ur": "فلٹرز صاف کریں",
+  "ar": "مسح المرشحات",
+  "fa": "پاک کردن فیلترها",
+  "ps": "فلټرونه پاک کړئ",
+  "source": "ui:acct.asr_clear_filters"
+ },
+ "Clearing Agent": {
+  "en": "Clearing Agent",
+  "ur": "کلیئرنگ ایجنٹ",
+  "ar": "مخلص جمركي",
+  "fa": "حق‌العمل‌کار / ترخیص‌کار",
+  "ps": "ګمرکي وکیل",
+  "source": "HEADER"
+ },
+ "Clearing Truck": {
+  "en": "Clearing Truck",
+  "ur": "کلیئرنگ ٹرک",
+  "ar": "شاحنة التخليص",
+  "fa": "کامیون ترخیص",
+  "ps": "د تصفیې لارۍ",
+  "source": "HEADER"
+ },
+ "Clearing Workspace": {
+  "en": "Clearing Workspace",
+  "ur": "کلیئرنگ ورک اسپیس",
+  "ar": "مساحة عمل التخليص",
+  "fa": "میز کار ترخیص کالا",
+  "ps": "د تصفیې کاري ځای",
+  "source": "HEADER"
+ },
+ "Complete Journey Timeline": {
+  "en": "Complete Journey Timeline",
+  "ur": "مکمل سفر کی ٹائم لائن",
+  "ar": "الجدول الزمني الكامل للرحلة",
+  "fa": "جدول زمانی کامل سفر",
+  "ps": "د بشپړ سفر مهال ویش",
+  "source": "ui:shtrk.timeline_title"
+ },
+ "Completed": {
+  "en": "Completed",
+  "ur": "مکمل",
+  "ar": "مكتمل",
+  "fa": "تکمیل‌شده",
+  "ps": "بشپړ",
+  "source": "HEADER"
+ },
+ "Confirmed Sales Orders": {
+  "en": "Confirmed Sales Orders",
+  "ur": "تصدیق شدہ سیلز آرڈرز",
+  "ar": "طلبات المبيعات المؤكدة",
+  "fa": "سفارشات فروش تایید شده",
+  "ps": "تایید شوي د پلور امرونه",
+  "source": "HEADER"
+ },
+ "Confirmed Stock": {
+  "en": "Confirmed Stock",
+  "ur": "تصدیق شدہ اسٹاک",
+  "ar": "المخزون المؤكد",
+  "fa": "موجودی قطعی",
+  "ps": "تایید شوې ذخیره",
+  "source": "HEADER"
+ },
+ "Container": {
+  "en": "Container",
+  "ur": "کنٹینر",
+  "ar": "الحاوية",
+  "fa": "کانتینر",
+  "ps": "کانټینر",
+  "source": "ui:shtrk.lbl_container"
+ },
+ "Container & Vessel Tracking": {
+  "en": "Container & Vessel Tracking",
+  "ur": "کنٹینر اور جہاز ٹریکنگ",
+  "ar": "تتبع الحاويات والسفن",
+  "fa": "ردیابی کانتینر و کشتی",
+  "ps": "د کانټینر او بېړۍ تعقیب",
+  "source": "ui:shtrk.title"
+ },
+ "Container Details": {
+  "en": "Container Details",
+  "ur": "کنٹینر کی تفصیل",
+  "ar": "تفاصيل الحاوية",
+  "fa": "جزئیات کانتینر",
+  "ps": "د کانټینر جزئیات",
+  "source": "ui:shtrk.detail_title"
+ },
+ "Container No": {
+  "en": "Container No",
+  "ur": "کنٹینر نمبر",
+  "ar": "رقم الحاوية",
+  "fa": "شماره کانتینر",
+  "ps": "د کانټینر نمبر",
+  "source": "ui:shtrk.col_container_no"
+ },
+ "Could not load tracking records.": {
+  "en": "Could not load tracking records.",
+  "ur": "ٹریکنگ ریکارڈ لوڈ نہیں ہو سکا۔",
+  "ar": "تعذّر تحميل سجلات التتبع.",
+  "fa": "بارگذاری رکوردهای ردیابی ممکن نشد.",
+  "ps": "د تعقیب ریکارډونه نه شي پورته کېدلی.",
+  "source": "ui:shtrk.err_load_list"
+ },
+ "Country": {
+  "en": "Country",
+  "ur": "ملک",
+  "ar": "الدولة",
+  "fa": "کشور",
+  "ps": "هیواد",
+  "source": "HEADER"
+ },
+ "Country Admin Reports": {
+  "en": "Country Admin Reports",
+  "ur": "ملکی ایڈمن رپورٹس",
+  "ar": "تقارير مدير الدولة",
+  "fa": "گزارش‌های مدیر کشور",
+  "ps": "د هیواد د اډمین راپورونه",
+  "source": "HEADER"
+ },
+ "Create pass": {
+  "en": "Create pass",
+  "ur": "پاس بنائیں",
+  "ar": "إنشاء التصريح",
+  "fa": "ایجاد مجوز",
+  "ps": "پاس جوړ کړئ",
+  "source": "ui:mdev.rp_create"
+ },
+ "Credit": {
+  "en": "Credit",
+  "ur": "جمع",
+  "ar": "دائن",
+  "fa": "بستانکار",
+  "ps": "کریډټ",
+  "source": "HEADER"
+ },
+ "Currency": {
+  "en": "Currency",
+  "ur": "کرنسی",
+  "ar": "العملة",
+  "fa": "ارز",
+  "ps": "اسعار",
+  "source": "HEADER"
+ },
+ "Currency Exchange Rates": {
+  "en": "Currency Exchange Rates",
+  "ur": "کرنسی شرح تبادلہ",
+  "ar": "أسعار صرف العملات",
+  "fa": "نرخ تبدیل ارز",
+  "ps": "د اسعارو تبادلې نرخونه",
+  "source": "ui:dash.currency_rates"
+ },
+ "Current Location": {
+  "en": "Current Location",
+  "ur": "موجودہ مقام",
+  "ar": "الموقع الحالي",
+  "fa": "موقعیت فعلی",
+  "ps": "اوسنی موقعیت",
+  "source": "ui:shtrk.col_current_location"
+ },
+ "Current Movement (By Mode)": {
+  "en": "Current Movement (By Mode)",
+  "ur": "موجودہ نقل و حرکت (ذریعے کے لحاظ سے)",
+  "ar": "الحركة الحالية (حسب الوسيلة)",
+  "fa": "حرکت جاری (بر اساس نوع حمل‌ونقل)",
+  "ps": "اوسنی حرکت (د ډول له مخې)",
+  "source": "ui:shtrk.card_movement"
+ },
+ "Custom Bills": {
+  "en": "Custom Bills",
+  "ur": "کسٹم بلز",
+  "ar": "فواتير الجمارك",
+  "fa": "صورتحساب‌های گمرک",
+  "ps": "ګمرکي بلونه",
+  "source": "HEADER"
+ },
+ "Customer": {
+  "en": "Customer",
+  "ur": "گاہک",
+  "ar": "العميل",
+  "fa": "مشتری",
+  "ps": "پیرودونکی",
+  "source": "HEADER"
+ },
+ "Customer Bills": {
+  "en": "Customer Bills",
+  "ur": "کسٹمر بلز",
+  "ar": "فواتير العملاء",
+  "fa": "صورتحساب‌های مشتریان",
+  "ps": "د پیرودونکو بلونه",
+  "source": "HEADER"
+ },
+ "Customer Order": {
+  "en": "Customer Order",
+  "ur": "کسٹمر آرڈر",
+  "ar": "طلب العميل",
+  "fa": "سفارش مشتری",
+  "ps": "د پیرودونکي امر",
+  "source": "HEADER"
+ },
+ "Customers": {
+  "en": "Customers",
+  "ur": "کسٹمرز",
+  "ar": "العملاء",
+  "fa": "مشتریان",
+  "ps": "پیرودونکي",
+  "source": "HEADER"
+ },
+ "Customs": {
+  "en": "Customs",
+  "ur": "کسٹمز",
+  "ar": "الجمارك",
+  "fa": "گمرک",
+  "ps": "ګمرک",
+  "source": "ui:shtrk.lbl_customs"
+ },
+ "Daily Cash Entry (Roznamcha)": {
+  "en": "Daily Cash Entry (Roznamcha)",
+  "ur": "روزانہ کیش انٹری (روزنامچہ)",
+  "ar": "المدخلات النقدية اليومية (روزنامجة)",
+  "fa": "ورود نقدی روزانه (روزنامچه)",
+  "ps": "ورځنۍ نغدي داخله (روزنامچه)",
+  "source": "HEADER"
+ },
+ "Daily Exchange Rate": {
+  "en": "Daily Exchange Rate",
+  "ur": "روزانہ شرح مبادلہ",
+  "ar": "سعر الصرف اليومي",
+  "fa": "نرخ ارز روزانه",
+  "ps": "د اسعارو ورځنی نرخ",
+  "source": "HEADER"
+ },
+ "Daily Payment Entry": {
+  "en": "Daily Payment Entry",
+  "ur": "روزانہ ادائیگی انٹری",
+  "ar": "إدخال المدفوعات اليومية",
+  "fa": "ثبت پرداخت‌های روزانه",
+  "ps": "د ورځنۍ اداینې داخلول",
+  "source": "HEADER"
+ },
+ "Dashboard": {
+  "en": "Dashboard",
+  "ur": "ڈیش بورڈ",
+  "ar": "لوحة التحكم",
+  "fa": "داشبورد",
+  "ps": "ډشبورډ",
+  "source": "HEADER"
+ },
+ "Date": {
+  "en": "Date",
+  "ur": "تاریخ",
+  "ar": "التاريخ",
+  "fa": "تاریخ",
+  "ps": "نېټه",
+  "source": "HEADER"
+ },
+ "Day / White": {
+  "en": "Day / White",
+  "ur": "دن / سفید",
+  "ar": "نهاري / أبيض",
+  "fa": "روز / سفید",
+  "ps": "ورځ / سپینه",
+  "source": "ui:nav.theme_day"
+ },
+ "Debit": {
+  "en": "Debit",
+  "ur": "بنام",
+  "ar": "مدين",
+  "fa": "بدهکار",
+  "ps": "ډېبټ",
+  "source": "HEADER"
+ },
+ "Delayed / Pending": {
+  "en": "Delayed / Pending",
+  "ur": "تاخیر / زیر التواء",
+  "ar": "متأخرة / معلّقة",
+  "fa": "تأخیر / در انتظار",
+  "ps": "ځنډ / په انتظار کې",
+  "source": "ui:shtrk.lbl_delayed"
+ },
+ "Delete": {
+  "en": "Delete",
+  "ur": "حذف کریں",
+  "ar": "حذف",
+  "fa": "حذف",
+  "ps": "ړنګول",
+  "source": "HEADER"
+ },
+ "Delivered": {
+  "en": "Delivered",
+  "ur": "ڈیلیور ہو گئی",
+  "ar": "تم التسليم",
+  "fa": "تحویل‌شده",
+  "ps": "سپارل شوې",
+  "source": "ui:shtrk.st_completed"
+ },
+ "Destination": {
+  "en": "Destination",
+  "ur": "منزل",
+  "ar": "الوجهة",
+  "fa": "مقصد",
+  "ps": "منزل",
+  "source": "ui:shtrk.destination"
+ },
+ "Detailed Ledger Statement": {
+  "en": "Detailed Ledger Statement",
+  "ur": "تفصیلی لیجر گوشوارہ",
+  "ar": "كشف حساب الأستاذ التفصيلي",
+  "fa": "صورتحساب تفصیلی دفتر کل",
+  "ps": "د لیجر تفصیلي صورتحساب",
+  "source": "HEADER"
+ },
+ "Device": {
+  "en": "Device",
+  "ur": "ڈیوائس",
+  "ar": "الجهاز",
+  "fa": "دستگاه",
+  "ps": "وسیله",
+  "source": "ui:mdev.col_device"
+ },
+ "Device activated": {
+  "en": "Device activated",
+  "ur": "ڈیوائس فعال ہو گئی",
+  "ar": "تم تفعيل الجهاز",
+  "fa": "دستگاه فعال شد",
+  "ps": "وسیله فعاله شوه",
+  "source": "ui:mdev.active_title"
+ },
+ "DGT ACCOUNTS ERP": {
+  "en": "DGT ACCOUNTS ERP",
+  "ur": "ڈی جی ٹی اکاؤنٹس ای آر پی",
+  "ar": "دي جي تي لنظم الحسابات ERP",
+  "fa": "سیستم حسابداری دی‌جی‌تی ERP",
+  "ps": "ډي جي ټي اکاونټس ای آر پي",
+  "source": "login:brandTitle"
+ },
+ "Documents": {
+  "en": "Documents",
+  "ur": "دستاویزات",
+  "ar": "المستندات",
+  "fa": "اسناد",
+  "ps": "اسناد",
+  "source": "ui:shtrk.tab_documents"
+ },
+ "Draft": {
+  "en": "Draft",
+  "ur": "ڈرافٹ",
+  "ar": "مسودة",
+  "fa": "پیش‌نویس",
+  "ps": "مسوده",
+  "source": "HEADER"
+ },
+ "Driver": {
+  "en": "Driver",
+  "ur": "ڈرائیور",
+  "ar": "السائق",
+  "fa": "راننده",
+  "ps": "چلوونکی",
+  "source": "ui:shtrk.lbl_driver"
+ },
+ "Driver mobile": {
+  "en": "Driver mobile",
+  "ur": "ڈرائیور کا موبائل",
+  "ar": "هاتف السائق",
+  "fa": "موبایل راننده",
+  "ps": "د چلوونکي موبایل",
+  "source": "ui:shtrk.lbl_driver_mobile"
+ },
+ "Email / User Code": {
+  "en": "Email / User Code",
+  "ur": "ای میل / صارف کوڈ",
+  "ar": "البريد الإلكتروني / رمز المستخدم",
+  "fa": "ایمیل / کد کاربری",
+  "ps": "برېښنالیک / کارن کوډ",
+  "source": "login:identifierPlaceholder"
+ },
+ "Enter the activation code": {
+  "en": "Enter the activation code",
+  "ur": "ایکٹیویشن کوڈ درج کریں",
+  "ar": "أدخل رمز التفعيل",
+  "fa": "کد فعال‌سازی را وارد کنید",
+  "ps": "د فعالولو کوډ ولیکئ",
+  "source": "ui:mdev.approved_title"
+ },
+ "Entry Edit & Delete Control": {
+  "en": "Entry Edit & Delete Control",
+  "ur": "انٹری ترمیم اور حذف کنٹرول",
+  "ar": "التحكم في تعديل وحذف القيود",
+  "fa": "کنترل ویرایش و حذف ورودی‌ها",
+  "ps": "د ثبت بدلون او ړنګولو کنټرول",
+  "source": "HEADER"
+ },
+ "ERP e-mail or user code": {
+  "en": "ERP e-mail or user code",
+  "ur": "ERP ای میل یا یوزر کوڈ",
+  "ar": "البريد الإلكتروني أو رمز المستخدم في النظام",
+  "fa": "ایمیل یا کد کاربری ERP",
+  "ps": "د ERP برېښنالیک یا کارن کوډ",
+  "source": "ui:mdev.identifier"
+ },
+ "ERP login": {
+  "en": "ERP login",
+  "ur": "ERP لاگ اِن",
+  "ar": "دخول النظام",
+  "fa": "ورود ERP",
+  "ps": "ERP ننوتل",
+  "source": "ui:mdev.col_login"
+ },
+ "ETA": {
+  "en": "ETA",
+  "ur": "متوقع آمد",
+  "ar": "الوصول المتوقع",
+  "fa": "زمان رسیدن",
+  "ps": "د رسېدو وخت",
+  "source": "ui:shtrk.col_eta"
+ },
+ "Expected Arrival": {
+  "en": "Expected Arrival",
+  "ur": "متوقع آمد",
+  "ar": "الوصول المتوقع",
+  "fa": "رسیدن مورد انتظار",
+  "ps": "تمه شوی رارسېدل",
+  "source": "ui:shtrk.expected_arrival"
+ },
+ "Export": {
+  "en": "Export",
+  "ur": "برآمد",
+  "ar": "تصدير",
+  "fa": "خروجی",
+  "ps": "صادرول",
+  "source": "HEADER"
+ },
+ "Final Payment": {
+  "en": "Final Payment",
+  "ur": "حتمی ادائیگی",
+  "ar": "الدفعة النهائية",
+  "fa": "پرداخت نهایی",
+  "ps": "وروستۍ تادیه",
+  "source": "HEADER"
+ },
+ "Finance": {
+  "en": "Finance",
+  "ur": "مالیات",
+  "ar": "المالية",
+  "fa": "امور مالی",
+  "ps": "مالي چارې",
+  "source": "HEADER"
+ },
+ "Financial Overview (Live Records)": {
+  "en": "Financial Overview (Live Records)",
+  "ur": "مالیاتی جائزہ (لائیو ریکارڈز)",
+  "ar": "نظرة عامة مالية (سجلات مباشرة)",
+  "fa": "نمای کلی مالی (رکوردهای زنده)",
+  "ps": "مالي عمومي کتنه (ژوندي ریکارډونه)",
+  "source": "ui:dash.financial_overview_live"
+ },
+ "Financial Statements": {
+  "en": "Financial Statements",
+  "ur": "مالیاتی گوشوارے",
+  "ar": "القوائم والبيانات المالية",
+  "fa": "صورت‌های مالی",
+  "ps": "مالي راپورونه",
+  "source": "HEADER"
+ },
+ "Forgot password?": {
+  "en": "Forgot password?",
+  "ur": "پاس ورڈ بھول گئے؟",
+  "ar": "نسيت كلمة المرور؟",
+  "fa": "رمز عبور را فراموش کرده‌اید؟",
+  "ps": "پټنوم مو هېر شوی؟",
+  "source": "login:forgotPassword"
+ },
+ "From": {
+  "en": "From",
+  "ur": "سے",
+  "ar": "من",
+  "fa": "از",
+  "ps": "له",
+  "source": "ui:shtrk.col_from"
+ },
+ "Full name": {
+  "en": "Full name",
+  "ur": "پورا نام",
+  "ar": "الاسم الكامل",
+  "fa": "نام کامل",
+  "ps": "بشپړ نوم",
+  "source": "ui:mdev.name"
+ },
+ "General Office": {
+  "en": "General Office",
+  "ur": "جنرل آفس",
+  "ar": "المكتب العام",
+  "fa": "امور اداری عمومی",
+  "ps": "عمومي دفتر",
+  "source": "HEADER"
+ },
+ "Goods": {
+  "en": "Goods",
+  "ur": "مال",
+  "ar": "البضائع",
+  "fa": "کالا",
+  "ps": "توکي",
+  "source": "HEADER"
+ },
+ "Home": {
+  "en": "Home",
+  "ur": "ہوم",
+  "ar": "الرئيسية",
+  "fa": "خانه",
+  "ps": "کور",
+  "source": "ui:common.home"
+ },
+ "If you think this is a mistake, contact your administrator.": {
+  "en": "If you think this is a mistake, contact your administrator.",
+  "ur": "اگر آپ کو لگتا ہے کہ یہ غلطی ہے تو اپنے ایڈمنسٹریٹر سے رابطہ کریں۔",
+  "ar": "إذا كنت تعتقد أن هذا خطأ، تواصل مع المسؤول.",
+  "fa": "اگر فکر می‌کنید اشتباه است، با مدیر سیستم تماس بگیرید.",
+  "ps": "که فکر کوئ چې دا تېروتنه ده، له خپل مدیر سره اړیکه ونیسئ.",
+  "source": "ui:appch.contact"
+ },
+ "In Transit": {
+  "en": "In Transit",
+  "ur": "راستے میں",
+  "ar": "في الطريق",
+  "fa": "در مسیر",
+  "ps": "په لار کې",
+  "source": "ui:shtrk.lbl_in_transit"
+ },
+ "Inbox": {
+  "en": "Inbox",
+  "ur": "ان باکس",
+  "ar": "صندوق الوارد",
+  "fa": "صندوق دریافت",
+  "ps": "راتلونکي ای میلونه",
+  "source": "ui:email_mgmt.inbox"
+ },
+ "Journal Reporting": {
+  "en": "Journal Reporting",
+  "ur": "جرنل رپورٹنگ",
+  "ar": "تقارير اليومية",
+  "fa": "گزارش‌دهی روزنامه",
+  "ps": "د جرنل راپورونه",
+  "source": "HEADER"
+ },
+ "Journal Stock": {
+  "en": "Journal Stock",
+  "ur": "جرنل اسٹاک",
+  "ar": "مخزون اليومية",
+  "fa": "موجودی روزنامچه",
+  "ps": "د ژورنال ذخیره",
+  "source": "HEADER"
+ },
+ "Journey": {
+  "en": "Journey",
+  "ur": "سفر",
+  "ar": "الرحلة",
+  "fa": "سفر",
+  "ps": "سفر",
+  "source": "ui:shtrk.tab_journey"
+ },
+ "Language": {
+  "en": "Language",
+  "ur": "زبان",
+  "ar": "اللغة",
+  "fa": "زبان",
+  "ps": "ژبه",
+  "source": "ui:urf.language_word"
+ },
+ "Ledger Balance": {
+  "en": "Ledger Balance",
+  "ur": "لیجر بیلنس",
+  "ar": "رصيد دفتر الأستاذ",
+  "fa": "موجودی دفتر کل",
+  "ps": "د لیجر بیلانس",
+  "source": "ui:dash.ledger_balance"
+ },
+ "Ledgers": {
+  "en": "Ledgers",
+  "ur": "لیجرز (کھاتہ جات)",
+  "ar": "دفاتر الأستاذ",
+  "fa": "دفاتر کل",
+  "ps": "لیجرونه",
+  "source": "HEADER"
+ },
+ "Live database overview. No demo or fallback statistics.": {
+  "en": "Live database overview. No demo or fallback statistics.",
+  "ur": "لائیو ڈیٹا بیس کا جائزہ۔ کوئی ڈیمو یا فرضی اعداد و شمار نہیں دکھائے جا رہے۔",
+  "ar": "نظرة عامة على قاعدة البيانات المباشرة. لا تُعرض بيانات تجريبية أو احتياطية.",
+  "fa": "نمای کلی پایگاه داده زنده. هیچ آمار نمایشی یا جایگزین نمایش داده نمی‌شود.",
+  "ps": "د ژوندي ډیټابیس عمومي کتنه. هیڅ ډیمو یا بدیل شمېرې نه ښودل کیږي.",
+  "source": "ui:dash.live_db_overview_subtitle"
+ },
+ "Live Tracking": {
+  "en": "Live Tracking",
+  "ur": "لائیو ٹریکنگ",
+  "ar": "تتبع مباشر",
+  "fa": "ردیابی زنده",
+  "ps": "ژوندی تعقیب",
+  "source": "ui:shtrk.live_tracking"
+ },
+ "Loaded / Gate In": {
+  "en": "Loaded / Gate In",
+  "ur": "لوڈ شدہ / گیٹ اِن",
+  "ar": "تم التحميل / دخول البوابة",
+  "fa": "بارگیری‌شده / ورود به گیت",
+  "ps": "بار شوی / دروازې ته ننوتل",
+  "source": "ui:shtrk.lbl_loaded_gate_in"
+ },
+ "Loading": {
+  "en": "Loading",
+  "ur": "لوڈنگ",
+  "ar": "التحميل",
+  "fa": "بارگیری",
+  "ps": "بارول",
+  "source": "HEADER"
+ },
+ "Loading records...": {
+  "en": "Loading records...",
+  "ur": "ریکارڈ لوڈ ہو رہے ہیں...",
+  "ar": "جارٍ تحميل السجلات...",
+  "fa": "در حال بارگذاری رکوردها...",
+  "ps": "ریکارډونه پورته کېږي...",
+  "source": "ui:shtrk.loading_records"
+ },
+ "Loading...": {
+  "en": "Loading...",
+  "ur": "لوڈ ہو رہا ہے...",
+  "ar": "جارٍ التحميل...",
+  "fa": "در حال بارگذاری...",
+  "ps": "بارول کیږي...",
+  "source": "HEADER"
+ },
+ "Local Purchase": {
+  "en": "Local Purchase",
+  "ur": "مقامی خریداری",
+  "ar": "الشراء المحلي",
+  "fa": "خرید محلی",
+  "ps": "سیمه ییز پیرود",
+  "source": "HEADER"
+ },
+ "Logistics Tracking Dashboard": {
+  "en": "Logistics Tracking Dashboard",
+  "ur": "لاجسٹکس ٹریکنگ ڈیش بورڈ",
+  "ar": "لوحة متابعة الخدمات اللوجستية",
+  "fa": "داشبورد رهگیری لجستیک",
+  "ps": "د لوژستیک تعقیب ډشبورډ",
+  "source": "HEADER"
+ },
+ "Max devices": {
+  "en": "Max devices",
+  "ur": "زیادہ سے زیادہ ڈیوائسز",
+  "ar": "الحد الأقصى للأجهزة",
+  "fa": "حداکثر دستگاه",
+  "ps": "ډیر تر ډیره وسایل",
+  "source": "ui:mdev.rp_max"
+ },
+ "Mobile Devices": {
+  "en": "Mobile Devices",
+  "ur": "موبائل ڈیوائسز",
+  "ar": "الأجهزة المحمولة",
+  "fa": "دستگاه‌های موبایل",
+  "ps": "موبایل وسایل",
+  "source": "ui:mdev.adm_title"
+ },
+ "Mobile number": {
+  "en": "Mobile number",
+  "ur": "موبائل نمبر",
+  "ar": "رقم الجوال",
+  "fa": "شماره موبایل",
+  "ps": "د موبایل شمېره",
+  "source": "ui:mdev.phone"
+ },
+ "More": {
+  "en": "More",
+  "ur": "مزید",
+  "ar": "المزيد",
+  "fa": "بیشتر",
+  "ps": "نور",
+  "source": "ui:ujr.more"
+ },
+ "Multi-Leg Movement Sequence": {
+  "en": "Multi-Leg Movement Sequence",
+  "ur": "کثیر مرحلہ نقل و حرکت کی ترتیب",
+  "ar": "تسلسل النقل متعدد المراحل",
+  "fa": "توالی حمل‌ونقل چندمرحله‌ای",
+  "ps": "د څو پړاوي لېږد ترتیب",
+  "source": "ui:shtrk.multi_leg_title"
+ },
+ "New Customer Order": {
+  "en": "New Customer Order",
+  "ur": "نیا کسٹمر آرڈر",
+  "ar": "طلب عميل جديد",
+  "fa": "سفارش جدید مشتری",
+  "ps": "د پیرودونکي نوی امر",
+  "source": "HEADER"
+ },
+ "New Entry": {
+  "en": "New Entry",
+  "ur": "نئی انٹری",
+  "ar": "إدخال جديد",
+  "fa": "ورودی جدید",
+  "ps": "نوی داخلول",
+  "source": "HEADER"
+ },
+ "New Purchase Booking Order": {
+  "en": "New Purchase Booking Order",
+  "ur": "نیا پرچیز بکنگ آرڈر",
+  "ar": "طلب حجز مشتريات جديد",
+  "fa": "سفارش جدید رزرو خرید",
+  "ps": "د نوي پیرودلو بوکینګ امر",
+  "source": "HEADER"
+ },
+ "New Sales Booking Order": {
+  "en": "New Sales Booking Order",
+  "ur": "نیا سیلز بکنگ آرڈر",
+  "ar": "طلب حجز مبيعات جديد",
+  "fa": "سفارش جدید رزرو فروش",
+  "ps": "د نوي پلور بوکینګ امر",
+  "source": "HEADER"
+ },
+ "Night / Dark": {
+  "en": "Night / Dark",
+  "ur": "رات / ڈارک",
+  "ar": "ليلي / داكن",
+  "fa": "شب / تیره",
+  "ps": "شپه / توره",
+  "source": "ui:nav.theme_night"
+ },
+ "No records found.": {
+  "en": "No records found.",
+  "ur": "کوئی ریکارڈ نہیں ملا۔",
+  "ar": "لم يتم العثور على سجلات.",
+  "fa": "سابقه‌ای یافت نشد.",
+  "ps": "هیڅ ریکارډ ونه موندل شو.",
+  "source": "ui:inv.no_records"
+ },
+ "Note for the administrator (optional)": {
+  "en": "Note for the administrator (optional)",
+  "ur": "ایڈمنسٹریٹر کے لیے نوٹ (اختیاری)",
+  "ar": "ملاحظة للمسؤول (اختياري)",
+  "fa": "یادداشت برای مدیر (اختیاری)",
+  "ps": "مدیر ته یادښت (اختیاري)",
+  "source": "ui:mdev.note"
+ },
+ "Offline": {
+  "en": "Offline",
+  "ur": "آف لائن",
+  "ar": "غير متصل",
+  "fa": "آفلاین",
+  "ps": "آفلاین",
+  "source": "ui:dgtc.offline"
+ },
+ "Only for Apple, Google or Samsung store reviewers. Leave empty if you are a normal user.": {
+  "en": "Only for Apple, Google or Samsung store reviewers. Leave empty if you are a normal user.",
+  "ur": "صرف ایپل، گوگل یا سیمسنگ اسٹور کے ریویورز کے لیے۔ عام صارف ہوں تو خالی چھوڑ دیں۔",
+  "ar": "للمراجعين من متاجر Apple وGoogle وSamsung فقط. اتركه فارغًا إذا كنت مستخدمًا عاديًا.",
+  "fa": "فقط برای بازبین‌های فروشگاه Apple، Google یا Samsung. اگر کاربر عادی هستید خالی بگذارید.",
+  "ps": "یوازې د Apple، Google یا Samsung پلورنځي بیاکتونکو لپاره. که عادي کارن یاست خالي یې پریږدئ.",
+  "source": "ui:mdev.review_code_hint"
+ },
+ "Orders": {
+  "en": "Orders",
+  "ur": "آرڈرز",
+  "ar": "طلبات",
+  "fa": "سفارش‌ها",
+  "ps": "فرمایښتونه",
+  "source": "ui:bdash.orders"
+ },
+ "Origin": {
+  "en": "Origin",
+  "ur": "مقامِ آغاز",
+  "ar": "المنشأ",
+  "fa": "مبدأ",
+  "ps": "پیل ځای",
+  "source": "ui:shtrk.origin"
+ },
+ "Outstanding Ledgers Report": {
+  "en": "Outstanding Ledgers Report",
+  "ur": "واجب الادا لیجر رپورٹ",
+  "ar": "تقرير الأرصدة المعلقة",
+  "fa": "گزارش مانده‌های معوق دفتر کل",
+  "ps": "د پاتې لیجرونو راپور",
+  "source": "HEADER"
+ },
+ "Pass name (e.g. Apple App Review)": {
+  "en": "Pass name (e.g. Apple App Review)",
+  "ur": "پاس کا نام (مثلاً Apple App Review)",
+  "ar": "اسم التصريح (مثال: Apple App Review)",
+  "fa": "نام مجوز (مثلاً Apple App Review)",
+  "ps": "د پاس نوم (لکه Apple App Review)",
+  "source": "ui:mdev.rp_name"
+ },
+ "Password": {
+  "en": "Password",
+  "ur": "پاس ورڈ",
+  "ar": "كلمة المرور",
+  "fa": "رمز عبور",
+  "ps": "پټنوم",
+  "source": "login:passwordPlaceholder"
+ },
+ "Payments & Settlements Report": {
+  "en": "Payments & Settlements Report",
+  "ur": "ادائیگیوں اور تصفیہ جات کی رپورٹ",
+  "ar": "تقرير المدفوعات والتسويات",
+  "fa": "گزارش پرداخت‌ها و تسویه‌ها",
+  "ps": "د تادیاتو او تصفیو راپور",
+  "source": "HEADER"
+ },
+ "Pending": {
+  "en": "Pending",
+  "ur": "زیر التواء",
+  "ar": "قيد الانتظار",
+  "fa": "در انتظار",
+  "ps": "په تمه",
+  "source": "ui:mdev.st_pending"
+ },
+ "Pending Approvals": {
+  "en": "Pending Approvals",
+  "ur": "زیرِ التوا منظوریاں",
+  "ar": "الموافقات المعلّقة",
+  "fa": "تأییدهای در انتظار",
+  "ps": "پاتې تصویبونه",
+  "source": "ui:dash.pending_approvals"
+ },
+ "Person": {
+  "en": "Person",
+  "ur": "شخص",
+  "ar": "الشخص",
+  "fa": "فرد",
+  "ps": "کس",
+  "source": "ui:mdev.col_person"
+ },
+ "Port": {
+  "en": "Port",
+  "ur": "بندرگاہ",
+  "ar": "الميناء",
+  "fa": "بندر",
+  "ps": "بندر",
+  "source": "HEADER_EXTRA"
+ },
+ "Print": {
+  "en": "Print",
+  "ur": "پرنٹ کریں",
+  "ar": "طباعة",
+  "fa": "چاپ",
+  "ps": "چاپ کړئ",
+  "source": "HEADER"
+ },
+ "Profile": {
+  "en": "Profile",
+  "ur": "پروفائل",
+  "ar": "الملف الشخصي",
+  "fa": "نمایه",
+  "ps": "پېژنیال",
+  "source": "HEADER"
+ },
+ "Purchase": {
+  "en": "Purchase",
+  "ur": "خریداری",
+  "ar": "الشراء",
+  "fa": "خرید",
+  "ps": "پیرود",
+  "source": "HEADER"
+ },
+ "Purchase Booking": {
+  "en": "Purchase Booking",
+  "ur": "خریداری بکنگ",
+  "ar": "حجز المشتريات",
+  "fa": "رزرو خرید",
+  "ps": "د پیرودلو بوکینګ",
+  "source": "HEADER"
+ },
+ "Purchase Payments": {
+  "en": "Purchase Payments",
+  "ur": "خریداری ادائیگیاں",
+  "ar": "مدفوعات المشتريات",
+  "fa": "پرداخت‌های خرید",
+  "ps": "د پیرودلو تادیات",
+  "source": "HEADER"
+ },
+ "Purchase, Sales & Trade": {
+  "en": "Purchase, Sales & Trade",
+  "ur": "خریداری، فروخت اور تجارت",
+  "ar": "المشتريات والمبيعات والتجارة",
+  "fa": "خرید، فروش و تجارت",
+  "ps": "پیرود، پلور او سوداګري",
+  "source": "HEADER"
+ },
+ "Quantity": {
+  "en": "Quantity",
+  "ur": "مقدار",
+  "ar": "الكمية",
+  "fa": "تعداد",
+  "ps": "مقدار",
+  "source": "HEADER"
+ },
+ "Quick Access": {
+  "en": "Quick Access",
+  "ur": "فوری رسائی",
+  "ar": "الوصول السريع",
+  "fa": "دسترسی سریع",
+  "ps": "چټکه لاسرسی",
+  "source": "ui:dash.quick_actions"
+ },
+ "Recent Transactions": {
+  "en": "Recent Transactions",
+  "ur": "حالیہ لین دین",
+  "ar": "المعاملات الأخيرة",
+  "fa": "تراکنش‌های اخیر",
+  "ps": "وروستي لیږدونه",
+  "source": "ui:dash.recent_transactions"
+ },
+ "Rejected": {
+  "en": "Rejected",
+  "ur": "مسترد",
+  "ar": "مرفوض",
+  "fa": "ردشده",
+  "ps": "رد شوی",
+  "source": "HEADER"
+ },
+ "Remaining Payment": {
+  "en": "Remaining Payment",
+  "ur": "بقیہ ادائیگی",
+  "ar": "الدفعة المتبقية",
+  "fa": "پرداخت باقیمانده",
+  "ps": "پاتې تادیه",
+  "source": "HEADER"
+ },
+ "Remarks": {
+  "en": "Remarks",
+  "ur": "تبصرے",
+  "ar": "ملاحظات",
+  "fa": "ملاحظات",
+  "ps": "تبصرې",
+  "source": "HEADER"
+ },
+ "Reports": {
+  "en": "Reports",
+  "ur": "رپورٹس",
+  "ar": "التقارير",
+  "fa": "گزارش‌ها",
+  "ps": "راپورونه",
+  "source": "HEADER"
+ },
+ "Reports and All Reporting Page": {
+  "en": "Reports and All Reporting Page",
+  "ur": "رپورٹس اور تمام رپورٹنگ صفحات",
+  "ar": "التقارير وجميع صفحات التقارير",
+  "fa": "گزارش‌ها و صفحه کلیه گزارش‌ها",
+  "ps": "راپورونه او د ټولو راپورونو پاڼه",
+  "source": "HEADER"
+ },
+ "Request activation": {
+  "en": "Request activation",
+  "ur": "فعالیت کی درخواست بھیجیں",
+  "ar": "طلب التفعيل",
+  "fa": "درخواست فعال‌سازی",
+  "ps": "د فعالولو غوښتنه",
+  "source": "ui:mdev.submit"
+ },
+ "Requested": {
+  "en": "Requested",
+  "ur": "درخواست",
+  "ar": "الطلب",
+  "fa": "درخواست",
+  "ps": "غوښتنه",
+  "source": "ui:mdev.col_requested"
+ },
+ "Retry": {
+  "en": "Retry",
+  "ur": "دوبارہ کوشش کریں",
+  "ar": "إعادة المحاولة",
+  "fa": "تلاش مجدد",
+  "ps": "بیا هڅه وکړئ",
+  "source": "HEADER"
+ },
+ "Reviewer ERP login": {
+  "en": "Reviewer ERP login",
+  "ur": "ریویور کا ERP لاگ اِن",
+  "ar": "حساب دخول المراجع في النظام",
+  "fa": "ورود ERP بازبین",
+  "ps": "د بیاکتونکي ERP ننوتل",
+  "source": "ui:mdev.rp_identifier"
+ },
+ "Role": {
+  "en": "Role",
+  "ur": "عہدہ / کردار",
+  "ar": "الدور / الصلاحية",
+  "fa": "نقش / سمت",
+  "ps": "رول / دنده",
+  "source": "HEADER"
+ },
+ "Sales": {
+  "en": "Sales",
+  "ur": "فروخت",
+  "ar": "المبيعات",
+  "fa": "فروش",
+  "ps": "پلور",
+  "source": "HEADER"
+ },
+ "Sales Booking": {
+  "en": "Sales Booking",
+  "ur": "سیلز بکنگ",
+  "ar": "حجز المبيعات",
+  "fa": "رزرو فروش",
+  "ps": "د پلورلو بوکینګ",
+  "source": "HEADER"
+ },
+ "Sales vs Purchase": {
+  "en": "Sales vs Purchase",
+  "ur": "فروخت بمقابلہ خریداری",
+  "ar": "المبيعات مقابل المشتريات",
+  "fa": "فروش در مقابل خرید",
+  "ps": "پلور د پیرود پروړاندې",
+  "source": "ui:dash.sales_vs_purchase"
+ },
+ "Save": {
+  "en": "Save",
+  "ur": "محفوظ کریں",
+  "ar": "حفظ",
+  "fa": "ذخیره",
+  "ps": "خوندي کول",
+  "source": "HEADER"
+ },
+ "Seal": {
+  "en": "Seal",
+  "ur": "سیل",
+  "ar": "الختم",
+  "fa": "پلمب",
+  "ps": "مهر",
+  "source": "ui:shtrk.lbl_seal"
+ },
+ "Search": {
+  "en": "Search",
+  "ur": "تلاش کریں",
+  "ar": "بحث",
+  "fa": "جستجو",
+  "ps": "لټون",
+  "source": "HEADER"
+ },
+ "Search by Shipment No, BL, Container, Vessel, Voyage, Customer, Shipping Line...": {
+  "en": "Search by Shipment No, BL, Container, Vessel, Voyage, Customer, Shipping Line...",
+  "ur": "شپمنٹ نمبر، بی ایل، کنٹینر، جہاز، سفر، گاہک یا شپنگ لائن سے تلاش کریں...",
+  "ar": "ابحث برقم الشحنة أو بوليصة الشحن أو الحاوية أو السفينة أو الرحلة أو العميل أو خط الشحن...",
+  "fa": "جستجو با شماره محموله، بارنامه، کانتینر، کشتی، سفر، مشتری یا خط کشتیرانی...",
+  "ps": "د محمولې نمبر، بار لیک، کانټینر، بېړۍ، سفر، پیرودونکي یا د بار وړلو کرښې له مخې لټون وکړئ...",
+  "source": "ui:shtrk.search_ph"
+ },
+ "Secure Enterprise Access": {
+  "en": "Secure Enterprise Access",
+  "ur": "محفوظ انٹرپرائز رسائی",
+  "ar": "دخول مؤسسي آمن",
+  "fa": "ورود امن سازمانی",
+  "ps": "خوندي سوداګریز لاسرسی",
+  "source": "login:brandSubtitle"
+ },
+ "Settings": {
+  "en": "Settings",
+  "ur": "ترتیبات",
+  "ar": "الإعدادات",
+  "fa": "تنظیمات",
+  "ps": "ترتیبات",
+  "source": "HEADER"
+ },
+ "Settlement & Reconciliation": {
+  "en": "Settlement & Reconciliation",
+  "ur": "تصفیہ اور مطابقت",
+  "ar": "التسوية والمطابقة المالية",
+  "fa": "تسویه و تطبیق حساب‌ها",
+  "ps": "تصفیه او پخلاینه",
+  "source": "HEADER"
+ },
+ "Shipment & Container Tracking List": {
+  "en": "Shipment & Container Tracking List",
+  "ur": "شپمنٹ اور کنٹینر ٹریکنگ فہرست",
+  "ar": "قائمة تتبع الشحنات والحاويات",
+  "fa": "فهرست ردیابی محموله و کانتینر",
+  "ps": "د محمولې او کانټینر تعقیب لیست",
+  "source": "ui:shtrk.list_title"
+ },
+ "Shipping & Clearing": {
+  "en": "Shipping & Clearing",
+  "ur": "جہاز رانی اور کسٹم کلیئرنگ",
+  "ar": "الشحن والتخليص الجمركي",
+  "fa": "کشتیرانی و ترخیص کالا",
+  "ps": "بار وړل او ګمرکي تصفیه",
+  "source": "HEADER"
+ },
+ "Shipping & Clearing Reports": {
+  "en": "Shipping & Clearing Reports",
+  "ur": "شپنگ اور کلیئرنگ رپورٹس",
+  "ar": "تقارير الشحن والتخليص",
+  "fa": "گزارش‌های کشتیرانی و ترخیص",
+  "ps": "د بار وړلو او تصفیې راپورونه",
+  "source": "HEADER"
+ },
+ "Shipping Line": {
+  "en": "Shipping Line",
+  "ur": "شپنگ لائن",
+  "ar": "خط الشحن",
+  "fa": "خط کشتیرانی",
+  "ps": "د بار وړلو کرښه",
+  "source": "ui:shtrk.col_shipping_line"
+ },
+ "Shipping Lines": {
+  "en": "Shipping Lines",
+  "ur": "شپنگ لائنز",
+  "ar": "خطوط الشحن البحري",
+  "fa": "خطوط کشتیرانی",
+  "ps": "د کښتۍ لینونه",
+  "source": "HEADER"
+ },
+ "SIGN IN SECURELY": {
+  "en": "SIGN IN SECURELY",
+  "ur": "محفوظ لاگ ان کریں",
+  "ar": "تسجيل الدخول بأمان",
+  "fa": "ورود ایمن به سیستم",
+  "ps": "په خوندي ډول ننوتل",
+  "source": "login:signInSecurely"
+ },
+ "Sign out": {
+  "en": "Sign out",
+  "ur": "سائن آؤٹ",
+  "ar": "تسجيل الخروج",
+  "fa": "خروج",
+  "ps": "وتل",
+  "source": "ui:appch.sign_out"
+ },
+ "Smart Operations": {
+  "en": "Smart Operations",
+  "ur": "سمارٹ آپریشنز",
+  "ar": "العمليات الذكية",
+  "fa": "عملیات هوشمند",
+  "ps": "هوښیار عملیات",
+  "source": "HEADER"
+ },
+ "Soft Light": {
+  "en": "Soft Light",
+  "ur": "نرم روشنی",
+  "ar": "إضاءة ناعمة",
+  "fa": "نور ملایم",
+  "ps": "نرمه رڼا",
+  "source": "ui:nav.theme_soft"
+ },
+ "Something went wrong. Please try again.": {
+  "en": "Something went wrong. Please try again.",
+  "ur": "کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔",
+  "ar": "حدث خطأ. حاول مرة أخرى.",
+  "fa": "مشکلی پیش آمد. دوباره تلاش کنید.",
+  "ps": "یو څه ستونزه رامنځته شوه. بیا هڅه وکړئ.",
+  "source": "ui:mdev.err_generic"
+ },
+ "Status": {
+  "en": "Status",
+  "ur": "حیثیت",
+  "ar": "الحالة",
+  "fa": "وضعیت",
+  "ps": "حالت",
+  "source": "HEADER"
+ },
+ "Store review code (optional)": {
+  "en": "Store review code (optional)",
+  "ur": "اسٹور ریویو کوڈ (اختیاری)",
+  "ar": "رمز مراجعة المتجر (اختياري)",
+  "fa": "کد بازبینی فروشگاه (اختیاری)",
+  "ps": "د پلورنځي بیاکتنې کوډ (اختیاري)",
+  "source": "ui:mdev.review_code"
+ },
+ "Store review passes": {
+  "en": "Store review passes",
+  "ur": "اسٹور ریویو پاسز",
+  "ar": "تصاريح مراجعة المتجر",
+  "fa": "مجوزهای بازبینی فروشگاه",
+  "ps": "د پلورنځي بیاکتنې پاسونه",
+  "source": "ui:mdev.rp_title"
+ },
+ "Submit": {
+  "en": "Submit",
+  "ur": "جمع کریں",
+  "ar": "إرسال",
+  "fa": "ارسال",
+  "ps": "وسپارئ",
+  "source": "ui:tax_einv.ei_submit"
+ },
+ "Super Admin": {
+  "en": "Super Admin",
+  "ur": "سپر ایڈمن",
+  "ar": "المشرف العام",
+  "fa": "مدیر ارشد",
+  "ps": "سوپر اډمین",
+  "source": "HEADER"
+ },
+ "Supplier": {
+  "en": "Supplier",
+  "ur": "سپلائر",
+  "ar": "المورد",
+  "fa": "تأمین‌کننده",
+  "ps": "عرضه کوونکی",
+  "source": "HEADER"
+ },
+ "The account you will sign in with.": {
+  "en": "The account you will sign in with.",
+  "ur": "وہ اکاؤنٹ جس سے آپ سائن اِن کریں گے۔",
+  "ar": "الحساب الذي ستسجّل الدخول به.",
+  "fa": "حسابی که با آن وارد می‌شوید.",
+  "ps": "هغه حساب چې ورسره ننوځئ.",
+  "source": "ui:mdev.identifier_hint"
+ },
+ "Theme Mode": {
+  "en": "Theme Mode",
+  "ur": "تھیم موڈ",
+  "ar": "وضع المظهر",
+  "fa": "حالت پوسته",
+  "ps": "د بڼې حالت",
+  "source": "ui:nav.theme_mode"
+ },
+ "This login belongs to the other DGT.llc app": {
+  "en": "This login belongs to the other DGT.llc app",
+  "ur": "یہ لاگ اِن DGT.llc کی دوسری ایپ کے لیے ہے",
+  "ar": "حساب الدخول هذا يخص تطبيق DGT.llc الآخر",
+  "fa": "این حساب کاربری مربوط به برنامه دیگر DGT.llc است",
+  "ps": "دا ننوتل د DGT.llc بلې اپلیکیشن لپاره دی",
+  "source": "ui:appch.title"
+ },
+ "This phone must be approved by the administrator before it can open the ERP.": {
+  "en": "This phone must be approved by the administrator before it can open the ERP.",
+  "ur": "ERP کھولنے سے پہلے اس فون کی ایڈمنسٹریٹر سے منظوری ضروری ہے۔",
+  "ar": "يجب أن يوافق المسؤول على هذا الهاتف قبل أن يفتح النظام.",
+  "fa": "این گوشی باید پیش از باز کردن ERP توسط مدیر تأیید شود.",
+  "ps": "دا موبایل باید د ERP له پرانیستلو مخکې د مدیر لخوا تایید شي.",
+  "source": "ui:mdev.subtitle"
+ },
+ "To": {
+  "en": "To",
+  "ur": "تک",
+  "ar": "إلى",
+  "fa": "به",
+  "ps": "ته",
+  "source": "ui:shtrk.col_to"
+ },
+ "Total Containers": {
+  "en": "Total Containers",
+  "ur": "کل کنٹینرز",
+  "ar": "إجمالي الحاويات",
+  "fa": "مجموع کانتینرها",
+  "ps": "ټول کانټینرونه",
+  "source": "ui:shtrk.lbl_total_containers"
+ },
+ "Total Payables": {
+  "en": "Total Payables",
+  "ur": "کل واجبات",
+  "ar": "إجمالي المدفوعات المستحقة",
+  "fa": "کل بدهی‌ها",
+  "ps": "ټول د ورکړې وړ",
+  "source": "ui:dash.total_payables"
+ },
+ "Total Purchase": {
+  "en": "Total Purchase",
+  "ur": "کل خریداری",
+  "ar": "إجمالي المشتريات",
+  "fa": "کل خرید",
+  "ps": "ټول پیرود",
+  "source": "ui:dash.total_purchase"
+ },
+ "Total Receivables": {
+  "en": "Total Receivables",
+  "ur": "کل وصولیاں",
+  "ar": "إجمالي المستحقات",
+  "fa": "کل مطالبات",
+  "ps": "ټول د اخیستلو وړ",
+  "source": "ui:dash.total_receivables"
+ },
+ "Total Sales": {
+  "en": "Total Sales",
+  "ur": "کل فروخت",
+  "ar": "إجمالي المبيعات",
+  "fa": "کل فروش",
+  "ps": "ټول پلور",
+  "source": "ui:dash.total_sales"
+ },
+ "Total Shipments": {
+  "en": "Total Shipments",
+  "ur": "کل شپمنٹس",
+  "ar": "إجمالي الشحنات",
+  "fa": "مجموع محموله‌ها",
+  "ps": "ټولې محمولې",
+  "source": "ui:shtrk.lbl_total_shipments"
+ },
+ "Track shipments, containers and vessels in real-time with complete journey details.": {
+  "en": "Track shipments, containers and vessels in real-time with complete journey details.",
+  "ur": "شپمنٹس، کنٹینرز اور جہازوں کو مکمل سفری تفصیل کے ساتھ حقیقی وقت میں ٹریک کریں۔",
+  "ar": "تتبّع الشحنات والحاويات والسفن لحظة بلحظة مع تفاصيل الرحلة كاملة.",
+  "fa": "محموله‌ها، کانتینرها و کشتی‌ها را به‌صورت زنده و با جزئیات کامل سفر ردیابی کنید.",
+  "ps": "محموله، کانټینرونه او بېړۍ په ریښتینې مهال د بشپړ سفر جزئیاتو سره تعقیب کړئ.",
+  "source": "ui:shtrk.subtitle"
+ },
+ "Tracking": {
+  "en": "Tracking",
+  "ur": "ٹریکنگ",
+  "ar": "التتبع",
+  "fa": "ردیابی",
+  "ps": "تعقیب",
+  "source": "ui:log.seg_tracking"
+ },
+ "Tracking Status Summary": {
+  "en": "Tracking Status Summary",
+  "ur": "ٹریکنگ حالت کا خلاصہ",
+  "ar": "ملخص حالة التتبع",
+  "fa": "خلاصه وضعیت ردیابی",
+  "ps": "د تعقیب حالت لنډیز",
+  "source": "ui:shtrk.card_status"
+ },
+ "Transfer & Handover Center": {
+  "en": "Transfer & Handover Center",
+  "ur": "منتقلی اور حوالگی مرکز",
+  "ar": "مركز التحويل والتسليم",
+  "fa": "مرکز انتقال و تحویل",
+  "ps": "د لیږد او سپارلو مرکز",
+  "source": "HEADER"
+ },
+ "Truck": {
+  "en": "Truck",
+  "ur": "ٹرک",
+  "ar": "الشاحنة",
+  "fa": "کامیون",
+  "ps": "لاری",
+  "source": "HEADER"
+ },
+ "Truck Expenses Bills": {
+  "en": "Truck Expenses Bills",
+  "ur": "ٹرک اخراجات بلز",
+  "ar": "فواتير مصروفات الشاحنات",
+  "fa": "صورتحساب‌های هزینه کامیون",
+  "ps": "د لارۍ د لګښتونو بلونه",
+  "source": "HEADER"
+ },
+ "Truck Number": {
+  "en": "Truck Number",
+  "ur": "ٹرک نمبر",
+  "ar": "رقم الشاحنة",
+  "fa": "شماره کامیون",
+  "ps": "د ټرک نمبر",
+  "source": "ui:shtrk.lbl_truck"
+ },
+ "Truck Register": {
+  "en": "Truck Register",
+  "ur": "ٹرک رجسٹر",
+  "ar": "سجل الشاحنات",
+  "fa": "دفتر ثبت کامیون‌ها",
+  "ps": "د لاریو راجستر",
+  "source": "HEADER"
+ },
+ "Try adjusting your search or filters.": {
+  "en": "Try adjusting your search or filters.",
+  "ur": "اپنی تلاش یا فلٹرز تبدیل کر کے دیکھیں۔",
+  "ar": "حاول تعديل البحث أو عوامل التصفية.",
+  "fa": "جستجو یا فیلترها را تغییر دهید.",
+  "ps": "خپل لټون یا فلټرونه بدل کړئ.",
+  "source": "ui:shtrk.adjust_filters"
+ },
+ "User Tasks": {
+  "en": "User Tasks",
+  "ur": "صارف کے ٹاسکس",
+  "ar": "مهام المستخدمين",
+  "fa": "وظایف کاربران",
+  "ps": "د کاروونکي دندې",
+  "source": "HEADER"
+ },
+ "Valid for (days)": {
+  "en": "Valid for (days)",
+  "ur": "کتنے دن کے لیے درست",
+  "ar": "صالح لمدة (أيام)",
+  "fa": "اعتبار (روز)",
+  "ps": "د اعتبار موده (ورځې)",
+  "source": "ui:mdev.rp_days"
+ },
+ "Vessel": {
+  "en": "Vessel",
+  "ur": "جہاز",
+  "ar": "السفينة",
+  "fa": "کشتی",
+  "ps": "بېړۍ",
+  "source": "ui:shtrk.lbl_vessel"
+ },
+ "Vessel / Voyage": {
+  "en": "Vessel / Voyage",
+  "ur": "جہاز / سفر",
+  "ar": "السفينة / الرحلة",
+  "fa": "کشتی / سفر",
+  "ps": "بېړۍ / سفر",
+  "source": "ui:shtrk.col_vessel_voyage"
+ },
+ "Voyage": {
+  "en": "Voyage",
+  "ur": "سفر",
+  "ar": "الرحلة البحرية",
+  "fa": "سفر دریایی",
+  "ps": "سفر",
+  "source": "ui:shtrk.lbl_voyage"
+ },
+ "Waiting for approval": {
+  "en": "Waiting for approval",
+  "ur": "منظوری کا انتظار",
+  "ar": "بانتظار الموافقة",
+  "fa": "در انتظار تأیید",
+  "ps": "د تایید په تمه",
+  "source": "ui:mdev.pending_title"
+ },
+ "Weight": {
+  "en": "Weight",
+  "ur": "وزن",
+  "ar": "الوزن",
+  "fa": "وزن",
+  "ps": "وزن",
+  "source": "HEADER"
+ },
+ "You opened DGT.llc B (Business). This account is for shipping and clearing work — please use the DGT.llc BS app.": {
+  "en": "You opened DGT.llc B (Business). This account is for shipping and clearing work — please use the DGT.llc BS app.",
+  "ur": "آپ نے DGT.llc B (بزنس) کھولی ہے۔ یہ اکاؤنٹ شپنگ اور کلیئرنگ کے کام کے لیے ہے — براہِ کرم DGT.llc BS ایپ استعمال کریں۔",
+  "ar": "لقد فتحت DGT.llc B (الأعمال). هذا الحساب مخصص لأعمال الشحن والتخليص — يرجى استخدام تطبيق DGT.llc BS.",
+  "fa": "شما DGT.llc B (تجاری) را باز کرده‌اید. این حساب برای کارهای حمل و ترخیص است — لطفاً از برنامه DGT.llc BS استفاده کنید.",
+  "ps": "تاسو DGT.llc B (سوداګري) پرانیستې ده. دا حساب د بار وړلو او ترخیص کارونو لپاره دی — مهرباني وکړئ د DGT.llc BS اپلیکیشن وکاروئ.",
+  "source": "ui:appch.body_b"
+ },
+ "Your device was approved. Type the 6-digit code you received from the administrator.": {
+  "en": "Your device was approved. Type the 6-digit code you received from the administrator.",
+  "ur": "آپ کی ڈیوائس منظور ہو گئی۔ ایڈمنسٹریٹر سے ملا 6 ہندسوں کا کوڈ لکھیں۔",
+  "ar": "تمت الموافقة على جهازك. اكتب الرمز المكوّن من 6 أرقام الذي تلقيته من المسؤول.",
+  "fa": "دستگاه شما تأیید شد. کد ۶ رقمی را که از مدیر گرفته‌اید وارد کنید.",
+  "ps": "ستاسو وسیله تایید شوه. هغه ۶ عددي کوډ ولیکئ چې له مدیر څخه مو ترلاسه کړی.",
+  "source": "ui:mdev.approved_body"
+ },
+ "Your request was sent. The Super Admin will approve it and give you a 6-digit activation code.": {
+  "en": "Your request was sent. The Super Admin will approve it and give you a 6-digit activation code.",
+  "ur": "آپ کی درخواست بھیج دی گئی۔ سپر ایڈمن منظور کر کے آپ کو 6 ہندسوں کا ایکٹیویشن کوڈ دے گا۔",
+  "ar": "تم إرسال طلبك. سيوافق عليه المدير العام ويعطيك رمز تفعيل من 6 أرقام.",
+  "fa": "درخواست شما ارسال شد. مدیر ارشد آن را تأیید کرده و یک کد فعال‌سازی ۶ رقمی به شما می‌دهد.",
+  "ps": "ستاسو غوښتنه ولېږل شوه. سوپر مدیر به یې تایید کړي او تاسو ته به د ۶ عددونو د فعالولو کوډ درکړي.",
+  "source": "ui:mdev.pending_body"
+ }
+}
