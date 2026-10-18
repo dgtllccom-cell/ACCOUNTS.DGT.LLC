@@ -21,7 +21,8 @@ const CASES = [
   ["quetta_biz", "page", "/dashboard/clearing-agent/truck-freight-bill", "403"],
   ["quetta_biz", "page", "/dashboard/reports/shipping", "403"],
   ["quetta_biz", "page", "/dashboard/purchase/new-purchase-booking-order", "allowed"],
-  ["quetta_biz", "api", "/api/erp/shipping/bl-records", "403"],
+  // BL records are shared logistics data that Business purchase-transit pages read (deliberately not behind the Shipping accounting gate); scope still limits rows
+  ["quetta_biz", "api", "/api/erp/shipping/bl-records", "allowed"],
   ["quetta_biz", "api", "/api/erp/clearing-agent/customer-bill", "403"],
   ["quetta_biz", "api", "/api/erp/shipping/account-access/search?q=a", "403"],
   // ---- Business Super Admin ---------------------------------------------------------------------------------------

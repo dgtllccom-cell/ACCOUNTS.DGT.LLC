@@ -47,7 +47,12 @@ const LIST_ENDPOINTS = [
 
 // Documented, accepted legacy: ONE pre-separation roznamcha entry (operational_domain IS NULL, 2026-09-11) was created by the
 // Pakistan Shipping & Clearing Admin; unclassified legacy entries stay visible to Business by design (roznamcha/route.ts).
-const ACCEPTED_LEGACY = [{ ep: "/api/erp/roznamcha", prefix: "usr:54a55f8a" }];
+// Also accepted: 6 Shipping-domain accounts (+7 ledgers, 2 user assignments) are filed on the BUSINESS branch 'Quetta City Branch'
+// (legacy mis-filing, see docs/user-verification). They are correctly Shipping rows; only their branch-id column names Quetta.
+const ACCEPTED_LEGACY = [
+  { ep: "/api/erp/roznamcha", prefix: "usr:54a55f8a" },
+  ...["/api/erp/accounting/accounts", "/api/erp/ledgers", "/api/erp/reports/meta", "/api/erp/accounting/reports/accounts/general", "/api/erp/accounting/reports/ledger/ledgers"].map((ep) => ({ ep, prefix: "br:7d7d42fe", shippingOnly: true })),
+];
 
 // SCAN=critical limits the run to the endpoints that carry the separation rule (each call costs ~10-30 s on the remote DEV database)
 const CRITICAL = new Set([
@@ -71,7 +76,7 @@ for (const [persona, domain] of Object.entries(SINGLE)) {
     const body = r.text;
     const hits = [];
     for (const kind of ["acc", "br", "usr"]) for (const id of ids[other][kind]) if (body.includes(id)) hits.push(`${kind}:${id.slice(0, 8)}`);
-    const real = hits.filter((h) => !ACCEPTED_LEGACY.some((a) => a.ep === ep && a.prefix === h));
+    const real = hits.filter((h) => !ACCEPTED_LEGACY.some((a) => a.ep === ep && a.prefix === h && (!a.shippingOnly || domain === "shipping")));
     T.check(`${persona.padEnd(15)} ${ep}`, real.length === 0, real.length ? `LEAK ${other} ids → ${real.slice(0, 6).join(",")}` : hits.length ? "clean (accepted legacy NULL-domain entry only)" : "clean");
   }
 }

@@ -7,7 +7,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 const [dataPath, evidencePath, outPath = `docs/user-verification-${new Date().toISOString().slice(0, 10)}.md`] = process.argv.slice(2);
-const users = JSON.parse(readFileSync(dataPath, "utf8"));
+// harness identities ("[E2E TEST]", @e2e-test.dev) are not part of the user population
+const users = JSON.parse(readFileSync(dataPath, "utf8")).filter((u) => !u.email.endsWith("@e2e-test.dev"));
 const ev = JSON.parse(readFileSync(evidencePath, "utf8"));
 
 // ---- per-user findings that need an owner decision (everything else is PASS) ---------------------------------------------------
@@ -139,7 +140,18 @@ ${ev.evidence}
    **Known gap (not changed here):** the server does **not** force the change — \`profiles.must_change_password\` is read by the session builder but \`mustChangePassword\` is hard-coded \`false\` and the dashboard layout does not redirect. Until that is built, the administrator must instruct the user to change the temporary password at first sign-in.
 5. **Owner action:** the legacy plaintext column \`profiles.raw_password\` still holds non-NULL values for some DEV/PROD profiles (see memory *shipping-line-user-access*); purging it needs the owner's explicit approval and was **not** done.
 
-## 7. Summary
+## 7. Open owner decisions / actions
+
+1. \`shipping@dgt.llc\` resolves as the **Global** Super Admin (assignment domain \`both\`). Set the domain to \`shipping\` if it must be Shipping-only.
+2. \`quetta.shipping.admin.pakbr000002@dgt.llc\` and \`quetta.shipping.agent@dgt.llc\` are Shipping users on the **Business** branch Quetta (no Quetta Shipping branch exists). Also 6 Shipping accounts, 7 ledgers and 2 assignments are filed on that Business branch. Create a Shipping branch and re-file, or move the users to the Business domain. The users API now refuses new mismatches.
+3. \`audit.superadmin@dgt.llc\` is a full Global Super Admin (write access); re-issue as \`super_admin_reports\` if it must be audit-only.
+4. Production \`business.superadmin@dgt.llc\` is not in DEV: confirm its assignment is \`super_admin\` + operational_domain \`business\` (if it is \`both\` it is a Global Super Admin).
+5. Chaman's permission set was extended in DEV only (39 exact tokens); repeat in Production through Permission Control Center. Alras / Kandahar Shipping admins have the same legacy-token gap.
+6. Company and Customer masters carry no operational-domain column (shared masters); separating them needs a data-model decision.
+7. Temporary passwords are not force-changed at first sign-in (server gap, §6). The legacy plaintext column \`profiles.raw_password\` still holds values; purge needs explicit approval.
+8. \`quetta.branch@dgt.llc\` has only 4 permission tokens; apply the Business branch template.
+
+## 8. Summary
 
 - Users resolved: **${summary.total}** (real ${summary.real}, test ${summary.test}). Automatic domain-separation findings left unexplained: **${summary.fail}**.
 - Accounts needing an owner decision/action (listed above): **${summary.owner}**.
