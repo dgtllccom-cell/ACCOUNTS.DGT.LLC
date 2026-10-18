@@ -20,3 +20,9 @@ Owner-facing. Updated 2026-10-18 20:30 Dubai (UTC+4). (No earlier file with this
 
 ### Store-date impact of the new design gate
 The old targets (Google Play 25–29 Oct, Samsung end Oct, Apple early Nov) assumed the current design. With a new design, the implementation + new store screenshots + a new signed build move **Google Play submission to about 28 Oct → live about 1–5 Nov**, Samsung about 5–8 Nov, Apple about 10–15 Nov. These dates also depend on the owner finishing the store registrations.
+
+### Update 2026-10-18 23:00 Dubai — three design concepts delivered (not final)
+* Concepts A **Harbour Ledger** (light, navy + brass, bottom tabs), B **Night Dock** (dark control room, teal + amber, floating nav), C **Manifest** (flat editorial, black/white + orange, side drawer).
+* 10 screens each (Login, Device activation, Dashboard B, Dashboard BS, Menu, Customer order, Shipment tracking, Report + 2 tablet screens) in English and Urdu RTL. Folder: `Desktop\DGT-Mobile-Design-Concepts` (compare sheets, boards, single screens, Figma plugin). Sources: `docs/design/mobile-concepts`.
+* Figma: connector still NOT connected (owner click needed). Editable Figma file = run the plugin in Figma Desktop (steps in the folder) — the plugin has not yet been run inside Figma by me.
+* Owner decision needed: choose A, B or C (or a mix). No final UI, no store screenshots, no implementation until then.
