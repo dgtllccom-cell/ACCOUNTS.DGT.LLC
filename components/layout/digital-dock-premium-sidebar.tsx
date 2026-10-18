@@ -429,7 +429,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: nt("Custom Bills"), href: "/dashboard/clearing-agent/customs-expenses", icon: Landmark },
           { label: nt("Truck Expenses Bills"), href: "/dashboard/clearing-agent/truck-expenses", icon: Truck },
-          { label: nt("Customer Expenses Bills"), href: "/dashboard/clearing-agent/customer-bill?type=expenses", icon: Receipt },
+          { label: nt("Customer Expenses Bills"), href: "/dashboard/clearing-agent/customer-expenses", icon: Receipt },
           { label: nt("Other Expenses Bills"), href: "/dashboard/clearing-agent/other-expenses", icon: Receipt },
         ],
       },

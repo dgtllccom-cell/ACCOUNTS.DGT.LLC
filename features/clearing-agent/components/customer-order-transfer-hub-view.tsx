@@ -289,7 +289,7 @@ export const TRANSFER_SIDEBAR_CARDS = [
     borderActive: "border-teal-500 ring-2 ring-teal-500/20",
     badgeClass: "bg-teal-100 text-teal-700 dark:bg-teal-950/70 dark:text-teal-300",
     messageBg: "bg-teal-50/70 text-teal-900 dark:bg-teal-950/30 dark:text-teal-200",
-    route: "/dashboard/clearing-agent/other-expenses"
+    route: "/dashboard/clearing-agent/customer-expenses"
   },
   {
     key: "other" as const,
