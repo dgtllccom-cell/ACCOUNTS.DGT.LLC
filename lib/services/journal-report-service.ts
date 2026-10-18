@@ -35,7 +35,10 @@ export type JournalRegisterRow = {
   description: string | null;
   accountId: string | null;
   accountCode: string | null;
+  accountNumber: string | null;
   accountName: string | null;
+  accountType: string | null;
+  accountStatus: string | null;
   customerId: string | null;
   customerName: string | null;
   companyId: string | null;
@@ -44,12 +47,19 @@ export type JournalRegisterRow = {
   credit: number;
   currency: string;
   usdRate: number;
+  finalBalance: number;
+  balanceDirection: "DR" | "CR" | "—";
+  entryType: string | null;
   countryId: string | null;
   countryName: string | null;
   countryBranchId: string | null;
   countryBranchName: string | null;
   cityBranchId: string | null;
   cityBranchName: string | null;
+  branchName: string | null;
+  accountBranchName: string | null;
+  transactionBranchName: string | null;
+  contactInfo: string | null;
   createdById: string | null;
   createdByName: string | null;
   approvedById: string | null;
@@ -262,14 +272,14 @@ export class JournalReportService {
 
     const [eaRows, ledgerRows, countryRows, cbRows, cityBRows, userRows] = await Promise.all([
       accountIds.length
-        ? sql`select id, name, code, company_id, customer_id from enterprise_accounts where id = any(${accountIds}::uuid[])`
+        ? sql`select id, name, code, company_id, customer_id, account_number, kind, status, contacts, city_branch_id, country_branch_id from enterprise_accounts where id = any(${accountIds}::uuid[])`
         : Promise.resolve([]),
-      ledgerIds.length ? sql`select id, name, code from ledgers where id = any(${ledgerIds}::uuid[])` : Promise.resolve([]),
+      ledgerIds.length ? sql`select id, name, code, city_branch_id, country_branch_id from ledgers where id = any(${ledgerIds}::uuid[])` : Promise.resolve([]),
       countryIds.length ? sql`select id, name from countries where id = any(${countryIds}::uuid[])` : Promise.resolve([]),
       countryBranchIds.length
-        ? sql`select id, name from country_branches where id = any(${countryBranchIds}::uuid[])`
+        ? sql`select id, name, code from country_branches where id = any(${countryBranchIds}::uuid[])`
         : Promise.resolve([]),
-      cityBranchIds.length ? sql`select id, name from city_branches where id = any(${cityBranchIds}::uuid[])` : Promise.resolve([]),
+      cityBranchIds.length ? sql`select id, name, code from city_branches where id = any(${cityBranchIds}::uuid[])` : Promise.resolve([]),
       userIds.length ? sql`select id, full_name from profiles where id = any(${userIds}::uuid[])` : Promise.resolve([])
     ]);
 
@@ -324,14 +334,38 @@ export class JournalReportService {
       const lg = row.ledger_id ? ledgerById.get(row.ledger_id) : null;
       const accountName = ea?.name ?? lg?.name ?? null;
       const accountCode = ea?.code ?? lg?.code ?? null;
+      const accountNumber = ea?.account_number ?? lg?.code ?? null;
+      const accountType = ea?.kind ? String(ea.kind).replace(/_/g, " ").toUpperCase() : (lg ? "GENERAL LEDGER" : null);
+      const accountStatus = ea?.status ? String(ea.status).toUpperCase() : "ACTIVE";
       const companyId = ea?.company_id ?? null;
       const customerId = ea?.customer_id ?? null;
+
+      // Contact info
+      let contactInfo: string | null = null;
+      if (ea?.contacts) {
+        if (typeof ea.contacts === "object") {
+          const c = ea.contacts as any;
+          contactInfo = [c.phone, c.mobile, c.email].filter(Boolean).join(" · ") || null;
+        } else if (typeof ea.contacts === "string") {
+          contactInfo = ea.contacts;
+        }
+      }
+
+      // Branches: Account branch vs Transaction branch
+      const txBranchName = row.city_branch_id ? (cityBById.get(row.city_branch_id)?.name ?? null) : (row.country_branch_id ? (cbById.get(row.country_branch_id)?.name ?? null) : null);
+      const acctCityBId = ea?.city_branch_id ?? lg?.city_branch_id ?? null;
+      const acctCbId = ea?.country_branch_id ?? lg?.country_branch_id ?? null;
+      const acctBranchName = acctCityBId ? (cityBById.get(acctCityBId)?.name ?? null) : (acctCbId ? (cbById.get(acctCbId)?.name ?? null) : null);
+      const branchName = txBranchName || acctBranchName || null;
 
       const approvalStatus: "approved" | "pending" = row.approved_by
         ? "approved"
         : row.approval_status === "approved"
           ? "approved"
           : "pending";
+
+      const rawEntryType = row.journal_type || row.voucher_type || (row.source_table === "roznamcha" ? "Cash / Bank Entry" : "Journal Batch");
+      const entryType = String(rawEntryType).replace(/[_]+/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
 
       return {
         id: String(row.line_id),
@@ -344,7 +378,10 @@ export class JournalReportService {
         description: row.description,
         accountId: row.enterprise_account_id ?? row.ledger_id ?? row.account_id ?? null,
         accountCode,
+        accountNumber,
         accountName,
+        accountType,
+        accountStatus,
         customerId,
         customerName: customerId ? (customerById.get(customerId)?.customer_name ?? null) : null,
         companyId,
@@ -353,12 +390,19 @@ export class JournalReportService {
         credit: toNumber(row.credit),
         currency: row.currency ?? "USD",
         usdRate: toNumber(row.usd_rate) || 1,
+        finalBalance: 0,
+        balanceDirection: "—",
+        entryType,
         countryId: row.country_id,
         countryName: row.country_id ? (countryById.get(row.country_id)?.name ?? null) : null,
         countryBranchId: row.country_branch_id,
         countryBranchName: row.country_branch_id ? (cbById.get(row.country_branch_id)?.name ?? null) : null,
         cityBranchId: row.city_branch_id,
         cityBranchName: row.city_branch_id ? (cityBById.get(row.city_branch_id)?.name ?? null) : null,
+        branchName,
+        accountBranchName: acctBranchName,
+        transactionBranchName: txBranchName,
+        contactInfo,
         createdById: row.created_by,
         createdByName: row.created_by ? (userById.get(row.created_by)?.full_name ?? null) : null,
         approvedById: row.approved_by,
@@ -379,6 +423,14 @@ export class JournalReportService {
       if (a.date !== b.date) return a.date < b.date ? -1 : 1;
       return a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
     });
+
+    // Compute chronological cumulative running balance across the active filtered dataset
+    let running = 0;
+    for (const row of filtered) {
+      running += (row.debit - row.credit);
+      row.finalBalance = Math.abs(running);
+      row.balanceDirection = running > 0 ? "DR" : running < 0 ? "CR" : "—";
+    }
 
     return filtered;
   }

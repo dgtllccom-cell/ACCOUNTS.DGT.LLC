@@ -18,6 +18,7 @@ import {
   Download,
   ChevronDown,
   ArrowLeft,
+  X,
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
@@ -39,19 +40,41 @@ type Row = {
   name: string;
   currency: string;
   countryId: string | null;
+  countryName: string;
+  branchName: string;
+  branchCode: string | null;
+  accountNumber: string | null;
+  accountType: string;
+  accountStatus: string;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  contactPerson: string | null;
   scope: string;
   openingBalance: number;
   outstanding: number;
   side: "debit" | "credit" | "zero";
   debitTotal: number;
   creditTotal: number;
+  finalBalance: number;
+  balanceDirection: "DR" | "CR" | "—";
   lastMovementDate: string | null;
   daysOutstanding: number | null;
 };
 
 type Resp = {
   rows: Row[];
-  summary: { accounts: number; totalReceivable: number; totalPayable: number; overdue10: number };
+  summary: {
+    accounts: number;
+    totalAccounts?: number;
+    totalReceivable: number;
+    totalPayable: number;
+    netOutstanding: number;
+    clearedEntries: number;
+    remainingEntries: number;
+    overdueAccounts: number;
+    overdueAmounts: number;
+    overdue10: number;
+  };
 };
 
 type Tab = "all" | "receivable" | "payable" | "overdue";
@@ -123,6 +146,12 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [headerBrand, setHeaderBrand] = useState<{ name: string; address: string; taxNo: string; contact: string; currency: string }>({ name: "", address: "", taxNo: "", contact: "", currency: "" });
 
+  // Account Ledger Statement Drilldown Modal State
+  const [selectedLedgerAccount, setSelectedLedgerAccount] = useState<Row | null>(null);
+  const [statementLoading, setStatementLoading] = useState(false);
+  const [statementData, setStatementData] = useState<any>(null);
+  const [statementError, setStatementError] = useState<string | null>(null);
+
   const scopeSummary = sessionInfo?.scopes?.summary ?? null;
   const scopeCountry = scopeSummary?.countryName || "All Countries";
   const scopeBranch = scopeSummary?.branchDisplayName || scopeSummary?.branchName || "All Branches";
@@ -130,6 +159,30 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
   const scopeUserName = sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP User";
   const scopeUserId = sessionInfo?.user?.id || "-";
   const scopeStatus = sessionInfo?.authenticated ? "ACTIVE" : "SESSION UNKNOWN";
+
+  useEffect(() => {
+    if (!selectedLedgerAccount) {
+      setStatementData(null);
+      setStatementError(null);
+      return;
+    }
+    let cancelled = false;
+    setStatementLoading(true);
+    setStatementError(null);
+    apiGet<any>(`/api/erp/accounting/reports/ledger/statement?ledgerId=${encodeURIComponent(selectedLedgerAccount.id)}`)
+      .then((res) => {
+        if (!cancelled) setStatementData(res);
+      })
+      .catch((e: any) => {
+        if (!cancelled) setStatementError(e?.message || "Failed to load ledger statement");
+      })
+      .finally(() => {
+        if (!cancelled) setStatementLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedLedgerAccount]);
 
   useEffect(() => {
     fetch("/api/erp/auth/session", { credentials: "include" })
@@ -217,8 +270,8 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     >();
 
     for (const row of filtered) {
-      const countryName = scopeSummary?.countryName || "All Countries";
-      const branchName = scopeSummary?.branchDisplayName || scopeSummary?.branchName || "All Branches";
+      const countryName = row.countryName || scopeSummary?.countryName || "All Countries";
+      const branchName = row.branchName || scopeSummary?.branchDisplayName || scopeSummary?.branchName || "All Branches";
       const currency = row.currency || "AED";
 
       if (!map.has(countryName)) {
@@ -281,46 +334,42 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
 
   const previewRows = filtered.map((x, idx) => {
     const isOverdue = (x.daysOutstanding ?? 0) > overdueDays;
-    const creditVal = x.outstanding > 0 ? Math.abs(x.outstanding) : 0;
-    const debitVal = x.outstanding < 0 ? Math.abs(x.outstanding) : 0;
-    const accType = x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "General";
-    const accNo = x.code.replace(/^[^\d]+/, '') || "—";
     const lastDate = formatDateSlash(x.lastMovementDate);
     return {
       sr: String(idx + 1),
       startDate: "—",
       code: x.code,
-      accountNo: accNo,
+      accountNo: x.accountNumber || x.code.replace(/^[^\d]+/, '') || "—",
       contractNo: "—",
       name: x.name,
-      accountType: accType,
-      status: isOverdue ? "overdue" : "active",
-      credit: creditVal,
-      debit: debitVal,
+      accountType: x.accountType || (x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "General"),
+      status: isOverdue ? "overdue" : x.accountStatus || "active",
+      credit: x.creditTotal,
+      debit: x.debitTotal,
       currency: x.currency || "AED",
       lastMovementDate: lastDate,
       daysOutstanding: x.daysOutstanding ?? null,
-      type: x.outstanding > 0 ? "DR" : x.outstanding < 0 ? "CR" : "-",
-      balance: Math.abs(x.outstanding),
+      type: x.balanceDirection || (x.outstanding > 0 ? "DR" : x.outstanding < 0 ? "CR" : "—"),
+      balance: x.finalBalance,
     };
   });
 
   async function openReportPreview(autoPrint: boolean = false) {
     const printRows = filtered.map((r, idx) => {
       const isOverdue = (r.daysOutstanding ?? 0) > overdueDays;
-      const recStatus = r.outstanding === 0 ? "Cleared" : isOverdue ? "In Recovery" : "Pending";
-      const branchAndCountry = `${scopeBranch} (${scopeCountry})`;
+      const recStatus = r.finalBalance === 0 ? "Cleared" : isOverdue ? "In Recovery" : "Pending";
+      const branchAndCountry = `${r.branchName || scopeBranch} (${r.countryName || scopeCountry})`;
 
       return {
         srNo: idx + 1,
         accountName: r.name,
         accountCode: r.code,
-        accountType: (r as any).accountType || (r as any).accountKind || "—",
+        accountType: r.accountType || (r as any).accountKind || "—",
         branchAndCountry,
         currency: r.currency || "AED",
-        debit: r.outstanding > 0 ? r.outstanding : 0,
-        credit: r.outstanding < 0 ? Math.abs(r.outstanding) : 0,
-        outstandingAmount: r.outstanding,
+        debit: r.debitTotal,
+        credit: r.creditTotal,
+        outstandingAmount: r.finalBalance,
         agingStatus: isOverdue ? `Overdue (>${overdueDays}D)` : `0–${overdueDays}D (${r.daysOutstanding != null ? r.daysOutstanding : "—"}D)`,
         daysOutstanding: r.daysOutstanding ?? undefined,
         lastTransactionDate: r.lastMovementDate || "—",
@@ -328,7 +377,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
       };
     });
 
-    const netOutstanding = (summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0);
+    const netOutstanding = summary?.netOutstanding ?? ((summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0));
     const sessionActiveText = sessionInfo?.authenticated ? "Session Active" : "SESSION UNKNOWN";
 
     const sc = sessionInfo?.scopes;
@@ -346,14 +395,14 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     openOutstandingRecoveryPrintReport({
       rows: printRows,
       summary: {
-        outstandingAccounts: summary?.accounts ?? filtered.length,
+        outstandingAccounts: summary?.totalAccounts ?? summary?.accounts ?? filtered.length,
         totalReceivable: summary?.totalReceivable ?? 0,
         totalPayable: summary?.totalPayable ?? 0,
         netOutstanding: netOutstanding,
-        overdue10Count: summary?.overdue10 ?? 0,
-        totalEntries: filtered.length,
-        clearedEntries: filtered.filter((r: any) => Number(r.remaining ?? r.balance ?? 0) === 0).length,
-        remainingEntries: filtered.filter((r: any) => Number(r.remaining ?? r.balance ?? 0) !== 0).length,
+        overdue10Count: summary?.overdueAccounts ?? summary?.overdue10 ?? 0,
+        totalEntries: (summary?.clearedEntries ?? 0) + (summary?.remainingEntries ?? 0) || filtered.length,
+        clearedEntries: summary?.clearedEntries ?? 0,
+        remainingEntries: summary?.remainingEntries ?? filtered.length,
         activeCountriesCount: scopeSummary?.countryName ? 1 : 0,
         totalBranchesCount: scopeBranch && scopeBranch !== "All Branches" ? 1 : 0,
         statusText: sessionActiveText,
@@ -388,42 +437,40 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         "START DATE",
         "CODE",
         "ACCOUNT NO",
-        "CONTRACT NO",
         "ACCOUNT NAME",
+        "COUNTRY",
+        "BRANCH",
         "ACCOUNT TYPE",
-        "ACCOUNT STATUS",
-        "CREDIT (AED)",
-        "DEBIT (AED)",
+        "STATUS",
+        "TOTAL CREDIT (AED)",
+        "TOTAL DEBIT (AED)",
         "CURR",
         "LAST DATE",
         "DAYS (Diff.)",
-        "TYPE",
-        "BALANCE (AED)",
+        "DR / CR",
+        "FINAL BALANCE (AED)",
       ],
       ...filtered.map((x, idx) => {
         const isOverdue = (x.daysOutstanding ?? 0) > overdueDays;
         const srNo = idx + 1;
-        const creditVal = x.outstanding > 0 ? Math.abs(x.outstanding) : 0;
-        const debitVal = x.outstanding < 0 ? Math.abs(x.outstanding) : 0;
-        const accType = x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "General";
-        const accNo = x.code.replace(/^[^\d]+/, '') || "—";
         const lastDate = formatDateSlash(x.lastMovementDate);
         return [
           String(srNo),
           "—",
           x.code,
-          accNo,
-          "—",
+          x.accountNumber || x.code.replace(/^[^\d]+/, '') || "—",
           x.name,
-          accType,
-          isOverdue ? "Overdue" : "Active",
-          fmt(creditVal),
-          fmt(debitVal),
+          x.countryName || scopeCountry,
+          x.branchName || scopeBranch,
+          x.accountType || (x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "General"),
+          isOverdue ? "Overdue" : x.accountStatus || "Active",
+          fmt(x.creditTotal),
+          fmt(x.debitTotal),
           x.currency || "AED",
           lastDate,
           x.daysOutstanding != null ? String(x.daysOutstanding) : "—",
-          x.outstanding > 0 ? "DR" : x.outstanding < 0 ? "CR" : "-",
-          fmt(Math.abs(x.outstanding)),
+          x.balanceDirection || (x.outstanding > 0 ? "DR" : x.outstanding < 0 ? "CR" : "—"),
+          fmt(x.finalBalance),
         ];
       }),
     ];
@@ -608,8 +655,8 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           </div>
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>{tr("OUTSTANDING ACCOUNTS:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{summary?.accounts ?? filtered.length}</span>
+              <span>{tr("TOTAL OUTSTANDING ACCOUNTS:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{summary?.totalAccounts ?? summary?.accounts ?? filtered.length}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("TOTAL RECEIVABLE:")}</span>
@@ -620,13 +667,13 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
               <span className="font-mono font-bold text-amber-600 dark:text-amber-400">AED {fmt(summary?.totalPayable ?? 0)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>OVERDUE (&gt;10 DAYS):</span>
-              <span className="font-mono font-bold text-rose-600 dark:text-rose-400">{summary?.overdue10 ?? 0}</span>
+              <span>{tr("OVERDUE ACCOUNTS:")}</span>
+              <span className="font-mono font-bold text-rose-600 dark:text-rose-400">{summary?.overdueAccounts ?? summary?.overdue10 ?? 0}</span>
             </div>
             <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "ledger.orlv_net_outstanding_colon", "NET OUTSTANDING:")}</span>
               <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-xs">
-                AED {fmt((summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0))}
+                AED {fmt(summary?.netOutstanding ?? ((summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0)))}
               </span>
             </div>
           </div>
@@ -639,21 +686,25 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
-              {tr("3. BILL ENTRIES SUMMARY")}
+              {tr("3. BILL & ENTRY RECOVERY")}
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>{tr("TOTAL BILL ENTRIES:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{filtered.length * 2 || 0}</span>
+              <span>{tr("TOTAL LEDGER ENTRIES:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{(summary?.clearedEntries ?? 0) + (summary?.remainingEntries ?? 0) || filtered.length}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("CLEARED ENTRIES:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{Math.floor(filtered.length * 1.5) || 0}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{summary?.clearedEntries ?? 0}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("REMAINING ENTRIES:")}</span>
-              <span className="font-bold text-amber-600 dark:text-amber-400">{Math.ceil(filtered.length * 0.5) || 0}</span>
+              <span className="font-bold text-amber-600 dark:text-amber-400">{summary?.remainingEntries ?? filtered.length}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("OVERDUE AMOUNT:")}</span>
+              <span className="font-mono font-bold text-rose-600 dark:text-rose-400">AED {fmt(summary?.overdueAmounts ?? 0)}</span>
             </div>
             <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "rozrep.system_status", "SYSTEM STATUS:")}</span>
@@ -856,30 +907,26 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
 
         {/* Table Container */}
         <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-          <table className="ledger-table w-full min-w-[1350px] text-xs">
+          <table className="ledger-table w-full min-w-[1450px] text-xs">
             <thead className="bg-slate-50/80 text-left font-bold uppercase text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
               <tr className="border-b border-slate-200 dark:border-slate-700">
-                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("SR#")}</Th>
-                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">
-                  <div>{tr("START DATE")}</div>
-                </Th>
-                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("CODE")}</Th>
-                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT NO")}</Th>
-                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("CONTRACT NO")}</Th>
-                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT NAME")}</Th>
-                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT TYPE")}</Th>
-                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT STATUS")}</Th>
-                <Th className="px-3 py-3 text-right text-[10px] tracking-wider text-emerald-600">{tr("Credit")} (AED)</Th>
-                <Th className="px-3 py-3 text-right text-[10px] tracking-wider text-rose-600">{tr("Debit")} (AED)</Th>
-                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("CURR")}</Th>
-                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">
-                  <div>{tr("LAST DATE")}</div>
-                </Th>
-                <Th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("DAYS (Diff.)")}</Th>
-                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("TYPE")}</Th>
-                <Th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("Balance")} (AED)</Th>
-                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("CONTACT")}</Th>
-                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("ACTIONS")}</Th>
+                <Th className="px-2.5 py-2.5 text-center text-[10px] tracking-wider">{tr("SR#")}</Th>
+                <Th className="px-2.5 py-2.5 text-[10px] tracking-wider">{tr("ACCOUNT CODE")}</Th>
+                <Th className="px-2.5 py-2.5 text-[10px] tracking-wider">{tr("ACCOUNT NO")}</Th>
+                <Th className="px-2.5 py-2.5 text-[10px] tracking-wider">{tr("ACCOUNT NAME")}</Th>
+                <Th className="px-2.5 py-2.5 text-[10px] tracking-wider">{tr("COUNTRY")}</Th>
+                <Th className="px-2.5 py-2.5 text-[10px] tracking-wider">{tr("BRANCH")}</Th>
+                <Th className="px-2.5 py-2.5 text-[10px] tracking-wider">{tr("TYPE")}</Th>
+                <Th className="px-2.5 py-2.5 text-center text-[10px] tracking-wider">{tr("STATUS")}</Th>
+                <Th className="px-2.5 py-2.5 text-right text-[10px] tracking-wider text-emerald-600">{tr("TOTAL CREDIT")} (AED)</Th>
+                <Th className="px-2.5 py-2.5 text-right text-[10px] tracking-wider text-rose-600">{tr("TOTAL DEBIT")} (AED)</Th>
+                <Th className="px-2.5 py-2.5 text-center text-[10px] tracking-wider">{tr("CURR")}</Th>
+                <Th className="px-2.5 py-2.5 text-center text-[10px] tracking-wider">{tr("LAST DATE")}</Th>
+                <Th className="px-2.5 py-2.5 text-right text-[10px] tracking-wider">{tr("DAYS")}</Th>
+                <Th className="px-2.5 py-2.5 text-center text-[10px] tracking-wider">{tr("DR / CR")}</Th>
+                <Th className="px-2.5 py-2.5 text-right text-[10px] tracking-wider text-blue-600">{tr("FINAL BALANCE")} (AED)</Th>
+                <Th className="px-2.5 py-2.5 text-center text-[10px] tracking-wider">{tr("CONTACT")}</Th>
+                <Th className="px-2.5 py-2.5 text-center text-[10px] tracking-wider">{tr("ACTIONS")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -905,11 +952,8 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                 pagedRows.map((x, idx) => {
                   const isOverdue = (x.daysOutstanding ?? 0) > overdueDays;
                   const srNo = (currentPage - 1) * pageSize + idx + 1;
-                  const creditVal = x.outstanding > 0 ? Math.abs(x.outstanding) : 0;
-                  const debitVal = x.outstanding < 0 ? Math.abs(x.outstanding) : 0;
-                  const accType = x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "General";
-                  const accNo = x.code.replace(/^[^\d]+/, '') || "—";
-                  const contractNo = "—";
+                  const accNo = x.accountNumber || x.code.replace(/^[^\d]+/, '') || "—";
+                  const phoneContact = x.contactPhone ? x.contactPhone.replace(/[^\d+]/g, '') : "";
 
                   return (
                     <tr
@@ -919,89 +963,98 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                         isOverdue ? "bg-rose-50/40 dark:bg-rose-950/20" : ""
                       )}
                     >
-                      <td className="px-3 py-3 text-center font-bold text-slate-600 dark:text-slate-400">{srNo}</td>
-                      <td className="px-3 py-3 text-center font-mono text-[11px] text-slate-600 dark:text-slate-400">
-                        <div className="inline-flex items-center gap-1">
-                          <span>—</span>
-                          <Calendar className="h-3 w-3 text-slate-400" />
-                        </div>
-                      </td>
+                      <td className="px-2.5 py-2 text-center font-bold text-slate-600 dark:text-slate-400">{srNo}</td>
                       <td
-                        onClick={() => router.push(`/dashboard/ledger/new?account=${encodeURIComponent(x.code)}`)}
-                        className="px-3 py-3 font-mono text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                        onClick={() => setSelectedLedgerAccount(x)}
+                        className="px-2.5 py-2 font-mono text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                        title={tr("Click to view complete ledger statement")}
                       >
                         {x.code}
                       </td>
-                      <td className="px-3 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <td className="px-2.5 py-2 font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
                         {accNo}
                       </td>
-                      <td className="px-3 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
-                        {contractNo}
-                      </td>
-                      <td className="px-3 py-3 font-black uppercase text-slate-900 dark:text-slate-100">
+                      <td className="px-2.5 py-2 font-black uppercase text-slate-900 dark:text-slate-100">
                         {x.name}
                       </td>
-                      <td className="px-3 py-3 text-xs font-medium text-slate-600 dark:text-slate-400">
-                        {tv(accType)}
+                      <td className="px-2.5 py-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                        <span className="inline-flex items-center gap-1">
+                          <span>{getFlag(x.countryName)}</span>
+                          <span>{x.countryName || scopeCountry}</span>
+                        </span>
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-2.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                          {x.branchName || scopeBranch}
+                          {x.branchCode ? ` (${x.branchCode})` : ""}
+                        </span>
+                      </td>
+                      <td className="px-2.5 py-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+                        {tv(x.accountType || (x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "General"))}
+                      </td>
+                      <td className="px-2.5 py-2 text-center">
                         {isOverdue ? (
-                          <span className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-[10px] font-bold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                          <span className="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
                             {tv("Overdue")}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                            {tv("Active")}
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                            {tv(x.accountStatus || "Active")}
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-3 text-right font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                        {fmt(creditVal)}
+                      <td className="px-2.5 py-2 text-right font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                        {fmt(x.creditTotal)}
                       </td>
-                      <td className="px-3 py-3 text-right font-mono text-xs font-bold text-rose-600 dark:text-rose-400">
-                        {fmt(debitVal)}
+                      <td className="px-2.5 py-2 text-right font-mono text-xs font-bold text-rose-600 dark:text-rose-400">
+                        {fmt(x.debitTotal)}
                       </td>
-                      <td className="px-3 py-3 text-center font-mono text-xs text-slate-600 dark:text-slate-400">
+                      <td className="px-2.5 py-2 text-center font-mono text-xs text-slate-600 dark:text-slate-400">
                         {x.currency || "AED"}
                       </td>
-                      <td className="px-3 py-3 text-center font-mono text-[11px] text-slate-600 dark:text-slate-400">
-                        <div className="inline-flex items-center gap-1">
-                          <span>{formatDateSlash(x.lastMovementDate)}</span>
-                          <Calendar className="h-3 w-3 text-slate-400" />
-                        </div>
+                      <td className="px-2.5 py-2 text-center font-mono text-[11px] text-slate-600 dark:text-slate-400">
+                        {formatDateSlash(x.lastMovementDate)}
                       </td>
-                      <td className={cn("px-3 py-3 text-right font-mono text-xs font-bold", isOverdue ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300")}>
+                      <td className={cn("px-2.5 py-2 text-right font-mono text-xs font-bold", isOverdue ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300")}>
                         {x.daysOutstanding ?? "—"}
                       </td>
-                      <td className="px-3 py-3 text-center font-mono text-xs font-bold">
-                        {x.outstanding > 0 ? (
-                          <span className="text-emerald-600">DR</span>
-                        ) : x.outstanding < 0 ? (
-                          <span className="text-rose-600">CR</span>
+                      <td className="px-2.5 py-2 text-center font-mono text-xs font-bold">
+                        {x.balanceDirection === "DR" ? (
+                          <span className="inline-block rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-extrabold text-rose-700 dark:bg-rose-950 dark:text-rose-300">DR</span>
+                        ) : x.balanceDirection === "CR" ? (
+                          <span className="inline-block rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">CR</span>
                         ) : (
-                          "-"
+                          <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="px-3 py-3 text-right font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
-                        {fmt(Math.abs(x.outstanding))}
+                      <td className="px-2.5 py-2 text-right font-mono text-xs font-black text-blue-600 dark:text-blue-400">
+                        {fmt(x.finalBalance)}
                       </td>
-                      <td className="px-3 py-3 text-center">
+                      <td className="px-2.5 py-2 text-center">
                         <div className="flex items-center justify-center gap-1.5">
-                          <a href="https://wa.me/" target="_blank" rel="noreferrer" className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-400" title={t(lang, "cbs.whatsapp_word", "WhatsApp")}>
-                            <MessageSquare className="h-3 w-3" />
-                          </a>
-                          <a href="tel:+971" className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-950 dark:text-blue-400" title={t(lang, "ledger.orlv_call_word", "Call")}>
-                            <Phone className="h-3 w-3" />
-                          </a>
-                          <a href="mailto:info@dgt.llc" className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-100 text-sky-600 hover:bg-sky-200 dark:bg-sky-950 dark:text-sky-400" title={t(lang, "purchase.dd_email", "Email")}>
+                          {phoneContact ? (
+                            <>
+                              <a href={`https://wa.me/${phoneContact.replace(/^\+/, '')}`} target="_blank" rel="noreferrer" className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-400" title={`WhatsApp: ${phoneContact}`}>
+                                <MessageSquare className="h-3 w-3" />
+                              </a>
+                              <a href={`tel:${phoneContact}`} className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-950 dark:text-blue-400" title={`Call: ${phoneContact}`}>
+                                <Phone className="h-3 w-3" />
+                              </a>
+                            </>
+                          ) : (
+                            <a href="https://wa.me/" target="_blank" rel="noreferrer" className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-slate-800" title={t(lang, "cbs.whatsapp_word", "WhatsApp")}>
+                              <MessageSquare className="h-3 w-3" />
+                            </a>
+                          )}
+                          <a href={x.contactEmail ? `mailto:${x.contactEmail}` : "mailto:info@dgt.llc"} className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-100 text-sky-600 hover:bg-sky-200 dark:bg-sky-950 dark:text-sky-400" title={x.contactEmail ? `Email: ${x.contactEmail}` : "Email"}>
                             <Mail className="h-3 w-3" />
                           </a>
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-center">
+                      <td className="px-2.5 py-2 text-center">
                         <button
                           type="button"
-                          onClick={() => router.push(`/dashboard/ledger/new?account=${encodeURIComponent(x.code)}`)}
+                          onClick={() => setSelectedLedgerAccount(x)}
                           className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-600 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-400"
                         >
                           <Eye className="h-3 w-3" /> {tr("View")}
@@ -1068,6 +1121,165 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           </div>
         </div>
       </div>
+
+      {/* Account Ledger Statement Drilldown Modal */}
+      {selectedLedgerAccount && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-800/60">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded bg-blue-600 px-2 py-0.5 font-mono text-xs font-bold text-white">
+                    {selectedLedgerAccount.code}
+                  </span>
+                  <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
+                    {selectedLedgerAccount.name}
+                  </h3>
+                </div>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {selectedLedgerAccount.branchName || scopeBranch} ({selectedLedgerAccount.countryName || scopeCountry}) &bull; Currency: {selectedLedgerAccount.currency || "AED"} &bull; Type: {selectedLedgerAccount.accountType}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => router.push(`/dashboard/ledger/new?account=${encodeURIComponent(selectedLedgerAccount.code)}`)}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                  Open in Full Ledger
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedLedgerAccount(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {statementLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  <p className="mt-3 text-xs font-semibold">Loading account statement...</p>
+                </div>
+              ) : statementError ? (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-bold text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+                  {statementError}
+                </div>
+              ) : (
+                <>
+                  {/* Account Summary Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+                      <div className="text-[10px] font-bold uppercase text-slate-500">Opening Balance</div>
+                      <div className="mt-1 font-mono text-sm font-black text-slate-800 dark:text-slate-200">
+                        AED {fmt(Number(statementData?.totals?.openingBalance ?? statementData?.openingBalance ?? 0))}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+                      <div className="text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400">Total Credit</div>
+                      <div className="mt-1 font-mono text-sm font-black text-emerald-600 dark:text-emerald-400">
+                        AED {fmt(Number(statementData?.totals?.credit ?? selectedLedgerAccount.creditTotal ?? 0))}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-3 dark:border-rose-900/40 dark:bg-rose-950/20">
+                      <div className="text-[10px] font-bold uppercase text-rose-700 dark:text-rose-400">Total Debit</div>
+                      <div className="mt-1 font-mono text-sm font-black text-rose-600 dark:text-rose-400">
+                        AED {fmt(Number(statementData?.totals?.debit ?? selectedLedgerAccount.debitTotal ?? 0))}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-3 dark:border-blue-900/40 dark:bg-blue-950/20">
+                      <div className="text-[10px] font-bold uppercase text-blue-700 dark:text-blue-400">Final Balance</div>
+                      <div className="mt-1 flex items-baseline gap-1 font-mono text-sm font-black text-blue-600 dark:text-blue-400">
+                        <span>AED {fmt(Number(statementData?.totals?.balance ?? selectedLedgerAccount.finalBalance ?? 0))}</span>
+                        <span className="text-[10px] font-extrabold">{selectedLedgerAccount.balanceDirection}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Statement Lines Table */}
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table className="w-full min-w-[800px] text-xs">
+                      <thead className="bg-slate-100/80 text-left font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <tr>
+                          <th className="px-3 py-2 text-center text-[10px]">Date</th>
+                          <th className="px-3 py-2 text-[10px]">Voucher No</th>
+                          <th className="px-3 py-2 text-[10px]">Journal No</th>
+                          <th className="px-3 py-2 text-[10px]">Type</th>
+                          <th className="px-3 py-2 text-[10px]">Narration</th>
+                          <th className="px-3 py-2 text-[10px]">Branch</th>
+                          <th className="px-3 py-2 text-right text-[10px] text-rose-600">Debit</th>
+                          <th className="px-3 py-2 text-right text-[10px] text-emerald-600">Credit</th>
+                          <th className="px-3 py-2 text-right text-[10px] text-blue-600">Balance</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {statementData?.lines && statementData.lines.length > 0 ? (
+                          statementData.lines.map((line: any, idx: number) => (
+                            <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                              <td className="px-3 py-2 text-center font-mono text-[11px] text-slate-600 dark:text-slate-400">
+                                {formatDateSlash(line.date)}
+                              </td>
+                              <td className="px-3 py-2 font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                {line.voucherNo || "—"}
+                              </td>
+                              <td className="px-3 py-2 font-mono text-[11px] text-slate-600 dark:text-slate-400">
+                                {line.journalNo || "—"}
+                              </td>
+                              <td className="px-3 py-2 text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                                {line.entryType || line.type || "—"}
+                              </td>
+                              <td className="px-3 py-2 text-[11px] text-slate-700 dark:text-slate-300 max-w-xs truncate" title={line.narration}>
+                                {line.narration || "—"}
+                              </td>
+                              <td className="px-3 py-2 text-[11px] text-slate-600 dark:text-slate-400">
+                                {line.branch || selectedLedgerAccount.branchName || scopeBranch}
+                              </td>
+                              <td className="px-3 py-2 text-right font-mono text-xs font-bold text-rose-600">
+                                {line.debit ? fmt(line.debit) : "—"}
+                              </td>
+                              <td className="px-3 py-2 text-right font-mono text-xs font-bold text-emerald-600">
+                                {line.credit ? fmt(line.credit) : "—"}
+                              </td>
+                              <td className="px-3 py-2 text-right font-mono text-xs font-black text-blue-600">
+                                {fmt(line.runningBalance ?? 0)}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={9} className="px-3 py-8 text-center text-xs text-slate-400">
+                              No statement entries found for this ledger.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-3 dark:border-slate-800 dark:bg-slate-800/60">
+              <span className="text-[11px] text-slate-500">
+                Total statement entries: {statementData?.lines?.length ?? 0}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedLedgerAccount(null)}
+                className="rounded-lg bg-slate-900 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

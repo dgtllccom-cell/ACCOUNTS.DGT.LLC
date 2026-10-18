@@ -1781,6 +1781,174 @@ export const customerTranslations: Record<string, Record<SupportedLanguage, stri
     ar: "من",
     fa: "از",
     ps: "له"
+  },
+  customerAccountDetails: {
+    en: "Customer Account Details",
+    ur: "کسٹمر اکاؤنٹ کی تفصیلات",
+    ar: "تفاصيل حساب العميل",
+    fa: "جزئیات حساب مشتری",
+    ps: "د پیرودونکي حساب توضیحات"
+  },
+  accountName: {
+    en: "Account Name",
+    ur: "اکاؤنٹ کا نام",
+    ar: "اسم الحساب",
+    fa: "نام حساب",
+    ps: "د حساب نوم"
+  },
+  accountNumber: {
+    en: "Account Number",
+    ur: "اکاؤنٹ نمبر",
+    ar: "رقم الحساب",
+    fa: "شماره حساب",
+    ps: "د حساب شمیره"
+  },
+  branchName: {
+    en: "Branch Name",
+    ur: "برانچ کا نام",
+    ar: "اسم الفرع",
+    fa: "نام شعبه",
+    ps: "د څانګې نوم"
+  },
+  branchCode: {
+    en: "Branch Code",
+    ur: "برانچ کوڈ",
+    ar: "رمز الفرع",
+    fa: "کد شعبه",
+    ps: "د څانګې کوډ"
+  },
+  cityBranch: {
+    en: "City Branch",
+    ur: "سٹی برانچ",
+    ar: "فرع المدينة",
+    fa: "شعبه شهر",
+    ps: "د ښار څانګه"
+  },
+  companyName: {
+    en: "Company Name",
+    ur: "کمپنی کا نام",
+    ar: "اسم الشركة",
+    fa: "نام شرکت",
+    ps: "د شرکت نوم"
+  },
+  companyRegNo: {
+    en: "Company Registration No",
+    ur: "کمپنی رجسٹریشن نمبر",
+    ar: "رقم تسجيل الشركة",
+    fa: "شماره ثبت شرکت",
+    ps: "د شرکت د ثبت شمیره"
+  },
+  companyTaxNo: {
+    en: "Company Tax No (NTN)",
+    ur: "ٹیکس / این ٹی این نمبر",
+    ar: "الرقم الضريبي (NTN)",
+    fa: "شماره مالیاتی (NTN)",
+    ps: "د مالیې / NTN شمیره"
+  },
+  companyBusinessType: {
+    en: "Business Type",
+    ur: "کاروبار کی قسم",
+    ar: "نوع النشاط التجاري",
+    fa: "نوع کسب‌وکار",
+    ps: "د سوداګرۍ ډول"
+  },
+  companyPhone: {
+    en: "Company Phone",
+    ur: "کمپنی کا فون",
+    ar: "هاتف الشركة",
+    fa: "تلفن شرکت",
+    ps: "د شرکت تلیفون"
+  },
+  companyEmail: {
+    en: "Company Email",
+    ur: "کمپنی ای میل",
+    ar: "بريد الشركة الإلكتروني",
+    fa: "ایمیل شرکت",
+    ps: "د شرکت ایمیل"
+  },
+  companyAddress: {
+    en: "Company Address",
+    ur: "کمپنی کا پتہ",
+    ar: "عنوان الشركة",
+    fa: "آدرس شرکت",
+    ps: "د شرکت پته"
+  },
+  enterAccountNamePlaceholder: {
+    en: "Enter account title / name",
+    ur: "اکاؤنٹ کا نام / عنوان درج کریں",
+    ar: "أدخل عنوان / اسم الحساب",
+    fa: "عنوان / نام حساب را وارد کنید",
+    ps: "د حساب نوم / سرلیک دننه کړئ"
+  },
+  enterAccountNumberPlaceholder: {
+    en: "e.g. CUST-00124 or Bank A/C",
+    ur: "مثلاً CUST-00124 یا بینک اکاؤنٹ",
+    ar: "مثال CUST-00124 أو حساب بنكي",
+    fa: "مثلاً CUST-00124 یا حساب بانکی",
+    ps: "د بېلګې په توګه CUST-00124 یا بانک حساب"
+  },
+  enterManualRefPlaceholder: {
+    en: "e.g. REF-2026-001",
+    ur: "مثلاً REF-2026-001",
+    ar: "مثال REF-2026-001",
+    fa: "مثلاً REF-2026-001",
+    ps: "د بېلګې په توګه REF-2026-001"
+  },
+  enterBranchNamePlaceholder: {
+    en: "e.g. Main Branch, Karachi",
+    ur: "مثلاً مین برانچ، کراچی",
+    ar: "مثال الفرع الرئيسي، كراتشي",
+    fa: "مثلاً شعبه اصلی، کراچی",
+    ps: "د بېلګې په توګه مرکزي څانګه، کراچۍ"
+  },
+  enterBranchCodePlaceholder: {
+    en: "e.g. KHI-01",
+    ur: "مثلاً KHI-01",
+    ar: "مثال KHI-01",
+    fa: "مثلاً KHI-01",
+    ps: "د بېلګې په توګه KHI-01"
+  },
+  enterCityBranchPlaceholder: {
+    en: "e.g. Lahore City Branch",
+    ur: "مثلاً لاہور سٹی برانچ",
+    ar: "مثال فرع مدينة لاهور",
+    fa: "مثلاً شعبه شهر لاهور",
+    ps: "د بېلګې په توګه د لاهور ښار څانګه"
+  },
+  enterCompanyRegNoPlaceholder: {
+    en: "e.g. SECP-0019283",
+    ur: "مثلاً SECP-0019283",
+    ar: "مثال SECP-0019283",
+    fa: "مثلاً SECP-0019283",
+    ps: "د بېلګې په توګه SECP-0019283"
+  },
+  enterCompanyTaxNoPlaceholder: {
+    en: "e.g. 1234567-8 / STRN",
+    ur: "مثلاً 1234567-8 / ایس ٹی آر این",
+    ar: "مثال 1234567-8 / الرقم الضريبي",
+    fa: "مثلاً 1234567-8 / شناسه مالیاتی",
+    ps: "د بېلګې په توګه 1234567-8 / مالیاتي شمیره"
+  },
+  accountDetailsSub: {
+    en: "Account title, numbers, branches and banking references",
+    ur: "اکاؤنٹ کا عنوان، نمبرز، برانچز اور بینکنگ حوالہ جات",
+    ar: "عنوان الحساب والأرقام والفروع والمراجع المصرفية",
+    fa: "عنوان حساب، شماره‌ها، شعب و مراجع بانکی",
+    ps: "د حساب سرلیک، شمیرې، څانګې او بانکي حوالې"
+  },
+  companyDetailsSub: {
+    en: "Legal entity, registration, tax / NTN and business contacts",
+    ur: "قانونی ادارہ، رجسٹریشن، ٹیکس / این ٹی این اور کاروباری رابطے",
+    ar: "الكيان القانوني والتسجيل والضرائب وجهات اتصال العمل",
+    fa: "شخصیت حقوقی، ثبت، مالیات و تماس‌های کاری",
+    ps: "قانوني اداره، نوم لیکنه، مالیه او سوداګریزې اړیکې"
+  },
+  corporateClient: {
+    en: "Corporate",
+    ur: "کارپوریٹ",
+    ar: "شركات",
+    fa: "شرکتی",
+    ps: "کارپوریټ"
   }
 };
 

@@ -1,8 +1,8 @@
 # ERP System Enhancement Progress Checklist
 
-- [ ] Component: Frontend Customer Profiles & Forms
-  - [ ] Update `customer-form.tsx` fields & schema binding for Account Name, Number, Manual Ref, Branch/City, Company details (Registration, NTN, Business Type).
-  - [ ] Update `customer-profile.tsx` to display separate cards for Customer Account and Customer Company details.
+- [x] Component: Frontend Customer Profiles & Forms
+  - [x] Update `customer-form.tsx` fields & schema binding for Account Name, Number, Manual Ref, Branch/City, Company details (Registration, NTN, Business Type).
+  - [x] Update `customer-profile.tsx` to display separate cards for Customer Account and Customer Company details.
 - [ ] Component: Exchange Rates & Transaction Serials
   - [ ] Implement approved Pakistan Exchange Rates panel in `cash-entry-form.tsx`.
   - [ ] Display transaction information sequences (Serials, Date, Created, Approved, Status) in `cash-entry-form.tsx` below Company Details card.

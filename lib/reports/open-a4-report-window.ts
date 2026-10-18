@@ -80,6 +80,43 @@ export type BranchReportData = {
   remarks?: string;
 };
 
+export type RoznamchaCashEntryReportData = {
+  companyName?: string;
+  voucherNo?: string;
+  journalNo?: string;
+  entrySerial?: string;
+  entryDate?: string;
+  status?: string;
+
+  counterpartyName?: string;
+  counterpartyCode?: string;
+  accountNo?: string;
+  country?: string;
+  branch?: string;
+  bankName?: string;
+  paymentMethod?: string;
+
+  financialLines: Array<{
+    description?: string;
+    accountCode?: string;
+    accountName?: string;
+    currency?: string;
+    debit?: number;
+    credit?: number;
+    exchangeRate?: number;
+    convertedAmount?: number;
+  }>;
+
+  totalDebit?: number;
+  totalCredit?: number;
+  balanceDirection?: "DR" | "CR" | "—";
+  finalBalance?: number;
+  currency?: string;
+  narration?: string;
+  createdBy?: string;
+  approvedBy?: string;
+};
+
 function escapeHtml(value: string) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -95,6 +132,7 @@ export function openA4ReportWindow(input: {
   rows?: A4ReportRow[];
   autoPrint?: boolean;
   branchData?: BranchReportData;
+  cashEntryData?: RoznamchaCashEntryReportData;
   lang?: string;
 }) {
   if (typeof window === "undefined") return;
@@ -584,6 +622,208 @@ export function openA4ReportWindow(input: {
         <div>🏢 ACCOUNTS.DGT.LLC | Enterprise ERP / FMS</div>
         <div>✉ Email: ${escapeHtml(b.companyEmail || "info@dgt.llc")}</div>
         <div>Report ID: BR-${escapeHtml(b.branchCode || "MAIN")}-${stampDate.replace(/-/g, "")}</div>
+        <div>Page 1 of 1</div>
+      </div>
+    `;
+  } else if (input.cashEntryData) {
+    const c = input.cashEntryData;
+    const fmtM = (n: number) => new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+    const linesHtml = (c.financialLines || []).map((l, i) => `
+      <tr>
+        <td style="text-align: center; font-mono; font-size: 10px;">${i + 1}</td>
+        <td>
+          <div style="font-weight: 800; color: #0f172a; font-size: 11px;">${escapeHtml(l.description || "Cash Entry Line")}</div>
+          <div style="font-size: 9px; color: #64748b; font-family: monospace;">${escapeHtml(l.accountCode || "-")} · ${escapeHtml(l.accountName || "-")}</div>
+        </td>
+        <td style="text-align: center; font-family: monospace; font-size: 10px; font-weight: 700;">${escapeHtml(l.currency || c.currency || "AED")}</td>
+        <td style="text-align: right; font-family: monospace; font-size: 11px; font-weight: 800; color: ${l.debit ? '#e11d48' : '#94a3b8'};">
+          ${l.debit ? fmtM(l.debit) : "—"}
+        </td>
+        <td style="text-align: right; font-family: monospace; font-size: 11px; font-weight: 800; color: ${l.credit ? '#16a34a' : '#94a3b8'};">
+          ${l.credit ? fmtM(l.credit) : "—"}
+        </td>
+        <td style="text-align: center; font-family: monospace; font-size: 10px; color: #64748b;">${Number(l.exchangeRate || 1).toFixed(4)}</td>
+        <td style="text-align: right; font-family: monospace; font-size: 11px; font-weight: 800; color: #0f172a;">
+          ${l.convertedAmount ? "$" + fmtM(l.convertedAmount) : "—"}
+        </td>
+      </tr>
+    `).join("");
+
+    contentHtml = `
+      <!-- Header Block -->
+      <div style="border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="background: #2563eb; color: #fff; font-weight: 900; padding: 4px 8px; border-radius: 4px; font-size: 12px; letter-spacing: 0.5px;">
+                ${escapeHtml(c.companyName || "DGT LLC")}
+              </span>
+              <span style="font-size: 18px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+                Roznamcha Cash Entry
+              </span>
+            </div>
+            <div style="font-size: 10px; color: #64748b; font-weight: 600; margin-top: 4px;">
+              Enterprise Official Cash & Bank Transaction Voucher
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="display: inline-block; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 999px;">
+              ${escapeHtml(c.status || "POSTED")}
+            </div>
+            <div style="font-size: 9px; color: #64748b; font-weight: 600; margin-top: 4px;">
+              Printed: ${escapeHtml(stampDate + " · " + stampTime)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Voucher Metadata Bar -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+        <div>
+          <div style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b;">Voucher Number</div>
+          <div style="font-size: 12px; font-family: monospace; font-weight: 900; color: #2563eb; margin-top: 2px;">${escapeHtml(c.voucherNo || "-")}</div>
+        </div>
+        <div>
+          <div style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b;">Journal Number</div>
+          <div style="font-size: 12px; font-family: monospace; font-weight: 800; color: #0f172a; margin-top: 2px;">${escapeHtml(c.journalNo || "-")}</div>
+        </div>
+        <div>
+          <div style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b;">Entry Serial</div>
+          <div style="font-size: 12px; font-family: monospace; font-weight: 800; color: #0f172a; margin-top: 2px;">${escapeHtml(c.entrySerial || "-")}</div>
+        </div>
+        <div>
+          <div style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b;">Transaction Date</div>
+          <div style="font-size: 12px; font-family: monospace; font-weight: 800; color: #0f172a; margin-top: 2px;">${escapeHtml(c.entryDate || "-")}</div>
+        </div>
+      </div>
+
+      <!-- Customer / Counterparty & Account Information Card -->
+      <div style="border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 14px; overflow: hidden;">
+        <div style="background: #f1f5f9; padding: 6px 12px; border-bottom: 1px solid #e2e8f0; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: #334155;">
+          Customer & Account Information
+        </div>
+        <div style="padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 10px;">
+          <div>
+            <div style="margin-bottom: 6px;">
+              <span style="color: #64748b; font-weight: 600;">Customer / Counterparty: </span>
+              <strong style="color: #0f172a; font-size: 11px;">${escapeHtml(c.counterpartyName || "-")}</strong>
+            </div>
+            <div style="margin-bottom: 6px;">
+              <span style="color: #64748b; font-weight: 600;">Account Code / No: </span>
+              <span style="font-family: monospace; font-weight: 800; color: #2563eb;">${escapeHtml(c.counterpartyCode || "-")} ${c.accountNo ? `(${escapeHtml(c.accountNo)})` : ""}</span>
+            </div>
+            <div>
+              <span style="color: #64748b; font-weight: 600;">Payment Method: </span>
+              <strong style="color: #0f172a;">${escapeHtml(c.paymentMethod || "Cash")}</strong>
+            </div>
+          </div>
+          <div>
+            <div style="margin-bottom: 6px;">
+              <span style="color: #64748b; font-weight: 600;">Country / Territory: </span>
+              <strong style="color: #0f172a;">${escapeHtml(c.country || "-")}</strong>
+            </div>
+            <div style="margin-bottom: 6px;">
+              <span style="color: #64748b; font-weight: 600;">Branch Name: </span>
+              <strong style="color: #0f172a;">${escapeHtml(c.branch || "-")}</strong>
+            </div>
+            <div>
+              <span style="color: #64748b; font-weight: 600;">Bank / Cash Account: </span>
+              <strong style="color: #0f172a;">${escapeHtml(c.bankName || "-")}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Information Table -->
+      <div style="border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 14px; overflow: hidden;">
+        <div style="background: #f1f5f9; padding: 6px 12px; border-bottom: 1px solid #e2e8f0; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: #334155;">
+          Financial Breakdown & Line Details
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+          <thead style="background: #fafafa; border-bottom: 1px solid #e2e8f0;">
+            <tr>
+              <th style="padding: 6px 8px; width: 5%; text-align: center; font-size: 9px;">#</th>
+              <th style="padding: 6px 8px; width: 35%; text-align: left; font-size: 9px;">Description / Account</th>
+              <th style="padding: 6px 8px; width: 8%; text-align: center; font-size: 9px;">Curr</th>
+              <th style="padding: 6px 8px; width: 14%; text-align: right; font-size: 9px; color: #e11d48;">Debit</th>
+              <th style="padding: 6px 8px; width: 14%; text-align: right; font-size: 9px; color: #16a34a;">Credit</th>
+              <th style="padding: 6px 8px; width: 10%; text-align: center; font-size: 9px;">Rate</th>
+              <th style="padding: 6px 8px; width: 14%; text-align: right; font-size: 9px;">Converted (USD)</th>
+            </tr>
+          </thead>
+          <tbody style="divide-y: 1px solid #f1f5f9;">
+            ${linesHtml}
+          </tbody>
+          <tfoot style="background: #f8fafc; border-top: 2px solid #cbd5e1; font-weight: 800;">
+            <tr>
+              <td colspan="3" style="padding: 8px 10px; text-align: right; text-transform: uppercase; font-size: 9px; color: #475569;">
+                Totals & Net Balance
+              </td>
+              <td style="padding: 8px 10px; text-align: right; font-family: monospace; font-size: 11px; font-weight: 900; color: #e11d48;">
+                ${fmtM(c.totalDebit || 0)}
+              </td>
+              <td style="padding: 8px 10px; text-align: right; font-family: monospace; font-size: 11px; font-weight: 900; color: #16a34a;">
+                ${fmtM(c.totalCredit || 0)}
+              </td>
+              <td colspan="2" style="padding: 8px 10px; text-align: right;">
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                  <span style="font-size: 8px; text-transform: uppercase; color: #64748b;">Final:</span>
+                  <span style="font-family: monospace; font-size: 12px; font-weight: 900; color: #2563eb;">
+                    ${escapeHtml(c.currency || "AED")} ${fmtM(c.finalBalance || 0)}
+                  </span>
+                  <span style="background: ${c.balanceDirection === 'DR' ? '#ffe4e6' : c.balanceDirection === 'CR' ? '#dcfce7' : '#f1f5f9'}; color: ${c.balanceDirection === 'DR' ? '#be123c' : c.balanceDirection === 'CR' ? '#15803d' : '#475569'}; font-size: 9px; font-weight: 900; padding: 1px 5px; border-radius: 4px;">
+                    ${escapeHtml(c.balanceDirection || "—")}
+                  </span>
+                </div>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Separate Narration Section -->
+      <div style="border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 18px; overflow: hidden;">
+        <div style="background: #f1f5f9; padding: 6px 12px; border-bottom: 1px solid #e2e8f0; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: #334155;">
+          Transaction Narration & Remarks
+        </div>
+        <div style="padding: 10px 12px; font-size: 10.5px; line-height: 1.4; color: #1e293b; background: #ffffff;">
+          ${escapeHtml(c.narration || "No additional narration provided.")}
+        </div>
+      </div>
+
+      <!-- Verification, Signatures & Footer -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+        <div style="width: 32%;">
+          <div style="border-bottom: 1px solid #94a3b8; height: 32px; display: flex; align-items: flex-end; justify-content: center; font-size: 10px; font-weight: 700; color: #334155;">
+            ${escapeHtml(c.createdBy || "Authorized Officer")}
+          </div>
+          <div style="font-size: 8px; color: #64748b; text-align: center; margin-top: 3px; font-weight: 600; text-transform: uppercase;">
+            Prepared By
+          </div>
+        </div>
+
+        <div style="text-align: center; width: 30%;">
+          <div style="display: inline-block; border: 1.5px dashed #059669; border-radius: 6px; padding: 4px 10px; background: #ecfdf5;">
+            <div style="font-size: 8px; font-weight: 900; color: #059669; letter-spacing: 0.5px;">OFFICIALLY VERIFIED</div>
+            <div style="font-size: 7px; color: #065f46; font-family: monospace;">ACCOUNTS.DGT.LLC</div>
+          </div>
+        </div>
+
+        <div style="width: 32%;">
+          <div style="border-bottom: 1px solid #94a3b8; height: 32px; display: flex; align-items: flex-end; justify-content: center; font-size: 10px; font-weight: 700; color: #334155;">
+            ${escapeHtml(c.approvedBy || "Finance Manager")}
+          </div>
+          <div style="font-size: 8px; color: #64748b; text-align: center; margin-top: 3px; font-weight: 600; text-transform: uppercase;">
+            Authorized & Approved By
+          </div>
+        </div>
+      </div>
+
+      <!-- Page Footer -->
+      <div class="page-footer" style="margin-top: 15px;">
+        <div>🏢 ACCOUNTS.DGT.LLC | Cash & Bank Roznamcha</div>
+        <div>Voucher: ${escapeHtml(c.voucherNo || "-")}</div>
+        <div>Doc Ref: RZN-${escapeHtml(c.entrySerial || "0001")}</div>
         <div>Page 1 of 1</div>
       </div>
     `;

@@ -456,6 +456,18 @@ export function CustomerProfile({
                     <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.branchName}</span>
                   </div>
                 )}
+                {parsedMeta.branchCode && (
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                    <span className="text-slate-500 font-medium">{getLabel("branchCode", lang)}</span>
+                    <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.branchCode}</span>
+                  </div>
+                )}
+                {parsedMeta.cityBranch && (
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                    <span className="text-slate-500 font-medium">{getLabel("cityBranch", lang)}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.cityBranch}</span>
+                  </div>
+                )}
                 <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
                   <span className="text-slate-500 font-medium">{getLabel("country", lang)}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{customer.country_name || parsedMeta.country || "-"}</span>
@@ -519,10 +531,22 @@ export function CustomerProfile({
                     <span className="text-slate-500 font-medium">{getLabel("country", lang)}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCountry || parsedMeta.country || customer.country_name || "-"}</span>
                   </div>
-                  <div className="flex justify-between pb-0.5">
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
                     <span className="text-slate-500 font-medium">{getLabel("city", lang)}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCity || parsedMeta.city || customer.city_name || "-"}</span>
                   </div>
+                  {parsedMeta.companyState && (
+                    <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                      <span className="text-slate-500 font-medium">{t(lang, "branch.state_label", "State")}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyState}</span>
+                    </div>
+                  )}
+                  {parsedMeta.companyAddress && (
+                    <div className="flex justify-between pb-0.5">
+                      <span className="text-slate-500 font-medium">{getLabel("companyAddress", lang)}</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate max-w-[150px]" title={parsedMeta.companyAddress}>{parsedMeta.companyAddress}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -875,6 +899,18 @@ export function CustomerProfile({
                     <div className="flex justify-between border-b border-slate-100 pb-1.5">
                       <span className="text-slate-500">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
                       <span className="font-bold text-slate-800">{parsedMeta.branchName}</span>
+                    </div>
+                  )}
+                  {parsedMeta.branchCode && (
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">{getLabel("branchCode", lang)}</span>
+                      <span className="font-bold text-slate-800 font-mono">{parsedMeta.branchCode}</span>
+                    </div>
+                  )}
+                  {parsedMeta.cityBranch && (
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">{getLabel("cityBranch", lang)}</span>
+                      <span className="font-bold text-slate-800">{parsedMeta.cityBranch}</span>
                     </div>
                   )}
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">

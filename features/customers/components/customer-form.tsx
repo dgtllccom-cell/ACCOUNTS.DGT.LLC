@@ -444,7 +444,7 @@ export function CustomerForm({
     const firstEmail = contacts.find((c) => c.type === "Email")?.value || "";
 
     const resolvedCustomerName = isBusiness 
-      ? businessName.trim() 
+      ? (companyName.trim() || businessName.trim()) 
       : ([firstName, lastName].filter(Boolean).join(" ").trim() || "New Person");
 
     const payload = {
@@ -459,7 +459,7 @@ export function CustomerForm({
       fatherName: isBusiness ? null : (fatherName.trim() || null),
       gender: isBusiness ? null : customerType,
       photoUrl: passportPicture || null,
-      companyName: isBusiness ? businessName.trim() : (companyName || null),
+      companyName: isBusiness ? (companyName.trim() || businessName.trim() || null) : (companyName.trim() || null),
       contactPerson: isBusiness ? `${firstName} ${lastName}`.trim() : null,
       mobile: firstMobile || null,
       whatsapp: firstWhatsapp || null,
@@ -901,33 +901,263 @@ export function CustomerForm({
           )}
 
           {currentStep === 2 && (
-            <Card className="rounded-xl border shadow-sm bg-white overflow-hidden md:col-span-2">
-              <div className="border-b px-5 py-4 bg-slate-50 flex items-center gap-2">
-                <MapPin className="h-4.5 w-4.5 text-teal-600" />
-                <h2 className="font-semibold text-slate-800 text-sm">{getLabel("locationInfo", lang)}</h2>
-              </div>
-              <CardContent className="p-5 space-y-4">
-                <LocationHierarchySelect
-                  value={location}
-                  onChange={(next, meta) => {
-                    setLocation(next);
-                    setLocationMeta(meta);
-                  }}
-                  showDistrict={false}
-                  showArea={true}
-                />
-                <div className="grid gap-3 grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">{getLabel("cityCode", lang)}</Label>
-                    <Input value={cityCode} onChange={(e) => setCityCode(e.target.value)} placeholder={getLabel("cityZipCodePlaceholder", lang)} className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
+            <div className="space-y-6">
+              {/* Customer Account Details Card */}
+              <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900 overflow-hidden">
+                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                    <User className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                      {getLabel("customerAccountDetails", lang)}
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {getLabel("accountDetailsSub", lang)}
+                    </p>
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">{getLabel("fullAddress", lang)} *</Label>
-                  <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t(lang, "company_form.enter_full_address", "Enter full address")} className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
+                <CardContent className="p-5 space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {getLabel("accountName", lang)} <span className="text-rose-500">*</span>
+                      </Label>
+                      <Input
+                        value={accountName}
+                        onChange={(e) => setAccountName(e.target.value)}
+                        placeholder={getLabel("enterAccountNamePlaceholder", lang)}
+                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {getLabel("accountNumber", lang)}
+                      </Label>
+                      <Input
+                        value={accountNumber}
+                        onChange={(e) => setAccountNumber(e.target.value)}
+                        placeholder={getLabel("enterAccountNumberPlaceholder", lang)}
+                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {getLabel("manualReference", lang)}
+                      </Label>
+                      <Input
+                        value={manualReference}
+                        onChange={(e) => setManualReference(e.target.value)}
+                        placeholder={getLabel("enterManualRefPlaceholder", lang)}
+                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {getLabel("branchName", lang)}
+                      </Label>
+                      <Input
+                        value={branchName}
+                        onChange={(e) => setBranchName(e.target.value)}
+                        placeholder={getLabel("enterBranchNamePlaceholder", lang)}
+                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {getLabel("branchCode", lang)}
+                      </Label>
+                      <Input
+                        value={branchCode}
+                        onChange={(e) => setBranchCode(e.target.value)}
+                        placeholder={getLabel("enterBranchCodePlaceholder", lang)}
+                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono uppercase"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      {getLabel("cityBranch", lang)}
+                    </Label>
+                    <Input
+                      value={cityBranch}
+                      onChange={(e) => setCityBranch(e.target.value)}
+                      placeholder={getLabel("enterCityBranchPlaceholder", lang)}
+                      className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Customer Company Details Card */}
+              <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900 overflow-hidden">
+                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                      <Building2 className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                        {getLabel("customerCompanyDetails", lang)}
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {getLabel("companyDetailsSub", lang)}
+                      </p>
+                    </div>
+                  </div>
+                  {isBusiness && (
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800">
+                      {getLabel("corporateClient", lang)}
+                    </span>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+                <CardContent className="p-5 space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {getLabel("companyName", lang)}
+                      </Label>
+                      <Input
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        placeholder={getLabel("companyNamePlaceholderExample", lang)}
+                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {getLabel("companyBusinessType", lang)}
+                      </Label>
+                      <select
+                        value={companyBusinessType}
+                        onChange={(e) => setCompanyBusinessType(e.target.value)}
+                        className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                      >
+                        {[
+                          "Private Limited",
+                          "Sole Proprietorship",
+                          "Partnership / AOP",
+                          "Limited Liability Company (LLC)",
+                          "Public Limited",
+                          "Joint Venture",
+                          "Branch / Liaison Office",
+                          "Non-Profit / NGO",
+                          "Other"
+                        ].map((bt) => (
+                          <option key={bt} value={bt}>{bt}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {getLabel("companyRegNo", lang)}
+                      </Label>
+                      <Input
+                        value={companyRegNo}
+                        onChange={(e) => setCompanyRegNo(e.target.value)}
+                        placeholder={getLabel("enterCompanyRegNoPlaceholder", lang)}
+                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono uppercase"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {getLabel("companyTaxNo", lang)}
+                      </Label>
+                      <Input
+                        value={companyTaxNo}
+                        onChange={(e) => setCompanyTaxNo(e.target.value)}
+                        placeholder={getLabel("enterCompanyTaxNoPlaceholder", lang)}
+                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono uppercase"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {getLabel("companyPhone", lang)}
+                      </Label>
+                      <Input
+                        value={companyPhone}
+                        onChange={(e) => setCompanyPhone(e.target.value)}
+                        placeholder="+92 300 1234567"
+                        dir="ltr"
+                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono text-left"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {getLabel("companyEmail", lang)}
+                      </Label>
+                      <Input
+                        value={companyEmail}
+                        onChange={(e) => setCompanyEmail(e.target.value)}
+                        placeholder="company@domain.com"
+                        dir="ltr"
+                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono text-left"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      {getLabel("companyAddress", lang)}
+                    </Label>
+                    <Input
+                      value={companyAddress}
+                      onChange={(e) => setCompanyAddress(e.target.value)}
+                      placeholder={t(lang, "company_form.enter_full_address", "Enter full address")}
+                      className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Location Hierarchy & Physical Address Card */}
+              <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900 overflow-hidden">
+                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                    <MapPin className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                      {getLabel("locationInfo", lang)}
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {getLabel("stepLocationSub", lang)}
+                    </p>
+                  </div>
+                </div>
+                <CardContent className="p-5 space-y-4">
+                  <LocationHierarchySelect
+                    value={location}
+                    onChange={(next, meta) => {
+                      setLocation(next);
+                      setLocationMeta(meta);
+                    }}
+                    showDistrict={false}
+                    showArea={true}
+                  />
+                  <div className="grid gap-3 grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{getLabel("cityCode", lang)}</Label>
+                      <Input value={cityCode} onChange={(e) => setCityCode(e.target.value)} placeholder={getLabel("cityZipCodePlaceholder", lang)} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{getLabel("fullAddress", lang)} *</Label>
+                    <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t(lang, "company_form.enter_full_address", "Enter full address")} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
 
@@ -1186,35 +1416,109 @@ export function CustomerForm({
           )}
 
           {currentStep === 4 && (
-            <Card className="rounded-xl border shadow-sm bg-white overflow-hidden md:col-span-2">
-              <div className="border-b px-5 py-4 bg-slate-50 flex items-center gap-2">
-                <Info className="h-4.5 w-4.5 text-teal-600" />
-                <h2 className="font-semibold text-slate-800 text-sm">{getLabel("additionalInfo", lang)}</h2>
-              </div>
-              <CardContent className="p-5 space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">{getLabel("status", lang)} *</Label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
-                  >
-                    <option value="Active">{getLabel("activeStatus", lang)}</option>
-                    <option value="Inactive">{getLabel("inactiveStatus", lang)}</option>
-                  </select>
+            <div className="space-y-6 md:col-span-2">
+              {/* Review & Audit Summary Card */}
+              <Card className="rounded-xl border shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
+                <div className="border-b px-5 py-4 bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600" />
+                    <h2 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{getLabel("stepReviewSaveTitle", lang)}</h2>
+                  </div>
+                  <span className="text-xs text-slate-500 font-medium">Step 4 / 4</span>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">{getLabel("remarksNotes", lang)}</Label>
-                  <textarea
-                    rows={4}
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    placeholder={getLabel("enterRemarksNotesPlaceholder", lang)}
-                    className="flex w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
-                  />
+                <CardContent className="p-5 space-y-4 text-xs">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3.5 space-y-2 bg-slate-50/50 dark:bg-slate-800/40">
+                      <p className="font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        <User className="h-3.5 w-3.5 text-blue-600" />
+                        <span>{getLabel("customerAccountDetails", lang)}</span>
+                      </p>
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">{getLabel("accountName", lang)}:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{accountName || (isBusiness ? businessName : `${firstName} ${lastName}`.trim()) || "-"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">{getLabel("accountNumber", lang)}:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{accountNumber || "-"}</span>
+                        </div>
+                        {branchName && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">{getLabel("branchName", lang)}:</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{branchName}</span>
+                          </div>
+                        )}
+                        {manualReference && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">{getLabel("manualReference", lang)}:</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{manualReference}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3.5 space-y-2 bg-slate-50/50 dark:bg-slate-800/40">
+                      <p className="font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 text-indigo-600" />
+                        <span>{getLabel("customerCompanyDetails", lang)}</span>
+                      </p>
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">{getLabel("companyName", lang)}:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{companyName || (isBusiness ? businessName : "-")}</span>
+                        </div>
+                        {companyRegNo && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">{getLabel("companyRegNo", lang)}:</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{companyRegNo}</span>
+                          </div>
+                        )}
+                        {companyTaxNo && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">{getLabel("companyTaxNo", lang)}:</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{companyTaxNo}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">{getLabel("companyBusinessType", lang)}:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{companyBusinessType}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-xl border shadow-sm bg-white dark:bg-slate-900 overflow-hidden md:col-span-2">
+                <div className="border-b px-5 py-4 bg-slate-50 dark:bg-slate-800/60 flex items-center gap-2">
+                  <Info className="h-4.5 w-4.5 text-teal-600" />
+                  <h2 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{getLabel("additionalInfo", lang)}</h2>
                 </div>
-              </CardContent>
-            </Card>
+                <CardContent className="p-5 space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{getLabel("status", lang)} *</Label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
+                    >
+                      <option value="Active">{getLabel("activeStatus", lang)}</option>
+                      <option value="Inactive">{getLabel("inactiveStatus", lang)}</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{getLabel("remarksNotes", lang)}</Label>
+                    <textarea
+                      rows={4}
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                      placeholder={getLabel("enterRemarksNotesPlaceholder", lang)}
+                      className="flex w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {/* Form Actions */}
@@ -1299,6 +1603,96 @@ export function CustomerForm({
                 </p>
               </div>
             </div>
+
+            {/* Account Details Section */}
+            {(accountName || accountNumber || branchName || manualReference) && (
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-slate-400" />
+                    <span>{getLabel("customerAccountDetails", lang)}</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    {getLabel("editBtn", lang)}
+                  </button>
+                </div>
+                <div className="space-y-1 text-xs">
+                  {accountName && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">{getLabel("accountName", lang)}:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{accountName}</span>
+                    </div>
+                  )}
+                  {accountNumber && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">{getLabel("accountNumber", lang)}:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{accountNumber}</span>
+                    </div>
+                  )}
+                  {branchName && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">{getLabel("branchName", lang)}:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{branchName}</span>
+                    </div>
+                  )}
+                  {manualReference && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">{getLabel("manualReference", lang)}:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{manualReference}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Company Details Section */}
+            {(companyName || companyRegNo || companyTaxNo || (isBusiness && businessName)) && (
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                    <span>{getLabel("customerCompanyDetails", lang)}</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    {getLabel("editBtn", lang)}
+                  </button>
+                </div>
+                <div className="space-y-1 text-xs">
+                  {(companyName || businessName) && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">{getLabel("companyName", lang)}:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{companyName || businessName}</span>
+                    </div>
+                  )}
+                  {companyRegNo && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">{getLabel("companyRegNo", lang)}:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{companyRegNo}</span>
+                    </div>
+                  )}
+                  {companyTaxNo && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">{getLabel("companyTaxNo", lang)}:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{companyTaxNo}</span>
+                    </div>
+                  )}
+                  {companyBusinessType && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">{getLabel("companyBusinessType", lang)}:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{companyBusinessType}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Location Section */}
             <div className="border-t border-slate-100 dark:border-slate-800 pt-4">

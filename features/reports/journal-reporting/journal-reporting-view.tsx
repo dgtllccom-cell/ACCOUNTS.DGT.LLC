@@ -47,16 +47,27 @@ type JournalRegisterRow = {
   description: string | null;
   accountId: string | null;
   accountCode: string | null;
+  accountNumber: string | null;
   accountName: string | null;
+  accountType: string | null;
+  accountStatus: string | null;
+  customerId: string | null;
   customerName: string | null;
   companyName: string | null;
   debit: number;
   credit: number;
   currency: string;
   usdRate: number;
+  finalBalance: number;
+  balanceDirection: "DR" | "CR" | "—";
+  entryType: string | null;
   countryName: string | null;
   countryBranchName: string | null;
   cityBranchName: string | null;
+  branchName: string | null;
+  accountBranchName: string | null;
+  transactionBranchName: string | null;
+  contactInfo: string | null;
   createdByName: string | null;
   approvedByName: string | null;
   approvalStatus: "approved" | "pending";
@@ -248,14 +259,22 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
     switch (key) {
       case "date":
         return row.date;
-      case "journalNo":
-        return row.journalNo || "—";
       case "voucherNo":
         return row.voucherNo || "—";
+      case "journalNo":
+        return row.journalNo || "—";
       case "referenceNo":
         return row.referenceNo || "—";
+      case "accountCode":
+        return row.accountCode || "—";
+      case "accountNumber":
+        return row.accountNumber || "—";
       case "accountName":
         return row.accountName || row.accountCode || "—";
+      case "branchName":
+        return row.branchName || row.cityBranchName || row.countryBranchName || "—";
+      case "entryType":
+        return row.entryType || "—";
       case "customerName":
         return row.customerName || "—";
       case "description":
@@ -264,6 +283,10 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
         return row.debit ? numberFmt(row.debit) : "—";
       case "credit":
         return row.credit ? numberFmt(row.credit) : "—";
+      case "finalBalance":
+        return numberFmt(row.finalBalance);
+      case "drCr":
+        return row.balanceDirection;
       case "currency":
         return row.currency || "—";
       case "usdRate":
@@ -284,6 +307,104 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
         return row.status || "—";
       default:
         return "—";
+    }
+  }
+
+  function renderCell(row: JournalRegisterRow, key: JournalColumnKey) {
+    switch (key) {
+      case "credit":
+        return (
+          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+            {row.credit ? numberFmt(row.credit) : "—"}
+          </span>
+        );
+      case "debit":
+        return (
+          <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+            {row.debit ? numberFmt(row.debit) : "—"}
+          </span>
+        );
+      case "finalBalance":
+        return (
+          <span className="font-mono font-black text-blue-600 dark:text-blue-400">
+            {numberFmt(row.finalBalance)}
+          </span>
+        );
+      case "drCr":
+        if (row.balanceDirection === "DR") {
+          return (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+              DR
+            </span>
+          );
+        }
+        if (row.balanceDirection === "CR") {
+          return (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              CR
+            </span>
+          );
+        }
+        return <span className="text-slate-400">—</span>;
+      case "accountCode":
+        return (
+          <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">
+            {row.accountCode || "—"}
+          </span>
+        );
+      case "accountNumber":
+        return (
+          <span className="font-mono text-slate-600 dark:text-slate-400">
+            {row.accountNumber || "—"}
+          </span>
+        );
+      case "voucherNo":
+        return (
+          <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+            {row.voucherNo || "—"}
+          </span>
+        );
+      case "journalNo":
+        return (
+          <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+            {row.journalNo || "—"}
+          </span>
+        );
+      case "branchName":
+        return (
+          <span className="font-medium text-slate-800 dark:text-slate-200">
+            {row.branchName || row.cityBranchName || row.countryBranchName || "—"}
+          </span>
+        );
+      case "entryType":
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            {row.entryType || "Journal"}
+          </span>
+        );
+      case "description":
+        return (
+          <div className="max-w-[200px] truncate text-slate-600 dark:text-slate-400" title={row.description || ""}>
+            {row.description || "—"}
+          </div>
+        );
+      case "status":
+        return (
+          <span
+            className={cn(
+              "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+              row.status === "posted"
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                : row.status === "cancelled"
+                  ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+                  : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+            )}
+          >
+            {row.status}
+          </span>
+        );
+      default:
+        return columnValue(row, key);
     }
   }
 
@@ -331,10 +452,10 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
       columns: visible.map((c) => ({
         key: c.key,
         label: columnLabel(s, c.key),
-        format: c.key === "debit" || c.key === "credit" || c.key === "usdRate" ? ("currency" as const) : c.key === "date" ? ("date" as const) : ("text" as const)
+        format: c.key === "debit" || c.key === "credit" || c.key === "finalBalance" || c.key === "usdRate" ? ("currency" as const) : c.key === "date" ? ("date" as const) : ("text" as const)
       })),
       rows: rows.map((r) => Object.fromEntries(visible.map((c) => [c.key, columnValue(r, c.key)]))),
-      totals: data ? { debit: numberFmt(data.totals.debit), credit: numberFmt(data.totals.credit) } : undefined,
+      totals: data ? { debit: numberFmt(data.totals.debit), credit: numberFmt(data.totals.credit), balance: numberFmt(data.totals.balance) } : undefined,
       showSignatures: true,
       autoPrint
     };
@@ -728,21 +849,28 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">{s.t("register_title", "Journal Register")}</h2>
           {loading && <span className="text-xs text-slate-400">{s.t("loading", "Loading journal register…")}</span>}
         </div>
-        <table className="w-full min-w-[900px] text-sm">
+        <table className="w-full min-w-[1100px] text-xs">
           <thead className="bg-slate-50 dark:bg-slate-800">
             <tr>
               {visibleColumns.map((c) => (
-                <Th key={c.key} style={{ width: c.width }} className={`px-3 py-2 font-medium text-slate-600 dark:text-slate-300 ${s.textStart}`}>
+                <Th
+                  key={c.key}
+                  style={{ width: c.width }}
+                  className={cn(
+                    "px-2.5 py-2 font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px]",
+                    ["debit", "credit", "finalBalance", "usdRate"].includes(c.key) ? "text-right" : ["drCr", "date", "currency", "status"].includes(c.key) ? "text-center" : s.textStart
+                  )}
+                >
                   {columnLabel(s, c.key)}
                 </Th>
               ))}
-              <Th className={`px-3 py-2 font-medium text-slate-600 dark:text-slate-300 ${s.textStart}`}>{s.t("view_original", "View Original")}</Th>
+              <Th className={`px-2.5 py-2 font-semibold text-slate-700 dark:text-slate-200 text-center uppercase tracking-wider text-[11px]`}>{s.t("view_original", "Actions")}</Th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {(data?.table.rows.length ?? 0) === 0 ? (
               <tr>
-                <td colSpan={visibleColumns.length + 1} className="px-3 py-6 text-center text-slate-400">
+                <td colSpan={visibleColumns.length + 1} className="px-3 py-8 text-center text-slate-400">
                   {s.t("no_records", "No journal entries found for the selected filters.")}
                 </td>
               </tr>
@@ -751,29 +879,35 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
                 <tr
                   key={row.id}
                   onClick={() => setSelectedDetailRow(row)}
-                  className="border-t border-slate-100 dark:border-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
+                  className="hover:bg-blue-50/50 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
                 >
                   {visibleColumns.map((c) => (
-                    <td key={c.key} style={{ width: c.width }} className="px-3 py-2 text-slate-700 dark:text-slate-300">
-                      {columnValue(row, c.key)}
+                    <td
+                      key={c.key}
+                      style={{ width: c.width }}
+                      className={cn(
+                        "px-2.5 py-1.5 text-slate-700 dark:text-slate-300 whitespace-nowrap",
+                        ["debit", "credit", "finalBalance", "usdRate"].includes(c.key) ? "text-right font-mono" : ["drCr", "date", "currency", "status"].includes(c.key) ? "text-center" : "text-left"
+                      )}
+                    >
+                      {renderCell(row, c.key)}
                     </td>
                   ))}
-                  <td className="px-3 py-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-1.5">
+                  <td className="px-2.5 py-1.5 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => setSelectedDetailRow(row)}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
+                        className="text-[11px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800"
                         title={s.t("view_details", "View Details")}
                       >
-                        <Eye className="h-3.5 w-3.5" />
+                        <Eye className="h-3 w-3" />
                         <span>{s.t("view_action", "View")}</span>
                       </button>
-                      <span className="text-slate-300 dark:text-slate-700">|</span>
                       <button
                         type="button"
                         onClick={() => viewOriginal(row)}
-                        className="text-xs text-slate-500 hover:text-blue-600 flex items-center gap-0.5"
+                        className="text-[11px] text-slate-500 hover:text-blue-600 p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
                         title={s.t("open_source", "Open Source")}
                       >
                         <ExternalLink className="h-3 w-3" />
@@ -786,16 +920,34 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
           </tbody>
           {config.showTotalsRow && data && data.table.rows.length > 0 && (
             <tfoot>
-              <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold dark:border-slate-700 dark:bg-slate-800">
+              <tr className="border-t-2 border-slate-200 bg-slate-50 font-bold text-xs dark:border-slate-700 dark:bg-slate-800">
                 {visibleColumns.map((c, idx) => (
-                  <td key={c.key} className="px-3 py-2 text-slate-700 dark:text-slate-200">
-                    {idx === 0
-                      ? s.t("total_row", "Totals")
-                      : c.key === "debit"
-                        ? numberFmt(data.totals.debit)
-                        : c.key === "credit"
-                          ? numberFmt(data.totals.credit)
-                          : ""}
+                  <td
+                    key={c.key}
+                    className={cn(
+                      "px-2.5 py-2 text-slate-800 dark:text-slate-100",
+                      ["debit", "credit", "finalBalance"].includes(c.key) ? "text-right font-mono" : idx === 0 ? "text-left" : "text-center"
+                    )}
+                  >
+                    {idx === 0 ? (
+                      <span className="uppercase tracking-wider font-extrabold text-[11px] text-slate-900 dark:text-slate-100">
+                        {s.t("total_row", "Totals")}
+                      </span>
+                    ) : c.key === "debit" ? (
+                      <span className="text-rose-600 dark:text-rose-400 font-mono font-bold">
+                        {numberFmt(data.totals.debit)}
+                      </span>
+                    ) : c.key === "credit" ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                        {numberFmt(data.totals.credit)}
+                      </span>
+                    ) : c.key === "finalBalance" ? (
+                      <span className="text-blue-600 dark:text-blue-400 font-mono font-black">
+                        {numberFmt(data.totals.balance)}
+                      </span>
+                    ) : (
+                      ""
+                    )}
                   </td>
                 ))}
                 <td />
@@ -910,46 +1062,99 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
               </button>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900/50 p-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900/50 p-3">
               <div>
                 <span className="text-[10px] text-muted-foreground uppercase font-bold block">Date</span>
                 <span className="font-semibold text-slate-900 dark:text-slate-100">{selectedDetailRow.date}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Source</span>
-                <span className="font-semibold capitalize text-blue-600 dark:text-blue-400">{selectedDetailRow.sourceTable.replace("_", " ")}</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Voucher No</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{selectedDetailRow.voucherNo || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Status</span>
-                <span className="font-semibold capitalize text-emerald-600">{selectedDetailRow.status}</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Journal No</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{selectedDetailRow.journalNo || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account</span>
-                <span className="font-semibold text-slate-900 dark:text-slate-100">{selectedDetailRow.accountName || selectedDetailRow.accountCode || "-"}</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Entry Type</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400">{selectedDetailRow.entryType || selectedDetailRow.sourceTable}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Customer / Party</span>
-                <span className="font-semibold text-slate-900 dark:text-slate-100">{selectedDetailRow.customerName || "-"}</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account Code</span>
+                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{selectedDetailRow.accountCode || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Amount</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-                  {selectedDetailRow.debit > 0 ? `DR ${numberFmt(selectedDetailRow.debit)}` : `CR ${numberFmt(selectedDetailRow.credit)}`} {selectedDetailRow.currency}
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account Number</span>
+                <span className="font-mono text-slate-800 dark:text-slate-200">{selectedDetailRow.accountNumber || "—"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account Name</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100">{selectedDetailRow.accountName || "—"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account Type / Status</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">
+                  {selectedDetailRow.accountType || "General"} · <span className="text-emerald-600 font-bold">{selectedDetailRow.accountStatus || "ACTIVE"}</span>
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Transaction Branch</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100">{selectedDetailRow.transactionBranchName || selectedDetailRow.branchName || "—"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account Branch</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedDetailRow.accountBranchName || selectedDetailRow.branchName || "—"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Country</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedDetailRow.countryName || "—"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Currency & Rate</span>
+                <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedDetailRow.currency} (USD Rate: {numberFmt(selectedDetailRow.usdRate)})</span>
+              </div>
+            </div>
+
+            {/* Financial Summary Box */}
+            <div className="grid grid-cols-4 gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Total Debit</span>
+                <span className="font-mono font-bold text-sm text-rose-600 dark:text-rose-400">
+                  {selectedDetailRow.debit ? numberFmt(selectedDetailRow.debit) : "0.00"} {selectedDetailRow.currency}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Total Credit</span>
+                <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
+                  {selectedDetailRow.credit ? numberFmt(selectedDetailRow.credit) : "0.00"} {selectedDetailRow.currency}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Final Balance</span>
+                <span className="font-mono font-black text-sm text-blue-600 dark:text-blue-400">
+                  {numberFmt(selectedDetailRow.finalBalance)} {selectedDetailRow.currency}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Balance Type</span>
+                <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-xs font-black", selectedDetailRow.balanceDirection === "DR" ? "bg-rose-100 text-rose-700" : selectedDetailRow.balanceDirection === "CR" ? "bg-emerald-100 text-emerald-700" : "text-slate-400")}>
+                  {selectedDetailRow.balanceDirection}
                 </span>
               </div>
             </div>
 
             <div>
-              <span className="text-[10px] text-muted-foreground uppercase font-bold block">Description</span>
-              <p className="mt-1 text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 border rounded p-2">
+              <span className="text-[10px] text-muted-foreground uppercase font-bold block">Narration / Description</span>
+              <p className="mt-1 text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 border rounded p-2.5 leading-relaxed">
                 {selectedDetailRow.description || "No description provided."}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-slate-600 dark:text-slate-400 text-[11px]">
-              <div>Branch: <b className="text-slate-800 dark:text-slate-200">{selectedDetailRow.cityBranchName || selectedDetailRow.countryBranchName || "-"}</b></div>
-              <div>Country: <b className="text-slate-800 dark:text-slate-200">{selectedDetailRow.countryName || "-"}</b></div>
-              <div>Created By: <b className="text-slate-800 dark:text-slate-200">{selectedDetailRow.createdByName || "-"}</b></div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-600 dark:text-slate-400 text-[11px] pt-1">
+              <div>Created By: <b className="text-slate-800 dark:text-slate-200">{selectedDetailRow.createdByName || "—"}</b></div>
+              <div>Approved By: <b className="text-slate-800 dark:text-slate-200">{selectedDetailRow.approvedByName || "—"}</b></div>
+              <div>Approval Status: <b className="text-slate-800 dark:text-slate-200 uppercase">{selectedDetailRow.approvalStatus}</b></div>
+              <div>Contact Info: <b className="text-slate-800 dark:text-slate-200">{selectedDetailRow.contactInfo || "—"}</b></div>
             </div>
 
             <div className="flex justify-end gap-2 border-t pt-3">

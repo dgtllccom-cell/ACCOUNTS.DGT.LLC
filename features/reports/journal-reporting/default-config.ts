@@ -4,23 +4,29 @@
 
 export type JournalColumnKey =
   | "date"
-  | "journalNo"
   | "voucherNo"
-  | "referenceNo"
+  | "journalNo"
+  | "accountCode"
   | "accountName"
-  | "customerName"
-  | "description"
-  | "debit"
-  | "credit"
+  | "accountNumber"
+  | "countryName"
+  | "branchName"
+  | "entryType"
   | "currency"
   | "usdRate"
+  | "credit"
+  | "debit"
+  | "finalBalance"
+  | "drCr"
+  | "status"
+  | "referenceNo"
+  | "description"
+  | "customerName"
   | "companyName"
-  | "countryName"
   | "countryBranchName"
   | "cityBranchName"
   | "createdByName"
-  | "approvedByName"
-  | "status";
+  | "approvedByName";
 
 export type JournalCardKey =
   | "openingBalance"
@@ -46,23 +52,26 @@ export type JournalReportConfig = {
 
 export const ALL_COLUMN_KEYS: JournalColumnKey[] = [
   "date",
-  "journalNo",
   "voucherNo",
-  "referenceNo",
+  "journalNo",
+  "accountCode",
   "accountName",
-  "customerName",
-  "description",
-  "debit",
-  "credit",
+  "countryName",
+  "branchName",
+  "entryType",
   "currency",
   "usdRate",
+  "credit",
+  "debit",
+  "finalBalance",
+  "drCr",
+  "status",
+  "referenceNo",
+  "description",
+  "customerName",
   "companyName",
-  "countryName",
-  "countryBranchName",
-  "cityBranchName",
   "createdByName",
-  "approvedByName",
-  "status"
+  "approvedByName"
 ];
 
 export const ALL_CARD_KEYS: JournalCardKey[] = [
@@ -78,24 +87,30 @@ export const ALL_CARD_KEYS: JournalCardKey[] = [
 export const ALL_CHART_KEYS: JournalChartKey[] = ["debitVsCredit", "movementByDate", "accountWise", "branchWise", "currencyWise"];
 
 const DEFAULT_WIDTHS: Record<JournalColumnKey, number> = {
-  date: 100,
-  journalNo: 110,
-  voucherNo: 110,
-  referenceNo: 120,
-  accountName: 180,
-  customerName: 160,
-  description: 220,
-  debit: 110,
-  credit: 110,
-  currency: 80,
-  usdRate: 90,
-  companyName: 150,
-  countryName: 110,
-  countryBranchName: 140,
-  cityBranchName: 140,
-  createdByName: 140,
-  approvedByName: 140,
-  status: 100
+  date: 90,
+  voucherNo: 105,
+  journalNo: 105,
+  accountCode: 100,
+  accountName: 160,
+  accountNumber: 110,
+  countryName: 95,
+  branchName: 120,
+  entryType: 110,
+  currency: 70,
+  usdRate: 85,
+  credit: 105,
+  debit: 105,
+  finalBalance: 110,
+  drCr: 65,
+  status: 85,
+  referenceNo: 110,
+  description: 180,
+  customerName: 140,
+  companyName: 130,
+  countryBranchName: 120,
+  cityBranchName: 120,
+  createdByName: 110,
+  approvedByName: 110
 };
 
 export function defaultJournalReportConfig(): JournalReportConfig {
