@@ -49,6 +49,12 @@ const LIST_ENDPOINTS = [
 // Pakistan Shipping & Clearing Admin; unclassified legacy entries stay visible to Business by design (roznamcha/route.ts).
 const ACCEPTED_LEGACY = [{ ep: "/api/erp/roznamcha", prefix: "usr:54a55f8a" }];
 
+// SCAN=critical limits the run to the endpoints that carry the separation rule (each call costs ~10-30 s on the remote DEV database)
+const CRITICAL = new Set([
+  "/api/erp/accounting/accounts", "/api/erp/ledgers", "/api/erp/accounting/reports/ledger/ledgers", "/api/erp/accounting/reports/accounts/general",
+  "/api/erp/locations/branches/city?scope=all", "/api/branch-management/city-branches", "/api/branch-management/org-chart",
+  "/api/erp/users/journal-report", "/api/erp/users/login-management", "/api/erp/reports/meta", "/api/branch-management/general-report",
+]);
 const SINGLE = { biz_super: "business", quetta_biz: "business", deira_biz: "business", pk_country_biz: "business",
   ship_super: "shipping", chaman_ship: "shipping", alras_ship: "shipping", pk_country_ship: "shipping" };
 const only = process.argv[2]?.split(",");
@@ -58,6 +64,7 @@ for (const [persona, domain] of Object.entries(SINGLE)) {
   const other = domain === "business" ? "shipping" : "business";
   const c = client(await login(PERSONAS[persona].body));
   for (const ep of LIST_ENDPOINTS) {
+    if (process.env.SCAN === "critical" && !CRITICAL.has(ep)) continue;
     const r = await c.get(ep);
     if (r.status >= 500) { T.check(`${persona.padEnd(15)} ${ep}`, false, `HTTP ${r.status}`); continue; }
     if (r.status >= 400 || r.status === 307) { T.check(`${persona.padEnd(15)} ${ep}`, true, `refused ${r.status}`); continue; }

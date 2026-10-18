@@ -98,6 +98,9 @@ describe.skipIf(!RUN)("DEV per-user verification", () => {
         const menu = visibleMenuHrefsFor(session.roles, session.permissions, ctx);
         rec.menuCount = menu.length;
         rec.menuGroups = [...new Set(menu.map((h) => h.split("?")[0].split("/").slice(0, 3).join("/")))].sort();
+        // reports and data-entry forms the sidebar offers (counts + the paths, for the per-user table)
+        rec.reportEntries = menu.filter((h) => /\/reports?(\/|$|\?)|report/i.test(h.split("?")[0]));
+        rec.formEntries = menu.filter((h) => /(new-|\/setup|registration|cash-entry|expenses-bill|customer-order|customer-bill|truck-|bl-entry|agent-entry|branch-entry)/i.test(h.split("?")[0]));
 
         const can = (pathname: string) =>
           evaluateRouteAccess({ pathname, permissions: session.permissions, roles: session.roles, operationalDomains: session.operationalDomains, canViewFinancials: session.canViewFinancials }).allowed;

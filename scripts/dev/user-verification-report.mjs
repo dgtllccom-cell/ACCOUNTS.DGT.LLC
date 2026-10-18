@@ -65,7 +65,7 @@ function row(u) {
 const head = "| Username | Email | Role | Country | Branch | Business / Shipping | Login* | Dashboard | Permissions | Issue | Fix | Final status |\n|---|---|---|---|---|---|---|---|---|---|---|---|";
 
 const menuRows = (list) =>
-  list.map((u) => `| ${u.email} | ${u.menuCount ?? "—"} | ${(u.menuGroups ?? []).map((g) => g.replace("/dashboard", "").replace(/^\//, "") || "home").join(", ")} | ${u.urlCheck ? (u.domainClass === "business" ? `${u.urlCheck.shippingUrlsOpen.length === 0 ? "all Shipping URLs 403" : "LEAK " + u.urlCheck.shippingUrlsOpen.join(",")}` : u.domainClass === "shipping" ? `${u.urlCheck.businessUrlsOpen.length === 0 ? "all Business URLs 403" : "LEAK " + u.urlCheck.businessUrlsOpen.join(",")}` : "both domains allowed (by assignment)") : "—"} |`).join("\n");
+  list.map((u) => `| ${u.email} | ${u.menuCount ?? "—"} | ${u.reportEntries?.length ?? "—"} | ${u.formEntries?.length ?? "—"} | ${(u.menuGroups ?? []).map((g) => g.replace("/dashboard", "").replace(/^\//, "") || "home").join(", ")} | ${u.urlCheck ? (u.domainClass === "business" ? `${u.urlCheck.shippingUrlsOpen.length === 0 ? "all Shipping URLs 403" : "LEAK " + u.urlCheck.shippingUrlsOpen.join(",")}` : u.domainClass === "shipping" ? `${u.urlCheck.businessUrlsOpen.length === 0 ? "all Business URLs 403" : "LEAK " + u.urlCheck.businessUrlsOpen.join(",")}` : "both domains allowed (by assignment)") : "—"} |`).join("\n");
 
 const summary = {
   total: users.length, real: real.length, test: test.length,
@@ -109,8 +109,8 @@ ${real.map(row).join("\n")}
 
 ### 3b. Menus and direct-URL access per real account
 
-| Email | Sidebar entries | Sidebar groups | Direct URL check (domain) |
-|---|---|---|---|
+| Email | Sidebar entries | Reports | Forms / entry screens | Sidebar groups | Direct URL check (domain) |
+|---|---|---|---|---|---|
 ${menuRows(real)}
 
 ## 3c. RBAC test fixtures (@rbac-test.dev)
