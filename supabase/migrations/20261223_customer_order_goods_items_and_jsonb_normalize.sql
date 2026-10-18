@@ -28,7 +28,15 @@ update public.erp_activity_events
  where jsonb_typeof(metadata) = 'string'
    and (metadata #>> '{}') ~ '^\s*\{';
 
-update public.inter_country_transfers
-   set metadata = (metadata #>> '{}')::jsonb
- where jsonb_typeof(metadata) = 'string'
-   and (metadata #>> '{}') ~ '^\s*\{';
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns 
+    where table_schema = 'public' and table_name = 'inter_country_transfers' and column_name = 'metadata'
+  ) then
+    execute 'update public.inter_country_transfers
+       set metadata = (metadata #>> ''{}'')::jsonb
+     where jsonb_typeof(metadata) = ''string''
+       and (metadata #>> ''{}'') ~ ''^\s*\{''';
+  end if;
+end $$;
