@@ -5,6 +5,7 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { allowedRowDomains } from "@/lib/permissions/domain-scope";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -57,6 +58,12 @@ export async function GET(request: NextRequest) {
         ? sql`(v.city_branch_id = ${q.branchId} or v.country_branch_id = ${q.branchId})`
         : sql`true`;
 
+      // One operational-domain rule: a Business login never sees Shipping-branch ledgers (and vice-versa).
+      const domains = allowedRowDomains(session);
+      const domainCond = domains
+        ? sql`(v.city_branch_id is null or coalesce(cib.operational_domain, 'business') = any(${domains}::text[]))`
+        : sql`true`;
+
       return sql`
         select
           v.id,
@@ -88,7 +95,7 @@ export async function GET(request: NextRequest) {
         left join public.country_branches cb on cb.id = v.country_branch_id
         left join public.city_branches cib on cib.id = v.city_branch_id
         left join public.enterprise_accounts ea on ea.id = v.account_id
-        where ${scopeCond} and ${branchCond}
+        where ${scopeCond} and ${branchCond} and ${domainCond}
         order by v.days_since_movement desc nulls last, v.current_balance desc
       `;
     });

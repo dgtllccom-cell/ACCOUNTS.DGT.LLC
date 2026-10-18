@@ -76,6 +76,10 @@ try {
 
   // 7. ledger entries balanced (DR == CR) for every posted payment
   const lines = await sql`select e.id, sum(l.debit)::float d, sum(l.credit)::float c from purchase_order_payments p join roznamcha_entries e on e.id = p.roznamcha_entry_id join roznamcha_lines l on l.roznamcha_entry_id = e.id where p.purchase_order_id = ${id} and p.deleted_at is null group by e.id`;
+  // the Stock Balance report must show the same settlement: paid in the BILL currency (USD), booking accrual never counted
+  const rep = await fetch(`${BASE}/api/erp/reports/stock-balance/bill?type=booking&id=${id}`, { headers: { cookie } }).then((x) => x.json()).catch(() => null);
+  const rb = rep?.data?.bill; const cardPaid = rep?.data?.cards?.payment;
+  check("Stock Balance report: paid = USD 220,500 in the bill currency and pending 0 (AED payments converted, not summed as USD)", rb && near(rb.paid, 220500, 1) && near(rb.pending ?? 0, 0, 1) && rb.mixedCurrency === false, rb ? `paid ${rb.paid} pending ${rb.pending} mixed ${rb.mixedCurrency}` : "no report");
   check("every voucher's journal is balanced (DR = CR)", lines.length >= 4 && lines.every((x) => near(x.d, x.c, 0.01)), `${lines.length} vouchers`);
 } catch (e) {
   fail++; console.log("FATAL", e?.stack || e);

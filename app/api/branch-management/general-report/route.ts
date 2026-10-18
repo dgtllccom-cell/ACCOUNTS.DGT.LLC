@@ -1,3 +1,5 @@
+import { rowInSessionDomain, sessionDomainFilter } from "@/lib/permissions/domain-scope";
+import { loadCityBranchDomains, loadUserDomains } from "@/lib/permissions/domain-scope-db";
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -372,6 +374,17 @@ export async function GET() {
       }
       const { data: assignmentData } = await assignmentQuery;
       assignments = (assignmentData ?? []) as AssignmentRow[];
+    }
+
+    // Business ↔ Shipping separation: a single-domain login receives only the branches and users of its own operational domain.
+    {
+      const viewerDomain = sessionDomainFilter(session);
+      if (viewerDomain && !session.isSuperAdmin) {
+        const branchDomains = await loadCityBranchDomains(cityBranches.map((b) => b.id));
+        cityBranches = cityBranches.filter((b) => rowInSessionDomain(session, branchDomains.get(b.id) ?? "business"));
+        const userDomains = await loadUserDomains(assignments.map((a) => a.user_id));
+        assignments = assignments.filter((a) => userDomains.get(a.user_id)?.has(viewerDomain));
+      }
     }
 
     // Fetch enterprise accounts + ledgers for account counts

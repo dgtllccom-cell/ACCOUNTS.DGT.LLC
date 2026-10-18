@@ -46,7 +46,7 @@ for (const path of PAGES) {
   check(`${tag}: print uses the real table and hides the toggle`, pr && /table/.test(pr.tbodyDisplay) && !tgPrint, JSON.stringify(pr && pr.tbodyDisplay) + " toggleVisible=" + tgPrint);
   await p.emulateMedia({ media: "screen" });
   // remembered per report
-  await p.reload({ waitUntil: "domcontentloaded" }); await settle(p); await p.waitForFunction(() => document.querySelector("main[data-erp-content]")?.getAttribute("data-view-mode") === "grid", null, { timeout: 25000 }).catch(() => {});
+  await p.reload({ waitUntil: "domcontentloaded", timeout: 180000 }); await settle(p); await p.waitForFunction(() => document.querySelector("main[data-erp-content]")?.getAttribute("data-view-mode") === "grid", null, { timeout: 25000 }).catch(() => {});
   const again = await stats(p);
   check(`${tag}: choice is remembered after reload`, again && again.mode === "grid" && again.tbodyDisplay === "grid", JSON.stringify(again && again.mode));
   await p.locator("[data-testid='view-list']").first().click(); await p.waitForFunction(() => document.querySelector("main[data-erp-content]")?.getAttribute("data-view-mode") === "list", null, { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(500);

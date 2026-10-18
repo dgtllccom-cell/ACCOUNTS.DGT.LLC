@@ -4,6 +4,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
+import { sessionDomainFilter } from "@/lib/permissions/domain-scope";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
@@ -31,6 +32,7 @@ type AssignmentRow = {
   country_branch_id: string | null;
   city_branch_id: string | null;
   clearing_agent_id?: string | null;
+  operational_domain?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -191,7 +193,7 @@ export async function GET(request: NextRequest) {
       withTimeout<AssignmentRow>(
         admin
         .from("user_role_assignments")
-        .select("user_id, role, country_id, country_branch_id, city_branch_id, clearing_agent_id, is_active, created_at, updated_at")
+        .select("user_id, role, country_id, country_branch_id, city_branch_id, clearing_agent_id, operational_domain, is_active, created_at, updated_at")
         .is("deleted_at", null)
           .order("created_at", { ascending: false })
           .limit(Math.max(query.limit * 3, 500)),
@@ -456,6 +458,7 @@ export async function GET(request: NextRequest) {
         branchName,
         branchCode,
         branchType,
+        operationalDomain: latestAssignment?.operational_domain ?? "business",
         role,
         registrationDate: profile.created_at,
         status: latestAssignment?.is_active ? "active" : "inactive",
@@ -470,9 +473,13 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // Business / Shipping separation: a login limited to one operational domain lists only the users of that domain (a
+    // 'both' / Global identity is never listed to a single-domain manager).
+    const viewerDomain = sessionDomainFilter(session);
     const scopedRows = session.isSuperAdmin
       ? rowData
       : rowData.filter((row) => {
+          if (viewerDomain && row.operationalDomain !== viewerDomain) return false;
           if (session.cityBranchIds.length) return row.branchId ? session.cityBranchIds.includes(row.branchId) : false;
           if (session.countryBranchIds.length) return row.branchId ? session.countryBranchIds.includes(row.branchId) : row.countryId ? session.countryIds.includes(row.countryId) : false;
           if (session.countryIds.length) return row.countryId ? session.countryIds.includes(row.countryId) : false;

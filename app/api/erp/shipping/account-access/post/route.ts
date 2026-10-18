@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
@@ -38,6 +39,7 @@ function serial(prefix: string) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     if (!canPostCrossBranch(session)) {
       throw new ApiClientError("Missing permission: roznamcha:post_cross_branch", { status: 403 });
     }

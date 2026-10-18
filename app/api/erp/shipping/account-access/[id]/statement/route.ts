@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -13,6 +14,7 @@ import { getAccountStatement } from "@/lib/services/shipping-account-access-serv
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     if (!hasRolePermission(session, "accounts", "read")) throw new ErpPermissionError("Missing permission: accounts:read");
     const { id } = await context.params;
     const sp = request.nextUrl.searchParams;

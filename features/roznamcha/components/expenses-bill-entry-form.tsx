@@ -218,6 +218,7 @@ export function ExpensesBillEntryForm({
     | "customer_expenses"
     | "customs_expenses"
     | "truck_expenses"
+    | "truck_freight_rent"
     | "other_expenses"
     | string;
 }) {
@@ -946,6 +947,8 @@ export function ExpensesBillEntryForm({
               ? tt("exp.customs_bill_title", "Customs Expenses Bill")
               : initialBillCategory === "truck_expenses"
               ? tt("exp.truck_bill_title", "Truck Expenses Bill")
+              : initialBillCategory === "truck_freight_rent"
+              ? tt("exp.truck_freight_bill_title", "Truck Freight / Rent Bill")
               : initialBillCategory === "other_expenses"
               ? tt("exp.other_bill_title", "Other Expenses Bill")
               : tt("exp.office_bill_title", "Office / Home Expenses Bill")}
@@ -1119,6 +1122,7 @@ export function ExpensesBillEntryForm({
                     <option value="new-customer_expenses">{tt("exp.customer_expenses_bill", "Customer Expenses Bill")}</option>
                     <option value="new-customs_expenses">{tt("exp.customs_expenses_bill", "Customs Expenses Bill")}</option>
                     <option value="new-truck_expenses">{tt("exp.truck_expenses_bill", "Truck Expenses Bill")}</option>
+                    <option value="new-truck_freight_rent">{tt("exp.truck_freight_bill", "Truck Freight / Rent Bill")}</option>
                     <option value="new-other_expenses">{tt("exp.other_expenses_bill", "Other Expenses Bill")}</option>
                     <option value="new-office_home">{tt("exp.office_home_bill", "Office / Home Bill")}</option>
                     <option value="new-daily_expenses">{tt("exp.daily_ops_bill", "Daily Operational Bill")}</option>

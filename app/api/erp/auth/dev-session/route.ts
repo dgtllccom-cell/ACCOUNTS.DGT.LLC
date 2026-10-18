@@ -27,7 +27,10 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({} as Record<string, unknown>));
   const role = typeof body.role === "string" ? body.role : "super_admin";
 
-  if (role === "super_admin") {
+  // A Super Admin bound to ONE operational domain is a Business / Shipping Super Admin (never the Global Super Admin): it goes
+  // through the scoped path below so the session builder derives business_super_admin / shipping_super_admin from the domain.
+  const domainBoundSuperAdmin = role === "super_admin" && (body.operationalDomain === "business" || body.operationalDomain === "shipping");
+  if (role === "super_admin" && !domainBoundSuperAdmin) {
     await setTempSuperAdminSession({ remember: false });
     return NextResponse.json({ ok: true, role: "super_admin", email: "superadmin@damaan.com" });
   }
@@ -46,6 +49,8 @@ export async function POST(request: Request) {
         clearingAgentId: (typeof body.clearingAgentId === "string" && body.clearingAgentId) || null,
         ledgerVisibility: (typeof body.ledgerVisibility === "string" && body.ledgerVisibility) || undefined,
         operationalDomain: (typeof body.operationalDomain === "string" && body.operationalDomain) || undefined,
+        accessProfile: (typeof body.accessProfile === "string" && body.accessProfile) || undefined,
+        shippingLineId: (typeof body.shippingLineId === "string" && body.shippingLineId) || undefined,
       } as never,
     ],
     remember: false,

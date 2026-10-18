@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createCityBranchSchema } from "@/features/branch-management/validation";
 import { ErpAuthError, requireErpSession, sessionInDomain } from "@/lib/auth/session";
+import { allowedRowDomains, rowInSessionDomain, sqlRowDomainCondition } from "@/lib/permissions/domain-scope";
+import { orgRowInSessionScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { auditApiAction } from "@/lib/api/audit";
 import { allPermissionGroupKeys, constrainChildPermissions } from "@/lib/permissions/catalog";
@@ -97,6 +99,8 @@ function buildCityBranchQuery(
   if (!session.isSuperAdmin && domainSuperAdminDomain(session.roles)) {
     query = query.in("id", session.cityBranchIds.length ? session.cityBranchIds : ["00000000-0000-0000-0000-000000000000"]);
   }
+  const domains = allowedRowDomains(session);
+  if (domains) query = query.in("operational_domain", domains);
 
   return query;
 }
@@ -139,6 +143,7 @@ export async function GET(request: Request) {
           and (${countryBranchId ? sql`country_branch_id = ${countryBranchId}` : sql`true`})
           and (${operationalDomain ? sql`operational_domain = ${operationalDomain}` : sql`true`})
           and (${!session.isSuperAdmin && domainSuperAdminDomain(session.roles) ? sql`id = any(${session.cityBranchIds})` : sql`true`})
+          and ${sqlRowDomainCondition(sql, session, "")}
         order by created_at asc
       `;
       return { cityBranches: normalizeCityBranchRows(rows as any[]) };
@@ -161,6 +166,13 @@ export async function GET(request: Request) {
       }
       cityBranches = normalizeCityBranchRows(data);
     }
+
+    // Domain + hierarchy trim over both read paths: no Shipping Line branch for a Business login (and the reverse), and a branch
+    // user gets its own branch — never a sibling branch of the same country.
+    cityBranches = cityBranches.filter(
+      (b) => rowInSessionDomain(session, b.operational_domain ?? b.operationalDomain) &&
+        (session.isSuperAdmin || orgRowInSessionScope(session, "cityBranch", { id: b.id, country_id: b.country_id ?? b.countryId, country_branch_id: b.country_branch_id ?? b.countryBranchId }))
+    );
 
     const lang = await getRequestLanguage();
     cityBranches = await localizeRecordNames(cityBranches, "city_branches", "name", lang);

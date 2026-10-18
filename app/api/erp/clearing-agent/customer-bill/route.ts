@@ -1,3 +1,4 @@
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -5,38 +6,57 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import {
   listCustomerBills,
   ensureCustomerBillForOrders,
+  getCustomerBillById,
   getCustomerBillByOrderId
 } from "@/lib/services/clearing-customer-bill-service";
-import { listCustomerOrders, type CustomerOrderScopeFilter } from "@/lib/services/clearing-customer-order-service";
+import {
+  listCustomerOrders,
+  getCustomerOrderById,
+  type CustomerOrderScopeFilter
+} from "@/lib/services/clearing-customer-order-service";
 
 export async function GET(req: NextRequest) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     authorizeApiScope(session, { resource: "shipping_records", action: "read" });
     const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
     const orderId = searchParams.get("orderId");
     const customerId = searchParams.get("customerId");
     const status = searchParams.get("status");
     const search = searchParams.get("search");
+    const targetId = id || orderId;
 
-    if (orderId) {
-      const bill = await getCustomerBillByOrderId(orderId);
-      if (bill && !session.isSuperAdmin) {
-        const scope: CustomerOrderScopeFilter = {
-          isSuperAdmin: false,
-          countryIds: (session.countryIds ?? []) as string[],
-          countryBranchIds: (session.countryBranchIds ?? []) as string[],
-          cityBranchIds: (session.cityBranchIds ?? []) as string[],
-          clearingAgentIds: (session.clearingAgentIds ?? []) as string[],
-          createdByUserId: typeof session.userId === "string" ? session.userId : null
-        };
-        const visibleOrderIds = new Set((await listCustomerOrders(undefined, scope)).map((order: any) => String(order.id)));
-        const linkedOrderIds = Array.isArray(bill.order_ids) && bill.order_ids.length > 0 ? bill.order_ids : [bill.order_id];
-        if (!linkedOrderIds.some((id) => visibleOrderIds.has(String(id)))) {
-          return NextResponse.json({ success: false, error: "Not authorized to view this customer bill." }, { status: 403 });
-        }
+    if (targetId) {
+      let bill = await getCustomerBillById(targetId).catch(() => null);
+      if (!bill) {
+        bill = await getCustomerBillByOrderId(targetId).catch(() => null);
       }
-      return NextResponse.json({ success: true, data: bill });
+      if (bill) {
+        if (!session.isSuperAdmin) {
+          const scope: CustomerOrderScopeFilter = {
+            isSuperAdmin: false,
+            countryIds: (session.countryIds ?? []) as string[],
+            countryBranchIds: (session.countryBranchIds ?? []) as string[],
+            cityBranchIds: (session.cityBranchIds ?? []) as string[],
+            clearingAgentIds: (session.clearingAgentIds ?? []) as string[],
+            createdByUserId: typeof session.userId === "string" ? session.userId : null
+          };
+          const visibleOrderIds = new Set((await listCustomerOrders(undefined, scope)).map((order: any) => String(order.id)));
+          const linkedOrderIds = Array.isArray(bill.order_ids) && bill.order_ids.length > 0 ? bill.order_ids : [bill.order_id];
+          if (!linkedOrderIds.some((id: any) => visibleOrderIds.has(String(id)))) {
+            return NextResponse.json({ success: false, error: "Not authorized to view this customer bill." }, { status: 403 });
+          }
+        }
+        return NextResponse.json({ success: true, data: bill });
+      }
+
+      // Check if targetId is an order ID directly
+      const order = await getCustomerOrderById(targetId).catch(() => null);
+      if (order) {
+        return NextResponse.json({ success: true, data: null, order });
+      }
     }
 
     const bills = await listCustomerBills({
@@ -68,6 +88,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await requireErpSession();
+    { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     authorizeApiScope(session, { resource: "shipping_records", action: "create" });
     const body = await req.json();
     const orderIds: string[] = Array.from(new Set<string>(

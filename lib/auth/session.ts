@@ -249,6 +249,28 @@ function getAssignmentRoots(assignments: RoleAssignmentScope[]) {
   };
 }
 
+/**
+ * Domain separation of a DOWNWARD scope grant: a Country / Main Branch administrator of the Business domain is handed every
+ * Business city branch under its country — never the Shipping Line branches that share the same parent (and the reverse).
+ * `domains` = the operational domains of the assignment(s) the grant comes from; "both" (or both domains) keeps every branch.
+ * Branches the administrator was assigned to DIRECTLY are never filtered here (they are validated when the assignment is made).
+ */
+export function cityBranchInDomains(branchDomain: string | null | undefined, domains: readonly string[] | null | undefined): boolean {
+  if (!domains || domains.length === 0 || domains.includes("both")) return true;
+  const d = branchDomain ?? "business";
+  if (d === "both") return true;
+  return domains.includes(d);
+}
+
+/** Operational domains of the assignments that carry a DOWNWARD grant (country / main-branch level, no city branch). */
+function downwardGrantDomains(assignments: Array<{ cityBranchId: string | null; countryId: string | null; countryBranchId: string | null; operationalDomain?: string | null }>): string[] {
+  return [...new Set(
+    assignments
+      .filter((a) => !a.cityBranchId && (a.countryId || a.countryBranchId))
+      .map((a) => a.operationalDomain ?? "business")
+  )];
+}
+
 async function resolveHierarchyScopes(
   supabase: any,
   initialCountryIds: string[],
@@ -256,7 +278,8 @@ async function resolveHierarchyScopes(
   initialCityBranchIds: string[],
   isSuperAdmin: boolean,
   downwardCountryIds: string[] = initialCountryIds,
-  downwardCountryBranchIds: string[] = initialCountryBranchIds
+  downwardCountryBranchIds: string[] = initialCountryBranchIds,
+  domains: readonly string[] | null = null
 ): Promise<{ countryIds: string[]; countryBranchIds: string[]; cityBranchIds: string[] }> {
   if (isSuperAdmin || !supabase) {
     return {
@@ -278,10 +301,10 @@ async function resolveHierarchyScopes(
     try {
       const [cbRes, cityRes] = await Promise.all([
         supabase.from("country_branches").select("id").in("country_id", downwardCountryIds).is("deleted_at", null),
-        supabase.from("city_branches").select("id").in("country_id", downwardCountryIds).is("deleted_at", null)
+        supabase.from("city_branches").select("id, operational_domain").in("country_id", downwardCountryIds).is("deleted_at", null)
       ]);
       cbRes?.data?.forEach((r: any) => { if (r.id) finalCountryBranchIds.add(r.id); });
-      cityRes?.data?.forEach((r: any) => { if (r.id) finalCityBranchIds.add(r.id); });
+      cityRes?.data?.forEach((r: any) => { if (r.id && cityBranchInDomains(r.operational_domain, domains)) finalCityBranchIds.add(r.id); });
     } catch (e) {
       console.error("Error resolving downward from country IDs:", e);
     }
@@ -298,10 +321,10 @@ async function resolveHierarchyScopes(
     try {
       const { data: cityRes } = await supabase
         .from("city_branches")
-        .select("id")
+        .select("id, operational_domain")
         .in("country_branch_id", downwardCountryBranchIds)
         .is("deleted_at", null);
-      cityRes?.forEach((r: any) => { if (r.id) finalCityBranchIds.add(r.id); });
+      cityRes?.forEach((r: any) => { if (r.id && cityBranchInDomains(r.operational_domain, domains)) finalCityBranchIds.add(r.id); });
     } catch (e) {
       console.error("Error resolving downward from country branch IDs:", e);
     }
@@ -416,7 +439,7 @@ async function buildAssignmentGrants(db: any, assignments: RoleAssignmentScope[]
   const out: AssignmentGrant[] = [];
   for (const x of perAssignment) {
     const roots = getAssignmentRoots([x.a]);
-    const sc = await resolveHierarchyScopes(db, roots.initialCountryIds, roots.initialCountryBranchIds, roots.initialCityBranchIds, false, roots.downwardCountryIds, roots.downwardCountryBranchIds);
+    const sc = await resolveHierarchyScopes(db, roots.initialCountryIds, roots.initialCountryBranchIds, roots.initialCityBranchIds, false, roots.downwardCountryIds, roots.downwardCountryBranchIds, downwardGrantDomains([x.a]));
     out.push({ role: x.a.role, permissions: x.permissions, countryIds: sc.countryIds, countryBranchIds: sc.countryBranchIds, cityBranchIds: sc.cityBranchIds, assignment: x.a });
   }
   return out;
@@ -586,7 +609,7 @@ async function resolveErpSessionFromDb(
   const isSuperAdmin = roles.includes("super_admin") || isBootstrapEmail;
   const isGlobalScope = isSuperAdmin || roles.some((r) => GLOBAL_SCOPE_ROLES.includes(r));
 
-  const resolvedScopes = await resolveHierarchyScopes(db, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds);
+  const resolvedScopes = await resolveHierarchyScopes(db, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds, downwardGrantDomains(assignments));
   // A Global Operations Admin is global in DATA scope but not a Super Admin: give it every active country/branch id so both
   // "no filter" and "filter by session ids" call styles see the whole network (and nothing else).
   if (isGlobalScope && !isSuperAdmin) await expandToWholeNetwork(db, resolvedScopes);
@@ -778,7 +801,7 @@ async function getCurrentErpSessionUnchecked(): Promise<ErpSession | null> {
       const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds, downwardCountryIds, downwardCountryBranchIds } = getAssignmentRoots(tempAssignments);
       const isSuperAdmin = temp.roles.includes("super_admin");
       const isGlobalScope = isSuperAdmin || temp.roles.some((r) => GLOBAL_SCOPE_ROLES.includes(r));
-      const resolvedScopes = await resolveHierarchyScopes(admin, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds);
+      const resolvedScopes = await resolveHierarchyScopes(admin, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds, downwardGrantDomains(tempAssignments));
       if (isGlobalScope && !isSuperAdmin && admin) await expandToWholeNetwork(admin, resolvedScopes);
       const tempDomainSuper = isSuperAdmin ? null : domainSuperAdminDomain(temp.roles);
       if (tempDomainSuper && admin) await expandToDomainNetwork(admin, resolvedScopes, tempDomainSuper);

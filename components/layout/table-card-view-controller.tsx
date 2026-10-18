@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { viewModeStore } from "@/components/layout/view-mode-store";
+import { useViewMode, viewModeStore } from "@/components/layout/view-mode-store";
+import { ViewModeToggle } from "@/components/layout/view-mode-toggle";
 
 /**
  * Mounted ONCE in the dashboard frame. It
@@ -57,6 +58,9 @@ export function TableCardViewController() {
   const pathname = usePathname();
   const search = useSearchParams();
   const reportKey = search?.get("type") || search?.get("reportType") || "";
+  const { eligible } = useViewMode();
+  // Pages that draw their own header (no global page bar, no toggle of their own) still get the ONE shared toggle, as a small floating control.
+  const [needFloating, setNeedFloating] = useState(false);
 
   // per-report memory
   useEffect(() => {
@@ -73,6 +77,7 @@ export function TableCardViewController() {
       if (!main) return;
       const tables = eligibleTables(main);
       viewModeStore.set({ eligible: tables.length > 0 });
+      setNeedFloating(tables.length > 0 && !document.querySelector("[data-testid='view-mode-toggle']:not([data-floating] *)"));
       const mode = viewModeStore.get().mode;
       main.setAttribute("data-view-mode", mode);
       if (mode === "grid") tables.forEach(annotate);
@@ -95,5 +100,10 @@ export function TableCardViewController() {
     return () => { mo.disconnect(); unsub(); if (timer) window.clearTimeout(timer); if (raf) cancelAnimationFrame(raf); };
   }, [pathname, reportKey]);
 
-  return null;
+  if (!eligible || !needFloating) return null;
+  return (
+    <div className="no-print sticky top-1 z-30 -mb-1 flex h-0 justify-end overflow-visible pe-1">
+      <div data-floating className="translate-y-1 rounded-lg bg-background/90 shadow-sm backdrop-blur"><ViewModeToggle /></div>
+    </div>
+  );
 }

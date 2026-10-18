@@ -1,9 +1,26 @@
 "use client";
 
-import { IntakeDraftPicker } from "@/features/document-intelligence/components/intake-draft-picker";
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, RefreshCcw, Search, Receipt, ArrowLeft } from "lucide-react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Plus,
+  RefreshCcw,
+  Search,
+  Receipt,
+  ArrowLeft,
+  ArrowRight,
+  FileText,
+  Truck,
+  Eye,
+  CheckCircle2,
+  Clock,
+  Building2,
+  DollarSign,
+  Filter,
+  SlidersHorizontal,
+  ExternalLink,
+  Printer
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,39 +29,44 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
+import { IntakeDraftPicker } from "@/features/document-intelligence/components/intake-draft-picker";
+import { CustomerOrderTransferHubView } from "./customer-order-transfer-hub-view";
 import { CustomerBillManagementView } from "./customer-bill-management-view";
 import type { CustomerBillRow } from "@/lib/services/clearing-customer-bill-service";
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
-  submitted: "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
-  approved: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300",
-  posted: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
-  paid: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
-  cancelled: "bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300",
+  draft: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border-slate-300",
+  submitted: "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200",
+  approved: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border-indigo-200",
+  posted: "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200",
+  paid: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200",
+  completed: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200",
+  cancelled: "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200",
 };
 
-/**
- * Table-first wrapper for Customer Bills: shows the real bill register on
- * load, and only opens CustomerBillManagementView (which already supports
- * loading an existing bill via ?id=) after "+ New Bill" or a row click.
- */
 export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLanguage }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const lang = langProp ?? "en";
   const isRtl = getLanguageDirection(lang) === "rtl";
   const _ = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
 
+  // Read URL params
+  const urlId = searchParams.get("id") || searchParams.get("orderId");
+  const editModeParam = searchParams.get("mode") === "edit";
+
   const [rows, setRows] = useState<CustomerBillRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"list" | "form">("list");
-  const [openBillId, setOpenBillId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [modeFilter, setModeFilter] = useState("all");
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(urlId);
+  const [openBillManagementId, setOpenBillManagementId] = useState<string | null>(editModeParam ? urlId : null);
 
   const loadRows = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/erp/clearing-agent/customer-bill", { cache: "no-store" });
+      const res = await fetch("/api/erp/clearing-agent/customer-bill?limit=100", { cache: "no-store" });
       const json = await res.json();
       setRows(json.success && Array.isArray(json.data) ? json.data : []);
     } catch {
@@ -58,156 +80,384 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
     void loadRows();
   }, [loadRows]);
 
-  const filteredRows = rows.filter((r) => {
-    if (!query.trim()) return true;
-    const q = query.trim().toLowerCase();
-    return [r.bill_no, r.customer_name, r.order_no].some((v) => (v || "").toLowerCase().includes(q));
-  });
+  // Keep state synced with URL id
+  useEffect(() => {
+    if (urlId) {
+      if (editModeParam) {
+        setOpenBillManagementId(urlId);
+        setActiveOrderId(null);
+      } else {
+        setActiveOrderId(urlId);
+        setOpenBillManagementId(null);
+      }
+    } else {
+      setActiveOrderId(null);
+      setOpenBillManagementId(null);
+    }
+  }, [urlId, editModeParam]);
 
-  if (viewMode === "form") {
+  // Filtered rows
+  const filteredRows = useMemo(() => {
+    return rows.filter((r) => {
+      if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (modeFilter !== "all" && r.transport_mode !== modeFilter && r.movement_type !== modeFilter) return false;
+      if (!query.trim()) return true;
+      const q = query.trim().toLowerCase();
+      return (
+        (r.bill_no || "").toLowerCase().includes(q) ||
+        (r.customer_name || "").toLowerCase().includes(q) ||
+        (r.order_no || "").toLowerCase().includes(q) ||
+        (r.truck_number || "").toLowerCase().includes(q)
+      );
+    });
+  }, [rows, query, statusFilter, modeFilter]);
+
+  // KPI Statistics
+  const stats = useMemo(() => {
+    const total = rows.length;
+    const completed = rows.filter((r) => ["paid", "posted", "completed", "approved"].includes(r.status)).length;
+    const draft = rows.filter((r) => r.status === "draft").length;
+    const submitted = rows.filter((r) => ["submitted", "in_progress"].includes(r.status)).length;
+    const totalGrand = rows.reduce((sum, r) => sum + Number(r.grand_total || 0), 0);
+    return { total, completed, draft, submitted, totalGrand };
+  }, [rows]);
+
+  // If in edit / charges management mode
+  if (openBillManagementId) {
     return (
-      <div dir={isRtl ? "rtl" : "ltr"} className="space-y-3">
+      <div dir={isRtl ? "rtl" : "ltr"} className="space-y-3 p-3">
         <Button
           type="button"
           variant="outline"
           size="sm"
           className="h-8"
           onClick={() => {
-            setViewMode("list");
-            setOpenBillId(null);
-            router.replace("/dashboard/clearing-agent/customer-bill");
+            setOpenBillManagementId(null);
+            router.replace(activeOrderId ? `/dashboard/clearing-agent/customer-bill?id=${activeOrderId}` : "/dashboard/clearing-agent/customer-bill");
             void loadRows();
           }}
         >
           <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-          {_("cbr.back_to_register", "Back to Bill Register")}
+          {_("cbr.back_to_register", "Back to Customer Order & Bill")}
         </Button>
-        <CustomerBillManagementView key={openBillId ?? "new"} initialBillId={openBillId} />
+        <CustomerBillManagementView initialBillId={openBillManagementId} />
       </div>
     );
   }
 
+  // If an order / bill is selected for the Transfer Hub View
+  if (activeOrderId) {
+    return (
+      <div dir={isRtl ? "rtl" : "ltr"}>
+        <CustomerOrderTransferHubView
+          orderId={activeOrderId}
+          lang={lang}
+          onBack={() => {
+            setActiveOrderId(null);
+            router.replace("/dashboard/clearing-agent/customer-bill");
+            void loadRows();
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Otherwise show the Smart Customer Bill & Order Register Table
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto max-w-[1680px] space-y-3 p-3">
-      <Card>
-        <CardHeader className="flex flex-col gap-3 border-b py-3 lg:flex-row lg:items-center lg:justify-between">
-          <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
-            <Receipt className="h-4 w-4" />
-            {_("cbill.register_title", "Customer Bill Register")} ({filteredRows.length})
-          </CardTitle>
+    <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto max-w-[1720px] space-y-4 p-3 sm:p-5">
+      {/* Top Header & Overview */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-[#0b5394] text-white shadow-md shadow-blue-900/15">
+            <Receipt className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+              {_("cbill.register_title", "Customer Bill & Order Register")}
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Central clearing agent billing, orders, and multi-expense transfer desk
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-9 rounded-xl border-slate-200 dark:border-slate-800 text-xs font-bold"
+            onClick={() => void loadRows()}
+            disabled={loading}
+          >
+            <RefreshCcw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+
+          <IntakeDraftPicker
+            targetModule="clearing_customer_bills"
+            domain="shipping"
+            lang={lang}
+            onPicked={() => {
+              setOpenBillManagementId("new");
+            }}
+          />
+
+          <Button
+            type="button"
+            size="sm"
+            className="h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20"
+            onClick={() => {
+              router.push("/dashboard/clearing-agent/customer-order");
+            }}
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            New Customer Order
+          </Button>
+        </div>
+      </div>
+
+      {/* Smart KPI Summary Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase tracking-wider">
+            <span>Total Orders & Bills</span>
+            <FileText className="h-4 w-4 text-blue-500" />
+          </div>
+          <div className="mt-2 text-2xl font-black text-slate-900 dark:text-white">
+            {stats.total}
+          </div>
+          <div className="text-[11px] text-slate-400 mt-0.5">
+            Active clearing & commercial records
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-emerald-200/90 bg-white p-4 dark:border-emerald-900/50 dark:bg-slate-900 shadow-xs">
+          <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
+            <span>Completed / Settled</span>
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          </div>
+          <div className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
+            {stats.completed}
+          </div>
+          <div className="text-[11px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
+            Transferred and fully processed
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-blue-200/90 bg-white p-4 dark:border-blue-900/50 dark:bg-slate-900 shadow-xs">
+          <div className="flex items-center justify-between text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider">
+            <span>In Process / Active</span>
+            <Clock className="h-4 w-4 text-blue-500" />
+          </div>
+          <div className="mt-2 text-2xl font-black text-blue-600 dark:text-blue-400">
+            {stats.submitted}
+          </div>
+          <div className="text-[11px] text-blue-600/70 dark:text-blue-400/70 mt-0.5">
+            Under customs or inland transit
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-amber-200/90 bg-white p-4 dark:border-amber-900/50 dark:bg-slate-900 shadow-xs">
+          <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
+            <span>Draft / Pending</span>
+            <SlidersHorizontal className="h-4 w-4 text-amber-500" />
+          </div>
+          <div className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400">
+            {stats.draft}
+          </div>
+          <div className="text-[11px] text-amber-600/70 dark:text-amber-400/70 mt-0.5">
+            Awaiting final documentation
+          </div>
+        </div>
+      </div>
+
+      {/* Main Table Card */}
+      <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
+        <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="relative flex-1 max-w-md">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by Bill No, Customer, Order No, Truck..."
+              className="h-9.5 pl-9 text-xs rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+            />
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative w-64">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={_("cbr.search_ph", "Search bill no, customer, order...")}
-                className="h-9 pl-9 text-xs"
-              />
-            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
+            >
+              <option value="all">All Statuses</option>
+              <option value="completed">Completed / Paid</option>
+              <option value="submitted">Submitted / In Process</option>
+              <option value="draft">Draft</option>
+            </select>
+
+            <select
+              value={modeFilter}
+              onChange={(e) => setModeFilter(e.target.value)}
+              className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
+            >
+              <option value="all">All Modes</option>
+              <option value="by_road">By Road</option>
+              <option value="by_sea">By Sea</option>
+              <option value="by_air">By Air</option>
+              <option value="transit">Transit</option>
+              <option value="import">Import</option>
+            </select>
+
             <JournalPrintButton
-              title={_("cbill.register_title", "Customer Bill Register")}
+              title="Customer Bill & Order Register"
               columns={[
-                { key: "bill_no", label: _("cbr.col_bill_no", "Bill No"), align: "center" },
-                { key: "customer_name", label: _("cbr.col_customer", "Customer") },
-                { key: "order_no", label: _("cbr.col_order", "Order"), align: "center" },
-                { key: "currency_code", label: _("common.currency", "Currency"), align: "center" },
-                { key: "grand_total", label: _("cbr.col_total", "Grand Total"), align: "right", format: "number" },
-                { key: "balance_due", label: _("cbr.col_balance", "Balance Due"), align: "right", format: "number" },
-                { key: "status", label: _("common.status", "Status"), align: "center", format: "status" },
+                { key: "bill_no", label: "Bill No", align: "center" },
+                { key: "order_no", label: "Order No", align: "center" },
+                { key: "customer_name", label: "Customer" },
+                { key: "transport_mode", label: "Transport Mode", align: "center" },
+                { key: "movement_type", label: "Movement", align: "center" },
+                { key: "grand_total", label: "Grand Total", align: "right", format: "number" },
+                { key: "status", label: "Status", align: "center", format: "status" }
               ]}
               rows={filteredRows as unknown as Record<string, unknown>[]}
-              fetchFullData={async () => {
-                const all: CustomerBillRow[] = [];
-                for (let offset = 0; offset < 20000; offset += 100) {
-                  const res = await fetch(`/api/erp/clearing-agent/customer-bill?limit=100&offset=${offset}`, { cache: "no-store" });
-                  const json = await res.json();
-                  const page: CustomerBillRow[] = json.success && Array.isArray(json.data) ? json.data : [];
-                  all.push(...page);
-                  if (page.length < 100) break;
-                }
-                const q = query.trim().toLowerCase();
-                return all.filter((r) => !q || [r.bill_no, r.customer_name, r.order_no].some((v) => (v || "").toLowerCase().includes(q))) as unknown as Record<string, unknown>[];
-              }}
-              filters={query.trim() ? [{ label: _("common.search", "Search"), value: query.trim() }] : []}
               orientation="landscape"
             />
-            <Button type="button" size="sm" variant="outline" className="h-9" onClick={() => void loadRows()} disabled={loading}>
-              <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            </Button>
-            {/* Scan / Upload a charge document → reviewed draft → new bill pre-filled with its charge lines. */}
-            <IntakeDraftPicker
-              targetModule="clearing_customer_bills"
-              domain="shipping"
-              lang={lang}
-              onPicked={() => {
-                setOpenBillId(null);
-                setViewMode("form");
-              }}
-            />
-            <Button
-              type="button"
-              size="sm"
-              className="h-9 bg-cyan-600 text-white hover:bg-cyan-500"
-              onClick={() => {
-                setOpenBillId(null);
-                setViewMode("form");
-              }}
-            >
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
-              {_("cbr.new_bill", "New Bill")}
-            </Button>
           </div>
         </CardHeader>
+
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-xs">
-              <thead className="border-b bg-muted/50">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#f1f5f9] dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                 <tr>
-                  <Th className="px-3 py-2 font-black uppercase">{_("cbr.col_bill_no", "Bill No")}</Th>
-                  <Th className="px-3 py-2 font-black uppercase">{_("cbr.col_customer", "Customer")}</Th>
-                  <Th className="px-3 py-2 font-black uppercase">{_("cbr.col_order", "Order")}</Th>
-                  <Th className="px-3 py-2 font-black uppercase text-right">{_("cbr.col_total", "Grand Total")}</Th>
-                  <Th className="px-3 py-2 font-black uppercase text-right">{_("cbr.col_balance", "Balance Due")}</Th>
-                  <Th className="px-3 py-2 font-black uppercase">{_("common.status", "Status")}</Th>
+                  <th className="py-3 px-3.5">Bill No.</th>
+                  <th className="py-3 px-3.5">Order No.</th>
+                  <th className="py-3 px-3.5">Customer & Ledger</th>
+                  <th className="py-3 px-3.5">Route & Mode</th>
+                  <th className="py-3 px-3.5 text-right">Grand Total</th>
+                  <th className="py-3 px-3.5 text-center">Status</th>
+                  <th className="py-3 px-3.5 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11.5px]">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
-                      {_("common.loading", "Loading...")}
+                    <td colSpan={7} className="py-12 text-center text-slate-400">
+                      <RefreshCcw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-500" />
+                      <span>Loading customer orders and bills...</span>
                     </td>
                   </tr>
                 ) : filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
-                      {_("cbr.empty", "No customer bills found. Click \"New Bill\" to create one.")}
+                    <td colSpan={7} className="py-12 text-center text-slate-400">
+                      <FileText className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
+                      <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
+                        No customer bills or orders found
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Select a customer order or create a new one to open the transfer hub.
+                      </p>
                     </td>
                   </tr>
                 ) : (
-                  filteredRows.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="cursor-pointer border-b hover:bg-muted/30"
-                      onClick={() => {
-                        setOpenBillId(r.id);
-                        router.replace(`/dashboard/clearing-agent/customer-bill?id=${r.id}`);
-                        setViewMode("form");
-                      }}
-                    >
-                      <td className="px-3 py-2 font-mono font-semibold text-cyan-700 dark:text-cyan-300">{r.bill_no || "-"}</td>
-                      <td className="px-3 py-2">{r.customer_name || "-"}</td>
-                      <td className="px-3 py-2">{r.order_no || "-"}</td>
-                      <td className="px-3 py-2 text-right tabular-nums">{Number(r.grand_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} {r.currency_code}</td>
-                      <td className="px-3 py-2 text-right tabular-nums">{Number(r.balance_due || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                      <td className="px-3 py-2">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${STATUS_STYLES[r.status] || STATUS_STYLES.draft}`}>
-                          {r.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
+                  filteredRows.map((r) => {
+                    const targetId = r.order_id || r.id;
+                    return (
+                      <tr
+                        key={r.id}
+                        className="hover:bg-blue-50/50 dark:hover:bg-slate-800/40 transition group cursor-pointer"
+                        onClick={() => {
+                          setActiveOrderId(targetId);
+                          router.push(`/dashboard/clearing-agent/customer-bill?id=${targetId}`);
+                        }}
+                      >
+                        {/* Bill No */}
+                        <td className="py-3 px-3.5">
+                          <div className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                            {r.bill_no || "CB-PENDING"}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            {r.bill_date ? new Date(r.bill_date).toLocaleDateString() : "-"}
+                          </div>
+                        </td>
+
+                        {/* Order No */}
+                        <td className="py-3 px-3.5">
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                            {r.order_no || "CL-ORD-PENDING"}
+                          </span>
+                        </td>
+
+                        {/* Customer */}
+                        <td className="py-3 px-3.5">
+                          <div className="font-bold text-slate-900 dark:text-white">
+                            {r.customer_name || "Unspecified Customer"}
+                          </div>
+                          <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                            {r.customer_account_number || "A/C: Linked Ledger"}
+                          </div>
+                        </td>
+
+                        {/* Route & Mode */}
+                        <td className="py-3 px-3.5">
+                          <div className="font-semibold text-slate-700 dark:text-slate-300">
+                            {r.transport_mode ? r.transport_mode.replace("by_", "By ").toUpperCase() : "ROAD CORRIDOR"}
+                          </div>
+                          <div className="text-[10px] uppercase font-bold text-slate-400 mt-0.5">
+                            {r.movement_type || "TRANSIT"}
+                          </div>
+                        </td>
+
+                        {/* Grand Total */}
+                        <td className="py-3 px-3.5 text-right font-mono font-black text-slate-900 dark:text-white">
+                          {Number(r.grand_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} {r.currency_code || "USD"}
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-3 px-3.5 text-center">
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
+                              STATUS_STYLES[r.status] || STATUS_STYLES.draft
+                            }`}
+                          >
+                            {r.status}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3 px-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                          <div className="inline-flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveOrderId(targetId);
+                                router.push(`/dashboard/clearing-agent/customer-bill?id=${targetId}`);
+                              }}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
+                              title="Open Customer Order & Transfer Hub"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              <span>View / Transfer Hub ➔</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenBillManagementId(r.id);
+                                router.push(`/dashboard/clearing-agent/customer-bill?id=${r.id}&mode=edit`);
+                              }}
+                              className="inline-flex items-center p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                              title="Edit Bill Charges"
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
