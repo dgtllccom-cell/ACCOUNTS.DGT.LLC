@@ -20,9 +20,11 @@ const links = await crumb.locator("a").count();
 check("breadcrumb has clickable ancestors (Home + group)", links >= 1, "links=" + links);
 await p.screenshot({ path: `${OUT}/${LANG}-breadcrumb.png`, clip: { x: 270, y: 50, width: 1100, height: 120 } }).catch(() => {});
 const backBtns = p.locator("main button[aria-label='Back to previous page'], main button:has-text('Back')");
-check("exactly one Back button in the page chrome", (await p.locator("[data-erp-page-actions] button[aria-label]").filter({ hasText: /./ }).count()) >= 1 && (await p.locator("main button[aria-label*='Back' i], main button:text-is('Back')").count()) === 1, "count=" + (await p.locator("main button[aria-label*='Back' i], main button:text-is('Back')").count()));
+// language-agnostic: the Back control is the arrow-left button inside the page-actions bar (labels are translated)
+const backCount = await p.locator("[data-erp-page-actions] button:has(svg.lucide-arrow-left), main button:has(svg.lucide-arrow-left)").count();
+check("exactly one Back button in the page chrome", backCount === 1, "count=" + backCount);
 // ⋮ menu: one, opens, lists the report kinds, no generic Print/PDF duplicates
-const dots = p.locator("[data-erp-page-actions] button[aria-label*='actions' i]");
+const dots = p.locator("[data-erp-page-actions] button:has(svg[class*='lucide-ellipsis-vertical']), [data-erp-page-actions] button:has(svg[class*='lucide-more-vertical'])");
 check("exactly one ⋮ Actions button", (await dots.count()) === 1 && (await p.locator("[data-testid='sbr-more']").count()) === 0);
 await dots.first().click(); await p.waitForTimeout(400);
 const menuText = await p.locator("[data-testid='erp-page-menu']").innerText();
@@ -30,7 +32,7 @@ check("⋮ menu lists the page's own report actions", /PDF/i.test(menuText) && /
 check("⋮ menu does not repeat the generic Print / PDF Download (page has its own)", !/Print\b/i.test(menuText.split("\n").filter((l) => /^print$/i.test(l.trim())).join()) , "");
 await p.screenshot({ path: `${OUT}/${LANG}-menu.png` });
 await p.keyboard.press("Escape");
-await p.locator("main button[aria-label*='Back' i], main button:text-is('Back')").first().click(); await p.waitForTimeout(2500);
+await p.locator("main button:has(svg.lucide-arrow-left)").first().click(); await p.waitForTimeout(2500);
 check("direct deep link: Back → parent page", path(p) !== "/dashboard/purchase/stock/report" && path(p).startsWith("/dashboard"), path(p));
 // B) in-app navigation → Back returns to the page we came from
 await p.goto(BASE + "/dashboard", { waitUntil: "domcontentloaded", timeout: 120000 }); await settle(p);
