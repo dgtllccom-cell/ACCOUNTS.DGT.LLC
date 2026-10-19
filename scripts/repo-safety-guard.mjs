@@ -138,6 +138,21 @@ for (const rel of listFiles()) {
   }
 }
 
+// 3. credential / backup DOCUMENTS tracked in git (2026-10-19: ACCOUNTS_DGT_LLC_USERS_CREDENTIALS.pdf sat in public/downloads and was
+//    downloadable by anyone from the live site). A file whose NAME says credentials/password/secret, or a database backup, must never be tracked.
+{
+  let tracked = [];
+  try { tracked = execFileSync("git", ["ls-files"], { encoding: "utf8", cwd: ROOT }).split("\n").map((x) => x.trim()).filter(Boolean); } catch { tracked = []; }
+  const SENSITIVE_NAME = /(^|\/)[^/]*(credential|passw(or)?d|secret)[^/]*\.(pdf|xlsx?|docx?|csv|zip|txt|bak|dump|sql|json|png|jpe?g)$/i;
+  const BACKUP_DATA = /^(backups|env_backups)\/.*\.(json|sql|dump|gz|zip|env)$/i;
+  for (const rel of tracked) {
+    if (rel.startsWith("supabase/migrations/")) continue; // migration files may legitimately mention a password column
+    if (SENSITIVE_NAME.test(rel) || BACKUP_DATA.test(rel)) {
+      hits.push({ rel, line: 0, id: "sensitive-file", msg: "A credentials/password/secret document or a database backup is tracked in git (under public/ it is served to the internet). Remove it; keep it in the company vault.", snippet: "tracked file" });
+    }
+  }
+}
+
 if (hits.length) {
   console.log("✗ repo-safety-guard FAILED:");
   for (const h of hits) console.log(`  [${h.id}] ${h.rel}:${h.line}  «${h.snippet}»\n      ${h.msg}`);

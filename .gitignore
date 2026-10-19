@@ -98,3 +98,8 @@ docs/store/screenshots/
 # mobile design concepts: generated outputs (boards, PNGs, Figma plugin bundle) are rebuilt by build.mjs / export-figma-scene.mjs
 docs/design/mobile-concepts/dist/
 docs/design/mobile-concepts/figma-plugin/
+
+# never track credential documents or database backups (see scripts/repo-safety-guard.mjs)
+/public/downloads/*CREDENTIAL*
+*CREDENTIALS*.pdf
+/backups/*.json
