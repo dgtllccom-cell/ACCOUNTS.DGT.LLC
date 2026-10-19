@@ -2,7 +2,9 @@
 
 Sources: session list, `git` branches/commits of this repository, the live server (read-only), my own work. "Not inspected" means I did not open that session's transcript — its owner must fill that row in. Nothing here is archived.
 
-## 0. CRITICAL — Production was moved without the gate (found 2026-10-18)
+## 0. RESOLVED 2026-10-19 — Production was moved without the gate (found 2026-10-18)
+**Status update (verified read-only 2026-10-19):** the Main Master released a reconciled commit through the gate — live `HEAD` = `906dd2c` (gate log: DEPLOYED 2026-10-19 09:40:38Z after fresh backups), `core.hooksPath` = `/usr/local/lib/dgt/githooks` (lock intact), stock-balance report files present, site HTTP 200, `origin/production` = `906dd2c`. The text below is the original finding, kept as the record. Remaining: per-agent SSH keys (owner decision).
+
 | Fact | Evidence |
 |---|---|
 | Live checkout `/var/www/dgt-nextjs` is on `05283dc` (a `main` commit, 21:10 Dubai); the app was rebuilt from it at 21:14 and PM2 restarted at 21:15 | `git rev-parse`, `.next/BUILD_ID` mtime, PM2 uptime |
