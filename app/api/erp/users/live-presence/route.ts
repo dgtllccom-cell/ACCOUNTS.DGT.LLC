@@ -111,8 +111,8 @@ export async function GET(req: NextRequest) {
           p.id as user_id,
           p.user_code,
           p.full_name,
-          p.email,
-          p.last_login_at,
+          au.email as email,
+          au.last_sign_in_at as last_login_at,
           ura.role,
           ura.is_active,
           ura.country_id,
@@ -129,6 +129,7 @@ export async function GET(req: NextRequest) {
           latest_audit.entity_table as last_table,
           latest_audit.created_at as last_action_time
         from public.profiles p
+        left join auth.users au on au.id = p.id
         join public.user_role_assignments ura 
           on ura.user_id = p.id 
          and ura.is_active = true 
