@@ -94,3 +94,7 @@ android/capacitor-cordova-android-plugins/build/
 
 # generated store screenshots (kept in the owner folder, not in git)
 docs/store/screenshots/
+
+# mobile design concepts: generated outputs (boards, PNGs, Figma plugin bundle) are rebuilt by build.mjs / export-figma-scene.mjs
+docs/design/mobile-concepts/dist/
+docs/design/mobile-concepts/figma-plugin/

@@ -1,0 +1,80 @@
+// Shared building blocks for the three DGT.llc B / BS mobile design concepts.
+// Everything renders as plain DOM (no pseudo-elements, no images) so scripts/export-figma-scene.mjs can turn it into native editable Figma layers.
+
+// ── icons (24×24, stroke = currentColor) ─────────────────────────────────────
+const P = {
+  home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/>',
+  users: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.2a3 3 0 0 1 0 5.6"/><path d="M18 14.8c1.8.7 3 2.3 3 5.2"/>',
+  ship: '<path d="M3 17c1.5 1.2 3 1.2 4.5 0s3-1.2 4.5 0 3 1.2 4.5 0 3-1.2 4.5 0"/><path d="M5 14 4 9h16l-1 5"/><path d="M12 9V4h4"/><path d="M8 9V6"/>',
+  box: '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5"/><path d="M12 12v9"/>',
+  file: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/>',
+  chart: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M21 20H3"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/>',
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5h4"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+  mail: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m4 8 8 6 8-6"/>',
+  phone: '<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 17.5h2"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  chev: '<path d="m9 6 6 6-6 6"/>',
+  truck: '<path d="M3 6h11v10H3z"/><path d="M14 9h4l3 3v4h-7"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+  pin: '<path d="M12 21s6.5-5.6 6.5-11A6.5 6.5 0 0 0 5.5 10c0 5.4 6.5 11 6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+  shield: '<path d="M12 3 5 6v5.5c0 4.4 3 7.8 7 9.5 4-1.7 7-5.1 7-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
+  scan: '<path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M4 12h16"/>',
+  chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+  ledger: '<path d="M5 4h13v16H5z"/><path d="M9 4v16"/><path d="M12 8.5h3.5M12 12h3.5"/>',
+  cart: '<path d="M3 4h2.5l2 11h10.5l2-8H7"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
+  task: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  print: '<path d="M7 9V3.5h10V9"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/>',
+  down: '<path d="M12 4v12"/><path d="m7 11.5 5 5 5-5"/><path d="M5 20h14"/>',
+  filter: '<path d="M4 6h16l-6 7v6l-4-2v-4z"/>',
+  anchor: '<circle cx="12" cy="5" r="2"/><path d="M12 7v13"/><path d="M5 13c0 4 3 7 7 7s7-3 7-7"/><path d="M8.5 11H5M19 11h-3.5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+};
+export const icon = (n, s = 20, sw = 1.8) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
+
+// ── strings: English + Urdu (RTL). Business data (codes, container numbers) is never translated. ───────
+export const S = {
+  en: {
+    appB: "DGT.llc B", appBS: "DGT.llc BS", appBsub: "Business", appBSsub: "Shipping & Clearing",
+    signin: "Sign in", signinTo: "Sign in to your ERP", email: "ERP e-mail or user code", passwordLabel: "Password", forgot: "Forgot password?",
+    approved: "This phone is approved", lang: "Language",
+    actTitle: "Activate this device", actSub: "This phone must be approved by the administrator before it can open the ERP.",
+    fullName: "Full name", mobile: "Mobile number", note: "Note for the administrator (optional)", reviewCode: "Store review code (optional)", reviewHint: "Only for store reviewers. Leave empty if you are a normal user.",
+    request: "Request activation", stRequest: "Request", stApproval: "Approval", stCode: "Code", stSignin: "Sign in",
+    hello: "Welcome back", role: "Super Admin", today: "Today", live: "Live records",
+    countries: "Countries", branches: "Branches", customers: "Customers", suppliers: "Suppliers", purchases: "Purchases", users: "Users",
+    assigned: "Assigned shipments", pending: "Pending clearance", transit: "In transit", containers: "Containers", openDocs: "Open documents", tasks: "Pending tasks",
+    approvals: "Approvals waiting", due: "Tasks due today", messages: "New messages", activity: "Weekly activity", quick: "Quick access",
+    tShip: "Shipping", mDash: "Dashboard", mSmart: "Smart Operations", mCust: "Customers", mTrade: "Purchase & Sales", mShip: "Shipping & Clearing", mLedger: "Ledgers", mStock: "Stock", mReports: "Reports", mTasks: "Tasks", mChat: "DGT Connect", mSettings: "Settings", more: "More", menu: "Menu",
+    order: "Customer order", orderNo: "CL-ORD-00000084", inClearing: "In clearing", route: "Route", goods: "Goods", cargo: "Mixed cargo · 3 containers", customer: "Customer", sampleCust: "Sample Customer Co.",
+    booked: "Booked", loaded: "Loaded", border: "Border", customs: "Customs", delivered: "Delivered", addDoc: "Add document", transfer: "Transfer", print: "Print",
+    track: "Shipment tracking", trackPh: "Search B/L, container, vessel", eta: "ETA", vessel: "Vessel", bl: "B/L", status: "Status", onSea: "On sea", arrived: "Arrived", cleared: "Cleared",
+    report: "Shipment report", export: "Export", filters: "Filters", total: "Total", all: "All", thisMonth: "This month", sampleNote: "Sample data for design review",
+    uzb: "Uzbekistan", ind: "India", jebel: "Jebel Ali", nhava: "Nhava Sheva", sea: "At sea", portCall: "Port call", gateOut: "Gate out",
+  },
+  ur: {
+    appB: "DGT.llc B", appBS: "DGT.llc BS", appBsub: "کاروبار", appBSsub: "شپنگ اور کلیئرنگ",
+    signin: "سائن اِن", signinTo: "اپنے ERP میں سائن اِن کریں", email: "ERP ای میل یا یوزر کوڈ", passwordLabel: "پاس ورڈ", forgot: "پاس ورڈ بھول گئے؟",
+    approved: "یہ فون منظور شدہ ہے", lang: "زبان",
+    actTitle: "اس ڈیوائس کو فعال کریں", actSub: "ERP کھولنے سے پہلے اس فون کی ایڈمنسٹریٹر سے منظوری ضروری ہے۔",
+    fullName: "پورا نام", mobile: "موبائل نمبر", note: "ایڈمنسٹریٹر کے لیے نوٹ (اختیاری)", reviewCode: "اسٹور ریویو کوڈ (اختیاری)", reviewHint: "صرف اسٹور ریویورز کے لیے۔ عام صارف ہوں تو خالی چھوڑ دیں۔",
+    request: "فعالیت کی درخواست بھیجیں", stRequest: "درخواست", stApproval: "منظوری", stCode: "کوڈ", stSignin: "سائن اِن",
+    hello: "خوش آمدید", role: "سپر ایڈمن", today: "آج", live: "لائیو ریکارڈز",
+    countries: "ممالک", branches: "برانچیں", customers: "کسٹمرز", suppliers: "سپلائرز", purchases: "خریداری", users: "صارفین",
+    assigned: "تفویض شدہ شپمنٹس", pending: "زیر التوا کلیئرنس", transit: "راستے میں", containers: "کنٹینرز", openDocs: "کھلی دستاویزات", tasks: "زیر التوا کام",
+    approvals: "منظوری کے منتظر", due: "آج کے کام", messages: "نئے پیغامات", activity: "ہفتہ وار سرگرمی", quick: "فوری رسائی",
+    tShip: "شپنگ", mDash: "ڈیش بورڈ", mSmart: "اسمارٹ آپریشنز", mCust: "کسٹمرز", mTrade: "خرید و فروخت", mShip: "شپنگ اور کلیئرنگ", mLedger: "لیجرز", mStock: "اسٹاک", mReports: "رپورٹس", mTasks: "کام", mChat: "DGT کنیکٹ", mSettings: "ترتیبات", more: "مزید", menu: "مینو",
+    order: "کسٹمر آرڈر", orderNo: "CL-ORD-00000084", inClearing: "کلیئرنگ میں", route: "راستہ", goods: "مال", cargo: "مخلوط کارگو · 3 کنٹینرز", customer: "کسٹمر", sampleCust: "نمونہ کسٹمر کمپنی",
+    booked: "بک", loaded: "لوڈ", border: "بارڈر", customs: "کسٹم", delivered: "ڈیلیور", addDoc: "دستاویز شامل کریں", transfer: "منتقلی", print: "پرنٹ",
+    track: "شپمنٹ ٹریکنگ", trackPh: "B/L، کنٹینر، جہاز تلاش کریں", eta: "متوقع آمد", vessel: "جہاز", bl: "B/L", status: "حالت", onSea: "سمندر میں", arrived: "پہنچ گیا", cleared: "کلیئر",
+    report: "شپمنٹ رپورٹ", export: "ایکسپورٹ", filters: "فلٹرز", total: "کل", all: "سب", thisMonth: "اس ماہ", sampleNote: "ڈیزائن جائزے کے لیے نمونہ ڈیٹا",
+    uzb: "ازبکستان", ind: "بھارت", jebel: "جبل علی", nhava: "نہاوا شیوا", sea: "سمندر میں", portCall: "بندرگاہ پر", gateOut: "گیٹ آؤٹ",
+  },
+};
+
+export const statusBar = (fg) => `<div class="sb" style="color:${fg}"><span class="sbt">9:41</span><span class="sbi"><span class="sbb"></span><span class="sbb s2"></span><span class="sbb s3"></span><span class="sbbat"></span></span></div>`;
