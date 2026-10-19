@@ -73,6 +73,7 @@ const SALES_TYPES: TypeDef[] = [
   { key: "credit", labelEn: "Credit Payment / Receipt", route: "/dashboard/journal/sales-order-payment/charges", pick: (p) => p.kind === "credit", tone: "blue", valueTone: "blue" },
   { key: "remaining", labelEn: "Remaining Payment / Recovery", route: "/dashboard/journal/sales-order-payment/remaining", pick: (p) => p.kind === "remaining", tone: "red", valueTone: "red" },
   { key: "history", labelEn: "Sales Payment History", route: "/dashboard/journal/sales-order-payment/history", pick: () => true, tone: "green", valueTone: "green" },
+  { key: "final", labelEn: "Final Payment", route: "/dashboard/journal/sales-order-payment/final", pick: (p, c) => c.settled.has(p.orderId), tone: "green", valueTone: "green" },
 ];
 
 export function PaymentModuleHeader({

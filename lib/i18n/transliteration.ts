@@ -457,6 +457,10 @@ const LATIN_NAME_CORRECTIONS: Array<[RegExp, string]> = ([
   ["dbyy", "dubai"], ["abwzby", "abu dhabi"], ["shrjh", "sharjah"], ["tstyng", "testing"],
   ["tyst", "test"], ["kmpny", "company"], ["kmpany", "company"], ["trady", "trading"],
   ["trdyng", "trading"], ["gljstan", "gulistan"], ["glstan", "gulistan"], ["fwd", "food"],
+  ["shyl", "shell"], ["swybr", "super"], ["shahjhan", "shahjahan"], ["asghr", "asghar"],
+  ["mft", "muft"], ["astar", "ustad"], ["astad", "ustad"], ["bsm allh", "bismillah"], ["bsm", "bismillah"],
+  ["abdalslam", "abdulsalam"], ["nsrallh", "nasrullah"], ["nsraillh", "nasrullah"],
+  ["wly", "wali"], ["shahnwaz", "shahnawaz"], ["jhan", "jahan"],
 ] as Array<[string, string]>).map(([k, v]) => [new RegExp(`\\b${k}\\b`, "gi"), v]);
 
 /** Localize or transliterate any business/entity term dynamically into the target language. */

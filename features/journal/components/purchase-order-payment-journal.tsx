@@ -42,6 +42,7 @@ import {
   Paperclip,
   Plus,
   Printer,
+  Receipt,
   SlidersHorizontal,
   RefreshCw,
   Save,
@@ -92,6 +93,8 @@ import { PaymentJournalV2Header } from "./payment-journal-v2-header";
 import { PaymentJournalV2FilterModal } from "./payment-journal-v2-filter-modal";
 import { PurchasePaymentJournalRemainingView } from "./purchase-payment-journal-remaining-view";
 import { StandardizedDailyPaymentForm } from "@/components/daily-payments/standardized-daily-payment-form";
+import { calculatePaymentDueTracking, resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
+import { Badge } from "@/components/ui/badge";
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
@@ -4533,10 +4536,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       ? goods.reduce((sum: number, g: any) => sum + Number(g.netKgs || g.netWeight || g.netWt || 0), 0)
       : Number(form.netWeight || 0);
 
-    const rawDueDate = form.advancePaymentDate || form.paymentDueDate || form.loadingDate;
-    const dueDateStr = rawDueDate
-      ? new Date(rawDueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
-      : "—";
+    const dueTracking = calculatePaymentDueTracking({
+      module: "purchase",
+      record: row,
+      referenceDate: new Date(),
+      preferredKind: ["advance", "endorsement", "credit", "remaining", "final"].includes(activeMode) ? (activeMode as any) : undefined
+    });
+    const dueDateStr = dueTracking.agreedDueDate
+      ? new Date(`${dueTracking.agreedDueDate}T00:00:00Z`).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
+      : tGlobal(currentLanguage, "paytrack.due_date_not_set", "Due Date Not Set");
 
     const pCode = form.purchaseAccountNo || form.pCode || form.purchaseCode || "";
     const sCode = form.salesAccountNo || form.sCode || form.salesCode || "";
@@ -4708,12 +4716,48 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
             <span className="inline-block px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-[10px] uppercase">{calcs.purchCurr}</span>
           </td>
 
-          {/* 15. ADVANCE PAYMENT DUE DATE (DATE 1) */}
-          <td className="py-3.5 px-3 whitespace-nowrap text-rose-600 dark:text-rose-400 font-bold font-mono border-r border-slate-200/80 dark:border-slate-800 text-[12px]">
-            <span className="inline-flex items-center gap-1">
-              {dueDateStr}
-              <Calendar className="h-3.5 w-3.5 inline text-rose-500" />
-            </span>
+          {/* 15. PAYMENT DUE TRACKING & DUE DATE */}
+          <td className="py-2.5 px-3 whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800 text-[11.5px]">
+            <div className="flex flex-col gap-0.5 items-start">
+              <span className={cn("font-bold font-mono inline-flex items-center gap-1", dueTracking.agreedDueDate ? "text-slate-800 dark:text-slate-200" : "text-slate-400 italic text-[11px]")}>
+                <Calendar className="h-3 w-3 text-slate-400" />
+                {dueDateStr}
+              </span>
+              <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                {dueTracking.isDueToday ? (
+                  <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                    {tGlobal(currentLanguage, "paytrack.due_today", "Due Today")}
+                  </span>
+                ) : dueTracking.isOverdue ? (
+                  <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
+                    {dueTracking.overdueDays}d {tGlobal(currentLanguage, "paytrack.overdue", "Overdue")}
+                  </span>
+                ) : dueTracking.isUpcoming ? (
+                  <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                    {dueTracking.daysRemaining}d {tGlobal(currentLanguage, "paytrack.days_remaining", "Remaining")}
+                  </span>
+                ) : null}
+
+                <span className={cn(
+                  "px-1.5 py-0.5 rounded text-[9.5px] font-bold",
+                  dueTracking.statusBadgeVariant === "emerald" && "bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300",
+                  dueTracking.statusBadgeVariant === "amber" && "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300",
+                  dueTracking.statusBadgeVariant === "rose" && "bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300",
+                  dueTracking.statusBadgeVariant === "blue" && "bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300",
+                  dueTracking.statusBadgeVariant === "slate" && "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                )}>
+                  {tGlobal(
+                    currentLanguage,
+                    dueTracking.paymentStatus === "Upcoming" ? "paytrack.status_upcoming" :
+                    dueTracking.paymentStatus === "Due Today" ? "paytrack.status_due_today" :
+                    dueTracking.paymentStatus === "Overdue" ? "paytrack.status_overdue" :
+                    dueTracking.paymentStatus === "Partially Paid" ? "paytrack.status_partially_paid" :
+                    dueTracking.paymentStatus === "Fully Paid" ? "paytrack.status_fully_paid" : "paytrack.due_date_not_set",
+                    dueTracking.paymentStatus
+                  )}
+                </span>
+              </div>
+            </div>
           </td>
 
           {/* 16. EXCHANGE RATE */}
@@ -6366,6 +6410,92 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                           </FieldBlock>
                         </div>
                       )}
+
+                      {/* MANDATORY PAYMENT DUE TRACKING & SETTLEMENT DETAILS PANEL */}
+                      {selected && (() => {
+                        const sTrack = calculatePaymentDueTracking({
+                          module: "purchase",
+                          record: selected,
+                          referenceDate: new Date(),
+                          preferredKind: ["advance", "endorsement", "credit", "remaining", "final"].includes(activeMode) ? (activeMode as any) : undefined
+                        });
+                        return (
+                          <div className="p-3.5 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/20 space-y-2.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-extrabold text-blue-900 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
+                                <Receipt className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                <span>{tGlobal(currentLanguage, "paytrack.payment_status", "Payment Due Tracking & Settlement Details")}</span>
+                              </span>
+                              <Badge variant="outline" className="font-mono text-[10.5px]">
+                                {selected.purchase_order_no ? `P#${selected.purchase_order_no}` : "PO"}
+                              </Badge>
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                              <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <span className="text-[10px] text-slate-500 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.supplier_or_customer", "Supplier")}</span>
+                                <span className="font-bold truncate block">{sTrack.supplierOrCustomerName}</span>
+                              </div>
+                              <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <span className="text-[10px] text-slate-500 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.total_payment_amount", "Total Payment Amount")}</span>
+                                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{sTrack.currency} {sTrack.totalPaymentAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </div>
+                              <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <span className="text-[10px] text-slate-500 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.amount_paid_received", "Amount Paid")}</span>
+                                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{sTrack.currency} {sTrack.amountPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </div>
+                              <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <span className="text-[10px] text-rose-600 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.outstanding_balance", "Outstanding Balance")}</span>
+                                <span className="font-mono font-black text-rose-600 dark:text-rose-400">{sTrack.currency} {sTrack.outstandingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-blue-500" />
+                                <span className="text-slate-500 font-bold">{tGlobal(currentLanguage, "paytrack.agreed_payment_due_date", "Agreed Payment Due Date")}:</span>
+                                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                                  {sTrack.agreedDueDate || tGlobal(currentLanguage, "paytrack.due_date_not_set", "Due Date Not Set")}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {sTrack.isDueToday ? (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                                    {tGlobal(currentLanguage, "paytrack.due_today", "Due Today")}
+                                  </span>
+                                ) : sTrack.isOverdue ? (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
+                                    {sTrack.overdueDays}d {tGlobal(currentLanguage, "paytrack.overdue", "Overdue")}
+                                  </span>
+                                ) : sTrack.isUpcoming ? (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                                    {sTrack.daysRemaining}d {tGlobal(currentLanguage, "paytrack.days_remaining", "Days Remaining")}
+                                  </span>
+                                ) : null}
+
+                                <span className={cn(
+                                  "px-2 py-0.5 rounded text-[10px] font-bold",
+                                  sTrack.statusBadgeVariant === "emerald" && "bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300",
+                                  sTrack.statusBadgeVariant === "amber" && "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300",
+                                  sTrack.statusBadgeVariant === "rose" && "bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300",
+                                  sTrack.statusBadgeVariant === "blue" && "bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300",
+                                  sTrack.statusBadgeVariant === "slate" && "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                                )}>
+                                  {tGlobal(
+                                    currentLanguage,
+                                    sTrack.paymentStatus === "Upcoming" ? "paytrack.status_upcoming" :
+                                    sTrack.paymentStatus === "Due Today" ? "paytrack.status_due_today" :
+                                    sTrack.paymentStatus === "Overdue" ? "paytrack.status_overdue" :
+                                    sTrack.paymentStatus === "Partially Paid" ? "paytrack.status_partially_paid" :
+                                    sTrack.paymentStatus === "Fully Paid" ? "paytrack.status_fully_paid" : "paytrack.due_date_not_set",
+                                    sTrack.paymentStatus
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* 3. FINANCIAL AMOUNTS, CURRENCY & LIVE CONVERSION HELPER */}
                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
