@@ -185,6 +185,10 @@ function companyRegNumber(company: CompanyDetails | null | undefined): string | 
 
 type TruckRow = {
   id: string;
+  driver_docs_expiry_date?: string | null;
+  country_id?: string | null;
+  country_branch_id?: string | null;
+  city_branch_id?: string | null;
   truck_number: string;
   truck_name: string | null;
   model: string | null;
@@ -255,6 +259,12 @@ export type SessionDocument = {
   url: string;
   file?: File;
 };
+
+type ViewMode = "list" | "form";
+const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
+type OptionalColumnKey = "truckName" | "model" | "company" | "transporter" | "mobile" | "branch";
+/** TRK_TEXT values are strings or (n,total) formatters; JSX needs a string. */
+const trkStr = (v: string | ((n: number, total?: number) => string) | undefined): string => (typeof v === "string" ? v : "");
 
 const EMPTY_FORM = {
   hasOwner: "yes",
@@ -1904,7 +1914,7 @@ export function TruckRecreationWizard({
               <Building2 className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              {TRK_TEXT.sec1Title[activeLang]}
+              {trkStr(TRK_TEXT.sec1Title[activeLang])}
             </span>
           </div>
           <button
@@ -1959,7 +1969,7 @@ export function TruckRecreationWizard({
               <TruckIcon className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              {TRK_TEXT.sec2Title[activeLang]}
+              {trkStr(TRK_TEXT.sec2Title[activeLang])}
             </span>
           </div>
           <button
@@ -2009,7 +2019,7 @@ export function TruckRecreationWizard({
               <UserCheck className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              {TRK_TEXT.sec3Title[activeLang]}
+              {trkStr(TRK_TEXT.sec3Title[activeLang])}
             </span>
           </div>
           <button
@@ -2050,7 +2060,7 @@ export function TruckRecreationWizard({
               )}
             </div>
             <span className="mt-1.5 inline-block rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-black tracking-wide text-white uppercase shadow-2xs">
-              {TRK_TEXT.permanentBadge[activeLang]}
+              {trkStr(TRK_TEXT.permanentBadge[activeLang])}
             </span>
           </div>
 
