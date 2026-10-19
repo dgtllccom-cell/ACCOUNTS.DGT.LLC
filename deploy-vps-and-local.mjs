@@ -91,9 +91,11 @@ console.log("\n[4/4] Executing remote VPS deployment & build on 72.60.209.121...
 
 const remoteScript = `
 set -e
+export DGT_DEPLOY_GATE=1
 
 echo "[VPS 1/7] Navigating to /var/www/dgt-nextjs..."
 cd /var/www/dgt-nextjs
+rm -f .deploy.lock 2>/dev/null || true
 
 if [ ! -d ".git" ]; then
   git init
