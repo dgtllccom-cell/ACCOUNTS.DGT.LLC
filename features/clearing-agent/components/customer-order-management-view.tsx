@@ -259,6 +259,13 @@ type RouteLeg = {
   wagonNumber: string;
   railContainerNumber: string;
   handlerType?: "our_branch" | "external_partner" | "";
+  branchCountryId?: string;
+  branchCountryName?: string;
+  branchId?: string;
+  branchName?: string;
+  assignedUserId?: string;
+  assignedUserName?: string;
+  exitBorderPortName?: string;
   partnerType?: string;
   partnerName?: string;
   partnerAccountId?: string;
@@ -858,6 +865,21 @@ const EMPTY_FORM = {
   step1c_assignee_id: "",
   step1c_assignee_name: "",
   step1c_handover_notes: "",
+  exit_point_type: "border" as "border" | "port",
+  entry_point_type: "border" as "border" | "port",
+  routing_mode: "direct" as "direct" | "transit",
+  intermediate_stages: [] as Array<{
+    id: string;
+    countryId: string;
+    countryName: string;
+    branchId: string;
+    branchName: string;
+    operation: "import" | "transit" | "re_export";
+    entryPoint: string;
+    exitPoint: string;
+    entryPointType?: "border" | "port";
+    exitPointType?: "border" | "port";
+  }>,
   legs: [] as RouteLeg[],
   loadingAllocations: [] as LoadingAllocation[]
 };
@@ -1173,6 +1195,46 @@ function PartyRolePanel({
       ) : null}
     </div>
   );
+}
+
+export function formatOrderCompleteRoute(order: any): string {
+  if (!order) return "—";
+  if (Array.isArray(order.intermediate_stages) && order.intermediate_stages.length > 0) {
+    const origin = order.loading_country_name || order.loading_place || "Origin";
+    const originLoc = order.loading_place && order.loading_place !== origin ? ` (${order.loading_place})` : "";
+    const dest = order.receiving_country_name || order.receiving_place || order.destination_city || "Destination";
+    const destLoc = order.receiving_place && order.receiving_place !== dest ? ` (${order.receiving_place})` : "";
+    const stages = order.intermediate_stages.map((s: any) => {
+      const c = s.countryName || s.countryId || "Stage";
+      const branchOrOp = [s.branchName, s.operation ? String(s.operation).toUpperCase() : ""].filter(Boolean).join(" • ");
+      return branchOrOp ? `${c} [${branchOrOp}]` : c;
+    });
+    return `${origin}${originLoc} ➔ ${stages.join(" ➔ ")} ➔ ${dest}${destLoc}`;
+  }
+
+  if (Array.isArray(order.legs) && order.legs.length > 1) {
+    const parts: string[] = [];
+    order.legs.forEach((leg: any, idx: number) => {
+      if (idx === 0) {
+        const origin = leg.fromCountryName || leg.fromLocationText || order.loading_country_name || "Origin";
+        const originLoc = leg.fromLocationText && leg.fromLocationText !== origin ? ` (${leg.fromLocationText})` : "";
+        parts.push(`${origin}${originLoc}`);
+      }
+      const dest = leg.toCountryName || leg.toLocationText || "Stop";
+      const branchOrOp = [leg.branchName, leg.customsTreatment ? String(leg.customsTreatment).toUpperCase() : ""].filter(Boolean).join(" • ");
+      const extra = branchOrOp ? ` [${branchOrOp}]` : "";
+      parts.push(`${dest}${extra}`);
+    });
+    return parts.join(" ➔ ");
+  }
+
+  if (order.route_name && String(order.route_name).trim()) {
+    return order.route_name;
+  }
+
+  const origin = order.loading_country_name || order.loading_location_name || order.loading_place || "Origin";
+  const dest = order.receiving_country_name || order.receiving_location_name || order.receiving_place || "Destination";
+  return `${origin} ➔ ${dest}`;
 }
 
 export function CustomerOrderManagementView() {
@@ -2572,7 +2634,7 @@ export function CustomerOrderManagementView() {
       o.transport_mode ? transportModeLabel(lang, o.transport_mode) : "-",
       o.shipment_type || "-",
       o.loading_source_name || o.loading_source || "-",
-      o.route_name || "-",
+      formatOrderCompleteRoute(o) || "-",
       o.customer_name || "-",
       o.importer_name || "-",
       o.exporter_name || "-",
@@ -2592,6 +2654,9 @@ export function CustomerOrderManagementView() {
   const handlePrintOrder = (order: ClearingCustomerOrderRow) => {
     const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
     const align = isRtl ? "right" : "left";
+    const fullRouteStr = formatOrderCompleteRoute(order);
+    const hasIntermediate = (Array.isArray((order as any).intermediate_stages) && (order as any).intermediate_stages.length > 0) || (Array.isArray(order.legs) && order.legs.length > 1);
+
     const html = `
       <html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}"><head><title>${order.order_no || tt("title", "Customer Order")}</title>
       <style>
@@ -2600,12 +2665,55 @@ export function CustomerOrderManagementView() {
         table{width:100%;border-collapse:collapse;margin-top:16px;}
         th,td{border:1px solid #cbd5e1;padding:8px;text-align:${align};font-size:12px;}
         th{background:#f1f5f9;}
+        .corridor-box{margin-top:16px;padding:12px;border:1px solid #93c5fd;border-radius:8px;background:#f0f9ff;}
       </style></head><body>
       <h1>${order.order_no || tt("title", "Customer Order")}</h1>
       <p><strong>${tt("party", "Party")}:</strong> ${order.customer_name || "-"}</p>
       <p><strong>${tt("print_goods", "Goods")}:</strong> ${[order.goods_name, order.goods_chs_code ? `CHS ${order.goods_chs_code}` : "", order.goods_variation_label, order.goods_origin_country_name].filter(Boolean).join(" • ") || "-"}</p>
-      <p><strong>${tt("print_route", "Route")}:</strong> ${order.route_name || "-"}</p>
+      <p><strong>${tt("print_route", "Route")}:</strong> ${fullRouteStr || "-"}</p>
       <p><strong>${tt("print_movement", "Movement")}:</strong> ${order.movement_type ? movementTypeLabel(lang, order.movement_type) : "-"}</p>
+      ${hasIntermediate ? `
+        <div class="corridor-box">
+          <h3 style="margin:0 0 8px 0;font-size:13px;color:#1e40af;">Route & Multi-Stage Transit Details</h3>
+          <p style="margin:0 0 8px 0;font-size:12px;"><strong>Progression:</strong> ${fullRouteStr}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Country</th>
+                <th>Branch / Location</th>
+                <th>Operation</th>
+                <th>Entry / Exit Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Origin</td>
+                <td>${order.loading_country_name || "-"}</td>
+                <td>${order.loading_location_name || order.loading_place || "-"}</td>
+                <td>Export Clearance</td>
+                <td>Exit: ${order.exit_border_port_name || "-"}</td>
+              </tr>
+              ${((order as any).intermediate_stages || []).map((stg: any, i: number) => `
+                <tr>
+                  <td>Intermediate ${i + 1}</td>
+                  <td>${stg.countryName || "-"}</td>
+                  <td>${stg.branchName || "-"}</td>
+                  <td style="text-transform:uppercase;">${stg.operation || "Transit"}</td>
+                  <td>${[stg.entryPoint ? `Entry: ${stg.entryPoint}` : "", stg.exitPoint ? `Exit: ${stg.exitPoint}` : ""].filter(Boolean).join(" • ") || "-"}</td>
+                </tr>
+              `).join("")}
+              <tr>
+                <td>Destination</td>
+                <td>${order.receiving_country_name || "-"}</td>
+                <td>${order.receiving_location_name || order.receiving_place || order.destination_city || "-"}</td>
+                <td>Import Clearance</td>
+                <td>Entry: ${order.entry_border_port_name || "-"}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ` : ""}
       <table>
         <thead><tr><th>${tt("print_role", "Role")}</th><th>${tt("party", "Party")}</th><th>${tt("print_company", "Company")}</th><th>${tt("print_address", "Address")}</th></tr></thead>
         <tbody>
@@ -4152,10 +4260,7 @@ export function CustomerOrderManagementView() {
                         ? `${order.goods_quantity} ${order.goods_unit || "MT"}`
                         : "20 MT";
 
-                      const routeDisplay = order.route_name || [
-                        order.loading_location_name || order.loading_country_name || "Karachi",
-                        order.receiving_location_name || order.receiving_country_name || "Chaman"
-                      ].filter(Boolean).join(" ➔ ");
+                      const routeDisplay = formatOrderCompleteRoute(order);
 
                       const s = (order.status || "pending_approval").toLowerCase();
                       const isCompleted = s === "completed" || order.current_stage === "goods_completed";
@@ -6189,6 +6294,244 @@ function Step1BookingCustomer({
   const [viewCustomerModalOpen, setViewCustomerModalOpen] = useState(false);
   const [showAdvancedCorridor, setShowAdvancedCorridor] = useState(false);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState("");
+
+  // Loading Country & Receiving Country Overlay Panels
+  const [isOriginOverlayOpen, setIsOriginOverlayOpen] = useState(false);
+  const [isDestinationOverlayOpen, setIsDestinationOverlayOpen] = useState(false);
+  const [routingMode, setRoutingMode] = useState<"direct" | "transit">(() => {
+    if ((formData as any).routing_mode) return (formData as any).routing_mode;
+    if (formData.movement_type === "transit" || formData.movement_type === "up_transit" || (formData.legs && formData.legs.length > 1)) {
+      return "transit";
+    }
+    return "direct";
+  });
+
+  // Intermediate Stages for Transit Corridors (no 5-country limit)
+  const [intermediateStages, setIntermediateStages] = useState<Array<{
+    id: string;
+    countryId: string;
+    countryName: string;
+    branchId: string;
+    branchName: string;
+    operation: "import" | "transit" | "re_export";
+    entryPoint: string;
+    exitPoint: string;
+    entryPointType?: "border" | "port";
+    exitPointType?: "border" | "port";
+  }>>(() => {
+    if (Array.isArray((formData as any).intermediate_stages) && (formData as any).intermediate_stages.length > 0) {
+      return (formData as any).intermediate_stages;
+    }
+    if (formData.legs && formData.legs.length > 1) {
+      return formData.legs.slice(0, -1).map((leg: any, idx: number) => ({
+        id: leg.id || `stage-${idx}-${Date.now()}`,
+        countryId: leg.toCountryId || leg.to_country_id || "",
+        countryName: leg.toCountryName || leg.to_country_name || "",
+        branchId: leg.branchId || leg.branch_id || "",
+        branchName: leg.branchName || leg.branch_name || "",
+        operation: (leg.customsTreatment || leg.customs_treatment || "transit") as any,
+        entryPoint: leg.customsPointText || leg.toLocationText || "",
+        exitPoint: leg.exitBorderPortName || "",
+        entryPointType: "border",
+        exitPointType: "border"
+      }));
+    }
+    return [];
+  });
+
+  const getBranchesForCountry = (countryId: string) => {
+    if (!countryId) return countryBranches || [];
+    const matchingCountryBranches = (countryBranches || []).filter(
+      (b) => b.countryId === countryId || b.id === countryId
+    );
+    const cbIds = new Set(matchingCountryBranches.map((b) => b.id));
+    const matchingCityBranches = (cityBranches || []).filter((cb) =>
+      cbIds.has(cb.countryBranchId)
+    );
+    if (matchingCityBranches.length > 0) return matchingCityBranches;
+    if (matchingCountryBranches.length > 0) return matchingCountryBranches;
+    return countryBranches || [];
+  };
+
+  const getPortsForCountry = (countryId: string) => {
+    if (!countryId) return ports;
+    const filtered = ports.filter((p) => p.country_id === countryId);
+    return filtered.length > 0 ? filtered : ports;
+  };
+
+  const rebuildRouteFromCurrentState = (
+    mode: "direct" | "transit",
+    stages: typeof intermediateStages,
+    override?: {
+      loadingCountryId?: string;
+      loadingCountryName?: string;
+      receivingCountryId?: string;
+      receivingCountryName?: string;
+      loadingLoc?: string;
+      receivingLoc?: string;
+      transportMode?: string;
+    }
+  ) => {
+    const lCId = override?.loadingCountryId ?? formData.loading_country_id;
+    const lCName = override?.loadingCountryName ?? (countries.find((c) => c.id === lCId)?.name || formData.loading_country_name || "Origin");
+    const rCId = override?.receivingCountryId ?? formData.receiving_country_id;
+    const rCName = override?.receivingCountryName ?? (countries.find((c) => c.id === rCId)?.name || formData.receiving_country_name || "Destination");
+
+    const originPlace = override?.loadingLoc ?? (formData.loading_place || formData.loading_source_name || "");
+    const destPlace = override?.receivingLoc ?? (formData.receiving_place || formData.destination_city || "");
+    const tMode = override?.transportMode ?? (formData.transport_mode || "by_road");
+    const modeLabel = tMode === "by_road" ? "Road" : tMode === "by_sea" ? "Sea" : tMode === "by_air" ? "Air" : "Rail";
+
+    const originStr = originPlace ? `${lCName} (${originPlace})` : lCName;
+    const destStr = destPlace ? `${rCName} (${destPlace})` : rCName;
+
+    if (mode === "direct" || stages.length === 0) {
+      const directRouteName = `${originStr} ➔ ${destStr} (Direct ${modeLabel})`;
+      const singleLeg: RouteLeg = {
+        legNo: 1,
+        fromCountryId: lCId || "",
+        fromCountryName: lCName,
+        toCountryId: rCId || "",
+        toCountryName: rCName,
+        fromLocationText: originPlace || lCName,
+        toLocationText: destPlace || rCName,
+        transportMode: tMode as any,
+        handlerType: "our_branch",
+        branchCountryId: lCId || "",
+        branchCountryName: lCName,
+        branchId: formData.loading_customs_branch_id || "",
+        branchName: formData.loading_customs_branch_name || "",
+        assignedUserId: formData.loading_customs_user_id || "",
+        assignedUserName: formData.loading_customs_user_name || ""
+      } as any;
+
+      setFormData((c) => ({
+        ...c,
+        route_name: directRouteName,
+        legs: [singleLeg],
+        intermediate_stages: stages,
+        routing_mode: mode
+      }));
+      return;
+    }
+
+    // Transit Route with Intermediate Stages
+    const stagePills = stages.map((s, idx) => {
+      const stageCountry = s.countryName || `Stage ${idx + 1}`;
+      const details = [s.branchName, s.operation ? String(s.operation).toUpperCase() : ""].filter(Boolean).join(" • ");
+      return details ? `${stageCountry} [${details}]` : stageCountry;
+    });
+
+    const fullRouteName = `${originStr} ➔ ${stagePills.join(" ➔ ")} ➔ ${destStr}`;
+
+    // Construct sequential multi-legs
+    const newLegs: RouteLeg[] = [];
+    // Leg 1: Origin -> First Stage
+    newLegs.push({
+      legNo: 1,
+      fromCountryId: lCId || "",
+      fromCountryName: lCName,
+      toCountryId: stages[0].countryId || "",
+      toCountryName: stages[0].countryName || "",
+      fromLocationText: originPlace || lCName,
+      toLocationText: stages[0].entryPoint || stages[0].branchName || stages[0].countryName || "Entry Point",
+      transportMode: tMode as any,
+      handlerType: "our_branch",
+      branchId: stages[0].branchId || "",
+      branchName: stages[0].branchName || "",
+      customsTreatment: stages[0].operation || "transit"
+    } as any);
+
+    // Intermediate Legs: Stage i -> Stage i+1
+    for (let i = 0; i < stages.length - 1; i++) {
+      const fromS = stages[i];
+      const toS = stages[i + 1];
+      newLegs.push({
+        legNo: i + 2,
+        fromCountryId: fromS.countryId || "",
+        fromCountryName: fromS.countryName || "",
+        toCountryId: toS.countryId || "",
+        toCountryName: toS.countryName || "",
+        fromLocationText: fromS.exitPoint || fromS.branchName || fromS.countryName || "Exit Point",
+        toLocationText: toS.entryPoint || toS.branchName || toS.countryName || "Entry Point",
+        transportMode: tMode as any,
+        handlerType: "our_branch",
+        branchId: toS.branchId || "",
+        branchName: toS.branchName || "",
+        customsTreatment: toS.operation || "transit"
+      } as any);
+    }
+
+    // Final Leg: Last Stage -> Destination
+    const lastStage = stages[stages.length - 1];
+    newLegs.push({
+      legNo: stages.length + 1,
+      fromCountryId: lastStage.countryId || "",
+      fromCountryName: lastStage.countryName || "",
+      toCountryId: rCId || "",
+      toCountryName: rCName,
+      fromLocationText: lastStage.exitPoint || lastStage.branchName || lastStage.countryName || "Exit Point",
+      toLocationText: destPlace || rCName,
+      transportMode: tMode as any,
+      handlerType: "our_branch",
+      branchId: formData.receiving_customs_branch_id || "",
+      branchName: formData.receiving_customs_branch_name || "",
+      customsTreatment: "import"
+    } as any);
+
+    setFormData((c) => ({
+      ...c,
+      route_name: fullRouteName,
+      legs: newLegs,
+      intermediate_stages: stages,
+      routing_mode: mode
+    }));
+  };
+
+  const handleAddIntermediateCountry = () => {
+    const newStage = {
+      id: `stage-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      countryId: "",
+      countryName: "",
+      branchId: "",
+      branchName: "",
+      operation: "transit" as const,
+      entryPoint: "",
+      exitPoint: "",
+      entryPointType: "border" as const,
+      exitPointType: "border" as const
+    };
+    const updated = [...intermediateStages, newStage];
+    setIntermediateStages(updated);
+    setRoutingMode("transit");
+    rebuildRouteFromCurrentState("transit", updated);
+  };
+
+  const handleRemoveIntermediateCountry = (idx: number) => {
+    const updated = intermediateStages.filter((_, i) => i !== idx);
+    setIntermediateStages(updated);
+    rebuildRouteFromCurrentState(routingMode, updated);
+  };
+
+  const handleUpdateIntermediateStage = (idx: number, patch: Partial<(typeof intermediateStages)[0]>) => {
+    const updated = [...intermediateStages];
+    updated[idx] = { ...updated[idx], ...patch };
+    if (patch.countryId && patch.countryId !== intermediateStages[idx].countryId) {
+      const cObj = countries.find((c) => c.id === patch.countryId);
+      updated[idx].countryName = cObj?.name || "";
+      const availBranches = getBranchesForCountry(patch.countryId);
+      if (!availBranches.some((b) => b.id === updated[idx].branchId)) {
+        updated[idx].branchId = availBranches[0]?.id || "";
+        updated[idx].branchName = availBranches[0]?.name || "";
+      }
+    }
+    if (patch.branchId) {
+      const bObj = (countryBranches || []).find((b) => b.id === patch.branchId) || (cityBranches || []).find((b) => b.id === patch.branchId);
+      updated[idx].branchName = bObj?.name || "";
+    }
+    setIntermediateStages(updated);
+    rebuildRouteFromCurrentState(routingMode, updated);
+  };
   const [internalDraftGoodsItem, setInternalDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
   const [internalEditingGoodsIdx, setInternalEditingGoodsIdx] = useState<number | null>(null);
 
@@ -6494,55 +6837,274 @@ function Step1BookingCustomer({
       {/* ========================================================================= */}
       {step1SubStep === "1A" && (
         <div className="space-y-4 animate-in fade-in duration-150">
-          {/* TOP ROW: Customer Selection with View Button & Operation Type */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {/* Customer Selector */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+          {/* 1. CUSTOMER ID & ACCOUNT SELECTION */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5 text-blue-600" />
-                <span>{tt("select_customer_label", "Select Customer")} *</span>
+                <Users className="h-4 w-4 text-blue-600" />
+                <span>{tt("select_customer_label", "Customer ID / Account")} *</span>
               </label>
-
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <SearchSelect
-                    label=""
-                    value={formData.customer_id}
-                    options={customerOptions}
-                    placeholder={tt("select_customer_account_ph", "Select Customer (e.g. Sample Customer)...")}
-                    onValueChange={handleCustomerSelection}
-                    disabled={loading}
-                    searchPlaceholder="Search customer by name, code or mobile..."
-                    emptyLabel="No matching customers found"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setViewCustomerModalOpen(true)}
-                  disabled={!formData.customer_id}
-                  className="inline-flex items-center gap-1 h-9 px-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40 disabled:pointer-events-none dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300 text-xs font-bold transition shadow-2xs shrink-0"
-                  title={tt("view_customer_details", "View Customer Details")}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  <span>{tt("view_btn", "View")}</span>
-                </button>
-              </div>
-
-              {selectedCustomer || selectedAccount ? (
-                <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {selectedCustomer?.customer_name || selectedAccount?.name}
-                  </span>
-                  <span>•</span>
-                  <span className="font-mono">{selectedAccount?.code || selectedCustomer?.person_code || "CUS-001"}</span>
-                  <span>•</span>
-                  <span className="font-bold text-emerald-600">
-                    {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
-                  </span>
-                </div>
-              ) : null}
+              {selectedAccount && (
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-bold">
+                  {selectedAccount.code || "ACC"}
+                </span>
+              )}
             </div>
 
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <SearchSelect
+                  label=""
+                  value={formData.customer_id}
+                  options={customerOptions}
+                  placeholder={tt("select_customer_account_ph", "Select Customer (e.g. Sample Customer)...")}
+                  onValueChange={handleCustomerSelection}
+                  disabled={loading}
+                  searchPlaceholder="Search customer by name, code or mobile..."
+                  emptyLabel="No matching customers found"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewCustomerModalOpen(true)}
+                disabled={!formData.customer_id}
+                className="inline-flex items-center gap-1 h-9 px-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40 disabled:pointer-events-none dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300 text-xs font-bold transition shadow-2xs shrink-0"
+                title={tt("view_customer_details", "View Customer Details")}
+              >
+                <Eye className="h-3.5 w-3.5" />
+                <span>{tt("view_btn", "View")}</span>
+              </button>
+            </div>
+
+            {selectedCustomer || selectedAccount ? (
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  {selectedCustomer?.customer_name || selectedAccount?.name}
+                </span>
+                <span>•</span>
+                <span className="font-mono">{selectedAccount?.code || selectedCustomer?.person_code || "CUS-001"}</span>
+                <span>•</span>
+                <span className="font-bold text-emerald-600">
+                  {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
+                </span>
+              </div>
+            ) : null}
+          </div>
+
+          {/* 2. TRANSPORT MODE: ROAD / SEA / AIR / TRAIN */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Truck className="h-4 w-4 text-blue-600" />
+                <span>{tt("transport_mode_star", "Transport Mode")} *</span>
+              </label>
+              <span className="text-[11px] text-slate-400">Road / Sea / Air / Train</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {[
+                { id: "by_road", label: tt("opt_road_full", "By Road"), icon: Truck, desc: "Overland trucking & border" },
+                { id: "by_sea", label: tt("opt_sea_full", "By Sea"), icon: Ship, desc: "Ocean freight & container" },
+                { id: "by_air", label: tt("opt_air_full", "By Air"), icon: Plane, desc: "Air cargo & express" },
+                { id: "by_rail", label: tt("opt_rail_full", "By Rail"), icon: Train, desc: "Rail freight & wagons" }
+              ].map((m) => {
+                const Icon = m.icon;
+                const isSel = (formData.transport_mode || "by_road") === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      setFormData((c) => ({ ...c, transport_mode: m.id as any }));
+                      rebuildRouteFromCurrentState(routingMode, intermediateStages, { transportMode: m.id });
+                    }}
+                    className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      isSel
+                        ? "border-blue-600 bg-blue-50/70 text-blue-900 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-200 shadow-xs ring-1 ring-blue-500/20"
+                        : "border-slate-200 hover:border-slate-300 bg-white dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1 w-full justify-between">
+                      <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${isSel ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"}`}>
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      {isSel && <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
+                    </div>
+                    <span className="font-bold text-xs">{m.label}</span>
+                    <span className="text-[10px] text-slate-400 leading-tight mt-0.5">{m.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. LOADING COUNTRY AND RECEIVING COUNTRY, SIDE BY SIDE */}
+          <div className="space-y-2">
+            {/* Routing Strategy Toggle (Direct vs Transit) */}
+            <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Route className="h-3.5 w-3.5 text-blue-600" />
+                <span>{tt("route_routing_strategy", "Routing Strategy:")}</span>
+              </span>
+              <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRoutingMode("direct");
+                    rebuildRouteFromCurrentState("direct", intermediateStages);
+                  }}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    routingMode === "direct"
+                      ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-2xs"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                  }`}
+                >
+                  ● {tt("routing_direct", "Direct Routing")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRoutingMode("transit");
+                    rebuildRouteFromCurrentState("transit", intermediateStages);
+                  }}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    routingMode === "transit"
+                      ? "bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-400 shadow-2xs"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                  }`}
+                >
+                  ● {tt("routing_transit", "Transit Routing (Multi-Country)")}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {/* Left Card: Loading Country (Origin) */}
+              <div
+                onClick={() => setIsOriginOverlayOpen(true)}
+                className="group cursor-pointer rounded-2xl border border-sky-200 dark:border-sky-900/60 bg-gradient-to-br from-white to-sky-50/40 dark:from-slate-900 dark:to-sky-950/20 p-3.5 sm:p-4 shadow-xs hover:border-blue-400 dark:hover:border-blue-600 transition"
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-sky-100 dark:border-sky-900/40">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
+                      <Upload className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <h4 className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>{tt("loading_country_title", "Loading Country (Origin)")}</span>
+                        <span className="text-red-500">*</span>
+                      </h4>
+                      <p className="text-[10.5px] text-slate-400">{tt("click_to_configure_origin", "Click to configure branch, date & exit point")}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsOriginOverlayOpen(true);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-[11px] font-bold border border-blue-200 dark:border-blue-900 transition"
+                  >
+                    {tt("edit_origin_details", "Edit Details ➔")}
+                  </button>
+                </div>
+
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-500">{tt("country_lbl", "Country")}:</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-blue-600" />
+                      <span>{formData.loading_country_name || countries.find((c) => c.id === formData.loading_country_id)?.name || tt("not_selected", "Select Country...")}</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-500">{tt("loading_branch_loc", "Loading Branch / Loc")}:</span>
+                    <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate max-w-[200px]">
+                      {formData.loading_place || formData.loading_source_name || "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-500">{tt("loading_date", "Loading Date")}:</span>
+                    <span className="text-xs font-mono font-medium text-slate-800 dark:text-slate-200">
+                      {formData.loading_date || formData.planned_dispatch_date || "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-500">{tt("exit_point_lbl", "Exit Point")}:</span>
+                    <span className="text-xs font-semibold text-sky-700 dark:text-sky-300">
+                      {formData.exit_point_type === "port"
+                        ? `Port: ${formData.loading_port_name || formData.exit_border_port_name || "—"}`
+                        : `Border: ${formData.exit_border_port_name || "—"}`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Card: Receiving Country (Destination) */}
+              <div
+                onClick={() => setIsDestinationOverlayOpen(true)}
+                className="group cursor-pointer rounded-2xl border border-purple-200 dark:border-purple-900/60 bg-gradient-to-br from-white to-purple-50/40 dark:from-slate-900 dark:to-purple-950/20 p-3.5 sm:p-4 shadow-xs hover:border-purple-400 dark:hover:border-purple-600 transition"
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-purple-100 dark:border-purple-900/40">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 text-white shadow-xs">
+                      <Download className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <h4 className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>{tt("receiving_country_title", "Receiving Country (Destination)")}</span>
+                        <span className="text-red-500">*</span>
+                      </h4>
+                      <p className="text-[10.5px] text-slate-400">{tt("click_to_configure_dest", "Click to configure branch, date & entry point")}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsDestinationOverlayOpen(true);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 text-[11px] font-bold border border-purple-200 dark:border-purple-900 transition"
+                  >
+                    {tt("edit_dest_details", "Edit Details ➔")}
+                  </button>
+                </div>
+
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-500">{tt("destination_country_lbl", "Destination Country")}:</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-purple-600" />
+                      <span>{formData.receiving_country_name || countries.find((c) => c.id === formData.receiving_country_id)?.name || tt("not_selected", "Select Country...")}</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-500">{tt("receiving_branch_loc", "Receiving Branch / Loc")}:</span>
+                    <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate max-w-[200px]">
+                      {formData.receiving_place || formData.destination_city || "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-500">{tt("receiving_date", "Receiving Date")}:</span>
+                    <span className="text-xs font-mono font-medium text-slate-800 dark:text-slate-200">
+                      {formData.receiving_date || formData.planned_arrival_date || "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-500">{tt("entry_point_lbl", "Entry Point")}:</span>
+                    <span className="text-xs font-semibold text-purple-700 dark:text-purple-300">
+                      {formData.entry_point_type === "port"
+                        ? `Port: ${formData.destination_port_name || formData.entry_border_port_name || "—"}`
+                        : `Border: ${formData.entry_border_port_name || "—"}`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. OPERATION TYPE AND MOVEMENT SCENARIO */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {/* Operation Type */}
             <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
@@ -6570,33 +7132,6 @@ function Step1BookingCustomer({
               </select>
               <p className="text-[10.5px] text-slate-400">
                 {tt("op_type_sub", "Primary customs regime and declaration flow")}
-              </p>
-            </div>
-          </div>
-
-          {/* ROW 2: Transport Mode & Movement Scenario */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {/* Transport Mode */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Truck className="h-3.5 w-3.5 text-blue-600" />
-                <span>{tt("transport_mode_star", "Transport Mode")} *</span>
-              </label>
-              <select
-                value={formData.transport_mode || "by_road"}
-                onChange={(e) => {
-                  const m = e.target.value as any;
-                  setFormData((c) => ({ ...c, transport_mode: m }));
-                }}
-                className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
-              >
-                <option value="by_road">{tt("opt_road_full", "By Road")}</option>
-                <option value="by_sea">{tt("opt_sea_full", "By Sea")}</option>
-                <option value="by_air">{tt("opt_air_full", "By Air")}</option>
-                <option value="by_rail">{tt("opt_rail_full", "By Rail")}</option>
-              </select>
-              <p className="text-[10.5px] text-slate-400">
-                {formData.transport_mode === "by_road" ? "Overland trucking & border crossings" : "Multimodal logistics corridor"}
               </p>
             </div>
 
@@ -6627,529 +7162,571 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* CARD 1: Loading & Exit (Origin) - Blue Accent Card */}
+          {/* 5. EXISTING ROUTE VIA CORRIDOR BUILDER & INTERMEDIATE COUNTRIES */}
+          <div className="rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-white dark:bg-slate-900 p-4 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
+                  <Route className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                    {tt("route_via_corridor_builder_title", "Route Via Corridor Builder")}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {routingMode === "direct"
+                      ? tt("direct_corridor_desc", "Direct Point-to-Point routing active. Switch to Transit mode to add intermediate countries.")
+                      : tt("multi_stage_transit_desc", "Multi-country transit corridor in travel order. Add intermediate countries without limit.")}
+                  </p>
+                </div>
+              </div>
+
+              {/* + Add Country button */}
+              <button
+                type="button"
+                onClick={handleAddIntermediateCountry}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition cursor-pointer self-start sm:self-auto"
+              >
+                <Plus className="h-4 w-4" />
+                <span>{tt("add_country_btn", "+ Add Country")}</span>
+              </button>
+            </div>
+
+            {/* Real-time Visual Route Chain Preview */}
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-850 space-y-1.5">
+              <div className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                {tt("live_route_progression", "Complete Route Progression:")}
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 font-bold border border-sky-200 dark:border-sky-800">
+                  <MapPin className="h-3 w-3 text-sky-600" />
+                  <span>{formData.loading_country_name || countries.find((c) => c.id === formData.loading_country_id)?.name || "Origin"}</span>
+                  {formData.loading_place && <span className="font-normal text-[11px]">({formData.loading_place})</span>}
+                </span>
+
+                {intermediateStages.map((stg, i) => (
+                  <React.Fragment key={stg.id || i}>
+                    <span className="text-slate-400 font-bold">➔</span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 font-bold border border-amber-200 dark:border-amber-800">
+                      <span>{stg.countryName || `Stage ${i + 1}`}</span>
+                      {stg.branchName && (
+                        <span className="font-normal text-[10.5px] text-amber-700 dark:text-amber-400">
+                          • {stg.branchName}
+                        </span>
+                      )}
+                      <span className="px-1 py-0.2 rounded text-[9.5px] bg-amber-200/70 text-amber-800 dark:bg-amber-900 dark:text-amber-200 uppercase font-mono">
+                        {stg.operation || "transit"}
+                      </span>
+                    </span>
+                  </React.Fragment>
+                ))}
+
+                <span className="text-slate-400 font-bold">➔</span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800">
+                  <MapPin className="h-3 w-3 text-purple-600" />
+                  <span>{formData.receiving_country_name || countries.find((c) => c.id === formData.receiving_country_id)?.name || "Destination"}</span>
+                  {formData.receiving_place && <span className="font-normal text-[11px]">({formData.receiving_place})</span>}
+                </span>
+              </div>
+            </div>
+
+            {/* Intermediate Stages List (No 5-country limit!) */}
+            {intermediateStages.length > 0 && (
+              <div className="space-y-3 pt-1">
+                <div className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                  <span>{tt("intermediate_countries_title", "Intermediate Countries (In Travel Order):")}</span>
+                  <span className="text-[11px] text-slate-400 font-normal">
+                    {intermediateStages.length} {intermediateStages.length === 1 ? "intermediate country" : "intermediate countries"} configured
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {intermediateStages.map((stage, sIdx) => {
+                    const stageBranches = getBranchesForCountry(stage.countryId);
+                    return (
+                      <div
+                        key={stage.id}
+                        className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/20 dark:bg-amber-950/10 p-3 sm:p-3.5 space-y-3 relative group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-500 text-white font-black text-xs">
+                              {sIdx + 1}
+                            </span>
+                            <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                              {tt("stage_lbl", "Stage")} {sIdx + 1}: {stage.countryName || tt("select_intermediate_country", "Select Country")}
+                            </span>
+                          </div>
+
+                          {/* − Remove button */}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveIntermediateCountry(sIdx)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900 transition"
+                            title={tt("remove_stage", "Remove this intermediate country")}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>{tt("remove_btn", "− Remove")}</span>
+                          </button>
+                        </div>
+
+                        {/* Grid of Fields for this Stage */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                          {/* Country */}
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              {tt("country_lbl", "Country")} *
+                            </label>
+                            <select
+                              value={stage.countryId}
+                              onChange={(e) => handleUpdateIntermediateStage(sIdx, { countryId: e.target.value })}
+                              className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                            >
+                              <option value="">{tt("select_country", "Select country...")}</option>
+                              {countries.map((c) => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Handling Branch */}
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              {tt("handling_branch_lbl", "Handling Branch")} *
+                            </label>
+                            <select
+                              value={stage.branchId}
+                              onChange={(e) => handleUpdateIntermediateStage(sIdx, { branchId: e.target.value })}
+                              className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                            >
+                              <option value="">{tt("choose_branch", "Choose branch...")}</option>
+                              {stageBranches.map((b) => (
+                                <option key={b.id} value={b.id}>{b.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Operation */}
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              {tt("operation_lbl", "Operation")} *
+                            </label>
+                            <select
+                              value={stage.operation}
+                              onChange={(e) => handleUpdateIntermediateStage(sIdx, { operation: e.target.value as any })}
+                              className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                            >
+                              <option value="transit">{tt("opt_transit", "Transit")}</option>
+                              <option value="import">{tt("opt_import", "Import")}</option>
+                              <option value="re_export">{tt("opt_re_export", "Re-export")}</option>
+                            </select>
+                          </div>
+
+                          {/* Entry / Exit Details */}
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              {tt("entry_exit_details", "Entry / Exit Details")}
+                            </label>
+                            <input
+                              type="text"
+                              value={stage.entryPoint}
+                              onChange={(e) => handleUpdateIntermediateStage(sIdx, { entryPoint: e.target.value })}
+                              placeholder="e.g. Entry: Bandar Abbas / Exit: Taftan"
+                              className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Embed existing Route Via Corridor Builder for fine-grained stops, partner accounts & insurance */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAdvancedCorridor((prev) => !prev)}
+                className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-300 transition"
+              >
+                <span className="flex items-center gap-2">
+                  <Route className="h-4 w-4 text-blue-600" />
+                  <span>{tt("detailed_leg_partner_config", "Advanced Route Corridor Builder (Leg Handlers, Partners & Insurance)")}</span>
+                </span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showAdvancedCorridor ? "rotate-180" : ""}`} />
+              </button>
+
+              {showAdvancedCorridor && (
+                <div className="mt-3 space-y-3.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+                  <CustomerOrderRouteBuilder
+                    routeName={formData.route_name}
+                    transportMode={formData.transport_mode}
+                    loadingCountryId={formData.loading_country_id}
+                    loadingCountryName={
+                      countries.find((c) => c.id === formData.loading_country_id)?.name ||
+                      formData.loading_country_name ||
+                      ""
+                    }
+                    receivingCountryId={formData.receiving_country_id}
+                    receivingCountryName={
+                      countries.find((c) => c.id === formData.receiving_country_id)?.name ||
+                      formData.receiving_country_name ||
+                      ""
+                    }
+                    loadingCityName={
+                      loadingCities.find((c) => c.id === formData.loading_city_id)?.name ||
+                      formData.loading_city_name ||
+                      formData.loading_source_name ||
+                      ""
+                    }
+                    destinationCityName={
+                      receivingCities.find((c) => c.id === formData.receiving_city_id)?.name ||
+                      formData.destination_city ||
+                      ""
+                    }
+                    legs={formData.legs || []}
+                    onChange={(routeName, legs) => {
+                      setFormData((c) => ({ ...c, route_name: routeName, legs }));
+                    }}
+                    countries={countries.map((c) => ({ id: c.id, name: c.name }))}
+                    countryBranches={countryBranches}
+                    cityBranches={cityBranches}
+                    assignableUsers={assignableUsers}
+                    ports={ports.map((p) => ({ id: p.id, port_name: p.port_name, country_id: p.country_id || undefined }))}
+                    ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
+                    lang={lang}
+                  />
+
+                  {activeOrder?.id && (formData.legs || []).length > 0 && (
+                    <CustomerOrderInsurancePanel
+                      orderId={activeOrder.id}
+                      legs={(formData.legs || []).map((l: any) => ({ legNo: l.legNo }))}
+                      ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
+                      lang={lang}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 6. REMAINING CUSTOMS AND DESTINATION DETAILS */}
+          {/* Loading Customs (Origin) */}
           <div className="rounded-2xl border border-sky-200 dark:border-sky-900/60 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
-            {/* Header */}
             <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-sky-50/70 dark:bg-sky-950/30 border-b border-sky-100 dark:border-sky-900/50">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
-                <Upload className="h-5 w-5" />
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
+                <Building2 className="h-4 w-4" />
               </span>
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                  {tt("loading_exit_origin_title", "Loading & Exit (Origin)")}
+                <h3 className="font-bold text-slate-900 dark:text-white text-xs">
+                  {tt("loading_customs_required_q", "Loading Customs Required?")}
                 </h3>
-                <p className="text-xs text-slate-500">
-                  {tt("loading_exit_origin_sub", "Cargo loading location and exit details from origin country")}
+                <p className="text-[11px] text-slate-500">
+                  {tt("loading_customs_sub", `For export clearance at origin (${formData.loading_country_name || "Origin"})`)}
                 </p>
               </div>
             </div>
 
-            <div className="p-3.5 sm:p-4 space-y-4">
-              {/* 4 Location & Date Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("country_of_origin", "Country of Origin")} *
-                  </label>
-                  <select
-                    value={formData.loading_country_id || ""}
-                    onChange={(e) => {
-                      const cId = e.target.value;
-                      const cName = countries.find((c) => c.id === cId)?.name || "";
-                      setFormData((c) => ({ ...c, loading_country_id: cId, loading_country_name: cName }));
-                      handleLoadingCountryChange(cId);
-                    }}
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+            <div className="p-3.5 sm:p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {tt("require_loading_customs", "Require origin export customs clearance:")}
+                </span>
+                <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setFormData((c) => ({ ...c, loading_customs_required: true }))}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      formData.loading_customs_required !== false
+                        ? "bg-blue-600 text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                    }`}
                   >
-                    <option value="">{tt("select_country", "Select country...")}</option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                    {!countries.some((c) => c.name?.toLowerCase() === "afghanistan") && (
-                      <option value="afghanistan">{tt("country_afghanistan", "Afghanistan")}</option>
-                    )}
-                    {!countries.some((c) => c.name?.toLowerCase() === "pakistan") && (
-                      <option value="pakistan">{tt("country_pakistan", "Pakistan")}</option>
-                    )}
-                    {!countries.some((c) => c.name?.toLowerCase() === "united arab emirates") && (
-                      <option value="uae">{tt("country_uae", "United Arab Emirates")}</option>
-                    )}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("loading_place_port", "Loading Place / Port")} *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.loading_place || formData.loading_source_name || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, loading_place: e.target.value, loading_source_name: e.target.value }))}
-                    placeholder="e.g. Kandahar Warehouse"
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                    ● {tt("yes", "Yes")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData((c) => ({ ...c, loading_customs_required: false }))}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      formData.loading_customs_required === false
+                        ? "bg-slate-700 text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                    }`}
                   >
-                  </input>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("loading_date", "Loading Date")} *
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.loading_date || formData.planned_dispatch_date || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, loading_date: e.target.value, planned_dispatch_date: e.target.value }))}
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("exit_border_port", "Exit Border / Port")} *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.exit_border_port_name || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, exit_border_port_name: e.target.value }))}
-                    placeholder="e.g. Spin Boldak"
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
-                  />
+                    ○ {tt("no", "No")}
+                  </button>
                 </div>
               </div>
 
-              {/* Nested Green Box: Loading Customs Required? */}
-              <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-start gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-white shrink-0 mt-0.5">
-                      <Building2 className="h-3.5 w-3.5" />
-                    </span>
+              {formData.loading_customs_required !== false && (
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <span className="font-bold text-emerald-900 dark:text-emerald-200 text-xs">
-                        {tt("loading_customs_required_q", "Loading Customs Required?")}
-                      </span>
-                      <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">
-                        {tt("loading_customs_sub", `For export clearance at origin (${formData.loading_country_name || "Afghanistan"})`)}
-                      </p>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {tt("customs_name", "Customs Name")} *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.loading_customs_name || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, loading_customs_name: e.target.value }))}
+                        placeholder="e.g. Spin Boldak Customs"
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {tt("customs_port_border", "Customs Port / Border")} *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.loading_customs_port_border || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, loading_customs_port_border: e.target.value }))}
+                        placeholder="e.g. Spin Boldak"
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      />
                     </div>
                   </div>
 
-                  {/* Yes / No Toggle */}
-                  <div className="inline-flex rounded-xl bg-white dark:bg-slate-900 p-0.5 border border-emerald-200 dark:border-emerald-800 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setFormData((c) => ({ ...c, loading_customs_required: true }))}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        formData.loading_customs_required !== false
-                          ? "bg-blue-600 text-white shadow-xs"
-                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                      }`}
-                    >
-                      <span>●</span> {tt("yes", "Yes")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData((c) => ({ ...c, loading_customs_required: false }))}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        formData.loading_customs_required === false
-                          ? "bg-slate-700 text-white shadow-xs"
-                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                      }`}
-                    >
-                      <span>○</span> {tt("no", "No")}
-                    </button>
-                  </div>
-                </div>
-
-                {formData.loading_customs_required !== false && (
-                  <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-800/40 space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          {tt("customs_name", "Customs Name")} *
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.loading_customs_name || ""}
-                          onChange={(e) => setFormData((c) => ({ ...c, loading_customs_name: e.target.value }))}
-                          placeholder="e.g. Spin Boldak Customs"
-                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          {tt("customs_port_border", "Customs Port / Border")} *
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.loading_customs_port_border || ""}
-                          onChange={(e) => setFormData((c) => ({ ...c, loading_customs_port_border: e.target.value }))}
-                          placeholder="e.g. Spin Boldak"
-                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {tt("handled_by", "Handled By")} *
+                      </label>
+                      <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
+                        <button
+                          type="button"
+                          onClick={() => setFormData((c) => ({ ...c, loading_customs_handled_by: "our_branch" }))}
+                          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            (formData.loading_customs_handled_by || "our_branch") === "our_branch"
+                              ? "bg-blue-600 text-white shadow-xs"
+                              : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                          }`}
+                        >
+                          <Building2 className="h-3.5 w-3.5" />
+                          <span>{tt("our_branch", "Our Branch")}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData((c) => ({ ...c, loading_customs_handled_by: "external_agent" }))}
+                          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            formData.loading_customs_handled_by === "external_agent"
+                              ? "bg-purple-600 text-white shadow-xs"
+                              : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                          }`}
+                        >
+                          <Users className="h-3.5 w-3.5" />
+                          <span>{tt("external_agent", "External Agent")}</span>
+                        </button>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {formData.loading_customs_handled_by !== "external_agent" ? (
                       <div>
                         <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          {tt("handled_by", "Handled By")} *
+                          {tt("select_our_branch", "Select Our Branch")} *
                         </label>
-                        <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
-                          <button
-                            type="button"
-                            onClick={() => setFormData((c) => ({ ...c, loading_customs_handled_by: "our_branch" }))}
-                            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                              (formData.loading_customs_handled_by || "our_branch") === "our_branch"
-                                ? "bg-blue-600 text-white shadow-xs"
-                                : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
-                            }`}
-                          >
-                            <Building2 className="h-3.5 w-3.5" />
-                            <span>{tt("our_branch", "Our Branch")}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setFormData((c) => ({ ...c, loading_customs_handled_by: "external_agent" }))}
-                            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                              formData.loading_customs_handled_by === "external_agent"
-                                ? "bg-purple-600 text-white shadow-xs"
-                                : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
-                            }`}
-                          >
-                            <Users className="h-3.5 w-3.5" />
-                            <span>{tt("external_agent", "External Agent")}</span>
-                          </button>
-                        </div>
+                        <select
+                          value={formData.loading_customs_branch_id || ""}
+                          onChange={(e) => {
+                            const bId = e.target.value;
+                            const bName = countryBranches?.find((b) => b.id === bId)?.name || cityBranches?.find((b) => b.id === bId)?.name || "";
+                            setFormData((c) => ({ ...c, loading_customs_branch_id: bId, loading_customs_branch_name: bName }));
+                          }}
+                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        >
+                          <option value="">{tt("choose_branch", "Choose branch")}</option>
+                          {getBranchesForCountry(formData.loading_country_id).map((b) => (
+                            <option key={b.id} value={b.id}>{b.name}</option>
+                          ))}
+                        </select>
                       </div>
-
-                      {formData.loading_customs_handled_by !== "external_agent" ? (
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                            {tt("select_our_branch", "Select Our Branch")} *
-                          </label>
-                          <select
-                            value={formData.loading_customs_branch_id || ""}
-                            onChange={(e) => {
-                              const bId = e.target.value;
-                              const bName = countryBranches?.find((b) => b.id === bId)?.name || cityBranches?.find((b) => b.id === bId)?.name || "";
-                              setFormData((c) => ({ ...c, loading_customs_branch_id: bId, loading_customs_branch_name: bName }));
-                            }}
-                            className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                          >
-                            <option value="">{tt("choose_branch", "Choose branch")}</option>
-                            {(countryBranches || []).map((b) => (
-                              <option key={b.id} value={b.id}>{b.name}</option>
-                            ))}
-                            {(cityBranches || []).map((b) => (
-                              <option key={b.id} value={b.id}>{b.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : (
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                            {tt("external_agent_account", "External Agent Account")} *
-                          </label>
-                          <select
-                            value={formData.loading_customs_user_id || ""}
-                            onChange={(e) => {
-                              const aId = e.target.value;
-                              const aName = accounts.find((a) => a.id === aId)?.name || "";
-                              setFormData((c) => ({ ...c, loading_customs_user_id: aId, loading_customs_user_name: aName }));
-                            }}
-                            className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                          >
-                            <option value="">{tt("select_agent_account", "Select agent account...")}</option>
-                            {accounts.map((a) => (
-                              <option key={a.id} value={a.id}>{a.name} ({a.code || "ACC"})</option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-
-                    {formData.loading_customs_handled_by !== "external_agent" && (
+                    ) : (
                       <div>
                         <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          {tt("responsible_user", "Responsible User")} *
+                          {tt("external_agent_account", "External Agent Account")} *
                         </label>
                         <select
                           value={formData.loading_customs_user_id || ""}
                           onChange={(e) => {
-                            const uId = e.target.value;
-                            const uName = assignableUsers?.find((u) => u.id === uId)?.name || "";
-                            setFormData((c) => ({ ...c, loading_customs_user_id: uId, loading_customs_user_name: uName }));
+                            const aId = e.target.value;
+                            const aName = accounts.find((a) => a.id === aId)?.name || "";
+                            setFormData((c) => ({ ...c, loading_customs_user_id: aId, loading_customs_user_name: aName }));
                           }}
                           className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         >
-                          <option value="">{tt("choose_authorized_user", "Choose authorized user")}</option>
-                          {(assignableUsers || []).map((u) => (
-                            <option key={u.id} value={u.id}>{u.name}</option>
+                          <option value="">{tt("select_agent_account", "Select agent account...")}</option>
+                          {accounts.map((a) => (
+                            <option key={a.id} value={a.id}>{a.name} ({a.code || "ACC"})</option>
                           ))}
                         </select>
-                        <p className="mt-1 text-[10.5px] text-blue-600 dark:text-blue-400 flex items-center gap-1 font-medium">
-                          <Info className="h-3 w-3" />
-                          <span>{tt("assigned_branch_user_msg", "Assigned to selected branch and user.")}</span>
-                        </p>
                       </div>
                     )}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* CARD 2: Receiving & Entry (Destination) - Purple Accent Card */}
+          {/* Receiving Customs (Destination) */}
           <div className="rounded-2xl border border-purple-200 dark:border-purple-900/60 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
-            {/* Header */}
             <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-purple-50/70 dark:bg-purple-950/30 border-b border-purple-100 dark:border-purple-900/50">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-600 text-white shadow-xs">
-                <Download className="h-5 w-5" />
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 text-white shadow-xs">
+                <Building2 className="h-4 w-4" />
               </span>
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                  {tt("receiving_entry_dest_title", "Receiving & Entry (Destination)")}
+                <h3 className="font-bold text-slate-900 dark:text-white text-xs">
+                  {tt("receiving_customs_required_q", "Receiving Customs Required?")}
                 </h3>
-                <p className="text-xs text-slate-500">
-                  {tt("receiving_entry_dest_sub", "Cargo receiving location and entry details at destination country")}
+                <p className="text-[11px] text-slate-500">
+                  {tt("receiving_customs_sub", `For import clearance at destination (${formData.receiving_country_name || "Destination"})`)}
                 </p>
               </div>
             </div>
 
-            <div className="p-3.5 sm:p-4 space-y-4">
-              {/* 4 Location & Date Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("receiving_country", "Receiving Country")} *
-                  </label>
-                  <select
-                    value={formData.receiving_country_id || ""}
-                    onChange={(e) => {
-                      const cId = e.target.value;
-                      const cName = countries.find((c) => c.id === cId)?.name || "";
-                      setFormData((c) => ({ ...c, receiving_country_id: cId, receiving_country_name: cName }));
-                      handleReceivingCountryChange(cId);
-                    }}
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+            <div className="p-3.5 sm:p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {tt("require_receiving_customs", "Require destination import customs clearance:")}
+                </span>
+                <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setFormData((c) => ({ ...c, receiving_customs_required: true }))}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      formData.receiving_customs_required !== false
+                        ? "bg-purple-600 text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                    }`}
                   >
-                    <option value="">{tt("select_country", "Select country...")}</option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                    {!countries.some((c) => c.name?.toLowerCase() === "pakistan") && (
-                      <option value="pakistan">{tt("country_pakistan", "Pakistan")}</option>
-                    )}
-                    {!countries.some((c) => c.name?.toLowerCase() === "afghanistan") && (
-                      <option value="afghanistan">{tt("country_afghanistan", "Afghanistan")}</option>
-                    )}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("entry_border_port", "Entry Border / Port")} *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.entry_border_port_name || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, entry_border_port_name: e.target.value }))}
-                    placeholder="e.g. Chaman"
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("receiving_date", "Receiving Date")} *
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.receiving_date || formData.planned_arrival_date || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, receiving_date: e.target.value, planned_arrival_date: e.target.value }))}
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("receiving_location", "Receiving Location")} *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.receiving_place || formData.destination_city || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, receiving_place: e.target.value }))}
-                    placeholder="e.g. Chaman Warehouse"
-                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
-                  />
+                    ● {tt("yes", "Yes")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData((c) => ({ ...c, receiving_customs_required: false }))}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      formData.receiving_customs_required === false
+                        ? "bg-slate-700 text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                    }`}
+                  >
+                    ○ {tt("no", "No")}
+                  </button>
                 </div>
               </div>
 
-              {/* Nested Green Box: Receiving Customs Required? */}
-              <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-start gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-white shrink-0 mt-0.5">
-                      <Building2 className="h-3.5 w-3.5" />
-                    </span>
+              {formData.receiving_customs_required !== false && (
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <span className="font-bold text-emerald-900 dark:text-emerald-200 text-xs">
-                        {tt("receiving_customs_required_q", "Receiving Customs Required?")}
-                      </span>
-                      <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">
-                        {tt("receiving_customs_sub", `For import clearance at destination (${formData.receiving_country_name || "Pakistan"})`)}
-                      </p>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {tt("customs_name", "Customs Name")} *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.receiving_customs_name || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, receiving_customs_name: e.target.value }))}
+                        placeholder="e.g. Chaman Customs"
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {tt("customs_port_border", "Customs Port / Border")} *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.receiving_customs_port_border || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, receiving_customs_port_border: e.target.value }))}
+                        placeholder="e.g. Chaman"
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      />
                     </div>
                   </div>
 
-                  {/* Yes / No Toggle */}
-                  <div className="inline-flex rounded-xl bg-white dark:bg-slate-900 p-0.5 border border-emerald-200 dark:border-emerald-800 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setFormData((c) => ({ ...c, receiving_customs_required: true }))}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        formData.receiving_customs_required !== false
-                          ? "bg-blue-600 text-white shadow-xs"
-                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                      }`}
-                    >
-                      <span>●</span> {tt("yes", "Yes")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData((c) => ({ ...c, receiving_customs_required: false }))}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        formData.receiving_customs_required === false
-                          ? "bg-slate-700 text-white shadow-xs"
-                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                      }`}
-                    >
-                      <span>○</span> {tt("no", "No")}
-                    </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {tt("handled_by", "Handled By")} *
+                      </label>
+                      <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
+                        <button
+                          type="button"
+                          onClick={() => setFormData((c) => ({ ...c, receiving_customs_handled_by: "our_branch" }))}
+                          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            formData.receiving_customs_handled_by === "our_branch"
+                              ? "bg-purple-600 text-white shadow-xs"
+                              : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                          }`}
+                        >
+                          <Building2 className="h-3.5 w-3.5" />
+                          <span>{tt("our_branch", "Our Branch")}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData((c) => ({ ...c, receiving_customs_handled_by: "external_agent" }))}
+                          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            (formData.receiving_customs_handled_by || "external_agent") === "external_agent"
+                              ? "bg-purple-600 text-white shadow-xs"
+                              : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                          }`}
+                        >
+                          <Users className="h-3.5 w-3.5" />
+                          <span>{tt("external_agent", "External Agent")}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {formData.receiving_customs_handled_by === "our_branch" ? (
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          {tt("select_our_branch", "Select Our Branch")} *
+                        </label>
+                        <select
+                          value={formData.receiving_customs_branch_id || ""}
+                          onChange={(e) => {
+                            const bId = e.target.value;
+                            const bName = countryBranches?.find((b) => b.id === bId)?.name || cityBranches?.find((b) => b.id === bId)?.name || "";
+                            setFormData((c) => ({ ...c, receiving_customs_branch_id: bId, receiving_customs_branch_name: bName }));
+                          }}
+                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        >
+                          <option value="">{tt("choose_branch", "Choose branch")}</option>
+                          {getBranchesForCountry(formData.receiving_country_id).map((b) => (
+                            <option key={b.id} value={b.id}>{b.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          {tt("existing_agent_account", "Existing Agent Account")} *
+                        </label>
+                        <select
+                          value={formData.receiving_customs_agent_account_id || ""}
+                          onChange={(e) => {
+                            const aId = e.target.value;
+                            const aName = accounts.find((a) => a.id === aId)?.name || "";
+                            setFormData((c) => ({ ...c, receiving_customs_agent_account_id: aId, receiving_customs_agent_account_name: aName }));
+                          }}
+                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        >
+                          <option value="">{tt("select_existing_account", "Select existing account")}</option>
+                          {accounts.map((a) => (
+                            <option key={a.id} value={a.id}>{a.name} ({a.code || "ACC"})</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {formData.receiving_customs_required !== false && (
-                  <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-800/40 space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          {tt("customs_name", "Customs Name")} *
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.receiving_customs_name || ""}
-                          onChange={(e) => setFormData((c) => ({ ...c, receiving_customs_name: e.target.value }))}
-                          placeholder="e.g. Chaman Customs"
-                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          {tt("customs_port_border", "Customs Port / Border")} *
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.receiving_customs_port_border || ""}
-                          onChange={(e) => setFormData((c) => ({ ...c, receiving_customs_port_border: e.target.value }))}
-                          placeholder="e.g. Chaman"
-                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          {tt("handled_by", "Handled By")} *
-                        </label>
-                        <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
-                          <button
-                            type="button"
-                            onClick={() => setFormData((c) => ({ ...c, receiving_customs_handled_by: "our_branch" }))}
-                            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                              formData.receiving_customs_handled_by === "our_branch"
-                                ? "bg-blue-600 text-white shadow-xs"
-                                : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
-                            }`}
-                          >
-                            <Building2 className="h-3.5 w-3.5" />
-                            <span>{tt("our_branch", "Our Branch")}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setFormData((c) => ({ ...c, receiving_customs_handled_by: "external_agent" }))}
-                            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                              (formData.receiving_customs_handled_by || "external_agent") === "external_agent"
-                                ? "bg-blue-600 text-white shadow-xs"
-                                : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
-                            }`}
-                          >
-                            <Users className="h-3.5 w-3.5" />
-                            <span>{tt("external_agent", "External Agent")}</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {formData.receiving_customs_handled_by === "our_branch" ? (
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                            {tt("select_our_branch", "Select Our Branch")} *
-                          </label>
-                          <select
-                            value={formData.receiving_customs_branch_id || ""}
-                            onChange={(e) => {
-                              const bId = e.target.value;
-                              const bName = countryBranches?.find((b) => b.id === bId)?.name || cityBranches?.find((b) => b.id === bId)?.name || "";
-                              setFormData((c) => ({ ...c, receiving_customs_branch_id: bId, receiving_customs_branch_name: bName }));
-                            }}
-                            className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                          >
-                            <option value="">{tt("choose_branch", "Choose branch")}</option>
-                            {(countryBranches || []).map((b) => (
-                              <option key={b.id} value={b.id}>{b.name}</option>
-                            ))}
-                            {(cityBranches || []).map((b) => (
-                              <option key={b.id} value={b.id}>{b.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : (
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                            {tt("existing_agent_account", "Existing Agent Account")} *
-                          </label>
-                          <select
-                            value={formData.receiving_customs_agent_account_id || ""}
-                            onChange={(e) => {
-                              const aId = e.target.value;
-                              const aName = accounts.find((a) => a.id === aId)?.name || "";
-                              setFormData((c) => ({ ...c, receiving_customs_agent_account_id: aId, receiving_customs_agent_account_name: aName }));
-                            }}
-                            className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                          >
-                            <option value="">{tt("select_existing_account", "Select existing account")}</option>
-                            {accounts.map((a) => (
-                              <option key={a.id} value={a.id}>{a.name} ({a.code || "ACC"})</option>
-                            ))}
-                          </select>
-                          <p className="mt-1 text-[10.5px] text-blue-600 dark:text-blue-400 flex items-center gap-1 font-medium">
-                            <Info className="h-3 w-3" />
-                            <span>{tt("linked_draft_msg", "Linked draft in existing Clearing Agent Bill menu.")}</span>
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
 
-          {/* FINAL DESTINATION ROW */}
+          {/* Final Destination */}
           <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-3">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
               <Flag className="h-4 w-4 text-blue-600" />
@@ -7185,7 +7762,7 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* ACTION BUTTONS & ASSIGNMENT PANEL */}
+          {/* 7. ACTION BUTTONS & ASSIGNMENT PANEL */}
           <div className="space-y-3 pt-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <button
@@ -7255,74 +7832,435 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* ADVANCED ROUTE CORRIDOR BUILDER & INSURANCE ACCORDION */}
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={() => setShowAdvancedCorridor((prev) => !prev)}
-              className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200/80 bg-slate-50 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-300 transition"
-            >
-              <span className="flex items-center gap-2">
-                <Route className="h-4 w-4 text-blue-600" />
-                <span>{tt("advanced_corridor_toggle", "Advanced Route Corridor Builder & Insurance (Optional Leg Configuration)")}</span>
-              </span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${showAdvancedCorridor ? "rotate-180" : ""}`} />
-            </button>
+          {/* OVERLAY PANEL 1: LOADING COUNTRY & ORIGIN LOGISTICS */}
+          <SimpleModal
+            isOpen={isOriginOverlayOpen}
+            onClose={() => setIsOriginOverlayOpen(false)}
+            title={
+              <div className="flex items-center gap-2">
+                <Upload className="h-4 w-4 text-blue-600" />
+                <span>{tt("origin_overlay_title", "Loading Country & Origin Logistics Details")}</span>
+              </div>
+            }
+          >
+            <div className="space-y-4 p-1 text-xs text-left">
+              <p className="text-slate-500 text-[11px]">
+                {tt("origin_overlay_sub", "Configure origin country, loading branch/location, loading date and exit border or port.")}
+              </p>
 
-            {showAdvancedCorridor && (
-              <div className="mt-3 space-y-3.5 border-t border-slate-100 dark:border-slate-800 pt-3">
-                <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-                  <CustomerOrderRouteBuilder
-                    routeName={formData.route_name}
-                    transportMode={formData.transport_mode}
-                    loadingCountryId={formData.loading_country_id}
-                    loadingCountryName={
-                      countries.find((c) => c.id === formData.loading_country_id)?.name ||
-                      formData.loading_country_name ||
-                      ""
-                    }
-                    receivingCountryId={formData.receiving_country_id}
-                    receivingCountryName={
-                      countries.find((c) => c.id === formData.receiving_country_id)?.name ||
-                      formData.receiving_country_name ||
-                      ""
-                    }
-                    loadingCityName={
-                      loadingCities.find((c) => c.id === formData.loading_city_id)?.name ||
-                      formData.loading_city_name ||
-                      formData.loading_source_name ||
-                      ""
-                    }
-                    destinationCityName={
-                      receivingCities.find((c) => c.id === formData.receiving_city_id)?.name ||
-                      formData.destination_city ||
-                      ""
-                    }
-                    legs={formData.legs || []}
-                    onChange={(routeName, legs) => {
-                      setFormData((c) => ({ ...c, route_name: routeName, legs }));
+              {/* 1. Country */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {tt("country_of_origin", "Country of Origin")} *
+                </label>
+                <select
+                  value={formData.loading_country_id || ""}
+                  onChange={(e) => {
+                    const cId = e.target.value;
+                    const cName = countries.find((c) => c.id === cId)?.name || "";
+                    setFormData((c) => ({ ...c, loading_country_id: cId, loading_country_name: cName }));
+                    handleLoadingCountryChange(cId);
+                    rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingCountryId: cId, loadingCountryName: cName });
+                  }}
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="">{tt("select_country", "Select country...")}</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 2. Loading Branch / Location */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("loading_branch", "Loading Branch (Filtered by Country)")}
+                  </label>
+                  <select
+                    value={formData.loading_customs_branch_id || ""}
+                    onChange={(e) => {
+                      const bId = e.target.value;
+                      const bName = (countryBranches || []).find((b) => b.id === bId)?.name || (cityBranches || []).find((b) => b.id === bId)?.name || "";
+                      setFormData((c) => ({
+                        ...c,
+                        loading_customs_branch_id: bId,
+                        loading_customs_branch_name: bName,
+                        loading_place: bName || c.loading_place
+                      }));
+                      rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingLoc: bName || formData.loading_place });
                     }}
-                    countries={countries.map((c) => ({ id: c.id, name: c.name }))}
-                    countryBranches={countryBranches}
-                    cityBranches={cityBranches}
-                    assignableUsers={assignableUsers}
-                    ports={ports.map((p) => ({ id: p.id, port_name: p.port_name, country_id: p.country_id || undefined }))}
-                    ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
-                    lang={lang}
-                  />
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="">{tt("select_branch", "Select branch...")}</option>
+                    {getBranchesForCountry(formData.loading_country_id).map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
                 </div>
 
-                {activeOrder?.id && (formData.legs || []).length > 0 && (
-                  <CustomerOrderInsurancePanel
-                    orderId={activeOrder.id}
-                    legs={(formData.legs || []).map((l: any) => ({ legNo: l.legNo }))}
-                    ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
-                    lang={lang}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("loading_location_place", "Loading Location / Warehouse")} *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.loading_place || formData.loading_source_name || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData((c) => ({ ...c, loading_place: val, loading_source_name: val }));
+                    }}
+                    placeholder="e.g. Kandahar Warehouse"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                   />
-                )}
+                </div>
               </div>
-            )}
-          </div>
+
+              {/* 3. Loading Date */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {tt("loading_date", "Loading Date")} *
+                </label>
+                <input
+                  type="date"
+                  value={formData.loading_date || formData.planned_dispatch_date || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, loading_date: e.target.value, planned_dispatch_date: e.target.value }))}
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              {/* 4. Exit Point Type & 5. Corresponding Port / Border */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850 p-3 space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("exit_point_type", "Exit Point Type")} *
+                  </label>
+                  <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
+                    <button
+                      type="button"
+                      onClick={() => setFormData((c) => ({ ...c, exit_point_type: "border" }))}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        (formData.exit_point_type || "border") === "border"
+                          ? "bg-blue-600 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                      }`}
+                    >
+                      <Truck className="h-3.5 w-3.5 inline mr-1" />
+                      {tt("exit_border", "Exit Border")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((c) => ({ ...c, exit_point_type: "port" }))}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        formData.exit_point_type === "port"
+                          ? "bg-blue-600 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                      }`}
+                    >
+                      <Ship className="h-3.5 w-3.5 inline mr-1" />
+                      {tt("exit_port", "Exit Port")}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {formData.exit_point_type === "port"
+                      ? tt("corresponding_port", "Corresponding Exit Port")
+                      : tt("corresponding_border", "Corresponding Exit Border")} *
+                  </label>
+                  {formData.exit_point_type === "port" ? (
+                    <div className="space-y-2">
+                      <select
+                        value={formData.loading_port_id || ""}
+                        onChange={(e) => {
+                          const pId = e.target.value;
+                          const pName = ports.find((p) => p.id === pId)?.port_name || "";
+                          setFormData((c) => ({
+                            ...c,
+                            loading_port_id: pId,
+                            loading_port_name: pName,
+                            exit_border_port_name: pName
+                          }));
+                        }}
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="">{tt("select_port", "Select port...")}</option>
+                        {getPortsForCountry(formData.loading_country_id).map((p) => (
+                          <option key={p.id} value={p.id}>{p.port_name}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={formData.exit_border_port_name || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, exit_border_port_name: e.target.value, loading_port_name: e.target.value }))}
+                        placeholder="Or enter custom port name..."
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={formData.exit_border_port_name || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, exit_border_port_name: e.target.value }))}
+                        placeholder="e.g. Spin Boldak / Torkham / Islam Qala / Zaranj"
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                      />
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {["Spin Boldak", "Torkham", "Islam Qala", "Zaranj", "Hairatan", "Shir Khan"].map((b) => (
+                          <button
+                            key={b}
+                            type="button"
+                            onClick={() => setFormData((c) => ({ ...c, exit_border_port_name: b }))}
+                            className="px-2 py-0.5 rounded-md bg-slate-200 hover:bg-blue-100 text-slate-700 hover:text-blue-800 dark:bg-slate-800 dark:text-slate-300 text-[10.5px] font-semibold transition"
+                          >
+                            {b}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Action Buttons */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsOriginOverlayOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                >
+                  {tt("cancel_btn", "Cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    rebuildRouteFromCurrentState(routingMode, intermediateStages);
+                    setIsOriginOverlayOpen(false);
+                  }}
+                  className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 shadow-xs transition"
+                >
+                  {tt("apply_close_btn", "Apply & Close")}
+                </button>
+              </div>
+            </div>
+          </SimpleModal>
+
+          {/* OVERLAY PANEL 2: RECEIVING COUNTRY & DESTINATION LOGISTICS */}
+          <SimpleModal
+            isOpen={isDestinationOverlayOpen}
+            onClose={() => setIsDestinationOverlayOpen(false)}
+            title={
+              <div className="flex items-center gap-2">
+                <Download className="h-4 w-4 text-purple-600" />
+                <span>{tt("dest_overlay_title", "Receiving Country & Destination Logistics Details")}</span>
+              </div>
+            }
+          >
+            <div className="space-y-4 p-1 text-xs text-left">
+              <p className="text-slate-500 text-[11px]">
+                {tt("dest_overlay_sub", "Configure destination country, receiving branch/location, arrival date and entry border or port.")}
+              </p>
+
+              {/* 1. Destination Country */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {tt("receiving_country", "Receiving Country (Destination)")} *
+                </label>
+                <select
+                  value={formData.receiving_country_id || ""}
+                  onChange={(e) => {
+                    const cId = e.target.value;
+                    const cName = countries.find((c) => c.id === cId)?.name || "";
+                    setFormData((c) => ({ ...c, receiving_country_id: cId, receiving_country_name: cName }));
+                    handleReceivingCountryChange(cId);
+                    rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingCountryId: cId, receivingCountryName: cName });
+                  }}
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                >
+                  <option value="">{tt("select_country", "Select country...")}</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 2. Receiving Branch / Location */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("receiving_branch", "Receiving Branch (Filtered by Country)")}
+                  </label>
+                  <select
+                    value={formData.receiving_customs_branch_id || ""}
+                    onChange={(e) => {
+                      const bId = e.target.value;
+                      const bName = (countryBranches || []).find((b) => b.id === bId)?.name || (cityBranches || []).find((b) => b.id === bId)?.name || "";
+                      setFormData((c) => ({
+                        ...c,
+                        receiving_customs_branch_id: bId,
+                        receiving_customs_branch_name: bName,
+                        receiving_place: bName || c.receiving_place
+                      }));
+                      rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingLoc: bName || formData.receiving_place });
+                    }}
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                  >
+                    <option value="">{tt("select_branch", "Select branch...")}</option>
+                    {getBranchesForCountry(formData.receiving_country_id).map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("receiving_location_place", "Receiving Location / Warehouse")} *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.receiving_place || formData.destination_city || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData((c) => ({ ...c, receiving_place: val, destination_city: val }));
+                    }}
+                    placeholder="e.g. Chaman Warehouse"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                  />
+                </div>
+              </div>
+
+              {/* 3. Entry Point Type & 4. Corresponding Port / Border */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850 p-3 space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("entry_point_type", "Entry Point Type")} *
+                  </label>
+                  <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
+                    <button
+                      type="button"
+                      onClick={() => setFormData((c) => ({ ...c, entry_point_type: "border" }))}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        (formData.entry_point_type || "border") === "border"
+                          ? "bg-purple-600 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                      }`}
+                    >
+                      <Truck className="h-3.5 w-3.5 inline mr-1" />
+                      {tt("entry_border", "Entry Border")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((c) => ({ ...c, entry_point_type: "port" }))}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        formData.entry_point_type === "port"
+                          ? "bg-purple-600 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                      }`}
+                    >
+                      <Ship className="h-3.5 w-3.5 inline mr-1" />
+                      {tt("entry_port", "Entry Port")}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {formData.entry_point_type === "port"
+                      ? tt("corresponding_entry_port", "Corresponding Entry Port")
+                      : tt("corresponding_entry_border", "Corresponding Entry Border")} *
+                  </label>
+                  {formData.entry_point_type === "port" ? (
+                    <div className="space-y-2">
+                      <select
+                        value={formData.destination_port_id || ""}
+                        onChange={(e) => {
+                          const pId = e.target.value;
+                          const pName = ports.find((p) => p.id === pId)?.port_name || "";
+                          setFormData((c) => ({
+                            ...c,
+                            destination_port_id: pId,
+                            destination_port_name: pName,
+                            entry_border_port_name: pName
+                          }));
+                        }}
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="">{tt("select_port", "Select port...")}</option>
+                        {getPortsForCountry(formData.receiving_country_id).map((p) => (
+                          <option key={p.id} value={p.id}>{p.port_name}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={formData.entry_border_port_name || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, entry_border_port_name: e.target.value, destination_port_name: e.target.value }))}
+                        placeholder="Or enter custom entry port name..."
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={formData.entry_border_port_name || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, entry_border_port_name: e.target.value }))}
+                        placeholder="e.g. Chaman / Torkham / Taftan / Wagah / Sost"
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                      />
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {["Chaman", "Torkham", "Taftan", "Wagah", "Sost", "Khunjerab"].map((b) => (
+                          <button
+                            key={b}
+                            type="button"
+                            onClick={() => setFormData((c) => ({ ...c, entry_border_port_name: b }))}
+                            className="px-2 py-0.5 rounded-md bg-slate-200 hover:bg-purple-100 text-slate-700 hover:text-purple-800 dark:bg-slate-800 dark:text-slate-300 text-[10.5px] font-semibold transition"
+                          >
+                            {b}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 5. Receiving Date */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {tt("receiving_date", "Receiving Date")} *
+                </label>
+                <input
+                  type="date"
+                  value={formData.receiving_date || formData.planned_arrival_date || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, receiving_date: e.target.value, planned_arrival_date: e.target.value }))}
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                />
+              </div>
+
+              {/* Modal Action Buttons */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsDestinationOverlayOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                >
+                  {tt("cancel_btn", "Cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    rebuildRouteFromCurrentState(routingMode, intermediateStages);
+                    setIsDestinationOverlayOpen(false);
+                  }}
+                  className="px-5 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700 shadow-xs transition"
+                >
+                  {tt("apply_close_btn", "Apply & Close")}
+                </button>
+              </div>
+            </div>
+          </SimpleModal>
 
           {/* VIEW CUSTOMER DETAILS MODAL */}
           <SimpleModal

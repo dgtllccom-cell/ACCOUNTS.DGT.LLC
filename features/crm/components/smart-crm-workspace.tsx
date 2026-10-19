@@ -6,6 +6,7 @@ import { Customer360View } from "./customer-360-view";
 import { SmartCrmControlCenter } from "./smart-crm-control-center";
 import { CrmSpecializedReportView } from "./crm-specialized-reports";
 import { CrmReportsView } from "./crm-reports-view";
+import { CrmPayablesReceivablesView } from "./crm-payables-receivables-view";
 import type { ErpSession } from "@/lib/auth/session";
 
 interface SmartCrmWorkspaceProps {
@@ -16,6 +17,11 @@ export function SmartCrmWorkspace({ session }: SmartCrmWorkspaceProps) {
   const searchParams = useSearchParams();
   const report = (searchParams.get("report") || "").toLowerCase().trim();
   const tab = (searchParams.get("tab") || "").toLowerCase().trim();
+
+  // If Purchase Payables & Sales Receivables requested
+  if (report === "payables-receivables" || report === "payment-tracking" || tab === "payables-receivables") {
+    return <CrmPayablesReceivablesView onBackToOverview={() => window.location.href = "/dashboard/crm"} />;
+  }
 
   // If a specific due/action tab is requested or explicitly "due-followup", render SmartCrmControlCenter
   if (tab || report === "due-followup") {
