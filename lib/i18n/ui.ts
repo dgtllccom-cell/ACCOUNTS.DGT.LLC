@@ -11727,6 +11727,11 @@ export type UiKey =
   | "comv.customs_office_label"
   | "comv.customs_treatment_label"
   | "comv.select_treatment"
+  | "common.more_options"
+  | "expreg.back_customer"
+  | "expreg.back_customs"
+  | "expreg.back_other"
+  | "expreg.back_truck"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -36367,6 +36372,11 @@ const en: Dict = {
   "sacct.activated": "Account approved and now Active.",
   "sacct.rejected_done": "Account request rejected.",
   "sacct.error": "The decision could not be saved.",
+  "common.more_options": "More Options",
+  "expreg.back_customer": "Back to Customer Expenses Register",
+  "expreg.back_customs": "Back to Custom Bills Register",
+  "expreg.back_other": "Back to Other Expenses Register",
+  "expreg.back_truck": "Back to Truck Expenses Register",
 };
 
 const ur: Dict = {
@@ -60975,6 +60985,11 @@ const ur: Dict = {
   "sacct.activated": "اکاؤنٹ منظور ہو گیا اور اب فعال ہے۔",
   "sacct.rejected_done": "اکاؤنٹ کی درخواست مسترد کر دی گئی۔",
   "sacct.error": "فیصلہ محفوظ نہیں ہو سکا۔",
+  "common.more_options": "مزید اختیارات",
+  "expreg.back_customer": "کسٹمر اخراجات رجسٹر پر واپس",
+  "expreg.back_customs": "کسٹم بلز رجسٹر پر واپس",
+  "expreg.back_other": "دیگر اخراجات رجسٹر پر واپس",
+  "expreg.back_truck": "ٹرک اخراجات رجسٹر پر واپس",
 };
 
 const ar: Dict = {
@@ -85584,6 +85599,11 @@ const ar: Dict = {
   "sacct.activated": "تم اعتماد الحساب وأصبح نشطاً.",
   "sacct.rejected_done": "تم رفض طلب الحساب.",
   "sacct.error": "تعذر حفظ القرار.",
+  "common.more_options": "خيارات إضافية",
+  "expreg.back_customer": "العودة إلى سجل مصروفات العملاء",
+  "expreg.back_customs": "العودة إلى سجل فواتير الجمارك",
+  "expreg.back_other": "العودة إلى سجل المصروفات الأخرى",
+  "expreg.back_truck": "العودة إلى سجل مصروفات الشاحنات",
 };
 
 const fa: Dict = {
@@ -110192,6 +110212,11 @@ const fa: Dict = {
   "sacct.activated": "حساب تأیید شد و اکنون فعال است.",
   "sacct.rejected_done": "درخواست حساب رد شد.",
   "sacct.error": "تصمیم ذخیره نشد.",
+  "common.more_options": "گزینه‌های بیشتر",
+  "expreg.back_customer": "بازگشت به دفتر هزینه‌های مشتری",
+  "expreg.back_customs": "بازگشت به دفتر صورتحساب‌های گمرک",
+  "expreg.back_other": "بازگشت به دفتر سایر هزینه‌ها",
+  "expreg.back_truck": "بازگشت به دفتر هزینه‌های کامیون",
 };
 
 const ps: Dict = {
@@ -134807,6 +134832,11 @@ const ps: Dict = {
   "sacct.activated": "حساب تصویب شو او اوس فعال دی.",
   "sacct.rejected_done": "د حساب غوښتنه رد شوه.",
   "sacct.error": "پریکړه خوندي نه شوه.",
+  "common.more_options": "نور اختیارونه",
+  "expreg.back_customer": "د پیرودونکي لګښتونو راجستر ته بیرته",
+  "expreg.back_customs": "د گمرک بلونو راجستر ته بیرته",
+  "expreg.back_other": "د نورو لګښتونو راجستر ته بیرته",
+  "expreg.back_truck": "د لارۍ لګښتونو راجستر ته بیرته",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

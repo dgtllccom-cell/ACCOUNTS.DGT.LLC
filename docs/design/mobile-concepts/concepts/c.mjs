@@ -1,0 +1,98 @@
+// CONCEPT C — "Manifest": editorial, list-first, flat. Big numerals, hairlines, ONE signal colour (orange), side-drawer navigation, action bar instead of tabs.
+import { icon, statusBar } from "../lib/core.mjs";
+
+export const meta = { id: "c", name: "Manifest", tagline: "Flat · editorial · black, white & signal orange · side drawer", bg: "#E7E8EC" };
+
+export const css = `
+.cC{--ink:#0F1115;--mut:#6B7280;--line:#E4E6EB;--bg:#FFFFFF;--soft:#F4F5F7;--sig:#FF5A1F;--grn:#0E7A4F;--blu:#2457D6;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;position:relative}
+.cC .sb{height:44px;padding:14px 24px 0;display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:600}
+.cC .row{display:flex;align-items:center}.cC .between{justify-content:space-between}.cC .g8{gap:8px}.cC .g12{gap:12px}.cC .g16{gap:16px}.cC .col{display:flex;flex-direction:column}
+.cC .pad{padding-inline:22px}.cC .grow{flex:1;min-width:0}
+.cC .bar{height:56px;display:flex;align-items:center;justify-content:space-between;padding-inline:14px}
+.cC .ib{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px}
+.cC .ib.ln{border:1.5px solid var(--ink)}
+.cC .mark{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:1.2px;font-size:13px}.cC .mark i{display:block;width:22px;height:22px;background:var(--ink);border-radius:6px}
+.cC .t1{font-size:34px;font-weight:800;letter-spacing:-1px;line-height:1.08}.cC .t2{font-size:20px;font-weight:800;letter-spacing:-.3px}
+.cC .cap{font-size:10px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:var(--mut)}
+.cC .mut{color:var(--mut);font-size:13px}
+.cC .hr{height:1.5px;background:var(--ink)}.cC .hl{height:1px;background:var(--line)}
+.cC .field{border-bottom:1.5px solid var(--ink);height:48px;display:flex;align-items:center;gap:10px;font-size:16px;color:var(--mut)}
+.cC .lbl{font-size:10px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;margin-bottom:2px}
+.cC .btn{height:56px;background:var(--sig);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:space-between;padding-inline:20px;border-radius:14px}
+.cC .btn.k{background:var(--ink)}.cC .btn.o{background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
+.cC .kp{background:var(--soft);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.cC .kp b{font-size:40px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+.cC .kp.hot{background:var(--ink);color:#fff}.cC .kp.hot .cap{color:#AAB0BB}
+.cC .dot{display:inline-block;width:8px;height:8px;border-radius:4px;background:var(--sig)}
+.cC .li{display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1px solid var(--line)}
+.cC .st{font-weight:800;font-size:12px;letter-spacing:.3px}.cC .st.o{color:var(--sig)}.cC .st.g{color:var(--grn)}.cC .st.b{color:var(--blu)}
+.cC .scrim{position:absolute;top:0;bottom:0;background:rgba(15,17,21,.48)}
+.cC .drawer{width:304px;background:#fff;display:flex;flex-direction:column;padding-top:44px;position:relative;box-shadow:12px 0 30px rgba(0,0,0,.18)}
+.cC .mi{display:flex;align-items:center;gap:14px;padding:10px 22px;font-size:16px;font-weight:600}.cC .mi.on{background:var(--soft);box-shadow:inset 4px 0 0 var(--sig)}
+.cC .seg{display:flex;gap:6px}.cC .seg span{padding:7px 12px;border-radius:999px;border:1.5px solid var(--line);font-size:12px;font-weight:700}.cC .seg span.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.cC .tlc{display:flex;flex-direction:column;align-items:center;width:18px}.cC .tld{width:14px;height:14px;border-radius:7px;border:2.5px solid var(--ink);background:#fff}.cC .tld.f{background:var(--ink)}.cC .tld.n{background:var(--sig);border-color:var(--sig)}
+.cC .tll{width:2px;flex:1;background:var(--ink);min-height:34px}.cC .tll.d{background:repeating-linear-gradient(180deg,#C9CCD3 0 4px,transparent 4px 8px)}
+.cC .tr{display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);font-size:13px}
+.cC .th{display:flex;padding:8px 0;border-bottom:1.5px solid var(--ink)}
+.cC .num{font-variant-numeric:tabular-nums;font-weight:800}
+.cC .ac{margin-top:auto;padding:12px 22px 28px;border-top:1px solid var(--line);display:flex;gap:10px;background:#fff}
+.cC .stp{display:flex;align-items:center}.cC .sn{width:30px;height:30px;border-radius:15px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}.cC .sn.on{background:var(--sig);border-color:var(--sig);color:#fff}.cC .sn.f{background:var(--ink);color:#fff}
+.cC .tick{background:var(--soft);border-radius:18px;padding:0 0 4px}
+.cC .dash{height:0;border-top:2px dashed #C9CCD3;margin:0 14px}
+`;
+
+const brand = `<div class="mark"><i></i>DGT.llc</div>`;
+const top = (S, right = "") => `${statusBar("#0F1115")}<div class="bar"><div class="ib ln">${icon("menu", 22, 2)}</div>${brand}<div class="row g8">${right}<div class="ib">${icon("bell", 22)}</div></div></div>`;
+const act = (...b) => `<div class="ac">${b.join("")}</div>`;
+const drawerItems = (S, on = 0) => [["home", S.mDash], ["scan", S.mSmart], ["users", S.mCust], ["cart", S.mTrade], ["ship", S.mShip], ["ledger", S.mLedger], ["box", S.mStock], ["chart", S.mReports], ["task", S.mTasks], ["chat", S.mChat], ["gear", S.mSettings]].map(([ic, t], i) => `<div class="mi ${i === on ? "on" : ""}">${icon(ic, 22, 1.9)}<span class="grow">${t}</span>${i === on ? '<span class="dot"></span>' : ""}</div>`).join("");
+
+export function screens(l, S) {
+  const o = {};
+  o.login = `${statusBar("#0F1115")}<div class="pad col" style="margin-top:30px">${brand}<div class="t1" style="margin-top:60px">${S.signin}.</div><div class="mut" style="margin-top:10px;font-size:15px">${S.appB} · ${S.appBsub}</div></div>
+  <div class="pad col" style="margin-top:44px;gap:22px"><div><div class="lbl">${S.email}</div><div class="field">${icon("mail", 18)}<span>name@company.com</span></div></div><div><div class="lbl">${S.passwordLabel}</div><div class="field">${icon("lock", 18)}<span>••••••••</span></div></div><div class="btn" style="margin-top:6px"><span>${S.signin}</span>${icon("chev", 22, 2.4)}</div><div class="mut" style="font-weight:700;color:var(--ink)">${S.forgot}</div></div>
+  <div class="pad col g12" style="margin-top:auto;padding-bottom:32px"><div class="hl"></div><div class="row between"><span class="st g">${S.approved}</span><div class="seg">${["EN", "اردو"].map((x, i) => `<span class="${i === (l === "ur" ? 1 : 0) ? "on" : ""}">${x}</span>`).join("")}</div></div></div>`;
+  const steps = [[S.stRequest, 1], [S.stApproval, 2], [S.stCode, 3], [S.stSignin, 4]];
+  o.activation = `${top(S)}<div class="pad col" style="margin-top:6px"><div class="cap">${S.appB}</div><div class="t1" style="font-size:30px;margin-top:6px">${S.actTitle}</div><div class="mut" style="margin-top:8px;line-height:1.5">${S.actSub}</div></div>
+  <div class="pad col" style="margin-top:18px"><div class="hr"></div>
+  <div class="row g12" style="padding:14px 0"><div class="sn on">1</div><b class="grow" style="font-size:16px">${S.stRequest}</b><span class="dot"></span></div>
+  <div class="col" style="gap:8px;padding-bottom:10px"><div><div class="lbl">${S.fullName}</div><div class="field" style="height:34px"></div></div><div><div class="lbl">${S.mobile}</div><div class="field" style="height:34px"><span dir="ltr">+971 5X XXX XXXX</span></div></div><div><div class="lbl">${S.email}</div><div class="field" style="height:34px"></div></div><div><div class="lbl">${S.reviewCode}</div><div class="field" style="height:34px"><span dir="ltr">XXXX-XXXX-XXXX</span></div></div></div>
+  ${steps.slice(1).map(([t, n]) => `<div class="hl"></div><div class="row g12" style="padding:14px 0"><div class="sn">${n}</div><span class="grow mut" style="font-size:16px;font-weight:700">${t}</span></div>`).join("")}</div>
+  ${act(`<div class="btn grow"><span>${S.request}</span>${icon("chev", 22, 2.4)}</div>`)}`;
+  const dash = (kp, att) => `${top(S)}<div class="pad col" style="margin-top:4px"><div class="cap">${S.today} · 18 Oct</div><div class="t1" style="margin-top:6px">${S.hello}.</div><div class="mut" style="margin-top:6px">${S.role}</div></div>
+   <div class="pad" style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px">${kp.map(([n, v, hot]) => `<div class="kp ${hot ? "hot" : ""}"><span class="cap">${n}</span><b>${v}</b></div>`).join("")}</div>
+   <div class="pad col" style="margin-top:22px"><div class="row between"><div class="t2">${S.approvals}</div><span class="cap">${S.live}</span></div><div class="hr" style="margin-top:10px"></div>${att.map(([t, v, c]) => `<div class="li"><span class="dot" style="${c ? "" : "background:#C9CCD3"}"></span><span class="grow" style="font-weight:600">${t}</span><b class="num" style="font-size:18px">${v}</b>${icon("chev", 18)}</div>`).join("")}</div>`;
+  o.dashB = dash([[S.countries, "19", true], [S.branches, "8"], [S.customers, "56"], [S.users, "34"]], [[S.approvals, "3", 1], [S.due, "5", 1], [S.messages, "2", 0]]);
+  o.dashBS = dash([[S.assigned, "8", true], [S.pending, "7"], [S.transit, "2"], [S.containers, "12"]], [[S.openDocs, "8", 1], [S.tasks, "4", 1], [S.messages, "2", 0]]);
+  o.menu = `<div style="display:flex;flex:1;position:relative"><div class="drawer"><div class="pad row between" style="height:56px"><div class="col"><b style="font-size:16px">${S.role}</b><span class="mut" style="font-size:12px">${S.appB}</span></div><div class="ib ln">${icon("check", 18, 2.4)}</div></div><div class="hl"></div><div style="padding-top:8px">${drawerItems(S, 4)}</div><div class="pad col g12" style="margin-top:auto;padding-bottom:30px"><div class="hl"></div><div class="cap">${S.lang}</div><div class="seg" style="flex-wrap:wrap">${["EN", "اردو", "العربية", "فارسی", "پښتو"].map((x, i) => `<span class="${i === (l === "ur" ? 1 : 0) ? "on" : ""}">${x}</span>`).join("")}</div></div></div><div class="grow" style="background:#fff;opacity:.55;padding-top:44px"><div class="pad"><div class="t1" style="margin-top:56px;font-size:26px">${S.hello}.</div></div></div><div class="scrim" style="inset-inline-start:304px;inset-inline-end:0"></div></div>`;
+  const legs = [[S.booked, "f"], [S.loaded, "f"], [S.border, "f"], [S.customs, "n"], [S.delivered, ""]];
+  o.order = `${top(S)}<div class="pad col" style="margin-top:4px"><div class="cap">${S.order}</div><div class="t1" dir="ltr" style="font-size:30px;margin-top:6px">${S.orderNo}</div><div class="row g8" style="margin-top:10px"><span class="dot"></span><span class="st o">${S.inClearing}</span></div></div>
+  <div class="pad col" style="margin-top:20px"><div class="tick"><div class="pad col" style="padding-top:16px;padding-bottom:12px;gap:14px"><div class="row between"><div class="col"><span class="cap">${S.customer}</span><b style="margin-top:3px;font-size:16px">${S.sampleCust}</b></div>${icon("users", 22)}</div><div class="dash" style="margin:0"></div><div class="col"><span class="cap">${S.route}</span><b style="margin-top:3px;font-size:16px">${S.uzb} → ${S.ind}</b></div><div class="col"><span class="cap">${S.goods}</span><b style="margin-top:3px;font-size:16px">${S.cargo}</b></div></div></div></div>
+  <div class="pad col" style="margin-top:20px"><div class="cap" style="margin-bottom:12px">${S.status}</div><div class="stp">${legs.map(([t, k], i) => `<div class="sn ${k === "f" ? "f" : k === "n" ? "on" : ""}">${k === "f" ? icon("check", 14, 3) : i + 1}</div>${i < 4 ? `<div class="grow" style="height:2px;background:${k === "f" ? "var(--ink)" : "#D9DCE2"}"></div>` : ""}`).join("")}</div><div class="row between" style="margin-top:8px">${legs.map(([t, k]) => `<span style="font-size:10px;font-weight:${k ? 800 : 500};color:${k === "n" ? "var(--sig)" : k ? "var(--ink)" : "var(--mut)"}">${t}</span>`).join("")}</div></div>
+  ${act(`<div class="btn k grow" style="height:52px"><span>${S.addDoc}</span>${icon("plus", 20, 2.4)}</div>`, `<div class="btn o" style="height:52px;width:56px;padding:0;justify-content:center">${icon("print", 20)}</div>`)}`;
+  const ev = [[S.portCall + " · " + S.nhava, "12 Nov", "n"], [S.sea, "04 Nov", "f"], [S.loaded + " · " + S.jebel, "29 Oct", "f"]];
+  o.track = `${top(S)}<div class="pad col" style="margin-top:4px"><div class="cap">${S.bl}</div><div class="t1" dir="ltr" style="font-size:30px;margin-top:6px">MSCU-000000-0</div><div class="row g8" style="margin-top:10px"><span class="dot"></span><span class="st o">${S.onSea}</span></div></div>
+  <div class="pad col" style="margin-top:18px"><div class="field">${icon("search", 18)}<span>${S.trackPh}</span></div></div>
+  <div class="pad" style="margin-top:20px"><div class="row between"><div class="col"><b style="font-size:24px;letter-spacing:-.5px">${S.jebel}</b><span class="cap">AE</span></div><div class="grow row" style="margin:0 12px"><div class="grow" style="height:2px;background:var(--ink)"></div>${icon("ship", 24, 2)}<div class="grow" style="height:2px;background:repeating-linear-gradient(90deg,#C9CCD3 0 6px,transparent 6px 12px)"></div></div><div class="col" style="text-align:end"><b style="font-size:24px;letter-spacing:-.5px">${S.nhava}</b><span class="cap">IN</span></div></div>
+  <div class="row between" style="margin-top:14px"><div class="col"><span class="cap">${S.vessel}</span><b style="margin-top:2px">MV Sample Star</b></div><div class="col" style="text-align:end"><span class="cap">${S.eta}</span><b style="margin-top:2px" dir="ltr">12 Nov 2026</b></div></div></div>
+  <div class="pad col" style="margin-top:22px"><div class="hr"></div><div style="padding-top:16px">${ev.map(([t, d, k], i) => `<div class="row g12" style="align-items:stretch"><div class="tlc"><div class="tld ${k}"></div>${i < 2 ? `<div class="tll ${k === "n" ? "d" : ""}"></div>` : ""}</div><div class="row between grow" style="padding-bottom:18px;align-items:flex-start"><b style="font-size:15px">${t}</b><span class="mut num" dir="ltr">${d}</span></div></div>`).join("")}</div></div>`;
+  o.report = `${top(S, `<div class="ib">${icon("down", 22)}</div>`)}<div class="pad col" style="margin-top:4px"><div class="cap">${S.thisMonth}</div><div class="t1" style="margin-top:6px">${S.report}</div></div>
+  <div class="pad row" style="margin-top:18px;gap:0"><div class="grow col"><b class="num" style="font-size:36px;letter-spacing:-1.2px">8</b><span class="cap">${S.total}</span></div><div class="grow col"><b class="num" style="font-size:36px;letter-spacing:-1.2px;color:var(--sig)">2</b><span class="cap">${S.onSea}</span></div><div class="grow col"><b class="num" style="font-size:36px;letter-spacing:-1.2px;color:var(--grn)">5</b><span class="cap">${S.cleared}</span></div></div>
+  <div class="pad row g8" style="margin-top:18px">${[S.all, S.onSea, S.arrived, S.cleared].map((t, i) => `<div class="seg"><span class="${i === 0 ? "on" : ""}">${t}</span></div>`).join("")}</div>
+  <div class="pad col" style="margin-top:16px"><div class="th"><span class="cap" style="width:42%">${S.bl}</span><span class="cap" style="width:32%">${S.vessel}</span><span class="cap" style="width:26%;text-align:end">${S.status}</span></div>
+  ${[["MSCU-000001", "MV Sample Star", S.onSea, "o"], ["MSCU-000002", "MV Sample Star", S.arrived, "b"], ["MSCU-000003", "MV Sample Moon", S.cleared, "g"], ["MSCU-000004", "MV Sample Moon", S.cleared, "g"], ["MSCU-000005", "MV Sample Sun", S.cleared, "g"]].map(([a, b, c, k]) => `<div class="tr"><b class="num" style="width:42%" dir="ltr">${a}</b><span style="width:32%;color:var(--mut)" dir="ltr">${b}</span><span class="st ${k}" style="width:26%;text-align:end">${c}</span></div>`).join("")}</div>
+  ${act(`<div class="btn o grow" style="height:50px;justify-content:center;gap:8px">${icon("print", 18)}<span>${S.print}</span></div>`, `<div class="btn k grow" style="height:50px;justify-content:center;gap:8px">${icon("down", 18)}<span>${S.export}</span></div>`)}`;
+  return o;
+}
+
+export function tablets(l, S) {
+  const t = {};
+  const side = (on) => `<div class="drawer" style="width:250px;box-shadow:none;border-inline-end:1.5px solid var(--ink);padding-top:44px"><div class="pad" style="height:56px;display:flex;align-items:center">${brand}</div><div class="hl"></div><div style="padding-top:8px">${drawerItems(S, on)}</div></div>`;
+  t.dashTab = `<div style="display:flex;flex:1">${side(0)}<div class="grow col" style="padding-top:44px"><div class="pad col" style="margin-top:20px"><div class="cap">${S.today} · 18 Oct</div><div class="t1" style="margin-top:6px;font-size:40px">${S.hello}.</div></div>
+   <div class="pad" style="margin-top:24px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px">${[[S.assigned, "8", true], [S.pending, "7"], [S.transit, "2"], [S.containers, "12"]].map(([n, v, hot]) => `<div class="kp ${hot ? "hot" : ""}"><span class="cap">${n}</span><b style="font-size:48px">${v}</b></div>`).join("")}</div>
+   <div class="pad row g16" style="margin-top:26px;align-items:flex-start"><div class="grow col"><div class="t2">${S.approvals}</div><div class="hr" style="margin-top:10px"></div>${[[S.openDocs, "8", 1], [S.tasks, "4", 1], [S.messages, "2", 0]].map(([a, v, c]) => `<div class="li"><span class="dot" style="${c ? "" : "background:#C9CCD3"}"></span><span class="grow" style="font-weight:600">${a}</span><b class="num" style="font-size:18px">${v}</b></div>`).join("")}</div>
+   <div class="grow col"><div class="t2">${S.report}</div><div class="hr" style="margin-top:10px"></div>${[["MSCU-000001", S.onSea, "o"], ["MSCU-000002", S.arrived, "b"], ["MSCU-000003", S.cleared, "g"], ["MSCU-000004", S.cleared, "g"]].map(([a, c, k]) => `<div class="tr"><b class="num grow" dir="ltr">${a}</b><span class="st ${k}">${c}</span></div>`).join("")}</div></div></div></div>`;
+  t.trackTab = `<div style="display:flex;flex:1">${side(4)}<div class="grow row" style="padding-top:44px;align-items:stretch"><div class="col" style="width:290px;border-inline-end:1px solid var(--line)"><div class="pad" style="margin-top:20px"><div class="field">${icon("search", 18)}<span>${S.trackPh}</span></div></div><div style="margin-top:10px">${[["MSCU-000001", S.onSea, "o"], ["MSCU-000002", S.arrived, "b"], ["MSCU-000003", S.cleared, "g"], ["MSCU-000004", S.cleared, "g"]].map(([a, c, k], i) => `<div class="li" style="padding-inline:22px;${i === 0 ? "background:var(--soft);box-shadow:inset 4px 0 0 var(--sig)" : ""}"><b class="num grow" dir="ltr">${a}</b><span class="st ${k}">${c}</span></div>`).join("")}</div></div>
+   <div class="grow col pad" style="margin-top:20px"><div class="cap">${S.bl}</div><div class="t1" dir="ltr" style="margin-top:6px">MSCU-000001</div><div class="row between" style="margin-top:26px"><b style="font-size:24px;white-space:nowrap">${S.jebel}</b><div class="grow row" style="margin:0 12px"><div class="grow" style="height:2px;background:var(--ink)"></div>${icon("ship", 26, 2)}<div class="grow" style="height:2px;background:repeating-linear-gradient(90deg,#C9CCD3 0 6px,transparent 6px 12px)"></div></div><b style="font-size:24px;white-space:nowrap">${S.nhava}</b></div>
+   <div class="hr" style="margin-top:26px"></div><div style="padding-top:18px">${[[S.portCall + " · " + S.nhava, "12 Nov", "n"], [S.sea, "04 Nov", "f"], [S.loaded + " · " + S.jebel, "29 Oct", "f"]].map(([t2, d, k], i) => `<div class="row g12" style="align-items:stretch"><div class="tlc"><div class="tld ${k}"></div>${i < 2 ? `<div class="tll ${k === "n" ? "d" : ""}"></div>` : ""}</div><div class="row between grow" style="padding-bottom:22px;align-items:flex-start"><b style="font-size:16px">${t2}</b><span class="mut num" dir="ltr">${d}</span></div></div>`).join("")}</div></div></div></div>`;
+  return t;
+}
