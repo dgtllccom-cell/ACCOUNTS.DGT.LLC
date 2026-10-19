@@ -53,9 +53,12 @@ export function randomPassword() {
 export async function ensureTestUser(g, spec) {
   const email = `${spec.key}@${E2E_DOMAIN}`;
   const reg = readRegistry();
-  if (reg[spec.key]) return { id: reg[spec.key], created: false, email };
+  // e2e-cleanup.mjs deactivates these identities at the end of a run, so a reused one is re-activated first (a deactivated user's
+  // session is revoked and every request would redirect to login)
+  const reactivate = async (id) => { await g.req("PATCH", "/api/erp/users", { userId: id, isActive: true }); };
+  if (reg[spec.key]) { await reactivate(reg[spec.key]); return { id: reg[spec.key], created: false, email }; }
   const existing = await lookupUserId(email);
-  if (existing) { reg[spec.key] = existing; writeRegistry(reg); return { id: existing, created: false, email }; }
+  if (existing) { reg[spec.key] = existing; writeRegistry(reg); await reactivate(existing); return { id: existing, created: false, email }; }
   const res = await g.req("POST", "/api/erp/users", {
     fullName: `[E2E TEST] ${spec.name}`, email, password: randomPassword(), preferredLanguage: "en",
     role: spec.role, operationalDomain: spec.domain, countryId: spec.countryId ?? null, countryBranchId: spec.countryBranchId ?? null,
