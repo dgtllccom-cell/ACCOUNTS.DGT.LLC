@@ -251,7 +251,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
               className="h-8 text-xs font-bold border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-white gap-1.5"
             >
               <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-              <span>{t(lang, "all_records.refresh_data", "Refresh")}</span>
+              <span>{pt("btn_refresh", "Refresh")}</span>
             </Button>
             <Button
               variant="outline"
@@ -260,7 +260,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
               className="h-8 text-xs font-bold border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-white gap-1.5"
             >
               <Download className="h-3.5 w-3.5" />
-              <span>{t(lang, "all_records.btn_export_excel", "Export")}</span>
+              <span>{pt("btn_export", "Export")}</span>
             </Button>
             <Button
               variant="outline"
@@ -269,7 +269,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
               className="h-8 text-xs font-bold border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-white gap-1.5"
             >
               <Printer className="h-3.5 w-3.5" />
-              <span>{t(lang, "all_records.btn_print", "Print")}</span>
+              <span>{pt("btn_print", "Print")}</span>
             </Button>
             {onBackToOverview && (
               <Button
@@ -278,7 +278,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
                 onClick={onBackToOverview}
                 className="h-8 text-xs font-bold bg-white/10 hover:bg-white/20 text-white"
               >
-                {t(lang, "stock_journal.back_to_list", "Back")}
+                {pt("btn_back", "Back")}
               </Button>
             )}
           </div>
