@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { issueForSalesOrder } from "@/lib/services/stock-journal-service";
 import { assertReservationsReady, finalizeForOrder, usesManagedLots } from "@/lib/sales/managed-lot-sales";
 import { z } from "zod";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -52,6 +52,9 @@ function buildSalesGoodsAuditRemark(orderRow: any, fallbackReference?: string | 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   let idempotencyKey = "";
   let tenantHash = "";
+  // exactly-once claim on the order (set just before posting, released if posting has NOT happened)
+  let claimedOrderId: string | null = null;
+  let paymentPosted = false;
   try {
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
@@ -123,7 +126,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       Boolean(form.transferAudit);
 
     if (alreadyTransferred && !orderRow.is_edited_since_transfer) {
-      return handleApiError(new Error("This booking has already been transferred to Sales Transfer Payment and cannot be transferred again."));
+      throw new ApiClientError("This booking has already been transferred to Sales Transfer Payment and cannot be transferred again.", { status: 409, code: "ALREADY_TRANSFERRED" });
     }
 
     // post_sales_order_payment expects p_amount in the order's OWN currency
@@ -271,6 +274,41 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       "Amount: " + totalSalesAmount
     ].filter(Boolean).join(" | ");
 
+    // EXACTLY-ONCE GUARD (database-level). The status check above reads a snapshot; two requests that both pass it would both post.
+    // This single conditional UPDATE is atomic in Postgres: only ONE request can take the claim for an order that is not yet
+    // transferred; every other request gets 0 rows and is refused with 409. A claim older than 3 minutes (crashed request that never
+    // posted) can be taken again; once the payment is posted the order carries transferPostedPaymentId and can never be claimed again
+    // until the final status update (re-transfer after an edit is still allowed through is_edited_since_transfer).
+    const claimRows = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        update sales_orders set
+          form_data = coalesce(form_data, '{}'::jsonb) || jsonb_build_object(
+            'workflow', coalesce(form_data->'workflow', '{}'::jsonb) || jsonb_build_object('transferClaimAt', now()::text)
+          )
+        where id = ${params.id} and deleted_at is null
+          and (
+            is_edited_since_transfer is true
+            or (
+              coalesce(ledger_posting_status, '') not in ('transferred', 'posted')
+              and coalesce(form_data->'workflow'->>'transferStatus', '') <> 'transferred'
+            )
+          )
+          and coalesce(form_data->'workflow'->>'transferPostedPaymentId', '') = ''
+          and (
+            coalesce(form_data->'workflow'->>'transferClaimAt', '') = ''
+            or (form_data->'workflow'->>'transferClaimAt')::timestamptz < now() - interval '3 minutes'
+          )
+        returning id
+      `;
+      return rows;
+    });
+    if (claimRows !== null) {
+      if (claimRows.length !== 1) {
+        throw new ApiClientError("This booking has already been transferred or is being transferred right now.", { status: 409, code: "ALREADY_TRANSFERRED" });
+      }
+      claimedOrderId = params.id;
+    }
+
     const { data: paymentId, error: rpcError } = await supabase.rpc("post_sales_booking_transfer", {
       p_actor_id: session.userId,
       p_sales_order_id: params.id,
@@ -288,6 +326,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     if (rpcError) {
       throw new Error(rpcError.message);
     }
+    paymentPosted = true;
+    await withLocalPg(async (sql) => {
+      await sql`
+        update sales_orders set form_data = coalesce(form_data, '{}'::jsonb) || jsonb_build_object(
+          'workflow', coalesce(form_data->'workflow', '{}'::jsonb) || jsonb_build_object('transferPostedPaymentId', ${String(paymentId)}::text)
+        ) where id = ${params.id}
+      `;
+    });
 
     // sales_order_payments reads can hit the same RLS gap as sales_orders under the temp-session
     // bootstrap login; try direct-Postgres first.
@@ -618,6 +664,18 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     return apiOk(resPayload);
   } catch (error) {
+    if (claimedOrderId && !paymentPosted) {
+      try {
+        await withLocalPg(async (sql) => {
+          await sql`
+            update sales_orders set form_data = jsonb_set(form_data, '{workflow}', (coalesce(form_data->'workflow', '{}'::jsonb) - 'transferClaimAt'))
+            where id = ${claimedOrderId} and coalesce(form_data->'workflow'->>'transferPostedPaymentId', '') = ''
+          `;
+        });
+      } catch (releaseErr) {
+        console.warn("[sales-transfer] could not release the transfer claim:", releaseErr instanceof Error ? releaseErr.message : releaseErr);
+      }
+    }
     if (idempotencyKey && tenantHash) {
       await releaseIdempotencyLock(idempotencyKey, tenantHash);
     }
