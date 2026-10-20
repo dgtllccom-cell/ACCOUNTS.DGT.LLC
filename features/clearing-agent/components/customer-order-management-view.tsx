@@ -1994,11 +1994,9 @@ export function CustomerOrderManagementView() {
 
   const visibleOrders = useMemo(() => {
     if (orders.length === 0) {
-      let sampleList = REFERENCE_SAMPLE_ORDERS;
-      if (statusFilter && statusFilter !== "all") {
-        sampleList = sampleList.filter((o) => (o.status || "").toLowerCase().includes(statusFilter.toLowerCase()));
-      }
-      return sampleList;
+      // Real data only: while the list is loading, or when there are no orders, show the empty state — never the hard-coded
+      // REFERENCE_SAMPLE_ORDERS (fake customers/orders must not appear in a live ERP).
+      return [] as ClearingCustomerOrderRow[];
     }
     let list = orders;
 
@@ -3622,9 +3620,6 @@ export function CustomerOrderManagementView() {
                     <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
                       {tt("live_report_title", "Live Customer Order Report")}
                     </h1>
-                    <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300">
-                      {tt("sample_data_preview", "Sample data • Design preview")}
-                    </span>
                   </div>
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                     {tt("super_admin_all_countries", "Super Admin • All countries and branches")}
