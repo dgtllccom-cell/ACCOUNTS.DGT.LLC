@@ -19,57 +19,48 @@ export async function GET() {
     const session = await requireErpSession();
     const language = await getRequestLanguage();
 
-    const [countries, countryBranches, cityBranches, accounts, companies, customers, distinctValues] = await Promise.all([
-      withLocalPg(async (sql) =>
-        session.isSuperAdmin
-          ? sql`select id::text as id, name from public.countries where deleted_at is null order by name`
-          : sql`select id::text as id, name from public.countries where deleted_at is null and id = any(${session.countryIds}::uuid[]) order by name`
-      ),
-      withLocalPg(async (sql) =>
-        session.isSuperAdmin
-          ? sql`select id::text as id, name, code from public.country_branches where deleted_at is null order by name`
-          : sql`select id::text as id, name, code from public.country_branches where deleted_at is null and id = any(${session.countryBranchIds}::uuid[]) order by name`
-      ),
-      withLocalPg(async (sql) =>
-        session.isSuperAdmin
-          ? sql`select id::text as id, name, code from public.city_branches where deleted_at is null order by name limit 500`
-          : sql`select id::text as id, name, code from public.city_branches where deleted_at is null and id = any(${session.cityBranchIds}::uuid[]) order by name`
-      ),
-      // Account/Ledger options — reuse the already scope-filtered ledger lookup instead of
-      // re-deriving RBAC scope logic here.
-      ledgerReportService.listLedgers({ session, reportScope: "super_admin", includeAllScopes: true, limit: 1000, language }),
-      withLocalPg(async (sql) =>
-        session.isSuperAdmin
-          ? sql`select distinct c.id::text as id, c.name from public.companies c
+    // ONE database connection for all the small lookups (they used to open seven connections at once, on top of the ledger lookup's
+    // pooled connections - on the 15-slot pooler that starved the pool and the endpoint hung for minutes). The ledger lookup runs in
+    // parallel on its own pooled connection.
+    const [base, accounts] = await Promise.all([
+      withLocalPg(async (sql) => {
+        const countries = session.isSuperAdmin
+          ? await sql`select id::text as id, name from public.countries where deleted_at is null order by name`
+          : await sql`select id::text as id, name from public.countries where deleted_at is null and id = any(${session.countryIds}::uuid[]) order by name`;
+        const countryBranches = session.isSuperAdmin
+          ? await sql`select id::text as id, name, code from public.country_branches where deleted_at is null order by name`
+          : await sql`select id::text as id, name, code from public.country_branches where deleted_at is null and id = any(${session.countryBranchIds}::uuid[]) order by name`;
+        const cityBranches = session.isSuperAdmin
+          ? await sql`select id::text as id, name, code from public.city_branches where deleted_at is null order by name limit 500`
+          : await sql`select id::text as id, name, code from public.city_branches where deleted_at is null and id = any(${session.cityBranchIds}::uuid[]) order by name`;
+        const companies = session.isSuperAdmin
+          ? await sql`select distinct c.id::text as id, c.name from public.companies c
                 join public.enterprise_accounts ea on ea.company_id = c.id
                 where c.deleted_at is null order by c.name limit 500`
-          : sql`select distinct c.id::text as id, c.name from public.companies c
+          : await sql`select distinct c.id::text as id, c.name from public.companies c
                 join public.enterprise_accounts ea on ea.company_id = c.id
                 where c.deleted_at is null
                   and (ea.city_branch_id = any(${session.cityBranchIds}::uuid[])
                     or ea.country_branch_id = any(${session.countryBranchIds}::uuid[])
                     or ea.country_id = any(${session.countryIds}::uuid[]))
-                order by c.name limit 500`
-      ),
-      withLocalPg(async (sql) =>
-        session.isSuperAdmin
-          ? sql`select id::text as id, customer_name as name from public.customers where deleted_at is null order by customer_name limit 500`
-          : sql`select id::text as id, customer_name as name from public.customers where deleted_at is null and country_id = any(${session.countryIds}::uuid[]) order by customer_name limit 500`
-      ),
-      withLocalPg(async (sql) => {
-        const [journalTypes, voucherTypes, currencies, users] = await Promise.all([
-          sql`select distinct payment_entry_type as value from public.roznamcha_lines where payment_entry_type is not null order by value limit 50`,
-          sql`select distinct transaction_type as value from public.ledger_posting_batches where transaction_type is not null order by value limit 50`,
-          sql`select distinct currency as value from (
+                order by c.name limit 500`;
+        const customers = session.isSuperAdmin
+          ? await sql`select id::text as id, customer_name as name from public.customers where deleted_at is null order by customer_name limit 500`
+          : await sql`select id::text as id, customer_name as name from public.customers where deleted_at is null and country_id = any(${session.countryIds}::uuid[]) order by customer_name limit 500`;
+        const journalTypes = await sql`select distinct payment_entry_type as value from public.roznamcha_lines where payment_entry_type is not null order by value limit 50`;
+        const voucherTypes = await sql`select distinct transaction_type as value from public.ledger_posting_batches where transaction_type is not null order by value limit 50`;
+        const currencies = await sql`select distinct currency as value from (
                 select currency from public.roznamcha_lines where currency is not null
                 union
                 select currency from public.ledger_posting_lines where currency is not null
-              ) x order by value limit 50`,
-          sql`select id::text as id, full_name as name from public.profiles where deleted_at is null order by full_name limit 500`
-        ]);
-        return { journalTypes, voucherTypes, currencies, users };
-      })
+              ) x order by value limit 50`;
+        const users = await sql`select id::text as id, full_name as name from public.profiles where deleted_at is null order by full_name limit 500`;
+        return { countries, countryBranches, cityBranches, companies, customers, distinctValues: { journalTypes, voucherTypes, currencies, users } };
+      }),
+      // Account/Ledger options - reuse the already scope-filtered ledger lookup instead of re-deriving RBAC scope logic here.
+      ledgerReportService.listLedgers({ session, reportScope: "super_admin", includeAllScopes: true, limit: 1000, language })
     ]);
+    const { countries, countryBranches, cityBranches, companies, customers, distinctValues } = base ?? { countries: [], countryBranches: [], cityBranches: [], companies: [], customers: [], distinctValues: { journalTypes: [], voucherTypes: [], currencies: [], users: [] } };
 
     const accountOptions = (accounts ?? []).map((a) => ({
       id: a.ledgerId,
