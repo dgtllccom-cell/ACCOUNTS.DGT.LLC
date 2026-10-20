@@ -10,7 +10,7 @@ const OUT = process.env.OUT; if (!OUT) throw new Error("OUT required"); fs.mkdir
 const ORDER_ID = process.env.ORDER_ID || "";
 const LANGS = (process.env.LANGS || "en,ur,ar,fa,ps").split(",");
 const WIDTHS = (process.env.WIDTHS || "1440,820,390").split(",").map(Number);
-const SCREENS = [
+const SCREENS = process.env.SCREENS ? process.env.SCREENS.split(",").map((x) => x.split(/=(.+)/).slice(0, 2)) : [
   ["register", "/dashboard/clearing-agent/customer-bill"],
   ...(ORDER_ID ? [["detail-hub", `/dashboard/clearing-agent/customer-bill?id=${ORDER_ID}`]] : []),
   ["management", "/dashboard/clearing-agent/customer-order"],
