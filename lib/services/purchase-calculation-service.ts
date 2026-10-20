@@ -633,7 +633,7 @@ export function resolveLoadingEligibility(
       // Required advance must be fully cleared (within ±0.01 tolerance)
       const requiredFC = amounts.advanceAmountFC;
       const shortfall = Math.max(0, requiredFC - paidFC);
-      if (shortfall <= 0.01) {
+      if (paidFC > 0.005 && shortfall <= 0.01) {
         return {
           eligible: true,
           reason: "Required advance payment has been cleared.",
@@ -645,11 +645,13 @@ export function resolveLoadingEligibility(
       }
       return {
         eligible: false,
-        reason: `Advance payment not cleared. Required: ${formatAmount(requiredFC)} ${amounts.purchaseCurrency}, Paid: ${formatAmount(paidFC)} ${amounts.purchaseCurrency}, Shortfall: ${formatAmount(shortfall)} ${amounts.purchaseCurrency}.`,
+        reason: paidFC <= 0.005
+          ? "Advance payment required before loading. Required advance has not been paid."
+          : `Advance payment not cleared. Required: ${formatAmount(requiredFC)} ${amounts.purchaseCurrency}, Paid: ${formatAmount(paidFC)} ${amounts.purchaseCurrency}, Shortfall: ${formatAmount(shortfall)} ${amounts.purchaseCurrency}.`,
         paymentCondition: condition,
         requiredAmountFC: requiredFC,
         paidAmountFC: paidFC,
-        shortfallFC: shortfall,
+        shortfallFC: Math.max(requiredFC > 0 ? requiredFC : amounts.totalPurchaseFC, shortfall),
       };
     }
 
@@ -698,9 +700,7 @@ export function resolveLoadingEligibility(
     }
 
     case "invoice": {
-      // Invoice Purchase: the required invoice payment must be COMPLETED AND CONFIRMED before the goods move to Loading.
-      // Confirmed = the invoice step was marked completed / payment posted, or the payments posted cover the invoice amount.
-      // A partial payment (or an unrelated advance) does not unlock Loading.
+      // Credit / Invoice bookings follow their approved route into Loading Booking and Confirmed Booking, with the outstanding balance clearly visible.
       const orderAny = order as any;
       const wf = getWorkflow(order);
       const requiredFC = amounts.totalPurchaseFC;
@@ -708,15 +708,18 @@ export function resolveLoadingEligibility(
       const stepConfirmed =
         wf.invoiceStatus === "completed" ||
         wf.currentStep === "payment_posted" ||
-        wf.currentStep === "purchase_loading";
+        wf.currentStep === "purchase_loading" ||
+        orderAny.status === "transferred" ||
+        orderAny.ledger_posting_status === "posted" ||
+        wf.transferStatus === "transferred";
       const covered = requiredFC > 0 ? settledFC + 0.01 >= requiredFC : true;
 
       if (stepConfirmed || covered) {
         return {
           eligible: true,
-          reason: "Invoice payment completed and confirmed — loading eligible.",
+          reason: "Invoice booking approved — loading allowed with outstanding balance visible.",
           paymentCondition: condition,
-          requiredAmountFC: requiredFC,
+          requiredAmountFC: 0,
           paidAmountFC: settledFC,
           shortfallFC: Math.max(0, requiredFC - settledFC),
         };

@@ -77,6 +77,7 @@ export type TransportBookingRecord = {
   }>;
   // Purchase bill details kept separate
   purchaseBillTotal: number;
+  purchaseAdvancePaid: number;
   purchaseTotalPaid: number;
   purchaseRemainingDue: number;
   purchasePaymentStatus: string;
@@ -84,7 +85,6 @@ export type TransportBookingRecord = {
 
 export function TransportPaymentBookingWorkspace() {
   const activeLang = useActiveLanguage();
-  const tt = (key: string, fallback: string) => t(activeLang, key as never, fallback);
 
   const [records, setRecords] = useState<TransportBookingRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -527,13 +527,13 @@ export function TransportPaymentBookingWorkspace() {
           </div>
           <div className="mt-2 flex items-baseline justify-between">
             <span className="text-2xl font-black text-rose-700 dark:text-rose-400">
-              {stats.totalRemaining.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {actionError ? "—" : stats.totalRemaining.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <span className={cn(
               "rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
-              stats.totalRemaining <= 0.005 ? "bg-slate-900 text-white" : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+              actionError ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300" : stats.totalRemaining <= 0.005 ? "bg-slate-900 text-white" : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
             )}>
-              {stats.totalRemaining <= 0.005 ? "Fully Settled" : "Outstanding"}
+              {actionError ? "Error" : stats.totalRemaining <= 0.005 ? "Fully Settled" : "Outstanding"}
             </span>
           </div>
         </Card>
@@ -699,11 +699,15 @@ export function TransportPaymentBookingWorkspace() {
                             <span className="font-bold">{r.purchaseBillTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                           </div>
                           <div className="flex justify-between gap-2">
-                            <span className="text-muted-foreground">Bill Paid:</span>
+                            <span className="text-muted-foreground">Advance Paid:</span>
+                            <span className="font-bold text-sky-700 dark:text-sky-400">{(r.purchaseAdvancePaid || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="flex justify-between gap-2">
+                            <span className="text-muted-foreground">Total Paid:</span>
                             <span className="font-bold text-emerald-700 dark:text-emerald-400">{r.purchaseTotalPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                           </div>
                           <div className="flex justify-between gap-2 border-t pt-0.5 mt-0.5">
-                            <span className="text-muted-foreground">Bill Due:</span>
+                            <span className="text-muted-foreground">Remaining:</span>
                             <span className={cn("font-black", r.purchaseRemainingDue <= 0.005 ? "text-slate-900 dark:text-white" : "text-rose-600 dark:text-rose-400")}>
                               {r.purchaseRemainingDue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </span>

@@ -296,15 +296,9 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: ClipboardList,
         children: [
           { label: nt("New Booking"), href: "/dashboard/purchase/new-purchase-booking-order", icon: ClipboardList },
-          { label: nt("Confirmed Booking"), href: "/dashboard/purchase/purchase-confirm", icon: CheckCircle2 },
-          { label: nt("Loading Booking"), href: "/dashboard/purchase/purchase-loading-records", icon: Truck },
           { label: nt("Transport Payment Booking"), href: "/dashboard/purchase/transport-payment", icon: Receipt },
-          { label: nt("Purchase Booking Details & Register"), href: "/dashboard/purchase/purchase-booking-journal-report", icon: FileBarChart },
-          { label: nt("Purchase Payments"), href: "/dashboard/purchase/purchase-payments", icon: CreditCard },
-          { label: nt("Purchase Orders Payment"), href: "/dashboard/purchase/purchase-order", icon: Receipt },
-          { label: nt("Country Bill Payment"), href: "/dashboard/purchase/completed-purchase-bills", icon: FileCheck2 },
-          { label: nt("Purchase Transit & Lane"), href: "/dashboard/purchase/purchase-transit-lane?source=purchase_booking", icon: Truck },
-          { label: nt("Track Shipment (Cargo & Containers)"), href: "/dashboard/purchase/shipment-tracking", icon: Compass, tone: "red" },
+          { label: nt("Loading Booking"), href: "/dashboard/purchase/purchase-loading-records", icon: Truck },
+          { label: nt("Confirmed Booking"), href: "/dashboard/purchase/purchase-confirm", icon: CheckCircle2 },
         ],
       },
       {

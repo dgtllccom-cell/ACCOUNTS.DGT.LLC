@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
           po.payment_status as purchase_payment_status,
           po.form_data as po_form_data,
           c.name as country_name,
-          c.currency as country_currency,
+          c.currency_code as country_currency,
           cb.name as branch_name
         from purchase_loading_records plr
         left join purchase_orders po on po.id = plr.purchase_order_id
@@ -136,6 +136,7 @@ export async function GET(request: NextRequest) {
         payments: transportPayments,
         // Purchase bill figures kept strictly separate
         purchaseBillTotal: Number(row.purchase_bill_total || 0),
+        purchaseAdvancePaid: Number(row.purchase_advance_paid || 0),
         purchaseTotalPaid: Number(row.purchase_advance_paid || 0) + Number(row.purchase_remaining_paid || 0) + Number(row.purchase_credit_amount || 0),
         purchaseRemainingDue: Number(row.purchase_remaining_due || 0),
         purchasePaymentStatus: row.purchase_payment_status || "pending"

@@ -196,11 +196,54 @@ function paymentIndicator(row: PurchaseOrderRow) {
   };
 }
 
+function transferIndicator(row: PurchaseOrderRow) {
+  const f = form(row);
+  const w = workflow(row);
+  const isTransferred =
+    String(row.ledger_posting_status || "").toLowerCase().includes("post") ||
+    String(row.status || "").toLowerCase() === "transferred" ||
+    String(w.transferStatus || "").toLowerCase() === "transferred" ||
+    Boolean(f.transferAudit || f.roznamchaEntryId);
+
+  const transferDate = f.transferAudit?.transferDate || w.transferredAt || null;
+  const transferRef = f.transferAudit?.referenceNo || w.referenceNo || null;
+
+  if (isTransferred) {
+    return {
+      isTransferred: true,
+      statusText: "Transferred",
+      badgeClass: "border border-slate-900 bg-slate-950 text-white font-black shadow-sm",
+      textClass: "text-slate-900 dark:text-white font-black",
+      transferDate,
+      transferRef
+    };
+  }
+
+  return {
+    isTransferred: false,
+    statusText: "Not Transferred",
+    badgeClass: "border border-rose-300 bg-rose-50 text-rose-700 font-black shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300",
+    textClass: "text-rose-600 dark:text-rose-400 font-bold",
+    transferDate: null,
+    transferRef: null
+  };
+}
+
 function isConfirmedBooking(row: PurchaseOrderRow): boolean {
   const f = form(row);
   const w = workflow(row);
+  const paymentType = String(f.paymentType || f.paymentCondition || (row as any).payment_mode || "").toLowerCase();
+  const isAdvance = paymentType.includes("advance") || paymentType.includes("endorsement");
+  const advancePaid = Number(row.advance_paid || 0);
+
+  // Requirement 5: For advance-payment bookings, before the required advance payment is successfully recorded,
+  // it must NOT appear as eligible in Loading Booking or Confirmed Booking.
+  if (isAdvance && advancePaid <= 0.005) {
+    return false;
+  }
+
   const ledgerPosted = String(row.ledger_posting_status || "").toLowerCase().includes("post");
-  const hasPayment = Number(row.advance_paid || 0) > 0 || Number(row.remaining_paid || 0) > 0 || Number(row.credit_amount || 0) > 0;
+  const hasPayment = advancePaid > 0 || Number(row.remaining_paid || 0) > 0 || Number(row.credit_amount || 0) > 0;
   const payStatus = String(row.payment_status || "").toLowerCase();
   const isPaidOrPartial = payStatus === "completed" || payStatus === "partial" || payStatus === "paid";
 
@@ -697,8 +740,9 @@ export function PurchaseModuleWorkspace({
                   ["Bill Total", "Bill Total"],
                   ["Advance Paid", "Advance Paid"],
                   ["Total Paid", "Total Paid"],
-                  ["Remaining Amount", "Remaining Amount"],
-                  ["Payment Status", "Payment Status"],
+                  ["Remaining Due", "Remaining Due"],
+                  ["Transfer Status", "Transfer Status"],
+                  ["Bill Payment Status", "Bill Payment Status"],
                   [t(lang, "common.status", "Operational Status"), "Operational Status"],
                   [t(lang, "common.actions", "Action"), "Action"],
                 ].map(([label, key]) => (
@@ -708,8 +752,9 @@ export function PurchaseModuleWorkspace({
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={14} className="px-3 py-8 text-center text-muted-foreground">{t(lang, "purchase.pmw_loading", "Loading purchase records...")}</td></tr>
+                <tr><td colSpan={15} className="px-3 py-8 text-center text-muted-foreground">{t(lang, "purchase.pmw_loading", "Loading purchase records...")}</td></tr>
               ) : rows.length ? rows.map((row) => {
+                const ti = transferIndicator(row);
                 const pi = paymentIndicator(row);
                 const rem = remaining(row);
                 const curr = currency(row);
@@ -729,7 +774,20 @@ export function PurchaseModuleWorkspace({
                       {money(rem, curr)}
                     </td>
                     <td className="px-3 py-3">
-                      <div className="flex flex-col gap-1 items-start">
+                      <div className="flex flex-col gap-0.5 items-start">
+                        <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider", ti.badgeClass)}>
+                          <span className={cn("h-1.5 w-1.5 rounded-full", ti.isTransferred ? "bg-white" : "bg-rose-500 animate-pulse")} />
+                          {ti.statusText}
+                        </span>
+                        {ti.isTransferred && ti.transferDate && (
+                          <span className="text-[9px] text-muted-foreground font-mono">
+                            {date(ti.transferDate)}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex flex-col gap-0.5 items-start">
                         <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider", pi.badgeClass)}>
                           <span className={cn("h-1.5 w-1.5 rounded-full", pi.isFullyPaid ? "bg-white" : "bg-rose-500 animate-pulse")} />
                           {pi.statusText}
@@ -746,7 +804,7 @@ export function PurchaseModuleWorkspace({
                   </tr>
                 );
               }) : (
-                <tr><td colSpan={14} className="px-3 py-8 text-center text-muted-foreground">{t(lang, "purchase.pmw_no_live_records", "No live purchase records found for this stage.")}</td></tr>
+                <tr><td colSpan={15} className="px-3 py-8 text-center text-muted-foreground">{t(lang, "purchase.pmw_no_live_records", "No live purchase records found for this stage.")}</td></tr>
               )}
             </tbody>
           </table>
