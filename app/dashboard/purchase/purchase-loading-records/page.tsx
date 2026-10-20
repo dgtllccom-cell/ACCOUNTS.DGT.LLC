@@ -1,7 +1,7 @@
 import { PurchaseLoadingRecordsView } from "@/features/purchases/components/purchase-loading-records-view";
 import { requireErpSession } from "@/lib/auth/session";
 
-export const metadata = { title: "Purchase — Purchase Loading Records" };
+export const metadata = { title: "Purchase — Loading Booking" };
 
 
 export const dynamic = "force-dynamic";

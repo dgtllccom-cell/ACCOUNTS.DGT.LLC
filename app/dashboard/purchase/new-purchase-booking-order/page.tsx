@@ -1,7 +1,7 @@
 import { NewPurchaseBookingEntry } from "@/features/purchases/components/new-purchase-booking-entry";
 import { requireErpSession } from "@/lib/auth/session";
 
-export const metadata = { title: "Purchase — New Purchase Booking Order" };
+export const metadata = { title: "Purchase — New Booking" };
 
 
 export const dynamic = "force-dynamic";

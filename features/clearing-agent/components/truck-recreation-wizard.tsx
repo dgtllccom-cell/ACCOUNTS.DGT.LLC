@@ -238,7 +238,15 @@ type TruckRow = {
   country_serial: string | null;
   branch_serial: string | null;
   entry_serial: string | null;
+  driver_docs_expiry_date?: string | null;
+  city_branch_id?: string | null;
+  country_branch_id?: string | null;
+  country_id?: string | null;
 };
+
+export type ViewMode = "form" | "list";
+export type OptionalColumnKey = string;
+export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 export type ContactType = "WhatsApp" | "Mobile" | "Phone" | "Email";
 
@@ -308,7 +316,7 @@ const EMPTY_FORM = {
   registrationDate: new Date().toISOString().slice(0, 10),
 };
 
-const TRK_TEXT: Record<string, Record<SupportedLanguage, string | ((n: number, total?: number) => string)>> = {
+const TRK_TEXT: Record<string, Record<SupportedLanguage, any>> = {
   pageTitle: {
     en: "Clearing Truck Registration",
     ur: "کلیرنگ ٹرک رجسٹریشن",
