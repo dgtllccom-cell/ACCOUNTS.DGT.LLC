@@ -932,132 +932,130 @@ export function JournalBookingStockDashboard({
   const toEntry = isFilteredLocally ? displayRows.length : Math.min(page * LIMIT, totalEntries);
 
   return (
-    <div dir={s.dir} data-testid="stock-journal" className="mx-auto min-h-screen max-w-[1920px] space-y-4 p-3 sm:p-5">
-      {/* ── Top Header matching Reference ── */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
-          <div className="flex items-center gap-3">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md">
-              <Boxes className="h-7 w-7" />
-            </span>
-            <div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+    <div dir={s.dir} data-testid="stock-journal" className="mx-auto min-h-screen max-w-[1920px] space-y-2.5 p-2 sm:p-4">
+      {/* ── Compact Unified Header Strip ── */}
+      <header className="flex flex-col gap-2.5 rounded-xl border border-slate-200/90 bg-white p-2.5 sm:p-3 shadow-xs dark:border-slate-700/80 dark:bg-slate-800 xl:flex-row xl:items-center xl:justify-between print:hidden">
+        {/* Left: Compact Title, Eyebrow & Icon */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs">
+            <Boxes className="h-5 w-5" />
+          </span>
+          <div>
+            <div className="flex items-center gap-1.5 leading-none">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
                 {s.t("eyebrow_inventory_journal", "INVENTORY / STOCK JOURNAL")}
-              </div>
-              <h1 className="text-[24px] font-black tracking-tight text-slate-900 dark:text-slate-50">
-                {s.t("title_purchase_general_stock", "Purchase General Stock")}
-              </h1>
-              <p className="text-[12px] font-medium text-slate-500">
+              </span>
+              <span className="hidden text-[9px] font-bold text-slate-300 dark:text-slate-600 md:inline">•</span>
+              <span className="hidden text-[9px] font-medium text-slate-400 md:inline">
                 {s.t("subtitle_purchase_general_stock", "Your stock, from booking to delivery.")}
-              </p>
+              </span>
             </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="hidden rounded-lg bg-blue-50 px-3 py-1.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 md:inline-block">
-              {s.t("label_damaan_inventory", "DAMAAN BUSINESS GROUP · INVENTORY WORKSPACE")}
-            </span>
+            <h1 className="text-[17px] font-black tracking-tight text-slate-900 dark:text-slate-50 leading-tight">
+              {s.t("title_purchase_general_stock", "Purchase General Stock")}
+            </h1>
           </div>
         </div>
-      </div>
 
-      {/* ── Action Toolbar with Search, Sources, Filters, Three-dot Menu, New Entry ── */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs dark:border-slate-700 dark:bg-slate-800 lg:flex-row lg:items-center lg:justify-between print:hidden">
-        {/* Search input */}
-        <div className="relative min-w-[280px] flex-1">
-          <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            data-testid="sj-search"
-            value={f.search}
-            onChange={(e) => setF({ ...f, search: e.target.value })}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setLoading(true);
-                setApplied({ ...f });
+        {/* Right: Search, Source Filters, Filters, Three-dot Menu, New Entry */}
+        <div className="flex flex-wrap items-center gap-1.5 xl:justify-end">
+          {/* Search Input */}
+          <div className="relative min-w-[200px] flex-1 sm:w-56 sm:flex-initial">
+            <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <input
+              data-testid="sj-search"
+              value={f.search}
+              onChange={(e) => setF({ ...f, search: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setLoading(true);
+                  setApplied({ ...f });
+                  setPage(1);
+                }
+              }}
+              placeholder={s.t("search_ph_entry", "Search purchase, supplier, product or invoice…")}
+              className="h-8 w-full rounded-lg border border-slate-300 bg-white ps-8 pe-2.5 text-[12px] placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900"
+            />
+          </div>
+
+          {/* Source filters: All Purchases / Local Purchase / Purchase Booking */}
+          <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/60">
+            <button
+              type="button"
+              onClick={() => {
+                setSourceType("all");
                 setPage(1);
-              }
-            }}
-            placeholder={s.t("search_ph_entry", "Search purchase, supplier, product or invoice…")}
-            className="min-h-[40px] w-full rounded-lg border border-slate-300 bg-white ps-9 pe-3 text-[13px] dark:border-slate-600 dark:bg-slate-900"
-          />
-        </div>
+              }}
+              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-bold transition ${
+                sourceType === "all"
+                  ? "bg-blue-600 text-white shadow-xs font-black"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+              }`}
+              title={s.t("source_all_purchases", "All Purchases")}
+            >
+              <Boxes className="h-3 w-3" />
+              <span>{s.t("source_all_purchases", "All Purchases")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSourceType("local_purchase");
+                setPage(1);
+              }}
+              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-bold transition ${
+                sourceType === "local_purchase"
+                  ? "bg-emerald-600 text-white shadow-xs font-black"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+              }`}
+              title={s.t("source_local_purchase", "Local Purchase")}
+            >
+              <ShoppingBag className="h-3 w-3 text-emerald-500" />
+              <span>{s.t("source_local_purchase", "Local Purchase")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSourceType("purchase_booking");
+                setPage(1);
+              }}
+              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-bold transition ${
+                sourceType === "purchase_booking"
+                  ? "bg-indigo-600 text-white shadow-xs font-black"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+              }`}
+              title={s.t("source_purchase_booking", "Purchase Booking")}
+            >
+              <FileText className="h-3 w-3 text-indigo-500" />
+              <span>{s.t("source_purchase_booking", "Purchase Booking")}</span>
+            </button>
+          </div>
 
-        {/* Source filters: All Purchases / Local Purchase / Purchase Booking (Requirement 2) */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => {
-              setSourceType("all");
-              setPage(1);
-            }}
-            className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg px-3.5 text-[12px] font-bold transition ${
-              sourceType === "all"
-                ? "bg-blue-600 text-white shadow-xs font-black"
-                : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            }`}
-          >
-            <Boxes className="h-3.5 w-3.5" />
-            {s.t("source_all_purchases", "All Purchases")}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSourceType("local_purchase");
-              setPage(1);
-            }}
-            className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg px-3.5 text-[12px] font-bold transition ${
-              sourceType === "local_purchase"
-                ? "bg-emerald-600 text-white shadow-xs font-black"
-                : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            }`}
-          >
-            <ShoppingBag className="h-3.5 w-3.5 text-emerald-500" />
-            {s.t("source_local_purchase", "Local Purchase")}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSourceType("purchase_booking");
-              setPage(1);
-            }}
-            className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg px-3.5 text-[12px] font-bold transition ${
-              sourceType === "purchase_booking"
-                ? "bg-indigo-600 text-white shadow-xs font-black"
-                : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            }`}
-          >
-            <FileText className="h-3.5 w-3.5 text-indigo-500" />
-            {s.t("source_purchase_booking", "Purchase Booking")}
-          </button>
-        </div>
-
-        {/* Actions: Filters overlay trigger, Three-dot Menu (Export CSV, Print / PDF), Refresh, New Entry */}
-        <div className="flex flex-wrap items-center gap-2">
+          {/* Filters Button */}
           <button
             type="button"
             onClick={() => setFiltersOpen(true)}
-            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 text-[12px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
           >
             <Filter className="h-3.5 w-3.5 text-blue-600" />
-            {s.t("filters", "Filters")}
+            <span>{s.t("filters", "Filters")}</span>
             {activeChips.length > 0 && (
-              <span className="rounded-full bg-blue-100 px-1.5 py-0.2 text-[10px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+              <span className="rounded-full bg-blue-100 px-1.5 py-0.2 text-[9px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                 {activeChips.length}
               </span>
             )}
           </button>
 
+          {/* Refresh Button */}
           <button
             type="button"
             onClick={() => void load(page)}
-            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-[12px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-            title="Refresh records"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            title={s.t("refresh_records", "Refresh records")}
+            aria-label={s.t("refresh_records", "Refresh records")}
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">{s.t("refresh", "Refresh")}</span>
           </button>
 
-          {/* Three-dot menu for Export CSV & Print / PDF (Requirement 6) */}
+          {/* Three-dot menu for Export CSV & Print / PDF */}
           <div className="relative">
             <button
               type="button"
@@ -1065,16 +1063,17 @@ export function JournalBookingStockDashboard({
                 e.stopPropagation();
                 setThreeDotOpen((v) => !v);
               }}
-              className="inline-flex min-h-[38px] w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              aria-label="More actions"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              aria-label={s.t("more_actions", "More actions")}
+              title={s.t("more_actions", "More actions")}
             >
-              <MoreVertical className="h-4 w-4" />
+              <MoreVertical className="h-3.5 w-3.5" />
             </button>
 
             {threeDotOpen && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute end-0 top-11 z-50 w-44 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-800"
+                className="absolute end-0 top-9.5 z-50 w-44 rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-800"
               >
                 <button
                   type="button"
@@ -1102,26 +1101,27 @@ export function JournalBookingStockDashboard({
             )}
           </div>
 
+          {/* New Purchase Entry */}
           <a
             href="/dashboard/purchase/purchase-order"
-            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg bg-blue-600 px-4 text-[13px] font-bold text-white shadow-sm hover:bg-blue-700"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-[12px] font-bold text-white shadow-xs hover:bg-blue-700"
           >
-            <Plus className="h-4 w-4" />
-            {s.t("btn_new_entry", "New Purchase Entry")}
+            <Plus className="h-3.5 w-3.5" />
+            <span>{s.t("btn_new_entry", "New Purchase Entry")}</span>
           </a>
         </div>
-      </div>
+      </header>
 
-      {/* ── Active Filter Chips ── */}
+      {/* ── Active Filter Chips (if any) ── */}
       {activeChips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 print:hidden">
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5 print:hidden">
           <span className="text-[11px] font-bold text-slate-500">Active filters:</span>
           {activeChips.map((chip) => (
             <button
               key={chip.id}
               type="button"
               onClick={chip.onRemove}
-              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300"
+              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300"
             >
               <span>{chip.label}</span>
               <X className="h-3 w-3" />
@@ -1130,7 +1130,7 @@ export function JournalBookingStockDashboard({
           <button
             type="button"
             onClick={clearAllFilters}
-            className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300"
+            className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300"
           >
             Clear all
           </button>
@@ -1138,7 +1138,7 @@ export function JournalBookingStockDashboard({
       )}
 
       {/* ── Three Compact Stock Report Panels (Requirement 3) ── */}
-      <section className="grid grid-cols-1 gap-3.5 lg:grid-cols-12 print:hidden">
+      <section className="grid grid-cols-1 gap-2.5 lg:grid-cols-12 print:hidden">
         {/* Panel 1: Stock Summary */}
         <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-800 lg:col-span-4 flex flex-col justify-between">
           <div>
@@ -1517,8 +1517,8 @@ export function JournalBookingStockDashboard({
       </SimpleModal>
 
       {/* ── Stage Tabs ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-xs dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex gap-1.5 overflow-x-auto pb-0.5" role="tablist">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-slate-200/90 bg-white p-2 shadow-xs dark:border-slate-700/80 dark:bg-slate-800">
+        <div className="flex gap-1 overflow-x-auto pb-0.5" role="tablist">
           {TABS.map((t) => (
             <button
               key={t}
@@ -1527,7 +1527,7 @@ export function JournalBookingStockDashboard({
               type="button"
               data-testid={`sj-tab-${t}`}
               onClick={() => goTab(t)}
-              className={`min-h-[38px] shrink-0 rounded-lg px-3.5 text-[12px] font-black transition ${
+              className={`min-h-[32px] shrink-0 rounded-lg px-3 text-[11px] font-black transition ${
                 tab === t
                   ? "bg-blue-600 text-white shadow-xs"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-100"
