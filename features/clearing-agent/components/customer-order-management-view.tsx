@@ -3667,10 +3667,10 @@ export function CustomerOrderManagementView() {
                     );
                   }}
                   className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300 transition shadow-2xs"
-                  title="View Customer Order Details Layout"
+                  title={tt("final_design_view_title", "View Customer Order Details Layout")}
                 >
                   <Eye className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Final Design View</span>
+                  <span>{tt("final_design_view", "Final Design View")}</span>
                 </button>
 
                 {/* + New Order Primary Button */}
