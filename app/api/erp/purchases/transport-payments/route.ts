@@ -7,6 +7,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { writeAuditLog } from "@/lib/api/supabase";
 import { parseJsonish } from "@/lib/stock-journal/model";
+import { getRequestLanguage } from "@/lib/i18n/server";
 
 const paymentSchema = z.object({
   loadingRecordId: z.string().uuid(),
@@ -41,6 +42,8 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const { searchParams } = new URL(request.url);
+    const lang = await getRequestLanguage(searchParams.get("lang"));
+    void lang;
     const q = searchParams.get("q")?.trim().toLowerCase();
     const statusFilter = searchParams.get("status");
 
