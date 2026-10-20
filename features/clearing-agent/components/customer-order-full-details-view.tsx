@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Printer,
   FileDown,
@@ -28,7 +28,14 @@ import {
   Hash,
   ChevronRight
 } from "lucide-react";
-import { t } from "@/lib/i18n/ui";
+import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import {
+  coCustomerTypeLabel,
+  coModeLabel,
+  coMovementLabel,
+  coStatusLabel,
+  coYesNoLabel,
+} from "./customer-order-i18n";
 import type { ClearingCustomerOrderRow } from "@/lib/services/clearing-customer-order-service";
 
 interface CustomerOrderFullDetailsViewProps {
@@ -56,8 +63,16 @@ export function CustomerOrderFullDetailsView({
   onEdit,
   lang = "en"
 }: CustomerOrderFullDetailsViewProps) {
+  const s = useErpScreen("cod", lang);
+  const L = s.lang;
+  const tg = s.tGlobal;
   const [activeTab, setActiveTab] = useState<"order_customer" | "shipping" | "goods" | "history">("order_customer");
   const [searchQuery, setSearchQuery] = useState("");
+  // Report-footer timestamp is set on the client only (no SSR/hydration mismatch).
+  const [generatedAt, setGeneratedAt] = useState("");
+  useEffect(() => {
+    setGeneratedAt(new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).toUpperCase());
+  }, []);
 
   const o = (order || {}) as Record<string, any>;
   const linkedCust = customers.find((c) => c.id === order?.customer_id || c.name === order?.customer_name);
@@ -89,7 +104,7 @@ export function CustomerOrderFullDetailsView({
   const loadingCity = order?.loading_source_name || o.loading_city || "Kabul";
   const loadingDate = o.loading_date || o.planned_dispatch_date || "12 OCT 2026";
   const exitBorder = o.exit_border_port_name || o.exit_border || "Chaman (AF → PK)";
-  const customsClearance = "Yes";
+  const customsClearance = coYesNoLabel(L, "Yes");
   const loadingCustomsName = o.loading_customs_name || "Kabul Customs";
   const loadingWarehouse = order?.loading_source_name || o.loading_warehouse || "Main Warehouse";
 
@@ -128,10 +143,10 @@ export function CustomerOrderFullDetailsView({
     if (Array.isArray(rawItems) && rawItems.length > 0) {
       goodsRows = rawItems.map((g: any, idx: number) => ({
         id: idx + 1,
-        name: g.goodsName || g.goods_name || g.name || "Goods Item",
+        name: g.goodsName || g.goods_name || g.name || s.t("goods_item", "Goods Item"),
         hsCode: g.goodsChsCode || g.goods_chs_code || g.hsCode || "0802.51",
-        brand: g.brand || "Standard",
-        size: g.size || "Standard",
+        brand: g.brand || s.t("standard", "Standard"),
+        size: g.size || s.t("standard", "Standard"),
         unit: g.unit || g.packaging_type || "KG",
         qty: Number(g.quantity) || 0,
         grossKg: Number(g.grossWeight || g.totalKg) || 0,
@@ -191,41 +206,41 @@ export function CustomerOrderFullDetailsView({
   // Section User Audit Details
   const auditUsers = [
     {
-      section: "Shipping / Loading Details",
+      section: s.t("sec_shipping", "Shipping / Loading Details"),
       enteredBy: "Ahmad Khan",
-      role: "Clearing Agent",
+      role: s.t("aud_role_clearing", "Clearing Agent"),
       branch: "Kabul Branch",
       dateTime: "12 OCT 2026 10:20",
-      remarks: "Shipping details entered"
+      remarks: s.t("aud_rem_shipping", "Shipping details entered")
     },
     {
-      section: "Transport Details",
+      section: s.t("transport_details", "Transport Details"),
       enteredBy: "Kandahar Admin",
-      role: "Transport Team",
+      role: s.t("aud_role_transport", "Transport Team"),
       branch: "Kandahar Branch",
       dateTime: "12 OCT 2026 11:05",
-      remarks: "Truck and route updated"
+      remarks: s.t("aud_rem_transport", "Truck and route updated")
     },
     {
-      section: "Receiving Details",
+      section: s.t("sec_receiving", "Receiving Details"),
       enteredBy: "Karachi User",
-      role: "Receiving Desk",
+      role: s.t("aud_role_receiving", "Receiving Desk"),
       branch: "Karachi Branch",
       dateTime: "12 OCT 2026 12:10",
-      remarks: "Receiving destination confirmed"
+      remarks: s.t("aud_rem_receiving", "Receiving destination confirmed")
     },
     {
-      section: "Goods Details",
+      section: s.t("goods_details", "Goods Details"),
       enteredBy: "Asmatullah",
-      role: "Operations",
+      role: s.t("aud_role_operations", "Operations"),
       branch: "Dubai Main",
       dateTime: "12 OCT 2026 13:15",
-      remarks: "Goods items added"
+      remarks: s.t("aud_rem_goods", "Goods items added")
     }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-100/70 p-3 sm:p-5 lg:p-6 print:p-0 print:bg-white text-slate-800">
+    <div dir={s.dir} className="min-h-screen bg-slate-100/70 p-3 sm:p-5 lg:p-6 print:p-0 print:bg-white text-slate-800">
       {/* 
         Width Container:
         Fulfills user's audio request: "Thoda isko chaudai me aur chota karwa do"
@@ -236,7 +251,7 @@ export function CustomerOrderFullDetailsView({
           {/* ========================================================================= */}
           {/* LEFT USER PROFILE SIDEBAR                                                 */}
           {/* ========================================================================= */}
-          <aside className="w-full lg:w-60 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/60 p-4 shrink-0 flex flex-col justify-between print:hidden">
+          <aside className="w-full lg:w-60 border-b lg:border-b-0 lg:border-e border-slate-200 bg-slate-50/60 p-4 shrink-0 flex flex-col justify-between print:hidden">
             <div className="space-y-4">
               {/* Back button to return to table */}
               <button
@@ -244,8 +259,8 @@ export function CustomerOrderFullDetailsView({
                 onClick={onClose}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 hover:text-blue-600 transition shadow-2xs"
               >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back to Customer Orders</span>
+                <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                <span>{s.t("back_to_orders", "Back to Customer Orders")}</span>
               </button>
 
               {/* Profile Card */}
@@ -254,7 +269,7 @@ export function CustomerOrderFullDetailsView({
                   <User className="h-9 w-9 text-slate-500" />
                 </div>
                 <h3 className="font-black text-sm text-slate-900">Asmatullah</h3>
-                <span className="text-[11px] font-semibold text-blue-600">ID: UCL-001</span>
+                <span className="text-[11px] font-semibold text-blue-600">{s.t("id", "ID")}: UCL-001</span>
               </div>
 
               {/* Profile Meta Fields */}
@@ -262,15 +277,15 @@ export function CustomerOrderFullDetailsView({
                 <div className="flex items-start gap-2.5">
                   <User className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Role</span>
-                    <span className="font-bold text-slate-800">Operations</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{s.t("role", "Role")}</span>
+                    <span className="font-bold text-slate-800">{s.t("aud_role_operations", "Operations")}</span>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-2.5">
                   <Building2 className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Branch</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{tg("common.branch", "Branch")}</span>
                     <span className="font-bold text-slate-800">Dubai Main</span>
                   </div>
                 </div>
@@ -278,7 +293,7 @@ export function CustomerOrderFullDetailsView({
                 <div className="flex items-start gap-2.5">
                   <Hash className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Branch Code</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{s.t("branch_code", "Branch Code")}</span>
                     <span className="font-mono font-bold text-slate-800">DXB-001</span>
                   </div>
                 </div>
@@ -286,7 +301,7 @@ export function CustomerOrderFullDetailsView({
                 <div className="flex items-start gap-2.5">
                   <MapPin className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Country</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{tg("common.country", "Country")}</span>
                     <span className="font-bold text-slate-800">United Arab Emirates</span>
                   </div>
                 </div>
@@ -294,7 +309,7 @@ export function CustomerOrderFullDetailsView({
                 <div className="flex items-start gap-2.5 pt-2 border-t border-slate-100">
                   <Clock className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Date & Time</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{s.t("date_time", "Date & Time")}</span>
                     <span className="font-mono font-bold text-slate-800 text-[11px]">12 OCT 2026 16:20</span>
                   </div>
                 </div>
@@ -303,7 +318,7 @@ export function CustomerOrderFullDetailsView({
 
             <div className="pt-4 text-center">
               <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-200">
-                Verified ERP Order
+                {s.t("verified_order", "Verified ERP Order")}
               </span>
             </div>
           </aside>
@@ -325,7 +340,7 @@ export function CustomerOrderFullDetailsView({
                     <span className="text-xs font-black text-blue-900 tracking-wide">DAMAAN GENERAL TRADING L.L.C</span>
                   </div>
                   <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                    IMPORT • EXPORT • TRANSIT • LOGISTICS • CLEARING AGENT
+                    {s.t("tagline", "IMPORT • EXPORT • TRANSIT • LOGISTICS • CLEARING AGENT")}
                   </p>
                 </div>
               </div>
@@ -337,10 +352,10 @@ export function CustomerOrderFullDetailsView({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search Order / BL No. / Container No. / Customer..."
-                    className="w-full rounded-full border border-slate-300 bg-slate-50/70 pl-4 pr-9 py-2 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    placeholder={s.t("search_ph", "Search Order / BL No. / Container No. / Customer...")}
+                    className="w-full rounded-full border border-slate-300 bg-slate-50/70 ps-4 pe-9 py-2 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
-                  <Search className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute end-3 top-2.5 h-4 w-4 text-slate-400" />
                 </div>
 
                 <button
@@ -349,7 +364,7 @@ export function CustomerOrderFullDetailsView({
                   className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
                 >
                   <Printer className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Print</span>
+                  <span>{tg("common.print", "Print")}</span>
                 </button>
 
                 <button
@@ -358,7 +373,7 @@ export function CustomerOrderFullDetailsView({
                   className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
                 >
                   <FileDown className="h-3.5 w-3.5 text-rose-600" />
-                  <span>PDF</span>
+                  <span>{s.t("pdf", "PDF")}</span>
                 </button>
 
                 {onEdit && (
@@ -368,7 +383,7 @@ export function CustomerOrderFullDetailsView({
                     className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 transition shadow-2xs"
                   >
                     <Edit3 className="h-3.5 w-3.5" />
-                    <span>Edit</span>
+                    <span>{tg("common.edit", "Edit")}</span>
                   </button>
                 )}
 
@@ -377,7 +392,7 @@ export function CustomerOrderFullDetailsView({
                   className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition shadow-2xs"
                 >
                   <MoreVertical className="h-3.5 w-3.5" />
-                  <span>More</span>
+                  <span>{s.t("more", "More")}</span>
                 </button>
               </div>
             </div>
@@ -389,8 +404,8 @@ export function CustomerOrderFullDetailsView({
                   <FileText className="h-5 w-5" />
                 </div>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Customer Order</h1>
-                  <p className="text-xs font-medium text-slate-500">Import, Export and Transit Order Details</p>
+                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{s.t("title", "Customer Order")}</h1>
+                  <p className="text-xs font-medium text-slate-500">{s.t("subtitle", "Import, Export and Transit Order Details")}</p>
                 </div>
               </div>
 
@@ -398,7 +413,7 @@ export function CustomerOrderFullDetailsView({
               <div className="flex items-center">
                 <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-xs">
                   <CheckCircle2 className="h-4 w-4" />
-                  <span className="capitalize">{status || "Completed"}</span>
+                  <span className="capitalize">{coStatusLabel(L, status || "completed")}</span>
                 </span>
               </div>
             </div>
@@ -415,7 +430,7 @@ export function CustomerOrderFullDetailsView({
                 }`}
               >
                 <span className="h-2 w-2 rounded-full bg-white ring-2 ring-white/50" />
-                <span>Order & Customer</span>
+                <span>{s.t("tab_order_customer", "Order & Customer")}</span>
               </button>
 
               <button
@@ -428,7 +443,7 @@ export function CustomerOrderFullDetailsView({
                 }`}
               >
                 <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
-                <span>Shipping (Loading & Receiving)</span>
+                <span>{s.t("tab_shipping", "Shipping (Loading & Receiving)")}</span>
               </button>
 
               <button
@@ -441,7 +456,7 @@ export function CustomerOrderFullDetailsView({
                 }`}
               >
                 <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
-                <span>Goods</span>
+                <span>{s.t("tab_goods", "Goods")}</span>
               </button>
 
               <button
@@ -454,7 +469,7 @@ export function CustomerOrderFullDetailsView({
                 }`}
               >
                 <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
-                <span>Transfer & History</span>
+                <span>{s.t("tab_history", "Transfer & History")}</span>
               </button>
             </div>
 
@@ -468,7 +483,7 @@ export function CustomerOrderFullDetailsView({
                 <div className="bg-blue-900 text-white px-4 py-2.5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-blue-200" />
-                    <h3 className="font-bold text-xs uppercase tracking-wide">Order Details</h3>
+                    <h3 className="font-bold text-xs uppercase tracking-wide">{s.t("order_details", "Order Details")}</h3>
                   </div>
                   {onEdit && (
                     <button
@@ -477,7 +492,7 @@ export function CustomerOrderFullDetailsView({
                       className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition"
                     >
                       <Edit3 className="h-3 w-3" />
-                      <span>Edit</span>
+                      <span>{tg("common.edit", "Edit")}</span>
                     </button>
                   )}
                 </div>
@@ -485,32 +500,32 @@ export function CustomerOrderFullDetailsView({
                 {/* Table rows */}
                 <div className="p-3 text-xs divide-y divide-slate-100">
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Order No.</span>
+                    <span className="text-slate-500 font-medium">{s.t("order_no", "Order No.")}</span>
                     <span className="font-mono font-bold text-slate-900">{orderNo}</span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Order Date</span>
+                    <span className="text-slate-500 font-medium">{s.t("order_date", "Order Date")}</span>
                     <span className="font-bold text-slate-900">{orderDate}</span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Shipment Type</span>
+                    <span className="text-slate-500 font-medium">{s.t("shipment_type", "Shipment Type")}</span>
                     <span className="font-bold text-slate-900 flex items-center gap-1">
                       <Truck className="h-3.5 w-3.5 text-blue-600" />
-                      <span>{shipmentType}</span>
+                      <span>{coModeLabel(L, shipmentType)}</span>
                     </span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Operation Type</span>
-                    <span className="font-bold text-slate-900">{operationType}</span>
+                    <span className="text-slate-500 font-medium">{s.t("operation_type", "Operation Type")}</span>
+                    <span className="font-bold text-slate-900">{coMovementLabel(L, operationType)}</span>
                   </div>
                   <div className="py-1.5 flex justify-between items-center">
-                    <span className="text-slate-500 font-medium">Status</span>
+                    <span className="text-slate-500 font-medium">{tg("common.status", "Status")}</span>
                     <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-                      {status || "Completed"}
+                      {coStatusLabel(L, status || "completed")}
                     </span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Remarks</span>
+                    <span className="text-slate-500 font-medium">{tg("common.remarks", "Remarks")}</span>
                     <span className="text-slate-600">{remarks}</span>
                   </div>
                 </div>
@@ -522,7 +537,7 @@ export function CustomerOrderFullDetailsView({
                 <div className="bg-blue-900 text-white px-4 py-2.5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-emerald-300" />
-                    <h3 className="font-bold text-xs uppercase tracking-wide">Customer Details</h3>
+                    <h3 className="font-bold text-xs uppercase tracking-wide">{s.t("customer_details", "Customer Details")}</h3>
                   </div>
                   {onEdit && (
                     <button
@@ -531,7 +546,7 @@ export function CustomerOrderFullDetailsView({
                       className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition"
                     >
                       <Edit3 className="h-3 w-3" />
-                      <span>Edit</span>
+                      <span>{tg("common.edit", "Edit")}</span>
                     </button>
                   )}
                 </div>
@@ -539,43 +554,43 @@ export function CustomerOrderFullDetailsView({
                 {/* Table rows */}
                 <div className="p-3 text-xs divide-y divide-slate-100">
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Account Code</span>
+                    <span className="text-slate-500 font-medium">{s.t("account_code", "Account Code")}</span>
                     <span className="font-mono font-bold text-slate-900">{accountCode}</span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Customer Name</span>
+                    <span className="text-slate-500 font-medium">{s.t("customer_name", "Customer Name")}</span>
                     <span className="font-bold text-slate-900">{customerName}</span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Contact Person</span>
+                    <span className="text-slate-500 font-medium">{s.t("contact_person", "Contact Person")}</span>
                     <span className="font-bold text-slate-800">{contactPerson}</span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Phone</span>
+                    <span className="text-slate-500 font-medium">{tg("common.phone", "Phone")}</span>
                     <span className="font-mono text-blue-600 font-bold">{phone}</span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Email</span>
+                    <span className="text-slate-500 font-medium">{tg("common.email", "Email")}</span>
                     <span className="font-mono text-slate-700">{email}</span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Address</span>
+                    <span className="text-slate-500 font-medium">{tg("common.address", "Address")}</span>
                     <span className="text-slate-800">{address}</span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Country</span>
+                    <span className="text-slate-500 font-medium">{tg("common.country", "Country")}</span>
                     <span className="font-bold text-slate-900">{country}</span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Customer Type</span>
-                    <span className="font-semibold text-slate-800">{customerType}</span>
+                    <span className="text-slate-500 font-medium">{s.t("customer_type", "Customer Type")}</span>
+                    <span className="font-semibold text-slate-800">{coCustomerTypeLabel(L, customerType)}</span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Tax No. / TRN</span>
+                    <span className="text-slate-500 font-medium">{s.t("tax_no", "Tax No. / TRN")}</span>
                     <span className="font-mono text-slate-600">{trn}</span>
                   </div>
                   <div className="py-1.5 flex justify-between">
-                    <span className="text-slate-500 font-medium">Remarks</span>
+                    <span className="text-slate-500 font-medium">{tg("common.remarks", "Remarks")}</span>
                     <span className="text-slate-600">-</span>
                   </div>
                 </div>
@@ -589,7 +604,7 @@ export function CustomerOrderFullDetailsView({
               <div className="bg-blue-900 text-white px-4 py-2.5 flex items-center gap-2">
                 <Truck className="h-4 w-4 text-blue-200" />
                 <h3 className="font-bold text-xs uppercase tracking-wide">
-                  Shipping – Loading, Transport & Receiving
+                  {s.t("shipping_section", "Shipping – Loading, Transport & Receiving")}
                 </h3>
               </div>
 
@@ -599,50 +614,50 @@ export function CustomerOrderFullDetailsView({
                   <div className="bg-sky-100/90 text-sky-950 px-3 py-2 text-xs font-bold flex items-center justify-between border-b border-sky-200">
                     <div className="flex items-center gap-1.5">
                       <FileDown className="h-3.5 w-3.5 text-sky-700" />
-                      <span>Loading Details (From)</span>
+                      <span>{s.t("loading_from", "Loading Details (From)")}</span>
                     </div>
                   </div>
 
                   <div className="p-3 text-xs space-y-2 flex-1 divide-y divide-sky-100">
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Country</span>
+                      <span className="text-slate-500 font-medium">{tg("common.country", "Country")}</span>
                       <span className="font-bold text-slate-900 flex items-center gap-1">
                         <span>🇦🇫</span>
                         <span>{loadingCountry}</span>
                       </span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">City / Location</span>
+                      <span className="text-slate-500 font-medium">{s.t("city_location", "City / Location")}</span>
                       <span className="font-bold text-slate-900">{loadingCity}</span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Date</span>
+                      <span className="text-slate-500 font-medium">{tg("common.date", "Date")}</span>
                       <span className="font-bold text-slate-900 flex items-center gap-1">
                         <Calendar className="h-3 w-3 text-blue-600" />
                         <span>{loadingDate}</span>
                       </span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Exit Border</span>
+                      <span className="text-slate-500 font-medium">{s.t("exit_border", "Exit Border")}</span>
                       <span className="font-bold text-slate-900">{exitBorder}</span>
                     </div>
                     <div className="pt-1 flex justify-between items-center">
-                      <span className="text-slate-500 font-medium">Customs Clearance</span>
+                      <span className="text-slate-500 font-medium">{s.t("customs_clearance", "Customs Clearance")}</span>
                       <span className="font-bold text-emerald-700 flex items-center gap-1">
                         <Check className="h-3 w-3" />
                         <span>{customsClearance}</span>
                       </span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Customs Name</span>
+                      <span className="text-slate-500 font-medium">{s.t("customs_name", "Customs Name")}</span>
                       <span className="font-bold text-slate-800">{loadingCustomsName}</span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Warehouse / Yard</span>
+                      <span className="text-slate-500 font-medium">{s.t("warehouse_yard", "Warehouse / Yard")}</span>
                       <span className="font-bold text-slate-800">{loadingWarehouse}</span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Remarks</span>
+                      <span className="text-slate-500 font-medium">{tg("common.remarks", "Remarks")}</span>
                       <span className="text-slate-500">-</span>
                     </div>
                   </div>
@@ -651,7 +666,7 @@ export function CustomerOrderFullDetailsView({
                 {/* Arrow 1 */}
                 <div className="lg:col-span-1 hidden lg:flex items-center justify-center">
                   <div className="h-8 w-8 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center">
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                   </div>
                 </div>
 
@@ -660,45 +675,45 @@ export function CustomerOrderFullDetailsView({
                   <div className="bg-purple-100/80 text-purple-950 px-3 py-2 text-xs font-bold flex items-center justify-between border-b border-purple-200">
                     <div className="flex items-center gap-1.5">
                       <Truck className="h-3.5 w-3.5 text-purple-700" />
-                      <span>Transport Details</span>
+                      <span>{s.t("transport_details", "Transport Details")}</span>
                     </div>
                   </div>
 
                   <div className="p-3 text-xs space-y-2 flex-1 divide-y divide-purple-100">
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Mode</span>
+                      <span className="text-slate-500 font-medium">{s.t("mode", "Mode")}</span>
                       <span className="font-bold text-slate-900 flex items-center gap-1">
                         <Truck className="h-3 w-3 text-purple-700" />
-                        <span>{transportMode}</span>
+                        <span>{coModeLabel(L, transportMode)}</span>
                       </span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Carrier / Truck No.</span>
+                      <span className="text-slate-500 font-medium">{s.t("carrier_truck", "Carrier / Truck No.")}</span>
                       <span className="font-mono font-bold text-slate-900">{truckNo}</span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Driver Name</span>
+                      <span className="text-slate-500 font-medium">{s.t("driver_name", "Driver Name")}</span>
                       <span className="font-bold text-slate-900">{driverName}</span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Estimated Transit Time</span>
+                      <span className="text-slate-500 font-medium">{s.t("est_transit", "Estimated Transit Time")}</span>
                       <span className="font-bold text-slate-900 flex items-center gap-1">
                         <Clock className="h-3 w-3 text-purple-600" />
                         <span>{transitTime}</span>
                       </span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Distance (KM)</span>
+                      <span className="text-slate-500 font-medium">{s.t("distance_km", "Distance (KM)")}</span>
                       <span className="font-mono font-bold text-slate-900">{distanceKm}</span>
                     </div>
                     <div className="pt-1">
-                      <span className="text-slate-500 font-medium block mb-1">Route</span>
+                      <span className="text-slate-500 font-medium block mb-1">{s.t("route", "Route")}</span>
                       <span className="font-semibold text-slate-800 text-[11px] block leading-tight">
                         {routeDisplay}
                       </span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Remarks</span>
+                      <span className="text-slate-500 font-medium">{tg("common.remarks", "Remarks")}</span>
                       <span className="text-slate-500">-</span>
                     </div>
                   </div>
@@ -707,7 +722,7 @@ export function CustomerOrderFullDetailsView({
                 {/* Arrow 2 */}
                 <div className="lg:col-span-1 hidden lg:flex items-center justify-center">
                   <div className="h-8 w-8 rounded-full bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center">
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                   </div>
                 </div>
 
@@ -716,53 +731,53 @@ export function CustomerOrderFullDetailsView({
                   <div className="bg-emerald-100/80 text-emerald-950 px-3 py-2 text-xs font-bold flex items-center justify-between border-b border-emerald-200">
                     <div className="flex items-center gap-1.5">
                       <FileDown className="h-3.5 w-3.5 text-emerald-700" />
-                      <span>Receiving Details (To)</span>
+                      <span>{s.t("receiving_to", "Receiving Details (To)")}</span>
                     </div>
                   </div>
 
                   <div className="p-3 text-xs space-y-2 flex-1 divide-y divide-emerald-100">
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Country</span>
+                      <span className="text-slate-500 font-medium">{tg("common.country", "Country")}</span>
                       <span className="font-bold text-slate-900 flex items-center gap-1">
                         <span>🇵🇰</span>
                         <span>{receivingCountry}</span>
                       </span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">City / Port</span>
+                      <span className="text-slate-500 font-medium">{s.t("city_port", "City / Port")}</span>
                       <span className="font-bold text-slate-900">{receivingCity}</span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Date (ETA)</span>
+                      <span className="text-slate-500 font-medium">{s.t("date_eta", "Date (ETA)")}</span>
                       <span className="font-bold text-slate-900 flex items-center gap-1">
                         <Calendar className="h-3 w-3 text-emerald-600" />
                         <span>{receivingEta}</span>
                       </span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Entry Border</span>
+                      <span className="text-slate-500 font-medium">{s.t("entry_border", "Entry Border")}</span>
                       <span className="font-bold text-slate-900 flex items-center gap-1">
                         <Anchor className="h-3 w-3 text-blue-600" />
                         <span>{entryBorder}</span>
                       </span>
                     </div>
                     <div className="pt-1 flex justify-between items-center">
-                      <span className="text-slate-500 font-medium">Customs Clearance</span>
+                      <span className="text-slate-500 font-medium">{s.t("customs_clearance", "Customs Clearance")}</span>
                       <span className="font-bold text-emerald-700 flex items-center gap-1">
                         <Check className="h-3 w-3" />
                         <span>{customsClearance}</span>
                       </span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Customs Name</span>
+                      <span className="text-slate-500 font-medium">{s.t("customs_name", "Customs Name")}</span>
                       <span className="font-bold text-slate-800">{receivingCustomsName}</span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Warehouse / Yard</span>
+                      <span className="text-slate-500 font-medium">{s.t("warehouse_yard", "Warehouse / Yard")}</span>
                       <span className="font-bold text-slate-800">{receivingWarehouse}</span>
                     </div>
                     <div className="pt-1 flex justify-between">
-                      <span className="text-slate-500 font-medium">Remarks</span>
+                      <span className="text-slate-500 font-medium">{tg("common.remarks", "Remarks")}</span>
                       <span className="text-slate-500">-</span>
                     </div>
                   </div>
@@ -777,24 +792,24 @@ export function CustomerOrderFullDetailsView({
               <div className="bg-blue-900 text-white px-4 py-2.5 flex items-center gap-2">
                 <Package className="h-4 w-4 text-blue-200" />
                 <h3 className="font-bold text-xs uppercase tracking-wide">
-                  Goods Details (Which goods will be made)
+                  {s.t("goods_details", "Goods Details")}
                 </h3>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left border-collapse">
+                <table className="w-full text-xs text-start border-collapse">
                   <thead>
                     <tr className="bg-blue-50/80 text-blue-950 font-bold border-b border-blue-100">
                       <th className="py-2.5 px-3 w-10">#</th>
-                      <th className="py-2.5 px-3">Goods Name</th>
-                      <th className="py-2.5 px-3">HS Code</th>
-                      <th className="py-2.5 px-3">Brand</th>
-                      <th className="py-2.5 px-3">Size</th>
-                      <th className="py-2.5 px-3">Unit</th>
-                      <th className="py-2.5 px-3 text-right">Quantity</th>
-                      <th className="py-2.5 px-3 text-right">Gross Weight</th>
-                      <th className="py-2.5 px-3 text-right">Net Weight</th>
-                      <th className="py-2.5 px-3 text-center">Remarks</th>
+                      <th className="py-2.5 px-3">{s.t("col_goods_name", "Goods Name")}</th>
+                      <th className="py-2.5 px-3">{s.t("col_hs_code", "HS Code")}</th>
+                      <th className="py-2.5 px-3">{s.t("col_brand", "Brand")}</th>
+                      <th className="py-2.5 px-3">{s.t("col_size", "Size")}</th>
+                      <th className="py-2.5 px-3">{s.t("col_unit", "Unit")}</th>
+                      <th className="py-2.5 px-3 text-end">{tg("common.quantity", "Quantity")}</th>
+                      <th className="py-2.5 px-3 text-end">{s.t("col_gross", "Gross Weight")}</th>
+                      <th className="py-2.5 px-3 text-end">{s.t("col_net", "Net Weight")}</th>
+                      <th className="py-2.5 px-3 text-center">{tg("common.remarks", "Remarks")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -806,13 +821,13 @@ export function CustomerOrderFullDetailsView({
                         <td className="py-2 px-3 text-slate-700">{row.brand}</td>
                         <td className="py-2 px-3 text-slate-700">{row.size}</td>
                         <td className="py-2 px-3 text-slate-600 font-semibold">{row.unit}</td>
-                        <td className="py-2 px-3 font-mono font-bold text-slate-900 text-right">
+                        <td className="py-2 px-3 font-mono font-bold text-slate-900 text-end">
                           {row.qty.toLocaleString()}
                         </td>
-                        <td className="py-2 px-3 font-mono font-bold text-slate-900 text-right">
+                        <td className="py-2 px-3 font-mono font-bold text-slate-900 text-end">
                           {row.grossKg.toLocaleString()}
                         </td>
-                        <td className="py-2 px-3 font-mono font-bold text-slate-900 text-right">
+                        <td className="py-2 px-3 font-mono font-bold text-slate-900 text-end">
                           {row.netKg.toLocaleString()}
                         </td>
                         <td className="py-2 px-3 text-center text-slate-400">{row.remarks}</td>
@@ -821,16 +836,16 @@ export function CustomerOrderFullDetailsView({
                   </tbody>
                   <tfoot>
                     <tr className="bg-slate-50 font-black text-slate-900 border-t-2 border-slate-200">
-                      <td colSpan={6} className="py-2.5 px-3 text-left">
-                        Total
+                      <td colSpan={6} className="py-2.5 px-3 text-start">
+                        {tg("common.total", "Total")}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-mono text-blue-900">
+                      <td className="py-2.5 px-3 text-end font-mono text-blue-900">
                         {totalQty.toLocaleString()}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-mono text-blue-900">
+                      <td className="py-2.5 px-3 text-end font-mono text-blue-900">
                         {totalGross.toLocaleString()}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-mono text-blue-900">
+                      <td className="py-2.5 px-3 text-end font-mono text-blue-900">
                         {totalNet.toLocaleString()}
                       </td>
                       <td className="py-2.5 px-3 text-center text-slate-400">-</td>
@@ -846,19 +861,19 @@ export function CustomerOrderFullDetailsView({
             <div className="rounded-xl border border-blue-200 bg-white overflow-hidden shadow-2xs">
               <div className="bg-blue-900 text-white px-4 py-2.5 flex items-center gap-2">
                 <User className="h-4 w-4 text-blue-200" />
-                <h3 className="font-bold text-xs uppercase tracking-wide">Section User Details</h3>
+                <h3 className="font-bold text-xs uppercase tracking-wide">{s.t("section_user_details", "Section User Details")}</h3>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left border-collapse">
+                <table className="w-full text-xs text-start border-collapse">
                   <thead>
                     <tr className="bg-blue-50/80 text-blue-950 font-bold border-b border-blue-100">
-                      <th className="py-2.5 px-3">Section</th>
-                      <th className="py-2.5 px-3">Entered By</th>
-                      <th className="py-2.5 px-3">Role</th>
-                      <th className="py-2.5 px-3">Branch</th>
-                      <th className="py-2.5 px-3">Date & Time</th>
-                      <th className="py-2.5 px-3">Remarks</th>
+                      <th className="py-2.5 px-3">{s.t("col_section", "Section")}</th>
+                      <th className="py-2.5 px-3">{s.t("col_entered_by", "Entered By")}</th>
+                      <th className="py-2.5 px-3">{s.t("role", "Role")}</th>
+                      <th className="py-2.5 px-3">{tg("common.branch", "Branch")}</th>
+                      <th className="py-2.5 px-3">{s.t("date_time", "Date & Time")}</th>
+                      <th className="py-2.5 px-3">{tg("common.remarks", "Remarks")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -879,7 +894,7 @@ export function CustomerOrderFullDetailsView({
 
             {/* Official Report Footer */}
             <div className="pt-2 pb-1 text-center text-[11px] font-mono text-slate-400">
-              DGT LLC | Customer Order Report | Generated on 12 OCT 2026 16:20
+              {s.t("report_footer", "DGT LLC | Customer Order Report | Generated on")} {generatedAt}
             </div>
           </main>
         </div>
