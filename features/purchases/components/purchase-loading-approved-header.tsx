@@ -61,6 +61,7 @@ export function LoadingApprovedHeader({
   return (
     <PurchaseApprovedHeader
       page="loading-records"
+      title={s.t("loadingBooking", "Loading Booking")}
       toolbar={toolbar}
       summary={{
         title: `${s.t("loadingSummary", "Loading Summary")} (${scope})`,

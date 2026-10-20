@@ -68,6 +68,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/purchase/purchase-order-tracking": ["purchases:read", "route:/dashboard/purchase/purchase-order-tracking"],
   "/dashboard/purchase/completed-purchase-bills": ["purchases:read", "route:/dashboard/purchase/completed-purchase-bills"],
   "/dashboard/purchase/purchase-loading-records": ["purchases:read", "purchases:update", "purchase_logistics:read", "route:/dashboard/purchase/purchase-loading-records"],
+  "/dashboard/purchase/transport-payment": ["purchases:read", "expenses:read", "expenses:create", "route:/dashboard/purchase/transport-payment"],
   "/dashboard/purchase/purchase-transit-lane": ["purchases:read", "purchase_logistics:read", "route:/dashboard/purchase/purchase-transit-lane"],
   "/dashboard/purchase/local-purchase": ["purchases:read", "purchases:create", "route:/dashboard/purchase/local-purchase"],
   "/dashboard/purchase/local-goods-received": ["purchases:read", "inventory:read", "route:/dashboard/purchase/local-goods-received"],
