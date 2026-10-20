@@ -285,6 +285,7 @@ export async function handleApiError(error: unknown) {
       // current state of the record, not a server fault and not a permission problem
       m.includes("cannot exceed remaining") ||
       m.includes("is already fully received") ||
+      m.includes("is already fully paid") ||
       m.includes("no remaining payable balance") ||
       m.includes("no remaining receivable balance") ||
       m.includes("has already been transferred")
