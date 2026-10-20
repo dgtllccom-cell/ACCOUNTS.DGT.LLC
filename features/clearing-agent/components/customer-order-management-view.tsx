@@ -6959,110 +6959,74 @@ function Step1BookingCustomer({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {/* Left Card: Loading Country (Origin) */}
-              <div className="rounded-2xl border border-sky-200 dark:border-sky-900/60 bg-gradient-to-br from-white to-sky-50/40 dark:from-slate-900 dark:to-sky-950/20 p-3.5 sm:p-4 shadow-xs space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Upload className="h-4 w-4 text-blue-600" />
-                    <span>{tt("loading_country_title", "Loading Country (Origin)")} *</span>
-                  </label>
+              {/* Left Box: Loading Country (Origin) */}
+              <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Upload className="h-3.5 w-3.5 text-blue-600" />
+                  <span>{tt("loading_country_title", "Loading Country (Origin)")} *</span>
+                </label>
+
+                <div className="flex items-center gap-2">
+                  <select
+                    value={formData.loading_country_id || ""}
+                    onChange={(e) => {
+                      const cId = e.target.value;
+                      const cName = countries.find((c) => c.id === cId)?.name || "";
+                      setFormData((c) => ({ ...c, loading_country_id: cId, loading_country_name: cName }));
+                      handleLoadingCountryChange(cId);
+                      rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingCountryId: cId, loadingCountryName: cName });
+                    }}
+                    className="flex-1 h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                  >
+                    <option value="">{tt("select_loading_country", "Select Loading Country...")}</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+
                   <button
                     type="button"
                     onClick={() => setIsOriginOverlayOpen(true)}
-                    className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-[11px] font-bold border border-blue-200 dark:border-blue-900 transition cursor-pointer"
+                    className="h-9 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-900 transition shrink-0 inline-flex items-center gap-1 cursor-pointer"
+                    title={tt("edit_origin_details", "Edit Details ➔")}
                   >
-                    {tt("edit_origin_details", "Edit Details ➔")}
-                  </button>
-                </div>
-
-                <select
-                  value={formData.loading_country_id || ""}
-                  onChange={(e) => {
-                    const cId = e.target.value;
-                    const cName = countries.find((c) => c.id === cId)?.name || "";
-                    setFormData((c) => ({ ...c, loading_country_id: cId, loading_country_name: cName }));
-                    handleLoadingCountryChange(cId);
-                    rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingCountryId: cId, loadingCountryName: cName });
-                  }}
-                  className="w-full h-10 rounded-xl border border-sky-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-sky-800 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
-                >
-                  <option value="">{tt("select_loading_country", "Select Loading Country (Origin)...")}</option>
-                  {countries.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
-                  <span className="truncate max-w-[220px]">
-                    {formData.loading_place || formData.loading_source_name ? (
-                      <span className="font-medium text-slate-700 dark:text-slate-300">
-                        📍 {formData.loading_place || formData.loading_source_name}
-                        {formData.loading_date || formData.planned_dispatch_date ? ` • 📅 ${formData.loading_date || formData.planned_dispatch_date}` : ""}
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">{tt("click_to_configure_origin", "Branch, date & exit point in details")}</span>
-                    )}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsOriginOverlayOpen(true)}
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-[11px] font-semibold underline underline-offset-2 shrink-0 cursor-pointer"
-                  >
-                    {tt("origin_parda_btn", "Configure Details ↗")}
+                    <span>{tt("edit_origin_details", "Edit Details ➔")}</span>
                   </button>
                 </div>
               </div>
 
-              {/* Right Card: Receiving Country (Destination) */}
-              <div className="rounded-2xl border border-purple-200 dark:border-purple-900/60 bg-gradient-to-br from-white to-purple-50/40 dark:from-slate-900 dark:to-purple-950/20 p-3.5 sm:p-4 shadow-xs space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Download className="h-4 w-4 text-purple-600" />
-                    <span>{tt("receiving_country_title", "Receiving Country (Destination)")} *</span>
-                  </label>
+              {/* Right Box: Receiving Country (Destination) */}
+              <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Download className="h-3.5 w-3.5 text-purple-600" />
+                  <span>{tt("receiving_country_title", "Receiving Country (Destination)")} *</span>
+                </label>
+
+                <div className="flex items-center gap-2">
+                  <select
+                    value={formData.receiving_country_id || ""}
+                    onChange={(e) => {
+                      const cId = e.target.value;
+                      const cName = countries.find((c) => c.id === cId)?.name || "";
+                      setFormData((c) => ({ ...c, receiving_country_id: cId, receiving_country_name: cName }));
+                      handleReceivingCountryChange(cId);
+                      rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingCountryId: cId, receivingCountryName: cName });
+                    }}
+                    className="flex-1 h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+                  >
+                    <option value="">{tt("select_receiving_country", "Select Destination Country...")}</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+
                   <button
                     type="button"
                     onClick={() => setIsDestinationOverlayOpen(true)}
-                    className="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 text-[11px] font-bold border border-purple-200 dark:border-purple-900 transition cursor-pointer"
+                    className="h-9 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 text-xs font-bold border border-purple-200 dark:border-purple-900 transition shrink-0 inline-flex items-center gap-1 cursor-pointer"
+                    title={tt("edit_dest_details", "Edit Details ➔")}
                   >
-                    {tt("edit_dest_details", "Edit Details ➔")}
-                  </button>
-                </div>
-
-                <select
-                  value={formData.receiving_country_id || ""}
-                  onChange={(e) => {
-                    const cId = e.target.value;
-                    const cName = countries.find((c) => c.id === cId)?.name || "";
-                    setFormData((c) => ({ ...c, receiving_country_id: cId, receiving_country_name: cName }));
-                    handleReceivingCountryChange(cId);
-                    rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingCountryId: cId, receivingCountryName: cName });
-                  }}
-                  className="w-full h-10 rounded-xl border border-purple-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-purple-800 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
-                >
-                  <option value="">{tt("select_receiving_country", "Select Destination Country...")}</option>
-                  {countries.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
-                  <span className="truncate max-w-[220px]">
-                    {formData.receiving_place || formData.destination_city ? (
-                      <span className="font-medium text-slate-700 dark:text-slate-300">
-                        📍 {formData.receiving_place || formData.destination_city}
-                        {formData.receiving_date || formData.planned_arrival_date ? ` • 📅 ${formData.receiving_date || formData.planned_arrival_date}` : ""}
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">{tt("click_to_configure_dest", "Branch, date & entry point in details")}</span>
-                    )}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsDestinationOverlayOpen(true)}
-                    className="text-purple-600 hover:text-purple-700 dark:text-purple-400 text-[11px] font-semibold underline underline-offset-2 shrink-0 cursor-pointer"
-                  >
-                    {tt("dest_parda_btn", "Configure Details ↗")}
+                    <span>{tt("edit_dest_details", "Edit Details ➔")}</span>
                   </button>
                 </div>
               </div>
