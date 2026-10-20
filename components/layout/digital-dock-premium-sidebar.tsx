@@ -372,7 +372,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
   },
   {
     key: "journal-stock",
-    label: nt("Journal Stock"),
+    label: nt("Purchase General Stock"),
     icon: Boxes,
     href: "/dashboard/purchase/stock/journal",
     upgraded: true,

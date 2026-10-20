@@ -1,7 +1,13 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { requireErpSession } from "@/lib/auth/session";
 import { JournalBookingStockDashboard, type StockTab } from "@/features/journal/components/journal-booking-stock-dashboard";
 import type { DestinationType } from "@/lib/stock-journal/model";
+
+export const metadata: Metadata = {
+  title: "Purchase General Stock — DGT ERP",
+  description: "Stock Journal and Inventory Management across all stages and sources",
+};
 
 /**
  * Every /dashboard/purchase/stock/<type> URL is the SAME Stock Journal screen; the segment only chooses the opening tab.
