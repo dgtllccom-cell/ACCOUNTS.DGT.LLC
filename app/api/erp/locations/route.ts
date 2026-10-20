@@ -84,7 +84,15 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
       .range(query.offset, query.offset + query.limit - 1);
 
-    if (error) throw error;
+    if (error) {
+      // The legacy `locations` table does not exist in every environment (it is absent on Production): answer with an empty
+      // list, as for "no rows", instead of a 500 on every page that asks for it (e.g. Inter-Country Transfers).
+      const code = String((error as any)?.code ?? "");
+      if (code === "PGRST205" || code === "42P01" || /could not find the table|does not exist/i.test(String((error as any)?.message ?? ""))) {
+        return apiOk({ locations: [], summary: { total: 0, active: 0, inactive: 0 } });
+      }
+      throw error;
+    }
 
     // Return empty array if no data (NOT sample data)
     if (!data || data.length === 0) {

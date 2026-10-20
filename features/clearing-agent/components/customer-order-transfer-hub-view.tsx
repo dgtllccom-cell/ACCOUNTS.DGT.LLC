@@ -28,7 +28,15 @@ import {
   Share2
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { t } from "@/lib/i18n/ui";
+import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import {
+  coCustomerTypeLabel,
+  coFill,
+  coModeLabel,
+  coMovementLabel,
+  coStatusLabel,
+  coYesNoLabel,
+} from "./customer-order-i18n";
 
 export interface TransferHistoryEntry {
   id: string;
@@ -54,6 +62,8 @@ export interface GoodsItem {
   grossWeight: number;
   netWeight: number;
   remarks: string;
+  /** which localized placeholder to show when the order carries no goods name */
+  nameFallback?: "commercial_cargo" | "general_cargo";
 }
 
 export interface TransferHubOrderData {
@@ -206,7 +216,7 @@ const DEFAULT_DEMO_ORDER: TransferHubOrderData = {
       transferredTo: "General Received Bill",
       transferredToKey: "general_received",
       billNo: "GRB-202610-001",
-      message: "This Customer Order has been transferred to General Received Bill for received goods by agent.",
+      message: "",
       status: "Completed",
       postedBy: "Asmatullah"
     },
@@ -217,7 +227,7 @@ const DEFAULT_DEMO_ORDER: TransferHubOrderData = {
       transferredTo: "Customs Bill",
       transferredToKey: "customs",
       billNo: "CSB-202610-002",
-      message: "This Customer Order has been transferred to Customs Bill for customs clearance and border duty.",
+      message: "",
       status: "Completed",
       postedBy: "Asmatullah"
     },
@@ -228,7 +238,7 @@ const DEFAULT_DEMO_ORDER: TransferHubOrderData = {
       transferredTo: "Truck Expense Bill",
       transferredToKey: "truck",
       billNo: "TEB-202610-003",
-      message: "This Customer Order has been transferred to Truck Expense Bill for freight, tolls and driver advance.",
+      message: "",
       status: "In Process",
       postedBy: "Kandahar Admin"
     }
@@ -238,8 +248,8 @@ const DEFAULT_DEMO_ORDER: TransferHubOrderData = {
 export const TRANSFER_SIDEBAR_CARDS = [
   {
     key: "general_received" as const,
-    title: "General Received Bill",
-    subtitle: "Create bill for received goods by agent",
+    titleKey: "card_general_received_title",
+    subtitleKey: "card_general_received_sub",
     icon: Inbox,
     colorClass: "text-blue-600 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/60",
     borderActive: "border-blue-500 ring-2 ring-blue-500/20",
@@ -249,8 +259,8 @@ export const TRANSFER_SIDEBAR_CARDS = [
   },
   {
     key: "clearing_agent" as const,
-    title: "Clearing Agent Bill",
-    subtitle: "Route to clearing agent expenses",
+    titleKey: "card_clearing_agent_title",
+    subtitleKey: "card_clearing_agent_sub",
     icon: Building2,
     colorClass: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60",
     borderActive: "border-emerald-500 ring-2 ring-emerald-500/20",
@@ -260,8 +270,8 @@ export const TRANSFER_SIDEBAR_CARDS = [
   },
   {
     key: "customs" as const,
-    title: "Customs Bill",
-    subtitle: "Tariff, clearance and border duty",
+    titleKey: "card_customs_title",
+    subtitleKey: "card_customs_sub",
     icon: Shield,
     colorClass: "text-amber-600 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60",
     borderActive: "border-amber-500 ring-2 ring-amber-500/20",
@@ -271,8 +281,8 @@ export const TRANSFER_SIDEBAR_CARDS = [
   },
   {
     key: "truck" as const,
-    title: "Truck Expense Bill",
-    subtitle: "Freight, tolls and driver advance",
+    titleKey: "card_truck_title",
+    subtitleKey: "card_truck_sub",
     icon: Truck,
     colorClass: "text-purple-600 bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900/60",
     borderActive: "border-purple-500 ring-2 ring-purple-500/20",
@@ -282,8 +292,8 @@ export const TRANSFER_SIDEBAR_CARDS = [
   },
   {
     key: "customer" as const,
-    title: "Customer Expense Bill",
-    subtitle: "Other direct expenses",
+    titleKey: "card_customer_title",
+    subtitleKey: "card_customer_sub",
     icon: UserCheck,
     colorClass: "text-teal-600 bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-900/60",
     borderActive: "border-teal-500 ring-2 ring-teal-500/20",
@@ -293,8 +303,8 @@ export const TRANSFER_SIDEBAR_CARDS = [
   },
   {
     key: "other" as const,
-    title: "Other Expense Bill",
-    subtitle: "Inspection, lab, misc & fees",
+    titleKey: "card_other_title",
+    subtitleKey: "card_other_sub",
     icon: Receipt,
     colorClass: "text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900/60",
     borderActive: "border-indigo-500 ring-2 ring-indigo-500/20",
@@ -314,6 +324,9 @@ export function CustomerOrderTransferHubView({
   lang?: SupportedLanguage;
 }) {
   const router = useRouter();
+  const s = useErpScreen("cohub", lang);
+  const L = s.lang;
+  const tg = s.tGlobal;
   const [data, setData] = useState<TransferHubOrderData>(DEFAULT_DEMO_ORDER);
   const [loading, setLoading] = useState(false);
   const [activeTransferCard, setActiveTransferCard] = useState<string | null>(null);
@@ -364,9 +377,10 @@ export function CustomerOrderTransferHubView({
             const mappedGoods: GoodsItem[] = Array.isArray(foundOrder.goods_items) && foundOrder.goods_items.length > 0
               ? foundOrder.goods_items.map((g: any, idx: number) => ({
                   serial: idx + 1,
-                  goodsName: g.goods_name || g.goodsName || foundOrder.goods_name || "Commercial Cargo",
+                  goodsName: g.goods_name || g.goodsName || foundOrder.goods_name || "",
+                  nameFallback: "commercial_cargo" as const,
                   hsCode: g.hs_code || g.goodsChsCode || foundOrder.goods_chs_code || "0802.12",
-                  brand: g.brand || foundOrder.goods_brand || "Standard",
+                  brand: g.brand || foundOrder.goods_brand || "",
                   size: g.size || foundOrder.goods_size || "-",
                   unit: g.unit || foundOrder.goods_unit || "KG",
                   quantity: Number(g.quantity || foundOrder.goods_quantity || 1),
@@ -377,9 +391,10 @@ export function CustomerOrderTransferHubView({
               : [
                   {
                     serial: 1,
-                    goodsName: foundOrder.goods_name || "General Cargo",
+                    goodsName: foundOrder.goods_name || "",
+                    nameFallback: "general_cargo" as const,
                     hsCode: foundOrder.goods_chs_code || "0802.12",
-                    brand: foundOrder.goods_brand || "Standard",
+                    brand: foundOrder.goods_brand || "",
                     size: foundOrder.goods_size || "-",
                     unit: foundOrder.goods_unit || "KG",
                     quantity: Number(foundOrder.goods_quantity || 1),
@@ -428,7 +443,7 @@ export function CustomerOrderTransferHubView({
               loadingCity: leg1?.from_location_text || DEFAULT_DEMO_ORDER.loadingCity,
               loadingDate: DEFAULT_DEMO_ORDER.loadingDate,
               loadingCustomsClearance: "Yes",
-              loadingCustomsName: leg1?.customs_agent_name || "Customs Clearance Post",
+              loadingCustomsName: leg1?.customs_agent_name || "",
               loadingWarehouse: DEFAULT_DEMO_ORDER.loadingWarehouse,
               loadingRemarks: foundOrder.remarks || "-",
 
@@ -437,7 +452,7 @@ export function CustomerOrderTransferHubView({
               receivingDateEta: DEFAULT_DEMO_ORDER.receivingDateEta,
               entryBorder: legLast?.from_location_text || DEFAULT_DEMO_ORDER.entryBorder,
               receivingCustomsClearance: "Yes",
-              receivingCustomsName: "Destination Port Customs",
+              receivingCustomsName: "",
               receivingWarehouse: DEFAULT_DEMO_ORDER.receivingWarehouse,
               receivingRemarks: "-",
 
@@ -473,6 +488,14 @@ export function CustomerOrderTransferHubView({
     );
   }, [data.goods]);
 
+  const cardTitle = (card: typeof TRANSFER_SIDEBAR_CARDS[0]) => s.t(card.titleKey, card.key);
+  const cardSub = (card: typeof TRANSFER_SIDEBAR_CARDS[0]) => s.t(card.subtitleKey, card.key);
+  const defaultMessage = (card: typeof TRANSFER_SIDEBAR_CARDS[0]) =>
+    coFill(s.t("default_message", "This Customer Order has been transferred to {title} ({purpose})."), {
+      title: cardTitle(card),
+      purpose: cardSub(card),
+    });
+
   // Open Transfer Modal
   const handleOpenTransferModal = (card: typeof TRANSFER_SIDEBAR_CARDS[0]) => {
     setSelectedTarget(card);
@@ -488,7 +511,7 @@ export function CustomerOrderTransferHubView({
 
     const nextNum = String(data.transfers.length + 1).padStart(3, "0");
     setBillNoInput(`${prefix}-202610-${nextNum}`);
-    setMessageInput(`This Customer Order has been transferred to ${card.title} for ${card.subtitle.toLowerCase()}.`);
+    setMessageInput(defaultMessage(card));
     setModalOpen(true);
   };
 
@@ -503,9 +526,9 @@ export function CustomerOrderTransferHubView({
       id: `tr-${Date.now()}`,
       serial: data.transfers.length + 1,
       dateTime: formattedDate,
-      transferredTo: selectedTarget.title,
+      transferredTo: cardTitle(selectedTarget),
       transferredToKey: selectedTarget.key,
-      billNo: billNoInput.trim() || `${selectedTarget.title.substring(0, 3).toUpperCase()}-202610-001`,
+      billNo: billNoInput.trim() || `${selectedTarget.key.substring(0, 3).toUpperCase()}-202610-001`,
       message: messageInput.trim(),
       status: "In Process",
       postedBy: postedByInput.trim() || "Asmatullah"
@@ -516,7 +539,12 @@ export function CustomerOrderTransferHubView({
       transfers: [...prev.transfers, newEntry]
     }));
 
-    setToastMessage(`✓ Order transferred successfully to ${selectedTarget.title} (Bill No: ${newEntry.billNo})`);
+    setToastMessage(
+      coFill(s.t("toast_success", "✓ Order transferred successfully to {title} (Bill No: {billNo})"), {
+        title: cardTitle(selectedTarget),
+        billNo: newEntry.billNo,
+      })
+    );
     setModalOpen(false);
 
     if (navigateAfterTransfer) {
@@ -525,16 +553,16 @@ export function CustomerOrderTransferHubView({
   };
 
   return (
-    <div className="w-full bg-[#f8fafc] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-16">
+    <div dir={s.dir} className="w-full bg-[#f8fafc] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-16">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl bg-emerald-600 text-white px-5 py-3.5 shadow-2xl shadow-emerald-600/30 text-xs font-bold animate-in fade-in slide-in-from-bottom-5">
+        <div className="fixed bottom-6 end-6 z-50 flex items-center gap-3 rounded-2xl bg-emerald-600 text-white px-5 py-3.5 shadow-2xl shadow-emerald-600/30 text-xs font-bold animate-in fade-in slide-in-from-bottom-5">
           <CheckCircle2 className="h-5 w-5" />
           <span>{toastMessage}</span>
           <button
             type="button"
             onClick={() => setToastMessage(null)}
-            className="ml-2 hover:bg-emerald-700 rounded-lg p-1"
+            className="ms-2 hover:bg-emerald-700 rounded-lg p-1"
           >
             <X className="h-4 w-4" />
           </button>
@@ -556,10 +584,10 @@ export function CustomerOrderTransferHubView({
                 </div>
                 <div>
                   <h3 className="font-black text-sm tracking-tight text-white">
-                    Customer Order Transfer
+                    {s.t("banner_title", "Customer Order Transfer")}
                   </h3>
                   <p className="text-[11px] text-blue-200 mt-0.5">
-                    Transfer order to related bills and expenses
+                    {s.t("banner_sub", "Transfer order to related bills and expenses")}
                   </p>
                 </div>
               </div>
@@ -572,8 +600,8 @@ export function CustomerOrderTransferHubView({
                 onClick={onBack}
                 className="w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 text-xs font-bold shadow-2xs transition cursor-pointer"
               >
-                <ArrowLeft className="h-4 w-4 text-slate-500" />
-                <span>Back to Customer Orders</span>
+                <ArrowLeft className="h-4 w-4 text-slate-500 rtl:rotate-180" />
+                <span>{tg("cod.back_to_orders", "Back to Customer Orders")}</span>
               </button>
             )}
 
@@ -587,7 +615,7 @@ export function CustomerOrderTransferHubView({
                     key={card.key}
                     type="button"
                     onClick={() => handleOpenTransferModal(card)}
-                    className={`w-full text-left p-3.5 rounded-2xl border transition-all duration-200 flex items-center justify-between gap-3 shadow-2xs cursor-pointer group bg-white dark:bg-slate-900 hover:shadow-md ${
+                    className={`w-full text-start p-3.5 rounded-2xl border transition-all duration-200 flex items-center justify-between gap-3 shadow-2xs cursor-pointer group bg-white dark:bg-slate-900 hover:shadow-md ${
                       isActive ? card.borderActive : "border-slate-200/90 dark:border-slate-800 hover:border-blue-300 dark:hover:border-slate-700"
                     }`}
                   >
@@ -597,14 +625,14 @@ export function CustomerOrderTransferHubView({
                       </div>
                       <div className="min-w-0">
                         <div className="font-bold text-xs text-slate-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
-                          {card.title}
+                          {cardTitle(card)}
                         </div>
                         <div className="text-[10.5px] text-slate-400 dark:text-slate-400 truncate mt-0.5">
-                          {card.subtitle}
+                          {cardSub(card)}
                         </div>
                       </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition shrink-0" />
+                    <ChevronRight className="h-4 w-4 rtl:rotate-180 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition shrink-0" />
                   </button>
                 );
               })}
@@ -623,10 +651,10 @@ export function CustomerOrderTransferHubView({
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                    Customer Order
+                    {tg("cod.title", "Customer Order")}
                   </h1>
                   <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 mt-0.5">
-                    Import, Export and Transit Order Details
+                    {tg("cod.subtitle", "Import, Export and Transit Order Details")}
                   </p>
                 </div>
               </div>
@@ -639,7 +667,7 @@ export function CustomerOrderTransferHubView({
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 text-xs font-bold shadow-2xs transition cursor-pointer"
                 >
                   <Printer className="h-4 w-4 text-slate-500" />
-                  <span>Print</span>
+                  <span>{tg("common.print", "Print")}</span>
                 </button>
 
                 <button
@@ -648,7 +676,7 @@ export function CustomerOrderTransferHubView({
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 text-xs font-bold shadow-2xs transition cursor-pointer"
                 >
                   <Download className="h-4 w-4 text-slate-500" />
-                  <span>Download PDF</span>
+                  <span>{s.t("download_pdf", "Download PDF")}</span>
                 </button>
 
                 <button
@@ -657,7 +685,7 @@ export function CustomerOrderTransferHubView({
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition cursor-pointer"
                 >
                   <Edit className="h-4 w-4" />
-                  <span>Edit</span>
+                  <span>{tg("common.edit", "Edit")}</span>
                 </button>
               </div>
             </div>
@@ -672,41 +700,41 @@ export function CustomerOrderTransferHubView({
                   <span className="w-5 h-5 rounded-md bg-white/20 text-white font-bold text-xs flex items-center justify-center shrink-0">
                     1
                   </span>
-                  <span className="font-bold text-xs uppercase tracking-wide">Order Information</span>
+                  <span className="font-bold text-xs uppercase tracking-wide">{s.t("box_order_info", "Order Information")}</span>
                 </div>
                 <div className="p-3 text-[11.5px] divide-y divide-slate-100 dark:divide-slate-800">
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Order No.</span>
+                    <span className="text-slate-400 font-semibold">{tg("cod.order_no", "Order No.")}</span>
                     <span className="font-mono font-bold text-slate-900 dark:text-white">{data.orderNo}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Order Date</span>
+                    <span className="text-slate-400 font-semibold">{tg("cod.order_date", "Order Date")}</span>
                     <span className="font-medium text-slate-800 dark:text-slate-200">{data.orderDate}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Operation Type</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">{data.operationType}</span>
+                    <span className="text-slate-400 font-semibold">{tg("cod.operation_type", "Operation Type")}</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{coMovementLabel(L, data.operationType)}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Shipment Type</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">{data.shipmentType}</span>
+                    <span className="text-slate-400 font-semibold">{tg("cod.shipment_type", "Shipment Type")}</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{coModeLabel(L, data.shipmentType)}</span>
                   </div>
                   <div className="py-1.5 flex justify-between items-center gap-2">
-                    <span className="text-slate-400 font-semibold">Status</span>
+                    <span className="text-slate-400 font-semibold">{tg("common.status", "Status")}</span>
                     <span className="inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-500 text-white">
-                      {data.status}
+                      {coStatusLabel(L, data.status)}
                     </span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Expected Dispatch</span>
+                    <span className="text-slate-400 font-semibold">{s.t("expected_dispatch", "Expected Dispatch")}</span>
                     <span className="font-medium text-slate-800 dark:text-slate-200">{data.expectedDispatch}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Expected Delivery</span>
+                    <span className="text-slate-400 font-semibold">{s.t("expected_delivery", "Expected Delivery")}</span>
                     <span className="font-medium text-slate-800 dark:text-slate-200">{data.expectedDelivery}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Branch</span>
+                    <span className="text-slate-400 font-semibold">{tg("common.branch", "Branch")}</span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{data.branch}</span>
                   </div>
                 </div>
@@ -718,40 +746,40 @@ export function CustomerOrderTransferHubView({
                   <span className="w-5 h-5 rounded-md bg-white/20 text-white font-bold text-xs flex items-center justify-center shrink-0">
                     2
                   </span>
-                  <span className="font-bold text-xs uppercase tracking-wide">Customer Details</span>
+                  <span className="font-bold text-xs uppercase tracking-wide">{tg("cod.customer_details", "Customer Details")}</span>
                 </div>
                 <div className="p-3 text-[11.5px] divide-y divide-slate-100 dark:divide-slate-800">
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Customer Name</span>
+                    <span className="text-slate-400 font-semibold">{tg("cod.customer_name", "Customer Name")}</span>
                     <span className="font-bold text-slate-900 dark:text-white truncate">{data.customerName}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Account Code</span>
+                    <span className="text-slate-400 font-semibold">{tg("cod.account_code", "Account Code")}</span>
                     <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{data.accountCode}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Contact Person</span>
+                    <span className="text-slate-400 font-semibold">{tg("cod.contact_person", "Contact Person")}</span>
                     <span className="font-medium text-slate-800 dark:text-slate-200 truncate">{data.contactPerson}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Phone</span>
+                    <span className="text-slate-400 font-semibold">{tg("common.phone", "Phone")}</span>
                     <span className="font-mono text-slate-800 dark:text-slate-200">{data.phone}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Email</span>
+                    <span className="text-slate-400 font-semibold">{tg("common.email", "Email")}</span>
                     <span className="text-blue-600 dark:text-blue-400 truncate">{data.email}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Address</span>
+                    <span className="text-slate-400 font-semibold">{tg("common.address", "Address")}</span>
                     <span className="font-medium text-slate-800 dark:text-slate-200 truncate">{data.address}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Country</span>
+                    <span className="text-slate-400 font-semibold">{tg("common.country", "Country")}</span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{data.country}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Customer Type</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">{data.customerType}</span>
+                    <span className="text-slate-400 font-semibold">{tg("cod.customer_type", "Customer Type")}</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{coCustomerTypeLabel(L, data.customerType)}</span>
                   </div>
                 </div>
               </div>
@@ -762,43 +790,43 @@ export function CustomerOrderTransferHubView({
                   <span className="w-5 h-5 rounded-md bg-white/20 text-white font-bold text-xs flex items-center justify-center shrink-0">
                     3
                   </span>
-                  <span className="font-bold text-xs uppercase tracking-wide">Route & Transport Details</span>
+                  <span className="font-bold text-xs uppercase tracking-wide">{s.t("box_route", "Route & Transport Details")}</span>
                 </div>
                 <div className="p-3 text-[11.5px] divide-y divide-slate-100 dark:divide-slate-800">
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Loading Country</span>
+                    <span className="text-slate-400 font-semibold">{s.t("loading_country", "Loading Country")}</span>
                     <span className="font-bold text-slate-900 dark:text-white truncate">{data.loadingCountry}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Loading Location</span>
+                    <span className="text-slate-400 font-semibold">{s.t("loading_location", "Loading Location")}</span>
                     <span className="font-medium text-slate-800 dark:text-slate-200 truncate">{data.loadingLocation}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Exit Border</span>
+                    <span className="text-slate-400 font-semibold">{tg("cod.exit_border", "Exit Border")}</span>
                     <span className="font-medium text-blue-600 dark:text-blue-400 truncate">{data.exitBorder}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Transit Country</span>
+                    <span className="text-slate-400 font-semibold">{s.t("transit_country", "Transit Country")}</span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{data.transitCountry}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Receiving Location</span>
+                    <span className="text-slate-400 font-semibold">{s.t("receiving_location", "Receiving Location")}</span>
                     <span className="font-medium text-slate-800 dark:text-slate-200 truncate">{data.receivingLocation}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Final Destination</span>
+                    <span className="text-slate-400 font-semibold">{s.t("final_destination", "Final Destination")}</span>
                     <span className="font-bold text-slate-900 dark:text-white truncate">{data.finalDestination}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Transport Mode</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">{data.transportMode}</span>
+                    <span className="text-slate-400 font-semibold">{tg("cbill.transport_mode", "Transport Mode")}</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{coModeLabel(L, data.transportMode)}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Carrier / Truck No.</span>
+                    <span className="text-slate-400 font-semibold">{tg("cod.carrier_truck", "Carrier / Truck No.")}</span>
                     <span className="font-mono font-bold text-slate-900 dark:text-white truncate">{data.carrierTruckNo}</span>
                   </div>
                   <div className="py-1.5 flex justify-between gap-2">
-                    <span className="text-slate-400 font-semibold">Driver Name</span>
+                    <span className="text-slate-400 font-semibold">{tg("cod.driver_name", "Driver Name")}</span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{data.driverName}</span>
                   </div>
                 </div>
@@ -813,40 +841,42 @@ export function CustomerOrderTransferHubView({
                 <span className="w-5 h-5 rounded-md bg-white/20 text-white font-bold text-xs flex items-center justify-center shrink-0">
                   4
                 </span>
-                <span className="font-bold text-xs uppercase tracking-wide">Goods Details</span>
+                <span className="font-bold text-xs uppercase tracking-wide">{tg("cod.goods_details", "Goods Details")}</span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-start text-xs">
                   <thead className="bg-[#f1f5f9] dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300">
                     <tr>
                       <th className="py-2.5 px-3 w-10 text-center">#</th>
-                      <th className="py-2.5 px-3">Goods Name</th>
-                      <th className="py-2.5 px-3">HS Code</th>
-                      <th className="py-2.5 px-3">Brand</th>
-                      <th className="py-2.5 px-3">Size</th>
-                      <th className="py-2.5 px-3">Unit</th>
-                      <th className="py-2.5 px-3 text-right">Quantity</th>
-                      <th className="py-2.5 px-3 text-right">Gross Weight</th>
-                      <th className="py-2.5 px-3 text-right">Net Weight</th>
-                      <th className="py-2.5 px-3 text-center">Remarks</th>
+                      <th className="py-2.5 px-3">{tg("cod.col_goods_name", "Goods Name")}</th>
+                      <th className="py-2.5 px-3">{tg("cod.col_hs_code", "HS Code")}</th>
+                      <th className="py-2.5 px-3">{tg("cod.col_brand", "Brand")}</th>
+                      <th className="py-2.5 px-3">{tg("cod.col_size", "Size")}</th>
+                      <th className="py-2.5 px-3">{tg("cod.col_unit", "Unit")}</th>
+                      <th className="py-2.5 px-3 text-end">{tg("common.quantity", "Quantity")}</th>
+                      <th className="py-2.5 px-3 text-end">{tg("cod.col_gross", "Gross Weight")}</th>
+                      <th className="py-2.5 px-3 text-end">{tg("cod.col_net", "Net Weight")}</th>
+                      <th className="py-2.5 px-3 text-center">{tg("common.remarks", "Remarks")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11.5px]">
                     {data.goods.map((item) => (
                       <tr key={item.serial} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
                         <td className="py-2 px-3 text-center font-bold text-slate-400">{item.serial}</td>
-                        <td className="py-2 px-3 font-bold text-slate-900 dark:text-white">{item.goodsName}</td>
+                        <td className="py-2 px-3 font-bold text-slate-900 dark:text-white">
+                          {item.goodsName || (item.nameFallback ? s.t(`fb_${item.nameFallback}`, item.nameFallback === "general_cargo" ? "General Cargo" : "Commercial Cargo") : "")}
+                        </td>
                         <td className="py-2 px-3 font-mono text-slate-600 dark:text-slate-400">{item.hsCode}</td>
-                        <td className="py-2 px-3 text-slate-700 dark:text-slate-300">{item.brand}</td>
+                        <td className="py-2 px-3 text-slate-700 dark:text-slate-300">{item.brand || tg("cod.standard", "Standard")}</td>
                         <td className="py-2 px-3 text-slate-700 dark:text-slate-300">{item.size}</td>
                         <td className="py-2 px-3 text-slate-700 dark:text-slate-300">{item.unit}</td>
-                        <td className="py-2 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
+                        <td className="py-2 px-3 text-end font-mono font-bold text-slate-900 dark:text-white">
                           {Number(item.quantity).toLocaleString()}
                         </td>
-                        <td className="py-2 px-3 text-right font-mono text-slate-800 dark:text-slate-200">
+                        <td className="py-2 px-3 text-end font-mono text-slate-800 dark:text-slate-200">
                           {Number(item.grossWeight).toLocaleString()}
                         </td>
-                        <td className="py-2 px-3 text-right font-mono text-slate-800 dark:text-slate-200">
+                        <td className="py-2 px-3 text-end font-mono text-slate-800 dark:text-slate-200">
                           {Number(item.netWeight).toLocaleString()}
                         </td>
                         <td className="py-2 px-3 text-center text-slate-400">{item.remarks}</td>
@@ -854,16 +884,16 @@ export function CustomerOrderTransferHubView({
                     ))}
                     {/* Total Row */}
                     <tr className="bg-[#f8fafc] dark:bg-slate-850 font-bold border-t-2 border-slate-200 dark:border-slate-700">
-                      <td colSpan={6} className="py-2 px-3 text-right font-black uppercase text-slate-700 dark:text-slate-200">
-                        Total
+                      <td colSpan={6} className="py-2 px-3 text-end font-black uppercase text-slate-700 dark:text-slate-200">
+                        {tg("common.total", "Total")}
                       </td>
-                      <td className="py-2 px-3 text-right font-mono font-black text-blue-600 dark:text-blue-400">
+                      <td className="py-2 px-3 text-end font-mono font-black text-blue-600 dark:text-blue-400">
                         {Number(totals.quantity).toLocaleString()}
                       </td>
-                      <td className="py-2 px-3 text-right font-mono font-black text-slate-900 dark:text-white">
+                      <td className="py-2 px-3 text-end font-mono font-black text-slate-900 dark:text-white">
                         {Number(totals.grossWeight).toLocaleString()}
                       </td>
-                      <td className="py-2 px-3 text-right font-mono font-black text-slate-900 dark:text-white">
+                      <td className="py-2 px-3 text-end font-mono font-black text-slate-900 dark:text-white">
                         {Number(totals.netWeight).toLocaleString()}
                       </td>
                       <td className="py-2 px-3 text-center text-slate-400">-</td>
@@ -881,46 +911,46 @@ export function CustomerOrderTransferHubView({
                 <span className="w-5 h-5 rounded-md bg-white/20 text-white font-bold text-xs flex items-center justify-center shrink-0">
                   5
                 </span>
-                <span className="font-bold text-xs uppercase tracking-wide">Loading & Receiving Details</span>
+                <span className="font-bold text-xs uppercase tracking-wide">{s.t("box_loading_receiving", "Loading & Receiving Details")}</span>
               </div>
               <div className="p-4 grid grid-cols-1 md:grid-cols-11 gap-3 items-center">
                 {/* Left Box: Loading Details (From) (5 cols) */}
                 <div className="md:col-span-5 rounded-xl border border-blue-200 dark:border-blue-900/60 overflow-hidden">
                   <div className="bg-[#d9e8fb] dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 px-3.5 py-2 text-xs font-bold flex items-center justify-center gap-2">
                     <span className="text-blue-600">↑</span>
-                    <span>Loading Details (From)</span>
+                    <span>{tg("cod.loading_from", "Loading Details (From)")}</span>
                   </div>
                   <div className="p-3 text-[11px] divide-y divide-slate-100 dark:divide-slate-800">
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Loading Country</span>
+                      <span className="text-slate-400 font-semibold">{s.t("loading_country", "Loading Country")}</span>
                       <span className="font-bold text-slate-900 dark:text-white">{data.loadingCountry}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Loading City / Location</span>
+                      <span className="text-slate-400 font-semibold">{s.t("loading_city_location", "Loading City / Location")}</span>
                       <span className="font-medium text-slate-800 dark:text-slate-200">{data.loadingCity}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Loading Date</span>
+                      <span className="text-slate-400 font-semibold">{s.t("loading_date", "Loading Date")}</span>
                       <span className="font-medium text-slate-800 dark:text-slate-200">{data.loadingDate}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Exit Border</span>
+                      <span className="text-slate-400 font-semibold">{tg("cod.exit_border", "Exit Border")}</span>
                       <span className="font-medium text-blue-600 dark:text-blue-400">{data.exitBorder}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Customs Clearance</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{data.loadingCustomsClearance}</span>
+                      <span className="text-slate-400 font-semibold">{tg("cod.customs_clearance", "Customs Clearance")}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{coYesNoLabel(L, data.loadingCustomsClearance)}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Customs Name</span>
-                      <span className="font-medium text-slate-800 dark:text-slate-200">{data.loadingCustomsName}</span>
+                      <span className="text-slate-400 font-semibold">{tg("cod.customs_name", "Customs Name")}</span>
+                      <span className="font-medium text-slate-800 dark:text-slate-200">{data.loadingCustomsName || s.t("fb_customs_post", "Customs Clearance Post")}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Warehouse / Yard</span>
+                      <span className="text-slate-400 font-semibold">{tg("cod.warehouse_yard", "Warehouse / Yard")}</span>
                       <span className="font-medium text-slate-800 dark:text-slate-200">{data.loadingWarehouse}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Remarks</span>
+                      <span className="text-slate-400 font-semibold">{tg("common.remarks", "Remarks")}</span>
                       <span className="text-slate-400">{data.loadingRemarks}</span>
                     </div>
                   </div>
@@ -929,7 +959,7 @@ export function CustomerOrderTransferHubView({
                 {/* Center Transition Arrow (1 col) */}
                 <div className="md:col-span-1 flex items-center justify-center py-2">
                   <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black shadow-xs">
-                    ➔
+                    {s.isRtl ? "⬅" : "➔"}
                   </div>
                 </div>
 
@@ -937,39 +967,39 @@ export function CustomerOrderTransferHubView({
                 <div className="md:col-span-5 rounded-xl border border-emerald-200 dark:border-emerald-900/60 overflow-hidden">
                   <div className="bg-[#dcfce7] dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 px-3.5 py-2 text-xs font-bold flex items-center justify-center gap-2">
                     <span className="text-emerald-600">↓</span>
-                    <span>Receiving Details (To)</span>
+                    <span>{tg("cod.receiving_to", "Receiving Details (To)")}</span>
                   </div>
                   <div className="p-3 text-[11px] divide-y divide-slate-100 dark:divide-slate-800">
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Receiving Country</span>
+                      <span className="text-slate-400 font-semibold">{s.t("receiving_country", "Receiving Country")}</span>
                       <span className="font-bold text-slate-900 dark:text-white">{data.receivingCountry}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Receiving City / Port</span>
+                      <span className="text-slate-400 font-semibold">{s.t("receiving_city_port", "Receiving City / Port")}</span>
                       <span className="font-medium text-slate-800 dark:text-slate-200">{data.receivingCityPort}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Receiving Date (ETA)</span>
+                      <span className="text-slate-400 font-semibold">{s.t("receiving_date_eta", "Receiving Date (ETA)")}</span>
                       <span className="font-medium text-slate-800 dark:text-slate-200">{data.receivingDateEta}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Entry Border</span>
+                      <span className="text-slate-400 font-semibold">{tg("cod.entry_border", "Entry Border")}</span>
                       <span className="font-medium text-emerald-600 dark:text-emerald-400">{data.entryBorder}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Customs Clearance</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{data.receivingCustomsClearance}</span>
+                      <span className="text-slate-400 font-semibold">{tg("cod.customs_clearance", "Customs Clearance")}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{coYesNoLabel(L, data.receivingCustomsClearance)}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Customs Name</span>
-                      <span className="font-medium text-slate-800 dark:text-slate-200">{data.receivingCustomsName}</span>
+                      <span className="text-slate-400 font-semibold">{tg("cod.customs_name", "Customs Name")}</span>
+                      <span className="font-medium text-slate-800 dark:text-slate-200">{data.receivingCustomsName || s.t("fb_dest_customs", "Destination Port Customs")}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Warehouse / Yard</span>
+                      <span className="text-slate-400 font-semibold">{tg("cod.warehouse_yard", "Warehouse / Yard")}</span>
                       <span className="font-medium text-slate-800 dark:text-slate-200">{data.receivingWarehouse}</span>
                     </div>
                     <div className="py-1 flex justify-between gap-2">
-                      <span className="text-slate-400 font-semibold">Remarks</span>
+                      <span className="text-slate-400 font-semibold">{tg("common.remarks", "Remarks")}</span>
                       <span className="text-slate-400">{data.receivingRemarks}</span>
                     </div>
                   </div>
@@ -986,20 +1016,20 @@ export function CustomerOrderTransferHubView({
                   6
                 </span>
                 <span className="font-bold text-xs uppercase tracking-wide">
-                  Transfer History (This Customer Order has been transferred to the following bills)
+                  {s.t("box_history", "Transfer History (This Customer Order has been transferred to the following bills)")}
                 </span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-start text-xs">
                   <thead className="bg-[#f1f5f9] dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300">
                     <tr>
                       <th className="py-2.5 px-3 w-10 text-center">#</th>
-                      <th className="py-2.5 px-3 w-36">Date & Time</th>
-                      <th className="py-2.5 px-3 w-48">Transferred To</th>
-                      <th className="py-2.5 px-3 w-36">Bill No.</th>
-                      <th className="py-2.5 px-3">Message</th>
-                      <th className="py-2.5 px-3 w-28 text-center">Status</th>
-                      <th className="py-2.5 px-3 w-32">Posted By</th>
+                      <th className="py-2.5 px-3 w-36">{tg("cod.date_time", "Date & Time")}</th>
+                      <th className="py-2.5 px-3 w-48">{s.t("col_transferred_to", "Transferred To")}</th>
+                      <th className="py-2.5 px-3 w-36">{tg("cod.bill_no", "Bill No.")}</th>
+                      <th className="py-2.5 px-3">{s.t("col_message", "Message")}</th>
+                      <th className="py-2.5 px-3 w-28 text-center">{tg("common.status", "Status")}</th>
+                      <th className="py-2.5 px-3 w-32">{s.t("col_posted_by", "Posted By")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11.5px]">
@@ -1015,7 +1045,7 @@ export function CustomerOrderTransferHubView({
                           <td className="py-2.5 px-3">
                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border ${cardDef.colorClass}`}>
                               <IconComponent className="h-3.5 w-3.5" />
-                              <span>{item.transferredTo}</span>
+                              <span>{cardTitle(cardDef)}</span>
                             </span>
                           </td>
                           <td className="py-2.5 px-3 font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
@@ -1023,7 +1053,7 @@ export function CustomerOrderTransferHubView({
                           </td>
                           <td className="py-2.5 px-3">
                             <div className={`p-2 rounded-xl text-[11px] leading-relaxed border border-slate-200/40 dark:border-slate-800/40 ${cardDef.messageBg}`}>
-                              {item.message}
+                              {item.message || defaultMessage(cardDef)}
                             </div>
                           </td>
                           <td className="py-2.5 px-3 text-center">
@@ -1034,7 +1064,7 @@ export function CustomerOrderTransferHubView({
                                   : "bg-blue-500 text-white"
                               }`}
                             >
-                              {item.status}
+                              {coStatusLabel(L, item.status)}
                             </span>
                           </td>
                           <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
@@ -1064,10 +1094,10 @@ export function CustomerOrderTransferHubView({
                 </div>
                 <div>
                   <h3 className="font-black text-sm text-slate-900 dark:text-white">
-                    Transfer Customer Order
+                    {s.t("modal_title", "Transfer Customer Order")}
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Destination: {selectedTarget.title}
+                    {s.t("destination", "Destination")}: {cardTitle(selectedTarget)}
                   </p>
                 </div>
               </div>
@@ -1083,7 +1113,7 @@ export function CustomerOrderTransferHubView({
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 mb-1">
-                  Generated Bill / Reference No.
+                  {s.t("lbl_bill_ref", "Generated Bill / Reference No.")}
                 </label>
                 <input
                   type="text"
@@ -1095,7 +1125,7 @@ export function CustomerOrderTransferHubView({
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 mb-1">
-                  Transfer Narration / Instructions
+                  {s.t("lbl_narration", "Transfer Narration / Instructions")}
                 </label>
                 <textarea
                   rows={3}
@@ -1107,7 +1137,7 @@ export function CustomerOrderTransferHubView({
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 mb-1">
-                  Posted / Assigned By
+                  {s.t("lbl_posted_by", "Posted / Assigned By")}
                 </label>
                 <input
                   type="text"
@@ -1125,7 +1155,7 @@ export function CustomerOrderTransferHubView({
                   className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                 />
                 <span className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">
-                  Open {selectedTarget.title} page immediately after recording
+                  {coFill(s.t("open_after", "Open {title} page immediately after recording"), { title: cardTitle(selectedTarget) })}
                 </span>
               </label>
             </div>
@@ -1136,14 +1166,14 @@ export function CustomerOrderTransferHubView({
                 onClick={() => setModalOpen(false)}
                 className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
               >
-                Cancel
+                {tg("common.cancel", "Cancel")}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmTransfer}
                 className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition cursor-pointer"
               >
-                Confirm & Record Transfer
+                {s.t("confirm_record", "Confirm & Record Transfer")}
               </button>
             </div>
           </div>

@@ -11,6 +11,7 @@ const r = (ur: string, ar: string, fa: string, ps: string): Row => ({ ur, ar, fa
 
 export const HEADER_EXTRA: Record<string, Row> = {
   "MOBILE DEVICES": r("موبائل ڈیوائسز", "الأجهزة المحمولة", "دستگاه‌های موبایل", "موبایل وسایل"),
+  "CUSTOMER BILL": r("کسٹمر بل", "فاتورة العميل", "صورتحساب مشتری", "د پیرودونکي بل"),
   // accounts / finance
   "OPENING DEBIT": r("ابتدائی ڈیبٹ", "مدين افتتاحي", "بدهکار افتتاحیه", "پیل ډیبیټ"),
   "OPENING CREDIT": r("ابتدائی کریڈٹ", "دائن افتتاحي", "بستانکار افتتاحیه", "پیل کریډیټ"),

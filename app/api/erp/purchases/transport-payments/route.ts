@@ -2,7 +2,9 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiCreated, apiOk, handleApiError, apiError } from "@/lib/api/response";
+import { ApiClientError, apiCreated, apiOk, handleApiError, apiError } from "@/lib/api/response";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { withKeyedLock } from "@/lib/db/keyed-lock";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { writeAuditLog } from "@/lib/api/supabase";
@@ -164,14 +166,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postTransportPayment(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const body = paymentSchema.parse(await request.json());
 
     const loadingRecord = await withLocalPg(async (sql) => {
       const rows = await sql`
-        select id, loading_record_no, purchase_order_id, purchase_order_no, report_payload
+        select id, loading_record_no, purchase_order_id, purchase_order_no, report_payload, country_id, country_branch_id, city_branch_id
         from purchase_loading_records
         where id = ${body.loadingRecordId}::uuid and deleted_at is null
         limit 1
@@ -182,6 +184,15 @@ export async function POST(request: NextRequest) {
     if (!loadingRecord) {
       return apiError("NOT_FOUND", "Loading record not found", 404);
     }
+
+    // the request must be inside the caller's country / branch scope and the caller must be allowed to post purchases
+    authorizeApiScope(session, {
+      resource: "purchases",
+      action: "post",
+      countryId: (loadingRecord as any).country_id ?? null,
+      countryBranchId: (loadingRecord as any).country_branch_id ?? null,
+      cityBranchId: (loadingRecord as any).city_branch_id ?? null
+    });
 
     const currentPayload = parseJsonish(loadingRecord.report_payload) || {};
     const existingPayments = Array.isArray(currentPayload.transportPayments) ? currentPayload.transportPayments : [];
@@ -213,6 +224,11 @@ export async function POST(request: NextRequest) {
     const newTotalPaid = newPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
     const transportCharges = Number(currentPayload.transportCharges || currentPayload.freightAmount || 0);
     const newBalance = Math.max(0, transportCharges - newTotalPaid);
+    const chargesCcy = String(currentPayload.transportCurrency || body.currency).toUpperCase();
+    if (transportCharges > 0 && body.currency.toUpperCase() === chargesCcy && newTotalPaid > transportCharges + 0.01) {
+      const remainingBefore = Math.max(0, transportCharges - existingPayments.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0));
+      throw new ApiClientError(`Payment amount cannot exceed remaining transport balance (${remainingBefore.toFixed(2)} ${chargesCcy}).`, { status: 409, code: "BUSINESS_RULE" });
+    }
 
     const updatedPayload = {
       ...currentPayload,
@@ -251,14 +267,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function putTransportCharges(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const body = updateChargesSchema.parse(await request.json());
 
     const loadingRecord = await withLocalPg(async (sql) => {
       const rows = await sql`
-        select id, loading_record_no, report_payload
+        select id, loading_record_no, report_payload, country_id, country_branch_id, city_branch_id
         from purchase_loading_records
         where id = ${body.loadingRecordId}::uuid and deleted_at is null
         limit 1
@@ -269,6 +285,15 @@ export async function PUT(request: NextRequest) {
     if (!loadingRecord) {
       return apiError("NOT_FOUND", "Loading record not found", 404);
     }
+
+    // the request must be inside the caller's country / branch scope and the caller must be allowed to post purchases
+    authorizeApiScope(session, {
+      resource: "purchases",
+      action: "post",
+      countryId: (loadingRecord as any).country_id ?? null,
+      countryBranchId: (loadingRecord as any).country_branch_id ?? null,
+      cityBranchId: (loadingRecord as any).city_branch_id ?? null
+    });
 
     const currentPayload = parseJsonish(loadingRecord.report_payload) || {};
     const existingPayments = Array.isArray(currentPayload.transportPayments) ? currentPayload.transportPayments : [];
@@ -306,4 +331,24 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
+}
+
+/** Both handlers read-modify-write ONE json document; run them one at a time per loading record so simultaneous requests cannot overwrite each other. */
+async function serialised(request: NextRequest, run: () => Promise<Response>): Promise<Response> {
+  try {
+    const raw = await request.clone().json().catch(() => ({}));
+    const id = typeof raw?.loadingRecordId === "string" ? raw.loadingRecordId : "";
+    if (!id) return await run();
+    return await withKeyedLock("transport-payment:" + id, run);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function POST(request: NextRequest) {
+  return serialised(request, () => postTransportPayment(request));
+}
+
+export async function PUT(request: NextRequest) {
+  return serialised(request, () => putTransportCharges(request));
 }
