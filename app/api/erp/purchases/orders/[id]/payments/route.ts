@@ -7,6 +7,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { writeAuditLog } from "@/lib/api/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { withKeyedLock } from "@/lib/db/keyed-lock";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
@@ -304,7 +305,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   }
 }
 
-export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+async function postPaymentHandler(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   let idempotencyKey = "";
   let tenantHash = "";
   try {
@@ -956,6 +957,20 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     if (idempotencyKey && tenantHash) {
       await releaseIdempotencyLock(idempotencyKey, tenantHash);
     }
+    return handleApiError(error);
+  }
+}
+
+/**
+ * Money-moving request: serialised PER ORDER. Two simultaneous payments for the same order run one after the other, so the second
+ * validates against the balance the first one produced and the order can never be over-paid (found 2026-10-19: four parallel
+ * payments of 100,000 against a 220,500 balance all posted).
+ */
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await context.params;
+    return await withKeyedLock("purchase-payment:" + id, () => postPaymentHandler(request, context));
+  } catch (error) {
     return handleApiError(error);
   }
 }

@@ -6,6 +6,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { withKeyedLock } from "@/lib/db/keyed-lock";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
@@ -187,7 +188,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   }
 }
 
-export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+async function postPaymentHandler(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   let idempotencyKey = "";
   let tenantHash = "";
   try {
@@ -317,7 +318,24 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // Transaction-safe posting via the SECURITY DEFINER wrapper post_sales_booking_transfer,
     // called directly over the raw Postgres connection (equivalent to, and more reliable
     // than, the Supabase RPC call).
-    const { paymentId, paymentRecord, journalRecord, journalLines } = await withLocalPg(async (sql) => {
+    // ONE database transaction: the order row is locked (FOR UPDATE) and the balance is re-checked on the locked row before posting,
+    // so simultaneous receipts are serialised and can never together exceed the receivable (found 2026-10-19: three parallel receipts
+    // of 6,000 against 9,000 all posted). If anything fails the whole receipt rolls back - no half-posted voucher.
+    const { paymentId, paymentRecord, journalRecord, journalLines } = await withLocalPg((sqlConn) => sqlConn.begin(async (sql: any) => {
+      const lockedRows = await sql`
+        select paid_amount, remaining_amount from sales_orders where id = ${params.id}::uuid and deleted_at is null for update
+      `;
+      const paidLocked = Number(lockedRows[0]?.paid_amount ?? 0);
+      const remainingLocked = Number(lockedRows[0]?.remaining_amount ?? 0);
+      if (body.kind === "advance" && advancePercent > 0) {
+        const remAdv = Math.max(0, requiredAdvanceUSD - paidLocked);
+        if (remAdv <= tolerance) throw new Error(`Advance payment is already fully received (Required: ${requiredAdvanceUSD.toFixed(2)}, Paid: ${paidLocked.toFixed(2)}). Duplicate posting is not allowed.`);
+        if (bodyAmountUSD > remAdv + tolerance) throw new Error(`Advance receipt amount cannot exceed remaining advance balance (${remAdv.toFixed(2)}).`);
+      }
+      if (body.kind === "remaining" || body.kind === "credit") {
+        if (remainingLocked <= tolerance) throw new Error("This sales order has no remaining receivable balance. Duplicate posting is not allowed.");
+        if (bodyAmountUSD > remainingLocked + tolerance) throw new Error(`Receipt amount cannot exceed remaining receivable balance (${remainingLocked.toFixed(2)}).`);
+      }
       const idRows = await sql`
         select post_sales_booking_transfer(
           p_actor_id => ${session.userId}::uuid,
@@ -339,7 +357,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       // AFTER the atomic posting RPC. Does NOT touch the posting/ledger/roznamcha logic.
       try {
         const s = await allocateFormSerials("payment_sales", { countryId: orderRow.country_id, branchKey: orderRow.country_branch_id ?? orderRow.city_branch_id ?? null });
-        await sql`update sales_order_payments set super_admin_serial = ${s.superAdminSerial}, country_serial = ${s.countrySerial}, branch_serial = ${s.branchSerial}, entry_serial = ${s.entrySerial} where id = ${paymentId}::uuid`;
+        // savepoint: a failure here must not abort the surrounding posting transaction
+        await sql.savepoint(async (sp: any) => {
+          await sp`update sales_order_payments set super_admin_serial = ${s.superAdminSerial}, country_serial = ${s.countrySerial}, branch_serial = ${s.branchSerial}, entry_serial = ${s.entrySerial} where id = ${paymentId}::uuid`;
+        });
       } catch { /* non-fatal — never affects posting */ }
 
       const paymentRows = await sql`
@@ -375,7 +396,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       `;
 
       return { paymentId, paymentRecord, journalRecord, journalLines };
-    }) as any;
+    })) as any;
 
     const exRate = Number(body.exchangeRate || (orderRow as any)?.exchange_rate || 1) || 1;
     assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, "Sales payment");
@@ -466,6 +487,20 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       await releaseIdempotencyLock(idempotencyKey, tenantHash);
     }
     console.error("SALES_PAYMENT_POST_ERROR:", error);
+    return handleApiError(error);
+  }
+}
+
+/**
+ * Money-moving request: serialised PER ORDER. Two simultaneous payments for the same order run one after the other, so the second
+ * validates against the balance the first one produced and the order can never be over-paid (found 2026-10-19: four parallel
+ * payments of 100,000 against a 220,500 balance all posted).
+ */
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await context.params;
+    return await withKeyedLock("sales-payment:" + id, () => postPaymentHandler(request, context));
+  } catch (error) {
     return handleApiError(error);
   }
 }
