@@ -281,6 +281,17 @@ export async function handleApiError(error: unknown) {
   if (status === 500 && typeof message === "string") {
     const m = message.toLowerCase();
     if (
+      // deliberate financial business-rule refusals (overpayment / settled bill / double posting): a conflict with the
+      // current state of the record, not a server fault and not a permission problem
+      m.includes("cannot exceed remaining") ||
+      m.includes("is already fully received") ||
+      m.includes("no remaining payable balance") ||
+      m.includes("no remaining receivable balance") ||
+      m.includes("has already been transferred")
+    ) {
+      code = "BUSINESS_RULE";
+      status = 409;
+    } else if (
       m.includes("is not allowed.") ||
       m.includes("location write is not allowed") ||
       m.includes("country scope is not allowed") ||

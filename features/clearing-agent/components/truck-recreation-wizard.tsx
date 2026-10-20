@@ -264,6 +264,9 @@ export type SessionDocument = {
   file?: File;
 };
 
+/** TRK_TEXT values are strings or (n,total) formatters; JSX needs a string. */
+const trkStr = (v: string | ((n: number, total?: number) => string) | undefined): string => (typeof v === "string" ? v : "");
+
 const EMPTY_FORM = {
   hasOwner: "yes",
   ownerId: "",
@@ -1912,7 +1915,7 @@ export function TruckRecreationWizard({
               <Building2 className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              {TRK_TEXT.sec1Title[activeLang]}
+              {trkStr(TRK_TEXT.sec1Title[activeLang])}
             </span>
           </div>
           <button
@@ -1967,7 +1970,7 @@ export function TruckRecreationWizard({
               <TruckIcon className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              {TRK_TEXT.sec2Title[activeLang]}
+              {trkStr(TRK_TEXT.sec2Title[activeLang])}
             </span>
           </div>
           <button
@@ -2017,7 +2020,7 @@ export function TruckRecreationWizard({
               <UserCheck className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              {TRK_TEXT.sec3Title[activeLang]}
+              {trkStr(TRK_TEXT.sec3Title[activeLang])}
             </span>
           </div>
           <button
@@ -2058,7 +2061,7 @@ export function TruckRecreationWizard({
               )}
             </div>
             <span className="mt-1.5 inline-block rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-black tracking-wide text-white uppercase shadow-2xs">
-              {TRK_TEXT.permanentBadge[activeLang]}
+              {trkStr(TRK_TEXT.permanentBadge[activeLang])}
             </span>
           </div>
 

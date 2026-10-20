@@ -26,13 +26,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Th } from "@/components/ui/translated-th";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { getLanguageDirection } from "@/lib/i18n/languages";
-import { t } from "@/lib/i18n/ui";
+import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { IntakeDraftPicker } from "@/features/document-intelligence/components/intake-draft-picker";
 import { CustomerOrderTransferHubView } from "./customer-order-transfer-hub-view";
 import { CustomerBillManagementView } from "./customer-bill-management-view";
 import type { CustomerBillRow } from "@/lib/services/clearing-customer-bill-service";
+import { coModeLabel, coMovementLabel, coStatusLabel } from "./customer-order-i18n";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border-slate-300",
@@ -47,9 +47,10 @@ const STATUS_STYLES: Record<string, string> = {
 export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLanguage }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const lang = langProp ?? "en";
-  const isRtl = getLanguageDirection(lang) === "rtl";
-  const _ = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
+  const s = useErpScreen("cbill", langProp);
+  const lang = s.lang;
+  const dir = s.dir;
+  const _ = (key: string, fallback: string) => s.tGlobal(key, fallback);
 
   // Read URL params
   const urlId = searchParams.get("id") || searchParams.get("orderId");
@@ -122,10 +123,22 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
     return { total, completed, draft, submitted, totalGrand };
   }, [rows]);
 
+  // Print/export rows carry the localized enum labels (not the raw by_road / draft codes).
+  const printRows = useMemo(
+    () =>
+      filteredRows.map((r) => ({
+        ...r,
+        transport_mode: coModeLabel(lang, r.transport_mode),
+        movement_type: coMovementLabel(lang, r.movement_type),
+        status: coStatusLabel(lang, r.status),
+      })) as unknown as Record<string, unknown>[],
+    [filteredRows, lang]
+  );
+
   // If in edit / charges management mode
   if (openBillManagementId) {
     return (
-      <div dir={isRtl ? "rtl" : "ltr"} className="space-y-3 p-3">
+      <div dir={dir} className="space-y-3 p-3">
         <Button
           type="button"
           variant="outline"
@@ -137,8 +150,8 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
             void loadRows();
           }}
         >
-          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-          {_("cbr.back_to_register", "Back to Customer Order & Bill")}
+          <ArrowLeft className="me-1.5 h-3.5 w-3.5 rtl:rotate-180" />
+          {s.t("reg_back", "Back to Customer Order & Bill")}
         </Button>
         <CustomerBillManagementView initialBillId={openBillManagementId} />
       </div>
@@ -148,7 +161,7 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
   // If an order / bill is selected for the Transfer Hub View
   if (activeOrderId) {
     return (
-      <div dir={isRtl ? "rtl" : "ltr"}>
+      <div dir={dir}>
         <CustomerOrderTransferHubView
           orderId={activeOrderId}
           lang={lang}
@@ -164,7 +177,7 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
 
   // Otherwise show the Smart Customer Bill & Order Register Table
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto max-w-[1720px] space-y-4 p-3 sm:p-5">
+    <div dir={dir} className="mx-auto max-w-[1720px] space-y-4 p-3 sm:p-5">
       {/* Top Header & Overview */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-3">
@@ -176,7 +189,7 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
               {_("cbill.register_title", "Customer Bill & Order Register")}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Central clearing agent billing, orders, and multi-expense transfer desk
+              {s.t("reg_subtitle", "Central clearing agent billing, orders, and multi-expense transfer desk")}
             </p>
           </div>
         </div>
@@ -190,8 +203,8 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
             onClick={() => void loadRows()}
             disabled={loading}
           >
-            <RefreshCcw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            <RefreshCcw className={`me-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            {_("common.refresh", "Refresh")}
           </Button>
 
           <IntakeDraftPicker
@@ -211,8 +224,8 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
               router.push("/dashboard/clearing-agent/customer-order");
             }}
           >
-            <Plus className="mr-1.5 h-4 w-4" />
-            New Customer Order
+            <Plus className="me-1.5 h-4 w-4" />
+            {s.t("reg_new_order", "New Customer Order")}
           </Button>
         </div>
       </div>
@@ -221,53 +234,53 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="rounded-2xl border border-slate-200/90 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
           <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase tracking-wider">
-            <span>Total Orders & Bills</span>
+            <span>{s.t("reg_kpi_total", "Total Orders & Bills")}</span>
             <FileText className="h-4 w-4 text-blue-500" />
           </div>
           <div className="mt-2 text-2xl font-black text-slate-900 dark:text-white">
             {stats.total}
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5">
-            Active clearing & commercial records
+            {s.t("reg_kpi_total_sub", "Active clearing & commercial records")}
           </div>
         </div>
 
         <div className="rounded-2xl border border-emerald-200/90 bg-white p-4 dark:border-emerald-900/50 dark:bg-slate-900 shadow-xs">
           <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
-            <span>Completed / Settled</span>
+            <span>{s.t("reg_kpi_completed", "Completed / Settled")}</span>
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </div>
           <div className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
             {stats.completed}
           </div>
           <div className="text-[11px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
-            Transferred and fully processed
+            {s.t("reg_kpi_completed_sub", "Transferred and fully processed")}
           </div>
         </div>
 
         <div className="rounded-2xl border border-blue-200/90 bg-white p-4 dark:border-blue-900/50 dark:bg-slate-900 shadow-xs">
           <div className="flex items-center justify-between text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider">
-            <span>In Process / Active</span>
+            <span>{s.t("reg_kpi_active", "In Process / Active")}</span>
             <Clock className="h-4 w-4 text-blue-500" />
           </div>
           <div className="mt-2 text-2xl font-black text-blue-600 dark:text-blue-400">
             {stats.submitted}
           </div>
           <div className="text-[11px] text-blue-600/70 dark:text-blue-400/70 mt-0.5">
-            Under customs or inland transit
+            {s.t("reg_kpi_active_sub", "Under customs or inland transit")}
           </div>
         </div>
 
         <div className="rounded-2xl border border-amber-200/90 bg-white p-4 dark:border-amber-900/50 dark:bg-slate-900 shadow-xs">
           <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
-            <span>Draft / Pending</span>
+            <span>{s.t("reg_kpi_draft", "Draft / Pending")}</span>
             <SlidersHorizontal className="h-4 w-4 text-amber-500" />
           </div>
           <div className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400">
             {stats.draft}
           </div>
           <div className="text-[11px] text-amber-600/70 dark:text-amber-400/70 mt-0.5">
-            Awaiting final documentation
+            {s.t("reg_kpi_draft_sub", "Awaiting final documentation")}
           </div>
         </div>
       </div>
@@ -276,12 +289,12 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
       <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
         <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/50">
           <div className="relative flex-1 max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by Bill No, Customer, Order No, Truck..."
-              className="h-9.5 pl-9 text-xs rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+              placeholder={s.t("reg_search_ph", "Search by Bill No, Customer, Order No, Truck...")}
+              className="h-9.5 ps-9 text-xs rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
             />
           </div>
 
@@ -291,10 +304,10 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
               onChange={(e) => setStatusFilter(e.target.value)}
               className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
             >
-              <option value="all">All Statuses</option>
-              <option value="completed">Completed / Paid</option>
-              <option value="submitted">Submitted / In Process</option>
-              <option value="draft">Draft</option>
+              <option value="all">{s.t("reg_all_statuses", "All Statuses")}</option>
+              <option value="completed">{s.t("reg_st_completed", "Completed / Paid")}</option>
+              <option value="submitted">{s.t("reg_st_submitted", "Submitted / In Process")}</option>
+              <option value="draft">{_("com.status_draft", "Draft")}</option>
             </select>
 
             <select
@@ -302,26 +315,26 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
               onChange={(e) => setModeFilter(e.target.value)}
               className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
             >
-              <option value="all">All Modes</option>
-              <option value="by_road">By Road</option>
-              <option value="by_sea">By Sea</option>
-              <option value="by_air">By Air</option>
-              <option value="transit">Transit</option>
-              <option value="import">Import</option>
+              <option value="all">{s.t("reg_all_modes", "All Modes")}</option>
+              <option value="by_road">{_("com.mode_by_road", "By Road")}</option>
+              <option value="by_sea">{_("com.mode_by_sea", "By Sea")}</option>
+              <option value="by_air">{_("com.mode_by_air", "By Air")}</option>
+              <option value="transit">{_("com.mv_transit", "Transit")}</option>
+              <option value="import">{_("com.mv_import", "Import")}</option>
             </select>
 
             <JournalPrintButton
-              title="Customer Bill & Order Register"
+              title={_("cbill.register_title", "Customer Bill & Order Register")}
               columns={[
-                { key: "bill_no", label: "Bill No", align: "center" },
-                { key: "order_no", label: "Order No", align: "center" },
-                { key: "customer_name", label: "Customer" },
-                { key: "transport_mode", label: "Transport Mode", align: "center" },
-                { key: "movement_type", label: "Movement", align: "center" },
-                { key: "grand_total", label: "Grand Total", align: "right", format: "number" },
-                { key: "status", label: "Status", align: "center", format: "status" }
+                { key: "bill_no", label: _("cod.bill_no", "Bill No."), align: "center" },
+                { key: "order_no", label: _("cod.order_no", "Order No."), align: "center" },
+                { key: "customer_name", label: s.t("reg_col_customer", "Customer") },
+                { key: "transport_mode", label: _("cbill.transport_mode", "Transport Mode"), align: "center" },
+                { key: "movement_type", label: _("cbill.movement_type", "Movement Type"), align: "center" },
+                { key: "grand_total", label: _("cbill.grand_total", "Grand Total"), align: "right", format: "number" },
+                { key: "status", label: _("common.status", "Status"), align: "center" }
               ]}
-              rows={filteredRows as unknown as Record<string, unknown>[]}
+              rows={printRows}
               orientation="landscape"
             />
           </div>
@@ -329,16 +342,16 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
 
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-start text-xs">
               <thead className="bg-[#f1f5f9] dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                 <tr>
-                  <th className="py-3 px-3.5">Bill No.</th>
-                  <th className="py-3 px-3.5">Order No.</th>
-                  <th className="py-3 px-3.5">Customer & Ledger</th>
-                  <th className="py-3 px-3.5">Route & Mode</th>
-                  <th className="py-3 px-3.5 text-right">Grand Total</th>
-                  <th className="py-3 px-3.5 text-center">Status</th>
-                  <th className="py-3 px-3.5 text-center">Actions</th>
+                  <th className="py-3 px-3.5">{_("cod.bill_no", "Bill No.")}</th>
+                  <th className="py-3 px-3.5">{_("cod.order_no", "Order No.")}</th>
+                  <th className="py-3 px-3.5">{s.t("reg_col_customer_ledger", "Customer & Ledger")}</th>
+                  <th className="py-3 px-3.5">{s.t("reg_col_route_mode", "Route & Mode")}</th>
+                  <th className="py-3 px-3.5 text-end">{_("cbill.grand_total", "Grand Total")}</th>
+                  <th className="py-3 px-3.5 text-center">{_("common.status", "Status")}</th>
+                  <th className="py-3 px-3.5 text-center">{_("common.actions", "Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11.5px]">
@@ -346,7 +359,7 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-slate-400">
                       <RefreshCcw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-500" />
-                      <span>Loading customer orders and bills...</span>
+                      <span>{s.t("reg_loading", "Loading customer orders and bills...")}</span>
                     </td>
                   </tr>
                 ) : filteredRows.length === 0 ? (
@@ -354,10 +367,10 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
                     <td colSpan={7} className="py-12 text-center text-slate-400">
                       <FileText className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
                       <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
-                        No customer bills or orders found
+                        {s.t("reg_empty_title", "No customer bills or orders found")}
                       </p>
                       <p className="text-xs text-slate-400 mt-1">
-                        Select a customer order or create a new one to open the transfer hub.
+                        {s.t("reg_empty_sub", "Select a customer order or create a new one to open the transfer hub.")}
                       </p>
                     </td>
                   </tr>
@@ -393,25 +406,25 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
                         {/* Customer */}
                         <td className="py-3 px-3.5">
                           <div className="font-bold text-slate-900 dark:text-white">
-                            {r.customer_name || "Unspecified Customer"}
+                            {r.customer_name || s.t("reg_unspecified_customer", "Unspecified Customer")}
                           </div>
                           <div className="text-[10px] font-mono text-slate-400 mt-0.5">
-                            {r.customer_account_number || "A/C: Linked Ledger"}
+                            {r.customer_account_number || s.t("reg_linked_ledger", "A/C: Linked Ledger")}
                           </div>
                         </td>
 
                         {/* Route & Mode */}
                         <td className="py-3 px-3.5">
                           <div className="font-semibold text-slate-700 dark:text-slate-300">
-                            {r.transport_mode ? r.transport_mode.replace("by_", "By ").toUpperCase() : "ROAD CORRIDOR"}
+                            {r.transport_mode ? coModeLabel(lang, r.transport_mode) : s.t("reg_road_corridor", "Road Corridor")}
                           </div>
                           <div className="text-[10px] uppercase font-bold text-slate-400 mt-0.5">
-                            {r.movement_type || "TRANSIT"}
+                            {r.movement_type ? coMovementLabel(lang, r.movement_type) : _("com.mv_transit", "Transit")}
                           </div>
                         </td>
 
                         {/* Grand Total */}
-                        <td className="py-3 px-3.5 text-right font-mono font-black text-slate-900 dark:text-white">
+                        <td className="py-3 px-3.5 text-end font-mono font-black text-slate-900 dark:text-white">
                           {Number(r.grand_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} {r.currency_code || "USD"}
                         </td>
 
@@ -422,7 +435,7 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
                               STATUS_STYLES[r.status] || STATUS_STYLES.draft
                             }`}
                           >
-                            {r.status}
+                            {coStatusLabel(lang, r.status)}
                           </span>
                         </td>
 
@@ -436,10 +449,10 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
                                 router.push(`/dashboard/clearing-agent/customer-bill?id=${targetId}`);
                               }}
                               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
-                              title="Open Customer Order & Transfer Hub"
+                              title={s.t("reg_open_hub_title", "Open Customer Order & Transfer Hub")}
                             >
                               <Eye className="h-3.5 w-3.5" />
-                              <span>View / Transfer Hub ➔</span>
+                              <span>{s.t("reg_open_hub", "View / Transfer Hub")}</span>
                             </button>
 
                             <button
@@ -449,7 +462,7 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
                                 router.push(`/dashboard/clearing-agent/customer-bill?id=${r.id}&mode=edit`);
                               }}
                               className="inline-flex items-center p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                              title="Edit Bill Charges"
+                              title={s.t("reg_edit_charges", "Edit Bill Charges")}
                             >
                               <FileText className="h-3.5 w-3.5" />
                             </button>

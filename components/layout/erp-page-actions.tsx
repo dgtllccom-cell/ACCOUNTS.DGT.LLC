@@ -325,7 +325,7 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
           {subtitleOverride ? (
             <p className="mt-0.5 hidden truncate text-[9.5px] font-medium leading-tight text-slate-400 sm:block">{subtitle}</p>
           ) : (
-            <nav aria-label="Breadcrumb" data-testid="erp-breadcrumb" className="mt-0.5 hidden min-w-0 items-center gap-0.5 truncate text-[10px] font-medium leading-tight text-slate-400 sm:flex">
+            <nav aria-label={t(lang, "pa.breadcrumb", "Breadcrumb")} data-testid="erp-breadcrumb" className="mt-0.5 hidden min-w-0 items-center gap-0.5 truncate text-[10px] font-medium leading-tight text-slate-400 sm:flex">
               {crumbs.map((c, i) => (
                 <span key={i} className="flex min-w-0 items-center gap-0.5">
                   {i > 0 && <ChevronRight className="h-2.5 w-2.5 shrink-0 rtl:rotate-180" aria-hidden />}
