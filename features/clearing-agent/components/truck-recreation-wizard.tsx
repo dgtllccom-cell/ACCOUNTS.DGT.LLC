@@ -657,13 +657,11 @@ export function TruckRecreationWizard({
   /** Language the server must resolve record names in: ALWAYS what is on screen (never the possibly stale cookie). */
   const langQ = `lang=${encodeURIComponent(activeLang)}`;
 
-  const [view, setView] = useState<ViewMode>(() => {
-    if (typeof window !== "undefined") {
-      const sp = new URLSearchParams(window.location.search);
-      if (sp.get("view") === "list") return "list";
-    }
-    return "form";
-  });
+  // Server and first client render must be identical (React hydration): start on the form, then honour ?view=list after mount.
+  const [view, setView] = useState<ViewMode>("form");
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("view") === "list") setView("list");
+  }, []);
   const [form, setForm] = useState(EMPTY_FORM);
   const [contacts, setContacts] = useState<ContactEntry[]>([
     { id: "c-1", type: "WhatsApp", value: "" },
@@ -726,7 +724,7 @@ export function TruckRecreationWizard({
   });
 
   const [mounted, setMounted] = useState(false);
-  const [nowStr, setNowStr] = useState("Oct 18, 2026, 9:24 PM");
+  const [nowStr, setNowStr] = useState("");
   useEffect(() => {
     setMounted(true);
     try {
@@ -3439,7 +3437,7 @@ export function TruckRecreationWizard({
 
                           <div>
                             <CompanyPicker
-                              label={form.companyType === "shippingLine" ? "Shipping Line Company *" : "Transporter Company *"}
+                              label={(form.companyType === "shippingLine" ? tt("trk.w_shipping_line_company", "Shipping Line Company") : tt("trk.w_transporter_company", "Transporter Company")) + " *"}
                               value={form.companyId}
                               onValueChange={(id) => setForm((p) => ({ ...p, companyId: id }))}
                               placeholder={tt("trk.search_company_ph", "Search company...")}
