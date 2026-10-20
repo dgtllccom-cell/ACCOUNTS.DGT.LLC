@@ -33,7 +33,7 @@ for (const lang of LANGS) {
       try {
         await p.goto(BASE + path, { waitUntil: "domcontentloaded", timeout: 180000 });
         await p.waitForFunction(() => !document.querySelector(".animate-spin") && document.body.innerText.length > 200, null, { timeout: 90000 }).catch(() => {});
-        await p.waitForTimeout(2500);
+        await p.waitForTimeout(Number(process.env.SETTLE || 2500));
         const info = await p.evaluate(() => {
           const dir = document.documentElement.dir || document.body.dir || getComputedStyle(document.body).direction;
           const main = document.querySelector("main") || document.body;

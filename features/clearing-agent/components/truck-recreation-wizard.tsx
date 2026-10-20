@@ -185,10 +185,6 @@ function companyRegNumber(company: CompanyDetails | null | undefined): string | 
 
 type TruckRow = {
   id: string;
-  driver_docs_expiry_date?: string | null;
-  country_id?: string | null;
-  country_branch_id?: string | null;
-  city_branch_id?: string | null;
   truck_number: string;
   truck_name: string | null;
   model: string | null;
@@ -268,9 +264,6 @@ export type SessionDocument = {
   file?: File;
 };
 
-type ViewMode = "list" | "form";
-const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
-type OptionalColumnKey = "truckName" | "model" | "company" | "transporter" | "mobile" | "branch";
 /** TRK_TEXT values are strings or (n,total) formatters; JSX needs a string. */
 const trkStr = (v: string | ((n: number, total?: number) => string) | undefined): string => (typeof v === "string" ? v : "");
 
