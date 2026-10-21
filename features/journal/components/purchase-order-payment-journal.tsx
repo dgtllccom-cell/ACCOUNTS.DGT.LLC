@@ -4680,8 +4680,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           </td>
 
           {/* 7. GOODS NAME */}
-          <td className="py-3.5 px-3 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300 border-r border-slate-200/80 dark:border-slate-800 text-[12.5px]">
-            {goodsName}
+          <td
+            className="py-3 px-3 border-r border-slate-200/80 dark:border-slate-800 text-[12.5px] max-w-[200px] w-[200px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GoodsPopoverCell
+              goods={goods.length > 0 ? goods : goodsName}
+              fallbackName={form.goodsName || form.productName || "—"}
+              maxWidthClass="max-w-[170px]"
+            />
           </td>
 
           {/* 8. QTY */}
@@ -5160,6 +5167,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     title={col.tip}
                     className={cn(
                       "px-3 py-3.5 whitespace-nowrap border-r border-slate-300 dark:border-slate-700 last:border-0 cursor-default select-none",
+                      i === 6 ? "w-[200px] max-w-[200px]" : "",
                       i === 7 || i === 8 || i === 9 || i === 10 || i === 12 || i === 13 || i === 17 ? "text-right" :
                       i === 1 || i === 11 || i === 15 || i === 16 || i === 27 ? "text-center" : "text-left"
                     )}
