@@ -1618,11 +1618,9 @@ export function PurchaseBookingJournalReportView({
   const [session, setSession] = useState<any>(null);
   const [filters, setFilters] = useState(() => {
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const fromDate = `${currentYear}-01-01`;
     const toDate = today.toISOString().slice(0, 10);
     return {
-      fromDate,
+      fromDate: "",
       toDate,
       supplier: "",
       branch: "",
@@ -1679,7 +1677,7 @@ export function PurchaseBookingJournalReportView({
     setLoading(true);
     setMessage("");
     try {
-      const params = new URLSearchParams({ limit: isSuperAdmin ? "1000" : "150" });
+      const params = new URLSearchParams({ limit: "2000" });
       if (nextFilters.fromDate) params.set("dateFrom", nextFilters.fromDate);
       if (nextFilters.toDate) params.set("dateTo", nextFilters.toDate);
       if (nextFilters.bookingNo) params.set("purchaseOrderNo", nextFilters.bookingNo);
