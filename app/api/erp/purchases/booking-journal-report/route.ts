@@ -28,7 +28,8 @@ type QueryResult<T> = {
 };
 
 function getEffectiveScope(session: Awaited<ReturnType<typeof requireErpSession>>, query: z.infer<typeof querySchema>) {
-  const scopeType = session.isSuperAdmin
+  const isSuperOrGlobal = session.isSuperAdmin || session.isGlobalScope || session.roles?.includes("business_super_admin");
+  const scopeType = isSuperOrGlobal
     ? "super_admin"
     : session.cityBranchIds.length
       ? "city_branch"
@@ -38,10 +39,10 @@ function getEffectiveScope(session: Awaited<ReturnType<typeof requireErpSession>
 
   return {
     type: scopeType,
-    countryIds: query.countryId ? [query.countryId] : session.isSuperAdmin ? [] : session.countryIds,
-    countryBranchIds: query.countryBranchId ? [query.countryBranchId] : session.isSuperAdmin ? [] : session.countryBranchIds,
-    cityBranchIds: query.cityBranchId ? [query.cityBranchId] : session.isSuperAdmin ? [] : session.cityBranchIds,
-    isGlobal: session.isSuperAdmin && !query.countryId && !query.countryBranchId && !query.cityBranchId
+    countryIds: query.countryId ? [query.countryId] : isSuperOrGlobal ? [] : session.countryIds,
+    countryBranchIds: query.countryBranchId ? [query.countryBranchId] : isSuperOrGlobal ? [] : session.countryBranchIds,
+    cityBranchIds: query.cityBranchId ? [query.cityBranchId] : isSuperOrGlobal ? [] : session.cityBranchIds,
+    isGlobal: isSuperOrGlobal && !query.countryId && !query.countryBranchId && !query.cityBranchId
   };
 }
 
@@ -331,21 +332,22 @@ function normalizeOrder(row: any) {
         requestQuery = requestQuery.lte("created_at", `${bufferedDateStr}T23:59:59.999Z`);
       }
 
+      const isSuperOrGlobal = session.isSuperAdmin || session.isGlobalScope || session.roles?.includes("business_super_admin");
       // Enforce strict scope isolation: city branch first, then main branch, then country.
       if (requestQuery && query.cityBranchId) {
         requestQuery = requestQuery.eq("city_branch_id", query.cityBranchId);
-      } else if (requestQuery && !session.isSuperAdmin && session.cityBranchIds.length) {
+      } else if (requestQuery && !isSuperOrGlobal && session.cityBranchIds.length) {
         requestQuery = requestQuery.or(`city_branch_id.in.(${session.cityBranchIds.join(",")}),city_branch_id.is.null`);
         if (session.countryIds.length) {
           requestQuery = requestQuery.in("country_id", session.countryIds);
         }
       } else if (requestQuery && query.countryBranchId) {
         requestQuery = requestQuery.eq("country_branch_id", query.countryBranchId);
-      } else if (requestQuery && !session.isSuperAdmin && session.countryBranchIds.length) {
+      } else if (requestQuery && !isSuperOrGlobal && session.countryBranchIds.length) {
         requestQuery = requestQuery.in("country_branch_id", session.countryBranchIds);
       } else if (requestQuery && query.countryId) {
         requestQuery = requestQuery.eq("country_id", query.countryId);
-      } else if (requestQuery && !session.isSuperAdmin) {
+      } else if (requestQuery && !isSuperOrGlobal) {
         requestQuery = requestQuery.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
       }
 

@@ -84,7 +84,7 @@ export function deriveEffectiveRole(storedRole: StoredEnterpriseRole, profile: A
 /** Country-level roles: they own their whole country, including branches that were later deactivated. */
 export const COUNTRY_LEVEL_ROLES: readonly string[] = ["country_admin", "country_user", "country_operations_admin"];
 /** Roles whose scope is global but whose permissions are NOT "everything". */
-export const GLOBAL_SCOPE_ROLES: readonly string[] = ["super_admin", "super_admin_reports", "global_operations_admin"];
+export const GLOBAL_SCOPE_ROLES: readonly string[] = ["super_admin", "super_admin_reports", "global_operations_admin", "business_super_admin", "shipping_super_admin"];
 /** Operational / shipping-line roles: financial modules are denied by construction. */
 export const NON_FINANCIAL_ROLES: readonly string[] = [
   "global_operations_admin", "country_operations_admin", "city_operations_admin", "shipping_line_user"
