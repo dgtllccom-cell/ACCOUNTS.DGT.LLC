@@ -695,18 +695,12 @@ export function ExpensesBillEntryForm({
     }
   }, [branch, cityBranches]);
 
-  const generateNextSerial = (b: string, d: string) => {
-    const br = cityBranches.find((x: any) => x.id === b);
-    const prefix = br?.code || "BR";
-    const period = d.replace(/-/g, "").slice(0, 6);
-    const rand = String(Math.floor(Math.random() * 9999) + 1).padStart(4, "0");
-    return `${prefix}-${period}-${rand}`;
-  };
+  const generateNextSerial = () => "AUTO";
 
   // Effects
   useEffect(() => {
     if (!headerLocked) {
-      setBillSerial(generateNextSerial(branch, billDate));
+      setBillSerial(generateNextSerial());
       setCurrency(branchCurrency);
     }
   }, [branch, billDate, headerLocked, branchCurrency]);
@@ -744,7 +738,7 @@ export function ExpensesBillEntryForm({
   const toggleHeaderLock = () => {
     setHeaderLocked(!headerLocked);
     if (!headerLocked && !billSerial) {
-      setBillSerial(generateNextSerial(branch, billDate));
+      setBillSerial(generateNextSerial());
     }
   };
 
@@ -1148,11 +1142,11 @@ export function ExpensesBillEntryForm({
 
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-medium">{tt("exp.super_admin_sr", "Super Admin Sr.")}</span>
-                  <span suppressHydrationWarning className="font-semibold text-slate-600">SA-{billSerial.split('-')[1]}-{Math.floor(Math.random() * 900) + 100}</span>
+                  <span className="font-semibold text-slate-600">—</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-medium">{tt("exp.country_sr", "Country Sr.")}</span>
-                  <span suppressHydrationWarning className="font-semibold text-slate-600">CT-{billSerial.split('-')[1]}-{Math.floor(Math.random() * 90) + 10}</span>
+                  <span className="font-semibold text-slate-600">—</span>
                 </div>
               </CardContent>
             </Card>

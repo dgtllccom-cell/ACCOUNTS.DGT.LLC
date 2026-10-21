@@ -132,10 +132,21 @@ export async function POST(req: NextRequest) {
       await supabase.from("expenses_bill_lines").delete().eq("bill_id", billId);
     } else {
       // Insert new
+      let serialNo = header.billSerial;
+      if (serialNo.trim().toUpperCase() === "AUTO") {
+        const { data: serialData, error: serialErr } = await supabase.rpc("next_entity_serial", {
+          p_scope_type: "global",
+          p_scope_key: "GLOBAL",
+          p_entity_type: "expenses_bills",
+          p_prefix: "EXP",
+        });
+        if (serialErr || !serialData) throw new Error("Failed to allocate bill serial: " + (serialErr?.message || "empty"));
+        serialNo = String(serialData);
+      }
       const { data: billData, error: billError } = await supabase
         .from("expenses_bills")
         .insert({
-          serial_no: header.billSerial,
+          serial_no: serialNo,
           branch_id: header.branch,
           bill_date: header.billDate,
           bill_mode: header.billMode,
