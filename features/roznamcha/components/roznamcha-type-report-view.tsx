@@ -788,7 +788,7 @@ export function RoznamchaTypeReportView({
             </div>
             <div className="flex justify-between items-center">
               <span>{tt("rozrep.datetime_label", "DATE & TIME:")}</span>
-              <span className="font-bold text-slate-700 dark:text-slate-300">
+              <span className="font-bold text-slate-700 dark:text-slate-300" suppressHydrationWarning>
                 {new Date().toLocaleDateString(currentLang === "en" ? "en-GB" : currentLang, { day: "2-digit", month: "short", year: "numeric" })},{" "}
                 {new Date().toLocaleTimeString(currentLang === "en" ? "en-US" : currentLang, { hour: "2-digit", minute: "2-digit", hour12: true })}
               </span>
