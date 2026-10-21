@@ -222,7 +222,7 @@ export async function GET(req: Request) {
           case when cb.id is not null then jsonb_build_object(
             'name', cb.name,
             'country_id', cb.country_id,
-            'countries', case when c.id is not null then jsonb_build_object('name', c.name, 'currency_code', c.currency_code) else null end
+            'countries', case when c.id is not null then jsonb_build_object('name', c.name, 'iso2', c.iso2, 'currency_code', c.currency_code) else null end
           ) else null end as city_branches,
           coalesce(
             (select jsonb_agg(l order by l.row_serial asc) from public.expenses_bill_lines l where l.bill_id = b.id),

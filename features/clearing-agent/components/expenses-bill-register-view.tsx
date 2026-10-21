@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -25,6 +25,52 @@ import { t as tc } from "@/lib/i18n/ui";
 
 export type ExpenseCategory = "customer" | "truck" | "customs" | "other";
 
+type RegisterRow = {
+  id: string;
+  expenseNo: string;
+  date: string;
+  countryCode: string;
+  countryName: string;
+  flag: string;
+  branch: string;
+  entryUser: string;
+  party: string;
+  expenseType: string;
+  creditAcc: string;
+  debitAcc: string;
+  amount: string;
+  amountValue: number;
+  currency: string;
+  status: string;
+};
+
+const CATEGORY_BILL_TITLE: Record<string, string> = {
+  customer: "customer_expenses",
+  truck: "truck_expenses",
+  customs: "customs_expenses",
+  other: "other_expenses",
+};
+
+function flagFromIso2(iso2: string): string {
+  if (!/^[A-Za-z]{2}$/.test(iso2)) return "";
+  return String.fromCodePoint(...[...iso2.toUpperCase()].map((c) => 127397 + c.charCodeAt(0)));
+}
+
+function formatAmount(n: number): string {
+  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/** Totals grouped by currency: one currency -> "USD 1,000.00"; mixed -> "USD 1,000.00 + AED 500.00" (never summed across currencies). */
+function currencyTotals(rows: RegisterRow[], pick: (r: RegisterRow) => boolean): string {
+  const byCur = new Map<string, number>();
+  for (const r of rows) {
+    if (!pick(r)) continue;
+    const cur = r.currency || "";
+    byCur.set(cur, (byCur.get(cur) || 0) + r.amountValue);
+  }
+  if (byCur.size === 0) return "0.00";
+  return [...byCur.entries()].map(([cur, v]) => `${cur ? cur + " " : ""}${formatAmount(v)}`).join(" + ");
+}
 interface ExpensesBillRegisterViewProps {
   category: ExpenseCategory;
   onOpenEntryForm?: () => void;
@@ -509,213 +555,90 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
 
   const partyHeader = category === "customer" ? t.col_customer : t.col_party;
 
-  // Master demo data matching real database branches (UAE, Pakistan Chaman, Afghanistan Kandahar)
-  const rawRows = useMemo(() => {
-    const prefix = category === "customer" ? "CE" : category === "truck" ? "TE" : category === "customs" ? "CB" : "OE";
+  // Real data: expense bills of this register's category (bill_title), scoped by the server's session rules.
+  const [rawRows, setRawRows] = useState<RegisterRow[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    return [
-      {
-        id: 1,
-        expenseNo: `${prefix}-2024-0001`,
-        date: "2024-09-01",
-        countryCode: "AE",
-        countryName: t.uae,
-        flag: "🇦🇪",
-        branch: lang === "en" ? "Dubai (Al Ras)" : lang === "ur" ? "دبئی (الراس)" : lang === "fa" ? "دبی (الراس)" : "دبي (الراس)",
-        entryUser: lang === "en" ? "Ali Khan" : lang === "ur" ? "علی خان" : lang === "fa" ? "علی خان" : "علي خان",
-        party:
-          category === "customer"
-            ? lang === "en" ? "Al Noor Trading LLC" : lang === "ur" ? "النور ٹریڈنگ ایل ایل سی" : lang === "fa" ? "شرکت النور تجارت" : "النور للتجارة ذ.م.م"
-            : category === "truck" ? "TRK-7865 / Ahmad Khan" : category === "customs" ? "Dubai Port Customs" : "SGS Inspection Services",
-        expenseType: lang === "en" ? "Travel Expense" : lang === "ur" ? "سفری اخراجات" : lang === "fa" ? "هزینه سفر" : "مصاريف السفر",
-        creditAcc: "4000-1001",
-        debitAcc: "5100-2003",
-        amount: "1,250.00",
-        currency: "USD",
-        status: "approved"
-      },
-      {
-        id: 2,
-        expenseNo: `${prefix}-2024-0002`,
-        date: "2024-09-02",
-        countryCode: "PK",
-        countryName: t.pakistan,
-        flag: "🇵🇰",
-        branch: lang === "en" ? "Karachi Port" : "کراچی پورٹ",
-        entryUser: lang === "en" ? "Sara Ahmed" : lang === "ur" ? "سارہ احمد" : "سارة أحمد",
-        party:
-          category === "customer"
-            ? lang === "en" ? "Faisal Enterprises" : lang === "ur" ? "فیصل انٹرپرائزز" : lang === "fa" ? "تصیل اینترپرایز" : "فيصل للمشاريع"
-            : category === "truck" ? "TRK-4412 / Rashid Ali" : category === "customs" ? "Karachi Customs Port" : "KICT Terminal Charges",
-        expenseType: lang === "en" ? "Marketing Expense" : lang === "ur" ? "مارکیٹنگ اخراجات" : lang === "fa" ? "هزینه بازاریابی" : "مصاريف التسويق",
-        creditAcc: "4000-2002",
-        debitAcc: "5100-3001",
-        amount: "850.00",
-        currency: "USD",
-        status: "pending"
-      },
-      {
-        id: 3,
-        expenseNo: `${prefix}-2024-0003`,
-        date: "2024-09-03",
-        countryCode: "AF",
-        countryName: t.afghanistan,
-        flag: "🇦🇫",
-        branch: lang === "en" ? "Kabul" : "کابل",
-        entryUser: lang === "en" ? "Mohammad Iqbal" : "محمد اقبال",
-        party:
-          category === "customer"
-            ? lang === "en" ? "Kabul Star Ltd" : lang === "ur" ? "کابل اسٹار لمیٹڈ" : lang === "fa" ? "کابل استار لیمیتد" : "كابول ستار المحدودة"
-            : category === "truck" ? "TRK-9901 / Gul Khan" : category === "customs" ? "Spin Boldak Clearance" : "Insurance Transit Policy",
-        expenseType: lang === "en" ? "Client Entertainment" : lang === "ur" ? "کلائنٹ انٹرٹینمنٹ" : lang === "fa" ? "هزینه پذیرایی" : "مصاريف الضيافة",
-        creditAcc: "4000-3001",
-        debitAcc: "5100-4002",
-        amount: "620.00",
-        currency: "USD",
-        status: "approved"
-      },
-      {
-        id: 4,
-        expenseNo: `${prefix}-2024-0004`,
-        date: "2024-09-04",
-        countryCode: "PK",
-        countryName: t.pakistan,
-        flag: "🇵🇰",
-        branch: lang === "en" ? "Chaman Shipping Branch" : lang === "ur" ? "چمن شپنگ برانچ" : lang === "fa" ? "شعبه باربری چمن" : "فرع شحن چمن",
-        entryUser: lang === "en" ? "Abdul Raziq" : "عبد الرازق",
-        party:
-          category === "customer"
-            ? lang === "en" ? "Chaman Logistics Group" : lang === "ur" ? "چمن لاجسٹکس گروپ" : "گروه لجستیک چمن"
-            : category === "truck" ? "TRK-2234 / Sherzod" : category === "customs" ? "Chaman Border Customs" : "Border Crossing Clearance",
-        expenseType: lang === "en" ? "Customs Clearance" : lang === "ur" ? "کسٹم کلیئرنس" : lang === "fa" ? "ترخیص گمرکی" : "التخليص الجمركي",
-        creditAcc: "4000-4001",
-        debitAcc: "5100-5001",
-        amount: "1,430.00",
-        currency: "USD",
-        status: "approved"
-      },
-      {
-        id: 5,
-        expenseNo: `${prefix}-2024-0005`,
-        date: "2024-09-05",
-        countryCode: "AE",
-        countryName: t.uae,
-        flag: "🇦🇪",
-        branch: lang === "en" ? "Dubai Port" : "دبئی پورٹ",
-        entryUser: lang === "en" ? "Fatima Noor" : "فاطمہ نور",
-        party:
-          category === "customer"
-            ? lang === "en" ? "Desert Line LLC" : lang === "ur" ? "ڈیزرٹ لائنز ایل ایل سی" : lang === "fa" ? "دیسرت لاین لیمیتد" : "ديزرت لاين ذ.م.م"
-            : category === "truck" ? "TRK-8812 / Bilal Khan" : category === "customs" ? "Dubai Port Customs" : "Storage & Warehousing",
-        expenseType: lang === "en" ? "Maintenance Expense" : lang === "ur" ? "مینٹیننس اخراجات" : lang === "fa" ? "هزینه نگهداری" : "مصاريف الصيانة",
-        creditAcc: "4000-1003",
-        debitAcc: "5100-2001",
-        amount: "2,100.00",
-        currency: "USD",
-        status: "approved"
-      },
-      {
-        id: 6,
-        expenseNo: `${prefix}-2024-0006`,
-        date: "2024-09-06",
-        countryCode: "PK",
-        countryName: t.pakistan,
-        flag: "🇵🇰",
-        branch: lang === "en" ? "Quetta" : "کوئٹہ",
-        entryUser: lang === "en" ? "Imran Sheikh" : "عمران شیخ",
-        party:
-          category === "customer"
-            ? lang === "en" ? "Royal Traders" : lang === "ur" ? "رائل ٹریڈرز" : "رویال تریدرز"
-            : category === "truck" ? "TRK-3310 / Tariq Mehmood" : category === "customs" ? "Quetta Dry Port Customs" : "Freight Brokerage",
-        expenseType: lang === "en" ? "Fuel Expense" : lang === "ur" ? "فیول اخراجات" : lang === "fa" ? "هزینه سوخت" : "مصاريف الوقود",
-        creditAcc: "4000-2001",
-        debitAcc: "5100-3003",
-        amount: "690.00",
-        currency: "USD",
-        status: "pending"
-      },
-      {
-        id: 7,
-        expenseNo: `${prefix}-2024-0007`,
-        date: "2024-09-07",
-        countryCode: "AF",
-        countryName: t.afghanistan,
-        flag: "🇦🇫",
-        branch: lang === "en" ? "Kandahar Shipping Branch" : lang === "ur" ? "قندھار شپنگ برانچ" : lang === "fa" ? "شعبه باربری قندهار" : "فرع شحن قندهار",
-        entryUser: lang === "en" ? "Zainab Malik" : "زینب ملک",
-        party:
-          category === "customer"
-            ? lang === "en" ? "Kandahar Transit Services" : lang === "ur" ? "قندھار ٹرانزٹ سروسز" : "خدمات ترانزیت قندهار"
-            : category === "truck" ? "TRK-5541 / Jan Agha" : category === "customs" ? "Spin Boldak Border" : "Security Escort Fee",
-        expenseType: lang === "en" ? "Border Transport Fee" : lang === "ur" ? "بارڈر ٹرانسپورٹ فیس" : lang === "fa" ? "کرایه حمل مرزی" : "رسوم نقل الحدود",
-        creditAcc: "4000-3002",
-        debitAcc: "5100-4001",
-        amount: "980.00",
-        currency: "USD",
-        status: "approved"
-      },
-      {
-        id: 8,
-        expenseNo: `${prefix}-2024-0008`,
-        date: "2024-09-08",
-        countryCode: "PK",
-        countryName: t.pakistan,
-        flag: "🇵🇰",
-        branch: lang === "en" ? "Chaman Shipping Branch" : lang === "ur" ? "چمن شپنگ برانچ" : lang === "fa" ? "شعبه باربری چمن" : "فرع شحن چمن",
-        entryUser: lang === "en" ? "Tariq Mehmood" : "طارق محمود",
-        party:
-          category === "customer"
-            ? lang === "en" ? "Balkh Trading Co" : lang === "ur" ? "بلخ ٹریڈنگ کمپنی" : "بلخ تریدینگ"
-            : category === "truck" ? "TRK-1120 / Timur" : category === "customs" ? "Chaman Terminal Customs" : "Loading Crane Hire",
-        expenseType: lang === "en" ? "Marketing Expense" : lang === "ur" ? "مارکیٹنگ اخراجات" : lang === "fa" ? "هزینه بازاریابی" : "مصاريف التسويق",
-        creditAcc: "4000-4002",
-        debitAcc: "5100-5002",
-        amount: "1,340.00",
-        currency: "USD",
-        status: "approved"
-      },
-      {
-        id: 9,
-        expenseNo: `${prefix}-2024-0009`,
-        date: "2024-09-09",
-        countryCode: "AE",
-        countryName: t.uae,
-        flag: "🇦🇪",
-        branch: lang === "en" ? "Dubai (Al Ras)" : lang === "ur" ? "دبئی (الراس)" : "دبي (الراس)",
-        entryUser: lang === "en" ? "Omar Abdullah" : "عمر عبداللہ",
-        party:
-          category === "customer"
-            ? lang === "en" ? "Bright General Trading" : lang === "ur" ? "برائٹ جنرل ٹریڈنگ" : "برایت جنرال تریدینگ"
-            : category === "truck" ? "TRK-6677 / Khalid" : category === "customs" ? "Dubai Customs Port" : "Software & IT Gateway",
-        expenseType: lang === "en" ? "Software & IT" : lang === "ur" ? "سافٹ ویئر و آئی ٹی" : lang === "fa" ? "نرم‌افزار و IT" : "برمجيات وتقنية معلومات",
-        creditAcc: "4000-1002",
-        debitAcc: "5100-2004",
-        amount: "760.00",
-        currency: "USD",
-        status: "approved"
-      },
-      {
-        id: 10,
-        expenseNo: `${prefix}-2024-0010`,
-        date: "2024-09-10",
-        countryCode: "PK",
-        countryName: t.pakistan,
-        flag: "🇵🇰",
-        branch: lang === "en" ? "Islamabad" : "اسلام آباد",
-        entryUser: lang === "en" ? "Ayesha Siddiqui" : "عائشہ صدیقی",
-        party:
-          category === "customer"
-            ? lang === "en" ? "Metro Cash & Carry" : lang === "ur" ? "میٹرو کیش اینڈ کری" : "مترو کش اند کری"
-            : category === "truck" ? "TRK-9002 / Aslam" : category === "customs" ? "Islamabad Airport Customs" : "Consultancy & Audit Fee",
-        expenseType: lang === "en" ? "Consultancy Fee" : lang === "ur" ? "کنسلٹنسی فیس" : lang === "fa" ? "هزینه مشاوره" : "أتعاب استشارية",
-        creditAcc: "4000-2003",
-        debitAcc: "5100-3002",
-        amount: "1,520.00",
-        currency: "USD",
-        status: "pending"
-      }
-    ];
-  }, [category, lang, t]);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    const billTitle = CATEGORY_BILL_TITLE[category] || "other_expenses";
+    fetch(`/api/erp/expenses?category=${encodeURIComponent(billTitle)}&limit=2000`, { credentials: "include" })
+      .then(async (res) => {
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body?.error || `HTTP ${res.status}`);
+        return body;
+      })
+      .then((body) => {
+        if (cancelled) return;
+        const bills: any[] = Array.isArray(body?.bills) ? body.bills : [];
+        const mapped: RegisterRow[] = bills.map((b) => {
+          const lines: any[] = Array.isArray(b.expenses_bill_lines) ? b.expenses_bill_lines : [];
+          const amountValue = lines.reduce((sum, l) => sum + Number(l.grand_amount || 0), 0);
+          const currency = lines.find((l) => l.currency)?.currency || b.city_branches?.countries?.currency_code || "";
+          const country = b.city_branches?.countries;
+          const iso2 = String(country?.iso2 || "");
+          return {
+            id: String(b.id),
+            expenseNo: b.serial_no || "",
+            date: b.bill_date ? String(b.bill_date).slice(0, 10) : "",
+            countryCode: iso2 || String(country?.name || ""),
+            countryName: String(country?.name || ""),
+            flag: flagFromIso2(iso2),
+            branch: String(b.city_branches?.name || ""),
+            entryUser: String(b.profiles?.full_name || ""),
+            party: String(b.reference_no || ""),
+            expenseType: String(lines[0]?.details || b.bill_title || ""),
+            creditAcc: "",
+            debitAcc: "",
+            amount: formatAmount(amountValue),
+            amountValue,
+            currency,
+            status: b.transferred_to_roznamcha ? "approved" : "pending",
+          };
+        });
+        setRawRows(mapped);
+        setLoadError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setRawRows([]);
+        setLoadError(String(err?.message || err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [category]);
+
+  // Country tabs / filter options come from the rows that really exist (never a fixed list).
+  const countryOptions = useMemo(() => {
+    const seen = new Map<string, { code: string; label: string; flag: string; count: number }>();
+    for (const r of rawRows) {
+      const hit = seen.get(r.countryCode);
+      if (hit) hit.count += 1;
+      else seen.set(r.countryCode, { code: r.countryCode, label: r.countryName || r.countryCode, flag: r.flag, count: 1 });
+    }
+    return [...seen.values()].sort((a, b) => a.label.localeCompare(b.label));
+  }, [rawRows]);
+
+  // Summary figures: computed from the real rows. Empty database -> zeros.
+  const summary = useMemo(() => {
+    const transferredRows = rawRows.filter((r) => r.status === "approved");
+    const pendingRows = rawRows.filter((r) => r.status !== "approved");
+    return {
+      count: rawRows.length,
+      total: currencyTotals(rawRows, () => true),
+      transferred: currencyTotals(rawRows, (r) => r.status === "approved"),
+      transferredCount: transferredRows.length,
+      pending: currencyTotals(rawRows, (r) => r.status !== "approved"),
+      pendingCount: pendingRows.length,
+      remaining: currencyTotals(rawRows, (r) => r.status !== "approved"),
+    };
+  }, [rawRows]);
 
   // Filter rows based on search, country tab, and filter form
   const filteredRows = useMemo(() => {
@@ -772,7 +695,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
               {categoryTitle}
             </h1>
             <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
-              (125)
+              ({summary.count})
             </span>
           </div>
 
@@ -836,9 +759,9 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
                         className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                       >
                         <option value="all">{t.select_country}</option>
-                        <option value="AE">{t.uae}</option>
-                        <option value="PK">{t.pakistan}</option>
-                        <option value="AF">{t.afghanistan}</option>
+                        {countryOptions.map((c) => (
+                          <option key={c.code} value={c.code}>{c.label}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -1002,8 +925,8 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-2.5 flex items-center justify-between dark:border-blue-900 dark:bg-blue-950/40">
               <div>
                 <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.total_bills}</span>
-                <span className="font-mono font-black text-blue-950 dark:text-blue-200 text-sm">$ 124,580</span>
-                <span className="text-[10px] text-slate-400 block">125 {t.records}</span>
+                <span className="font-mono font-black text-blue-950 dark:text-blue-200 text-sm">{summary.total}</span>
+                <span className="text-[10px] text-slate-400 block">{summary.count} {t.records}</span>
               </div>
               <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
                 <DollarSign className="h-4 w-4" />
@@ -1014,8 +937,8 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-2.5 flex items-center justify-between dark:border-emerald-900 dark:bg-emerald-950/40">
               <div>
                 <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.transferred_to_ledger}</span>
-                <span className="font-mono font-black text-emerald-900 dark:text-emerald-200 text-sm">$ 89,230</span>
-                <span className="text-[10px] text-slate-400 block">72 {t.records}</span>
+                <span className="font-mono font-black text-emerald-900 dark:text-emerald-200 text-sm">{summary.transferred}</span>
+                <span className="text-[10px] text-slate-400 block">{summary.transferredCount} {t.records}</span>
               </div>
               <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
                 <CheckCircle2 className="h-4 w-4" />
@@ -1026,7 +949,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-2.5 flex items-center justify-between dark:border-amber-900 dark:bg-amber-950/40">
               <div>
                 <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.pending_review}</span>
-                <span className="font-mono font-black text-amber-900 dark:text-amber-200 text-sm">$ 21,450</span>
+                <span className="font-mono font-black text-amber-900 dark:text-amber-200 text-sm">{summary.pending}</span>
                 <span className="text-[10px] text-slate-400 block">38 {t.records}</span>
               </div>
               <div className="h-8 w-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
@@ -1038,7 +961,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-2.5 flex items-center justify-between dark:border-rose-900 dark:bg-rose-950/40">
               <div>
                 <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.remaining_balance}</span>
-                <span className="font-mono font-black text-rose-900 dark:text-rose-200 text-sm">$ 13,900</span>
+                <span className="font-mono font-black text-rose-900 dark:text-rose-200 text-sm">{summary.remaining}</span>
                 <span className="text-[10px] text-slate-400 block">15 {t.records}</span>
               </div>
               <div className="h-8 w-8 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0">
@@ -1153,7 +1076,13 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
+      {loadError && (
+          <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+            {loadError}
+          </div>
+        )}
+
+        {/* ─────────────────────────────────────────────────────────────
           COUNTRY FILTER TABS (Pills with Flags)
          ───────────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-bold">
@@ -1166,47 +1095,24 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
               : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           }`}
         >
-          <span>{t.all_countries} (125)</span>
+          <span>{t.all_countries} ({summary.count})</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => setSelectedCountryTab("AE")}
-          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition whitespace-nowrap ${
-            selectedCountryTab === "AE"
-              ? "bg-blue-600 text-white shadow-2xs"
-              : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-          }`}
-        >
-          <span>🇦🇪</span>
-          <span>{t.uae} (52)</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setSelectedCountryTab("PK")}
-          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition whitespace-nowrap ${
-            selectedCountryTab === "PK"
-              ? "bg-blue-600 text-white shadow-2xs"
-              : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-          }`}
-        >
-          <span>🇵🇰</span>
-          <span>{t.pakistan} (45)</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setSelectedCountryTab("AF")}
-          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition whitespace-nowrap ${
-            selectedCountryTab === "AF"
-              ? "bg-blue-600 text-white shadow-2xs"
-              : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-          }`}
-        >
-          <span>🇦🇫</span>
-          <span>{t.afghanistan} (28)</span>
-        </button>
+        {countryOptions.map((c) => (
+          <button
+            key={c.code}
+            type="button"
+            onClick={() => setSelectedCountryTab(c.code)}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition whitespace-nowrap ${
+              selectedCountryTab === c.code
+                ? "bg-blue-600 text-white shadow-2xs"
+                : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            }`}
+          >
+            {c.flag && <span>{c.flag}</span>}
+            <span>{c.label} ({c.count})</span>
+          </button>
+        ))}
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
@@ -1310,7 +1216,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         {/* Table Footer: Pagination & Note */}
         <div className="p-3 bg-slate-50/50 border-t border-slate-100 dark:border-slate-800 dark:bg-slate-800/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
           <div className="text-slate-500 font-medium">
-            {t.showing}
+            {filteredRows.length} {t.records}
           </div>
 
           <div className="flex items-center gap-2">
