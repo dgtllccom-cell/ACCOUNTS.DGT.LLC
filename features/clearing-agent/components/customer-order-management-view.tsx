@@ -3818,7 +3818,7 @@ export function CustomerOrderManagementView() {
               <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <div>
                   <div className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                    {orders.length || 128}
+                    {orders.length}
                   </div>
                   <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
                     {tt("all_orders_in_system", "All orders in system")}
@@ -3826,7 +3826,7 @@ export function CustomerOrderManagementView() {
                 </div>
                 <div>
                   <div className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                    {orderCounts.confirmed + orderCounts.inTransit || 60}
+                    {orderCounts.confirmed + orderCounts.inTransit}
                   </div>
                   <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
                     {tt("currently_active", "Currently active")}
@@ -3834,7 +3834,7 @@ export function CustomerOrderManagementView() {
                 </div>
                 <div>
                   <div className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                    {orderCounts.cleared || 68}
+                    {orderCounts.cleared}
                   </div>
                   <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
                     {tt("delivered_and_invoiced", "Delivered & invoiced")}
@@ -3896,7 +3896,7 @@ export function CustomerOrderManagementView() {
                     <span className="font-semibold text-slate-700 dark:text-slate-300">{tt("completed", "Completed")}</span>
                   </div>
                   <div className="flex items-center gap-1 font-bold">
-                    <span>{orderCounts.cleared || 68}</span>
+                    <span>{orderCounts.cleared}</span>
                     <span className="text-slate-400">&gt;</span>
                   </div>
                 </div>
@@ -4070,7 +4070,7 @@ export function CustomerOrderManagementView() {
               >
                 <span>{tt("all_orders", "All Orders")}</span>
                 <span className={`text-[10px] font-mono ${statusFilter === "all" ? "text-blue-100" : "text-slate-400"}`}>
-                  ({orders.length || 128})
+                  ({orders.length})
                 </span>
               </button>
 
@@ -4115,7 +4115,7 @@ export function CustomerOrderManagementView() {
               >
                 <span>{tt("completed", "Completed")}</span>
                 <span className={`text-[10px] font-mono ${statusFilter === "completed" ? "text-blue-100" : "text-emerald-500"}`}>
-                  ({orderCounts.cleared || 68})
+                  ({orderCounts.cleared})
                 </span>
               </button>
             </div>
