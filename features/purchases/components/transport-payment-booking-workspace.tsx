@@ -438,7 +438,7 @@ export function TransportPaymentBookingWorkspace() {
           </div>
           <h1 className="text-xl font-black tracking-tight text-white sm:text-2xl flex items-center gap-2">
             <Truck className="h-6 w-6 text-blue-400" />
-            Transport Payment Booking
+            {translateHeader(activeLang, "Transport Payment Booking")}
           </h1>
           <p className="text-xs text-slate-300 max-w-2xl">
             Track and settle freight charges and payments linked to each booking and transporter. Transport accounts remain strictly separate from purchase bill settlements.
@@ -453,7 +453,7 @@ export function TransportPaymentBookingWorkspace() {
             onClick={exportCsv}
             className="h-9 border-slate-700 bg-slate-800/80 text-xs font-bold text-white hover:bg-slate-700"
           >
-            <Download className="mr-1.5 h-3.5 w-3.5 text-emerald-400" /> Export CSV
+            <Download className="mr-1.5 h-3.5 w-3.5 text-emerald-400" /> {translateHeader(activeLang, "Export CSV")}
           </Button>
           <Button
             type="button"
@@ -462,7 +462,7 @@ export function TransportPaymentBookingWorkspace() {
             onClick={() => void loadRecords()}
             className="h-9 border-slate-700 bg-slate-800/80 text-xs font-bold text-white hover:bg-slate-700"
           >
-            <RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", loading && "animate-spin")} /> Refresh
+            <RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", loading && "animate-spin")} /> {translateHeader(activeLang, "Refresh")}
           </Button>
         </div>
       </div>
@@ -725,7 +725,7 @@ export function TransportPaymentBookingWorkspace() {
                             className="h-7 px-2.5 text-[10px] font-bold bg-primary text-primary-foreground hover:bg-primary/90"
                             title={translateHeader(activeLang, "Record Transport Payment")}
                           >
-                            <CreditCard className="mr-1 h-3 w-3" /> Pay
+                            <CreditCard className="mr-1 h-3 w-3" /> {translateHeader(activeLang, "Pay")}
                           </Button>
                           <Button
                             type="button"

@@ -490,7 +490,7 @@ export function DailyExchangeRateManager() {
                 className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-slate-100 shadow-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer uppercase"
               >
                 <option value="" disabled hidden>
-                  {countries.length ? "-- SELECT COUNTRY --" : "NO COUNTRIES AVAILABLE"}
+                  {countries.length ? th("-- SELECT COUNTRY --") : th("NO COUNTRIES AVAILABLE")}
                 </option>
                 {countries.map((c) => (
                   <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold py-1">
@@ -573,7 +573,7 @@ export function DailyExchangeRateManager() {
                   type="number"
                   step="0.0001"
                   min="0"
-                  placeholder={selectedCountry ? `e.g. Rate in ${selectedCountry.currency_code}` : "Select country first"}
+                  placeholder={selectedCountry ? `e.g. Rate in ${selectedCountry.currency_code}` : th("Select country first")}
                   value={creditPrice}
                   onChange={(e) => setCreditPrice(e.target.value)}
                   className="h-10 text-xs font-black font-mono text-emerald-700 dark:text-emerald-400 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 focus:border-emerald-500 pr-24"
@@ -605,7 +605,7 @@ export function DailyExchangeRateManager() {
                   type="number"
                   step="0.0001"
                   min="0"
-                  placeholder={selectedCountry ? `e.g. Rate in ${selectedCountry.currency_code}` : "Select country first"}
+                  placeholder={selectedCountry ? `e.g. Rate in ${selectedCountry.currency_code}` : th("Select country first")}
                   value={debitPrice}
                   onChange={(e) => setDebitPrice(e.target.value)}
                   className="h-10 text-xs font-black font-mono text-blue-700 dark:text-blue-400 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800 focus:border-blue-500 pr-24"

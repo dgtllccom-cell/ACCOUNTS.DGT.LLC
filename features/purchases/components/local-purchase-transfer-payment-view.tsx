@@ -17,6 +17,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 const UAE_COUNTRY_MATCHERS = ["UNITED ARAB", "UAE", "EMIRATES", "AE"];
 
@@ -629,7 +630,7 @@ export function LocalPurchaseTransferPaymentView({
                               <div className="flex items-center justify-center gap-1">
                                 <Button
                                   size="sm"
-                                  title="A. Export Shipment"
+                                  title={translateHeader(activeLang, "A. Export Shipment")}
                                   onClick={() => openActionModal(row, "export")}
                                   className="h-6 px-1.5 text-[9px] font-black bg-amber-600 hover:bg-amber-700 text-white rounded-md flex items-center gap-0.5"
                                 >
@@ -638,7 +639,7 @@ export function LocalPurchaseTransferPaymentView({
                                 </Button>
                                 <Button
                                   size="sm"
-                                  title="B. Warehouse Transfer"
+                                  title={translateHeader(activeLang, "B. Warehouse Transfer")}
                                   onClick={() => openActionModal(row, "warehouse")}
                                   className="h-6 px-1.5 text-[9px] font-black bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-0.5"
                                 >
@@ -647,7 +648,7 @@ export function LocalPurchaseTransferPaymentView({
                                 </Button>
                                 <Button
                                   size="sm"
-                                  title="C. Branch Transfer"
+                                  title={translateHeader(activeLang, "C. Branch Transfer")}
                                   onClick={() => openActionModal(row, "branch")}
                                   className="h-6 px-1.5 text-[9px] font-black bg-purple-600 hover:bg-purple-700 text-white rounded-md flex items-center gap-0.5"
                                 >
@@ -656,7 +657,7 @@ export function LocalPurchaseTransferPaymentView({
                                 </Button>
                                 <Button
                                   size="sm"
-                                  title="D. Confirm & Hold"
+                                  title={translateHeader(activeLang, "D. Confirm & Hold")}
                                   onClick={() => openActionModal(row, "hold")}
                                   className="h-6 px-1.5 text-[9px] font-black bg-slate-600 hover:bg-slate-700 text-white rounded-md flex items-center gap-0.5"
                                 >
