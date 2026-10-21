@@ -1856,7 +1856,7 @@ export function AccountGeneralReportView({
               onClick={() => setShowAllCountries(!showAllCountries)}
               className="text-[10px] font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
             >
-              {showAllCountries ? "Hide List" : "View List"}
+              {showAllCountries ? tr("Hide List") : tr("View List")}
               <ChevronDown className={cn("h-3 w-3 transition-transform", showAllCountries ? "rotate-180" : "")} />
             </button>
           </div>

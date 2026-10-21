@@ -43,6 +43,7 @@ import {
 
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useBranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
@@ -819,7 +820,7 @@ export function CustomerOrderTransferView() {
                                 title={tt("quick_transfer_clearing_title", "Tuck! Instant transfer to Clearing Agent General Received Bills")}
                               >
                                 <Zap className="h-3.5 w-3.5 text-yellow-300" />
-                                <span>{tt("tuck_transfer_btn", "Tuck Transfer")}</span>
+                                <span>{translateHeader(lang, "Truck Transfer")}</span>
                               </button>
                             )}
                           </div>
@@ -1104,7 +1105,7 @@ export function CustomerOrderTransferView() {
                           className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
                         >
                           <Zap className="h-3 w-3 text-yellow-300" />
-                          <span>{tt("tuck_transfer_btn", "Tuck Transfer")}</span>
+                          <span>{translateHeader(lang, "Truck Transfer")}</span>
                         </button>
                       )}
                     </div>

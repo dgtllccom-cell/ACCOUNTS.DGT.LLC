@@ -5157,7 +5157,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 ].map((col, i) => (
                   <Th
                     key={col.label}
-                    title={col.tip}
+                    title={translateHeader(currentLanguage, col.tip)}
                     className={cn(
                       "px-3 py-3.5 whitespace-nowrap border-r border-slate-300 dark:border-slate-700 last:border-0 cursor-default select-none",
                       i === 7 || i === 8 || i === 9 || i === 10 || i === 12 || i === 13 || i === 17 ? "text-right" :

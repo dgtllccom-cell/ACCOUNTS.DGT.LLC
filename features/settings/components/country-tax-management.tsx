@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { SearchSelect } from "@/components/ui/search-select";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type CountryOption = {
   id: string;
@@ -440,7 +441,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
               <Layers className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">Tax Container & Configuration</h2>
+              <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">{translateHeader(lang, "Tax Container & Configuration")}</h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Manage country-wise tax rules, rates, TRN and defaults. Each country is a container with its own configuration.
               </p>
@@ -453,7 +454,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
             className="self-start sm:self-auto flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 shadow-xs transition-all whitespace-nowrap"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>+ Add Country</span>
+            <span>{translateHeader(lang, "+ Add Country")}</span>
           </button>
         </div>
 
@@ -466,7 +467,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                 <Settings className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">Tax Setup & Rates</h3>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">{translateHeader(lang, "Tax Setup & Rates")}</h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Configure tax rates, TRN, defaults and country rules
                 </p>

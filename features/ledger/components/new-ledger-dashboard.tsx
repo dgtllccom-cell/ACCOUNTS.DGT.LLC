@@ -219,8 +219,8 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
       }
     }
     const list = Array.from(seen.entries()).map(([value, label]) => ({ value, label }));
-    return [{ value: "", label: "All Countries" }, ...list];
-  }, [rawLedgers]);
+    return [{ value: "", label: translateHeader(activeLang, "All Countries") }, ...list];
+  }, [rawLedgers, activeLang]);
 
   const branchOptions = useMemo(() => {
     const seen = new Map<string, string>();
@@ -232,8 +232,8 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
       }
     }
     const list = Array.from(seen.entries()).map(([value, label]) => ({ value, label }));
-    return [{ value: "", label: "All Branches" }, ...list];
-  }, [rawLedgers]);
+    return [{ value: "", label: translateHeader(activeLang, "All Branches") }, ...list];
+  }, [rawLedgers, activeLang]);
 
   const userOptions = useMemo(() => {
     const seen = new Set<string>();
@@ -241,8 +241,8 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
       if (line.createdByName) seen.add(line.createdByName);
     }
     const list = Array.from(seen).map((u) => ({ value: u, label: u }));
-    return [{ value: "", label: "All Users" }, ...list];
-  }, [lines]);
+    return [{ value: "", label: translateHeader(activeLang, "All Users") }, ...list];
+  }, [lines, activeLang]);
 
   const filteredLedgers = useMemo(() => {
     let list = rawLedgers;

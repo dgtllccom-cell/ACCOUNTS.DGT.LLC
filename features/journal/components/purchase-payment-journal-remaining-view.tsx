@@ -214,7 +214,10 @@ export function PurchasePaymentJournalRemainingView({
   onPrintJournal,
   onExportJournal
 }: PurchasePaymentJournalRemainingViewProps) {
-  const tt = (key: string, fallback: string) => t(key, lang) || fallback;
+  const tt = (key: string, fallback: string) => {
+    const v = t(key, lang);
+    return v && v !== key ? v : fallback;
+  };
   const usdRates = useUsdRates(layout === "approved");
   const modulePayments = useModulePayments("purchase");
 

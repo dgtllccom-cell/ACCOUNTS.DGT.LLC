@@ -63,6 +63,7 @@ import {
   DashboardSettingsModal,
   type DashboardWidgetItem
 } from "@/components/dashboard/dashboard-settings-modal";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export type LogisticsShipment = {
   id: string;
@@ -440,7 +441,7 @@ export function LogisticsDashboardOverview({
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-blue-600" />
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Shipment & Clearance Trend
+                  {translateHeader(lang, "Shipment & Clearance Trend")}
                 </h3>
               </div>
               <button
@@ -499,7 +500,7 @@ export function LogisticsDashboardOverview({
             <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <Activity className="h-4 w-4 text-cyan-600" />
               <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                Status Mix
+                {translateHeader(lang, "Status Mix")}
               </h3>
             </div>
 
@@ -547,7 +548,7 @@ export function LogisticsDashboardOverview({
             <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <Zap className="h-4 w-4 text-blue-600" />
               <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                Quick Access
+                {translateHeader(lang, "Quick Access")}
               </h3>
             </div>
 
@@ -645,7 +646,7 @@ export function LogisticsDashboardOverview({
               <div className="flex items-center gap-2">
                 <Boxes className="h-4 w-4 text-emerald-600" />
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Recent Shipment Operations
+                  {translateHeader(lang, "Recent Shipment Operations")}
                 </h3>
               </div>
               <Link
@@ -704,7 +705,7 @@ export function LogisticsDashboardOverview({
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-rose-500" />
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Pending Tasks
+                  {translateHeader(lang, "Pending Tasks")}
                 </h3>
               </div>
               <Link
@@ -767,7 +768,7 @@ export function LogisticsDashboardOverview({
               <div className="flex items-center gap-2">
                 <FolderOpen className="h-4 w-4 text-blue-600" />
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Documents, Containers & Alerts
+                  {translateHeader(lang, "Documents, Containers & Alerts")}
                 </h3>
               </div>
               <Link

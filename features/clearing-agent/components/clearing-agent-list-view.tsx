@@ -9,8 +9,11 @@ import { Input } from "@/components/ui/input";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import type { ClearingAgentRow } from "@/lib/repositories/clearing-agents-repository";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export function ClearingAgentListView({ initialAgents }: { initialAgents: ClearingAgentRow[] }) {
+  const lang = useActiveLanguage();
   const [search, setSearch] = useState("");
   const [agents] = useState<ClearingAgentRow[]>(initialAgents);
 
@@ -34,7 +37,7 @@ export function ClearingAgentListView({ initialAgents }: { initialAgents: Cleari
           <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-600 dark:border-blue-900/50 dark:bg-blue-950/50 dark:text-blue-400 uppercase tracking-wider">
             Directory & Roster
           </span>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white mt-1">Clearing Agent List</h1>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{translateHeader(lang, "Clearing Agent List")}</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Registered customs brokers, clearing representatives and authorized shipping partners.
           </p>
@@ -57,7 +60,7 @@ export function ClearingAgentListView({ initialAgents }: { initialAgents: Cleari
         <Link href="/dashboard/shipping-line/agent-entry">
           <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5 shadow-sm">
             <Plus className="h-4 w-4" />
-            New Agent Entry
+            {translateHeader(lang, "New Agent Entry")}
           </Button>
         </Link>
         </div>
@@ -68,7 +71,7 @@ export function ClearingAgentListView({ initialAgents }: { initialAgents: Cleari
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Search clearing agents by name, code, contact or phone..."
+            placeholder={translateHeader(lang, "Search clearing agents by name, code, contact or phone...")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-xs h-9"

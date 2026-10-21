@@ -35,6 +35,7 @@ import { t } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { printStore } from "@/lib/store/print-store";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export type TransportBookingRecord = {
   id: string;
@@ -547,7 +548,7 @@ export function TransportPaymentBookingWorkspace() {
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search PO, Truck, Transporter, Driver..."
+              placeholder={translateHeader(activeLang, "Search PO, Truck, Transporter, Driver...")}
               className="h-8 w-64 pl-8 text-xs rounded-lg"
             />
           </div>
@@ -722,7 +723,7 @@ export function TransportPaymentBookingWorkspace() {
                             variant="default"
                             onClick={() => openPaymentModal(r)}
                             className="h-7 px-2.5 text-[10px] font-bold bg-primary text-primary-foreground hover:bg-primary/90"
-                            title="Record Transport Payment"
+                            title={translateHeader(activeLang, "Record Transport Payment")}
                           >
                             <CreditCard className="mr-1 h-3 w-3" /> Pay
                           </Button>
@@ -732,9 +733,9 @@ export function TransportPaymentBookingWorkspace() {
                             variant="outline"
                             onClick={() => openChargesModal(r)}
                             className="h-7 px-2 text-[10px] font-semibold"
-                            title="Edit Charges / Truck"
+                            title={translateHeader(activeLang, "Edit Charges / Truck")}
                           >
-                            Edit
+                            {translateHeader(activeLang, "Edit")}
                           </Button>
                           <Button
                             type="button"
@@ -766,7 +767,7 @@ export function TransportPaymentBookingWorkspace() {
                 <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
                   Workflow Stage 4 &bull; Payment
                 </span>
-                <h3 className="text-base font-black text-foreground mt-0.5">Record Transport Payment</h3>
+                <h3 className="text-base font-black text-foreground mt-0.5">{translateHeader(activeLang, "Record Transport Payment")}</h3>
               </div>
               <Button
                 type="button"

@@ -20,6 +20,7 @@ import {
   FileText
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { t as tc } from "@/lib/i18n/ui";
 
 export type ExpenseCategory = "customer" | "truck" | "customs" | "other";
@@ -978,7 +979,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
                 className="inline-flex items-center gap-1 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 text-xs font-bold shadow-2xs transition"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>+ New</span>
+                <span>{translateHeader(activeLang, "+ New")}</span>
               </button>
             )}
           </div>

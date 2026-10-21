@@ -4646,7 +4646,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 ].map((col, i) => (
                   <Th
                     key={col.label}
-                    title={col.tip}
+                    title={translateHeader(currentLanguage, col.tip)}
                     className={cn(
                       "px-2.5 py-3 whitespace-nowrap border-r border-slate-200/60 dark:border-slate-800/80 last:border-0 cursor-default",
                       i === 7 || i === 8 || i === 9 || i === 10 || i === 12 || i === 13 || i === 17 ? "text-right" :

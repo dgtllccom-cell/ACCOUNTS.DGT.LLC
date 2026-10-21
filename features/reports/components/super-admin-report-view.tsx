@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { listCountries, type LocationCountry } from "@/features/locations/location-api";
 import { apiGet } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
@@ -767,7 +768,7 @@ export function SuperAdminReportView({
                 className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 gap-1.5"
               >
                 <Columns3 className="h-3.5 w-3.5 text-slate-500" />
-                <span>Columns</span>
+                <span>{translateHeader(lang, "Columns")}</span>
               </Button>
 
               <Button

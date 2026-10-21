@@ -1,4 +1,5 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export type UiKey =
   | "invtpl.center_template_tab"
@@ -137574,6 +137575,13 @@ export function t(lang: SupportedLanguage | string | null | undefined, key: stri
   // already provided. Fall back to the caller's defaultValue, then the English dict entry,
   // then the raw key — same graceful-degradation contract every other resolver in this
   // codebase (translateHeader, localizeRecordNames) already follows.
-  return defaultValue ?? en[dictKey] ?? key;
+  // No dictionary entry for this key: the caller's English text may still be a heading/label the shared header
+  // dictionary knows, so a screen that passed a fallback never shows English to a UR/AR/FA/PS reader for a known label.
+  const fallbackText = defaultValue ?? en[dictKey];
+  if (safeLang !== "en" && fallbackText) {
+    const viaHeaders = translateHeader(safeLang, fallbackText);
+    if (viaHeaders && viaHeaders !== fallbackText) return viaHeaders;
+  }
+  return fallbackText ?? key;
 }
 
