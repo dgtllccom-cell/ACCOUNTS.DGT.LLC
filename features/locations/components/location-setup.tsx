@@ -11,6 +11,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { supportedLanguages } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { translateCountry } from "@/lib/i18n/table-values";
 
 type CountryRow = {
   id: string;
@@ -351,7 +352,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
                         : "rounded-lg border bg-card px-4 py-3 text-left hover:bg-muted/60"
                     }
                   >
-                    <p className="text-sm font-bold text-slate-950">{c.name}</p>
+                    <p className="text-sm font-bold text-slate-950">{translateCountry(c.name, lang)}</p>
                     <p className="mt-1 text-xs font-semibold uppercase text-muted-foreground">
                       {(c.iso3 || c.iso2 || "CTR").toUpperCase()} - {c.currency_code}
                     </p>
@@ -365,7 +366,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
             <div className="mt-5 grid gap-4 rounded-lg border bg-muted/20 p-4 lg:grid-cols-3">
               <div>
                 <p className="text-xs font-semibold uppercase text-muted-foreground">{tt("locsetup.country_pill", "Selected Country")}</p>
-                <p className="mt-1 font-semibold">{selectedCountry?.name || "-"}</p>
+                <p className="mt-1 font-semibold">{translateCountry(selectedCountry?.name, lang) || "-"}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase text-muted-foreground">{tt("locsetup.currency_label", "Currency")}</p>
@@ -388,7 +389,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
                   <CardTitle>{tt("locsetup.hierarchy", "Hierarchy")}</CardTitle>
                 </div>
                 <span className={pillClassName()}>
-                  <b>{tt("locsetup.banner_country", "Country")}:</b> <span>{selectedCountry?.name || "-"}</span>
+                  <b>{tt("locsetup.banner_country", "Country")}:</b> <span>{translateCountry(selectedCountry?.name, lang) || "-"}</span>
                 </span>
               </div>
             </CardHeader>
@@ -475,7 +476,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
               </div>
 
               <div className="rounded-lg border bg-muted/10 p-3 text-xs text-muted-foreground">
-                {tt("locsetup.selected_path", "Selected")}: {selectedCountry?.name || "-"} → {selectedState?.name || "-"} → {selectedCity?.name || "-"}
+                {tt("locsetup.selected_path", "Selected")}: {translateCountry(selectedCountry?.name, lang) || "-"} → {selectedState?.name || "-"} → {selectedCity?.name || "-"}
               </div>
             </CardContent>
           </Card>
@@ -536,7 +537,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
         <SimpleModal title={tt("locsetup.banner_state", "Add State / Province")} onClose={() => setModal(null)} className="max-w-lg">
           <div className="space-y-2">
             <Label>{tt("common.country", "Country")}</Label>
-            <Input value={selectedCountry?.name || ""} readOnly className="bg-muted/50" />
+            <Input value={translateCountry(selectedCountry?.name, lang) || ""} readOnly className="bg-muted/50" />
           </div>
           <div className="space-y-2">
             <Label>{tt("locsetup.state_name", "State / Province Name")}</Label>
@@ -567,7 +568,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
               <Label>{tt("common.country", "Country")}</Label>
-              <Input value={selectedCountry?.name || ""} readOnly className="bg-muted/50" />
+              <Input value={translateCountry(selectedCountry?.name, lang) || ""} readOnly className="bg-muted/50" />
             </div>
             <div className="space-y-2">
               <Label>{tt("locsetup.state_label", "State")}</Label>

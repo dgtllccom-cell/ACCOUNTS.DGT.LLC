@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
-import { translateValue } from "@/lib/i18n/table-values";
+import { translateValue, translateCountry } from "@/lib/i18n/table-values";
 import { t } from "@/lib/i18n/ui";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
@@ -200,7 +200,57 @@ export function AccountSetupReport({
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
   const actionRef = useRef<HTMLDivElement>(null);
   const filterMenuRef = useRef<HTMLDivElement>(null);
+  const dateMenuRef = useRef<HTMLDivElement>(null);
+  const tableMenuRef = useRef<HTMLDivElement>(null);
+  const [tableMenuOpen, setTableMenuOpen] = useState(false);
+  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
+  const [datePreset, setDatePreset] = useState<"all" | "today" | "week" | "month" | "year" | "custom">("all");
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
+
+  const dateLabel = useMemo(() => {
+    if (datePreset === "today") return tr("Today");
+    if (datePreset === "week") return tr("This Week");
+    if (datePreset === "month") return tr("This Month");
+    if (datePreset === "year") return tr("This Year");
+    if (dateFrom && dateTo) return `${dateFrom} – ${dateTo}`;
+    if (dateFrom) return `From ${dateFrom}`;
+    if (dateTo) return `To ${dateTo}`;
+    return tr("All Dates (2026)");
+  }, [datePreset, dateFrom, dateTo, lang]);
+
+  const applyDatePreset = (preset: "all" | "today" | "week" | "month" | "year" | "custom") => {
+    setDatePreset(preset);
+    const now = new Date();
+    if (preset === "all") {
+      setDateFrom("");
+      setDateTo("");
+      setDateDropdownOpen(false);
+    } else if (preset === "today") {
+      const todayStr = now.toISOString().slice(0, 10);
+      setDateFrom(todayStr);
+      setDateTo(todayStr);
+      setDateDropdownOpen(false);
+    } else if (preset === "week") {
+      const start = new Date(now);
+      start.setDate(now.getDate() - now.getDay());
+      const end = new Date(now);
+      end.setDate(now.getDate() - now.getDay() + 6);
+      setDateFrom(start.toISOString().slice(0, 10));
+      setDateTo(end.toISOString().slice(0, 10));
+      setDateDropdownOpen(false);
+    } else if (preset === "month") {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      setDateFrom(start.toISOString().slice(0, 10));
+      setDateTo(end.toISOString().slice(0, 10));
+      setDateDropdownOpen(false);
+    } else if (preset === "year") {
+      const yr = now.getFullYear();
+      setDateFrom(`${yr}-01-01`);
+      setDateTo(`${yr}-12-31`);
+      setDateDropdownOpen(false);
+    }
+  };
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -232,6 +282,7 @@ export function AccountSetupReport({
     setDraftSub("all");
     setDateFrom("");
     setDateTo("");
+    setDatePreset("all");
   };
 
   /* Fetch */
@@ -282,11 +333,13 @@ export function AccountSetupReport({
     setTitlePortalNode(document.getElementById("erp-page-title-slot"));
   }, [lang]);
 
-  /* Close action menu and filter popover on outside click */
+  /* Close action menu, filter popover, date popover, and table menu on outside click */
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (actionRef.current && !actionRef.current.contains(e.target as Node)) setActionMenuOpen(false);
       if (filterMenuRef.current && !filterMenuRef.current.contains(e.target as Node)) setFiltersOpen(false);
+      if (dateMenuRef.current && !dateMenuRef.current.contains(e.target as Node)) setDateDropdownOpen(false);
+      if (tableMenuRef.current && !tableMenuRef.current.contains(e.target as Node)) setTableMenuOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -552,7 +605,7 @@ export function AccountSetupReport({
   return (
     <div id="asr-report-shell" className="w-full space-y-4 font-sans antialiased text-slate-900 dark:text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
       {/* ── BREADCRUMB & HEADER ── */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2.5">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
           <button
             type="button"
@@ -572,54 +625,320 @@ export function AccountSetupReport({
           <span className="text-slate-800 dark:text-slate-200 font-bold">{t(lang, "asr.new_account_entry", "New Account Entry")}</span>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md">
-              <Building2 className="h-6 w-6" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8.5 w-8.5 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs">
+              <Building2 className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h1 className="text-xl font-black text-slate-900 dark:text-white">
+              <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
                 {isSuperAdminUser
                   ? t(lang, "asr.title", "Account Setup / New Account Entry")
-                  : `${reportContext.countryName} — ${t(lang, "asr.register_title", "Chart of Accounts Register")}`}
+                  : `${translateCountry(reportContext.countryName, lang)} — ${t(lang, "asr.register_title", "Chart of Accounts Register")}`}
               </h1>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
+              <p className="text-[11px] text-slate-500 font-normal leading-tight mt-0.5">
                 {t(lang, "asr.subtitle", "Create and manage chart of accounts for all companies, branches and locations.")}
               </p>
             </div>
           </div>
 
-          {/* Right Header Actions: Date-to-Date + New Account Entry */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Date Range (Date to Date) */}
-            <div className="flex items-center gap-1.5 h-9 px-3 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-xs">
-              <Calendar className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+          {/* Right Header Actions: Search, Filters, Unified Date Dropdown, Refresh, + New Account */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search Input */}
+            <div className="relative w-44 sm:w-56 md:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
               <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="bg-transparent outline-none w-[8.25rem] shrink-0 text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-200"
-                title={tr("From Date")}
+                type="text"
+                value={accNo}
+                onChange={(e) => {
+                  setAccNo(e.target.value);
+                  setDraftAccNo(e.target.value);
+                }}
+                placeholder={t(lang, "asr.search_placeholder", "Search by code or name...")}
+                className="w-full h-8.5 pl-8 pr-7 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold placeholder:text-slate-400 focus:outline-none focus:ring-1.5 focus:ring-blue-500 shadow-2xs"
               />
-              <span className="text-slate-400 font-bold">–</span>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="bg-transparent outline-none w-[8.25rem] shrink-0 text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-200"
-                title={tr("To Date")}
-              />
-              {(dateFrom || dateTo) && (
+              {accNo && (
                 <button
                   type="button"
-                  onClick={() => { setDateFrom(""); setDateTo(""); }}
-                  className="p-0.5 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
-                  title={t(lang, "common.clear", "Clear dates")}
+                  onClick={() => { setAccNo(""); setDraftAccNo(""); }}
+                  className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
+
+            {/* Filter Curtain / Dropdown Button */}
+            <div className="relative" ref={filterMenuRef}>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(!filtersOpen)}
+                className={cn(
+                  "h-8.5 px-3 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs",
+                  activeFilterCount > 0
+                    ? "border-blue-600 bg-blue-50/80 text-blue-700 dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300"
+                    : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                )}
+                title={tr("Filters")}
+              >
+                <Filter className="h-3.5 w-3.5 text-blue-600" />
+                <span>{tr("Filters")}</span>
+                {activeFilterCount > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-blue-600 text-white">
+                    {activeFilterCount}
+                  </span>
+                )}
+                <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform duration-200", filtersOpen && "rotate-180")} />
+              </button>
+
+              {/* Curtain / Dropdown Panel */}
+              {filtersOpen && (
+                <div className="absolute top-full right-0 rtl:right-auto rtl:left-0 mt-2 w-80 sm:w-96 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 space-y-3.5 font-sans">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <Filter className="h-4 w-4 text-blue-600" />
+                      <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        {tr("Account Filters")}
+                      </span>
+                    </div>
+                    {activeFilterCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={resetFilters}
+                        className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
+                      >
+                        {tr("Reset All")}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    {/* Country */}
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                        {t(lang, "common.country", "Country")}
+                      </label>
+                      <select
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
+                        disabled={!isSuperAdminUser && uniqueCountries.length <= 1}
+                      >
+                        {isSuperAdminUser && <option value="all">{t(lang, "common.all_countries", "All Countries")}</option>}
+                        {uniqueCountries.map(c => <option key={c} value={c}>{translateCountry(c, lang)}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Branch */}
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                        {t(lang, "common.branch", "Branch")}
+                      </label>
+                      <select
+                        value={branch}
+                        onChange={(e) => setBranch(e.target.value)}
+                        className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
+                      >
+                        <option value="all">{t(lang, "common.all_branches", "All Branches")}</option>
+                        {uniqueBranches.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Account Type */}
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                        {tr("Account Type")}
+                      </label>
+                      <select
+                        value={accType}
+                        onChange={(e) => setAccType(e.target.value)}
+                        className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
+                      >
+                        <option value="all">{t(lang, "asr.all_types", "All Types")}</option>
+                        {uniqueTypes.map(ty => <option key={ty} value={ty}>{tv(ty)}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Currency */}
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                        {t(lang, "asr.currency", "Currency")}
+                      </label>
+                      <select
+                        value={currencyFilter}
+                        onChange={(e) => setCurrencyFilter(e.target.value)}
+                        className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
+                      >
+                        <option value="all">{t(lang, "asr.all_currencies", "All Currencies")}</option>
+                        {uniqueCurrencies.map(cur => <option key={cur} value={cur}>{cur}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Status */}
+                    <div className="sm:col-span-2">
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                        {t(lang, "common.status", "Status")}
+                      </label>
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
+                      >
+                        <option value="all">{t(lang, "common.all_statuses", "All Statuses")}</option>
+                        <option value="active">{t(lang, "common.active", "Active")}</option>
+                        <option value="inactive">{t(lang, "common.inactive", "Inactive")}</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      {filtered.length} {tr("matching accounts")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFiltersOpen(false)}
+                      className="h-7 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer"
+                    >
+                      {tr("Done")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Date Range Dropdown (Single unified button + popover) */}
+            <div className="relative" ref={dateMenuRef}>
+              <button
+                type="button"
+                onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
+                className="flex items-center gap-1.5 h-8.5 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs transition cursor-pointer"
+                title={tr("Date Range")}
+              >
+                <Calendar className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                <span className="max-w-[130px] truncate">{dateLabel}</span>
+                <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform duration-200", dateDropdownOpen && "rotate-180")} />
+              </button>
+
+              {dateDropdownOpen && (
+                <div className="absolute top-full right-0 rtl:right-auto rtl:left-0 mt-2 w-72 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 space-y-3 font-sans">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    {tr("Date Range")}
+                  </div>
+
+                  {/* Preset quick buttons */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => applyDatePreset("all")}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left rtl:text-right transition cursor-pointer",
+                        datePreset === "all" ? "bg-blue-600 text-white" : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                      )}
+                    >
+                      {tr("All Dates")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyDatePreset("today")}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left rtl:text-right transition cursor-pointer",
+                        datePreset === "today" ? "bg-blue-600 text-white" : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                      )}
+                    >
+                      {tr("Today")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyDatePreset("week")}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left rtl:text-right transition cursor-pointer",
+                        datePreset === "week" ? "bg-blue-600 text-white" : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                      )}
+                    >
+                      {tr("This Week")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyDatePreset("month")}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left rtl:text-right transition cursor-pointer",
+                        datePreset === "month" ? "bg-blue-600 text-white" : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                      )}
+                    >
+                      {tr("This Month")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyDatePreset("year")}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left rtl:text-right transition cursor-pointer col-span-2",
+                        datePreset === "year" ? "bg-blue-600 text-white" : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                      )}
+                    >
+                      {tr("This Year (2026)")}
+                    </button>
+                  </div>
+
+                  {/* Custom From / To */}
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      {tr("Custom Range")}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="date"
+                        value={dateFrom}
+                        onChange={(e) => {
+                          setDateFrom(e.target.value);
+                          setDatePreset("custom");
+                        }}
+                        className="flex-1 h-7.5 px-2 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 outline-none"
+                      />
+                      <span className="text-slate-400">–</span>
+                      <input
+                        type="date"
+                        value={dateTo}
+                        onChange={(e) => {
+                          setDateTo(e.target.value);
+                          setDatePreset("custom");
+                        }}
+                        className="flex-1 h-7.5 px-2 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-1 flex items-center justify-between">
+                    {(dateFrom || dateTo || datePreset !== "all") && (
+                      <button
+                        type="button"
+                        onClick={() => applyDatePreset("all")}
+                        className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                      >
+                        {tr("Reset")}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setDateDropdownOpen(false)}
+                      className="ml-auto h-7 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer"
+                    >
+                      {tr("Done")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Refresh */}
+            <button
+              type="button"
+              onClick={fetchReport}
+              title={t(lang, "asr.refresh", "Refresh")}
+              className="h-8.5 w-8.5 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer shadow-2xs"
+            >
+              <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+            </button>
 
             {/* + New Account Button */}
             <button
@@ -628,7 +947,7 @@ export function AccountSetupReport({
                 if (onNewAccount) onNewAccount();
                 else router.push("/dashboard/accounts/setup?mode=new");
               }}
-              className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
+              className="h-8.5 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>{t(lang, "asr.new_account", "New Account")}</span>
@@ -651,7 +970,7 @@ export function AccountSetupReport({
             </div>
             <div className="space-y-1 text-xs">
               <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.branch", "Branch")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{reportContext.branchName}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.country", "Country")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{reportContext.countryName}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.country", "Country")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{translateCountry(reportContext.countryName, lang)}</span></div>
               <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.user_name", "User Name")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{reportContext.userName}</span></div>
               <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.user_id", "User ID")}:</span><span className="font-mono text-[11px] font-bold text-blue-600">{reportContext.userId}</span></div>
               <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.role", "Role")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{reportContext.userRole}</span></div>
@@ -723,219 +1042,67 @@ export function AccountSetupReport({
         ) : null}
       </div>
 
-      {/* ── FILTER & ACTION ROW ── */}
-      <div className="flex flex-wrap items-center gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[240px]">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            value={accNo}
-            onChange={(e) => {
-              setAccNo(e.target.value);
-              setDraftAccNo(e.target.value);
-            }}
-            placeholder={t(lang, "asr.search_placeholder", "Search by account code, name, manual ref...")}
-            className="w-full h-9 pl-9 pr-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 text-xs font-semibold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Filter Curtain / Dropdown (Pardah) */}
-        <div className="relative" ref={filterMenuRef}>
+      {/* ── ACTIVE FILTERS BAR (Shown only if any filter active) ── */}
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 bg-blue-50/60 dark:bg-blue-950/20 px-3 py-2 rounded-xl border border-blue-100 dark:border-blue-900/40 text-xs">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 mr-1 flex items-center gap-1">
+            <Filter className="h-3 w-3" />
+            {tr("Active Filters")}:
+          </span>
+          {country !== "all" && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+              <span>{translateCountry(country, lang)}</span>
+              <button type="button" onClick={() => setCountry("all")} className="hover:text-blue-900 cursor-pointer">
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {branch !== "all" && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+              <span>{branch}</span>
+              <button type="button" onClick={() => setBranch("all")} className="hover:text-blue-900 cursor-pointer">
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {accType !== "all" && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+              <span>{tv(accType)}</span>
+              <button type="button" onClick={() => setAccType("all")} className="hover:text-blue-900 cursor-pointer">
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {currencyFilter !== "all" && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+              <span>{currencyFilter}</span>
+              <button type="button" onClick={() => setCurrencyFilter("all")} className="hover:text-blue-900 cursor-pointer">
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {statusFilter !== "all" && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+              <span>{statusFilter}</span>
+              <button type="button" onClick={() => setStatusFilter("all")} className="hover:text-blue-900 cursor-pointer">
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
           <button
             type="button"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            className={cn(
-              "h-9 px-3.5 rounded-lg border text-xs font-bold flex items-center gap-2 transition cursor-pointer shadow-2xs",
-              activeFilterCount > 0
-                ? "border-blue-600 bg-blue-50/80 text-blue-700 dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300"
-                : "border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
-            )}
-            title={tr("Filters")}
+            onClick={resetFilters}
+            className="text-[11px] font-bold text-rose-600 hover:underline ml-auto cursor-pointer"
           >
-            <Filter className="h-3.5 w-3.5 text-blue-600" />
-            <span>{tr("Filters")}</span>
-            {activeFilterCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-blue-600 text-white">
-                {activeFilterCount}
-              </span>
-            )}
-            <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform duration-200", filtersOpen && "rotate-180")} />
+            {tr("Reset All")}
           </button>
-
-          {/* Curtain / Dropdown Panel */}
-          {filtersOpen && (
-            <div className="absolute top-full start-0 mt-2 w-80 sm:w-96 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 space-y-3.5 font-sans">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                    {tr("Account Filters")}
-                  </span>
-                </div>
-                {activeFilterCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={resetFilters}
-                    className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
-                  >
-                    {tr("Reset All")}
-                  </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                {/* Country */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    {t(lang, "common.country", "Country")}
-                  </label>
-                  <select
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
-                    disabled={!isSuperAdminUser && uniqueCountries.length <= 1}
-                  >
-                    {isSuperAdminUser && <option value="all">{t(lang, "common.all_countries", "All Countries")}</option>}
-                    {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-
-                {/* Branch */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    {t(lang, "common.branch", "Branch")}
-                  </label>
-                  <select
-                    value={branch}
-                    onChange={(e) => setBranch(e.target.value)}
-                    className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
-                  >
-                    <option value="all">{t(lang, "common.all_branches", "All Branches")}</option>
-                    {uniqueBranches.map(b => <option key={b} value={b}>{b}</option>)}
-                  </select>
-                </div>
-
-                {/* Account Type */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    {tr("Account Type")}
-                  </label>
-                  <select
-                    value={accType}
-                    onChange={(e) => setAccType(e.target.value)}
-                    className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
-                  >
-                    <option value="all">{t(lang, "asr.all_types", "All Types")}</option>
-                    {uniqueTypes.map(ty => <option key={ty} value={ty}>{tv(ty)}</option>)}
-                  </select>
-                </div>
-
-                {/* Currency */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    {t(lang, "asr.currency", "Currency")}
-                  </label>
-                  <select
-                    value={currencyFilter}
-                    onChange={(e) => setCurrencyFilter(e.target.value)}
-                    className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
-                  >
-                    <option value="all">{t(lang, "asr.all_currencies", "All Currencies")}</option>
-                    {uniqueCurrencies.map(cur => <option key={cur} value={cur}>{cur}</option>)}
-                  </select>
-                </div>
-
-                {/* Status */}
-                <div className="sm:col-span-2">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    {t(lang, "common.status", "Status")}
-                  </label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
-                  >
-                    <option value="all">{t(lang, "common.all_statuses", "All Statuses")}</option>
-                    <option value="active">{t(lang, "common.active", "Active")}</option>
-                    <option value="inactive">{t(lang, "common.inactive", "Inactive")}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <span className="text-[11px] text-slate-500 font-medium">
-                  {filtered.length} {tr("matching accounts")}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setFiltersOpen(false)}
-                  className="h-7 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer"
-                >
-                  {tr("Done")}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
-
-        {/* Active Filter Pills (Chips) for quick remove */}
-        {country !== "all" && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800">
-            <span>{country}</span>
-            <button type="button" onClick={() => setCountry("all")} className="hover:text-blue-900 cursor-pointer">
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        )}
-        {branch !== "all" && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800">
-            <span>{branch}</span>
-            <button type="button" onClick={() => setBranch("all")} className="hover:text-blue-900 cursor-pointer">
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        )}
-        {accType !== "all" && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800">
-            <span>{tv(accType)}</span>
-            <button type="button" onClick={() => setAccType("all")} className="hover:text-blue-900 cursor-pointer">
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        )}
-        {currencyFilter !== "all" && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800">
-            <span>{currencyFilter}</span>
-            <button type="button" onClick={() => setCurrencyFilter("all")} className="hover:text-blue-900 cursor-pointer">
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        )}
-        {statusFilter !== "all" && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800">
-            <span>{statusFilter}</span>
-            <button type="button" onClick={() => setStatusFilter("all")} className="hover:text-blue-900 cursor-pointer">
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        )}
-
-        {/* Refresh */}
-        <button
-          type="button"
-          onClick={fetchReport}
-          title={t(lang, "asr.refresh", "Refresh")}
-          className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
-        >
-          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-        </button>
-      </div>
+      )}
 
       {/* ── REGISTER TABLE CARD ── */}
       <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
         {/* Table Toolbar */}
-        <div className="flex flex-wrap items-center justify-between p-3.5 border-b border-slate-100 dark:border-slate-800 gap-3">
+        <div className="flex flex-wrap items-center justify-between p-3 border-b border-slate-100 dark:border-slate-800 gap-2">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-black text-slate-900 dark:text-white">
               {t(lang, "asr.register_title", "Chart of Accounts Register")}
@@ -945,31 +1112,44 @@ export function AccountSetupReport({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* 3-dots action menu replacing separate Print, PDF, Excel buttons */}
+          <div className="relative" ref={tableMenuRef}>
             <button
               type="button"
-              onClick={triggerOfficialReportPreview}
-              className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5"
+              onClick={() => setTableMenuOpen(!tableMenuOpen)}
+              className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-2xs cursor-pointer"
+              title={t(lang, "common.more_options", "Export & Print Options")}
             >
-              <Printer className="h-3.5 w-3.5 text-slate-500" />
-              <span>{t(lang, "asr.print", "Print")}</span>
+              <MoreVertical className="h-4 w-4" />
             </button>
-            <button
-              type="button"
-              onClick={triggerOfficialReportPreview}
-              className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5"
-            >
-              <FileText className="h-3.5 w-3.5 text-red-500" />
-              <span>{t(lang, "asr.pdf", "PDF")}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => exportCSV(filtered, isSuperAdminUser)}
-              className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5"
-            >
-              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-              <span>{t(lang, "asr.excel", "Excel")}</span>
-            </button>
+            {tableMenuOpen && (
+              <div className="absolute right-0 rtl:right-auto rtl:left-0 top-full mt-1.5 w-44 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-1.5 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-100">
+                <button
+                  type="button"
+                  onClick={() => { setTableMenuOpen(false); triggerOfficialReportPreview(); }}
+                  className="w-full px-3 py-2 text-left rtl:text-right text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition cursor-pointer"
+                >
+                  <Printer className="h-4 w-4 text-slate-500" />
+                  <span>{t(lang, "asr.print", "Print")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setTableMenuOpen(false); triggerOfficialReportPreview(); }}
+                  className="w-full px-3 py-2 text-left rtl:text-right text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition cursor-pointer"
+                >
+                  <FileText className="h-4 w-4 text-red-500" />
+                  <span>{t(lang, "asr.pdf", "PDF")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setTableMenuOpen(false); exportCSV(filtered, isSuperAdminUser); }}
+                  className="w-full px-3 py-2 text-left rtl:text-right text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition cursor-pointer"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                  <span>{t(lang, "asr.excel", "Excel")}</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1048,7 +1228,7 @@ export function AccountSetupReport({
                           {tv(row.subType || row.accountCategory)}
                         </span>
                       </td>
-                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{row.countryName}</td>
+                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{translateCountry(row.countryName, lang)}</td>
                       <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{row.branchName}</td>
                       <td className="p-3 font-mono font-bold text-slate-700 dark:text-slate-300">{row.currency}</td>
                       <td className="p-3 text-right font-mono font-semibold text-slate-700 dark:text-slate-300">

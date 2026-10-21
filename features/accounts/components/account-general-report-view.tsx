@@ -660,7 +660,7 @@ export function AccountGeneralReportView({
       try {
         setLoading(true);
         setError(null);
-        const res = await apiGet<AccountGeneralReportResponse>("/api/erp/accounting/reports/accounts/general?limit=2000");
+        const res = await apiGet<AccountGeneralReportResponse>(`/api/erp/accounting/reports/accounts/general?limit=2000&language=${lang}`);
         if (!cancelled) {
           setData(res);
           if (initialAccountId) setSelectedAccountId(initialAccountId);
@@ -713,10 +713,11 @@ export function AccountGeneralReportView({
     for (const row of rows) {
       if (!row.countryName || row.countryName === "-") continue;
       if (!map.has(row.countryName)) {
+        const localizedName = localizeTerm(row.countryName, lang);
         map.set(row.countryName, {
           value: row.countryName,
-          label: `${row.countryName}${row.countryCode && row.countryCode !== "-" ? ` (${row.countryCode})` : ""}`,
-          keywords: [row.countryName, row.countryCode].filter(Boolean).join(" ")
+          label: `${localizedName}${row.countryCode && row.countryCode !== "-" ? ` (${row.countryCode})` : ""}`,
+          keywords: [row.countryName, localizedName, row.countryCode].filter(Boolean).join(" ")
         });
       }
     }
@@ -2422,7 +2423,7 @@ export function AccountGeneralReportView({
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
                           <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {t(lang, "company_form.section_location", "Location")}</div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "report.country", "Country")}</span><span className="font-bold text-xs truncate block">{selectedRow.countryName}</span></div>
+                          <div><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "report.country", "Country")}</span><span className="font-bold text-xs truncate block">{localizeTerm(selectedRow.countryName, lang)}</span></div>
                           <div className="mt-1"><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "report.branch", "Branch")}</span><span className="font-bold text-xs">{selectedRow.branchName}</span></div>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">

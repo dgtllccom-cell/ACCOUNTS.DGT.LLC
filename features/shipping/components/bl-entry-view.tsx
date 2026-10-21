@@ -1465,14 +1465,6 @@ export function BlEntryView({
                       {w.name} {w.code ? `(${w.code})` : ""}
                     </option>
                   ))}
-                  {/* Fallback sample warehouses if none in test db */}
-                  {warehouses.length === 0 ? (
-                    <>
-                      <option value="MAIN WH A">MAIN WH A</option>
-                      <option value="CENTRAL DEPOT 1">CENTRAL DEPOT 1</option>
-                      <option value="PORT WAREHOUSE B">PORT WAREHOUSE B</option>
-                    </>
-                  ) : null}
                 </select>
               </div>
 

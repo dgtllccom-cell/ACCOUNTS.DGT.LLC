@@ -123,126 +123,55 @@ export interface TransferHubOrderData {
   transfers: TransferHistoryEntry[];
 }
 
-const DEFAULT_DEMO_ORDER: TransferHubOrderData = {
-  id: "5acbeb8a-66d6-4adc-9836-6e6972194bae",
-  orderNo: "CL-ORD-202610-6662",
-  orderDate: "09 OCT 2026",
-  operationType: "Transit",
-  shipmentType: "By Road",
-  status: "Completed",
-  expectedDispatch: "12 OCT 2026",
-  expectedDelivery: "25 OCT 2026",
-  branch: "Dubai - Main Branch",
+const EMPTY_ORDER: TransferHubOrderData = {
+  id: "",
+  orderNo: "-",
+  orderDate: "-",
+  operationType: "-",
+  shipmentType: "-",
+  status: "-",
+  expectedDispatch: "-",
+  expectedDelivery: "-",
+  branch: "-",
 
-  customerName: "United Customer Ledger",
-  accountCode: "UCL-001",
-  contactPerson: "Mr. Abdul Rahman",
-  phone: "+971 50 123 4567",
-  email: "customer@dgt.llc",
-  address: "Dubai, UAE",
-  country: "United Arab Emirates",
-  customerType: "Company",
+  customerName: "-",
+  accountCode: "-",
+  contactPerson: "-",
+  phone: "-",
+  email: "-",
+  address: "-",
+  country: "-",
+  customerType: "-",
 
-  loadingCountry: "Afghanistan",
-  loadingLocation: "Kabul",
-  exitBorder: "Chaman (AF ➔ PK)",
-  transitCountry: "Pakistan",
-  receivingLocation: "Karachi",
-  finalDestination: "Karachi Port",
-  transportMode: "By Road",
-  carrierTruckNo: "TRK-7865",
-  driverName: "Ahmad Khan",
+  loadingCountry: "-",
+  loadingLocation: "-",
+  exitBorder: "-",
+  transitCountry: "-",
+  receivingLocation: "-",
+  finalDestination: "-",
+  transportMode: "-",
+  carrierTruckNo: "-",
+  driverName: "-",
 
-  goods: [
-    {
-      serial: 1,
-      goodsName: "Pistachio Kernel",
-      hsCode: "0802.51",
-      brand: "Iran Grade A",
-      size: "25/27",
-      unit: "KG",
-      quantity: 10000,
-      grossWeight: 10500,
-      netWeight: 10000,
-      remarks: "-"
-    },
-    {
-      serial: 2,
-      goodsName: "Almond Kernel",
-      hsCode: "0802.12",
-      brand: "USA",
-      size: "23/25",
-      unit: "KG",
-      quantity: 8000,
-      grossWeight: 8300,
-      netWeight: 8000,
-      remarks: "-"
-    },
-    {
-      serial: 3,
-      goodsName: "Chickpeas",
-      hsCode: "0713.20",
-      brand: "Local",
-      size: "9 mm",
-      unit: "KG",
-      quantity: 7000,
-      grossWeight: 7200,
-      netWeight: 7000,
-      remarks: "-"
-    }
-  ],
+  goods: [],
 
-  loadingCity: "Kabul",
-  loadingDate: "12 OCT 2026",
-  loadingCustomsClearance: "Yes",
-  loadingCustomsName: "Kabul Customs",
-  loadingWarehouse: "Main Warehouse",
+  loadingCity: "-",
+  loadingDate: "-",
+  loadingCustomsClearance: "-",
+  loadingCustomsName: "-",
+  loadingWarehouse: "-",
   loadingRemarks: "-",
 
-  receivingCountry: "Pakistan",
-  receivingCityPort: "Karachi",
-  receivingDateEta: "25 OCT 2026",
-  entryBorder: "Karachi Port",
-  receivingCustomsClearance: "Yes",
-  receivingCustomsName: "Karachi Customs",
-  receivingWarehouse: "KICT Warehouse",
+  receivingCountry: "-",
+  receivingCityPort: "-",
+  receivingDateEta: "-",
+  entryBorder: "-",
+  receivingCustomsClearance: "-",
+  receivingCustomsName: "-",
+  receivingWarehouse: "-",
   receivingRemarks: "-",
 
-  transfers: [
-    {
-      id: "tr-1",
-      serial: 1,
-      dateTime: "10 OCT 2026 14:30",
-      transferredTo: "General Received Bill",
-      transferredToKey: "general_received",
-      billNo: "GRB-202610-001",
-      message: "",
-      status: "Completed",
-      postedBy: "Asmatullah"
-    },
-    {
-      id: "tr-2",
-      serial: 2,
-      dateTime: "11 OCT 2026 09:15",
-      transferredTo: "Customs Bill",
-      transferredToKey: "customs",
-      billNo: "CSB-202610-002",
-      message: "",
-      status: "Completed",
-      postedBy: "Asmatullah"
-    },
-    {
-      id: "tr-3",
-      serial: 3,
-      dateTime: "12 OCT 2026 16:20",
-      transferredTo: "Truck Expense Bill",
-      transferredToKey: "truck",
-      billNo: "TEB-202610-003",
-      message: "",
-      status: "In Process",
-      postedBy: "Kandahar Admin"
-    }
-  ]
+  transfers: []
 };
 
 export const TRANSFER_SIDEBAR_CARDS = [
@@ -327,7 +256,7 @@ export function CustomerOrderTransferHubView({
   const s = useErpScreen("cohub", lang);
   const L = s.lang;
   const tg = s.tGlobal;
-  const [data, setData] = useState<TransferHubOrderData>(DEFAULT_DEMO_ORDER);
+  const [data, setData] = useState<TransferHubOrderData>(EMPTY_ORDER);
   const [loading, setLoading] = useState(false);
   const [activeTransferCard, setActiveTransferCard] = useState<string | null>(null);
 
@@ -343,7 +272,7 @@ export function CustomerOrderTransferHubView({
   // Fetch real order / bill if available
   useEffect(() => {
     if (!orderId || orderId === "5acbeb8a-66d6-4adc-9836-6e6972194bae") {
-      setData(DEFAULT_DEMO_ORDER);
+      setData(EMPTY_ORDER);
       return;
     }
 
@@ -410,61 +339,61 @@ export function CustomerOrderTransferHubView({
 
             setData({
               id: foundOrder.id || orderId!,
-              orderNo: foundOrder.order_no || DEFAULT_DEMO_ORDER.orderNo,
-              orderDate: foundOrder.created_at ? new Date(foundOrder.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase() : DEFAULT_DEMO_ORDER.orderDate,
-              operationType: foundOrder.movement_type ? foundOrder.movement_type.charAt(0).toUpperCase() + foundOrder.movement_type.slice(1) : DEFAULT_DEMO_ORDER.operationType,
-              shipmentType: foundOrder.shipment_type || foundOrder.transport_mode?.replace("_", " ")?.toUpperCase() || DEFAULT_DEMO_ORDER.shipmentType,
+              orderNo: foundOrder.order_no || EMPTY_ORDER.orderNo,
+              orderDate: foundOrder.created_at ? new Date(foundOrder.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase() : EMPTY_ORDER.orderDate,
+              operationType: foundOrder.movement_type ? foundOrder.movement_type.charAt(0).toUpperCase() + foundOrder.movement_type.slice(1) : EMPTY_ORDER.operationType,
+              shipmentType: foundOrder.shipment_type || foundOrder.transport_mode?.replace("_", " ")?.toUpperCase() || EMPTY_ORDER.shipmentType,
               status: foundOrder.status === "completed" ? "Completed" : "In Process",
-              expectedDispatch: foundOrder.expected_loading_date ? new Date(foundOrder.expected_loading_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase() : DEFAULT_DEMO_ORDER.expectedDispatch,
-              expectedDelivery: DEFAULT_DEMO_ORDER.expectedDelivery,
-              branch: foundOrder.country_branch_name || DEFAULT_DEMO_ORDER.branch,
+              expectedDispatch: foundOrder.expected_loading_date ? new Date(foundOrder.expected_loading_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase() : EMPTY_ORDER.expectedDispatch,
+              expectedDelivery: EMPTY_ORDER.expectedDelivery,
+              branch: foundOrder.country_branch_name || EMPTY_ORDER.branch,
 
-              customerName: foundOrder.customer_name || DEFAULT_DEMO_ORDER.customerName,
-              accountCode: foundBill?.customer_account_number || DEFAULT_DEMO_ORDER.accountCode,
-              contactPerson: foundOrder.truck_driver_name || DEFAULT_DEMO_ORDER.contactPerson,
-              phone: foundOrder.truck_driver_mobile || DEFAULT_DEMO_ORDER.phone,
-              email: DEFAULT_DEMO_ORDER.email,
-              address: DEFAULT_DEMO_ORDER.address,
-              country: foundOrder.loading_country_name || DEFAULT_DEMO_ORDER.country,
+              customerName: foundOrder.customer_name || EMPTY_ORDER.customerName,
+              accountCode: foundBill?.customer_account_number || EMPTY_ORDER.accountCode,
+              contactPerson: foundOrder.truck_driver_name || EMPTY_ORDER.contactPerson,
+              phone: foundOrder.truck_driver_mobile || EMPTY_ORDER.phone,
+              email: EMPTY_ORDER.email,
+              address: EMPTY_ORDER.address,
+              country: foundOrder.loading_country_name || EMPTY_ORDER.country,
               customerType: "Company",
 
-              loadingCountry: foundOrder.loading_country_name || DEFAULT_DEMO_ORDER.loadingCountry,
-              loadingLocation: leg1?.from_location_text || foundOrder.route_name?.split("->")?.[0]?.trim() || DEFAULT_DEMO_ORDER.loadingLocation,
-              exitBorder: leg1?.to_location_text || DEFAULT_DEMO_ORDER.exitBorder,
-              transitCountry: foundOrder.receiving_country_name || DEFAULT_DEMO_ORDER.transitCountry,
-              receivingLocation: legLast?.to_location_text || DEFAULT_DEMO_ORDER.receivingLocation,
-              finalDestination: legLast?.to_location_text || DEFAULT_DEMO_ORDER.finalDestination,
-              transportMode: foundOrder.transport_mode ? foundOrder.transport_mode.replace("by_", "By ").replace("_", " ") : DEFAULT_DEMO_ORDER.transportMode,
-              carrierTruckNo: foundOrder.truck_number || DEFAULT_DEMO_ORDER.carrierTruckNo,
-              driverName: foundOrder.truck_driver_name || DEFAULT_DEMO_ORDER.driverName,
+              loadingCountry: foundOrder.loading_country_name || EMPTY_ORDER.loadingCountry,
+              loadingLocation: leg1?.from_location_text || foundOrder.route_name?.split("->")?.[0]?.trim() || EMPTY_ORDER.loadingLocation,
+              exitBorder: leg1?.to_location_text || EMPTY_ORDER.exitBorder,
+              transitCountry: foundOrder.receiving_country_name || EMPTY_ORDER.transitCountry,
+              receivingLocation: legLast?.to_location_text || EMPTY_ORDER.receivingLocation,
+              finalDestination: legLast?.to_location_text || EMPTY_ORDER.finalDestination,
+              transportMode: foundOrder.transport_mode ? foundOrder.transport_mode.replace("by_", "By ").replace("_", " ") : EMPTY_ORDER.transportMode,
+              carrierTruckNo: foundOrder.truck_number || EMPTY_ORDER.carrierTruckNo,
+              driverName: foundOrder.truck_driver_name || EMPTY_ORDER.driverName,
 
               goods: mappedGoods,
 
-              loadingCity: leg1?.from_location_text || DEFAULT_DEMO_ORDER.loadingCity,
-              loadingDate: DEFAULT_DEMO_ORDER.loadingDate,
+              loadingCity: leg1?.from_location_text || EMPTY_ORDER.loadingCity,
+              loadingDate: EMPTY_ORDER.loadingDate,
               loadingCustomsClearance: "Yes",
               loadingCustomsName: leg1?.customs_agent_name || "",
-              loadingWarehouse: DEFAULT_DEMO_ORDER.loadingWarehouse,
+              loadingWarehouse: EMPTY_ORDER.loadingWarehouse,
               loadingRemarks: foundOrder.remarks || "-",
 
-              receivingCountry: foundOrder.receiving_country_name || DEFAULT_DEMO_ORDER.receivingCountry,
-              receivingCityPort: legLast?.to_location_text || DEFAULT_DEMO_ORDER.receivingCityPort,
-              receivingDateEta: DEFAULT_DEMO_ORDER.receivingDateEta,
-              entryBorder: legLast?.from_location_text || DEFAULT_DEMO_ORDER.entryBorder,
+              receivingCountry: foundOrder.receiving_country_name || EMPTY_ORDER.receivingCountry,
+              receivingCityPort: legLast?.to_location_text || EMPTY_ORDER.receivingCityPort,
+              receivingDateEta: EMPTY_ORDER.receivingDateEta,
+              entryBorder: legLast?.from_location_text || EMPTY_ORDER.entryBorder,
               receivingCustomsClearance: "Yes",
               receivingCustomsName: "",
-              receivingWarehouse: DEFAULT_DEMO_ORDER.receivingWarehouse,
+              receivingWarehouse: EMPTY_ORDER.receivingWarehouse,
               receivingRemarks: "-",
 
-              transfers: DEFAULT_DEMO_ORDER.transfers
+              transfers: []
             });
           } else {
-            setData(DEFAULT_DEMO_ORDER);
+            setData(EMPTY_ORDER);
           }
         }
       } catch (err) {
         console.error("Error loading order for transfer hub:", err);
-        if (isMounted) setData(DEFAULT_DEMO_ORDER);
+        if (isMounted) setData(EMPTY_ORDER);
       } finally {
         if (isMounted) setLoading(false);
       }

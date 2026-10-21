@@ -3,46 +3,15 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
-
-// Standard sample records matching the user's reference design
-const MOCK_RECORDS = {
-  customer: [
-    { id: "1", expenseNo: "CE-2024-0001", date: "2024-09-01", country: "United Arab Emirates", countryCode: "AE", branch: "Dubai", entryUser: "Ali Khan", party: "Al Noor Trading LLC", expenseType: "Travel Expense", creditAccount: "4000-1001", debitAccount: "5100-2003", amount: 1250.00, currency: "USD", status: "approved" },
-    { id: "2", expenseNo: "CE-2024-0002", date: "2024-09-02", country: "Pakistan", countryCode: "PK", branch: "Karachi", entryUser: "Sara Ahmed", party: "Faisal Enterprises", expenseType: "Marketing Expense", creditAccount: "4000-2002", debitAccount: "5100-3001", amount: 850.00, currency: "USD", status: "pending" },
-    { id: "3", expenseNo: "CE-2024-0003", date: "2024-09-03", country: "Afghanistan", countryCode: "AF", branch: "Kabul", entryUser: "Mohammad Iqbal", party: "Kabul Star Ltd", expenseType: "Client Entertainment", creditAccount: "4000-3001", debitAccount: "5100-4002", amount: 620.00, currency: "USD", status: "approved" },
-    { id: "4", expenseNo: "CE-2024-0004", date: "2024-09-04", country: "Uzbekistan", countryCode: "UZ", branch: "Tashkent", entryUser: "Nuriddin", party: "Tashkent Motors", expenseType: "Office Supplies", creditAccount: "4000-4001", debitAccount: "5100-5001", amount: 430.00, currency: "USD", status: "rejected" },
-    { id: "5", expenseNo: "CE-2024-0005", date: "2024-09-05", country: "United Arab Emirates", countryCode: "AE", branch: "Abu Dhabi", entryUser: "Fatima Noor", party: "Desert Line LLC", expenseType: "Maintenance Expense", creditAccount: "4000-1003", debitAccount: "5100-2001", amount: 2100.00, currency: "USD", status: "approved" },
-    { id: "6", expenseNo: "CE-2024-0006", date: "2024-09-06", country: "Pakistan", countryCode: "PK", branch: "Lahore", entryUser: "Imran Sheikh", party: "Royal Traders", expenseType: "Fuel Expense", creditAccount: "4000-2001", debitAccount: "5100-3003", amount: 690.00, currency: "USD", status: "pending" },
-    { id: "7", expenseNo: "CE-2024-0007", date: "2024-09-07", country: "Afghanistan", countryCode: "AF", branch: "Mazar-i-Sharif", entryUser: "Zainab Malik", party: "Balkh Trading Co", expenseType: "Travel Expense", creditAccount: "4000-3002", debitAccount: "5100-4001", amount: 980.00, currency: "USD", status: "approved" },
-    { id: "8", expenseNo: "CE-2024-0008", date: "2024-09-08", country: "Uzbekistan", countryCode: "UZ", branch: "Samarkand", entryUser: "Javlon Karimov", party: "UzAuto Parts", expenseType: "Marketing Expense", creditAccount: "4000-4002", debitAccount: "5100-5002", amount: 1340.00, currency: "USD", status: "rejected" },
-    { id: "9", expenseNo: "CE-2024-0009", date: "2024-09-09", country: "United Arab Emirates", countryCode: "AE", branch: "Sharjah", entryUser: "Omar Abdullah", party: "Bright General Trading", expenseType: "Software & IT", creditAccount: "4000-1002", debitAccount: "5100-2004", amount: 760.00, currency: "USD", status: "approved" },
-    { id: "10", expenseNo: "CE-2024-0010", date: "2024-09-10", country: "Pakistan", countryCode: "PK", branch: "Islamabad", entryUser: "Ayesha Siddiqui", party: "Metro Cash & Carry", expenseType: "Consultancy Fee", creditAccount: "4000-2003", debitAccount: "5100-3002", amount: 1520.00, currency: "USD", status: "pending" }
-  ],
-  truck: [
-    { id: "1", expenseNo: "TE-2024-0001", date: "2024-09-01", country: "United Arab Emirates", countryCode: "AE", branch: "Dubai", entryUser: "Ali Khan", party: "TRK-7865 / Ahmad Khan", expenseType: "Driver Advance", creditAccount: "4000-1001", debitAccount: "5100-2003", amount: 1450.00, currency: "USD", status: "approved" },
-    { id: "2", expenseNo: "TE-2024-0002", date: "2024-09-02", country: "Pakistan", countryCode: "PK", branch: "Karachi", entryUser: "Sara Ahmed", party: "TRK-4412 / Rashid Ali", expenseType: "Fuel & Diesel", creditAccount: "4000-2002", debitAccount: "5100-3001", amount: 920.00, currency: "USD", status: "pending" },
-    { id: "3", expenseNo: "TE-2024-0003", date: "2024-09-03", country: "Afghanistan", countryCode: "AF", branch: "Kabul", entryUser: "Mohammad Iqbal", party: "TRK-9901 / Gul Khan", expenseType: "Toll Tax & Border Fee", creditAccount: "4000-3001", debitAccount: "5100-4002", amount: 580.00, currency: "USD", status: "approved" },
-    { id: "4", expenseNo: "TE-2024-0004", date: "2024-09-04", country: "Uzbekistan", countryCode: "UZ", branch: "Tashkent", entryUser: "Nuriddin", party: "TRK-2234 / Sherzod", expenseType: "Truck Maintenance", creditAccount: "4000-4001", debitAccount: "5100-5001", amount: 640.00, currency: "USD", status: "rejected" },
-    { id: "5", expenseNo: "TE-2024-0005", date: "2024-09-05", country: "United Arab Emirates", countryCode: "AE", branch: "Abu Dhabi", entryUser: "Fatima Noor", party: "TRK-8812 / Bilal Khan", expenseType: "Weighbridge & Parking", creditAccount: "4000-1003", debitAccount: "5100-2001", amount: 310.00, currency: "USD", status: "approved" },
-    { id: "6", expenseNo: "TE-2024-0006", date: "2024-09-06", country: "Pakistan", countryCode: "PK", branch: "Lahore", entryUser: "Imran Sheikh", party: "TRK-3310 / Tariq Mehmood", expenseType: "Driver Allowance", creditAccount: "4000-2001", debitAccount: "5100-3003", amount: 480.00, currency: "USD", status: "pending" }
-  ],
-  customs: [
-    { id: "1", expenseNo: "CB-2024-0001", date: "2024-09-01", country: "Pakistan", countryCode: "PK", branch: "Karachi", entryUser: "Sara Ahmed", party: "Karachi Customs Port", expenseType: "Customs Clearance & Duty", creditAccount: "4000-2002", debitAccount: "5100-3001", amount: 4200.00, currency: "USD", status: "approved" },
-    { id: "2", expenseNo: "CB-2024-0002", date: "2024-09-02", country: "Afghanistan", countryCode: "AF", branch: "Kabul", entryUser: "Mohammad Iqbal", party: "Chaman / Spin Boldak Customs", expenseType: "Border Transit Duty", creditAccount: "4000-3001", debitAccount: "5100-4002", amount: 2850.00, currency: "USD", status: "approved" },
-    { id: "3", expenseNo: "CB-2024-0003", date: "2024-09-03", country: "United Arab Emirates", countryCode: "AE", branch: "Dubai", entryUser: "Ali Khan", party: "Dubai Customs", expenseType: "Import Declaration Tariff", creditAccount: "4000-1001", debitAccount: "5100-2003", amount: 3600.00, currency: "USD", status: "approved" },
-    { id: "4", expenseNo: "CB-2024-0004", date: "2024-09-04", country: "Uzbekistan", countryCode: "UZ", branch: "Tashkent", entryUser: "Nuriddin", party: "Tashkent Customs Terminal", expenseType: "Customs Inspection & Scan", creditAccount: "4000-4001", debitAccount: "5100-5001", amount: 1100.00, currency: "USD", status: "pending" }
-  ],
-  other: [
-    { id: "1", expenseNo: "OE-2024-0001", date: "2024-09-01", country: "United Arab Emirates", countryCode: "AE", branch: "Dubai", entryUser: "Ali Khan", party: "Bureau Veritas Inspection", expenseType: "Lab Testing & SGS", creditAccount: "4000-1001", debitAccount: "5100-2003", amount: 890.00, currency: "USD", status: "approved" },
-    { id: "2", expenseNo: "OE-2024-0002", date: "2024-09-02", country: "Pakistan", countryCode: "PK", branch: "Karachi", entryUser: "Sara Ahmed", party: "KICT Terminal Services", expenseType: "Terminal Handling Charges (THC)", creditAccount: "4000-2002", debitAccount: "5100-3001", amount: 1450.00, currency: "USD", status: "pending" },
-    { id: "3", expenseNo: "OE-2024-0003", date: "2024-09-03", country: "Afghanistan", countryCode: "AF", branch: "Kabul", entryUser: "Mohammad Iqbal", party: "Kabul Insurance Corp", expenseType: "Cargo Transit Insurance", creditAccount: "4000-3001", debitAccount: "5100-4002", amount: 750.00, currency: "USD", status: "approved" },
-    { id: "4", expenseNo: "OE-2024-0004", date: "2024-09-04", country: "Uzbekistan", countryCode: "UZ", branch: "Tashkent", entryUser: "Nuriddin", party: "Central Legal Consultancy", expenseType: "Legal & Notary Fees", creditAccount: "4000-4001", debitAccount: "5100-5001", amount: 520.00, currency: "USD", status: "rejected" }
-  ]
-};
+import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 
 export async function GET(req: NextRequest) {
   try {
     const session = await requireErpSession();
+    {
+      const __denied = shippingAccountingDenied(session);
+      if (__denied) return __denied;
+    }
     authorizeApiScope(session, { resource: "shipping_records", action: "read" });
 
     const { searchParams } = new URL(req.url);
@@ -51,10 +20,119 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status");
     const search = (searchParams.get("search") || "").toLowerCase();
 
-    const baseList = MOCK_RECORDS[category as keyof typeof MOCK_RECORDS] || MOCK_RECORDS.customer;
+    const cityBranchIds = session.cityBranchIds ?? [];
+    const countryBranchIds = session.countryBranchIds ?? [];
+    const countryIds = session.countryIds ?? [];
 
-    let filtered = baseList.filter((item) => {
-      if (country && country !== "all" && item.countryCode !== country && item.country !== country) {
+    const dbRows = await withLocalPg(async (sql) => {
+      // 1. If category is 'customs', check clearing_payment_bills as primary source, plus bill_expenses
+      if (category === "customs") {
+        return sql`
+          SELECT
+            b.id::text,
+            COALESCE(b.bill_no, b.gd_number, 'CB-' || substr(b.id::text, 1, 8)) as "expenseNo",
+            COALESCE(b.created_at::date::text, '') as "date",
+            COALESCE(c.iso2, 'AE') as "countryCode",
+            COALESCE(c.name, 'United Arab Emirates') as "countryName",
+            COALESCE(c.flag_emoji, '🇦🇪') as "flag",
+            COALESCE(cb.name, cityb.name, 'Main Branch') as "branch",
+            COALESCE(p.full_name, 'System Admin') as "entryUser",
+            COALESCE(b.agent_name, cust.customer_name, 'Customs Authority') as "party",
+            'Customs Clearance' as "expenseType",
+            COALESCE(b.bl_number, b.order_no, '') as "creditAcc",
+            COALESCE(b.gd_number, '') as "debitAcc",
+            COALESCE(b.total_amount, 0)::numeric as "amount",
+            COALESCE(b.currency_code, 'USD') as "currency",
+            CASE
+              WHEN lower(COALESCE(b.payment_status, 'pending')) IN ('paid', 'approved', 'transferred') THEN 'approved'
+              WHEN lower(COALESCE(b.payment_status, 'pending')) IN ('rejected', 'cancelled') THEN 'rejected'
+              ELSE 'pending'
+            END as "status"
+          FROM public.clearing_payment_bills b
+          LEFT JOIN public.countries c ON c.id = b.country_id
+          LEFT JOIN public.country_branches cb ON cb.id = b.country_branch_id
+          LEFT JOIN public.city_branches cityb ON cityb.id = b.city_branch_id
+          LEFT JOIN public.customers cust ON cust.id = b.customer_id
+          LEFT JOIN public.profiles p ON p.id = b.created_by
+          WHERE b.deleted_at IS NULL
+            AND (
+              ${session.isSuperAdmin}
+              OR (b.country_id IS NULL AND b.customer_id IS NULL)
+              OR (${cityBranchIds.length > 0} AND b.city_branch_id = ANY(${cityBranchIds}))
+              OR (${cityBranchIds.length === 0 && countryBranchIds.length > 0} AND b.country_branch_id = ANY(${countryBranchIds}))
+              OR (${cityBranchIds.length === 0 && countryBranchIds.length === 0} AND b.country_id = ANY(${countryIds}))
+            )
+          ORDER BY b.created_at DESC
+        `;
+      }
+
+      // 2. Otherwise query public.bill_expenses for other categories
+      const moduleFilter =
+        category === "truck"
+          ? ["shipping_bl"]
+          : category === "customer"
+          ? ["clearing_bill", "purchase_booking", "local_purchase"]
+          : ["shipping_bl", "clearing_bill"];
+
+      return sql`
+        SELECT
+          be.id::text,
+          COALESCE(be.bill_no, be.manual_bill_no, 'EXP-' || substr(be.id::text, 1, 8)) as "expenseNo",
+          COALESCE(be.bill_date::text, be.created_at::date::text, '') as "date",
+          COALESCE(c.iso2, 'AE') as "countryCode",
+          COALESCE(c.name, 'United Arab Emirates') as "countryName",
+          COALESCE(c.flag_emoji, '🇦🇪') as "flag",
+          COALESCE(cb.name, cityb.name, 'Main Branch') as "branch",
+          COALESCE(p.full_name, 'System Admin') as "entryUser",
+          COALESCE(be.party_name, 'N/A') as "party",
+          COALESCE(be.source_module, 'Expense') as "expenseType",
+          COALESCE(be.party_account_no, '') as "creditAcc",
+          '' as "debitAcc",
+          COALESCE(be.original_bill_amount, 0)::numeric as "amount",
+          COALESCE(be.currency, 'USD') as "currency",
+          CASE
+            WHEN lower(COALESCE(be.source_status, 'pending')) IN ('posted', 'approved', 'transferred', 'completed') THEN 'approved'
+            WHEN lower(COALESCE(be.source_status, 'pending')) IN ('rejected', 'cancelled', 'withdrawn', 'deleted') THEN 'rejected'
+            ELSE 'pending'
+          END as "status"
+        FROM public.bill_expenses be
+        LEFT JOIN public.countries c ON c.id = be.country_id
+        LEFT JOIN public.country_branches cb ON cb.id = be.country_branch_id
+        LEFT JOIN public.city_branches cityb ON cityb.id = be.city_branch_id
+        LEFT JOIN public.profiles p ON p.id = be.created_by
+        WHERE be.eligibility = 'active'
+          AND be.source_module = ANY(${moduleFilter})
+          AND (
+            ${session.isSuperAdmin}
+            OR (${cityBranchIds.length > 0} AND be.city_branch_id = ANY(${cityBranchIds}))
+            OR (${cityBranchIds.length === 0 && countryBranchIds.length > 0} AND be.country_branch_id = ANY(${countryBranchIds}))
+            OR (${cityBranchIds.length === 0 && countryBranchIds.length === 0} AND be.country_id = ANY(${countryIds}))
+          )
+        ORDER BY be.created_at DESC
+      `;
+    });
+
+    const rows = (dbRows || []).map((r: any) => ({
+      id: r.id,
+      expenseNo: r.expenseNo,
+      date: r.date,
+      countryCode: r.countryCode,
+      countryName: r.countryName,
+      flag: r.flag,
+      branch: r.branch,
+      entryUser: r.entryUser,
+      party: r.party,
+      expenseType: r.expenseType,
+      creditAcc: r.creditAcc,
+      debitAcc: r.debitAcc,
+      amount: Number(r.amount || 0),
+      currency: r.currency,
+      status: r.status
+    }));
+
+    // In-memory filter on DB records if requested
+    const filtered = rows.filter((item: any) => {
+      if (country && country !== "all" && item.countryCode !== country && item.countryName !== country) {
         return false;
       }
       if (status && status !== "all" && item.status !== status) {
@@ -72,21 +150,21 @@ export async function GET(req: NextRequest) {
       return true;
     });
 
-    // Summary calculations
-    const totalAmount = filtered.reduce((acc, cur) => acc + cur.amount, 0);
-    const approvedAmount = filtered.filter((i) => i.status === "approved").reduce((acc, cur) => acc + cur.amount, 0);
-    const pendingAmount = filtered.filter((i) => i.status === "pending").reduce((acc, cur) => acc + cur.amount, 0);
-    const rejectedAmount = filtered.filter((i) => i.status === "rejected").reduce((acc, cur) => acc + cur.amount, 0);
+    // Summary calculations purely from real database rows
+    const totalAmount = filtered.reduce((acc: number, cur: any) => acc + cur.amount, 0);
+    const approvedAmount = filtered.filter((i: any) => i.status === "approved").reduce((acc: number, cur: any) => acc + cur.amount, 0);
+    const pendingAmount = filtered.filter((i: any) => i.status === "pending").reduce((acc: number, cur: any) => acc + cur.amount, 0);
+    const rejectedAmount = filtered.filter((i: any) => i.status === "rejected").reduce((acc: number, cur: any) => acc + cur.amount, 0);
 
     const summary = {
       totalAmount,
       totalCount: filtered.length,
       approvedAmount,
-      approvedCount: filtered.filter((i) => i.status === "approved").length,
+      approvedCount: filtered.filter((i: any) => i.status === "approved").length,
       pendingAmount,
-      pendingCount: filtered.filter((i) => i.status === "pending").length,
+      pendingCount: filtered.filter((i: any) => i.status === "pending").length,
       rejectedAmount,
-      rejectedCount: filtered.filter((i) => i.status === "rejected").length
+      rejectedCount: filtered.filter((i: any) => i.status === "rejected").length
     };
 
     return NextResponse.json({
