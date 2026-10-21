@@ -62,9 +62,10 @@ for (const lang of ["en", "ur"]) {
     p.on("pageerror", (e) => errs.push(String(e).slice(0, 160)));
     await p.goto(BASE + reg.path, { waitUntil: "domcontentloaded", timeout: 120000 });
     await p.waitForFunction(() => !document.querySelector(".animate-spin") && document.body.innerText.length > 200, null, { timeout: 90000 }).catch(() => {});
-    await p.waitForTimeout(2500);
-    const text = await p.evaluate(() => document.body.innerText);
     const expected = dbByTitle[reg.billTitle] || 0;
+    await p.waitForFunction((n) => document.body.innerText.includes(`(${n})`), expected, { timeout: 45000 }).catch(() => {});
+    await p.waitForTimeout(800);
+    const text = await p.evaluate(() => document.body.innerText);
     const demo = DEMO_MARKERS.filter((m) => text.includes(m));
     check(`page ${reg.key} [${lang}]: no demo figures or parties`, demo.length === 0, demo.join(" | "));
     check(`page ${reg.key} [${lang}]: header count = database (${expected})`, text.includes(`(${expected})`), "");
