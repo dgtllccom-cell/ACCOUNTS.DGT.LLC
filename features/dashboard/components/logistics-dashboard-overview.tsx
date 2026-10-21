@@ -385,7 +385,7 @@ export function LogisticsDashboardOverview({
                   className="h-9 px-3 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-700 dark:text-slate-200 text-xs font-bold inline-flex items-center gap-1.5 shadow-xs backdrop-blur-xs transition-all cursor-pointer"
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Settings</span>
+                  <span>{translateHeader(lang, "Settings")}</span>
                 </button>
 
               </div>

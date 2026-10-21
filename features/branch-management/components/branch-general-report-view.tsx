@@ -37,6 +37,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
 import { BranchRulesDrawer, type BranchRulesScope } from "./branch-rules-drawer";
 
@@ -359,7 +360,7 @@ function BranchUsersPanel({
                   <Th className="border-r p-2">Branch</Th>
                   <Th className="border-r p-2 text-left">User Name</Th>
                   <Th className="border-r p-2">Login ID</Th>
-                  <Th className="border-r p-2">Email</Th>
+                  <Th className="border-r p-2">{translateHeader(lang, "Email")}</Th>
                   <Th className="border-r p-2">Role</Th>
                   <Th className="border-r p-2">Status</Th>
                   <Th className="p-2">Actions</Th>
@@ -490,7 +491,7 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
                 <Th className="border-r p-2">Username</Th>
                 <Th className="border-r p-2">Role</Th>
                 <Th className="border-r p-2">User Name</Th>
-                <Th className="border-r p-2">Email</Th>
+                <Th className="border-r p-2">{translateHeader(lang, "Email")}</Th>
                 <Th className="border-r p-2">Status</Th>
                 <Th className="p-2">Action</Th>
               </tr>

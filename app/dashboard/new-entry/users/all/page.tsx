@@ -1730,9 +1730,9 @@ export default function SuperAdminAllUsersDirectoryPage() {
       <div className="space-y-3 print:hidden">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-          <Link href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link>
+          <Link href="/dashboard" className="hover:text-foreground transition-colors">{th("Dashboard")}</Link>
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />
-          <Link href="/dashboard/new-entry" className="hover:text-foreground transition-colors">New Entry</Link>
+          <Link href="/dashboard/new-entry" className="hover:text-foreground transition-colors">{th("New Entry")}</Link>
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />
           <span>User Accounts</span>
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />

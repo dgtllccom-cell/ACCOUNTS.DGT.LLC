@@ -340,7 +340,7 @@ export function VipRegisterEmployeeView() {
         </div>
 
         <nav className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-          <span className="hover:text-slate-800 transition cursor-pointer">Dashboard</span>
+          <span className="hover:text-slate-800 transition cursor-pointer">{T("common.dashboard", "Dashboard")}</span>
           <ChevronRight className="h-3 w-3 text-slate-400" />
           <span className="hover:text-slate-800 transition cursor-pointer">General Office</span>
           <ChevronRight className="h-3 w-3 text-slate-400" />

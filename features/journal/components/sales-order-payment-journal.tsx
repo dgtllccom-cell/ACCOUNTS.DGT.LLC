@@ -4339,7 +4339,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
           {/* 28. ACTION */}
           <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
             <ViewportActionMenu
-              ariaLabel="Row actions"
+              ariaLabel={translateHeader(currentLanguage, "Row actions")}
               buttonClassName="inline-flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 shadow-sm"
               trigger={<MoreVertical className="h-3.5 w-3.5" />}
               menuClassName="font-semibold p-1 w-48 shadow-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg"
