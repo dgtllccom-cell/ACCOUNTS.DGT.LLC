@@ -262,7 +262,7 @@ export function LogisticsDashboardOverview({
   const kpiCards = [
     {
       label: "Assigned Shipments",
-      value: String(data.assignedShipments || 128),
+      value: String(data.assignedShipments ?? 0),
       change: "↑ 12%",
       sub: "Active shipments in pipeline",
       badgeColor: "bg-blue-100/80 text-blue-600 dark:bg-blue-950 dark:text-blue-400",

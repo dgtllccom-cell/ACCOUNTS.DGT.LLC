@@ -480,30 +480,6 @@ const DICT = {
   }
 };
 
-const CUSTOMER_FILTER_OPTIONS = [
-  "Al Noor Trading LLC",
-  "Faisal Enterprises",
-  "Kabul Star Ltd",
-  "Chaman Logistics Group",
-  "Kandahar Transit Services"
-];
-const EXPENSE_TYPE_FILTER_OPTIONS = [
-  "Customs Clearance",
-  "Border Transport Fee",
-  "Travel Expense",
-  "Marketing Expense",
-  "Fuel Expense",
-  "Maintenance Expense",
-  "Port Handling & Terminal"
-];
-const BRANCH_FILTER_OPTIONS = [
-  "Chaman / چمن (Shipping Branch)",
-  "Dubai / دبئی (Port & Al Ras)",
-  "Kandahar / قندھار (Shipping Branch)",
-  "Quetta / کوئٹہ",
-  "Karachi / کراچی",
-  "Kabul / کابل"
-];
 
 export function ExpensesBillRegisterView({ category, onOpenEntryForm }: ExpensesBillRegisterViewProps) {
   const activeLang = useActiveLanguage();
@@ -614,6 +590,11 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
     };
   }, [category]);
 
+  // Filter options come from the rows that really exist (never a fixed list).
+  const branchOptions = useMemo(() => [...new Set(rawRows.map((r) => r.branch).filter(Boolean))].sort(), [rawRows]);
+  const partyOptions = useMemo(() => [...new Set(rawRows.map((r) => r.party).filter(Boolean))].sort(), [rawRows]);
+  const expenseTypeOptions = useMemo(() => [...new Set(rawRows.map((r) => r.expenseType).filter(Boolean))].sort(), [rawRows]);
+
   // Country tabs / filter options come from the rows that really exist (never a fixed list).
   const countryOptions = useMemo(() => {
     const seen = new Map<string, { code: string; label: string; flag: string; count: number }>();
@@ -624,6 +605,20 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
     }
     return [...seen.values()].sort((a, b) => a.label.localeCompare(b.label));
   }, [rawRows]);
+
+  // Per-country figures from the real rows (amounts are never summed across currencies).
+  const countryRows = useMemo(() => countryOptions.map((c) => {
+    const rs = rawRows.filter((r) => r.countryCode === c.code);
+    return {
+      code: c.code,
+      label: c.label,
+      flag: c.flag,
+      total: currencyTotals(rs, () => true),
+      transferred: currencyTotals(rs, (r) => r.status === "approved"),
+      pending: currencyTotals(rs, (r) => r.status !== "approved"),
+      remaining: currencyTotals(rs, (r) => r.status !== "approved"),
+    };
+  }), [countryOptions, rawRows]);
 
   // Summary figures: computed from the real rows. Empty database -> zeros.
   const summary = useMemo(() => {
@@ -655,6 +650,10 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
       if (filterStatus !== "all" && r.status !== filterStatus) {
         return false;
       }
+      if (filterBranch !== "all" && r.branch !== filterBranch) return false;
+      if (filterCustomer !== "all" && r.party !== filterCustomer) return false;
+      if (filterExpenseType !== "all" && r.expenseType !== filterExpenseType) return false;
+      if (filterVoucher.trim() && !r.expenseNo.toLowerCase().includes(filterVoucher.trim().toLowerCase())) return false;
       // Search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -668,7 +667,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
       }
       return true;
     });
-  }, [rawRows, selectedCountryTab, filterCountry, filterStatus, searchQuery]);
+  }, [rawRows, selectedCountryTab, filterCountry, filterBranch, filterCustomer, filterExpenseType, filterVoucher, filterStatus, searchQuery]);
 
   const handleResetFilters = () => {
     setFilterCountry("all");
@@ -774,7 +773,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
                         className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                       >
                         <option value="all">{t.select_branch}</option>
-                        {BRANCH_FILTER_OPTIONS.map((item) => (
+                        {branchOptions.map((item) => (
                           <option key={item} value={item}>{item}</option>
                         ))}
                       </select>
@@ -804,7 +803,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
                         className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                       >
                         <option value="all">{category === "customer" ? t.select_customer : t.select_party}</option>
-                        {CUSTOMER_FILTER_OPTIONS.map((item) => (
+                        {partyOptions.map((item) => (
                           <option key={item} value={item}>{item}</option>
                         ))}
                       </select>
@@ -819,7 +818,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
                         className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                       >
                         <option value="all">{t.select_expense_type}</option>
-                        {EXPENSE_TYPE_FILTER_OPTIONS.map((item) => (
+                        {expenseTypeOptions.map((item) => (
                           <option key={item} value={item}>{item}</option>
                         ))}
                       </select>
@@ -950,7 +949,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
               <div>
                 <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.pending_review}</span>
                 <span className="font-mono font-black text-amber-900 dark:text-amber-200 text-sm">{summary.pending}</span>
-                <span className="text-[10px] text-slate-400 block">38 {t.records}</span>
+                <span className="text-[10px] text-slate-400 block">{summary.pendingCount} {t.records}</span>
               </div>
               <div className="h-8 w-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
                 <Clock className="h-4 w-4" />
@@ -962,7 +961,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
               <div>
                 <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.remaining_balance}</span>
                 <span className="font-mono font-black text-rose-900 dark:text-rose-200 text-sm">{summary.remaining}</span>
-                <span className="text-[10px] text-slate-400 block">15 {t.records}</span>
+                <span className="text-[10px] text-slate-400 block">{summary.pendingCount} {t.records}</span>
               </div>
               <div className="h-8 w-8 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0">
                 <ArrowRightLeft className="h-4 w-4" />
@@ -990,36 +989,26 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60 font-mono">
-                <tr>
-                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                    <span>🇦🇪</span>
-                    <span>{t.uae}</span>
-                  </td>
-                  <td className="py-1 text-right font-bold">$ 52,430</td>
-                  <td className="py-1 text-right text-emerald-600 font-semibold">$ 38,120</td>
-                  <td className="py-1 text-right text-amber-600 font-semibold">$ 9,210</td>
-                  <td className="py-1 text-right text-rose-600 font-semibold">$ 5,100</td>
-                </tr>
-                <tr>
-                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                    <span>🇵🇰</span>
-                    <span>{t.pakistan}</span>
-                  </td>
-                  <td className="py-1 text-right font-bold">$ 46,590</td>
-                  <td className="py-1 text-right text-emerald-600 font-semibold">$ 34,880</td>
-                  <td className="py-1 text-right text-amber-600 font-semibold">$ 7,280</td>
-                  <td className="py-1 text-right text-rose-600 font-semibold">$ 4,430</td>
-                </tr>
-                <tr>
-                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                    <span>🇦🇫</span>
-                    <span>{t.afghanistan}</span>
-                  </td>
-                  <td className="py-1 text-right font-bold">$ 25,560</td>
-                  <td className="py-1 text-right text-emerald-600 font-semibold">$ 16,230</td>
-                  <td className="py-1 text-right text-amber-600 font-semibold">$ 4,960</td>
-                  <td className="py-1 text-right text-rose-600 font-semibold">$ 4,370</td>
-                </tr>
+                {countryRows.length === 0 ? (
+                  <tr>
+                    <td className="py-1 font-sans font-semibold">—</td>
+                    <td className="py-1 text-right font-bold">0.00</td>
+                    <td className="py-1 text-right text-emerald-600 font-semibold">0.00</td>
+                    <td className="py-1 text-right text-amber-600 font-semibold">0.00</td>
+                    <td className="py-1 text-right text-rose-600 font-semibold">0.00</td>
+                  </tr>
+                ) : countryRows.map((c) => (
+                  <tr key={c.code}>
+                    <td className="py-1 font-sans font-semibold flex items-center gap-1">
+                      {c.flag && <span>{c.flag}</span>}
+                      <span>{c.label}</span>
+                    </td>
+                    <td className="py-1 text-right font-bold">{c.total}</td>
+                    <td className="py-1 text-right text-emerald-600 font-semibold">{c.transferred}</td>
+                    <td className="py-1 text-right text-amber-600 font-semibold">{c.pending}</td>
+                    <td className="py-1 text-right text-rose-600 font-semibold">{c.remaining}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -1043,33 +1032,24 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60 font-mono">
-                <tr>
-                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                    <span>🇦🇪</span>
-                    <span>{t.uae}</span>
-                  </td>
-                  <td className="py-1 text-right font-bold text-slate-800 dark:text-slate-100">$ 52,430</td>
-                  <td className="py-1 text-right font-bold text-emerald-600">$ 38,120</td>
-                  <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">$ 14,310</td>
-                </tr>
-                <tr>
-                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                    <span>🇵🇰</span>
-                    <span>{t.pakistan}</span>
-                  </td>
-                  <td className="py-1 text-right font-bold text-slate-800 dark:text-slate-100">$ 46,590</td>
-                  <td className="py-1 text-right font-bold text-emerald-600">$ 34,880</td>
-                  <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">$ 11,710</td>
-                </tr>
-                <tr>
-                  <td className="py-1 font-sans font-semibold flex items-center gap-1">
-                    <span>🇦🇫</span>
-                    <span>{t.afghanistan}</span>
-                  </td>
-                  <td className="py-1 text-right font-bold text-slate-800 dark:text-slate-100">$ 25,560</td>
-                  <td className="py-1 text-right font-bold text-emerald-600">$ 16,230</td>
-                  <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">$ 9,330</td>
-                </tr>
+                {countryRows.length === 0 ? (
+                  <tr>
+                    <td className="py-1 font-sans font-semibold">—</td>
+                    <td className="py-1 text-right font-bold text-slate-800 dark:text-slate-100">0.00</td>
+                    <td className="py-1 text-right font-bold text-emerald-600">0.00</td>
+                    <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">0.00</td>
+                  </tr>
+                ) : countryRows.map((c) => (
+                  <tr key={c.code}>
+                    <td className="py-1 font-sans font-semibold flex items-center gap-1">
+                      {c.flag && <span>{c.flag}</span>}
+                      <span>{c.label}</span>
+                    </td>
+                    <td className="py-1 text-right font-bold text-slate-800 dark:text-slate-100">{c.total}</td>
+                    <td className="py-1 text-right font-bold text-emerald-600">{c.transferred}</td>
+                    <td className="py-1 text-right font-black text-blue-900 dark:text-blue-200">{c.remaining}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

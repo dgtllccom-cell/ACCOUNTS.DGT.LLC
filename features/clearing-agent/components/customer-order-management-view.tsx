@@ -1793,204 +1793,6 @@ export function CustomerOrderManagementView() {
     });
   };
 
-  const REFERENCE_SAMPLE_ORDERS: ClearingCustomerOrderRow[] = useMemo(() => [
-    {
-      id: "sample-order-01",
-      order_no: "CO-000128",
-      created_at: "2026-10-13T10:30:00Z",
-      customer_name: "Gulf Trade",
-      customer_phone: "+92 300 1234567",
-      account_id: "GT-1001",
-      loading_country_name: "Pakistan",
-      receiving_country_name: "Afghanistan",
-      country_name: "Pakistan",
-      branch_name: "Quetta Business",
-      transport_mode: "road",
-      movement_type: "transit",
-      shipment_type: "standard",
-      goods_name: "Almonds",
-      goods_quantity: "800",
-      goods_unit: "Bags",
-      goods_gross_weight: "20000",
-      goods_net_weight: "19800",
-      loading_location_name: "Karachi",
-      receiving_location_name: "Chaman",
-      route_name: "Karachi ➔ Chaman",
-      status: "pending_approval",
-      current_stage: "truck_confirmed",
-      global_serial: "128",
-      country_serial: "84",
-      branch_serial: "36",
-      entry_serial: "12",
-      created_by_name: "Demo Operator",
-      responsible_user_name: "Demo Supervisor",
-      truck_number: "DEMO-123",
-      driver_name: "Demo Driver",
-      driver_phone: "+92 300 7654321",
-      company_name: "Gulf Trade Pvt Ltd",
-      contact_person: "Demo Customer",
-      whatsapp: "+92 300 1234567",
-      account_currency: "PKR",
-      customs_handling: "External Agent",
-      clearing_agent_name: "Demo Clearing Services",
-      clearing_agent_account: "CA-DEMO-01",
-      customs_ref: "Pending",
-      receiving_country: "Afghanistan",
-      border_name: "Spin Boldak",
-      planned_receipt_date: "2026-10-16",
-      actual_receipt_date: "Not received",
-      delivery_address: "Customer warehouse, Spin Boldak",
-      receiving_customs: "Customer managed",
-      responsible_receiver: "Demo Receiver",
-      party_links: [
-        { role_key: "shipper", party_customer_name: "Gulf Trade", party_company_name: "Gulf Trade Pvt Ltd", selected_address_text: "Office 12, Trade Market, Quetta" },
-        { role_key: "consignee", party_customer_name: "Afghan Importers", party_company_name: "Afghan Imports Co", selected_address_text: "Kandahar Highway, Spin Boldak" }
-      ],
-      items: [
-        { id: "item-1", description: "Premium Badam (Almonds)", hs_code: "0802.12.00", package_type: "Bags", quantity: 800, gross_weight: 20000, net_weight: 19800, warehouse_location: "Karachi Bay 4", remarks: "Keep cargo dry." }
-      ]
-    } as any,
-    {
-      id: "sample-order-02",
-      order_no: "CO-000127",
-      created_at: "2026-10-13T10:25:00Z",
-      customer_name: "Pak Agro",
-      account_id: "PA-2045",
-      loading_country_name: "Pakistan",
-      receiving_country_name: "UAE",
-      country_name: "Pakistan",
-      branch_name: "Chaman Shipping",
-      transport_mode: "sea",
-      movement_type: "international",
-      goods_name: "Rice",
-      goods_quantity: "50",
-      goods_unit: "MT",
-      goods_gross_weight: "50000",
-      loading_location_name: "Dubai",
-      receiving_location_name: "Karachi",
-      route_name: "Dubai ➔ Karachi",
-      status: "in_transit",
-      current_stage: "goods_completed",
-      global_serial: "127",
-      country_serial: "83",
-      branch_serial: "35",
-      entry_serial: "11",
-      created_by_name: "Demo Operator",
-      company_name: "Pak Agro Corporation"
-    } as any,
-    {
-      id: "sample-order-03",
-      order_no: "CO-000126",
-      created_at: "2026-10-13T10:20:00Z",
-      customer_name: "Al Noor Trading",
-      account_id: "AN-7788",
-      loading_country_name: "UAE",
-      receiving_country_name: "Pakistan",
-      country_name: "UAE",
-      branch_name: "Al Ras Business",
-      transport_mode: "air",
-      movement_type: "international",
-      goods_name: "Dry Fruits",
-      goods_quantity: "10",
-      goods_unit: "MT",
-      goods_gross_weight: "10000",
-      loading_location_name: "Quetta",
-      receiving_location_name: "Dubai",
-      route_name: "Quetta ➔ Dubai",
-      status: "completed",
-      current_stage: "goods_completed",
-      global_serial: "126",
-      country_serial: "44",
-      branch_serial: "19",
-      entry_serial: "10",
-      created_by_name: "Demo Operator",
-      company_name: "Al Noor General Trading LLC"
-    } as any,
-    {
-      id: "sample-order-04",
-      order_no: "CO-000125",
-      created_at: "2026-10-13T10:15:00Z",
-      customer_name: "Gulf Trade",
-      account_id: "GT-1001",
-      loading_country_name: "Pakistan",
-      receiving_country_name: "Pakistan",
-      country_name: "Pakistan",
-      branch_name: "Chaman Shipping",
-      transport_mode: "train",
-      movement_type: "regional",
-      goods_name: "Almonds",
-      goods_quantity: "30",
-      goods_unit: "MT",
-      goods_gross_weight: "30000",
-      loading_location_name: "Karachi",
-      receiving_location_name: "Quetta",
-      route_name: "Karachi ➔ Quetta",
-      status: "in_transit",
-      current_stage: "goods_completed",
-      global_serial: "125",
-      country_serial: "82",
-      branch_serial: "34",
-      entry_serial: "9",
-      created_by_name: "Demo Operator",
-      company_name: "Gulf Trade Pvt Ltd"
-    } as any,
-    {
-      id: "sample-order-05",
-      order_no: "CO-000124",
-      created_at: "2026-10-13T10:10:00Z",
-      customer_name: "Pak Agro",
-      account_id: "PA-2045",
-      loading_country_name: "UAE",
-      receiving_country_name: "Pakistan",
-      country_name: "UAE",
-      branch_name: "Al Ras Business",
-      transport_mode: "road",
-      movement_type: "local",
-      goods_name: "Rice",
-      goods_quantity: "25",
-      goods_unit: "MT",
-      goods_gross_weight: "25000",
-      loading_location_name: "Dubai",
-      receiving_location_name: "Chaman",
-      route_name: "Dubai ➔ Chaman",
-      status: "pending_approval",
-      current_stage: "truck_confirmed",
-      global_serial: "124",
-      country_serial: "43",
-      branch_serial: "18",
-      entry_serial: "8",
-      created_by_name: "Demo Operator",
-      company_name: "Pak Agro Corporation"
-    } as any,
-    {
-      id: "sample-order-06",
-      order_no: "CO-000123",
-      created_at: "2026-10-13T10:05:00Z",
-      customer_name: "Al Noor Trading",
-      account_id: "AN-7788",
-      loading_country_name: "Pakistan",
-      receiving_country_name: "UAE",
-      country_name: "Pakistan",
-      branch_name: "Quetta Business",
-      transport_mode: "sea",
-      movement_type: "international",
-      goods_name: "Dry Fruits",
-      goods_quantity: "15",
-      goods_unit: "MT",
-      goods_gross_weight: "15000",
-      loading_location_name: "Karachi",
-      receiving_location_name: "Dubai",
-      route_name: "Karachi ➔ Dubai",
-      status: "completed",
-      current_stage: "goods_completed",
-      global_serial: "123",
-      country_serial: "81",
-      branch_serial: "33",
-      entry_serial: "7",
-      created_by_name: "Demo Operator",
-      company_name: "Al Noor General Trading LLC"
-    } as any
-  ], []);
 
   const visibleOrders = useMemo(() => {
     if (orders.length === 0) {
@@ -4423,7 +4225,7 @@ export function CustomerOrderManagementView() {
               <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 <span>{visibleOrders.length || 6} {tt("visible_orders_stat", "visible orders")}</span>
                 <span className="mx-2">•</span>
-                <span>{orderCounts.totalVolume || 150} MT {tt("cargo_stat", "cargo")}</span>
+                <span>{orderCounts.totalVolume || 0} MT {tt("cargo_stat", "cargo")}</span>
               </div>
               <div className="flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
                 <button
@@ -4483,7 +4285,7 @@ export function CustomerOrderManagementView() {
 
           {/* Fixed Floating Action Dropup Menu for Table Rows */}
           {activeActionMenuId && actionMenuAnchor && (() => {
-            const targetOrder = orders.find((o) => o.id === activeActionMenuId) || REFERENCE_SAMPLE_ORDERS.find((o) => o.id === activeActionMenuId);
+            const targetOrder = orders.find((o) => o.id === activeActionMenuId);
             if (!targetOrder) return null;
             const isDropup = actionMenuAnchor.top > (typeof window !== "undefined" ? window.innerHeight - 260 : 500);
             return (
@@ -5859,58 +5661,21 @@ export function CustomerOrderManagementView() {
                       const tare = w.tare;
                       const net = w.net;
                       const kgPer = parseFloat(String(it.kgPerQty || 0)) || (q > 0 ? kg / q : 0);
-                      const unitPrice = parseFloat(String(it.rate || 0)) || 12;
+                      const unitPrice = parseFloat(String(it.rate || 0)) || 0;
                       const lineTotal = parseFloat(String(it.finalAmount || 0)) || (q * unitPrice);
                       return {
                         id: it.id || String(idx),
-                        name: it.goodsName || it.goods_name || "Cargo Item",
-                        hsCode: it.goodsChsCode || "5208.51",
-                        packageType: it.unit || "Cartons",
+                        name: it.goodsName || it.goods_name || "",
+                        hsCode: it.goodsChsCode || "",
+                        packageType: it.unit || "",
                         packages: q,
-                        gross: kg || 600,
-                        net: net || 580,
-                        volume: 12.5,
-                        remarks: it.qualityReport || "Garments",
+                        gross: kg,
+                        net: net,
+                        volume: 0,
+                        remarks: it.qualityReport || "",
                         rawIndex: idx
                       };
-                    }) : [
-                      {
-                        id: "mock-1",
-                        name: "Textile Fabrics",
-                        hsCode: "5208.51",
-                        packageType: "Cartons",
-                        packages: 60,
-                        gross: 600,
-                        net: 580,
-                        volume: 12.5,
-                        remarks: "Garments",
-                        rawIndex: 0
-                      },
-                      {
-                        id: "mock-2",
-                        name: "Plastic Household Items",
-                        hsCode: "3924.10",
-                        packageType: "Cartons",
-                        packages: 30,
-                        gross: 250,
-                        net: 240,
-                        volume: 8.0,
-                        remarks: "General Goods",
-                        rawIndex: 1
-                      },
-                      {
-                        id: "mock-3",
-                        name: "Steel Parts",
-                        hsCode: "7308.90",
-                        packageType: "Pallets",
-                        packages: 10,
-                        gross: 150,
-                        net: 140,
-                        volume: 5.0,
-                        remarks: "Machinery Parts",
-                        rawIndex: 2
-                      }
-                    ];
+                    }) : [];
 
                     const totalItemsCount = displayItems.length;
                     const totalPackages = displayItems.reduce((acc, it) => acc + it.packages, 0);
