@@ -30,6 +30,7 @@ for (const lang of LANGS) {
       const p = await ctx.newPage(); const errs = [];
       p.on("pageerror", (e) => errs.push(String(e).slice(0, 140)));
       const tag = `${name} [${lang} ${w}px]`;
+      if (path.includes("?id=undefined") || path.endsWith("?id=")) { await p.close(); continue; }
       try {
         await p.goto(BASE + path, { waitUntil: "domcontentloaded", timeout: 180000 });
         await p.waitForFunction(() => !document.querySelector(".animate-spin") && document.body.innerText.length > 200, null, { timeout: 90000 }).catch(() => {});
