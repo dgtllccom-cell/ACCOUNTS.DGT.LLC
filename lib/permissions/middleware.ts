@@ -30,9 +30,15 @@ export function hasRolePermission(session: ErpSession, resource: string, action:
   return perms.includes(required) || perms.includes(`${normalizedResource}:*`) || perms.includes("*:*");
 }
 
-/** Global DATA scope: Super Admin, Super Admin Reports, Global Operations Admin. Says nothing about permissions. */
+/** Global DATA scope: Super Admin, Super Admin Reports, Global Operations Admin, Business Super Admin, Shipping Super Admin. Says nothing about permissions. */
 export function isGlobalSession(session: ErpSession): boolean {
-  return Boolean(session.isSuperAdmin || session.isGlobalScope || session.roles?.includes("super_admin_reports"));
+  return Boolean(
+    session.isSuperAdmin ||
+    session.isGlobalScope ||
+    session.roles?.includes("super_admin_reports") ||
+    session.roles?.includes("business_super_admin") ||
+    session.roles?.includes("shipping_super_admin")
+  );
 }
 
 /**

@@ -1617,13 +1617,9 @@ export function PurchaseBookingJournalReportView({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [filters, setFilters] = useState(() => {
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const fromDate = `${currentYear}-01-01`;
-    const toDate = today.toISOString().slice(0, 10);
     return {
-      fromDate,
-      toDate,
+      fromDate: "",
+      toDate: "",
       supplier: "",
       branch: "",
       country: "",
@@ -1652,7 +1648,7 @@ export function PurchaseBookingJournalReportView({
     return () => { cancelled = true; };
   }, []);
 
-  const isSuperAdmin = useMemo(() => session ? (session.scopes?.isSuperAdmin || session.roles?.includes("super_admin")) : true, [session]);
+  const isSuperAdmin = useMemo(() => session ? (session.scopes?.isSuperAdmin || session.scopes?.isGlobal || session.roles?.includes("super_admin") || session.roles?.includes("business_super_admin")) : true, [session]);
   const isCountryAdmin = useMemo(() => session ? session.roles?.includes("country_admin") : false, [session]);
   const isBranchAdmin = useMemo(() => session ? session.roles?.some((r: string) => r === "main_branch_admin" || r === "city_branch_admin" || r === "branch_admin") : false, [session]);
   const allowedCountryId = session?.scopes?.countryIds?.[0] || null;
@@ -1679,7 +1675,7 @@ export function PurchaseBookingJournalReportView({
     setLoading(true);
     setMessage("");
     try {
-      const params = new URLSearchParams({ limit: isSuperAdmin ? "1000" : "150" });
+      const params = new URLSearchParams({ limit: "2000" });
       if (nextFilters.fromDate) params.set("dateFrom", nextFilters.fromDate);
       if (nextFilters.toDate) params.set("dateTo", nextFilters.toDate);
       if (nextFilters.bookingNo) params.set("purchaseOrderNo", nextFilters.bookingNo);
