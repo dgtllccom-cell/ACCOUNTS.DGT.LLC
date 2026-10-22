@@ -5,8 +5,17 @@ import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
 import { withLocalPg } from "@/lib/db/local-postgres";
 
+async function nextGoodsChsCode(): Promise<string> {
+  const code = await withLocalPg(async (sql) => {
+    const [row] = await sql`select public.next_entity_serial('global', 'GLOBAL', 'goods_chs', 'GOODS') as s`;
+    return row?.s ? String(row.s) : null;
+  });
+  if (!code) throw new Error("Could not allocate a goods CHS code.");
+  return code;
+}
+
 export type GoodsMasterInput = {
-  chsCode: string;
+  chsCode?: string | null;
   goodsName: string;
   originCountryId?: string | null;
   originalLanguage: SupportedLanguage;
@@ -40,13 +49,14 @@ export class GoodsService {
   }
 
   async create(input: GoodsMasterInput, actorId?: string | null) {
-    const exists = await goodsRepository.checkChsCodeExists(input.chsCode);
+    const chsCode = input.chsCode?.trim() || (await nextGoodsChsCode());
+    const exists = await goodsRepository.checkChsCodeExists(chsCode);
     if (exists) {
-      throw new Error(`CHS Code "${input.chsCode}" is already in use.`);
+      throw new Error(`CHS Code "${chsCode}" is already in use.`);
     }
 
     const goodsId = await goodsRepository.create({
-      chsCode: input.chsCode,
+      chsCode,
       goodsName: input.goodsName,
       originCountryId: input.originCountryId,
       originalLanguageCode: input.originalLanguage,

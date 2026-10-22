@@ -1147,7 +1147,7 @@ export function LocalPurchaseView({
     setSubmittingNewGoods(true);
     try {
       const name = newGoodsNameInput.trim().toUpperCase();
-      const code = newChsCodeInput.trim() || `G-${Math.floor(1000 + Math.random() * 9000)}`;
+      const code = newChsCodeInput.trim();
       const res = await fetch("/api/erp/goods", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
