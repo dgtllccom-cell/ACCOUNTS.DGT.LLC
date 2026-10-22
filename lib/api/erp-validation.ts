@@ -520,7 +520,7 @@ export const companyCreateSchema = z.object({
 export const companyUpdateSchema = companyCreateSchema.partial();
 
 export const goodsCreateSchema = z.object({
-  chsCode: z.string().trim().min(2).max(100),
+  chsCode: z.string().trim().max(100).nullable().optional(),
   goodsName: z.string().trim().min(2).max(200),
   originCountryId: uuidSchema.nullable().optional(),
   originalLanguage: supportedLanguageSchema.default("en"),
