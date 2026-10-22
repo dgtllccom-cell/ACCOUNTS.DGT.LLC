@@ -761,6 +761,10 @@ export async function POST(request: NextRequest) {
     // Same RLS root cause as above — insert (and the transport-expense insert that reuses
     // the existing purchase expense trail) via withLocalPg in one connection.
     const insertResult = await withLocalPg(async (sql) => {
+      if (!payload.purchase_order_id && payload.purchase_order_no) {
+        const [order] = await sql`select id from purchase_orders where purchase_order_no = ${payload.purchase_order_no} limit 1`;
+        if (order?.id) payload.purchase_order_id = order.id;
+      }
       const lotName = payload.lot_name ?? (await allotmentsForOrder(sql, payload.purchase_order_id, payload.purchase_order_no));
       const rows = await sql`insert into purchase_loading_records ${sql({ ...payload, lot_name: lotName } as any)} returning id, loading_record_no`;
       // After Loading the load enters the General Purchase Lane (idempotent: one lane row per loading record).
