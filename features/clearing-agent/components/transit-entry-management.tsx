@@ -336,14 +336,13 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
   };
 
   const handleNewEntry = () => {
-    const randomSerial = "TE-" + String(Math.floor(1000000 + Math.random() * 9000000)).substring(0, 7);
     setFormData({
       ...DEFAULT_ENTRY,
-      entry_serial: randomSerial,
-      invoice_no: "INV-2026-" + String(Math.floor(100000 + Math.random() * 900000)),
+      entry_serial: "",
+      invoice_no: "",
       documents: []
     });
-    showNotification(`${tt("transit.new_initialized", "New Transit Entry initialized")} (${randomSerial})`, "info");
+    showNotification(tt("transit.new_initialized", "New Transit Entry initialized"), "info");
   };
 
   const handlePrint = async () => {

@@ -1763,7 +1763,7 @@ export function ExpensesBillEntryForm({
                     </div>
                     <div>
                       <span className="text-slate-500">{tt("exp.transfer_serial", "Transfer Serial:")}</span><br/>
-                      <span suppressHydrationWarning className="font-mono font-bold text-slate-800 bg-slate-100 px-1 rounded mt-0.5 inline-block">TR-{Math.floor(Math.random() * 90000) + 10000}</span>
+                      <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1 rounded mt-0.5 inline-block">—</span>
                     </div>
                     <div>
                       <span className="text-slate-500">{tt("exp.country_serial", "Country Serial:")}</span><br/>
