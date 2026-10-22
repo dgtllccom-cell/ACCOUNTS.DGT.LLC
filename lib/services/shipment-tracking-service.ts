@@ -10,6 +10,22 @@ import {
   type CanonicalTrackingPayload
 } from "@/lib/types/shipment-tracking";
 
+const STAGE_ORDER = ["booking", "truck_assignment", "goods_verification", "loading", "customs_clearing", "shipment_bl", "handover", "destination_review", "completed"] as const;
+const MILESTONE_STAGE = {
+  booking_confirmed: "booking",
+  empty_picked_up: "loading",
+  gate_in: "loading",
+  loaded: "loading",
+  vessel_departed: "shipment_bl",
+  transshipment: "shipment_bl",
+  vessel_voyage_change: "shipment_bl",
+  arrived: "destination_review",
+  discharged: "destination_review",
+  gate_out: "handover",
+  empty_returned: "completed",
+  closed: "completed",
+} as const;
+
 export {
   TRACKING_EVENT_CODES,
   TRACKING_EVENT_LABELS,
@@ -366,6 +382,25 @@ export class ShipmentTrackingService {
             updated_at = now()
         WHERE order_id = ${order.id}
       `;
+      const milestoneStage = MILESTONE_STAGE[input.eventCode as keyof typeof MILESTONE_STAGE];
+      if (milestoneStage) {
+        await sql`
+          UPDATE public.clearing_customer_orders
+          SET current_stage = CASE WHEN array_position(${STAGE_ORDER}::text[], ${milestoneStage}) > array_position(${STAGE_ORDER}::text[], current_stage)
+                                   THEN ${milestoneStage} ELSE current_stage END,
+              updated_at = now()
+          WHERE id = ${order.id}
+        `;
+        if (legId) {
+          await sql`
+            UPDATE public.clearing_customer_order_legs
+            SET stage = CASE WHEN array_position(${STAGE_ORDER}::text[], ${milestoneStage}) > array_position(${STAGE_ORDER}::text[], stage)
+                             THEN ${milestoneStage} ELSE stage END,
+                updated_at = now()
+            WHERE id = ${legId}
+          `;
+        }
+      }
       return eventRow;
     });
   }
