@@ -25,8 +25,11 @@ const snapshot = async () => ({
 const before = await snapshot();
 const target = (await sql`select id, order_no from clearing_customer_orders where deleted_at is null and order_no = ${"CL-ORD-00000265"}`)[0];
 check("target shipment exists in the database", !!target, target?.order_no);
+await sql`update clearing_customer_orders set current_stage = 'booking' where id = ${target.id}`;
+await sql`update clearing_customer_order_legs set stage = 'booking' where order_id = ${target.id}`;
 const stageOf = async () => (await sql`select current_stage from clearing_customer_orders where id = ${target.id}`)[0]?.current_stage;
 const milestones = ["loaded", "vessel_departed", "arrived", "discharged", "gate_out", "closed"];
+const expectedStage = { loaded: "loading", vessel_departed: "shipment_bl", arrived: "destination_review", discharged: "destination_review", gate_out: "handover", closed: "completed" };
 
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
@@ -41,6 +44,7 @@ await p.waitForFunction((n) => document.body.innerText.includes(n), target.order
 await p.waitForTimeout(1500);
 await p.getByText(target.order_no).first().click();
 await p.waitForTimeout(2000);
+await p.locator("[data-shtrk-add-event]").first().waitFor({ state: "attached", timeout: 60000 }).catch(() => {});
 check("shipment opens in the detail drawer", (await p.locator("[data-shtrk-add-event]").count()) > 0, "");
 
 let stage = await stageOf();
@@ -49,7 +53,8 @@ for (const code of milestones) {
   await p.waitForTimeout(600);
   await p.locator("#trk-ev-code").selectOption(code);
   await p.getByRole("button", { name: /Record Milestone/ }).click();
-  await p.waitForTimeout(2500);
+  const want = expectedStage[code];
+  for (let i = 0; i < 40; i++) { if ((await stageOf()) === want) break; await p.waitForTimeout(500); }
   const eventRows = (await sql`select count(*)::int n from shipment_tracking_events where order_id = ${target.id}`.catch(() => [{ n: NaN }]))[0].n;
   const next = await stageOf();
   check(`milestone ${code} recorded from the drawer`, next !== undefined, `stage ${stage} -> ${next}, events=${eventRows}`);
@@ -61,7 +66,8 @@ for (const code of milestones) {
 const after = await snapshot();
 check("stock totals unchanged by delivery milestones", Math.abs(after.stock - before.stock) < 0.001, `before=${before.stock} after=${after.stock}`);
 check("payment records unchanged by delivery milestones", after.payments === before.payments, `before=${before.payments} after=${after.payments}`);
-check("final stage is delivered/closed in the database", stage === "closed" || stage === "delivered" || stage === "completed", `stage=${stage}`);
+const finalStage = await stageOf();
+check("final stage is completed (closed milestone) in the database", finalStage === "completed", `stage=${finalStage}`);
 check("delivery workflow page has no page errors", errs.length === 0, errs.join(" | "));
 await p.screenshot({ path: `${OUT}/delivery.png` }).catch(() => {});
 await b.close();
