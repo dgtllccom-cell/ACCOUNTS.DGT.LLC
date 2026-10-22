@@ -1434,9 +1434,9 @@ export function PurchaseOrderWizard({ session }) {
         let loadedGoods = (rawFormData && typeof rawFormData === "object" && Array.isArray(rawFormData.goodsEntries) && rawFormData.goodsEntries.length)
           ? rawFormData.goodsEntries
           : (Array.isArray(poData.items) ? poData.items.map((item, idx) => ({
-              allotName: item.allotName || `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+              allotName: item.allotName || "",
               goodsId: item.productId || item.goodsId || null,
-              goodsName: item.goodsName || item.productName || item.name || "Cargo Item",
+              goodsName: item.goodsName || item.productName || item.name || "",
               size: item.size || "-",
               brand: item.brand || "-",
               origin: item.origin || "-",
@@ -2130,7 +2130,7 @@ export function PurchaseOrderWizard({ session }) {
     setGoodsEntries((prev) => [
       ...prev,
       {
-        allotName: form.allotName || `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+        allotName: form.allotName || "",
         goodsId: selectedGood?.id || null,
         goodsName: form.goodsName,
         size: form.size || "-",
@@ -2169,7 +2169,7 @@ export function PurchaseOrderWizard({ session }) {
       emptyKgs: 0,
       netWeight: "",
       coursePrice: 0,
-      allotName: `ALT-${Math.floor(4424 + Math.random() * 1000)}`,
+      allotName: "",
       manualTotalAmount: "",
       manualFinalAmount: ""
     }));
@@ -2224,7 +2224,7 @@ export function PurchaseOrderWizard({ session }) {
     const calculated = calculateItemTotals(form);
     const updatedItem = {
       ...goodsEntries[editingGoodsIndex],
-      allotName: form.allotName || goodsEntries[editingGoodsIndex]?.allotName || `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+      allotName: form.allotName || goodsEntries[editingGoodsIndex]?.allotName || "",
       goodsId: selectedGood?.id || goodsEntries[editingGoodsIndex]?.goodsId || null,
       goodsName: form.goodsName,
       size: form.size || "-",
@@ -2272,7 +2272,7 @@ export function PurchaseOrderWizard({ session }) {
       emptyKgs: 0,
       netWeight: "",
       coursePrice: 0,
-      allotName: `ALT-${Math.floor(4424 + Math.random() * 1000)}`,
+      allotName: "",
       manualTotalAmount: "",
       manualFinalAmount: ""
     }));
@@ -2292,7 +2292,7 @@ export function PurchaseOrderWizard({ session }) {
       emptyKgs: 0,
       netWeight: "",
       coursePrice: 0,
-      allotName: `ALT-${Math.floor(4424 + Math.random() * 1000)}`,
+      allotName: "",
       manualTotalAmount: "",
       manualFinalAmount: ""
     }));
@@ -2406,7 +2406,7 @@ export function PurchaseOrderWizard({ session }) {
     if (pendingGoodsName) {
       const calculated = calculateItemTotals(form);
       const pendingLot = {
-        allotName: form.allotName || `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+        allotName: form.allotName || "",
         goodsName: form.goodsName,
         size: form.size || "-",
         brand: form.brand || "-",

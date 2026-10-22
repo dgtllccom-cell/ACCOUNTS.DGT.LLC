@@ -117,6 +117,15 @@ export async function createPurchaseOrderViaLocalPg(input: {
         }
       }
 
+      // A goods line without an allotment number gets the next value from the persistent sequence (never a random value).
+      const goodsEntries = Array.isArray(body.formData?.goodsEntries) ? body.formData.goodsEntries : [];
+      for (const entry of goodsEntries) {
+        if (!String(entry?.allotName ?? "").trim()) {
+          const [allotRow] = await tx`select public.next_entity_serial('global', 'GLOBAL', 'purchase_allotment', 'ALT') as s`;
+          entry.allotName = String(allotRow.s);
+        }
+      }
+
       // Persistent counters (transaction_serial_sequences, entity purchase_order) — never count(*):
       // a number that was ever issued (live, soft-deleted or hard-deleted into a backup) is not reused.
       const serialRows = await tx`
