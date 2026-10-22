@@ -109,7 +109,7 @@ export function OpenFullBillModal({
     ? order.form_data.goodsEntries
     : [
         {
-          goodsName: order.productName || order.goodsDescription || form.goodsName || "Cargo Item",
+          goodsName: order.productName || order.goodsDescription || form.goodsName || "—",
           spec: form.specLot || form.origin || "Standard Quality",
           qtyNo: Number(order.quantity || form.qtyNo || 1),
           grossWeight: Number(order.totalGrossWeight || order.totalWeight || form.grossWeight || 0),
@@ -295,7 +295,7 @@ export function OpenFullBillModal({
         status: statusBadge,
         goodsItems: goodsEntries.map((g: any, i: number) => ({
           srNo: i + 1,
-          goodsName: g.goodsName || "Cargo Item",
+          goodsName: g.goodsName || "—",
           origin: form.originCountry || countryName,
           quantity: Number(g.qtyNo || 0),
           unit: g.qtyName || form.qtyName || "KG",
@@ -628,7 +628,7 @@ export function OpenFullBillModal({
                       <tr key={index} className="border-b last:border-b-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
                         <td className="px-3 py-2 text-center font-bold text-slate-400">{index + 1}</td>
                         <td className="px-4 py-2 font-bold text-slate-800 dark:text-slate-200">
-                          {g.goodsName || g.productName || "Cargo Item"}
+                          {g.goodsName || g.productName || "—"}
                           {g.spec && <span className="block text-[10px] font-normal text-slate-400">({g.spec})</span>}
                         </td>
                         <td className="px-4 py-2 text-right font-mono font-semibold">{qty.toLocaleString()}</td>
