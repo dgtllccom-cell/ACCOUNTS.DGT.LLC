@@ -17,10 +17,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { Building2, Link2, Loader2, Plus, Minus, Search, ShieldCheck, Trash2, UserRound, AlertTriangle, FileText, ScanLine } from "lucide-react";
+import { Building2, Link2, Loader2, Plus, Minus, ShieldCheck, Trash2, UserRound, AlertTriangle, FileText, ScanLine } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
+import { CustomerPicker } from "@/features/customers/components/customer-picker";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { CompanyDuplicateWarningModal, type CompanyDuplicateCandidate } from "@/components/erp/company-duplicate-warning-modal";
 import {
@@ -89,27 +90,20 @@ const CONTACT_METHOD_TYPES: Array<{ value: string; key: string; en: string; inpu
   { value: "other", key: "cmethod_other", en: "Other", input: "text", ph: "Value" },
 ];
 
-// Repeatable tax-registration types (owner spec: NTN / TRN / VAT / GST / Other).
+// Repeatable tax & legal registration types (NTN / Sales Tax / TRN / License / VAT / GST / Other)
 const TAX_TYPE_OPTIONS: Array<{ value: string; key: string; en: string }> = [
-  { value: "ntn", key: "taxtype_ntn", en: "NTN" },
-  { value: "trn", key: "taxtype_trn", en: "TRN" },
+  { value: "ntn", key: "taxtype_ntn", en: "NTN (National Tax No.)" },
+  { value: "sales_tax", key: "taxtype_sales_tax", en: "Sales Tax / STRN" },
+  { value: "trn", key: "taxtype_trn", en: "TRN (Tax Registration No.)" },
+  { value: "license", key: "taxtype_license", en: "License / Registration No." },
   { value: "vat", key: "taxtype_vat", en: "VAT" },
   { value: "gst", key: "taxtype_gst", en: "GST" },
-  { value: "other", key: "taxtype_other", en: "Other" },
+  { value: "other", key: "taxtype_other", en: "Other Registration" },
 ];
 type TaxRegItem = { id: string; type: string; value: string };
 const newTaxRegId = () => `tx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-// Repeatable contract details (migration 20261226 — tracking only, no accounting).
-const CONTRACT_TYPE_OPTIONS: Array<{ value: string; key: string; en: string }> = [
-  { value: "service", key: "ctype_service", en: "Service Agreement" },
-  { value: "supply", key: "ctype_supply", en: "Supply Contract" },
-  { value: "agency", key: "ctype_agency", en: "Agency Agreement" },
-  { value: "lease", key: "ctype_lease", en: "Lease / Tenancy" },
-  { value: "other", key: "ctype_other", en: "Other" },
-];
-type ContractItem = { id: string; type: string; reference: string; startDate: string; endDate: string; note: string };
-const newContractId = () => `ct-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
 
 const field = "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 const label = "mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300";
@@ -163,9 +157,6 @@ export function CompanyIncorporationForm({
   const [companyType, setCompanyType] = useState<"customer" | "internal">("customer");
   // owner (customer company)
   const [owner, setOwner] = useState<OwnerOption | null>(null);
-  const [ownerQuery, setOwnerQuery] = useState("");
-  const [ownerResults, setOwnerResults] = useState<OwnerOption[]>([]);
-  const [ownerSearching, setOwnerSearching] = useState(false);
   const [sisters, setSisters] = useState<SisterCompany[]>([]);
   // accounts of the selected customer (reference: pick the correct one if several)
   const [accounts, setAccounts] = useState<AccountOption[]>([]);
@@ -181,10 +172,9 @@ export function CompanyIncorporationForm({
   const [registrationType, setRegistrationType] = useState("trade_license");
   const [registrationNumber, setRegistrationNumber] = useState("");
   const [taxNumber, setTaxNumber] = useState("");
-  // Additional repeatable tax registrations (merged into the `registrations` jsonb on save).
-  const [taxRegs, setTaxRegs] = useState<TaxRegItem[]>([]);
-  // Repeatable contract details (saved to the companies.contracts jsonb).
-  const [contracts, setContracts] = useState<ContractItem[]>([]);
+  // Repeatable tax and legal registrations (NTN / Sales Tax / TRN / License / VAT / GST / Other)
+  const [taxRegs, setTaxRegs] = useState<TaxRegItem[]>([{ id: newTaxRegId(), type: "ntn", value: "" }]);
+
   const [incorporationDate, setIncorporationDate] = useState("");
   const [licenseExpiryDate, setLicenseExpiryDate] = useState("");
   const [companyStatus, setCompanyStatus] = useState("active");
@@ -264,32 +254,7 @@ export function CompanyIncorporationForm({
     }
   }, [countryId, countries, baseCurrency]);
 
-  // ── owner search (existing Customer Master — no new customer is created here) ──
-  useEffect(() => {
-    const q = ownerQuery.trim();
-    if (q.length < 2 || (owner && ownerQuery === owner.name)) {
-      setOwnerResults([]);
-      return;
-    }
-    setOwnerSearching(true);
-    const h = setTimeout(() => {
-      apiGet<any>(`/api/erp/customers?q=${encodeURIComponent(q)}&limit=15&lang=${s.lang}`)
-        .then((r) =>
-          setOwnerResults(
-            (r?.customers ?? []).map((c: any) => ({
-              id: c.id,
-              name: c.customer_name || [c.first_name, c.last_name].filter(Boolean).join(" ") || c.company_name || "—",
-              code: c.person_code || c.entry_serial || null,
-              mobile: c.mobile || null,
-              email: c.email || null,
-            }))
-          )
-        )
-        .catch(() => setOwnerResults([]))
-        .finally(() => setOwnerSearching(false));
-    }, 300);
-    return () => clearTimeout(h);
-  }, [ownerQuery, owner, s.lang]);
+
 
   const loadOwner = useCallback(async (id: string) => {
     try {
@@ -302,7 +267,6 @@ export function CompanyIncorporationForm({
           null;
         const o = { id: c.id, name: c.customer_name || c.company_name || "—", code: c.person_code || c.customer_code || null, mobile: c.mobile || null, email: c.email || null, address: addr };
         setOwner(o);
-        setOwnerQuery(o.name);
       }
     } catch {
       /* owner outside scope or removed — leave unselected */
@@ -404,29 +368,28 @@ export function CompanyIncorporationForm({
         setRegistrationType(c.registration_type || "trade_license");
         setRegistrationNumber(c.registration_number || "");
         setTaxNumber(c.tax_number || "");
-        // Hydrate extra tax registrations from the stored jsonb, excluding the two primary values already shown above.
+        // Hydrate all registrations into the repeatable list
         {
+          const existingRegs: TaxRegItem[] = Array.isArray(c.registrations)
+            ? c.registrations
+                .filter((r: any) => r && r.value && String(r.value).trim())
+                .map((r: any) => ({
+                  id: newTaxRegId(),
+                  type: String(r.type || "other").toLowerCase(),
+                  value: String(r.value).trim(),
+                }))
+            : [];
           const primaryReg = String(c.registration_number || "").trim();
           const primaryTrn = String(c.tax_number || "").trim();
-          const extra: TaxRegItem[] = Array.isArray(c.registrations)
-            ? c.registrations
-                .filter((r: any) => r && r.value && String(r.value).trim() !== primaryReg && String(r.value).trim() !== primaryTrn)
-                .map((r: any) => ({ id: newTaxRegId(), type: String(r.type || "other").toLowerCase(), value: String(r.value).trim() }))
-            : [];
-          setTaxRegs(extra);
+          if (primaryReg && !existingRegs.some((r) => r.value === primaryReg)) {
+            existingRegs.unshift({ id: newTaxRegId(), type: "license", value: primaryReg });
+          }
+          if (primaryTrn && !existingRegs.some((r) => r.value === primaryTrn)) {
+            existingRegs.unshift({ id: newTaxRegId(), type: "ntn", value: primaryTrn });
+          }
+          setTaxRegs(existingRegs.length > 0 ? existingRegs : [{ id: newTaxRegId(), type: "ntn", value: "" }]);
         }
-        setContracts(
-          Array.isArray(c.contracts)
-            ? c.contracts.map((r: any) => ({
-                id: newContractId(),
-                type: String(r?.type || "service"),
-                reference: String(r?.reference || ""),
-                startDate: String(r?.startDate || r?.start_date || ""),
-                endDate: String(r?.endDate || r?.end_date || ""),
-                note: String(r?.note || ""),
-              }))
-            : [],
-        );
+
         setIncorporationDate(c.incorporation_date || "");
         setLicenseExpiryDate(c.license_expiry_date || "");
         setCompanyStatus(c.company_status || "active");
@@ -478,15 +441,19 @@ export function CompanyIncorporationForm({
   // ── live duplicate check (same rule the API enforces) ──────────────────────
   useEffect(() => {
     const name = legalName.trim();
-    if (name.length < 3 && !registrationNumber.trim() && !taxNumber.trim()) {
+    const primaryReg =
+      taxRegs.find((r) => ["license", "registration", "trade_license"].includes(r.type))?.value?.trim() || "";
+    const primaryTax =
+      taxRegs.find((r) => ["ntn", "sales_tax", "trn", "vat", "gst"].includes(r.type))?.value?.trim() || "";
+    if (name.length < 3 && !primaryReg && !primaryTax) {
       setLiveDups([]);
       return;
     }
     const h = setTimeout(() => {
       const qp = new URLSearchParams();
       if (name) qp.set("legalName", name);
-      if (registrationNumber.trim()) qp.set("registrationNumber", registrationNumber.trim());
-      if (taxNumber.trim()) qp.set("taxNumber", taxNumber.trim());
+      if (primaryReg) qp.set("registrationNumber", primaryReg);
+      if (primaryTax) qp.set("taxNumber", primaryTax);
       if (owner?.id) qp.set("ownerPersonId", owner.id);
       if (countryId) qp.set("countryId", countryId);
       if (savedId) qp.set("excludeId", savedId);
@@ -495,7 +462,7 @@ export function CompanyIncorporationForm({
         .catch(() => setLiveDups([]));
     }, 450);
     return () => clearTimeout(h);
-  }, [legalName, registrationNumber, taxNumber, owner, countryId, savedId]);
+  }, [legalName, taxRegs, owner, countryId, savedId]);
 
   const validation = useMemo(() => {
     const issues: string[] = [];
@@ -516,6 +483,20 @@ export function CompanyIncorporationForm({
     }
     setSaving(true);
     const country = countries.find((c) => c.id === countryId);
+
+    const primaryReg =
+      taxRegs.find((r) => ["license", "registration", "trade_license"].includes(r.type))?.value?.trim() ||
+      registrationNumber.trim() ||
+      "";
+    const primaryTax =
+      taxRegs.find((r) => ["ntn", "sales_tax", "trn", "vat", "gst"].includes(r.type))?.value?.trim() ||
+      taxNumber.trim() ||
+      (taxRegs[0]?.value?.trim() ?? "");
+
+    const allRegistrations = taxRegs
+      .filter((r) => r.value && r.value.trim())
+      .map((r) => ({ type: (r.type || "other").trim(), value: r.value.trim() }));
+
     const payload: Record<string, unknown> = {
       name: tradeName.trim() || legalName.trim(),
       legalName: legalName.trim(),
@@ -527,8 +508,8 @@ export function CompanyIncorporationForm({
       natureOfBusiness: natureOfBusiness.trim() || null,
       businessType: natureOfBusiness.trim() || null,
       registrationType: registrationType || null,
-      registrationNumber: registrationNumber.trim() || null,
-      taxNumber: taxNumber.trim() || null,
+      registrationNumber: primaryReg || null,
+      taxNumber: primaryTax || null,
       incorporationDate: incorporationDate || null,
       licenseExpiryDate: licenseExpiryDate || null,
       companyStatus,
@@ -547,16 +528,8 @@ export function CompanyIncorporationForm({
       contacts: contacts
         .filter((c) => c.value.trim())
         .map((c) => ({ id: c.id, type: c.type, value: c.value.trim() })),
-      registrations: [
-        registrationNumber.trim() ? { type: registrationType || "registration", value: registrationNumber.trim() } : null,
-        taxNumber.trim() ? { type: "trn", value: taxNumber.trim() } : null,
-        ...taxRegs
-          .filter((r) => r.value.trim())
-          .map((r) => ({ type: (r.type || "other").trim(), value: r.value.trim() })),
-      ].filter(Boolean),
-      contracts: contracts
-        .filter((r) => r.reference.trim() || r.note.trim())
-        .map((r) => ({ id: r.id, type: r.type, reference: r.reference.trim(), startDate: r.startDate, endDate: r.endDate, note: r.note.trim() })),
+      registrations: allRegistrations,
+      contracts: [],
       acknowledgeDuplicates,
     };
     if (companyType === "internal") {
@@ -637,7 +610,7 @@ export function CompanyIncorporationForm({
     <h2>${esc(s.t("existing_linked", "Existing Linked Companies"))} (${sisters.length})</h2>
     <table class="lnk"><thead><tr><th>${esc(s.t("company_name_lbl", "Company Name"))}</th><th>${esc(s.t("company_code", "Company Code"))}</th><th>${esc(s.t("registration_number", "Registration / License Number"))}</th><th>${esc(s.t("country", "Country"))}</th></tr></thead><tbody>${sistersHtml}</tbody></table>
     <h2>${esc(s.t("new_draft", "New Company Draft"))}</h2>
-    <div class="draft"><table class="grid">${row(s.t("company_name_lbl", "Company Name"), legalName || tradeName)}${row(s.t("nature_label", "Company Type / Business Nature"), natureOfBusiness)}${row(s.t("sum_registrations", "Tax registrations"), String(regCount))}${row(s.t("location", "Location"), [cityName, stateName, countries.find((c) => c.id === countryId)?.name].filter(Boolean).join(", "))}${row(s.t("sum_contracts", "Contracts"), String(contracts.filter((r) => r.reference.trim() || r.note.trim()).length))}${row(s.t("sum_contacts", "Contact methods"), String(contacts.filter((c) => c.value.trim()).length))}</table></div>
+    <div class="draft"><table class="grid">${row(s.t("company_name_lbl", "Company Name"), legalName || tradeName)}${row(s.t("nature_label", "Company Type / Business Nature"), natureOfBusiness)}${row(s.t("sum_registrations", "Tax registrations"), String(regCount))}${row(s.t("location", "Location"), [cityName, stateName, countries.find((c) => c.id === countryId)?.name].filter(Boolean).join(", "))}${row(s.t("sum_contacts", "Contact methods"), String(contacts.filter((c) => c.value.trim()).length))}</table></div>
     ${contactsHtml ? `<h2>${esc(s.t("sec_contact_methods", "Contact Methods"))}</h2><table class="grid">${contactsHtml}</table>` : ""}
     </body></html>`;
     // Prefer a separate window (nicer for "Save as PDF"); fall back to a hidden iframe when
@@ -669,7 +642,7 @@ export function CompanyIncorporationForm({
         iframe.remove();
       }
     }
-  }, [accounts, accountId, countries, owner, sisters, legalName, tradeName, natureOfBusiness, registrationNumber, taxNumber, taxRegs, contracts, contacts, cityName, stateName, countryId, savedId, s]);
+  }, [accounts, accountId, countries, owner, sisters, legalName, tradeName, natureOfBusiness, registrationNumber, taxNumber, taxRegs, contacts, cityName, stateName, countryId, savedId, s]);
 
   const branchLinkedElsewhere = (b: BranchOption) => Boolean(b.company_id && b.company_id !== savedId);
 
@@ -780,40 +753,23 @@ export function CompanyIncorporationForm({
           <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
             <UserRound className="h-4 w-4 text-blue-600" /> {s.t("sec_owner", "2. Customer / Owner")}
           </h3>
-          <div className="relative">
-            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              data-testid="owner-search"
-              className={cn(field, "ps-9")}
-              value={ownerQuery}
-              placeholder={s.t("owner_search_ph", "Search existing customer by name, code or mobile…")}
-              onChange={(e) => {
-                setOwnerQuery(e.target.value);
-                if (owner && e.target.value !== owner.name) setOwner(null);
+          <div data-testid="owner-picker" className="w-full">
+            <CustomerPicker
+              label=""
+              value={owner?.id || ""}
+              onValueChange={(personId) => {
+                if (!personId) {
+                  setOwner(null);
+                } else {
+                  void loadOwner(personId);
+                }
               }}
+              placeholder={s.t("owner_search_ph", "Select customer from Customer Management…")}
+              createLabel={s.t("add_new_customer", "+ New Customer")}
+              lang={s.lang as any}
+              showCountryFilter={false}
+              createButtonPlacement="trigger"
             />
-            {ownerSearching && <Loader2 className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />}
-            {ownerResults.length > 0 && !owner && (
-              <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                {ownerResults.map((o) => (
-                  <button
-                    key={o.id}
-                    type="button"
-                    data-testid="owner-option"
-                    className="flex w-full flex-col items-start px-3 py-2 text-start hover:bg-slate-50 dark:hover:bg-slate-800"
-                    onClick={() => {
-                      setOwner(o);
-                      setOwnerQuery(o.name);
-                      setOwnerResults([]);
-                      void loadOwner(o.id);
-                    }}
-                  >
-                    <span className="text-sm font-semibold text-slate-900 dark:text-white">{o.name}</span>
-                    <span className="text-xs text-slate-500">{[o.code, o.mobile, o.email].filter(Boolean).join(" · ") || "—"}</span>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
           {owner ? (
             <div data-testid="owner-card" className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs dark:border-slate-700 dark:bg-slate-800/50">
@@ -960,44 +916,61 @@ export function CompanyIncorporationForm({
             </select>
           </div>
           <div>
-            <label className={label}>{s.t("registration_number", "Registration / License Number")}</label>
-            <input data-testid="registration-number" className={field} value={registrationNumber} onChange={(e) => setRegistrationNumber(e.target.value)} />
+            <label className={label}>{s.t("base_currency", "Base Currency")} *</label>
+            <select data-testid="base-currency" className={field} value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)}>
+              <option value="">{s.t("select", "— Select —")}</option>
+              {[...new Set([baseCurrency, ...CURRENCIES].filter(Boolean))].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
           <div>
-            <label className={label}>{s.t("tax_number", "TRN / Tax Number")}</label>
-            <input data-testid="tax-number" className={field} value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} />
+            <label className={label}>{s.t("incorporation_date", "Registration / Incorporation Date")}</label>
+            <input type="date" className={field} value={incorporationDate} onChange={(e) => setIncorporationDate(e.target.value)} />
           </div>
-          {/* Repeatable additional tax registrations — type dropdown (NTN/TRN/VAT/GST/Other) + number + add/remove */}
+          <div>
+            <label className={label}>{s.t("license_expiry", "License / Registration Expiry Date")}</label>
+            <input type="date" data-testid="license-expiry" className={field} value={licenseExpiryDate} onChange={(e) => setLicenseExpiryDate(e.target.value)} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={label}>{s.t("status", "Company Status")}</label>
+            <select data-testid="company-status" className={field} value={companyStatus} onChange={(e) => setCompanyStatus(e.target.value)}>
+              {COMPANY_STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{tt(o.key, o.en)}</option>
+              ))}
+            </select>
+          </div>
+          {/* Repeatable tax & legal registrations (NTN / Sales Tax / TRN / License No / VAT / GST / Other) */}
           <div className="sm:col-span-2">
             <div className="mb-1 flex items-center justify-between gap-2">
-              <label className={label + " mb-0"}>{s.t("tax_registrations", "Tax Registrations")}</label>
+              <label className={label + " mb-0"}>{s.t("tax_registrations", "Tax & Legal Registrations")}</label>
               <button
                 type="button"
                 onClick={() => setTaxRegs((prev) => [...prev, { id: newTaxRegId(), type: "ntn", value: "" }])}
                 className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300"
               >
-                <Plus className="h-3.5 w-3.5" /> {s.t("add_tax_reg", "Add tax registration")}
+                <Plus className="h-3.5 w-3.5" /> {s.t("add_tax_reg", "Add registration / tax number")}
               </button>
             </div>
             {taxRegs.length === 0 ? (
-              <p className="text-xs text-slate-400 dark:text-slate-500">{s.t("tax_reg_hint", "Add NTN, TRN, VAT, GST or other tax registrations. Use “Add tax registration” for each one.")}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">{s.t("tax_reg_hint", "Add NTN, Sales Tax / STRN, TRN, License No, VAT, GST or other tax registrations. Click “Add registration / tax number” to add each one.")}</p>
             ) : (
               <div className="space-y-2">
                 {taxRegs.map((r, idx) => (
-                  <div key={r.id} className="grid gap-2 sm:grid-cols-[9rem_1fr_auto]">
+                  <div key={r.id} className="grid gap-2 sm:grid-cols-[13rem_1fr_auto]">
                     <select
                       className={field}
                       value={r.type}
                       onChange={(e) => setTaxRegs((prev) => prev.map((x, i) => (i === idx ? { ...x, type: e.target.value } : x)))}
                     >
                       {TAX_TYPE_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>{o.value === "other" ? s.t("taxtype_other", "Other") : o.en}</option>
+                        <option key={o.value} value={o.value}>{s.t(o.key, o.en)}</option>
                       ))}
                     </select>
                     <input
                       className={field}
                       value={r.value}
-                      placeholder={s.t("tax_reg_number_ph", "Registration number")}
+                      placeholder={s.t("tax_reg_number_ph", "Registration / Tax number")}
                       onChange={(e) => setTaxRegs((prev) => prev.map((x, i) => (i === idx ? { ...x, value: e.target.value } : x)))}
                     />
                     <button
@@ -1023,20 +996,20 @@ export function CompanyIncorporationForm({
             </select>
           </div>
           <div>
-            <label className={label}>{s.t("incorporation_date", "Registration / Incorporation Date")}</label>
-            <input type="date" className={field} value={incorporationDate} onChange={(e) => setIncorporationDate(e.target.value)} />
-          </div>
-          <div>
-            <label className={label}>{s.t("license_expiry", "License / Registration Expiry Date")}</label>
-            <input type="date" data-testid="license-expiry" className={field} value={licenseExpiryDate} onChange={(e) => setLicenseExpiryDate(e.target.value)} />
-          </div>
-          <div>
             <label className={label}>{s.t("status", "Company Status")}</label>
             <select data-testid="company-status" className={field} value={companyStatus} onChange={(e) => setCompanyStatus(e.target.value)}>
               {COMPANY_STATUS_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{tt(o.key, o.en)}</option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className={label}>{s.t("incorporation_date", "Registration / Incorporation Date")}</label>
+            <input type="date" className={field} value={incorporationDate} onChange={(e) => setIncorporationDate(e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>{s.t("license_expiry", "License / Registration Expiry Date")}</label>
+            <input type="date" data-testid="license-expiry" className={field} value={licenseExpiryDate} onChange={(e) => setLicenseExpiryDate(e.target.value)} />
           </div>
         </div>
 
@@ -1148,65 +1121,7 @@ export function CompanyIncorporationForm({
         )}
       </section>
 
-      {/* Contract details — repeatable "+ Add"; tracking only (companies.contracts jsonb). */}
-      <section className={card}>
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">{s.t("sec_contracts", "Contract Details")}</h3>
-          <button
-            type="button"
-            onClick={() => setContracts((p) => [...p, { id: newContractId(), type: "service", reference: "", startDate: "", endDate: "", note: "" }])}
-            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300"
-          >
-            <Plus className="h-3.5 w-3.5" /> {s.t("add_contract", "Add contract")}
-          </button>
-        </div>
-        {contracts.length === 0 ? (
-          <p className="text-xs text-slate-400 dark:text-slate-500">{s.t("contracts_hint", "Optional. Add one or more contracts (service, supply, agency, lease…). Tracking only — no accounting posting.")}</p>
-        ) : (
-          <div className="space-y-3">
-            {contracts.map((r, idx) => (
-              <div key={r.id} className="rounded-xl border border-slate-200 p-2.5 dark:border-slate-700">
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                  <div>
-                    <label className={label}>{s.t("contract_type", "Type")}</label>
-                    <select className={field} value={r.type} onChange={(e) => setContracts((p) => p.map((x, j) => (j === idx ? { ...x, type: e.target.value } : x)))}>
-                      {CONTRACT_TYPE_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>{s.t(o.key, o.en)}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={label}>{s.t("contract_ref", "Reference / No.")}</label>
-                    <input className={field} value={r.reference} onChange={(e) => setContracts((p) => p.map((x, j) => (j === idx ? { ...x, reference: e.target.value } : x)))} />
-                  </div>
-                  <div>
-                    <label className={label}>{s.t("contract_start", "Start Date")}</label>
-                    <input type="date" className={field} value={r.startDate} onChange={(e) => setContracts((p) => p.map((x, j) => (j === idx ? { ...x, startDate: e.target.value } : x)))} />
-                  </div>
-                  <div>
-                    <label className={label}>{s.t("contract_end", "End Date")}</label>
-                    <input type="date" className={field} value={r.endDate} onChange={(e) => setContracts((p) => p.map((x, j) => (j === idx ? { ...x, endDate: e.target.value } : x)))} />
-                  </div>
-                  <div className="sm:col-span-2 lg:col-span-4">
-                    <label className={label}>{s.t("contract_note", "Note")}</label>
-                    <div className="flex items-center gap-2">
-                      <input className={field} value={r.note} onChange={(e) => setContracts((p) => p.map((x, j) => (j === idx ? { ...x, note: e.target.value } : x)))} />
-                      <button
-                        type="button"
-                        aria-label={s.t("remove", "Remove")}
-                        onClick={() => setContracts((p) => p.filter((_, j) => j !== idx))}
-                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:border-slate-700 dark:hover:bg-rose-950/40"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+
 
       {/* Contact methods — repeatable Type + Value; only the input for the selected type is shown. */}
       <section className={card}>
@@ -1309,7 +1224,7 @@ export function CompanyIncorporationForm({
           {(() => {
             const selAcc = accounts.find((a) => a.id === accountId) || null;
             const accCountry = countries.find((c) => c.id === selAcc?.countryId)?.name || null;
-            const regCount = (registrationNumber.trim() ? 1 : 0) + (taxNumber.trim() ? 1 : 0) + taxRegs.filter((r) => r.value.trim()).length;
+            const regCount = taxRegs.filter((r) => r.value.trim()).length;
             const Row = ({ k, v }: { k: string; v: ReactNode }) => (
               <div className="flex items-start justify-between gap-3 py-1.5">
                 <span className="shrink-0 text-[11px] font-semibold text-slate-500 dark:text-slate-400">{k}</span>
@@ -1415,7 +1330,6 @@ export function CompanyIncorporationForm({
                     <Row k={s.t("nature_label", "Company Type / Business Nature")} v={natureOfBusiness} />
                     <Row k={s.t("sum_registrations", "Tax registrations")} v={String(regCount)} />
                     <Row k={s.t("location", "Location")} v={[cityName, stateName, countries.find((c) => c.id === countryId)?.name].filter(Boolean).join(", ")} />
-                    <Row k={s.t("sum_contracts", "Contracts")} v={String(contracts.filter((r) => r.reference.trim() || r.note.trim()).length)} />
                     <Row k={s.t("sum_contacts", "Contact methods")} v={String(contacts.filter((c) => c.value.trim()).length)} />
                   </div>
                   {contacts.some((c) => c.value.trim()) && (

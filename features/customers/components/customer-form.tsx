@@ -120,25 +120,7 @@ export function CustomerForm({
   const [status, setStatus] = useState("Active");
   const [remarks, setRemarks] = useState("");
 
-  // Customer Account Details states
-  const [accountName, setAccountName] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [manualReference, setManualReference] = useState("");
-  const [branchName, setBranchName] = useState("");
-  const [branchCode, setBranchCode] = useState("");
-  const [cityBranch, setCityBranch] = useState("");
 
-  // Customer Company Details states
-  const [companyName, setCompanyName] = useState("");
-  const [companyRegNo, setCompanyRegNo] = useState("");
-  const [companyTaxNo, setCompanyTaxNo] = useState("");
-  const [companyBusinessType, setCompanyBusinessType] = useState("Private Limited");
-  const [companyPhone, setCompanyPhone] = useState("");
-  const [companyEmail, setCompanyEmail] = useState("");
-  const [companyCountry, setCompanyCountry] = useState("");
-  const [companyCity, setCompanyCity] = useState("");
-  const [companyState, setCompanyState] = useState("");
-  const [companyAddress, setCompanyAddress] = useState("");
 
   // Retrieve existing customer list to search edit candidate
   useEffect(() => {
@@ -211,25 +193,7 @@ export function CustomerForm({
               if (parsed.remarks) setRemarks(parsed.remarks);
               if (parsed.photoUrl) setPassportPicture(parsed.photoUrl);
 
-              // Load account fields
-              if (parsed.accountName) setAccountName(parsed.accountName);
-              if (parsed.accountNumber) setAccountNumber(parsed.accountNumber);
-              if (parsed.manualReference) setManualReference(parsed.manualReference);
-              if (parsed.branchName) setBranchName(parsed.branchName);
-              if (parsed.branchCode) setBranchCode(parsed.branchCode);
-              if (parsed.cityBranch) setCityBranch(parsed.cityBranch);
 
-              // Load company fields
-              if (parsed.companyName) setCompanyName(parsed.companyName);
-              if (parsed.companyRegNo) setCompanyRegNo(parsed.companyRegNo);
-              if (parsed.companyTaxNo) setCompanyTaxNo(parsed.companyTaxNo);
-              if (parsed.companyBusinessType) setCompanyBusinessType(parsed.companyBusinessType);
-              if (parsed.companyPhone) setCompanyPhone(parsed.companyPhone);
-              if (parsed.companyEmail) setCompanyEmail(parsed.companyEmail);
-              if (parsed.companyCountry) setCompanyCountry(parsed.companyCountry);
-              if (parsed.companyCity) setCompanyCity(parsed.companyCity);
-              if (parsed.companyState) setCompanyState(parsed.companyState);
-              if (parsed.companyAddress) setCompanyAddress(parsed.companyAddress);
 
               // Dynamic contacts list
               if (parsed.contacts && Array.isArray(parsed.contacts) && parsed.contacts.length > 0) {
@@ -298,64 +262,10 @@ export function CustomerForm({
 
   const isBusiness = customerType === "Corporate / Business Company" || customerType === "Business";
 
-  // Sync utilities for dynamic prefilling
-  useEffect(() => {
-    const fullName = isBusiness ? businessName : `${firstName} ${lastName}`.trim();
-    if (fullName) {
-      setAccountName((prev) => prev || fullName);
-      if (isBusiness) {
-        setCompanyName((prev) => prev || fullName);
-      }
-    }
-  }, [isBusiness, businessName, firstName, lastName]);
-
-  useEffect(() => {
-    if (country) {
-      setCompanyCountry((prev) => prev || country);
-    }
-  }, [country]);
-
-  useEffect(() => {
-    if (city) {
-      setCompanyCity((prev) => prev || city);
-      setCityBranch((prev) => prev || city);
-    }
-  }, [city]);
-
-  useEffect(() => {
-    if (stateName) {
-      setCompanyState((prev) => prev || stateName);
-    }
-  }, [stateName]);
-
-  useEffect(() => {
-    if (address) {
-      setCompanyAddress((prev) => prev || address);
-    }
-  }, [address]);
-
-  useEffect(() => {
-    const emailVal = contacts.find(c => c.type === "Email")?.value || "";
-    if (emailVal) {
-      setCompanyEmail((prev) => prev || emailVal);
-    }
-  }, [contacts]);
-
-  useEffect(() => {
-    const phoneVal = contacts.find(c => ["Mobile", "WhatsApp", "Landline", "Office"].includes(c.type))?.value || "";
-    if (phoneVal) {
-      setCompanyPhone((prev) => prev || phoneVal);
-    }
-  }, [contacts]);
-
   // Auto-fill City Code when city selects
   useEffect(() => {
     if (locationMeta.city?.zip_code) {
       setCityCode(locationMeta.city.zip_code);
-    }
-    if (locationMeta.city?.name) {
-      setBranchName((prev) => prev || locationMeta.city!.name + " Branch");
-      setBranchCode((prev) => prev || locationMeta.city!.name.substring(0, 3).toUpperCase());
     }
   }, [locationMeta.city]);
 
@@ -415,27 +325,7 @@ export function CustomerForm({
         upload: d.upload
       })),
       status,
-      remarks,
-      
-      // Separate Account Details
-      accountName,
-      accountNumber,
-      manualReference,
-      branchName,
-      branchCode,
-      cityBranch,
-      
-      // Separate Company Details
-      companyName,
-      companyRegNo,
-      companyTaxNo,
-      companyBusinessType,
-      companyPhone,
-      companyEmail,
-      companyCountry,
-      companyCity,
-      companyState,
-      companyAddress
+      remarks
     };
 
     // Keep primary contacts mapped to standard columns for db-level searches
@@ -444,7 +334,7 @@ export function CustomerForm({
     const firstEmail = contacts.find((c) => c.type === "Email")?.value || "";
 
     const resolvedCustomerName = isBusiness 
-      ? (companyName.trim() || businessName.trim()) 
+      ? businessName.trim() 
       : ([firstName, lastName].filter(Boolean).join(" ").trim() || "New Person");
 
     const payload = {
@@ -459,7 +349,7 @@ export function CustomerForm({
       fatherName: isBusiness ? null : (fatherName.trim() || null),
       gender: isBusiness ? null : customerType,
       photoUrl: passportPicture || null,
-      companyName: isBusiness ? (companyName.trim() || businessName.trim() || null) : (companyName.trim() || null),
+      companyName: isBusiness ? (businessName.trim() || null) : null,
       contactPerson: isBusiness ? `${firstName} ${lastName}`.trim() : null,
       mobile: firstMobile || null,
       whatsapp: firstWhatsapp || null,
@@ -902,223 +792,7 @@ export function CustomerForm({
 
           {currentStep === 2 && (
             <div className="space-y-6">
-              {/* Customer Account Details Card */}
-              <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900 overflow-hidden">
-                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                    <User className="h-4.5 w-4.5" />
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                      {getLabel("customerAccountDetails", lang)}
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {getLabel("accountDetailsSub", lang)}
-                    </p>
-                  </div>
-                </div>
-                <CardContent className="p-5 space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {getLabel("accountName", lang)} <span className="text-rose-500">*</span>
-                      </Label>
-                      <Input
-                        value={accountName}
-                        onChange={(e) => setAccountName(e.target.value)}
-                        placeholder={getLabel("enterAccountNamePlaceholder", lang)}
-                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {getLabel("accountNumber", lang)}
-                      </Label>
-                      <Input
-                        value={accountNumber}
-                        onChange={(e) => setAccountNumber(e.target.value)}
-                        placeholder={getLabel("enterAccountNumberPlaceholder", lang)}
-                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono"
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {getLabel("manualReference", lang)}
-                      </Label>
-                      <Input
-                        value={manualReference}
-                        onChange={(e) => setManualReference(e.target.value)}
-                        placeholder={getLabel("enterManualRefPlaceholder", lang)}
-                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {getLabel("branchName", lang)}
-                      </Label>
-                      <Input
-                        value={branchName}
-                        onChange={(e) => setBranchName(e.target.value)}
-                        placeholder={getLabel("enterBranchNamePlaceholder", lang)}
-                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {getLabel("branchCode", lang)}
-                      </Label>
-                      <Input
-                        value={branchCode}
-                        onChange={(e) => setBranchCode(e.target.value)}
-                        placeholder={getLabel("enterBranchCodePlaceholder", lang)}
-                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono uppercase"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      {getLabel("cityBranch", lang)}
-                    </Label>
-                    <Input
-                      value={cityBranch}
-                      onChange={(e) => setCityBranch(e.target.value)}
-                      placeholder={getLabel("enterCityBranchPlaceholder", lang)}
-                      className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Customer Company Details Card */}
-              <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900 overflow-hidden">
-                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                      <Building2 className="h-4.5 w-4.5" />
-                    </div>
-                    <div>
-                      <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                        {getLabel("customerCompanyDetails", lang)}
-                      </h2>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {getLabel("companyDetailsSub", lang)}
-                      </p>
-                    </div>
-                  </div>
-                  {isBusiness && (
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800">
-                      {getLabel("corporateClient", lang)}
-                    </span>
-                  )}
-                </div>
-                <CardContent className="p-5 space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {getLabel("companyName", lang)}
-                      </Label>
-                      <Input
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder={getLabel("companyNamePlaceholderExample", lang)}
-                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {getLabel("companyBusinessType", lang)}
-                      </Label>
-                      <select
-                        value={companyBusinessType}
-                        onChange={(e) => setCompanyBusinessType(e.target.value)}
-                        className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                      >
-                        {[
-                          "Private Limited",
-                          "Sole Proprietorship",
-                          "Partnership / AOP",
-                          "Limited Liability Company (LLC)",
-                          "Public Limited",
-                          "Joint Venture",
-                          "Branch / Liaison Office",
-                          "Non-Profit / NGO",
-                          "Other"
-                        ].map((bt) => (
-                          <option key={bt} value={bt}>{bt}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {getLabel("companyRegNo", lang)}
-                      </Label>
-                      <Input
-                        value={companyRegNo}
-                        onChange={(e) => setCompanyRegNo(e.target.value)}
-                        placeholder={getLabel("enterCompanyRegNoPlaceholder", lang)}
-                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono uppercase"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {getLabel("companyTaxNo", lang)}
-                      </Label>
-                      <Input
-                        value={companyTaxNo}
-                        onChange={(e) => setCompanyTaxNo(e.target.value)}
-                        placeholder={getLabel("enterCompanyTaxNoPlaceholder", lang)}
-                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono uppercase"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {getLabel("companyPhone", lang)}
-                      </Label>
-                      <Input
-                        value={companyPhone}
-                        onChange={(e) => setCompanyPhone(e.target.value)}
-                        placeholder="+92 300 1234567"
-                        dir="ltr"
-                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono text-left"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {getLabel("companyEmail", lang)}
-                      </Label>
-                      <Input
-                        value={companyEmail}
-                        onChange={(e) => setCompanyEmail(e.target.value)}
-                        placeholder="company@domain.com"
-                        dir="ltr"
-                        className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono text-left"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      {getLabel("companyAddress", lang)}
-                    </Label>
-                    <Input
-                      value={companyAddress}
-                      onChange={(e) => setCompanyAddress(e.target.value)}
-                      placeholder={t(lang, "company_form.enter_full_address", "Enter full address")}
-                      className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
 
               {/* Location Hierarchy & Physical Address Card */}
               <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900 overflow-hidden">
@@ -1431,57 +1105,57 @@ export function CustomerForm({
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3.5 space-y-2 bg-slate-50/50 dark:bg-slate-800/40">
                       <p className="font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
                         <User className="h-3.5 w-3.5 text-blue-600" />
-                        <span>{getLabel("customerAccountDetails", lang)}</span>
+                        <span>{getLabel("personalInfo", lang)}</span>
                       </p>
                       <div className="space-y-1">
                         <div className="flex justify-between">
-                          <span className="text-slate-500">{getLabel("accountName", lang)}:</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{accountName || (isBusiness ? businessName : `${firstName} ${lastName}`.trim()) || "-"}</span>
+                          <span className="text-slate-500">{getLabel("customerName", lang)}:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{isBusiness ? businessName : `${firstName} ${lastName}`.trim() || "-"}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">{getLabel("accountNumber", lang)}:</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{accountNumber || "-"}</span>
+                          <span className="text-slate-500">{getLabel("customerType", lang)}:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{customerType}</span>
                         </div>
-                        {branchName && (
+                        {!isBusiness && fatherName && (
                           <div className="flex justify-between">
-                            <span className="text-slate-500">{getLabel("branchName", lang)}:</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200">{branchName}</span>
+                            <span className="text-slate-500">{getLabel("fatherNameRepresentative", lang)}:</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{fatherName}</span>
                           </div>
                         )}
-                        {manualReference && (
-                          <div className="flex justify-between">
-                            <span className="text-slate-500">{getLabel("manualReference", lang)}:</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200">{manualReference}</span>
-                          </div>
-                        )}
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">{getLabel("passportSizePicture", lang)}:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{passportPicture ? "✓ Attached" : "None"}</span>
+                        </div>
                       </div>
                     </div>
 
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3.5 space-y-2 bg-slate-50/50 dark:bg-slate-800/40">
                       <p className="font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 text-indigo-600" />
-                        <span>{getLabel("customerCompanyDetails", lang)}</span>
+                        <MapPin className="h-3.5 w-3.5 text-teal-600" />
+                        <span>{getLabel("locationInfo", lang)}</span>
                       </p>
                       <div className="space-y-1">
                         <div className="flex justify-between">
-                          <span className="text-slate-500">{getLabel("companyName", lang)}:</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{companyName || (isBusiness ? businessName : "-")}</span>
+                          <span className="text-slate-500">{getLabel("location", lang)}:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{previewLocation !== "-" ? previewLocation : "-"}</span>
                         </div>
-                        {companyRegNo && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">{getLabel("fullAddress", lang)}:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[180px]" title={address}>{address || "-"}</span>
+                        </div>
+                        {cityCode && (
                           <div className="flex justify-between">
-                            <span className="text-slate-500">{getLabel("companyRegNo", lang)}:</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{companyRegNo}</span>
-                          </div>
-                        )}
-                        {companyTaxNo && (
-                          <div className="flex justify-between">
-                            <span className="text-slate-500">{getLabel("companyTaxNo", lang)}:</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{companyTaxNo}</span>
+                            <span className="text-slate-500">{getLabel("cityCode", lang)}:</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{cityCode}</span>
                           </div>
                         )}
                         <div className="flex justify-between">
-                          <span className="text-slate-500">{getLabel("companyBusinessType", lang)}:</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{companyBusinessType}</span>
+                          <span className="text-slate-500">{getLabel("contacts", lang)}:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{contacts.filter(c => c.value.trim()).length} recorded</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">{getLabel("documents", lang)}:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{documents.filter(d => d.number.trim() || d.upload.trim()).length} recorded</span>
                         </div>
                       </div>
                     </div>
@@ -1604,95 +1278,7 @@ export function CustomerForm({
               </div>
             </div>
 
-            {/* Account Details Section */}
-            {(accountName || accountNumber || branchName || manualReference) && (
-              <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
-                <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-slate-400" />
-                    <span>{getLabel("customerAccountDetails", lang)}</span>
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(2)}
-                    className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
-                  >
-                    {getLabel("editBtn", lang)}
-                  </button>
-                </div>
-                <div className="space-y-1 text-xs">
-                  {accountName && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">{getLabel("accountName", lang)}:</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{accountName}</span>
-                    </div>
-                  )}
-                  {accountNumber && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">{getLabel("accountNumber", lang)}:</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{accountNumber}</span>
-                    </div>
-                  )}
-                  {branchName && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">{getLabel("branchName", lang)}:</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{branchName}</span>
-                    </div>
-                  )}
-                  {manualReference && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">{getLabel("manualReference", lang)}:</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{manualReference}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
-            {/* Company Details Section */}
-            {(companyName || companyRegNo || companyTaxNo || (isBusiness && businessName)) && (
-              <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
-                <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <Building2 className="h-3.5 w-3.5 text-slate-400" />
-                    <span>{getLabel("customerCompanyDetails", lang)}</span>
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(2)}
-                    className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
-                  >
-                    {getLabel("editBtn", lang)}
-                  </button>
-                </div>
-                <div className="space-y-1 text-xs">
-                  {(companyName || businessName) && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">{getLabel("companyName", lang)}:</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{companyName || businessName}</span>
-                    </div>
-                  )}
-                  {companyRegNo && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">{getLabel("companyRegNo", lang)}:</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{companyRegNo}</span>
-                    </div>
-                  )}
-                  {companyTaxNo && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">{getLabel("companyTaxNo", lang)}:</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{companyTaxNo}</span>
-                    </div>
-                  )}
-                  {companyBusinessType && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">{getLabel("companyBusinessType", lang)}:</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{companyBusinessType}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Location Section */}
             <div className="border-t border-slate-100 dark:border-slate-800 pt-4">

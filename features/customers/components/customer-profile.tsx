@@ -419,16 +419,16 @@ export function CustomerProfile({
 
           {/* Details Grids */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Customer Account Details Card */}
+            {/* Customer & Personal Information Card */}
             <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-xs space-y-2">
               <h3 className="text-xs font-bold text-teal-800 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 dark:text-teal-400 flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5 text-teal-600" />
-                {t(lang, "nav.customer_account_details", "Customer Account Details")}
+                {getLabel("personalInfo", lang)}
               </h3>
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                  <span className="text-slate-500 font-medium">{t(lang, "purchase.f_account_name", "Account Name")}</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">{parsedMeta.accountName || customer.customer_name}</span>
+                  <span className="text-slate-500 font-medium">{getLabel("customerName", lang)}</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{customer.customer_name}</span>
                 </div>
                 {(customer.father_name || parsedMeta.fatherName) && (
                   <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
@@ -437,37 +437,27 @@ export function CustomerProfile({
                   </div>
                 )}
                 <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                  <span className="text-slate-500 font-medium">{t(lang, "bank.account_number", "Account Number")}</span>
-                  <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.accountNumber || parsedMeta.customerAccountNumber}</span>
+                  <span className="text-slate-500 font-medium">{getLabel("customerType", lang)}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.customerType || customer.customer_type || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                  <span className="text-slate-500 font-medium">{t(lang, "roz.cef_customer_number", "Customer Number")}</span>
-                  <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.customerAccountNumber}</span>
+                  <span className="text-slate-500 font-medium">{t(lang, "roz.cef_customer_number", "Customer Code")}</span>
+                  <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{customer.person_code || parsedMeta.customerAccountNumber}</span>
                 </div>
-                {parsedMeta.manualReference && (
-                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                    <span className="text-slate-500 font-medium">{getLabel("manualReference", lang)}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.manualReference}</span>
-                  </div>
-                )}
-                {parsedMeta.branchName && (
-                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                    <span className="text-slate-500 font-medium">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.branchName}</span>
-                  </div>
-                )}
-                {parsedMeta.branchCode && (
-                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                    <span className="text-slate-500 font-medium">{getLabel("branchCode", lang)}</span>
-                    <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.branchCode}</span>
-                  </div>
-                )}
-                {parsedMeta.cityBranch && (
-                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                    <span className="text-slate-500 font-medium">{getLabel("cityBranch", lang)}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.cityBranch}</span>
-                  </div>
-                )}
+                <div className="flex justify-between pb-0.5">
+                  <span className="text-slate-500 font-medium">{getLabel("status", lang)}</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">{parsedMeta.status || "Active"}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Location & Address overview Card */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-xs space-y-2">
+              <h3 className="text-xs font-bold text-teal-800 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 dark:text-teal-400 flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-teal-600" />
+                {getLabel("locationInfo", lang)}
+              </h3>
+              <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
                   <span className="text-slate-500 font-medium">{getLabel("country", lang)}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{customer.country_name || parsedMeta.country || "-"}</span>
@@ -481,101 +471,11 @@ export function CustomerProfile({
                   <span className="font-bold text-slate-800 dark:text-slate-200">{customer.city_name || parsedMeta.city || "-"}</span>
                 </div>
                 <div className="flex justify-between pb-0.5">
-                  <span className="text-slate-500 font-medium">{t(lang, "purchase.f_address", "Address")}</span>
+                  <span className="text-slate-500 font-medium">{t(lang, "purchase.f_address", "Full Address")}</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate max-w-[200px]" title={customer.address || ""}>{customer.address || "-"}</span>
                 </div>
               </div>
             </div>
-
-            {/* Customer Company Details Card */}
-            {hasCompanyDetails ? (
-              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-xs space-y-2">
-                <h3 className="text-xs font-bold text-teal-800 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 dark:text-teal-400 flex items-center gap-1.5">
-                  <Building2 className="h-3.5 w-3.5 text-teal-600" />
-                  {getLabel("customerCompanyDetails", lang)}
-                </h3>
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                    <span className="text-slate-500 font-medium">{t(lang, "branch.row_company_name", "Company Name")}</span>
-                    <span className="font-bold text-slate-900 dark:text-slate-100">{parsedMeta.companyName || customer.company_name || "-"}</span>
-                  </div>
-                  {parsedMeta.companyRegNo && (
-                    <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                      <span className="text-slate-500 font-medium">{t(lang, "ledger.registration_number", "Registration Number")}</span>
-                      <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyRegNo}</span>
-                    </div>
-                  )}
-                  {parsedMeta.companyTaxNo && (
-                    <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                      <span className="text-slate-500 font-medium">{getLabel("taxNtnNumber", lang)}</span>
-                      <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyTaxNo}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                    <span className="text-slate-500 font-medium">{t(lang, "company_form.business_type_label", "Business Type")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyBusinessType || "-"}</span>
-                  </div>
-                  {parsedMeta.companyPhone && (
-                    <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                      <span className="text-slate-500 font-medium">{t(lang, "purchase.f_phone_number", "Phone Number")}</span>
-                      <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyPhone}</span>
-                    </div>
-                  )}
-                  {parsedMeta.companyEmail && (
-                    <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                      <span className="text-slate-500 font-medium">{getLabel("emailAddress", lang)}</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[140px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                    <span className="text-slate-500 font-medium">{getLabel("country", lang)}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCountry || parsedMeta.country || customer.country_name || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                    <span className="text-slate-500 font-medium">{getLabel("city", lang)}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCity || parsedMeta.city || customer.city_name || "-"}</span>
-                  </div>
-                  {parsedMeta.companyState && (
-                    <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                      <span className="text-slate-500 font-medium">{t(lang, "branch.state_label", "State")}</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyState}</span>
-                    </div>
-                  )}
-                  {parsedMeta.companyAddress && (
-                    <div className="flex justify-between pb-0.5">
-                      <span className="text-slate-500 font-medium">{getLabel("companyAddress", lang)}</span>
-                      <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate max-w-[150px]" title={parsedMeta.companyAddress}>{parsedMeta.companyAddress}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              /* Location & Address overview */
-              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-xs space-y-2">
-                <h3 className="text-xs font-bold text-teal-800 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 dark:text-teal-400 flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-teal-600" />
-                  {getLabel("locationInfo", lang)}
-                </h3>
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                    <span className="text-slate-500 font-medium">{getLabel("country", lang)}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{customer.country_name || parsedMeta.country || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                    <span className="text-slate-500 font-medium">{t(lang, "branch.state_label", "State / Province")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{customer.state_province_name || parsedMeta.stateProvince || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
-                    <span className="text-slate-500 font-medium">{getLabel("city", lang)}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{customer.city_name || parsedMeta.city || "-"}</span>
-                  </div>
-                  <div className="flex justify-between pb-0.5">
-                    <span className="text-slate-500 font-medium">{t(lang, "purchase.f_address", "Full Address")}</span>
-                    <span className="font-bold text-slate-900 dark:text-slate-100 text-right">{customer.address || "-"}</span>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Contacts & Documents side-by-side */}
@@ -840,19 +740,17 @@ export function CustomerProfile({
             <div className="border-b-2 border-teal-600 pb-3 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-extrabold text-teal-800 tracking-tight">
-                  {hasCompanyDetails
-                    ? (parsedMeta.companyName || customer.company_name || "COMPANY PROFILE")
-                    : (customer.customer_name || "CUSTOMER PROFILE")}
+                  {customer.customer_name || "CUSTOMER PROFILE"}
                 </h2>
                 <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mt-0.5">
-                  {hasCompanyDetails ? getLabel("enterpriseRegistry", lang) : (getLabel("customerRegistry", lang) || "PERSONAL ACCOUNT REGISTRY")}
+                  {getLabel("customerRegistry", lang) || "CUSTOMER MASTER REGISTRY"}
                 </p>
               </div>
               <div className="text-right">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-[10px] font-bold text-teal-700 border border-teal-200 uppercase">
                   {parsedMeta.status}
                 </span>
-                <p className="text-[10px] text-slate-500 font-mono mt-1">{parsedMeta.customerAccountNumber}</p>
+                <p className="text-[10px] text-slate-500 font-mono mt-1">{customer.person_code || parsedMeta.customerAccountNumber}</p>
               </div>
             </div>
 
@@ -863,17 +761,17 @@ export function CustomerProfile({
             </div>
 
             {/* Content Grids */}
-            <div className={`grid gap-6 ${hasCompanyDetails ? "sm:grid-cols-2" : "grid-cols-1"}`}>
-              {/* Customer Account Details Card */}
+            <div className="grid gap-6 sm:grid-cols-2">
+              {/* Customer & Personal Information Card */}
               <div className="border rounded-xl p-4 bg-slate-50/50 space-y-3 relative">
                 <div className="absolute top-3 right-3 text-teal-600/30">
                   <User className="h-6 w-6" />
                 </div>
-                <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{t(lang, "nav.customer_account_details", "Customer Account Details")}</h3>
+                <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("personalInfo", lang)}</h3>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{t(lang, "purchase.f_account_name", "Account Name")}</span>
-                    <span className="font-bold text-slate-800">{parsedMeta.accountName || customer.customer_name}</span>
+                    <span className="text-slate-500">{getLabel("customerName", lang)}</span>
+                    <span className="font-bold text-slate-800">{customer.customer_name}</span>
                   </div>
                   {(customer.father_name || parsedMeta.fatherName) && (
                     <div className="flex justify-between border-b border-slate-100 pb-1.5">
@@ -882,37 +780,27 @@ export function CustomerProfile({
                     </div>
                   )}
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{t(lang, "bank.account_number", "Account Number")}</span>
-                    <span className="font-bold text-slate-800 font-mono">{parsedMeta.accountNumber || parsedMeta.customerAccountNumber}</span>
+                    <span className="text-slate-500">{getLabel("customerType", lang)}</span>
+                    <span className="font-bold text-slate-800">{parsedMeta.customerType || customer.customer_type || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{t(lang, "roz.cef_customer_number", "Customer Number")}</span>
-                    <span className="font-bold text-slate-800 font-mono">{parsedMeta.customerAccountNumber}</span>
+                    <span className="text-slate-500">{t(lang, "roz.cef_customer_number", "Customer Code")}</span>
+                    <span className="font-bold text-slate-800 font-mono">{customer.person_code || parsedMeta.customerAccountNumber}</span>
                   </div>
-                  {parsedMeta.manualReference && (
-                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                      <span className="text-slate-500">{getLabel("manualReference", lang)}</span>
-                      <span className="font-bold text-slate-800">{parsedMeta.manualReference}</span>
-                    </div>
-                  )}
-                  {parsedMeta.branchName && (
-                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                      <span className="text-slate-500">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
-                      <span className="font-bold text-slate-800">{parsedMeta.branchName}</span>
-                    </div>
-                  )}
-                  {parsedMeta.branchCode && (
-                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                      <span className="text-slate-500">{getLabel("branchCode", lang)}</span>
-                      <span className="font-bold text-slate-800 font-mono">{parsedMeta.branchCode}</span>
-                    </div>
-                  )}
-                  {parsedMeta.cityBranch && (
-                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                      <span className="text-slate-500">{getLabel("cityBranch", lang)}</span>
-                      <span className="font-bold text-slate-800">{parsedMeta.cityBranch}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between pb-0.5">
+                    <span className="text-slate-500">{getLabel("status", lang)}</span>
+                    <span className="font-bold text-emerald-700">{parsedMeta.status || "Active"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location & Physical Address Card */}
+              <div className="border rounded-xl p-4 bg-slate-50/50 space-y-3 relative">
+                <div className="absolute top-3 right-3 text-teal-600/30">
+                  <MapPin className="h-6 w-6" />
+                </div>
+                <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("locationInfo", lang)}</h3>
+                <div className="space-y-2 text-xs">
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
                     <span className="text-slate-500">{getLabel("country", lang)}</span>
                     <span className="font-bold text-slate-800">{customer.country_name || parsedMeta.country || "-"}</span>
@@ -931,66 +819,6 @@ export function CustomerProfile({
                   </div>
                 </div>
               </div>
-
-              {/* Customer Company Details Card — only rendered when company information exists */}
-              {hasCompanyDetails && (
-                <div className="border rounded-xl p-4 bg-slate-50/50 space-y-3 relative">
-                  <div className="absolute top-3 right-3 text-teal-600/30">
-                    <Building2 className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("customerCompanyDetails", lang)}</h3>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                      <span className="text-slate-500">{t(lang, "branch.row_company_name", "Company Name")}</span>
-                      <span className="font-bold text-slate-800">{parsedMeta.companyName || customer.company_name || "-"}</span>
-                    </div>
-                    {parsedMeta.companyRegNo && (
-                      <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                        <span className="text-slate-500">{t(lang, "ledger.registration_number", "Registration Number")}</span>
-                        <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyRegNo}</span>
-                      </div>
-                    )}
-                    {parsedMeta.companyTaxNo && (
-                      <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                        <span className="text-slate-500">{getLabel("taxNtnNumber", lang)}</span>
-                        <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyTaxNo}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                      <span className="text-slate-500">{t(lang, "company_form.business_type_label", "Business Type")}</span>
-                      <span className="font-bold text-slate-800">{parsedMeta.companyBusinessType || "-"}</span>
-                    </div>
-                    {parsedMeta.companyPhone && (
-                      <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                        <span className="text-slate-500">{t(lang, "purchase.f_phone_number", "Phone Number")}</span>
-                        <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyPhone}</span>
-                      </div>
-                    )}
-                    {parsedMeta.companyEmail && (
-                      <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                        <span className="text-slate-500">{getLabel("emailAddress", lang)}</span>
-                        <span className="font-bold text-slate-800 text-right max-w-[150px] truncate text-[11px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                      <span className="text-slate-500">{getLabel("country", lang)}</span>
-                      <span className="font-bold text-slate-800">{parsedMeta.companyCountry || parsedMeta.country || customer.country_name || "-"}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                      <span className="text-slate-500">{getLabel("city", lang)}</span>
-                      <span className="font-bold text-slate-800">{parsedMeta.companyCity || parsedMeta.city || customer.city_name || "-"}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                      <span className="text-slate-500">{t(lang, "branch.state_label", "State")}</span>
-                      <span className="font-bold text-slate-800">{parsedMeta.companyState || parsedMeta.stateProvince || customer.state_province_name || "-"}</span>
-                    </div>
-                    <div className="flex justify-between pb-0.5">
-                      <span className="text-slate-500">{getLabel("completeAddress", lang)}</span>
-                      <span className="font-bold text-slate-900 text-right max-w-[150px] truncate" title={parsedMeta.companyAddress || customer.address || ""}>{parsedMeta.companyAddress || customer.address || "-"}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Contacts Table style */}
