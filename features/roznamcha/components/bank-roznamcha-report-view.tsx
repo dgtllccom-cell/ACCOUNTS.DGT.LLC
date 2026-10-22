@@ -354,7 +354,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         bankId: newEntry.bankId || null,
         bankName: newEntry.bankName,
         bankCode: newEntry.bankCode,
-        chequeNo: newEntry.chequeNo || `CHK-${Math.floor(100000 + Math.random() * 900000)}`,
+        chequeNo: newEntry.chequeNo || null,
         particulars: newEntry.particulars || "Bank Transaction",
         chequeDate: newEntry.chequeDate,
         dueDate: newEntry.dueDate,
