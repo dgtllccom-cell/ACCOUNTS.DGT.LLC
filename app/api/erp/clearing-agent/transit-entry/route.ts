@@ -54,6 +54,11 @@ export async function POST(req: NextRequest) {
     authorizeApiScope(session, { resource: "shipping_records", action: "create" });
     const supabase = createSupabaseAdminClient() as any;
     const body = await req.json();
+    for (const field of ["super_agent", "country", "branch"]) {
+      if (!String(body[field] ?? "").trim()) {
+        return NextResponse.json({ success: false, error: `${field} is required.` }, { status: 400 });
+      }
+    }
 
     let entry_serial = body.entry_serial;
     if (!entry_serial) {
@@ -63,11 +68,11 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = {
-      super_agent: body.super_agent || "SA-0001",
+      super_agent: String(body.super_agent).trim(),
       super_agent_name: body.super_agent_name || null,
-      country: body.country || "PK - Pakistan",
+      country: String(body.country).trim(),
       country_name: body.country_name || (body.country ? body.country.split("-")[1]?.trim() : "Pakistan"),
-      branch: body.branch || "CHM - Chaman",
+      branch: String(body.branch).trim(),
       branch_name: body.branch_name || (body.branch ? body.branch.split("-")[1]?.trim() : "Chaman"),
       entry_serial,
       invoice_no: body.invoice_no || "",

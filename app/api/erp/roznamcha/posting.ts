@@ -246,18 +246,8 @@ async function generateTransactionSerials(admin: any, body: ReturnType<typeof ro
       creditSerialNumber
     };
   } catch (err: any) {
-    console.warn("[serial] generateTransactionSerials failed, using fallback serials:", err?.message);
-    const ts = Date.now().toString(36).toUpperCase();
-    return {
-      superAdminSerialNumber: `ERP-${ts}`,
-      countryTransactionSerialNumber: body.countryId ? `CNT-${ts}` : null,
-      branchTransactionSerialNumber: (body.cityBranchId || body.countryBranchId) ? `BR-${ts}` : null,
-      mainBranchTransactionSerialNumber: body.countryBranchId ? `MB-${ts}` : null,
-      cityBranchTransactionSerialNumber: body.cityBranchId ? `CB-${ts}` : null,
-      entrySerialNumber: `DR-${ts}`,
-      debitSerialNumber: `DR-${ts}`,
-      creditSerialNumber: `CR-${ts}`
-    };
+    console.error("[serial] generateTransactionSerials failed; entry not posted:", err?.message);
+    throw err;
   }
 }
 
@@ -432,18 +422,8 @@ async function generateTransactionSerialsPg(sql: any, body: ReturnType<typeof ro
       creditSerialNumber
     };
   } catch (err: any) {
-    console.warn("[serial][pg] generateTransactionSerials failed, using fallback serials:", err?.message);
-    const ts = Date.now().toString(36).toUpperCase();
-    return {
-      superAdminSerialNumber: `ERP-${ts}`,
-      countryTransactionSerialNumber: body.countryId ? `CNT-${ts}` : null,
-      branchTransactionSerialNumber: (body.cityBranchId || body.countryBranchId) ? `BR-${ts}` : null,
-      mainBranchTransactionSerialNumber: body.countryBranchId ? `MB-${ts}` : null,
-      cityBranchTransactionSerialNumber: body.cityBranchId ? `CB-${ts}` : null,
-      entrySerialNumber: `DR-${ts}`,
-      debitSerialNumber: `DR-${ts}`,
-      creditSerialNumber: `CR-${ts}`
-    };
+    console.error("[serial] generateTransactionSerials failed; entry not posted:", err?.message);
+    throw err;
   }
 }
 

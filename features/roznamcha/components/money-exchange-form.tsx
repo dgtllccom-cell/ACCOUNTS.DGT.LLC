@@ -276,9 +276,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
   useEffect(() => {
     if (selectedBranch) {
       const brCode = branches.find(b => b.id === selectedBranch)?.code || "BR";
-      const random = String(Math.floor(Math.random() * 9000) + 1000);
-      const period = entryDate.replace(/-/g, "").slice(0, 6);
-      setEntrySerial(`${brCode}-EX-${period}-${random}`);
+      setEntrySerial("");
     }
   }, [selectedBranch, entryDate, branches]);
 
@@ -361,7 +359,6 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
   const save = async (status: "draft" | "posted") => {
     setFormError(null);
     if (!selectedBranch) return setFormError(tr("money_exchange.err_select_branch", "Please select a valid Branch."));
-    if (!entrySerial) return setFormError(tr("money_exchange.err_no_serial", "Serial number not generated."));
     if (!qtyCurrency || !exCurrency || finalAmount <= 0) return setFormError(tr("money_exchange.err_formula", "Please complete formula fields properly."));
     if (transactionType === "Sale" && saleOption === "stock" && Number(quantity) > availableStockForSale) {
       return setFormError(

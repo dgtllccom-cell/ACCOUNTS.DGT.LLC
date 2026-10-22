@@ -99,6 +99,17 @@ const createSchema = z.object({
   lotName: z.string().trim().max(120).nullable().optional()
 });
 
+async function allotmentsForOrder(sql: any, purchaseOrderId: string | null, purchaseOrderNo: string | null): Promise<string | null> {
+  if (!purchaseOrderId && !purchaseOrderNo) return null;
+  const rows = purchaseOrderId
+    ? await sql`select form_data from purchase_orders where id = ${purchaseOrderId}::uuid`
+    : await sql`select form_data from purchase_orders where purchase_order_no = ${purchaseOrderNo} limit 1`;
+  const raw = rows[0]?.form_data;
+  const formData = typeof raw === "string" ? JSON.parse(raw) : raw;
+  const allots = [...new Set((formData?.goodsEntries ?? []).map((g: any) => String(g?.allotName ?? "").trim()).filter(Boolean))];
+  return allots.length ? allots.join(", ") : null;
+}
+
 type Session = Awaited<ReturnType<typeof requireErpSession>>;
 
 async function resolveEffectiveScope(session: Session, requested: { countryId?: string | null; countryBranchId?: string | null; cityBranchId?: string | null }) {
@@ -750,7 +761,8 @@ export async function POST(request: NextRequest) {
     // Same RLS root cause as above — insert (and the transport-expense insert that reuses
     // the existing purchase expense trail) via withLocalPg in one connection.
     const insertResult = await withLocalPg(async (sql) => {
-      const rows = await sql`insert into purchase_loading_records ${sql(payload as any)} returning id, loading_record_no`;
+      const lotName = payload.lot_name ?? (await allotmentsForOrder(sql, payload.purchase_order_id, payload.purchase_order_no));
+      const rows = await sql`insert into purchase_loading_records ${sql({ ...payload, lot_name: lotName } as any)} returning id, loading_record_no`;
       // After Loading the load enters the General Purchase Lane (idempotent: one lane row per loading record).
       if (rows[0]?.id) await ensureLaneFromLoadingRecord(sql, rows[0].id, session);
       if (body.transportExpenseAmount > 0 && body.purchaseOrderId) {
