@@ -17,7 +17,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 
 const moneyExchangePayloadSchema = z.object({
-  serialNo: z.string().min(1),
+  serialNo: z.string().trim().nullable().optional(),
   branchId: z.string().min(1),
   entryDate: z.string().date(),
   transactionType: z.enum(["Purchase", "Sale"]),
@@ -53,6 +53,13 @@ import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLoc
 import { NextRequest } from "next/server";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
+async function nextMoneyExchangeSerial(): Promise<string | null> {
+  return withLocalPg(async (sql) => {
+    const [row] = await sql`select public.next_entity_serial('global', 'GLOBAL', 'money_exchange', 'EX') as s`;
+    return row?.s ? String(row.s) : null;
+  });
+}
+
 export async function POST(req: NextRequest) {
   let idempotencyKey = "";
   let tenantHash = "";
@@ -63,6 +70,8 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const parsed = moneyExchangePayloadSchema.parse(body);
+    const serialNo = parsed.serialNo || (await nextMoneyExchangeSerial());
+    if (!serialNo) return NextResponse.json({ error: "Could not allocate a money exchange serial." }, { status: 500 });
     const writable = moneyExchangeBranches(session);
     if (writable && !writable.includes(parsed.branchId)) {
       return NextResponse.json({ error: "This branch is outside your assigned scope." }, { status: 403 });
@@ -74,7 +83,7 @@ export async function POST(req: NextRequest) {
       userId: session.userId,
       countryId: session.countryIds?.[0] ?? null,
       cityBranchId: session.cityBranchIds?.[0] || parsed.branchId,
-      businessReference: parsed.serialNo,
+      businessReference: serialNo,
       payload: body
     });
 
@@ -107,7 +116,7 @@ export async function POST(req: NextRequest) {
           purchase_account_id, sales_account_id, status,
           created_at, created_by
         ) values (
-          ${parsed.serialNo}, ${parsed.branchId}, ${parsed.entryDate}, ${parsed.transactionType},
+          ${serialNo}, ${parsed.branchId}, ${parsed.entryDate}, ${parsed.transactionType},
           ${parsed.accountNo || null}, ${parsed.qtyCurrency}, ${parsed.exCurrency},
           ${parsed.operation}, ${parsed.rate}, ${parsed.quantity}, ${parsed.finalAmount},
           ${parsed.receiptName || null}, ${parsed.receiptPersonId || null},
@@ -133,7 +142,7 @@ export async function POST(req: NextRequest) {
       const { data, error } = await supabase
         .from("money_exchange_entries")
         .insert({
-          serial_no: parsed.serialNo, branch_id: parsed.branchId, entry_date: parsed.entryDate,
+          serial_no: serialNo, branch_id: parsed.branchId, entry_date: parsed.entryDate,
           transaction_type: parsed.transactionType, account_no: parsed.accountNo || null,
           qty_currency: parsed.qtyCurrency, ex_currency: parsed.exCurrency,
           operation: parsed.operation, rate: parsed.rate, quantity: parsed.quantity,
