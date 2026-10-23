@@ -280,15 +280,124 @@ export async function POST(request: NextRequest) {
       throw new Error("No assignable permissions remain after applying parent scope limits.");
     }
 
-    const targetEmail = body.email;
+    if (body.mode === "assign_scope") {
+      const targetUserId = body.assignExistingUserId!;
+      const { data: existingProfile, error: profileFetchErr } = await admin
+        .from("profiles")
+        .select("id, user_code, full_name, default_company_id")
+        .eq("id", targetUserId)
+        .is("deleted_at", null)
+        .maybeSingle();
+
+      if (profileFetchErr || !existingProfile) {
+        throw new ApiClientError("Existing user account not found. Please choose an active user.", { status: 404 });
+      }
+
+      await assertNoDuplicateAssignment(
+        {
+          role: toAppRole(body.role),
+          countryId: body.countryId ?? null,
+          countryBranchId: body.countryBranchId ?? null,
+          cityBranchId: body.cityBranchId ?? null,
+          operationalDomain: domain
+        },
+        targetUserId
+      );
+
+      const assignmentPayload: Record<string, unknown> = {
+        user_id: targetUserId,
+        role: toAppRole(body.role),
+        country_id: body.countryId ?? null,
+        country_branch_id: body.countryBranchId ?? null,
+        city_branch_id: body.cityBranchId ?? null,
+        is_active: true,
+        operational_domain: domain,
+        clearing_agent_id: body.clearingAgentId ?? null,
+        ledger_visibility: ledgerVisibility,
+        mobile_profile: mobileProfile,
+        access_profile: accessProfile,
+        shipping_line_id: body.shippingLineId ?? null,
+        warehouse_ids: body.warehouseIds?.length ? body.warehouseIds : null,
+        effective_from: body.effectiveFrom ?? null,
+        effective_to: body.effectiveTo ?? null,
+        created_by: isUuid(session.userId) ? session.userId : null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      let { data: insAssign, error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload).select().maybeSingle();
+      if (assignmentError && ACCESS_COLUMNS.test(assignmentError.message)) {
+        if (accessProfile || body.shippingLineId || body.warehouseIds?.length || body.effectiveFrom || body.effectiveTo) {
+          throw new ApiClientError("This database does not yet support access profiles (migration 20261004_rbac_access_profiles).", { status: 409 });
+        }
+        for (const c of ["access_profile", "shipping_line_id", "warehouse_ids", "effective_from", "effective_to"]) delete assignmentPayload[c];
+        ({ data: insAssign, error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload).select().maybeSingle());
+      }
+      if (assignmentError && /mobile_profile/.test(assignmentError.message)) {
+        delete assignmentPayload.mobile_profile;
+        ({ data: insAssign, error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload).select().maybeSingle());
+      }
+      if (assignmentError && /operational_domain|clearing_agent_id|ledger_visibility/.test(assignmentError.message)) {
+        delete assignmentPayload.operational_domain;
+        delete assignmentPayload.clearing_agent_id;
+        delete assignmentPayload.ledger_visibility;
+        delete assignmentPayload.mobile_profile;
+        ({ data: insAssign, error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload).select().maybeSingle());
+      }
+      if (assignmentError) {
+        if ((assignmentError as any).code === "23505" || /duplicate key|unique constraint/i.test(assignmentError.message)) {
+          throw new ApiClientError("Duplicate assignment: this user already holds this role in this scope. No new assignment created.", { status: 409, code: "DUPLICATE_ASSIGNMENT" });
+        }
+        throw new Error(assignmentError.message);
+      }
+
+      if (requestedPermissions.length) {
+        await admin.from("user_permission_sets").upsert(
+          {
+            user_id: targetUserId,
+            permissions: issuedPermissions,
+            source: permissionSetSource(requestedPermissions, issuedPermissions, defaultRolePermissions),
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: "user_id" }
+        );
+      }
+
+      await auditApiAction(request, {
+        action: "users.assign_scope.api",
+        entityTable: "user_role_assignments",
+        entityId: insAssign?.id || targetUserId,
+        after: {
+          userId: targetUserId,
+          role: body.role,
+          countryId: body.countryId ?? null,
+          countryBranchId: body.countryBranchId ?? null,
+          cityBranchId: body.cityBranchId ?? null,
+          operationalDomain: domain,
+          permissions: issuedPermissions
+        }
+      });
+
+      return apiCreated({
+        userId: targetUserId,
+        userCode: existingProfile.user_code,
+        operationalDomain: domain,
+        mobileProfile,
+        assignmentId: insAssign?.id,
+        message: "Additional company/branch scope assigned successfully to existing user."
+      });
+    }
+
+    const targetEmail = body.email!;
     let createdUser: any = null;
 
-    // Duplicate protection BEFORE anything is created: same e-mail / username / employee, and an occupied admin scope.
+    // Duplicate protection BEFORE anything is created: same e-mail / username
     await assertNoDuplicateUser(admin, {
       email: targetEmail,
       username: body.username ?? null,
       employeeId: body.employeeId ?? null,
-      personMasterId: body.personMasterId ?? null
+      personMasterId: body.personMasterId ?? null,
+      allowMultipleLogins: true
     });
     await assertNoDuplicateAssignment(
       {
@@ -308,6 +417,8 @@ export async function POST(request: NextRequest) {
       user_metadata: {
         user_code: issuedUserCode,
         username: body.username ?? null,
+        employee_id: body.employeeId ?? null,
+        person_master_id: body.personMasterId ?? null,
         phone: body.phone ?? null,
         company_id: body.companyId ?? null,
         id_type: body.idType ?? null,

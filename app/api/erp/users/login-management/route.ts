@@ -74,6 +74,8 @@ type ProfileRow = {
   updated_at: string | null;
   deleted_at: string | null;
   default_company_id: string | null;
+  employee_id?: string | null;
+  person_master_id?: string | null;
 };
 
 type PermissionSetRow = {
@@ -99,6 +101,8 @@ type BranchUserDetail = {
   permissions: string[];
   status: "Active" | "Inactive";
   lastLogin: string | null;
+  employeeId?: string | null;
+  personMasterId?: string | null;
 };
 
 type CityBranchPayload = {
@@ -177,7 +181,7 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>, s
     const clearingBranchRowsRaw = await sql<any[]>`select id, name, code, clearing_agent_id, branch_level from clearing_agent_branches where deleted_at is null`;
     const authUserRowsRaw = await sql<any[]>`select id, email from auth.users`;
     const assignmentRowsRaw = await sql<AssignmentRow[]>`select user_id, role, country_id, country_branch_id, city_branch_id, clearing_agent_id, operational_domain, is_active, created_at, updated_at, deleted_at from user_role_assignments where deleted_at is null order by created_at desc`;
-    const profileRowsRaw = await sql<ProfileRow[]>`select id, full_name, user_code, created_at, updated_at, deleted_at, default_company_id from profiles where deleted_at is null`;
+    const profileRowsRaw = await sql<ProfileRow[]>`select id, full_name, user_code, created_at, updated_at, deleted_at, default_company_id, employee_id, person_master_id from profiles where deleted_at is null`;
     const permissionRowsRaw = await sql<PermissionSetRow[]>`select user_id, permissions from user_permission_sets where deleted_at is null`;
 
     let countryRows = countryRowsRaw as CountryRow[];
@@ -299,7 +303,9 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>, s
         department: assignment.role || "-",
         permissions: permissionsByUser.get(assignment.user_id) ?? [],
         status: assignment.is_active ? "Active" : "Inactive",
-        lastLogin
+        lastLogin,
+        employeeId: profile?.employee_id || null,
+        personMasterId: profile?.person_master_id || null
       };
     };
 

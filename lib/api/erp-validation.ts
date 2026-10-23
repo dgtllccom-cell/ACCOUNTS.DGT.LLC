@@ -198,11 +198,13 @@ export const assignmentAccessFields = {
 };
 
 export const userCreateSchema = scopeSchema.extend({
+  mode: z.enum(["create_login", "assign_scope"]).default("create_login"),
+  assignExistingUserId: z.string().trim().nullable().optional(),
   role: roleNameSchema,
   fullName: z.string().trim().min(2).max(200),
   username: z.string().trim().max(100).nullable().optional(),
-  email: z.string().trim().email().max(255),
-  password: z.string().min(8).max(200),
+  email: z.string().trim().max(255).optional().or(z.literal("")),
+  password: z.string().max(200).optional().or(z.literal("")),
   preferredLanguage: supportedLanguageSchema.default("en"),
   userCode: z.string().trim().min(2).max(80).nullable().optional(),
   permissions: z.array(z.string().trim().min(3).max(120)).nullable().optional(),
@@ -236,6 +238,19 @@ export const userCreateSchema = scopeSchema.extend({
   // roznamcha/journal viewing); "mobile_field" = Munshi / field (assigned forms + jobs).
   mobileProfile: z.enum(["standard", "mobile_cash_ledger", "mobile_field"]).default("standard"),
   ...assignmentAccessFields
+}).superRefine((data, ctx) => {
+  if (data.mode === "assign_scope") {
+    if (!data.assignExistingUserId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "assignExistingUserId is required when mode is assign_scope", path: ["assignExistingUserId"] });
+    }
+  } else {
+    if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Valid email address is required to create a new user login", path: ["email"] });
+    }
+    if (!data.password || data.password.length < 8) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Password of at least 8 characters is required to create a new user login", path: ["password"] });
+    }
+  }
 });
 
 export const userUpdateSchema = z.object({
