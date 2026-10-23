@@ -2110,7 +2110,7 @@ function ReportHeader({
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-xs lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <nav className="flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 mb-1" aria-label="Breadcrumb">
+        <nav className="flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 mb-1" aria-label={translateHeader(lang, "Breadcrumb")}>
           <Link href="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline">
             {th("Dashboard")}
           </Link>

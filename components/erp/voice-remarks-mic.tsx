@@ -293,8 +293,8 @@ export function VoiceRemarksMic({
         type="button"
         disabled={disabled}
         onClick={handleOpen}
-        title={`${label} (${selectedLang.toUpperCase()})`}
-        aria-label={label}
+        title={`${label ?? title ?? s.t("voice_entry", "Voice Entry")} (${selectedLang.toUpperCase()})`}
+        aria-label={label ?? title ?? s.t("voice_entry", "Voice Entry")}
         className={cn(
           "inline-flex items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1 text-slate-500 shadow-2xs transition-all hover:border-cyan-500 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-cyan-500/60 dark:hover:bg-cyan-950/40 dark:hover:text-cyan-300 disabled:opacity-50 cursor-pointer",
           className

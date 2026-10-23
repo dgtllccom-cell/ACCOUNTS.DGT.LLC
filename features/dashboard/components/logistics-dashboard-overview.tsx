@@ -369,7 +369,7 @@ export function LogisticsDashboardOverview({
                 </div>
 
                 <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white pt-1">
-                  Logistics Tracking Dashboard
+                  {translateHeader(lang, "Logistics Tracking Dashboard")}
                 </h1>
 
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium">

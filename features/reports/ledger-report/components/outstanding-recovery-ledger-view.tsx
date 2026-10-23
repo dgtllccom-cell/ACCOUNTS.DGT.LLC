@@ -551,7 +551,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{pageTitle}</h1>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{translateHeader(lang, pageTitle)}</h1>
             <p className="text-xs text-slate-500">{tr("Account-wise remaining balances, aging & recovery. Overdue = 10+ days since last transaction.")}</p>
           </div>
         </div>

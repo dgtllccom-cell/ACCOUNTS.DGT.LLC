@@ -474,7 +474,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
           <div className="flex items-center gap-2">
             <Coins className="h-4 w-4 text-blue-600" />
             <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              TRANSACTION LOG & SEARCH REPORT (LOCAL PURCHASES)
+              {th("TRANSACTION LOG & SEARCH REPORT (LOCAL PURCHASES)")}
             </CardTitle>
           </div>
           <span className="text-[10px] font-mono font-bold text-slate-500">

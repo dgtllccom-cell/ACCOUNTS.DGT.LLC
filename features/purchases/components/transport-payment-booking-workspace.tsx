@@ -743,7 +743,7 @@ export function TransportPaymentBookingWorkspace() {
                             variant="outline"
                             onClick={() => setSelectedRecordForHistory(r)}
                             className="h-7 px-2 text-[10px] font-semibold"
-                            title="Payment History"
+                            title={translateHeader(activeLang, "Payment History")}
                           >
                             <History className="h-3 w-3 text-blue-600" />
                           </Button>

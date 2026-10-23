@@ -308,7 +308,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
               TAX MANAGEMENT
             </div>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
-              All Taxes
+              {translateHeader(lang, "All Taxes")}
             </h1>
             <p className="text-xs sm:text-sm font-medium text-slate-300">
               Manage tax configurations, rates, TRN and compliance across all countries and branches

@@ -464,9 +464,9 @@ function rowCountryName(row: PurchaseOrderRow) {
 }
 
 function rowBranchName(row: PurchaseOrderRow) {
-  if (!row) return "Unassigned Branch";
+  if (!row) return "—";
   const form = rowForm(row);
-  return String((row as any).branchName || (row as any).branch_name || form.branchName || form.purchaseAccountBranch || form.salesAccountBranch || "Unassigned Branch");
+  return String((row as any).branchName || (row as any).branch_name || form.branchName || form.purchaseAccountBranch || form.salesAccountBranch || "—");
 }
 
 function rowCurrency(row: PurchaseOrderRow) {

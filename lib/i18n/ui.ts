@@ -7869,6 +7869,7 @@ export type UiKey =
   | "pjt.export_pdf"
   | "pjt.print_btn"
   | "pjt.row_actions"
+  | "voice.voice_entry"
   | "pjt.tt_click_view_goods"
   | "pjt.tt_click_view_accounts"
   | "pjt.payment_history"
@@ -37247,6 +37248,7 @@ const en: Dict = {
   "pa.breadcrumb": "Breadcrumb",
   "pjt.tt_click_view_goods": "Click to view Goods & Purchase Details",
   "pjt.tt_click_view_accounts": "Click to view Account & Supplier Details",
+  "voice.voice_entry": "Voice Entry",
 };
 
 const ur: Dict = {
@@ -62323,6 +62325,7 @@ const ur: Dict = {
   "pa.breadcrumb": "مسیرِ صفحہ",
   "pjt.tt_click_view_goods": "مال اور خریداری کی تفصیلات دیکھنے کے لیے کلک کریں",
   "pjt.tt_click_view_accounts": "اکاؤنٹ اور سپلائر کی تفصیلات دیکھنے کے لیے کلک کریں",
+  "voice.voice_entry": "صوتی اندراج",
 };
 
 const ar: Dict = {
@@ -87400,6 +87403,7 @@ const ar: Dict = {
   "pa.breadcrumb": "مسار التنقل",
   "pjt.tt_click_view_goods": "انقر لعرض تفاصيل البضائع والشراء",
   "pjt.tt_click_view_accounts": "انقر لعرض تفاصيل الحساب والمورد",
+  "voice.voice_entry": "إدخال صوتي",
 };
 
 const fa: Dict = {
@@ -112476,6 +112480,7 @@ const fa: Dict = {
   "pa.breadcrumb": "مسیر صفحه",
   "pjt.tt_click_view_goods": "برای مشاهده جزئیات کالا و خرید کلیک کنید",
   "pjt.tt_click_view_accounts": "برای مشاهده جزئیات حساب و تأمین‌کننده کلیک کنید",
+  "voice.voice_entry": "ورود صوتی",
 };
 
 const ps: Dict = {
@@ -137559,6 +137564,7 @@ const ps: Dict = {
   "pa.breadcrumb": "د پاڼې لار",
   "pjt.tt_click_view_goods": "د توکو او پېرود جزئیاتو لیدو لپاره کلیک وکړئ",
   "pjt.tt_click_view_accounts": "د حساب او عرضه کوونکي جزئیاتو لیدو لپاره کلیک وکړئ",
+  "voice.voice_entry": "غږیز داخلول",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
