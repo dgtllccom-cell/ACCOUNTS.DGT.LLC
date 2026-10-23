@@ -7869,6 +7869,17 @@ export type UiKey =
   | "pjt.export_pdf"
   | "pjt.print_btn"
   | "pjt.row_actions"
+  | "sarh.urdu_audit_excel"
+  | "logi.shipping_dash_subtitle"
+  | "bud.scope_country"
+  | "bud.scope_main_branch"
+  | "bud.scope_branch"
+  | "bud.scope_auditor_branch"
+  | "bud.scope_auditor_country"
+  | "safd.cat_accounting"
+  | "safd.cat_trade"
+  | "safd.cat_communication"
+  | "safd.cat_admin"
   | "voice.voice_entry"
   | "pjt.tt_click_view_goods"
   | "pjt.tt_click_view_accounts"
@@ -37249,6 +37260,17 @@ const en: Dict = {
   "pjt.tt_click_view_goods": "Click to view Goods & Purchase Details",
   "pjt.tt_click_view_accounts": "Click to view Account & Supplier Details",
   "voice.voice_entry": "Voice Entry",
+  "safd.cat_accounting": "Accounting & Roznamcha",
+  "safd.cat_trade": "Trade & Purchase",
+  "safd.cat_communication": "Communication",
+  "safd.cat_admin": "Administration & Settings",
+  "bud.scope_country": "Country",
+  "bud.scope_main_branch": "Main Branch",
+  "bud.scope_branch": "Branch",
+  "bud.scope_auditor_branch": "Auditor (Branch)",
+  "bud.scope_auditor_country": "Auditor (Country)",
+  "logi.shipping_dash_subtitle": "Dashboard for shipment and clearance operations",
+  "sarh.urdu_audit_excel": "Urdu Audit Excel",
 };
 
 const ur: Dict = {
@@ -62326,6 +62348,17 @@ const ur: Dict = {
   "pjt.tt_click_view_goods": "مال اور خریداری کی تفصیلات دیکھنے کے لیے کلک کریں",
   "pjt.tt_click_view_accounts": "اکاؤنٹ اور سپلائر کی تفصیلات دیکھنے کے لیے کلک کریں",
   "voice.voice_entry": "صوتی اندراج",
+  "safd.cat_accounting": "اکاؤنٹنگ اور روزنامچہ",
+  "safd.cat_trade": "تجارت اور خریداری",
+  "safd.cat_communication": "مواصلات",
+  "safd.cat_admin": "انتظامیہ اور ترتیبات",
+  "bud.scope_country": "ملک",
+  "bud.scope_main_branch": "مین برانچ",
+  "bud.scope_branch": "برانچ",
+  "bud.scope_auditor_branch": "آڈیٹر (برانچ)",
+  "bud.scope_auditor_country": "آڈیٹر (ملک)",
+  "logi.shipping_dash_subtitle": "شپمنٹ اور کلیئرنس آپریشنز کا ڈیش بورڈ",
+  "sarh.urdu_audit_excel": "اردو آڈٹ ایکسل رپورٹ",
 };
 
 const ar: Dict = {
@@ -87404,6 +87437,17 @@ const ar: Dict = {
   "pjt.tt_click_view_goods": "انقر لعرض تفاصيل البضائع والشراء",
   "pjt.tt_click_view_accounts": "انقر لعرض تفاصيل الحساب والمورد",
   "voice.voice_entry": "إدخال صوتي",
+  "safd.cat_accounting": "المحاسبة واليومية",
+  "safd.cat_trade": "التجارة والمشتريات",
+  "safd.cat_communication": "الاتصالات",
+  "safd.cat_admin": "الإدارة والإعدادات",
+  "bud.scope_country": "الدولة",
+  "bud.scope_main_branch": "الفرع الرئيسي",
+  "bud.scope_branch": "الفرع",
+  "bud.scope_auditor_branch": "مدقق (فرع)",
+  "bud.scope_auditor_country": "مدقق (دولة)",
+  "logi.shipping_dash_subtitle": "لوحة متابعة عمليات الشحن والتخليص",
+  "sarh.urdu_audit_excel": "تقرير التدقيق بالأردية (Excel)",
 };
 
 const fa: Dict = {
@@ -112481,6 +112525,17 @@ const fa: Dict = {
   "pjt.tt_click_view_goods": "برای مشاهده جزئیات کالا و خرید کلیک کنید",
   "pjt.tt_click_view_accounts": "برای مشاهده جزئیات حساب و تأمین‌کننده کلیک کنید",
   "voice.voice_entry": "ورود صوتی",
+  "safd.cat_accounting": "حسابداری و روزنامچه",
+  "safd.cat_trade": "تجارت و خرید",
+  "safd.cat_communication": "ارتباطات",
+  "safd.cat_admin": "مدیریت و تنظیمات",
+  "bud.scope_country": "کشور",
+  "bud.scope_main_branch": "شعبه اصلی",
+  "bud.scope_branch": "شعبه",
+  "bud.scope_auditor_branch": "حسابرس (شعبه)",
+  "bud.scope_auditor_country": "حسابرس (کشور)",
+  "logi.shipping_dash_subtitle": "داشبورد عملیات حمل و ترخیص",
+  "sarh.urdu_audit_excel": "گزارش ممیزی اردو (Excel)",
 };
 
 const ps: Dict = {
@@ -137565,6 +137620,17 @@ const ps: Dict = {
   "pjt.tt_click_view_goods": "د توکو او پېرود جزئیاتو لیدو لپاره کلیک وکړئ",
   "pjt.tt_click_view_accounts": "د حساب او عرضه کوونکي جزئیاتو لیدو لپاره کلیک وکړئ",
   "voice.voice_entry": "غږیز داخلول",
+  "safd.cat_accounting": "محاسبه او روزنامچه",
+  "safd.cat_trade": "تجارت او پېرود",
+  "safd.cat_communication": "اړیکې",
+  "safd.cat_admin": "اداره او تنظیمات",
+  "bud.scope_country": "هیواد",
+  "bud.scope_main_branch": "اصلي څانګه",
+  "bud.scope_branch": "څانګه",
+  "bud.scope_auditor_branch": "پلټونکی (څانګه)",
+  "bud.scope_auditor_country": "پلټونکی (هیواد)",
+  "logi.shipping_dash_subtitle": "د بار لیږد او ترخیص عملیاتو ډشبورډ",
+  "sarh.urdu_audit_excel": "د اردو پلټنې Excel راپور",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

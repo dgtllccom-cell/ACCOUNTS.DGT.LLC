@@ -223,16 +223,30 @@ export function UniversalReportShell(props: UniversalReportShellProps) {
   const setF = (patch: Partial<ReportFilterState>) => props.onFiltersChange({ ...props.filters, ...patch });
 
   const bud = props.branchUser;
+  // The report context is resolved on the server in English; translate its fixed scope / role words here.
+  const SCOPE_WORDS: Record<string, [string, string]> = {
+    "All Countries (Global)": ["report.all_countries_global", "All Countries (Global)"],
+    "All Global Branches": ["report.all_global_branches", "All Global Branches"],
+    "Global": ["common.global", "Global"],
+    "Country": ["bud.scope_country", "Country"],
+    "Main Branch": ["bud.scope_main_branch", "Main Branch"],
+    "Branch": ["bud.scope_branch", "Branch"],
+    "Auditor (Branch)": ["bud.scope_auditor_branch", "Auditor (Branch)"],
+    "Auditor (Country)": ["bud.scope_auditor_country", "Auditor (Country)"],
+  };
+  const scopeText = (v: string) => { const hit = SCOPE_WORDS[v]; return hit ? s.tGlobal(hit[0], hit[1]) : v; };
+  const roleText = (v: string) => s.tGlobal("role." + v.trim().toLowerCase().replace(/[\s/]+/g, "_"), v);
+  const locationText = (v: string) => v.split(", ").map(scopeText).join(", ");
   const budRows: Array<[string, string, string?]> = [
-    [s.t("bud_country", "Country"), bud.country],
+    [s.t("bud_country", "Country"), scopeText(bud.country)],
     [s.t("bud_state", "State / Province"), bud.state],
     [s.t("bud_city", "City"), bud.city],
-    [s.t("bud_branch_name", "Branch Name"), bud.branchName],
+    [s.t("bud_branch_name", "Branch Name"), scopeText(bud.branchName)],
     [s.t("bud_branch_code", "Branch Code"), bud.branchCode],
     [s.t("bud_user_id", "User ID"), bud.userId],
     [s.t("bud_user_name", "User Name"), bud.userName],
-    [s.t("bud_role", "Role"), bud.role, "role"],
-    [s.t("bud_scope", "Access Scope"), bud.accessScope],
+    [s.t("bud_role", "Role"), roleText(bud.role), "role"],
+    [s.t("bud_scope", "Access Scope"), scopeText(bud.accessScope)],
     [s.t("bud_datetime", "Date & Time"), bud.dateTime],
   ];
 
@@ -261,14 +275,14 @@ export function UniversalReportShell(props: UniversalReportShellProps) {
               {props.scopeBadge ? (
                 <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-300/40 bg-emerald-400/15 px-3 py-1 text-[11px] font-bold text-emerald-200">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  {props.scopeBadge}
+                  {scopeText(props.scopeBadge)}
                 </span>
               ) : null}
             </div>
             {props.locationLine ? (
               <p className={cn("flex items-center gap-1.5 text-[11px] font-semibold text-slate-200 sm:text-xs", s.textStart)}>
                 <MapPin className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
-                <span>{props.locationLine}</span>
+                <span>{locationText(props.locationLine)}</span>
               </p>
             ) : null}
           </div>

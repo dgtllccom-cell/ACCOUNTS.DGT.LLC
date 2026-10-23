@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { ChevronRight, FileText, Filter, Globe2, Layers, MoreVertical, RefreshCw, Search, ShoppingCart } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { localizeCountryName } from "@/lib/i18n/country-names";
 import { cn } from "@/lib/utils";
 import "./purchase-approved.css";
 
@@ -124,7 +125,7 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
             {countries.rows.map((c) => {
               const inner = (
                 <>
-                  <span className="dgt-pa-country-name">{c.name}</span>
+                  <span className="dgt-pa-country-name">{localizeCountryName(c.name, s.lang)}</span>
                   <span className="dgt-pa-country-money" dir="auto">{c.value || "—"}</span>
                   {c.count !== undefined && <span className="dgt-pa-country-count" dir="auto">{c.count}</span>}
                   <Go />

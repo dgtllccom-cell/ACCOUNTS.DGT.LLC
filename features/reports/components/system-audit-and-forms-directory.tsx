@@ -511,6 +511,20 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
   const brandLine = brandCompany || t(lang, "acct.brand_short", "Digital Dock ERP");
 
   const categories = ["All", "Dashboard", "New Entry", "Accounting & Roznamcha", "Trade & Purchase", "Shipping & Clearing", "Communication", "Administration & Settings"];
+  const categoryLabel = (cat: string) => {
+    const keys: Record<string, [string, string]> = {
+      "All": ["common.all", "All"],
+      "Dashboard": ["nav.dashboard", "Dashboard"],
+      "New Entry": ["nav.new_entry", "New Entry"],
+      "Accounting & Roznamcha": ["safd.cat_accounting", "Accounting & Roznamcha"],
+      "Trade & Purchase": ["safd.cat_trade", "Trade & Purchase"],
+      "Shipping & Clearing": ["nav.shipping_clearing", "Shipping & Clearing"],
+      "Communication": ["safd.cat_communication", "Communication"],
+      "Administration & Settings": ["safd.cat_admin", "Administration & Settings"],
+    };
+    const k = keys[cat];
+    return k ? t(lang, k[0] as never, k[1]) : cat;
+  };
 
   const filteredForms = useMemo(() => {
     return ERP_FORMS_CATALOG.filter((item) => {
@@ -552,7 +566,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
         sno: String(index + 1),
         name: item.name,
         route: item.route,
-        category: item.category
+        category: categoryLabel(item.category)
       }))
     });
   };
@@ -727,7 +741,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
                       : "bg-background text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                 >
-                  {cat}
+                  {categoryLabel(cat)}
                 </button>
               ))}
             </div>
@@ -773,7 +787,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
                     </td>
                     <td className="px-3.5 py-3">
                       <span className="inline-block rounded-md bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[9px] font-extrabold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800">
-                        {item.category}
+                        {categoryLabel(item.category)}
                       </span>
                     </td>
                     <td className="px-3.5 py-3 font-mono text-[10px] text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[180px]">

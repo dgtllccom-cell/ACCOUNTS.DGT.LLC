@@ -45,7 +45,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     await goodsService.update(
       id,
       {
-        chsCode: body.chsCode,
+        chsCode: body.chsCode?.trim() ? body.chsCode : undefined,
         goodsName: body.goodsName,
         originCountryId: body.originCountryId,
         isActive: body.isActive,

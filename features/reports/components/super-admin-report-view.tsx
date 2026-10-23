@@ -414,7 +414,7 @@ export function SuperAdminReportView({
                 className="h-8.5 px-3 rounded-lg text-xs font-extrabold bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white gap-1.5 shadow-xs border border-emerald-500/30"
               >
                 <Download className="h-3.5 w-3.5" />
-                <span>{lang === "ur" ? "اردو آڈٹ ایکسل رپورٹ" : "Urdu Audit Excel"}</span>
+                <span>{tt("sarh.urdu_audit_excel", "Urdu Audit Excel")}</span>
               </Button>
             )}
 

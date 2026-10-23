@@ -255,7 +255,7 @@ export function BillCostReportsView({ lang: langProp }: { lang?: string }) {
           </label>
           <label className="flex flex-col gap-1 text-xs text-slate-500">
             {s.t("rc_currency", "Currency")}
-            <input value={currency === "all" ? "" : currency} onChange={(e) => setCurrency(e.target.value.trim() ? e.target.value.toUpperCase() : "all")} placeholder="ALL" className={`${selectCls} w-20`} />
+            <input value={currency === "all" ? "" : currency} onChange={(e) => setCurrency(e.target.value.trim() ? e.target.value.toUpperCase() : "all")} placeholder={s.t("rc_all", "All")} className={`${selectCls} w-20`} />
           </label>
           <label className="flex flex-col gap-1 text-xs text-slate-500">
             {s.t("rc_bill_status", "Bill Status")}

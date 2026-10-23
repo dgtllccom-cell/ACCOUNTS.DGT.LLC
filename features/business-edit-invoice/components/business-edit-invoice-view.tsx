@@ -9,6 +9,7 @@ import {
   AlertTriangle, Calendar
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { localizeCountryName } from "@/lib/i18n/country-names";
 import { printStore } from "@/lib/store/print-store";
 import { apiGet } from "@/lib/api/client";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
@@ -392,7 +393,7 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
               className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value="all">{s.tGlobal("common.all_countries", "All Countries")}</option>
-              {countryOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {countryOptions.map((c) => <option key={c.id} value={c.id}>{localizeCountryName(c.name, s.lang)}</option>)}
             </select>
 
             {/* Branch Dropdown */}

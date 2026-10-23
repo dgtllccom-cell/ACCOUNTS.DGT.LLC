@@ -360,10 +360,10 @@ export function LogisticsDashboardOverview({
                   </div>
                   <div>
                     <h3 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
-                      Shipping & Clearing
+                      {t(lang, "nav.shipping_clearing", "Shipping & Clearing")}
                     </h3>
                     <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
-                      Dashboard for shipment and clearance operations
+                      {t(lang, "logi.shipping_dash_subtitle", "Dashboard for shipment and clearance operations")}
                     </p>
                   </div>
                 </div>

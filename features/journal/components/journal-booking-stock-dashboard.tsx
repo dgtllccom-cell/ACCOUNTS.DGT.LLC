@@ -2153,7 +2153,7 @@ export function JournalBookingStockDashboard({
           {/* ── Footer Pagination matching Image 2 ── */}
           <div className="flex flex-col items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[13px] font-semibold dark:border-slate-700 dark:bg-slate-800 sm:flex-row">
             <span className="text-slate-600 dark:text-slate-300">
-              Showing {fromEntry} to {toEntry} of {totalEntries} entries
+              {s.tGlobal("ujr.showing_range", "Showing {from} to {to} of {count} entries").replace("{from}", String(fromEntry)).replace("{to}", String(toEntry)).replace("{count}", String(totalEntries))}
             </span>
             <div className="flex items-center gap-1.5">
               <button
@@ -2162,7 +2162,7 @@ export function JournalBookingStockDashboard({
                 onClick={() => void load(page - 1)}
                 className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 px-3 text-[12px] font-bold text-slate-700 disabled:opacity-40 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
               >
-                Previous
+                {s.tGlobal("common.previous", "Previous")}
               </button>
               {Array.from({ length: Math.min(5, data?.pagination?.totalPages || 1) }, (_, i) => i + 1).map((pNum) => (
                 <button
@@ -2184,7 +2184,7 @@ export function JournalBookingStockDashboard({
                 onClick={() => void load(page + 1)}
                 className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 px-3 text-[12px] font-bold text-slate-700 disabled:opacity-40 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
               >
-                Next
+                {s.tGlobal("common.next", "Next")}
               </button>
             </div>
           </div>

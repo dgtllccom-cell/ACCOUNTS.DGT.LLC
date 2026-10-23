@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { localizeCountryName } from "@/lib/i18n/country-names";
 
 export interface UnifiedRegisterKpiData {
   totalRecords: number;
@@ -149,7 +150,7 @@ export function UnifiedErpRegisterBar({
       >
         <option value="">{t(activeLang, "pb_register.select_country_all", "Select Country (All)")}</option>
         {countryList.map((c) => (
-          <option key={c.id} value={c.id}>{c.name}</option>
+          <option key={c.id} value={c.id}>{localizeCountryName(c.name, activeLang)}</option>
         ))}
       </select>
 

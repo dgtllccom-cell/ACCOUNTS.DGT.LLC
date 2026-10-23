@@ -12,7 +12,10 @@ const KEYS: ReadonlyArray<[RegExp, string]> = [
 ];
 
 export function countryLabel(name: string, t: (key: string, fallback: string) => string): string {
-  const clean = String(name ?? "").trim();
-  for (const [re, key] of KEYS) if (re.test(clean)) return t(key, clean);
-  return clean;
+  const full = String(name ?? "").trim();
+  const m = full.match(/^([^\p{L}\p{N}]*)(.*)$/u);
+  const prefix = m ? m[1] : "";
+  const clean = m ? m[2].trim() : full;
+  for (const [re, key] of KEYS) if (re.test(clean)) return prefix + t(key, clean);
+  return full;
 }

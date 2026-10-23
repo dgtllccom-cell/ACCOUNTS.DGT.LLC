@@ -726,8 +726,8 @@ export function Customer360View() {
               onClick={fetchData}
               className="h-8 text-xs font-bold border-slate-200 rounded-lg"
             >
-              <RotateCcw className={`h-3 w-3 mr-1 ${loading ? "animate-spin" : ""}`} />
-              Refresh
+              <RotateCcw className={`h-3 w-3 me-1 ${loading ? "animate-spin" : ""}`} />
+              {tUi(lang, "crm.refresh", "Refresh")}
             </Button>
           </div>
         </div>
@@ -937,7 +937,7 @@ export function Customer360View() {
         {/* Pagination Bar */}
         <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500 font-medium">
           <div className="flex items-center gap-2">
-            <span>Show</span>
+            <span>{tUi(lang, "hrm.show", "Show")}</span>
             <select
               value={pageSize}
               onChange={(e) => {
@@ -950,10 +950,10 @@ export function Customer360View() {
               <option value={20}>20</option>
               <option value={50}>50</option>
             </select>
-            <span>per page</span>
+            <span>{tUi(lang, "audit.per_page", "per page")}</span>
             <span className="mx-2 text-slate-300">|</span>
             <span>
-              Showing {totalRecords === 0 ? 0 : (page - 1) * pageSize + 1} to {Math.min(page * pageSize, totalRecords)} of {totalRecords} {ct("customersCount", "customers")}
+              {tUi(lang, "ujr.showing_range", "Showing {from} to {to} of {count} entries").replace("{from}", String(totalRecords === 0 ? 0 : (page - 1) * pageSize + 1)).replace("{to}", String(Math.min(page * pageSize, totalRecords))).replace("{count}", String(totalRecords))}
             </span>
           </div>
 
@@ -966,7 +966,7 @@ export function Customer360View() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               className="h-8 px-2 text-xs font-bold"
             >
-              &lt; Previous
+              {tUi(lang, "crm.previous", "Previous")}
             </Button>
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((pNum) => (
               <Button
@@ -987,7 +987,7 @@ export function Customer360View() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               className="h-8 px-2 text-xs font-bold"
             >
-              Next &gt;
+              {tUi(lang, "crm.next", "Next")}
             </Button>
           </div>
         </div>

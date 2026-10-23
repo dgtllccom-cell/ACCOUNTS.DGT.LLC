@@ -33,8 +33,10 @@ for (const lang of LANGS) {
       if (path.includes("?id=undefined") || path.endsWith("?id=")) { await p.close(); continue; }
       try {
         await p.goto(BASE + path, { waitUntil: "domcontentloaded", timeout: 180000 });
-        await p.waitForFunction(() => !document.querySelector(".animate-spin") && document.body.innerText.length > 200, null, { timeout: 90000 }).catch(() => {});
+        await p.waitForFunction(() => !document.querySelector(".animate-spin") && document.body.innerText.length > 200, null, { timeout: Number(process.env.SPIN_CAP || 90000) }).catch(() => {});
         await p.waitForTimeout(Number(process.env.SETTLE || 2500));
+        { const cap = Date.now() + Number(process.env.STABLE_CAP || 0); let last = -1, same = 0; while (Date.now() < cap && same < 3) { const n = await p.evaluate(() => document.body.innerText.length).catch(() => -1); same = n === last ? same + 1 : 0; last = n; await p.waitForTimeout(800); } }
+        if (lang !== "en") await p.waitForFunction(() => /[؀-ۿ]/.test((document.querySelector("main") || document.body).innerText), null, { timeout: Number(process.env.HYDRATE_CAP || 12000) }).catch(() => {});
         const info = await p.evaluate(() => {
           const dir = document.documentElement.dir || document.body.dir || getComputedStyle(document.body).direction;
           const main = document.querySelector("main") || document.body;
@@ -43,7 +45,7 @@ for (const lang of LANGS) {
           return { dir, chrome, attrs, overflow: document.documentElement.scrollWidth - innerWidth, hasTable: !!main.querySelector("table"), len: document.body.innerText.length };
         });
         const rtl = ["ur", "ar", "fa", "ps"].includes(lang);
-        check(`${tag}: page renders`, info.len > 300, `len=${info.len}`);
+        check(`${tag}: page renders`, info.len > Number(process.env.MIN_LEN || 300), `len=${info.len}`);
         check(`${tag}: direction ${rtl ? "RTL" : "LTR"}`, info.dir === (rtl ? "rtl" : "ltr"), info.dir);
         check(`${tag}: no sideways page scroll`, info.overflow <= 2, String(info.overflow));
         if (lang !== "en") {

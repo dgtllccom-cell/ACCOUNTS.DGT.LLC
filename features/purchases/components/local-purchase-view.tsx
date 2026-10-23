@@ -22,6 +22,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { localizeCountryName } from "@/lib/i18n/country-names";
 import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
@@ -2834,7 +2835,7 @@ export function LocalPurchaseView({
                       >
                         <option value="">{t(lang, "lp.local_branch_country", "Local (Branch Country)")}</option>
                         {countries.map(c => (
-                          <option key={c.id} value={c.id}>{c.name}</option>
+                          <option key={c.id} value={c.id}>{localizeCountryName(c.name, lang)}</option>
                         ))}
                       </select>
                     </div>
@@ -4737,7 +4738,7 @@ export function LocalPurchaseView({
                           const billAmt = Number(p.final_cost || p.purchase_cost || 0);
                           const row = {
                             id: p.id,
-                            country: p.country_name || p.countryName || "—",
+                            country: localizeCountryName(p.country_name || p.countryName || "—", lang),
                             branch: p.branch_name || p.branchName || "—",
                             voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
                             date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
@@ -5322,7 +5323,7 @@ export function LocalPurchaseView({
                   className="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-bold outline-none focus:border-blue-500 bg-slate-50"
                 >
                   <option value="">{t(lang, "lp.select_country_ph", "Select Country…")}</option>
-                  {countryOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {countryOptions.map(c => <option key={c.id} value={c.id}>{localizeCountryName(c.name, lang)}</option>)}
                 </select>
               </div>
 

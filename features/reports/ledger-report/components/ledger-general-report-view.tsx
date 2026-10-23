@@ -379,7 +379,7 @@ export function LedgerReportView({
     }
     const list = Array.from(seen.entries()).map(([value, label]) => ({ value, label }));
     return [{ value: "", label: t(effectiveLang, "lgr.all_countries", "All Countries") }, ...list];
-  }, [rows]);
+  }, [rows, effectiveLang]);
 
   const branchOptions = useMemo(() => {
     const seen = new Map<string, string>();
@@ -392,7 +392,7 @@ export function LedgerReportView({
     }
     const list = Array.from(seen.entries()).map(([value, label]) => ({ value, label }));
     return [{ value: "", label: t(effectiveLang, "lgr.all_branches", "All Branches") }, ...list];
-  }, [rows]);
+  }, [rows, effectiveLang]);
 
   const userOptions = useMemo(() => {
     const seen = new Set<string>();

@@ -1046,7 +1046,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                               <MessageSquare className="h-3 w-3" />
                             </a>
                           )}
-                          <a href={x.contactEmail ? `mailto:${x.contactEmail}` : "mailto:info@dgt.llc"} className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-100 text-sky-600 hover:bg-sky-200 dark:bg-sky-950 dark:text-sky-400" title={x.contactEmail ? `Email: ${x.contactEmail}` : "Email"}>
+                          <a href={x.contactEmail ? `mailto:${x.contactEmail}` : "mailto:info@dgt.llc"} className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-100 text-sky-600 hover:bg-sky-200 dark:bg-sky-950 dark:text-sky-400" title={x.contactEmail ? `${t(lang, "common.email", "Email")}: ${x.contactEmail}` : t(lang, "common.email", "Email")}>
                             <Mail className="h-3 w-3" />
                           </a>
                         </div>
