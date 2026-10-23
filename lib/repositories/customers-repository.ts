@@ -42,6 +42,36 @@ export type CustomerRow = {
   accounts_count?: number;
   banks_count?: number;
   is_clearing_agent?: boolean;
+  companies_count?: number;
+  linked_companies?: CustomerLinkedCompany[];
+  branches_count?: number;
+  linked_branches?: CustomerLinkedBranch[];
+  original_customer_name?: string | null;
+  customer_name_en?: string | null;
+  customer_name_ur?: string | null;
+  customer_name_ar?: string | null;
+  customer_name_fa?: string | null;
+  customer_name_ps?: string | null;
+  native_customer_name?: string | null;
+};
+
+export type CustomerLinkedCompany = {
+  id: string;
+  name: string;
+  code?: string | null;
+  legal_name?: string | null;
+  country_id?: string | null;
+};
+
+export type CustomerLinkedBranch = {
+  id: string;
+  name: string;
+  code?: string | null;
+  type: string;
+  country_id?: string | null;
+  country_name?: string | null;
+  company_id?: string | null;
+  company_name?: string | null;
 };
 
 export type CustomerContactRow = {
@@ -97,7 +127,20 @@ export class CustomersRepository {
       const rows = await sql`
         SELECT 
           c.id, c.country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
-          c.customer_name, c.first_name, c.last_name, c.father_name, c.gender, c.photo_url, c.person_code,
+          c.customer_name,
+          c.customer_name as original_customer_name,
+          name_trans.english_text as customer_name_en,
+          name_trans.urdu_text as customer_name_ur,
+          name_trans.arabic_text as customer_name_ar,
+          name_trans.persian_text as customer_name_fa,
+          name_trans.pashto_text as customer_name_ps,
+          COALESCE(
+            NULLIF(name_trans.urdu_text, c.customer_name),
+            NULLIF(name_trans.arabic_text, c.customer_name),
+            NULLIF(name_trans.persian_text, c.customer_name),
+            NULLIF(name_trans.pashto_text, c.customer_name)
+          ) as native_customer_name,
+          c.first_name, c.last_name, c.father_name, c.gender, c.photo_url, c.person_code,
           c.company_name, c.contact_person, c.mobile, c.whatsapp, c.email, c.address,
           c.notes, c.original_language_code, c.is_active, c.created_at, c.updated_at,
           cnt.name as country_name,
@@ -112,12 +155,84 @@ export class CustomersRepository {
           COALESCE(trk.is_truck_driver, false) as is_truck_driver,
           COALESCE(act.accounts_count, 0) as accounts_count,
           COALESCE(bnk.banks_count, 0) as banks_count,
-          (COALESCE(clr.clearing_count, 0) > 0) as is_clearing_agent
+          (COALESCE(clr.clearing_count, 0) > 0) as is_clearing_agent,
+          COALESCE(comps.companies_count, 0) as companies_count,
+          comps.linked_companies,
+          COALESCE(brs.branches_count, 0) as branches_count,
+          brs.linked_branches
         FROM public.customers c
+        LEFT JOIN LATERAL (
+          SELECT 
+            rt.english_text,
+            rt.urdu_text,
+            rt.arabic_text,
+            rt.persian_text,
+            rt.pashto_text,
+            rt.original_text,
+            rt.original_language_code
+          FROM public.record_translations rt
+          WHERE rt.record_table = 'customers' 
+            AND rt.record_id = c.id 
+            AND rt.field_name = 'customer_name'
+          LIMIT 1
+        ) name_trans ON true
         LEFT JOIN public.countries cnt ON c.country_id = cnt.id
         LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
         LEFT JOIN public.districts di ON c.district_id = di.id
         LEFT JOIN public.cities ct ON c.city_id = ct.id
+        LEFT JOIN LATERAL (
+          SELECT 
+            COUNT(*)::int as companies_count,
+            COALESCE(
+              json_agg(
+                json_build_object(
+                  'id', comp.id,
+                  'name', comp.name,
+                  'code', comp.company_code,
+                  'legal_name', comp.legal_name,
+                  'country_id', comp.country_id
+                ) ORDER BY comp.created_at DESC
+              ) FILTER (WHERE comp.id IS NOT NULL),
+              '[]'::json
+            ) as linked_companies
+          FROM public.companies comp
+          WHERE (comp.owner_person_id = c.id OR comp.owner_name ILIKE c.customer_name OR comp.owner_name ILIKE SPLIT_PART(c.customer_name, ' ', 1))
+            AND comp.deleted_at IS NULL
+        ) comps ON true
+        LEFT JOIN LATERAL (
+          SELECT 
+            COUNT(*)::int as branches_count,
+            COALESCE(
+              json_agg(
+                json_build_object(
+                  'id', br.id,
+                  'name', br.name,
+                  'code', br.code,
+                  'type', br.branch_type,
+                  'country_id', br.country_id,
+                  'country_name', br.country_name,
+                  'company_id', br.company_id,
+                  'company_name', br.company_name
+                ) ORDER BY br.name ASC
+              ) FILTER (WHERE br.id IS NOT NULL),
+              '[]'::json
+            ) as linked_branches
+          FROM (
+            SELECT cb.id, cb.name, cb.code, 'country' as branch_type, cb.country_id, cnt.name as country_name, cb.company_id, comp.name as company_name
+            FROM public.country_branches cb
+            LEFT JOIN public.countries cnt ON cnt.id = cb.country_id
+            LEFT JOIN public.companies comp ON comp.id = cb.company_id
+            WHERE (cb.owner_customer_id = c.id OR cb.owner_name ILIKE c.customer_name OR cb.owner_name ILIKE '%' || SPLIT_PART(c.customer_name, ' ', 1) || '%' OR cb.company_id IN (SELECT comp2.id FROM public.companies comp2 WHERE comp2.owner_person_id = c.id OR comp2.owner_name ILIKE c.customer_name OR comp2.owner_name ILIKE SPLIT_PART(c.customer_name, ' ', 1)))
+              AND cb.deleted_at IS NULL
+            UNION ALL
+            SELECT ctb.id, ctb.name, ctb.code, 'city' as branch_type, ctb.country_id, cnt.name as country_name, ctb.company_id, comp.name as company_name
+            FROM public.city_branches ctb
+            LEFT JOIN public.countries cnt ON cnt.id = ctb.country_id
+            LEFT JOIN public.companies comp ON comp.id = ctb.company_id
+            WHERE (ctb.owner_customer_id = c.id OR ctb.owner_name ILIKE c.customer_name OR ctb.owner_name ILIKE '%' || SPLIT_PART(c.customer_name, ' ', 1) || '%' OR ctb.company_id IN (SELECT comp3.id FROM public.companies comp3 WHERE comp3.owner_person_id = c.id OR comp3.owner_name ILIKE c.customer_name OR comp3.owner_name ILIKE SPLIT_PART(c.customer_name, ' ', 1)))
+              AND ctb.deleted_at IS NULL
+          ) br
+        ) brs ON true
         LEFT JOIN LATERAL (
           SELECT e.employee_code, e.designation, e.department
           FROM public.employees e
@@ -152,6 +267,7 @@ export class CustomersRepository {
           AND (${
             like
               ? sql`(c.customer_name ILIKE ${like} OR c.first_name ILIKE ${like} OR c.last_name ILIKE ${like} OR c.father_name ILIKE ${like} OR c.person_code ILIKE ${like} OR c.company_name ILIKE ${like} OR c.contact_person ILIKE ${like} OR c.email ILIKE ${like} OR c.mobile ILIKE ${like} OR c.whatsapp ILIKE ${like} OR c.address ILIKE ${like} OR c.notes ILIKE ${like}
+                  OR name_trans.english_text ILIKE ${like} OR name_trans.urdu_text ILIKE ${like} OR name_trans.arabic_text ILIKE ${like} OR name_trans.persian_text ILIKE ${like} OR name_trans.pashto_text ILIKE ${like}
                   OR emp.employee_code ILIKE ${like} OR emp.designation ILIKE ${like} OR emp.department ILIKE ${like}
                   OR EXISTS (SELECT 1 FROM public.customer_registrations cr WHERE cr.customer_id = c.id AND cr.deleted_at IS NULL AND cr.registration_value ILIKE ${like}) ${
                   translatedMatchIds.length > 0 ? sql`OR c.id = ANY(${translatedMatchIds}::uuid[])` : sql``
@@ -208,20 +324,105 @@ export class CustomersRepository {
         const rows = await sql`
           SELECT
             c.id, c.country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
-            c.customer_name, c.first_name, c.last_name, c.father_name, c.gender, c.photo_url, c.person_code,
+            c.customer_name,
+            c.customer_name as original_customer_name,
+            name_trans.english_text as customer_name_en,
+            name_trans.urdu_text as customer_name_ur,
+            name_trans.arabic_text as customer_name_ar,
+            name_trans.persian_text as customer_name_fa,
+            name_trans.pashto_text as customer_name_ps,
+            COALESCE(
+              NULLIF(name_trans.urdu_text, c.customer_name),
+              NULLIF(name_trans.arabic_text, c.customer_name),
+              NULLIF(name_trans.persian_text, c.customer_name),
+              NULLIF(name_trans.pashto_text, c.customer_name)
+            ) as native_customer_name,
+            c.first_name, c.last_name, c.father_name, c.gender, c.photo_url, c.person_code,
             c.company_name, c.contact_person, c.mobile, c.whatsapp, c.email, c.address,
             c.notes, c.original_language_code, c.is_active, c.created_at, c.updated_at,
             cnt.name as country_name,
             sp.name as state_province_name,
             di.name as district_name,
             ct.name as city_name,
-            p.full_name as created_by_name
+            p.full_name as created_by_name,
+            COALESCE(comps.companies_count, 0) as companies_count,
+            comps.linked_companies,
+            COALESCE(brs.branches_count, 0) as branches_count,
+            brs.linked_branches
           FROM public.customers c
+          LEFT JOIN LATERAL (
+            SELECT 
+              rt.english_text,
+              rt.urdu_text,
+              rt.arabic_text,
+              rt.persian_text,
+              rt.pashto_text,
+              rt.original_text,
+              rt.original_language_code
+            FROM public.record_translations rt
+            WHERE rt.record_table = 'customers' 
+              AND rt.record_id = c.id 
+              AND rt.field_name = 'customer_name'
+            LIMIT 1
+          ) name_trans ON true
           LEFT JOIN public.countries cnt ON c.country_id = cnt.id
           LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
           LEFT JOIN public.districts di ON c.district_id = di.id
           LEFT JOIN public.cities ct ON c.city_id = ct.id
           LEFT JOIN public.profiles p ON c.created_by = p.id
+          LEFT JOIN LATERAL (
+            SELECT 
+              COUNT(*)::int as companies_count,
+              COALESCE(
+                json_agg(
+                  json_build_object(
+                    'id', comp.id,
+                    'name', comp.name,
+                    'code', comp.company_code,
+                    'legal_name', comp.legal_name,
+                    'country_id', comp.country_id
+                  ) ORDER BY comp.created_at DESC
+                ) FILTER (WHERE comp.id IS NOT NULL),
+                '[]'::json
+              ) as linked_companies
+            FROM public.companies comp
+            WHERE (comp.owner_person_id = c.id OR comp.owner_name ILIKE c.customer_name OR comp.owner_name ILIKE SPLIT_PART(c.customer_name, ' ', 1))
+              AND comp.deleted_at IS NULL
+          ) comps ON true
+          LEFT JOIN LATERAL (
+            SELECT 
+              COUNT(*)::int as branches_count,
+              COALESCE(
+                json_agg(
+                  json_build_object(
+                    'id', br.id,
+                    'name', br.name,
+                    'code', br.code,
+                    'type', br.branch_type,
+                    'country_id', br.country_id,
+                    'country_name', br.country_name,
+                    'company_id', br.company_id,
+                    'company_name', br.company_name
+                  ) ORDER BY br.name ASC
+                ) FILTER (WHERE br.id IS NOT NULL),
+                '[]'::json
+              ) as linked_branches
+            FROM (
+              SELECT cb.id, cb.name, cb.code, 'country' as branch_type, cb.country_id, cnt.name as country_name, cb.company_id, comp.name as company_name
+              FROM public.country_branches cb
+              LEFT JOIN public.countries cnt ON cnt.id = cb.country_id
+              LEFT JOIN public.companies comp ON comp.id = cb.company_id
+              WHERE (cb.owner_customer_id = c.id OR cb.owner_name ILIKE c.customer_name OR cb.owner_name ILIKE '%' || SPLIT_PART(c.customer_name, ' ', 1) || '%' OR cb.company_id IN (SELECT comp2.id FROM public.companies comp2 WHERE comp2.owner_person_id = c.id OR comp2.owner_name ILIKE c.customer_name OR comp2.owner_name ILIKE SPLIT_PART(c.customer_name, ' ', 1)))
+                AND cb.deleted_at IS NULL
+              UNION ALL
+              SELECT ctb.id, ctb.name, ctb.code, 'city' as branch_type, ctb.country_id, cnt.name as country_name, ctb.company_id, comp.name as company_name
+              FROM public.city_branches ctb
+              LEFT JOIN public.countries cnt ON cnt.id = ctb.country_id
+              LEFT JOIN public.companies comp ON comp.id = ctb.company_id
+              WHERE (ctb.owner_customer_id = c.id OR ctb.owner_name ILIKE c.customer_name OR ctb.owner_name ILIKE '%' || SPLIT_PART(c.customer_name, ' ', 1) || '%' OR ctb.company_id IN (SELECT comp3.id FROM public.companies comp3 WHERE comp3.owner_person_id = c.id OR comp3.owner_name ILIKE c.customer_name OR comp3.owner_name ILIKE SPLIT_PART(c.customer_name, ' ', 1)))
+                AND ctb.deleted_at IS NULL
+            ) br
+          ) brs ON true
           WHERE c.id = ${id}::uuid AND c.deleted_at IS NULL LIMIT 1
         `;
         return (rows[0] as unknown as CustomerRow) ?? null;

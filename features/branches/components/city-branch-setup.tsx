@@ -36,6 +36,7 @@ import { BranchFinalReview } from "./branch-final-review";
 type CountryBranchRow = {
   id: string;
   country_id: string;
+  operational_domain?: string | null;
   name: string;
   code: string;
   local_currency: string;
@@ -49,6 +50,7 @@ type CityBranchRow = {
   id: string;
   country_id: string;
   country_branch_id: string;
+  operational_domain?: string | null;
   city_name: string;
   name: string;
   code: string;
@@ -60,6 +62,8 @@ type CityBranchRow = {
   area_location_id?: string | null;
   company_id?: string | null;
   owner_name?: string | null;
+  owner_customer_id?: string | null;
+  owner_profile_id?: string | null;
   contacts?: unknown;
   documents?: unknown;
   permission_template?: string | null;
@@ -88,16 +92,19 @@ function localizeContactType(type: string, lang: string): string {
   return type;
 }
 
-type CompanyRow = { id: string; name: string; legal_name: string | null; base_currency: string };
+type CompanyRow = { id: string; name: string; legal_name: string | null; base_currency: string; owner_person_id?: string | null };
 type OwnerCustomerRow = {
   id: string;
   customer_name: string;
+  person_code?: string | null;
   company_name: string | null;
   contact_person: string | null;
   mobile: string | null;
   whatsapp: string | null;
   email: string | null;
   address: string | null;
+  country_name?: string | null;
+  city_name?: string | null;
 };
 type OwnerProfileRow = {
   userId: string;
@@ -246,6 +253,7 @@ function CityBranchSetupContent() {
   const [editingCityBranchId, setEditingCityBranchId] = useState("");
 
   const [branchName, setBranchName] = useState("");
+  const [operationalDomain, setOperationalDomain] = useState<"business" | "shipping">("business");
   const [branchCategory, setBranchCategory] = useState<"business" | "clearing_agent">("business");
   const [branchCode, setBranchCode] = useState("");
   const [permissionTemplate, setPermissionTemplate] = useState("city-standard");
@@ -322,7 +330,14 @@ function CityBranchSetupContent() {
       }
       try {
         const res = await apiGet<{ company: CompanyRow }>(`/api/erp/companies/${encodeURIComponent(companyId)}`);
-        if (!cancelled) setCompany(res.company ?? null);
+        if (!cancelled && res.company) {
+          setCompany(res.company);
+          if (res.company.owner_person_id) {
+            setOwnerId(res.company.owner_person_id);
+            setOwnerCustomerId(res.company.owner_person_id);
+            setOwnerProfileId(null);
+          }
+        }
       } catch {
         if (!cancelled) setCompany(null);
       }
@@ -335,81 +350,42 @@ function CityBranchSetupContent() {
 
   useEffect(() => {
     let cancelled = false;
-    const q = ownerName.trim();
-    if (!q) {
-      setOwnerPreview(null);
+    const targetCustomerId = ownerCustomerId || (isUuid(ownerId) ? ownerId : null);
+    if (!targetCustomerId) {
+      if (!ownerName) setOwnerPreview(null);
       return;
     }
 
     (async () => {
       try {
-        const [customersRes, usersRes] = await Promise.all([
-          apiGet<{ customers: OwnerCustomerRow[] }>(`/api/erp/customers?q=${encodeURIComponent(q)}&limit=10`),
-          apiGet<{ rows: OwnerProfileRow[] }>(`/api/erp/users/journal-report?q=${encodeURIComponent(q)}&limit=10`)
-        ]);
+        const res = await apiGet<{ customer: OwnerCustomerRow }>(`/api/erp/customers/${encodeURIComponent(targetCustomerId)}`);
+        if (cancelled || !res.customer) return;
 
-        if (cancelled) return;
-
-        const normalized = normalizeSearch(q);
-        const customer =
-          customersRes.customers?.find((row) =>
-            [row.customer_name, row.company_name, row.contact_person, row.mobile, row.whatsapp, row.email]
-              .filter(Boolean)
-              .some((value) => normalizeSearch(String(value)) === normalized || normalizeSearch(String(value)).includes(normalized))
-          ) ?? customersRes.customers?.[0] ?? null;
-
-        if (customer) {
-          setOwnerPreview({
-            source: "customer",
-            code: compactCode(customer.id, "CUST"),
-            name: customer.customer_name,
-            companyName: customer.company_name ?? "-",
-            contactPerson: customer.contact_person ?? "-",
-            mobile: customer.mobile ?? "-",
-            whatsapp: customer.whatsapp ?? "-",
-            email: customer.email ?? "-",
-            address: customer.address ?? "-",
-            country: locationMeta.country?.name ?? "-",
-            branch: selectedMainBranch?.name ?? "-",
-            role: "Customer / Owner"
-          });
-          return;
-        }
-
-        const profile =
-          usersRes.rows?.find((row) => {
-            const haystack = normalizeSearch([row.userCode, row.fullName, row.countryName, row.branchName, row.role].filter(Boolean).join(" "));
-            return haystack.includes(normalized);
-          }) ?? usersRes.rows?.[0] ?? null;
-
-        if (profile) {
-          setOwnerPreview({
-            source: "profile",
-            code: profile.userCode || compactCode(profile.userId, "USR"),
-            name: profile.fullName,
-            companyName: company?.name ?? "-",
-            contactPerson: profile.fullName,
-            mobile: "-",
-            whatsapp: "-",
-            email: "-",
-            address: "-",
-            country: profile.countryName || locationMeta.country?.name || "-",
-            branch: profile.branchName || selectedMainBranch?.name || "-",
-            role: profile.role
-          });
-          return;
-        }
-
-        setOwnerPreview(null);
+        const customer = res.customer;
+        setOwnerPreview({
+          source: "customer",
+          code: customer.person_code || compactCode(customer.id, "PER"),
+          name: customer.customer_name,
+          companyName: customer.company_name ?? company?.name ?? "-",
+          contactPerson: customer.contact_person ?? customer.customer_name,
+          mobile: customer.mobile ?? "-",
+          whatsapp: customer.whatsapp ?? customer.mobile ?? "-",
+          email: customer.email ?? "-",
+          address: customer.address ?? "-",
+          country: customer.country_name || locationMeta.country?.name || "-",
+          branch: customer.city_name || selectedMainBranch?.name || "-",
+          role: "Company Owner"
+        });
+        setOwnerName(customer.customer_name);
       } catch {
-        if (!cancelled) setOwnerPreview(null);
+        // Keep existing preview if fetch fails
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [company, locationMeta.country?.name, ownerName, selectedMainBranch?.name]);
+  }, [ownerCustomerId, ownerId, company?.name, selectedMainBranch?.name, locationMeta.country?.name]);
 
   const hasAny = Boolean(
     location.countryId ||
@@ -869,6 +845,9 @@ function CityBranchSetupContent() {
   function beginEditCityBranch(row: CityBranchRow) {
     setEditingCityBranchId(row.id);
     setCountryBranchId(row.country_branch_id);
+    const domain = (row.operational_domain === "shipping" ? "shipping" : "business") as "business" | "shipping";
+    setOperationalDomain(domain);
+    setBranchCategory(domain === "shipping" ? "clearing_agent" : "business");
     setLocation({
       countryId: row.country_id,
       stateProvinceId: row.state_province_id ?? "",
@@ -1074,53 +1053,54 @@ function CityBranchSetupContent() {
     });
   }, [existingCityBranches, existingCitySearch]);
 
-  async function loadMainBranches(nextCountryId: string) {
+  async function loadMainBranches(nextCountryId: string, domain?: "business" | "shipping") {
+    const effectiveDomain = domain ?? operationalDomain;
     if (!nextCountryId?.trim()) {
       setMainBranches([]);
+      setCountryBranchId("");
       return;
     }
     try {
-      let res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}`, {
+      let res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}&operationalDomain=${effectiveDomain}`, {
         cache: "no-store"
       });
       if (!res.ok) {
         setMainBranches([]);
+        setCountryBranchId("");
         return;
       }
       let json = (await res.json()) as { countryBranches?: CountryBranchRow[] };
       let list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
-      
-      // Fallback: If country-filtered search returned 0 branches, fetch all active country branches
-      if (list.length === 0) {
-        const fallbackRes = await fetch("/api/branch-management/country-branches", { cache: "no-store" });
-        if (fallbackRes.ok) {
-          const fallbackJson = (await fallbackRes.json()) as { countryBranches?: CountryBranchRow[] };
-          if (Array.isArray(fallbackJson.countryBranches) && fallbackJson.countryBranches.length > 0) {
-            list = fallbackJson.countryBranches;
-          }
-        }
-      }
 
       const mains = list.filter((b) => b.is_main !== false);
       const finalBranches = mains.length > 0 ? mains : list;
       setMainBranches(finalBranches);
-      if (finalBranches.length > 0 && !countryBranchId) {
-        await onMainBranchSelected(finalBranches[0].id);
+      if (finalBranches.length > 0) {
+        if (!countryBranchId || !finalBranches.some((b) => b.id === countryBranchId)) {
+          await onMainBranchSelected(finalBranches[0].id, effectiveDomain);
+        }
+      } else {
+        setCountryBranchId("");
       }
     } catch (e) {
       console.error("Failed to load main branches:", e);
       setMainBranches([]);
+      setCountryBranchId("");
     }
   }
 
-  async function loadExistingCityBranches(nextCountryId: string, nextCountryBranchId?: string) {
+  async function loadExistingCityBranches(nextCountryId: string, nextCountryBranchId?: string, domain?: "business" | "shipping") {
+    const effectiveDomain = domain ?? operationalDomain;
     if (!isUuid(nextCountryId)) {
       setExistingCityBranches([]);
       return [];
     }
-    const url = nextCountryBranchId && isUuid(nextCountryBranchId)
-      ? `/api/branch-management/city-branches?countryId=${encodeURIComponent(nextCountryId)}&countryBranchId=${encodeURIComponent(nextCountryBranchId)}`
-      : `/api/branch-management/city-branches?countryId=${encodeURIComponent(nextCountryId)}`;
+    const params = new URLSearchParams({ countryId: nextCountryId });
+    if (nextCountryBranchId && isUuid(nextCountryBranchId)) {
+      params.set("countryBranchId", nextCountryBranchId);
+    }
+    params.set("operationalDomain", effectiveDomain);
+    const url = `/api/branch-management/city-branches?${params.toString()}`;
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
       setExistingCityBranches([]);
@@ -1132,11 +1112,24 @@ function CityBranchSetupContent() {
     return list;
   }
 
-  function suggestBranchCode(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches) {
+  function suggestBranchCode(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches, domain: "business" | "shipping" = operationalDomain) {
     const prefix = asIso3(meta.country);
     const rawCity = meta.city?.code || meta.city?.name || "";
     const cityCode = compactCode(rawCity, "CITY");
     const existingCodes = new Set((existingBranchesList || []).map((b) => (b.code || "").toUpperCase().trim()));
+
+    if (domain === "shipping") {
+      let n = 1;
+      while (n <= 99) {
+        const num = String(n).padStart(2, "0");
+        const candidate = `${prefix}-${cityCode}-SHIP-${num}`;
+        if (!existingCodes.has(candidate)) {
+          return candidate;
+        }
+        n++;
+      }
+      return `${prefix}-${cityCode}-SHIP-01`;
+    }
 
     // Find the first available number starting from 1
     let n = 1;
@@ -1151,7 +1144,7 @@ function CityBranchSetupContent() {
     return `${prefix}-${cityCode}-${String((existingBranchesList || []).length + 1).padStart(3, "0")}`;
   }
 
-  function suggestBranchName(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches) {
+  function suggestBranchName(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches, domain: "business" | "shipping" = operationalDomain) {
     const city = meta.city?.name?.trim();
     if (!city) return "";
     const existingNames = new Set(
@@ -1160,20 +1153,37 @@ function CityBranchSetupContent() {
         .map((b) => (b.name || "").toLowerCase().trim())
     );
 
-    let candidate = `${city} City Branch`;
+    const baseName = domain === "shipping" ? `${city} Shipping & Clearing Branch` : `${city} City Branch`;
+    let candidate = baseName;
     if (!existingNames.has(candidate.toLowerCase())) {
       return candidate;
     }
 
     let n = 2;
     while (n <= 100) {
-      candidate = `${city} City Branch ${n}`;
+      candidate = domain === "shipping" ? `${city} Shipping & Clearing Branch ${n}` : `${city} City Branch ${n}`;
       if (!existingNames.has(candidate.toLowerCase())) {
         return candidate;
       }
       n++;
     }
-    return `${city} City Branch ${(existingBranchesList || []).length + 1}`;
+    return `${baseName} ${(existingBranchesList || []).length + 1}`;
+  }
+
+  async function onOperationalDomainChange(nextDomain: "business" | "shipping") {
+    setOperationalDomain(nextDomain);
+    setBranchCategory(nextDomain === "shipping" ? "clearing_agent" : "business");
+    setBanner(null);
+
+    if (!isUuid(location.countryId)) return;
+
+    await loadMainBranches(location.countryId, nextDomain);
+    const list = await loadExistingCityBranches(location.countryId, undefined, nextDomain);
+
+    if (locationMeta.city?.name) {
+      setBranchName(suggestBranchName(locationMeta, list, nextDomain));
+      setBranchCode(suggestBranchCode(locationMeta, list, nextDomain));
+    }
   }
 
   async function onCountrySelected(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
@@ -1218,18 +1228,19 @@ function CityBranchSetupContent() {
     }
 
     if (!isUuid(next.countryId)) return;
-    await loadMainBranches(next.countryId);
-    await loadExistingCityBranches(next.countryId);
+    await loadMainBranches(next.countryId, operationalDomain);
+    await loadExistingCityBranches(next.countryId, undefined, operationalDomain);
   }
 
-  async function onMainBranchSelected(nextId: string) {
+  async function onMainBranchSelected(nextId: string, domain?: "business" | "shipping") {
+    const effectiveDomain = domain ?? operationalDomain;
     setBanner(null);
     setCountryBranchId(nextId);
-    const list = await loadExistingCityBranches(location.countryId, nextId);
-    setBranchCode(suggestBranchCode(locationMeta, list));
+    const list = await loadExistingCityBranches(location.countryId, nextId, effectiveDomain);
+    setBranchCode(suggestBranchCode(locationMeta, list, effectiveDomain));
     if (!editingCityBranchId && locationMeta.city?.name?.trim()) {
-      if (!branchName.trim() || branchName.endsWith("City Branch") || /City Branch \d+$/.test(branchName)) {
-        const nextName = suggestBranchName(locationMeta, list) || `${locationMeta.city.name.trim()} City Branch`;
+      if (!branchName.trim() || branchName.includes("Branch")) {
+        const nextName = suggestBranchName(locationMeta, list, effectiveDomain) || `${locationMeta.city.name.trim()} City Branch`;
         if (nextName) setBranchName(nextName);
       }
     }
@@ -1248,13 +1259,13 @@ function CityBranchSetupContent() {
 
     if (editingCityBranchId) return;
 
-    if (!branchName.trim() || branchName.endsWith("City Branch") || /City Branch \d+$/.test(branchName)) {
-      const nextName = suggestBranchName(meta, existingCityBranches) || (meta.city?.name ? `${meta.city.name.trim()} City Branch` : "");
+    if (!branchName.trim() || branchName.includes("Branch")) {
+      const nextName = suggestBranchName(meta, existingCityBranches, operationalDomain) || (meta.city?.name ? `${meta.city.name.trim()} City Branch` : "");
       if (nextName) setBranchName(nextName);
     }
 
     if (countryBranchId) {
-      setBranchCode(suggestBranchCode(meta, existingCityBranches));
+      setBranchCode(suggestBranchCode(meta, existingCityBranches, operationalDomain));
     }
   }
 
@@ -1354,6 +1365,7 @@ function CityBranchSetupContent() {
           id: editingCityBranchId || undefined,
           countryId: location.countryId,
           countryBranchId,
+          operationalDomain,
           cityName: resolvedCityName,
           stateProvinceId: location.stateProvinceId || undefined,
           districtId: location.districtId || undefined,
@@ -1418,10 +1430,10 @@ function CityBranchSetupContent() {
       }
 
       setBanner({ type: "success", message: `${editingCityBranchId ? t(lang, "cbs.updated_status_word") : t(lang, "cbs.saved_status_word")}: ${branchName} (${branchCode})` });
-      const list = await loadExistingCityBranches(location.countryId, countryBranchId);
+      const list = await loadExistingCityBranches(location.countryId, countryBranchId, operationalDomain);
       setEditingCityBranchId("");
       if (!editingCityBranchId) {
-        setBranchCode(suggestBranchCode(locationMeta, list));
+        setBranchCode(suggestBranchCode(locationMeta, list, operationalDomain));
         setBranchName("");
         setPermissionTemplate("city-standard");
         setPermissionGrants(parentPermissionGrants?.length ? getPermissionKeysForTemplate("city-standard").filter((p) => parentPermissionGrants.includes(p)) : getPermissionKeysForTemplate("city-standard"));
@@ -1705,11 +1717,60 @@ function CityBranchSetupContent() {
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
                   <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1b_title")}</h2>
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
+
+                {/* 1. City Branch Operational Section Selector (Business vs Shipping Line) */}
+                <div className="mt-2 space-y-2 p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 font-sans">
+                  <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {lang === "ur" ? "اس سٹی برانچ کا آپریشنل سیکشن منتخب کریں *" : lang === "ar" ? "حدد القسم التشغيلي للفرع *" : lang === "ps" ? "د څانګې عملیاتي برخه وټاکئ *" : lang === "fa" ? "بخش عملیاتی شعبه را انتخاب کنید *" : "Select Operational Section *"}
+                  </Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => void onOperationalDomainChange("business")}
+                      className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
+                        operationalDomain === "business"
+                          ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-200 font-bold shadow-xs ring-1 ring-indigo-400/30"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="text-2xl">🏢</span>
+                      <div>
+                        <div className="text-xs font-bold">{lang === "ur" ? "بزنس و کارپوریٹ سیکشن" : lang === "ar" ? "قسم الأعمال التجاري" : lang === "ps" ? "تجارتي / بزنس برخه" : lang === "fa" ? "بخش تجاری و شرکتی" : "Business Section"}</div>
+                        <div className="text-[10px] text-slate-500">{t(lang, "cbs.general_commercial_branch", "General commercial & trading branch")}</div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void onOperationalDomainChange("shipping")}
+                      className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
+                        operationalDomain === "shipping"
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-200 font-bold shadow-xs ring-1 ring-blue-400/30"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="text-2xl">🚢</span>
+                      <div>
+                        <div className="text-xs font-bold">{lang === "ur" ? "شپنگ لائن و کسٹم کلیئرنگ سیکشن" : lang === "ar" ? "قسم خط الشحن والتخليص" : lang === "ps" ? "د کښتۍ لاین او کلیرنګ برخه" : lang === "fa" ? "بخش خط کشتیرانی و گمرک" : "Shipping Line Section"}</div>
+                        <div className="text-[10px] text-slate-500">{t(lang, "cbs.ports_shipping_customs", "Ports, shipping lines & customs clearing")}</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. Main Branch Selector (scoped to selected Operational Section) */}
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <SearchSelect
-                    label={t(lang, "cbs.select_main_branch")}
+                    label={operationalDomain === "shipping" ? "Select Shipping Line Main Branch *" : "Select Business Main Branch *"}
                     value={countryBranchId}
-                    placeholder={location.countryId ? t(lang, "cbs.select_main_branch_ph") : t(lang, "cbs.select_country_first")}
+                    placeholder={
+                      !location.countryId
+                        ? t(lang, "cbs.select_country_first")
+                        : mainBranches.length === 0
+                        ? `No ${operationalDomain === "shipping" ? "Shipping Line" : "Business"} Main Branch found for this country`
+                        : operationalDomain === "shipping"
+                        ? "Select Shipping Line Main Branch..."
+                        : t(lang, "cbs.select_main_branch_ph")
+                    }
                     disabled={!location.countryId}
                     options={mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})` }))}
                     onValueChange={(value) => void onMainBranchSelected(value)}
@@ -1718,45 +1779,6 @@ function CityBranchSetupContent() {
                   <div className="space-y-2">
                     <Label className="text-xs text-slate-600">{t(lang, "cbs.main_branch_code")}</Label>
                     <Input value={selectedMainBranch?.code ?? ""} readOnly className={compactInputClass(!countryBranchId)} />
-                  </div>
-                </div>
-
-                {/* City Branch Business Nature / Type Selector */}
-                <div className="mt-3 space-y-2 p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 font-sans">
-                  <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {lang === "ur" ? "اس سٹی برانچ کی نوعیت / بزنس کی قسم *" : lang === "ar" ? "نوع ونشاط هذا الفرع *" : lang === "ps" ? "د دې ښار د څانګې ډول *" : lang === "fa" ? "نوعیت این شعبه *" : "City Branch Business Nature / Type *"}
-                  </Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => setBranchCategory("business")}
-                      className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
-                        branchCategory === "business"
-                          ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-200 font-bold shadow-xs ring-1 ring-indigo-400/30"
-                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="text-2xl">🏢</span>
-                      <div>
-                        <div className="text-xs font-bold">{lang === "ur" ? "بزنس و کارپوریٹ سٹی برانچ" : lang === "ar" ? "فرع تجاري / أعمال" : lang === "ps" ? "تجارتي / بزنس څانګه" : lang === "fa" ? "شعبه تجاری و شرکتی" : "Business & Corporate Branch"}</div>
-                        <div className="text-[10px] text-slate-500">{t(lang, "cbs.general_commercial_branch", "General commercial & trading branch")}</div>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setBranchCategory("clearing_agent")}
-                      className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
-                        branchCategory === "clearing_agent"
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-200 font-bold shadow-xs ring-1 ring-blue-400/30"
-                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="text-2xl">🚢</span>
-                      <div>
-                        <div className="text-xs font-bold">{lang === "ur" ? "کسٹم کلیئرنگ ایجنٹ و شپنگ لائن" : lang === "ar" ? "فرع التخليص الجمركي وخط الشحن" : lang === "ps" ? "ګمرکي کلیرنګ ایجنټ او د کښتۍ لاین" : lang === "fa" ? "کارگزاری گمرک و خط کشتیرانی" : "Clearing Agent & Shipping Line"}</div>
-                        <div className="text-[10px] text-slate-500">{t(lang, "cbs.ports_shipping_customs", "Ports, shipping lines & customs clearing")}</div>
-                      </div>
-                    </button>
                   </div>
                 </div>
               </section>
@@ -1853,11 +1875,38 @@ function CityBranchSetupContent() {
                   <div className="space-y-2">
                     <BranchOwnerPicker
                       value={ownerId}
+                      companyId={companyId}
+                      countryId={location.countryId}
                       onValueChange={setOwnerId}
-                      onOwnerResolved={(owner) => {
-                        setOwnerName(owner?.name || "");
-                        setOwnerCustomerId(owner?.kind === "customer" ? owner.id : null);
-                        setOwnerProfileId(owner?.kind === "profile" ? owner.id : null);
+                      onOwnerResolved={(owner, customer) => {
+                        if (customer) {
+                          setOwnerName(customer.customer_name);
+                          setOwnerCustomerId(customer.id);
+                          setOwnerProfileId(null);
+                          setOwnerPreview({
+                            source: "customer",
+                            code: customer.person_code || compactCode(customer.id, "PER"),
+                            name: customer.customer_name,
+                            companyName: customer.company_name ?? company?.name ?? "-",
+                            contactPerson: customer.contact_person ?? customer.customer_name,
+                            mobile: customer.mobile ?? "-",
+                            whatsapp: customer.whatsapp ?? customer.mobile ?? "-",
+                            email: customer.email ?? "-",
+                            address: customer.address ?? "-",
+                            country: customer.country_name || locationMeta.country?.name || "-",
+                            branch: customer.city_name || selectedMainBranch?.name || "-",
+                            role: "Company Owner"
+                          });
+                        } else if (!owner) {
+                          setOwnerName("");
+                          setOwnerCustomerId(null);
+                          setOwnerProfileId(null);
+                          setOwnerPreview(null);
+                        } else {
+                          setOwnerName(owner.name);
+                          setOwnerCustomerId(owner.kind === "customer" ? owner.id : null);
+                          setOwnerProfileId(owner.kind === "profile" ? owner.id : null);
+                        }
                       }}
                       disabled={!location.countryId}
                       placeholder={t(lang, "cbs.search_owner_ph")}

@@ -1795,15 +1795,14 @@ export function CustomerOrderManagementView() {
 
 
 
-  const visibleOrders = useMemo(() => {
+  // 1. Scoped Orders: applying enterprise permission scope, branchScope hierarchy, registry filters (country, branch, date), and search query
+  const scopedOrders = useMemo(() => {
     if (orders.length === 0) {
-      // Real data only: while the list is loading, or when there are no orders, show the empty state — never the hard-coded
-      // REFERENCE_SAMPLE_ORDERS (fake customers/orders must not appear in a live ERP).
       return [] as ClearingCustomerOrderRow[];
     }
     let list = orders;
 
-    // 1. Enterprise Multi-Tier Scope Filtering (Super Admin / Country Admin / Branch Admin)
+    // Enterprise Multi-Tier Scope Filtering (Super Admin / Country Admin / Branch Admin)
     if (scopeMode === "country" && selectedCountryScopeId) {
       list = list.filter((o: any) =>
         o.country_id === selectedCountryScopeId ||
@@ -1831,7 +1830,74 @@ export function CustomerOrderManagementView() {
       }
     }
 
-    // 2. Queue filter
+    // Registry Filter: Country
+    if (registryFilters.countryId && registryFilters.countryId !== "all") {
+      list = list.filter((o: any) =>
+        o.country_id === registryFilters.countryId ||
+        o.countryId === registryFilters.countryId ||
+        o.loading_country_id === registryFilters.countryId ||
+        o.receiving_country_id === registryFilters.countryId
+      );
+    }
+
+    // Registry Filter: Branch
+    if (registryFilters.branchId && registryFilters.branchId !== "all") {
+      list = list.filter((o: any) =>
+        o.city_branch_id === registryFilters.branchId ||
+        o.country_branch_id === registryFilters.branchId ||
+        o.branch_id === registryFilters.branchId
+      );
+    }
+
+    // Registry Filter: Dates
+    if (registryFilters.fromDate) {
+      list = list.filter((o: any) => !o.created_at || new Date(o.created_at) >= new Date(registryFilters.fromDate!));
+    }
+    if (registryFilters.toDate) {
+      list = list.filter((o: any) => !o.created_at || new Date(o.created_at) <= new Date(registryFilters.toDate! + "T23:59:59"));
+    }
+
+    // Search query
+    const query = normalize(searchQuery || filterState.query);
+    if (query) {
+      list = list.filter((order) => {
+        const haystack = [
+          order.order_no,
+          order.customer_name,
+          order.goods_name,
+          order.goods_chs_code,
+          order.goods_variation_label,
+          order.goods_brand,
+          order.goods_size,
+          order.goods_origin_country_name,
+          order.exporter_name,
+          order.importer_name,
+          order.notify_party_name,
+          order.buyer_name,
+          order.loading_source_name,
+          order.loading_country_name,
+          order.receiving_country_name,
+          order.loading_port_name,
+          order.destination_port_name,
+          order.route_name,
+          order.cargo_details,
+          ...(order.party_links ?? []).map((link) => [link.party_customer_name, link.party_company_name, link.selected_address_text].filter(Boolean).join(" "))
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(query);
+      });
+    }
+
+    return list;
+  }, [orders, scopeMode, selectedCountryScopeId, selectedBranchScopeId, branchScope, searchQuery, filterState, registryFilters]);
+
+  // 2. Visible Orders: scoped orders further filtered by queue tab, status filter, and transport/movement filters
+  const visibleOrders = useMemo(() => {
+    let list = scopedOrders;
+
+    // Queue filter
     const currentUserId = userContext.context?.userId;
     if (queueTab === "assigned_to_me") {
       list = list.filter(
@@ -1867,20 +1933,28 @@ export function CustomerOrderManagementView() {
       );
     }
 
-    // 3. Status filter
+    // Status filter
     if (statusFilter && statusFilter !== "all") {
-      list = list.filter((o) => (o.status || "pending").toLowerCase() === statusFilter.toLowerCase());
+      if (statusFilter === "draft") {
+        list = list.filter((o) => !o.status || o.status === "draft" || o.status === "pending" || o.status === "pending_approval");
+      } else if (statusFilter === "in_transit") {
+        list = list.filter((o) => o.status === "in_transit" || o.status === "loaded" || o.status === "customs_pending");
+      } else if (statusFilter === "completed") {
+        list = list.filter((o) => o.status === "cleared" || o.status === "completed");
+      } else {
+        list = list.filter((o) => (o.status || "pending").toLowerCase() === statusFilter.toLowerCase());
+      }
     }
     if (registryFilters.status && registryFilters.status !== "all") {
       list = list.filter((o) => (o.status || "pending").toLowerCase() === registryFilters.status.toLowerCase());
     }
 
-    // 4. Transport mode filter
+    // Transport mode filter
     if (modeFilter && modeFilter !== "all") {
       list = list.filter((o) => (o.transport_mode || "").toLowerCase() === modeFilter.toLowerCase());
     }
 
-    // 5. Movement type filter
+    // Movement type filter
     if (movementFilter && movementFilter !== "all") {
       list = list.filter((o) => (o.movement_type || "").toLowerCase() === movementFilter.toLowerCase());
     }
@@ -1888,111 +1962,67 @@ export function CustomerOrderManagementView() {
       list = list.filter((o) => (o.movement_type || "").toLowerCase() === registryFilters.movementType.toLowerCase());
     }
 
-    // Registry Filter: Country
-    if (registryFilters.countryId && registryFilters.countryId !== "all") {
-      list = list.filter((o: any) =>
-        o.country_id === registryFilters.countryId ||
-        o.countryId === registryFilters.countryId ||
-        o.loading_country_id === registryFilters.countryId ||
-        o.receiving_country_id === registryFilters.countryId
-      );
-    }
-
-    // Registry Filter: Branch
-    if (registryFilters.branchId && registryFilters.branchId !== "all") {
-      list = list.filter((o: any) =>
-        o.city_branch_id === registryFilters.branchId ||
-        o.country_branch_id === registryFilters.branchId ||
-        o.branch_id === registryFilters.branchId
-      );
-    }
-
-    // Registry Filter: Dates
-    if (registryFilters.fromDate) {
-      list = list.filter((o: any) => !o.created_at || new Date(o.created_at) >= new Date(registryFilters.fromDate!));
-    }
-    if (registryFilters.toDate) {
-      list = list.filter((o: any) => !o.created_at || new Date(o.created_at) <= new Date(registryFilters.toDate! + "T23:59:59"));
-    }
-
-    // 6. Search query
-    const query = normalize(searchQuery || filterState.query);
-    if (query) {
-      list = list.filter((order) => {
-        const haystack = [
-          order.order_no,
-          order.customer_name,
-          order.goods_name,
-          order.goods_chs_code,
-          order.goods_variation_label,
-          order.goods_brand,
-          order.goods_size,
-          order.goods_origin_country_name,
-          order.exporter_name,
-          order.importer_name,
-          order.notify_party_name,
-          order.buyer_name,
-          order.loading_source_name,
-          order.loading_country_name,
-          order.receiving_country_name,
-          order.loading_port_name,
-          order.destination_port_name,
-          order.route_name,
-          order.cargo_details,
-          ...(order.party_links ?? []).map((link) => [link.party_customer_name, link.party_company_name, link.selected_address_text].filter(Boolean).join(" "))
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return haystack.includes(query);
-      });
-    }
-
     return list;
-  }, [orders, scopeMode, selectedCountryScopeId, selectedBranchScopeId, branchScope, queueTab, userContext.context?.userId, statusFilter, modeFilter, movementFilter, searchQuery, filterState, registryFilters]);
+  }, [scopedOrders, queueTab, userContext.context?.userId, statusFilter, registryFilters.status, modeFilter, movementFilter, registryFilters.movementType]);
+
+  // Client pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(visibleOrders.length / pageSize));
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
+  const paginatedOrders = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return visibleOrders.slice(start, start + pageSize);
+  }, [visibleOrders, currentPage, pageSize]);
 
   const queueCounts = useMemo(() => {
     const currentUserId = userContext.context?.userId;
-    const assignedToMe = orders.filter(
+    const assignedToMe = scopedOrders.filter(
       (o: any) =>
         (o.latest_handover?.receiver_user_id === currentUserId && (o.latest_handover?.status === "pending" || o.latest_handover?.status === "accepted")) ||
         (o.responsible_user_id === currentUserId && o.status !== "completed")
     ).length;
-    const pendingWithMe = orders.filter(
+    const pendingWithMe = scopedOrders.filter(
       (o: any) =>
         (o.latest_handover?.receiver_user_id === currentUserId && (o.latest_handover?.status === "pending" || o.latest_handover?.status === "accepted")) ||
         (o.created_by === currentUserId && (o.current_stage === "returned_for_correction" || o.status === "draft" || o.current_stage === "1a_draft"))
     ).length;
-    const completedByMe = orders.filter(
+    const completedByMe = scopedOrders.filter(
       (o: any) =>
         (o.created_by === currentUserId && (o.status === "completed" || o.current_stage === "goods_completed" || o.current_stage === "completed")) ||
         (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "completed")
     ).length;
-    const sentToAnother = orders.filter(
+    const sentToAnother = scopedOrders.filter(
       (o: any) =>
         o.latest_handover?.sender_user_id === currentUserId &&
         o.latest_handover?.receiver_user_id !== currentUserId &&
         o.latest_handover?.status === "pending"
     ).length;
-    const returned = orders.filter(
+    const returned = scopedOrders.filter(
       (o: any) =>
         o.current_stage === "returned_for_correction" ||
         o.status === "returned" ||
         o.latest_handover?.status === "returned"
     ).length;
-    const all = orders.length;
+    const all = scopedOrders.length;
 
     return { assignedToMe, pendingWithMe, completedByMe, sentToAnother, returned, all };
-  }, [orders, userContext.context?.userId]);
+  }, [scopedOrders, userContext.context?.userId]);
 
   const orderCounts = useMemo(() => {
-    const total = orders.length;
-    const draft = orders.filter((o) => !o.status || o.status === "draft" || o.status === "pending").length;
-    const confirmed = orders.filter((o) => o.status === "booking_confirmed" || o.status === "confirmed" || o.status === "accepted" || o.status === "in_progress").length;
-    const inTransit = orders.filter((o) => o.status === "in_transit" || o.status === "loaded" || o.status === "customs_pending").length;
-    const cleared = orders.filter((o) => o.status === "cleared" || o.status === "completed").length;
-    const totalVolume = orders.reduce((sum, o) => sum + (Number(o.goods_quantity) || 0), 0);
-    const uniqueRoutes = new Set(orders.map((o) => o.route_name || `${o.loading_country_name || ""}-${o.receiving_country_name || ""}`).filter(Boolean)).size;
+    const total = scopedOrders.length;
+    const draft = scopedOrders.filter((o) => !o.status || o.status === "draft" || o.status === "pending" || o.status === "pending_approval").length;
+    const confirmed = scopedOrders.filter((o) => o.status === "booking_confirmed" || o.status === "confirmed" || o.status === "accepted" || o.status === "in_progress").length;
+    const inTransit = scopedOrders.filter((o) => o.status === "in_transit" || o.status === "loaded" || o.status === "customs_pending").length;
+    const cleared = scopedOrders.filter((o) => o.status === "cleared" || o.status === "completed").length;
+    const totalVolume = scopedOrders.reduce((sum, o) => sum + (Number(o.goods_quantity) || 0), 0);
+    const uniqueRoutes = new Set(scopedOrders.map((o) => o.route_name || `${o.loading_country_name || ""}-${o.receiving_country_name || ""}`).filter(Boolean)).size;
 
     return {
       total,
@@ -2002,41 +2032,36 @@ export function CustomerOrderManagementView() {
       cleared,
       totalVolume,
       uniqueRoutes,
-      import: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "import").length,
-      export: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "export").length,
-      domestic: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "domestic").length,
-      transit: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "up_transit" || String(order.movement_type || "").toLowerCase() === "transit").length
+      import: scopedOrders.filter((order) => String(order.movement_type || "").toLowerCase() === "import").length,
+      export: scopedOrders.filter((order) => String(order.movement_type || "").toLowerCase() === "export").length,
+      domestic: scopedOrders.filter((order) => String(order.movement_type || "").toLowerCase() === "domestic").length,
+      transit: scopedOrders.filter((order) => String(order.movement_type || "").toLowerCase() === "up_transit" || String(order.movement_type || "").toLowerCase() === "transit").length
     };
-  }, [orders]);
+  }, [scopedOrders]);
 
   const transportModeCounts = useMemo(() => {
-    const road = orders.filter((o) => (o.transport_mode || "").toLowerCase().includes("road")).length;
-    const sea = orders.filter((o) => (o.transport_mode || "").toLowerCase().includes("sea")).length;
-    const air = orders.filter((o) => (o.transport_mode || "").toLowerCase().includes("air")).length;
-    const train = orders.filter((o) => (o.transport_mode || "").toLowerCase().includes("rail") || (o.transport_mode || "").toLowerCase().includes("train")).length;
-    return {
-      road: road || (orders.length > 0 ? Math.round(orders.length * 0.5) : 64),
-      sea: sea || (orders.length > 0 ? Math.round(orders.length * 0.31) : 40),
-      air: air || (orders.length > 0 ? Math.round(orders.length * 0.125) : 16),
-      train: train || (orders.length > 0 ? Math.round(orders.length * 0.0625) : 8)
-    };
-  }, [orders]);
+    const road = scopedOrders.filter((o) => (o.transport_mode || "").toLowerCase().includes("road")).length;
+    const sea = scopedOrders.filter((o) => (o.transport_mode || "").toLowerCase().includes("sea")).length;
+    const air = scopedOrders.filter((o) => (o.transport_mode || "").toLowerCase().includes("air")).length;
+    const train = scopedOrders.filter((o) => (o.transport_mode || "").toLowerCase().includes("rail") || (o.transport_mode || "").toLowerCase().includes("train")).length;
+    return { road, sea, air, train };
+  }, [scopedOrders]);
 
   const countryReportCounts = useMemo(() => {
-    const pkOrders = orders.filter((o: any) =>
+    const pkOrders = scopedOrders.filter((o: any) =>
       (o.country_name || o.loading_country_name || "").toLowerCase().includes("pakistan") ||
       (o.country_id && countries.find((c) => c.id === o.country_id)?.name?.toLowerCase().includes("pakistan"))
     ).length;
-    const uaeOrders = orders.filter((o: any) =>
+    const uaeOrders = scopedOrders.filter((o: any) =>
       (o.country_name || o.loading_country_name || "").toLowerCase().includes("uae") ||
       (o.country_name || o.loading_country_name || "").toLowerCase().includes("emirates") ||
       (o.country_id && countries.find((c) => c.id === o.country_id)?.name?.toLowerCase().includes("emirates"))
     ).length;
     return [
-      { id: "pk", name: tt("country_pakistan", "Pakistan"), flag: "🇵🇰", count: pkOrders || (orders.length > 0 ? Math.round(orders.length * 0.65) : 84) },
-      { id: "ae", name: tt("country_uae", "United Arab Emirates"), flag: "🇦🇪", count: uaeOrders || (orders.length > 0 ? Math.round(orders.length * 0.35) : 44) }
+      { id: "pk", name: tt("country_pakistan", "Pakistan"), flag: "🇵🇰", count: pkOrders },
+      { id: "ae", name: tt("country_uae", "United Arab Emirates"), flag: "🇦🇪", count: uaeOrders }
     ];
-  }, [orders, countries, lang]);
+  }, [scopedOrders, countries, lang]);
 
   const isSeaMode = formData.transport_mode === "by_sea";
   const isRoadMode = formData.transport_mode === "by_road";
@@ -3592,6 +3617,23 @@ export function CustomerOrderManagementView() {
             </div>
           </div>
 
+          {/* Error Banner when initial loading or refresh fails */}
+          {loadError && (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50/90 dark:border-rose-900/60 dark:bg-rose-950/40 p-4 text-xs text-rose-800 dark:text-rose-200 flex items-center justify-between shadow-xs">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                <span className="font-semibold">{loadError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => void fetchInitialData()}
+                className="px-3 py-1 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition cursor-pointer shrink-0 ml-3"
+              >
+                {tt("retry", "Retry")}
+              </button>
+            </div>
+          )}
+
           {/* 4 Report Cards — Reference 01 Style */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             {/* Card 1: Order Summary */}
@@ -3621,7 +3663,7 @@ export function CustomerOrderManagementView() {
               <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <div>
                   <div className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                    {orders.length}
+                    {scopedOrders.length}
                   </div>
                   <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
                     {tt("all_orders_in_system", "All orders in system")}
@@ -3873,7 +3915,7 @@ export function CustomerOrderManagementView() {
               >
                 <span>{tt("all_orders", "All Orders")}</span>
                 <span className={`text-[10px] font-mono ${statusFilter === "all" ? "text-blue-100" : "text-slate-400"}`}>
-                  ({orders.length})
+                  ({scopedOrders.length})
                 </span>
               </button>
 
@@ -4002,11 +4044,11 @@ export function CustomerOrderManagementView() {
                       </td>
                     </tr>
                   ) : (
-                    visibleOrders.map((order, index) => {
+                    paginatedOrders.map((order, index) => {
                       const isSelected = editingOrderId === order.id;
                       const dateFormatted = order.created_at
                         ? new Date(order.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-                        : "13 Oct 2026";
+                        : "—";
                       const linkedCust = customers.find((c) => c.id === order.customer_id || c.name === order.customer_name);
                       const linkedAcc = accounts.find((a) =>
                         a.id === order.account_id ||
@@ -4056,7 +4098,7 @@ export function CustomerOrderManagementView() {
                         ? `${Number(order.goods_gross_weight) >= 1000 ? (Number(order.goods_gross_weight) / 1000).toFixed(0) + " MT" : order.goods_gross_weight + " kg"}`
                         : order.goods_quantity
                         ? `${order.goods_quantity} ${order.goods_unit || "MT"}`
-                        : "20 MT";
+                        : "—";
 
                       const routeDisplay = formatOrderCompleteRoute(order);
 
@@ -4073,7 +4115,7 @@ export function CustomerOrderManagementView() {
                         >
                           {/* 1: # */}
                           <td className="px-4 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-                            {index + 1}
+                            {(currentPage - 1) * pageSize + index + 1}
                           </td>
 
                           {/* 2: Order No / Date */}
@@ -4224,58 +4266,52 @@ export function CustomerOrderManagementView() {
             {/* Bottom Summary & Pagination Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
               <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                <span>{visibleOrders.length || 6} {tt("visible_orders_stat", "visible orders")}</span>
+                <span>{visibleOrders.length} {tt("visible_orders_stat", "visible orders")}</span>
                 <span className="mx-2">•</span>
-                <span>{orderCounts.totalVolume || 150} MT {tt("cargo_stat", "cargo")}</span>
+                <span>{visibleOrders.reduce((sum, o) => sum + (Number(o.goods_quantity) || 0), 0)} MT {tt("cargo_stat", "cargo")}</span>
               </div>
               <div className="flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
                 <button
                   type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 text-slate-500"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage <= 1}
+                  className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 text-slate-500 disabled:opacity-40 disabled:cursor-not-allowed"
                   title={tt("prev_page", "Previous page")}
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                    if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) {
+                      acc.push("…");
+                    }
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    typeof item === "string" ? (
+                      <span key={`ellipsis-${idx}`} className="px-1 text-slate-400">…</span>
+                    ) : (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => setCurrentPage(item)}
+                        className={`flex h-7 w-7 items-center justify-center rounded-md font-bold transition ${
+                          currentPage === item
+                            ? "bg-blue-600 text-white shadow-xs"
+                            : "border border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
                 <button
                   type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-white font-bold shadow-xs"
-                >
-                  1
-                </button>
-                <button
-                  type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  2
-                </button>
-                <button
-                  type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  3
-                </button>
-                <button
-                  type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  4
-                </button>
-                <button
-                  type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  5
-                </button>
-                <span className="px-1 text-slate-400">…</span>
-                <button
-                  type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  22
-                </button>
-                <button
-                  type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 text-slate-500"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 text-slate-500 disabled:opacity-40 disabled:cursor-not-allowed"
                   title={tt("next_page", "Next page")}
                 >
                   <ChevronRight className="h-3.5 w-3.5" />

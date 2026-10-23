@@ -15,6 +15,9 @@ import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile
 type PersonRow = {
   id: string;
   customer_name: string;
+  original_customer_name?: string | null;
+  customer_name_en?: string | null;
+  native_customer_name?: string | null;
   first_name: string | null;
   last_name: string | null;
   father_name?: string | null;
@@ -45,7 +48,9 @@ export function personFullName(row: { first_name?: string | null; last_name?: st
 
 function toOption(row: PersonRow, lang: string = "en"): SearchSelectOption {
   const rawName = personFullName(row);
-  const name = transliterateProperNoun(rawName, lang as SupportedLanguage);
+  const primaryName = row.customer_name_en || rawName;
+  const name = transliterateProperNoun(primaryName, lang as SupportedLanguage);
+  const nativeName = row.native_customer_name || (row.original_customer_name && row.original_customer_name !== primaryName ? row.original_customer_name : null);
   const fatherRaw = row.father_name || ((row as any).contact_person && (row as any).contact_person !== rawName ? (row as any).contact_person : null);
   const father = fatherRaw && !fatherRaw.startsWith("+") && isNaN(Number(fatherRaw)) ? transliterateProperNoun(fatherRaw, lang as SupportedLanguage) : null;
   const companyRaw = row.company_name && row.company_name !== rawName ? row.company_name : null;
@@ -57,6 +62,7 @@ function toOption(row: PersonRow, lang: string = "en"): SearchSelectOption {
   const fatherPrefix = lang === "ur" ? "ولدیت:" : lang === "ar" ? "الوالد:" : lang === "fa" ? "فرزند:" : lang === "ps" ? "د پلار نوم:" : "S/O:";
 
   let secondaryParts: string[] = [];
+  if (nativeName && nativeName !== name) secondaryParts.push(nativeName);
   if (father) secondaryParts.push(`${fatherPrefix} ${father}`);
   if (empDesig) {
     secondaryParts.push(empDept ? `${empDesig} (${empDept})` : empDesig);
@@ -75,7 +81,8 @@ function toOption(row: PersonRow, lang: string = "en"): SearchSelectOption {
 
   const label = extraBits.length > 0 ? `${name} (${extraBits.join(" · ")})` : name;
   const keywords = [
-    name, rawName, row.customer_name, row.first_name, row.last_name, row.person_code,
+    name, rawName, primaryName, nativeName, row.original_customer_name, row.customer_name_en,
+    row.customer_name, row.first_name, row.last_name, row.person_code,
     row.employee_code, row.employee_designation, row.employee_department,
     father, fatherRaw, company, companyRaw, row.mobile, row.whatsapp, row.email,
     row.country_name, row.city_name,

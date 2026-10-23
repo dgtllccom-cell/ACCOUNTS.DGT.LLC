@@ -2070,14 +2070,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {/* STEP 2: Role & Branch Access Scope */}
               {step === 2 && (
                 <div className="space-y-4">
-                  {/* 1. Geographic & Branch Scopes */}
+                  {/* 1. Country & Operational Section */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 p-3.5 space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                       <MapPin className="h-4 w-4 text-emerald-600" />
-                      <span>{centralT(activeLang, "urw2.branch_scope_heading" as never, "1. Country, City & Branch Assignment")}</span>
+                      <span>{centralT(activeLang, "urw2.branch_scope_heading" as never, "1. Country & Operational Section")}</span>
                     </Label>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-3 sm:grid-cols-1">
                       <SearchSelect
                         label={loadingCountries ? `${tr("country")} (...)` : tr("country")}
                         value={countryId}
@@ -2086,7 +2086,71 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         options={countryOptions}
                         onValueChange={setCountryId}
                       />
+                    </div>
 
+                    {/* Operational Section Selector (Business vs Shipping Line) */}
+                    <div className="space-y-1.5 pt-1">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Operational Section *
+                      </Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button
+                          type="button"
+                          disabled={role === "super_admin"}
+                          onClick={() => {
+                            setOperationalDomain("business");
+                            setClearingAgentId("");
+                            if (branchType === "main") setRole("main_branch_admin");
+                            else setRole("city_branch_admin");
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            operationalDomain === "business"
+                              ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-1 ring-emerald-500/30 font-bold shadow-xs"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 text-xs font-bold">
+                            <span className="text-lg">🏢</span>
+                            <span>{centralT(activeLang, "urw2.domain_business" as never, "Business Section")}</span>
+                          </div>
+                          <p className="text-[10.5px] mt-1 text-slate-500 dark:text-slate-400 font-normal">
+                            Commercial trading, general branches, sales, cashier & accounting operations.
+                          </p>
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={role === "super_admin"}
+                          onClick={() => {
+                            setOperationalDomain("shipping");
+                            setRole("agent_user");
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            operationalDomain === "shipping"
+                              ? "border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 ring-1 ring-blue-500/30 font-bold shadow-xs"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 text-xs font-bold">
+                            <span className="text-lg">🚢</span>
+                            <span>{centralT(activeLang, "urw2.domain_shipping" as never, "Shipping Line Section")}</span>
+                          </div>
+                          <p className="text-[10.5px] mt-1 text-slate-500 dark:text-slate-400 font-normal">
+                            Shipping lines, port clearance, customs clearing agents & container tracking.
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Branch Assignment (scoped to Country and Operational Section) */}
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 p-3.5 space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Shield className="h-4 w-4 text-emerald-600" />
+                      <span>{`2. Assigned Branch (${operationalDomain === "shipping" ? "Shipping Line Section" : "Business Section"})`}</span>
+                    </Label>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
                       <SearchSelect
                         label={tr("branchType")}
                         value={branchType}
@@ -2102,9 +2166,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
                       {branchType === "main" ? (
                         <SearchSelect
-                          label={tr("assignedBranch")}
+                          label={`${operationalDomain === "shipping" ? "Shipping Line" : "Business"} Main Branch *`}
                           value={countryBranchId}
-                          placeholder={centralT(activeLang, "urw2.select_main_branch" as never, "Select main branch")}
+                          placeholder={
+                            !countryId
+                              ? centralT(activeLang, "urw2.select_country" as never, "Select country first")
+                              : mainBranches.length === 0
+                              ? `No ${operationalDomain === "shipping" ? "Shipping Line" : "Business"} Main Branch found`
+                              : centralT(activeLang, "urw2.select_main_branch" as never, "Select main branch")
+                          }
                           options={mainBranches.map((b) => ({
                             value: b.id,
                             label: `${b.name} (${b.code})`,
@@ -2115,9 +2185,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         />
                       ) : (
                         <SearchSelect
-                          label={tr("assignedBranch")}
+                          label={`${operationalDomain === "shipping" ? "Shipping Line" : "Business"} City Branch *`}
                           value={cityBranchId}
-                          placeholder={centralT(activeLang, "urw2.select_city_branch" as never, "Select city branch")}
+                          placeholder={
+                            !countryId
+                              ? centralT(activeLang, "urw2.select_country" as never, "Select country first")
+                              : cityBranches.length === 0
+                              ? `No ${operationalDomain === "shipping" ? "Shipping Line" : "Business"} City Branch found`
+                              : centralT(activeLang, "urw2.select_city_branch" as never, "Select city branch")
+                          }
                           options={cityBranches.map((b) => ({
                             value: b.id,
                             label: `${b.city_name || b.cityName || ""} - ${b.name} (${b.code})`,
@@ -2128,10 +2204,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         />
                       )}
 
-                      <div className="space-y-1">
+                      <div className="space-y-1 sm:col-span-2">
                         <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Branch Code & Scope")}</Label>
                         <Input
-                          value={`${branchCode || "MAIN"} (${effectiveCurrency})`}
+                          value={`${branchCode || "MAIN"} (${effectiveCurrency}) [${operationalDomain.toUpperCase()}]`}
                           readOnly
                           className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200"
                         />
@@ -2139,97 +2215,117 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
                   </div>
 
-                  {/* 2. User Category Selection: Admin vs Normal vs Shipping Line */}
+                  {/* 3. User Role & Authority Tier */}
                   <div className="rounded-xl border border-teal-200 dark:border-teal-900 bg-teal-50/50 dark:bg-teal-950/20 p-3.5 space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-teal-900 dark:text-teal-300 flex items-center gap-1.5">
-                      <Shield className="h-4 w-4 text-teal-600" />
-                      <span>{centralT(activeLang, "urw2.user_type_heading" as never, "2. User Category & Authority Tier")}</span>
+                      <ShieldCheck className="h-4 w-4 text-teal-600" />
+                      <span>{centralT(activeLang, "urw2.user_type_heading" as never, "3. User Category & Authority Tier")}</span>
                     </Label>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                      {/* Option 1: Admin User */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOperationalDomain("business");
-                          setClearingAgentId("");
-                          if (branchType === "main") setRole("main_branch_admin");
-                          else setRole("city_branch_admin");
-                        }}
-                        className={`p-3 rounded-xl border text-left transition-all ${
-                          (role === "city_branch_admin" || role === "main_branch_admin" || role === "country_admin" || role === "super_admin") && operationalDomain === "business"
-                            ? "border-teal-600 bg-teal-600 text-white shadow-sm"
-                            : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 font-bold text-xs">
-                          <ShieldCheck className="h-4 w-4 shrink-0" />
-                          <span>Admin User</span>
-                        </div>
-                        <p className={`text-[10px] mt-1 line-clamp-2 ${
-                          (role === "city_branch_admin" || role === "main_branch_admin" || role === "country_admin" || role === "super_admin") && operationalDomain === "business"
-                            ? "text-teal-100"
-                            : "text-slate-500"
-                        }`}>
-                          Branch & City Administrator with management and approval authority.
-                        </p>
-                      </button>
+                    {operationalDomain === "business" ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {/* Option 1: Admin User */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (branchType === "main") setRole("main_branch_admin");
+                            else setRole("city_branch_admin");
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            role === "city_branch_admin" || role === "main_branch_admin" || role === "country_admin" || role === "super_admin"
+                              ? "border-teal-600 bg-teal-600 text-white shadow-sm"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 font-bold text-xs">
+                            <ShieldCheck className="h-4 w-4 shrink-0" />
+                            <span>{centralT(activeLang, "urw2.role_country_admin" as never, "Admin User")}</span>
+                          </div>
+                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                            role === "city_branch_admin" || role === "main_branch_admin" || role === "country_admin" || role === "super_admin"
+                              ? "text-teal-100"
+                              : "text-slate-500"
+                          }`}>
+                            Branch & City Administrator with management and approval authority.
+                          </p>
+                        </button>
 
-                      {/* Option 2: Normal Operational Staff */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOperationalDomain("business");
-                          setClearingAgentId("");
-                          if (role !== "staff_user" && role !== "cashier" && role !== "accountant" && role !== "auditor_viewer") {
-                            setRole("staff_user");
-                          }
-                        }}
-                        className={`p-3 rounded-xl border text-left transition-all ${
-                          (role === "staff_user" || role === "cashier" || role === "accountant" || role === "auditor_viewer" || role === "country_user") && operationalDomain === "business"
-                            ? "border-teal-600 bg-teal-600 text-white shadow-sm"
-                            : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 font-bold text-xs">
-                          <Users className="h-4 w-4 shrink-0" />
-                          <span>Normal Staff User</span>
-                        </div>
-                        <p className={`text-[10px] mt-1 line-clamp-2 ${
-                          (role === "staff_user" || role === "cashier" || role === "accountant" || role === "auditor_viewer" || role === "country_user") && operationalDomain === "business"
-                            ? "text-teal-100"
-                            : "text-slate-500"
-                        }`}>
-                          Daily transactional operations, cash register, sales, and accounting.
-                        </p>
-                      </button>
+                        {/* Option 2: Normal Operational Staff */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (role !== "staff_user" && role !== "cashier" && role !== "accountant" && role !== "auditor_viewer") {
+                              setRole("staff_user");
+                            }
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            role === "staff_user" || role === "cashier" || role === "accountant" || role === "auditor_viewer" || role === "country_user"
+                              ? "border-teal-600 bg-teal-600 text-white shadow-sm"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 font-bold text-xs">
+                            <Users className="h-4 w-4 shrink-0" />
+                            <span>{centralT(activeLang, "urw2.role_staff_user" as never, "Normal Staff User")}</span>
+                          </div>
+                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                            role === "staff_user" || role === "cashier" || role === "accountant" || role === "auditor_viewer" || role === "country_user"
+                              ? "text-teal-100"
+                              : "text-slate-500"
+                          }`}>
+                            Daily transactional operations, cash register, sales, and accounting.
+                          </p>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {/* Option 1: Shipping Admin */}
+                        <button
+                          type="button"
+                          onClick={() => setRole("main_branch_admin")}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            role === "main_branch_admin" || role === "city_branch_admin"
+                              ? "border-teal-600 bg-teal-600 text-white shadow-sm"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 font-bold text-xs">
+                            <ShieldCheck className="h-4 w-4 shrink-0" />
+                            <span>{centralT(activeLang, "urw2.role_main_branch_admin" as never, "Shipping Branch Admin")}</span>
+                          </div>
+                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                            role === "main_branch_admin" || role === "city_branch_admin"
+                              ? "text-teal-100"
+                              : "text-slate-500"
+                          }`}>
+                            Managerial and supervisory authority for the Shipping Line branch.
+                          </p>
+                        </button>
 
-                      {/* Option 3: Shipping Line / Clearing Agent */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOperationalDomain("shipping");
-                          setRole("agent_user");
-                        }}
-                        className={`p-3 rounded-xl border text-left transition-all ${
-                          operationalDomain === "shipping" || role === "agent_user"
-                            ? "border-teal-600 bg-teal-600 text-white shadow-sm"
-                            : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 font-bold text-xs">
-                          <Globe2 className="h-4 w-4 shrink-0" />
-                          <span>Shipping / Agent User</span>
-                        </div>
-                        <p className={`text-[10px] mt-1 line-clamp-2 ${
-                          operationalDomain === "shipping" || role === "agent_user"
-                            ? "text-teal-100"
-                            : "text-slate-500"
-                        }`}>
-                          Port clearance, container tracking, customs documentation & bills.
-                        </p>
-                      </button>
-                    </div>
+                        {/* Option 2: Shipping / Agent User */}
+                        <button
+                          type="button"
+                          onClick={() => setRole("agent_user")}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            role === "agent_user"
+                              ? "border-teal-600 bg-teal-600 text-white shadow-sm"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 font-bold text-xs">
+                            <Globe2 className="h-4 w-4 shrink-0" />
+                            <span>{centralT(activeLang, "urw2.role_agent_user" as never, "Shipping / Agent User")}</span>
+                          </div>
+                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                            role === "agent_user"
+                              ? "text-teal-100"
+                              : "text-slate-500"
+                          }`}>
+                            Port clearance, container tracking, customs documentation & bills.
+                          </p>
+                        </button>
+                      </div>
+                    )}
 
                     {/* Specific Designation Picker for Normal Staff */}
                     {(role === "staff_user" || role === "cashier" || role === "accountant" || role === "auditor_viewer") && operationalDomain === "business" && (
