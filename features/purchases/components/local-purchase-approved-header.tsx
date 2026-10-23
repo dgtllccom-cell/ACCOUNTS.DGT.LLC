@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { unitFor, valueIn, fmtMoney, fmtInt, fmtPct, type RateOf } from "@/lib/purchase-ui/money-unit";
 import { countryLabel } from "@/lib/purchase-ui/country-name";
+import { localizeCountryName } from "@/lib/i18n/country-names";
 import "@/components/purchase-ui/purchase-approved.css";
 
 function getCountryFlag(nameOrCode?: string): string {
@@ -485,10 +486,10 @@ export function LocalPurchaseApprovedHeader({
               ? "bg-amber-600 text-white"
               : "bg-amber-200/70 hover:bg-amber-300 text-amber-950 dark:bg-amber-900/40 dark:text-amber-200"
           )}
-          title={c.name}
+          title={localizeCountryName(c.name, lang)}
         >
           <span>{c.flag}</span>
-          <span>{c.name.split(" ")[0]}:</span>
+          <span>{localizeCountryName(c.name, lang).split(" ")[0]}:</span>
           <span className="font-mono font-black" dir="ltr">{c.count}</span>
         </button>
       ));
@@ -1563,10 +1564,10 @@ export function LocalPurchaseApprovedHeader({
                       "dgt-pa-row",
                       isSelected && "bg-emerald-100/70 dark:bg-emerald-950/50 font-bold"
                     )}
-                    title={c.name}
+                    title={localizeCountryName(c.name, lang)}
                   >
                     <span className="text-base flex-none leading-none">{c.flag}</span>
-                    <span className="dgt-pa-row-label">{c.name}</span>
+                    <span className="dgt-pa-row-label">{localizeCountryName(c.name, lang)}</span>
                     <span className="dgt-pa-row-amt t-green font-mono font-bold" dir="ltr">
                       {c.totalAmount > 0 ? fmtMoney(metrics.unit, c.totalAmount) : "—"}
                     </span>
