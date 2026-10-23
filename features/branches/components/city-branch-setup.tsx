@@ -253,8 +253,8 @@ function CityBranchSetupContent() {
   const [editingCityBranchId, setEditingCityBranchId] = useState("");
 
   const [branchName, setBranchName] = useState("");
-  const [operationalDomain, setOperationalDomain] = useState<"business" | "shipping">("business");
-  const [branchCategory, setBranchCategory] = useState<"business" | "clearing_agent">("business");
+  const [operationalDomain, setOperationalDomain] = useState<"business" | "shipping" | "">("");
+  const [branchCategory, setBranchCategory] = useState<"business" | "clearing_agent" | "">("");
   const [branchCode, setBranchCode] = useState("");
   const [permissionTemplate, setPermissionTemplate] = useState("city-standard");
   const [permissionGrants, setPermissionGrants] = useState<string[]>(() => getPermissionKeysForTemplate("city-standard"));
@@ -498,7 +498,8 @@ function CityBranchSetupContent() {
         const sameCity =
           (location.cityId && b.city_id && b.city_id === location.cityId) ||
           (b.city_name && locationMeta.city?.name && b.city_name.trim().toLowerCase() === locationMeta.city.name.trim().toLowerCase());
-        return Boolean(sameCity && b.name && b.name.trim().toLowerCase() === branchName.trim().toLowerCase());
+        const sameDomain = !operationalDomain || !b.operational_domain || b.operational_domain === operationalDomain;
+        return Boolean(sameCity && sameDomain && b.name && b.name.trim().toLowerCase() === branchName.trim().toLowerCase());
       })
   );
 
@@ -1053,9 +1054,9 @@ function CityBranchSetupContent() {
     });
   }, [existingCityBranches, existingCitySearch]);
 
-  async function loadMainBranches(nextCountryId: string, domain?: "business" | "shipping") {
+  async function loadMainBranches(nextCountryId: string, domain?: "business" | "shipping" | "") {
     const effectiveDomain = domain ?? operationalDomain;
-    if (!nextCountryId?.trim()) {
+    if (!nextCountryId?.trim() || !effectiveDomain) {
       setMainBranches([]);
       setCountryBranchId("");
       return;
@@ -1089,7 +1090,7 @@ function CityBranchSetupContent() {
     }
   }
 
-  async function loadExistingCityBranches(nextCountryId: string, nextCountryBranchId?: string, domain?: "business" | "shipping") {
+  async function loadExistingCityBranches(nextCountryId: string, nextCountryBranchId?: string, domain?: "business" | "shipping" | "") {
     const effectiveDomain = domain ?? operationalDomain;
     if (!isUuid(nextCountryId)) {
       setExistingCityBranches([]);
@@ -1099,7 +1100,9 @@ function CityBranchSetupContent() {
     if (nextCountryBranchId && isUuid(nextCountryBranchId)) {
       params.set("countryBranchId", nextCountryBranchId);
     }
-    params.set("operationalDomain", effectiveDomain);
+    if (effectiveDomain) {
+      params.set("operationalDomain", effectiveDomain);
+    }
     const url = `/api/branch-management/city-branches?${params.toString()}`;
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
@@ -1112,7 +1115,7 @@ function CityBranchSetupContent() {
     return list;
   }
 
-  function suggestBranchCode(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches, domain: "business" | "shipping" = operationalDomain) {
+  function suggestBranchCode(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches, domain: "business" | "shipping" | "" = operationalDomain) {
     const prefix = asIso3(meta.country);
     const rawCity = meta.city?.code || meta.city?.name || "";
     const cityCode = compactCode(rawCity, "CITY");
@@ -1144,7 +1147,7 @@ function CityBranchSetupContent() {
     return `${prefix}-${cityCode}-${String((existingBranchesList || []).length + 1).padStart(3, "0")}`;
   }
 
-  function suggestBranchName(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches, domain: "business" | "shipping" = operationalDomain) {
+  function suggestBranchName(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches, domain: "business" | "shipping" | "" = operationalDomain) {
     const city = meta.city?.name?.trim();
     if (!city) return "";
     const existingNames = new Set(
@@ -1228,8 +1231,10 @@ function CityBranchSetupContent() {
     }
 
     if (!isUuid(next.countryId)) return;
-    await loadMainBranches(next.countryId, operationalDomain);
-    await loadExistingCityBranches(next.countryId, undefined, operationalDomain);
+    if (operationalDomain) {
+      await loadMainBranches(next.countryId, operationalDomain);
+      await loadExistingCityBranches(next.countryId, undefined, operationalDomain);
+    }
   }
 
   async function onMainBranchSelected(nextId: string, domain?: "business" | "shipping") {
@@ -1285,6 +1290,14 @@ function CityBranchSetupContent() {
     event.preventDefault();
     setFormTouched(true);
     setBanner(null);
+
+    if (!operationalDomain) {
+      setBanner({
+        type: "error",
+        message: "Mandatory: Please select an Operational Section (Option 1: Business & Trading OR Option 2: Shipping Line & Clearing Agent)."
+      });
+      return;
+    }
 
     if (!isUuid(location.countryId) || !isUuid(countryBranchId)) {
       setBanner({ type: "error", message: t(lang, "cbs.select_valid_country_branch") });
@@ -1467,6 +1480,8 @@ function CityBranchSetupContent() {
     setContacts([]);
     setPermissionTemplate("city-standard");
     setPermissionGrants(getPermissionKeysForTemplate("city-standard"));
+    setOperationalDomain("");
+    setBranchCategory("");
     setEmailPrefix("");
     setWhatsappNumber("");
     setPhoneNumberId("");
@@ -1639,7 +1654,7 @@ function CityBranchSetupContent() {
               type="submit"
               form="city-branch-wizard-form"
               size="sm"
-              disabled={saving || !location.countryId || !countryBranchId || cityAlreadyExists}
+              disabled={saving || !location.countryId || !operationalDomain || !countryBranchId || cityAlreadyExists}
               className="h-8 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg border-0 disabled:bg-slate-300 disabled:text-slate-500"
             >
               {saving ? t(lang, "common.saving") : editingCityBranchId ? t(lang, "common.update") : t(lang, "cbs.accept_save")}
@@ -1712,46 +1727,84 @@ function CityBranchSetupContent() {
                 </div>
               </section>
 
-              <section hidden={activeStep !== 1} className={compactSectionClass(!countryBranchId)}>
+              <section hidden={activeStep !== 1} className={compactSectionClass(!operationalDomain || !countryBranchId)}>
                 <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
                   <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1b_title")}</h2>
                 </div>
 
-                {/* 1. City Branch Operational Section Selector (Business vs Shipping Line) */}
-                <div className="mt-2 space-y-2 p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 font-sans">
-                  <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {lang === "ur" ? "اس سٹی برانچ کا آپریشنل سیکشن منتخب کریں *" : lang === "ar" ? "حدد القسم التشغيلي للفرع *" : lang === "ps" ? "د څانګې عملیاتي برخه وټاکئ *" : lang === "fa" ? "بخش عملیاتی شعبه را انتخاب کنید *" : "Select Operational Section *"}
-                  </Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* 1. Mandatory City Branch Operational Section Selector (Business & Trading vs Shipping Line & Clearing Agent) */}
+                <div className={cn(
+                  "mt-2 space-y-3 p-4 rounded-xl border-2 transition-all font-sans",
+                  !operationalDomain
+                    ? "border-amber-400 bg-amber-50/60 dark:bg-amber-950/20 shadow-xs"
+                    : operationalDomain === "business"
+                    ? "border-indigo-300 bg-indigo-50/40 dark:bg-indigo-950/30"
+                    : "border-blue-300 bg-blue-50/40 dark:bg-blue-950/30"
+                )}>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 border-slate-200 dark:border-slate-800">
+                    <div>
+                      <Label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                        <span>WHAT TYPE OF CITY BRANCH DO YOU WANT TO CREATE?</span>
+                        <span className="text-rose-500 text-sm">*</span>
+                      </Label>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        Mandatory: Choose the operational domain before assigning the parent Country Main Branch.
+                      </p>
+                    </div>
+                    {operationalDomain ? (
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
+                        ✓ Selected: {operationalDomain === "shipping" ? "Shipping Line & Clearing Agent" : "Business & Trading"}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
+                        ⚠️ Mandatory Selection Required
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <button
                       type="button"
+                      id="operational-domain-business-btn"
                       onClick={() => void onOperationalDomainChange("business")}
-                      className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
+                      className={`p-3.5 rounded-xl border-2 text-start flex items-start gap-3 transition-all ${
                         operationalDomain === "business"
-                          ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-200 font-bold shadow-xs ring-1 ring-indigo-400/30"
-                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                          ? "border-indigo-600 bg-white dark:bg-slate-950 text-indigo-900 dark:text-indigo-100 shadow-md ring-2 ring-indigo-500/30"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-400 hover:border-indigo-300 hover:bg-slate-50"
                       }`}
                     >
-                      <span className="text-2xl">🏢</span>
-                      <div>
-                        <div className="text-xs font-bold">{lang === "ur" ? "بزنس و کارپوریٹ سیکشن" : lang === "ar" ? "قسم الأعمال التجاري" : lang === "ps" ? "تجارتي / بزنس برخه" : lang === "fa" ? "بخش تجاری و شرکتی" : "Business Section"}</div>
-                        <div className="text-[10px] text-slate-500">{t(lang, "cbs.general_commercial_branch", "General commercial & trading branch")}</div>
+                      <span className="text-2xl mt-0.5">🏢</span>
+                      <div className="flex-1">
+                        <div className="text-xs font-black tracking-wide text-slate-900 dark:text-slate-100 flex items-center justify-between">
+                          <span>Option 1: Business & Trading</span>
+                          {operationalDomain === "business" && <span className="text-indigo-600 dark:text-indigo-400 font-extrabold text-sm">✓</span>}
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
+                          General commercial & trading branch. Handles authorized purchases, sales, inventory, business payments, business ledgers, and expenses.
+                        </div>
                       </div>
                     </button>
+
                     <button
                       type="button"
+                      id="operational-domain-shipping-btn"
                       onClick={() => void onOperationalDomainChange("shipping")}
-                      className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
+                      className={`p-3.5 rounded-xl border-2 text-start flex items-start gap-3 transition-all ${
                         operationalDomain === "shipping"
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-200 font-bold shadow-xs ring-1 ring-blue-400/30"
-                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                          ? "border-blue-600 bg-white dark:bg-slate-950 text-blue-900 dark:text-blue-100 shadow-md ring-2 ring-blue-500/30"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-400 hover:border-blue-300 hover:bg-slate-50"
                       }`}
                     >
-                      <span className="text-2xl">🚢</span>
-                      <div>
-                        <div className="text-xs font-bold">{lang === "ur" ? "شپنگ لائن و کسٹم کلیئرنگ سیکشن" : lang === "ar" ? "قسم خط الشحن والتخليص" : lang === "ps" ? "د کښتۍ لاین او کلیرنګ برخه" : lang === "fa" ? "بخش خط کشتیرانی و گمرک" : "Shipping Line Section"}</div>
-                        <div className="text-[10px] text-slate-500">{t(lang, "cbs.ports_shipping_customs", "Ports, shipping lines & customs clearing")}</div>
+                      <span className="text-2xl mt-0.5">🚢</span>
+                      <div className="flex-1">
+                        <div className="text-xs font-black tracking-wide text-slate-900 dark:text-slate-100 flex items-center justify-between">
+                          <span>Option 2: Shipping Line & Clearing Agent</span>
+                          {operationalDomain === "shipping" && <span className="text-blue-600 dark:text-blue-400 font-extrabold text-sm">✓</span>}
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
+                          Ports, shipping line operations, customs clearing agents, freight forwarders, cargo logistics, and shipping ledgers/expenses.
+                        </div>
                       </div>
                     </button>
                   </div>
@@ -1760,18 +1813,26 @@ function CityBranchSetupContent() {
                 {/* 2. Main Branch Selector (scoped to selected Operational Section) */}
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <SearchSelect
-                    label={operationalDomain === "shipping" ? "Select Shipping Line Main Branch *" : "Select Business Main Branch *"}
+                    label={
+                      !operationalDomain
+                        ? "Select Parent Main Branch *"
+                        : operationalDomain === "shipping"
+                        ? "Select Shipping Line / Country Main Branch *"
+                        : "Select Business / Country Main Branch *"
+                    }
                     value={countryBranchId}
                     placeholder={
                       !location.countryId
                         ? t(lang, "cbs.select_country_first")
+                        : !operationalDomain
+                        ? "⚠️ Select Operational Section above first"
                         : mainBranches.length === 0
-                        ? `No ${operationalDomain === "shipping" ? "Shipping Line" : "Business"} Main Branch found for this country`
+                        ? `No Country Main Branch found for this country`
                         : operationalDomain === "shipping"
-                        ? "Select Shipping Line Main Branch..."
+                        ? "Select Shipping / Country Main Branch..."
                         : t(lang, "cbs.select_main_branch_ph")
                     }
-                    disabled={!location.countryId}
+                    disabled={!location.countryId || !operationalDomain}
                     options={mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})` }))}
                     onValueChange={(value) => void onMainBranchSelected(value)}
                   />

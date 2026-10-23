@@ -218,10 +218,10 @@ export async function POST(request: Request) {
     }
 
     // Check main branch via Postgres or Supabase
-    let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any; operational_domain?: string | null } | null = null;
+    let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any; operational_domain?: string | null; is_main?: boolean | null } | null = null;
     const mbViaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
-        select id, country_id, local_currency, permission_grants, operational_domain
+        select id, country_id, local_currency, permission_grants, operational_domain, is_main
         from public.country_branches
         where id = ${parsed.data.countryBranchId}
           and deleted_at is null
@@ -236,7 +236,7 @@ export async function POST(request: Request) {
       const supabase = createSupabaseAdminClient() as any;
       const { data, error } = await supabase
         .from("country_branches")
-        .select("id,country_id,local_currency,permission_grants,operational_domain")
+        .select("id,country_id,local_currency,permission_grants,operational_domain,is_main")
         .eq("id", parsed.data.countryBranchId)
         .is("deleted_at", null)
         .single();
@@ -252,7 +252,8 @@ export async function POST(request: Request) {
     }
 
     const mbDomain = (mainBranch as any)?.operational_domain || "business";
-    if (mbDomain !== parsed.data.operationalDomain) {
+    const mbIsMain = Boolean((mainBranch as any)?.is_main);
+    if (!mbIsMain && mbDomain !== parsed.data.operationalDomain) {
       return NextResponse.json({
         error: formatError(
           `Selected Main Branch belongs to "${mbDomain === "shipping" ? "Shipping Line" : "Business"}" section, but this City Branch is for "${parsed.data.operationalDomain === "shipping" ? "Shipping Line" : "Business"}". Please select a matching Main Branch from the same section.`,
@@ -286,13 +287,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check duplicate branch name in the same city
+    // Check duplicate branch name in the same city for the same operational domain
     const existingNameId = await withLocalPg(async (sql) => {
       const rows = await sql`
         select id from public.city_branches
         where country_id = ${parsed.data.countryId}
           and lower(city_name) = lower(${normCityName})
           and lower(name) = lower(${normName})
+          and coalesce(operational_domain, 'business') = ${parsed.data.operationalDomain}
           and deleted_at is null
         limit 1
       `;
@@ -538,10 +540,10 @@ export async function PUT(request: Request) {
       }
     }
 
-    let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any; operational_domain?: string | null } | null = null;
+    let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any; operational_domain?: string | null; is_main?: boolean | null } | null = null;
     const mbViaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
-        select id, country_id, local_currency, permission_grants, operational_domain
+        select id, country_id, local_currency, permission_grants, operational_domain, is_main
         from public.country_branches
         where id = ${parsed.data.countryBranchId}
           and deleted_at is null
@@ -556,7 +558,7 @@ export async function PUT(request: Request) {
       const supabase = createSupabaseAdminClient() as any;
       const { data, error } = await supabase
         .from("country_branches")
-        .select("id,country_id,local_currency,permission_grants,operational_domain")
+        .select("id,country_id,local_currency,permission_grants,operational_domain,is_main")
         .eq("id", parsed.data.countryBranchId)
         .is("deleted_at", null)
         .single();
@@ -572,7 +574,8 @@ export async function PUT(request: Request) {
     }
 
     const mbDomain = (mainBranch as any)?.operational_domain || "business";
-    if (mbDomain !== parsed.data.operationalDomain) {
+    const mbIsMain = Boolean((mainBranch as any)?.is_main);
+    if (!mbIsMain && mbDomain !== parsed.data.operationalDomain) {
       return NextResponse.json({
         error: formatError(
           `Selected Main Branch belongs to "${mbDomain === "shipping" ? "Shipping Line" : "Business"}" section, but this City Branch is for "${parsed.data.operationalDomain === "shipping" ? "Shipping Line" : "Business"}". Please select a matching Main Branch from the same section.`,
@@ -607,13 +610,14 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Check duplicate branch name in the same city excluding self
+    // Check duplicate branch name in the same city excluding self (scoped to operational domain)
     const existingNameId = await withLocalPg(async (sql) => {
       const rows = await sql`
         select id from public.city_branches
         where country_id = ${parsed.data.countryId}
           and lower(city_name) = lower(${normCityName})
           and lower(name) = lower(${normName})
+          and coalesce(operational_domain, 'business') = ${parsed.data.operationalDomain}
           and id <> ${id}
           and deleted_at is null
         limit 1

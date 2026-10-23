@@ -78,9 +78,9 @@ function buildCountryBranchQuery(
 
   if (operationalDomain) {
     if (operationalDomain === "business") {
-      query = query.or("operational_domain.eq.business,operational_domain.is.null");
+      query = query.or("operational_domain.eq.business,operational_domain.is.null,is_main.eq.true");
     } else {
-      query = query.eq("operational_domain", operationalDomain);
+      query = query.or(`operational_domain.eq.${operationalDomain},is_main.eq.true`);
     }
   }
 
@@ -121,7 +121,7 @@ export async function GET(request: Request) {
           and (${id && isUuid(id) ? sql`id = ${id}` : sql`true`})
           and (${countryId ? sql`country_id = ${countryId}::uuid` : sql`true`})
           and (${!countryId && !session.isSuperAdmin ? sql`country_id = any(${session.countryIds})` : sql`true`})
-          and (${operationalDomain ? sql`coalesce(operational_domain, 'business') = ${operationalDomain}` : sql`true`})
+          and (${operationalDomain ? sql`(coalesce(operational_domain, 'business') = ${operationalDomain} or is_main = true)` : sql`true`})
         order by created_at asc
       `;
       return { countryBranches: normalizeCountryBranchRows(rows as any[]) };
