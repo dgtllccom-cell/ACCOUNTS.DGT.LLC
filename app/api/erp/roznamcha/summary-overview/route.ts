@@ -27,6 +27,16 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const canViewUsd = Boolean(
+      session.isSuperAdmin ||
+      session.roles.some((r) => ["super_admin", "business_super_admin", "shipping_super_admin", "super_admin_reports"].includes(r)) ||
+      session.permissions.some((p) => p === "*:*" || p === "view_usd_reporting" || p === "usd_reporting")
+    );
+    const isStaffOnly =
+      !session.isSuperAdmin &&
+      session.roles.includes("staff_user") &&
+      !session.roles.some((r) => ["country_admin", "main_branch_admin", "city_branch_admin", "branch_admin", "accountant", "cashier", "admin"].includes(r));
+
     const supabase = createSupabaseAdminClient();
 
     const allowedCountryIds = !session.isSuperAdmin && session.countryIds?.length ? session.countryIds : null;
@@ -122,6 +132,7 @@ export async function GET(request: NextRequest) {
           and entry_date = ${dateParam}
           and (${allowedCountryIds ? sql`country_id = any(${allowedCountryIds})` : sql`true`})
           and (${allowedBranchIds ? sql`city_branch_id = any(${allowedBranchIds})` : sql`true`})
+          and (${isStaffOnly ? sql`created_by = ${session.userId}::uuid` : sql`true`})
           and (${filterCountryId ? sql`country_id = ${filterCountryId}` : sql`true`})
           and (${filterBranchId ? sql`city_branch_id = ${filterBranchId}` : sql`true`})
         order by created_at desc
@@ -177,6 +188,9 @@ export async function GET(request: NextRequest) {
       }
       if (allowedBranchIds) {
         entriesQuery = entriesQuery.in("city_branch_id", allowedBranchIds);
+      }
+      if (isStaffOnly) {
+        entriesQuery = entriesQuery.eq("created_by", session.userId);
       }
       if (filterCountryId) {
         entriesQuery = entriesQuery.eq("country_id", filterCountryId);
@@ -263,7 +277,8 @@ export async function GET(request: NextRequest) {
     const countriesList = (countriesData || []).map((country: any) => {
       const cId = country.id;
       const stats = countryStats[cId] || { totalDebit: 0, totalCredit: 0, entryCount: 0, branches: {} };
-      const rates = countryRatesMap[cId] || countryRatesMap["GLOBAL"] || { buyingRate: null, sellingRate: null, creditRate: null, debitRate: null };
+      const rawRates = countryRatesMap[cId] || countryRatesMap["GLOBAL"] || { buyingRate: null, sellingRate: null, creditRate: null, debitRate: null };
+      const rates = canViewUsd ? rawRates : { buyingRate: null, sellingRate: null, creditRate: null, debitRate: null };
 
       // Balance convention: Credit - Debit. Positive => Cr, Negative => Dr
       const netBalanceRaw = stats.totalCredit - stats.totalDebit;

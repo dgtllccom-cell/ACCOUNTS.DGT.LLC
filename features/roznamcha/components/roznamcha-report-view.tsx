@@ -34,6 +34,8 @@ import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
 
 type SessionInfo = {
+  roles?: string[];
+  permissions?: string[];
   scopes: {
     countryIds: string[];
     countryBranchIds: string[];
@@ -133,6 +135,14 @@ export function RoznamchaReportView({
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<RoznamchaEntryRow[]>([]);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
+
+  const canViewUsd = useMemo(() => {
+    if (!sessionInfo) return false;
+    if (sessionInfo.scopes?.isSuperAdmin) return true;
+    if (sessionInfo.roles?.some((r: string) => r === "super_admin" || r === "financial_controller")) return true;
+    if (sessionInfo.permissions?.some((p: string) => p === "reports:view_usd" || p === "view_usd_reporting")) return true;
+    return false;
+  }, [sessionInfo]);
 
   const [fromDate, setFromDate] = useState(monthStartIso());
   const [toDate, setToDate] = useState(todayIso());
@@ -326,8 +336,7 @@ export function RoznamchaReportView({
       "Currency",
       "Debit",
       "Credit",
-      "USD Rate",
-      "USD Amount"
+      ...(canViewUsd ? ["USD Rate", "USD Amount"] : [])
     ];
 
     const rows = selectedLines.map((l) => [
@@ -344,8 +353,7 @@ export function RoznamchaReportView({
       l.currency,
       l.debit ? String(l.debit) : "",
       l.credit ? String(l.credit) : "",
-      l.usd_rate ? String(l.usd_rate) : "",
-      l.usd_amount ? String(l.usd_amount) : ""
+      ...(canViewUsd ? [l.usd_rate ? String(l.usd_rate) : "", l.usd_amount ? String(l.usd_amount) : ""] : [])
     ]);
 
     const csv = [headerRow, ...rows]
@@ -388,7 +396,7 @@ export function RoznamchaReportView({
           line.debit ? `Dr ${fmtNumber(Number(line.debit))}` : "",
           line.credit ? `Cr ${fmtNumber(Number(line.credit))}` : "",
           line.currency,
-          line.usd_amount ? `USD ${fmtNumber(Number(line.usd_amount))}` : ""
+          (canViewUsd && line.usd_amount) ? `USD ${fmtNumber(Number(line.usd_amount))}` : ""
         ]
           .filter(Boolean)
           .join("  |  ")
@@ -733,7 +741,7 @@ export function RoznamchaReportView({
                       <Th className="px-3 py-2">Account Code & Name</Th>
                       <Th className="px-3 py-2 text-right">Debit</Th>
                       <Th className="px-3 py-2 text-right">Credit</Th>
-                      <Th className="px-3 py-2 text-right">USD Amount</Th>
+                      {canViewUsd && <Th className="px-3 py-2 text-right">USD Amount</Th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-800">
@@ -754,9 +762,11 @@ export function RoznamchaReportView({
                         <td className="px-3 py-2 text-right font-mono tabular-nums text-emerald-600">
                           {line.credit ? `${selectedHeader.countries?.currency_code || "—"} ${fmtNumber(Number(line.credit))}` : "-"}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono tabular-nums text-slate-500 dark:text-slate-400">
-                          {line.usd_amount ? `$${fmtNumber(Number(line.usd_amount))}` : "-"}
-                        </td>
+                        {canViewUsd && (
+                          <td className="px-3 py-2 text-right font-mono tabular-nums text-slate-500 dark:text-slate-400">
+                            {line.usd_amount ? `$${fmtNumber(Number(line.usd_amount))}` : "-"}
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>

@@ -42,6 +42,16 @@ export async function GET(request: NextRequest) {
     // this session for the same class of bug on other tables).
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
+    const canViewUsd = Boolean(
+      session.isSuperAdmin ||
+      session.roles.some((r) => ["super_admin", "business_super_admin", "shipping_super_admin", "super_admin_reports"].includes(r)) ||
+      session.permissions.some((p) => p === "*:*" || p === "view_usd_reporting" || p === "usd_reporting")
+    );
+    const isStaffOnly =
+      !session.isSuperAdmin &&
+      session.roles.includes("staff_user") &&
+      !session.roles.some((r) => ["country_admin", "main_branch_admin", "city_branch_admin", "branch_admin", "accountant", "cashier", "admin"].includes(r));
+
     authorizeApiScope(session, {
       resource: "roznamcha",
       action: "read",
@@ -110,6 +120,7 @@ export async function GET(request: NextRequest) {
           and (${session.isSuperAdmin
             ? sql`true`
             : sql`(e.city_branch_id = any(${cityIds}) or e.country_branch_id = any(${countryBranchIds}) or e.country_id = any(${countryIds}))`})
+          and (${isStaffOnly ? sql`e.created_by = ${session.userId}::uuid` : sql`true`})
           and (${domainAllowed ? sql`(e.operational_domain is null or e.operational_domain = any(${domainAllowed}))` : sql`true`})
           and (${fromDate ? sql`e.entry_date::date >= ${fromDate}::date` : sql`true`})
           and (${toDate ? sql`e.entry_date::date <= ${toDate}::date` : sql`true`})
@@ -161,6 +172,14 @@ export async function GET(request: NextRequest) {
     if (viaPg) {
       const narrationResolved = await localizeRecordNames(viaPg.entries, "roznamcha_entries", "narration", lang);
       const resolvedEntries = await localizeRoznamchaEntryLines(narrationResolved, lang);
+      if (!canViewUsd) {
+        for (const entry of resolvedEntries) {
+          for (const line of (entry as any).roznamcha_lines || []) {
+            line.usd_rate = null;
+            line.usd_amount = null;
+          }
+        }
+      }
       return apiOk({ entries: resolvedEntries, limit });
     }
 
@@ -209,6 +228,10 @@ export async function GET(request: NextRequest) {
       } else {
         query = query.eq("id", "00000000-0000-0000-0000-000000000000");
       }
+    }
+
+    if (isStaffOnly) {
+      query = query.eq("created_by", session.userId);
     }
 
     if (fromDate) query = (query as any).gte("entry_date", fromDate.includes("T") ? fromDate : `${fromDate}T00:00:00.000Z`);
@@ -264,6 +287,15 @@ export async function GET(request: NextRequest) {
     }
     const narrationResolved = await localizeRecordNames(entries as any[], "roznamcha_entries", "narration", lang);
     const resolvedEntries = await localizeRoznamchaEntryLines(narrationResolved, lang);
+
+    if (!canViewUsd) {
+      for (const entry of resolvedEntries) {
+        for (const line of (entry as any).roznamcha_lines || []) {
+          line.usd_rate = null;
+          line.usd_amount = null;
+        }
+      }
+    }
 
     return apiOk({
       entries: resolvedEntries,

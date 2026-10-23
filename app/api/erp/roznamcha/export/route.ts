@@ -49,6 +49,16 @@ export async function GET(request: NextRequest) {
     const fromDate = query.fromDate ?? monthStartIso();
     const toDate = query.toDate ?? todayIso();
 
+    const canViewUsd = Boolean(
+      session.isSuperAdmin ||
+      session.roles.some((r) => ["super_admin", "business_super_admin", "shipping_super_admin", "super_admin_reports"].includes(r)) ||
+      session.permissions.some((p) => p === "*:*" || p === "view_usd_reporting" || p === "usd_reporting")
+    );
+    const isStaffOnly =
+      !session.isSuperAdmin &&
+      session.roles.includes("staff_user") &&
+      !session.roles.some((r) => ["country_admin", "main_branch_admin", "city_branch_admin", "branch_admin", "accountant", "cashier", "admin"].includes(r));
+
     // Real Roznamcha data — from roznamcha_entries + roznamcha_lines, scope-enforced with the one
     // scope rule (an OR over every assignment level widened a branch user to its whole country).
     const sqlScope = sessionSqlScope(session);
@@ -72,6 +82,7 @@ export async function GET(request: NextRequest) {
           and (${scope.countryId ? sql`e.country_id = ${scope.countryId}` : sql`true`})
           and (${scope.countryBranchId ? sql`e.country_branch_id = ${scope.countryBranchId}` : sql`true`})
           and (${scope.cityBranchId ? sql`e.city_branch_id = ${scope.cityBranchId}` : sql`true`})
+          and (${isStaffOnly ? sql`e.created_by = ${session.userId}::uuid` : sql`true`})
           and ${sqlScopeCondition(sql, sqlScope, "e")}
           and e.entry_date >= ${fromDate}
           and e.entry_date <= ${toDate}
@@ -108,25 +119,29 @@ export async function GET(request: NextRequest) {
     );
 
     // Build report layout
+    const reportHeaders = [
+      "Date",
+      "Description",
+      "Debit",
+      "Credit",
+      "Balance",
+      ...(canViewUsd ? ["Exchange Rate"] : [])
+    ];
+
+    const reportRows = filteredData.map((row) => [
+      row.date,
+      row.description,
+      row.debit.toFixed(2),
+      row.credit.toFixed(2),
+      row.balance.toFixed(2),
+      ...(canViewUsd ? [row.exchangeRate.toFixed(2)] : [])
+    ]);
+
     const report = buildProfessionalReportLayout(
       "Cash Entry / Roznamcha Report",
       {
-        headers: [
-          "Date",
-          "Description",
-          "Debit",
-          "Credit",
-          "Balance",
-          "Exchange Rate",
-        ],
-        rows: filteredData.map((row) => [
-          row.date,
-          row.description,
-          row.debit.toFixed(2),
-          row.credit.toFixed(2),
-          row.balance.toFixed(2),
-          row.exchangeRate.toFixed(2),
-        ]),
+        headers: reportHeaders,
+        rows: reportRows,
         summary: {
           "Total Entries": summary.entries,
           "Total Debit": summary.totalDebit.toFixed(2),
