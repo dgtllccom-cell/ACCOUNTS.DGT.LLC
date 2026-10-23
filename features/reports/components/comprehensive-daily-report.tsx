@@ -127,7 +127,7 @@ export function ComprehensiveDailyReportView() {
       const bid = e.city_branch_id || e.country_branch_id || "unassigned";
       if (!map.has(bid)) {
         map.set(bid, {
-          name: e.city_branches?.name || e.country_branches?.name || "Unassigned Branch",
+          name: e.city_branches?.name || e.country_branches?.name || "—",
           code: e.city_branches?.code || e.country_branches?.code || "N/A",
           country: e.countries?.name || "Unknown",
           debit: 0, credit: 0, count: 0

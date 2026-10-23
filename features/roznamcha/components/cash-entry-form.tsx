@@ -83,6 +83,7 @@ import {
 import { Th } from "@/components/ui/translated-th";
 import { resolveVerifiedTranslation } from "@/lib/i18n/verified-record-translations";
 import { translateNarrationBlock, translateHeader } from "@/lib/i18n/table-headers";
+import { localizeCountryName } from "@/lib/i18n/country-names";
 import { localizeTerm } from "@/lib/i18n/transliteration";
 
 function getRoznamchaCategoryLabel(row: any) {
@@ -3256,7 +3257,7 @@ export function CashEntryForm({
                         <option value="all">{t(lang, "roz.all_countries", "All Countries")}</option>
                         {countryList.map((c) => (
                           <option key={c.countryId} value={c.iso2}>
-                            {c.iso2} — {c.countryName}
+                            {c.iso2} — {localizeCountryName(c.countryName, lang)}
                           </option>
                         ))}
                       </select>

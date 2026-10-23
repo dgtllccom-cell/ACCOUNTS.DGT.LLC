@@ -7869,6 +7869,10 @@ export type UiKey =
   | "pjt.export_pdf"
   | "pjt.print_btn"
   | "pjt.row_actions"
+  | "fx.country_wide_all_branches"
+  | "fx.country_level"
+  | "fx.rate_in_placeholder"
+  | "common.actions_for"
   | "sarh.urdu_audit_excel"
   | "logi.shipping_dash_subtitle"
   | "bud.scope_country"
@@ -37271,6 +37275,10 @@ const en: Dict = {
   "bud.scope_auditor_country": "Auditor (Country)",
   "logi.shipping_dash_subtitle": "Dashboard for shipment and clearance operations",
   "sarh.urdu_audit_excel": "Urdu Audit Excel",
+  "fx.country_wide_all_branches": "Country-wide (All Branches)",
+  "fx.country_level": "Country level",
+  "fx.rate_in_placeholder": "e.g. Rate in {code}",
+  "common.actions_for": "Actions for {name}",
 };
 
 const ur: Dict = {
@@ -62359,6 +62367,10 @@ const ur: Dict = {
   "bud.scope_auditor_country": "آڈیٹر (ملک)",
   "logi.shipping_dash_subtitle": "شپمنٹ اور کلیئرنس آپریشنز کا ڈیش بورڈ",
   "sarh.urdu_audit_excel": "اردو آڈٹ ایکسل رپورٹ",
+  "fx.country_wide_all_branches": "ملک بھر (تمام برانچز)",
+  "fx.country_level": "ملکی سطح",
+  "fx.rate_in_placeholder": "مثلاً {code} میں ریٹ",
+  "common.actions_for": "{name} کے لیے کارروائیاں",
 };
 
 const ar: Dict = {
@@ -87448,6 +87460,10 @@ const ar: Dict = {
   "bud.scope_auditor_country": "مدقق (دولة)",
   "logi.shipping_dash_subtitle": "لوحة متابعة عمليات الشحن والتخليص",
   "sarh.urdu_audit_excel": "تقرير التدقيق بالأردية (Excel)",
+  "fx.country_wide_all_branches": "على مستوى الدولة (جميع الفروع)",
+  "fx.country_level": "على مستوى الدولة",
+  "fx.rate_in_placeholder": "مثال: السعر بـ {code}",
+  "common.actions_for": "إجراءات {name}",
 };
 
 const fa: Dict = {
@@ -112536,6 +112552,10 @@ const fa: Dict = {
   "bud.scope_auditor_country": "حسابرس (کشور)",
   "logi.shipping_dash_subtitle": "داشبورد عملیات حمل و ترخیص",
   "sarh.urdu_audit_excel": "گزارش ممیزی اردو (Excel)",
+  "fx.country_wide_all_branches": "سراسر کشور (همه شعبه‌ها)",
+  "fx.country_level": "سطح کشور",
+  "fx.rate_in_placeholder": "مثلاً نرخ به {code}",
+  "common.actions_for": "عملیات برای {name}",
 };
 
 const ps: Dict = {
@@ -137631,6 +137651,10 @@ const ps: Dict = {
   "bud.scope_auditor_country": "پلټونکی (هیواد)",
   "logi.shipping_dash_subtitle": "د بار لیږد او ترخیص عملیاتو ډشبورډ",
   "sarh.urdu_audit_excel": "د اردو پلټنې Excel راپور",
+  "fx.country_wide_all_branches": "د هېواد په کچه (ټولې څانګې)",
+  "fx.country_level": "د هېواد کچه",
+  "fx.rate_in_placeholder": "د بېلګې په توګه په {code} کې نرخ",
+  "common.actions_for": "د {name} لپاره کړنې",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

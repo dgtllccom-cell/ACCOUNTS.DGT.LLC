@@ -4812,7 +4812,7 @@ export function LocalPurchaseView({
                               <td className="px-3 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                                 <UnifiedActionMenu
                                   align="right"
-                                  ariaLabel={`Actions for ${row.voucherNo}`}
+                                  ariaLabel={t(lang, "common.actions_for", "Actions for {name}").replace("{name}", String(row.voucherNo))}
                                   buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-2xs cursor-pointer mx-auto"
                                   onView={() => {
                                     if (row.raw) setSelectedRowForVoucher(row.raw);
@@ -5172,7 +5172,7 @@ export function LocalPurchaseView({
                             <td className="px-3 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                               <UnifiedActionMenu
                                 align="right"
-                                ariaLabel={`Actions for ${row.voucherNo}`}
+                                ariaLabel={t(lang, "common.actions_for", "Actions for {name}").replace("{name}", String(row.voucherNo))}
                                 buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-2xs cursor-pointer mx-auto"
                                 onView={() => {
                                   if (row.raw) setSelectedRowForVoucher(row.raw);

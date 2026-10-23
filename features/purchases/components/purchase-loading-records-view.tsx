@@ -2420,7 +2420,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
       const goods = asRecordArray<any>(poData.goodsEntries);
 
       const country = String(r.countries?.name || form.branchCountry || "Unknown Country").trim();
-      const branch = String(r.country_branches?.name || form.branchName || "Unassigned Branch").trim();
+      const branch = String(r.country_branches?.name || form.branchName || "—").trim();
 
       const poQty = goods.length > 0 
         ? goods.reduce((s: number, g: any) => s + Number(g.qtyNo || g.quantity || 0), 0)
@@ -2486,7 +2486,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
       const form = poData.form || {};
       const goods = asRecordArray<any>(poData.goodsEntries);
       const country = String(r.countries?.name || form.branchCountry || "Unknown Country").trim();
-      const branch = String(r.country_branches?.name || form.branchName || "Unassigned Branch").trim();
+      const branch = String(r.country_branches?.name || form.branchName || "—").trim();
 
       const poQty = goods.length > 0 
         ? goods.reduce((s: number, g: any) => s + Number(g.qtyNo || g.quantity || 0), 0)
@@ -2774,7 +2774,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
         firstRecord?.country_branches?.name ||
         form.cityBranchName ||
         form.branchName ||
-        "Unassigned Branch"
+        "—"
       );
       const currencyFc = String(group.currency || form.currency || poRow.currency_code || "USD").toUpperCase();
       const countryKey = country.toLowerCase();

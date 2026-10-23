@@ -75,7 +75,7 @@ function country(row: SalesOrderRow) {
 
 function branch(row: SalesOrderRow) {
   const f = form(row);
-  return String(f.branchName || f.purchaseAccountBranch || f.salesAccountBranch || "Unassigned Branch");
+  return String(f.branchName || f.purchaseAccountBranch || f.salesAccountBranch || "—");
 }
 
 function currency(row: SalesOrderRow) {

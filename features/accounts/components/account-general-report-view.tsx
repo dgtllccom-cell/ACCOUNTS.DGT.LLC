@@ -25,6 +25,7 @@ const getFlag = (countryName: string) => {
 };
 import { apiDelete, apiGet } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { localizeCountryName } from "@/lib/i18n/country-names";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
@@ -1892,7 +1893,7 @@ export function AccountGeneralReportView({
                         )}
                       >
                         <span>{getFlag(c.countryName)}</span>
-                        <span>{c.countryName}</span>
+                        <span>{localizeCountryName(c.countryName, lang)}</span>
                       </button>
                     );
                   })}

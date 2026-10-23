@@ -2765,7 +2765,7 @@ export function PurchaseBookingJournalReportView({
                           {/* Three Dots (: Actions) Menu with all print & inspection options */}
                           <UnifiedActionMenu
                             align="right"
-                            ariaLabel={`Actions for ${report.purchaseBookingOrderNumber}`}
+                            ariaLabel={t(activeLang, "common.actions_for", "Actions for {name}").replace("{name}", String(report.purchaseBookingOrderNumber))}
                             buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 transition shadow-2xs"
                             onView={() => { setSelectedId(report.id); setIsDrawerOpen(true); }}
                             onEdit={() => {
@@ -3032,7 +3032,7 @@ export function PurchaseBookingJournalReportView({
                     <Td center onClick={(e) => e.stopPropagation()}>
                       <UnifiedActionMenu
                         align="right"
-                        ariaLabel={`Actions for ${report.purchaseBookingOrderNumber}`}
+                        ariaLabel={t(activeLang, "common.actions_for", "Actions for {name}").replace("{name}", String(report.purchaseBookingOrderNumber))}
                         buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm"
                         onView={() => { setSelectedId(report.id); setIsDrawerOpen(true); }}
                         onEdit={() => {

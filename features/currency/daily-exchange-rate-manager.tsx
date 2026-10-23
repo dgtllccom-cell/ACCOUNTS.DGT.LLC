@@ -15,6 +15,7 @@ import { apiGet, apiPost } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { Th } from "@/components/ui/translated-th";
 
@@ -98,6 +99,7 @@ function getFlag(iso2: string | null | undefined) {
 export function DailyExchangeRateManager() {
   const lang = useActiveLanguage();
   const th = (label: string) => translateHeader(lang, label);
+  const branchLabel = (name: string) => name === "Country-wide (All Branches)" ? t(lang, "fx.country_wide_all_branches", name) : name === "Country level" ? t(lang, "fx.country_level", name) : name;
   const [rates, setRates] = useState<CountryRate[]>([]);
   const [countries, setCountries] = useState<CountryOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -573,7 +575,7 @@ export function DailyExchangeRateManager() {
                   type="number"
                   step="0.0001"
                   min="0"
-                  placeholder={selectedCountry ? `e.g. Rate in ${selectedCountry.currency_code}` : th("Select country first")}
+                  placeholder={selectedCountry ? t(lang, "fx.rate_in_placeholder", "e.g. Rate in {code}").replace("{code}", String(selectedCountry.currency_code)) : th("Select country first")}
                   value={creditPrice}
                   onChange={(e) => setCreditPrice(e.target.value)}
                   className="h-10 text-xs font-black font-mono text-emerald-700 dark:text-emerald-400 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 focus:border-emerald-500 pr-24"
@@ -605,7 +607,7 @@ export function DailyExchangeRateManager() {
                   type="number"
                   step="0.0001"
                   min="0"
-                  placeholder={selectedCountry ? `e.g. Rate in ${selectedCountry.currency_code}` : th("Select country first")}
+                  placeholder={selectedCountry ? t(lang, "fx.rate_in_placeholder", "e.g. Rate in {code}").replace("{code}", String(selectedCountry.currency_code)) : th("Select country first")}
                   value={debitPrice}
                   onChange={(e) => setDebitPrice(e.target.value)}
                   className="h-10 text-xs font-black font-mono text-blue-700 dark:text-blue-400 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800 focus:border-blue-500 pr-24"
@@ -697,7 +699,7 @@ export function DailyExchangeRateManager() {
                 >
                   <option value="all">{th("ALL BRANCHES")}</option>
                   {branchOptions.map((branchName) => (
-                    <option key={branchName} value={branchName} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold py-1">{branchName}</option>
+                    <option key={branchName} value={branchName} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold py-1">{branchLabel(branchName)}</option>
                   ))}
                 </select>
               </div>
@@ -808,7 +810,7 @@ export function DailyExchangeRateManager() {
                                     <span className="uppercase">{countryName}</span>
                                   </td>
                                   <td className="py-2.5 px-3 font-bold text-[10px] text-slate-600 dark:text-slate-300 uppercase">
-                                    {r.branch_name || "-"}
+                                    {r.branch_name ? branchLabel(r.branch_name) : "-"}
                                   </td>
                                   <td className="py-2.5 px-3 font-bold text-[10px] text-blue-700 dark:text-blue-400 uppercase">
                                     {r.user_name || "-"}

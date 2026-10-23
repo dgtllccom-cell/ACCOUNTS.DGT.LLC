@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { t } from "@/lib/i18n/ui";
+import { localizeCountryName } from "@/lib/i18n/country-names";
 import { 
   FileText, 
   Download, 
@@ -195,6 +197,7 @@ const DAILY_DEVELOPMENT_LOGS: DailyLog[] = [
 
 export default function HandoverReportPage() {
   const lang = useActiveLanguage();
+  const roleLabel = (r: string) => t(lang, ("role." + r.trim().toLowerCase().replace(/[\s/]+/g, "_")) as never, translateHeader(lang, r));
   const th = (s: string) => translateHeader(lang, s);
   const [activeTab, setActiveTab] = useState<"overview" | "access-register" | "timeline" | "database" | "i18n" | "rbac" | "guide">("access-register");
   const [isDownloading, setIsDownloading] = useState(false);
@@ -423,7 +426,7 @@ export default function HandoverReportPage() {
               >
                 <option value="all">{th("All Countries")}</option>
                 {Array.from(new Set(accessRegister.map((e) => e.country).filter(Boolean))).sort().map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c}>{localizeCountryName(c, lang)}</option>
                 ))}
               </select>
 
@@ -434,7 +437,7 @@ export default function HandoverReportPage() {
               >
                 <option value="all">{th("All Roles")}</option>
                 {Array.from(new Set(accessRegister.map((e) => e.role).filter(Boolean))).sort().map((r) => (
-                  <option key={r} value={r}>{th(r)}</option>
+                  <option key={r} value={r}>{roleLabel(r)}</option>
                 ))}
               </select>
             </div>
@@ -474,13 +477,13 @@ export default function HandoverReportPage() {
 
                     return (
                       <tr key={entry.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td className="p-3 font-bold text-slate-900 dark:text-slate-100 align-middle">{entry.country}</td>
+                        <td className="p-3 font-bold text-slate-900 dark:text-slate-100 align-middle">{localizeCountryName(entry.country, lang)}</td>
                         <td className="p-3 text-slate-700 dark:text-slate-300 align-middle">{entry.mainBranch}</td>
                         <td className="p-3 text-slate-600 dark:text-slate-400 align-middle">{entry.cityBranch}</td>
                         <td className="p-3 font-semibold text-slate-900 dark:text-slate-100 align-middle">{entry.responsiblePerson}</td>
                         <td className="p-3 align-middle">
                           <span className={`inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-bold rounded-full border shadow-2xs ${roleBadge}`}>
-                            {entry.role}
+                            {roleLabel(entry.role)}
                           </span>
                         </td>
                         <td className="max-w-[160px] truncate p-3 font-mono text-[11px] text-blue-700 dark:text-blue-300 font-semibold align-middle" title={entry.username}>{entry.username}</td>
