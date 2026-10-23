@@ -7869,6 +7869,8 @@ export type UiKey =
   | "pjt.export_pdf"
   | "pjt.print_btn"
   | "pjt.row_actions"
+  | "pjt.tt_click_view_goods"
+  | "pjt.tt_click_view_accounts"
   | "pjt.payment_history"
   | "pjt.journal_entry"
   | "pjt.bank_branch_address_ph"
@@ -37243,6 +37245,8 @@ const en: Dict = {
   "com.choose_warehouse": "Choose Warehouse",
   "com.manifest_in_right_panel": "Goods manifest and live totals are tracked on the right panel",
   "pa.breadcrumb": "Breadcrumb",
+  "pjt.tt_click_view_goods": "Click to view Goods & Purchase Details",
+  "pjt.tt_click_view_accounts": "Click to view Account & Supplier Details",
 };
 
 const ur: Dict = {
@@ -62317,6 +62321,8 @@ const ur: Dict = {
   "com.choose_warehouse": "گودام منتخب کریں",
   "com.manifest_in_right_panel": "سامان کا مینی فیسٹ اور لائیو مجموعے دائیں پینل میں دیکھے جا سکتے ہیں",
   "pa.breadcrumb": "مسیرِ صفحہ",
+  "pjt.tt_click_view_goods": "مال اور خریداری کی تفصیلات دیکھنے کے لیے کلک کریں",
+  "pjt.tt_click_view_accounts": "اکاؤنٹ اور سپلائر کی تفصیلات دیکھنے کے لیے کلک کریں",
 };
 
 const ar: Dict = {
@@ -87392,6 +87398,8 @@ const ar: Dict = {
   "com.choose_warehouse": "اختر المستودع",
   "com.manifest_in_right_panel": "بيان البضائع والإجماليات المباشرة في اللوحة اليمنى",
   "pa.breadcrumb": "مسار التنقل",
+  "pjt.tt_click_view_goods": "انقر لعرض تفاصيل البضائع والشراء",
+  "pjt.tt_click_view_accounts": "انقر لعرض تفاصيل الحساب والمورد",
 };
 
 const fa: Dict = {
@@ -112466,6 +112474,8 @@ const fa: Dict = {
   "com.choose_warehouse": "انبار را انتخاب کنید",
   "com.manifest_in_right_panel": "مانیفست کالا و جمع‌های زنده در پنل سمت راست دنبال می‌شود",
   "pa.breadcrumb": "مسیر صفحه",
+  "pjt.tt_click_view_goods": "برای مشاهده جزئیات کالا و خرید کلیک کنید",
+  "pjt.tt_click_view_accounts": "برای مشاهده جزئیات حساب و تأمین‌کننده کلیک کنید",
 };
 
 const ps: Dict = {
@@ -137547,6 +137557,8 @@ const ps: Dict = {
   "com.choose_warehouse": "ګودام وټاکئ",
   "com.manifest_in_right_panel": "د توکو مانیفیسټ او ژوندي مجموعې په ښي پینل کې تعقیبیږي",
   "pa.breadcrumb": "د پاڼې لار",
+  "pjt.tt_click_view_goods": "د توکو او پېرود جزئیاتو لیدو لپاره کلیک وکړئ",
+  "pjt.tt_click_view_accounts": "د حساب او عرضه کوونکي جزئیاتو لیدو لپاره کلیک وکړئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

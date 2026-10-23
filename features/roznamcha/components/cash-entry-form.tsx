@@ -2693,7 +2693,7 @@ export function CashEntryForm({
 
 
   const viewScopeLabel =
-    effectiveScopeMode === "super_admin" ? "Super Admin" : effectiveScopeMode === "country" ? "Country" : "City";
+    effectiveScopeMode === "super_admin" ? tr("cj.roleSuperAdmin", "Super Admin") : effectiveScopeMode === "country" ? translateHeader(lang, "Country") : translateHeader(lang, "City");
   const hasFixedCityScope = Boolean(!isSuperAdmin && session?.scopes?.cityBranchIds?.length);
   const showScopeSelectors = effectiveScopeMode !== "branch" || isSuperAdmin || !hasFixedCityScope;
   const showCountrySelector = effectiveScopeMode === "super_admin" || isSuperAdmin;

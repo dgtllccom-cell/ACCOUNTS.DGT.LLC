@@ -628,7 +628,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             className="h-10 gap-2 px-4 font-bold bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 disabled:opacity-50 shadow-sm"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-            Search
+            {th("Search")}
           </Button>
 
           <div className="relative ml-auto">
