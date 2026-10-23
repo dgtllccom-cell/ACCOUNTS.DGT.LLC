@@ -26,3 +26,35 @@ The old targets (Google Play 25–29 Oct, Samsung end Oct, Apple early Nov) assu
 * 10 screens each (Login, Device activation, Dashboard B, Dashboard BS, Menu, Customer order, Shipment tracking, Report + 2 tablet screens) in English and Urdu RTL. Folder: `Desktop\DGT-Mobile-Design-Concepts` (compare sheets, boards, single screens, Figma plugin). Sources: `docs/design/mobile-concepts`.
 * Figma: connector still NOT connected (owner click needed). Editable Figma file = run the plugin in Figma Desktop (steps in the folder) — the plugin has not yet been run inside Figma by me.
 * Owner decision needed: choose A, B or C (or a mix). No final UI, no store screenshots, no implementation until then.
+
+## Four-language verification (Urdu, Arabic, Farsi, Pashto) — 2026-10-23 / 24
+
+Evidence from the DEV test environment only (DEV database `csesvyxxjivnkkozgopt`; Production was not touched). Final build = branch `feat/stock-balance-report` at commit `d8b997f` (production-mode build, `npm run build` exit 0, `npx tsc --noEmit` exit 0, `node scripts/i18n-ui-guard.mjs` passed with 22,167 keys × 5 languages).
+
+| Language | Page-loads (102 pages × desktop 1440 / tablet 820 / phone 390) | Checks passed | Checks failed |
+|---|---|---|---|
+| Urdu (ur) | 306 | 1,530 | 0 |
+| Arabic (ar) | 306 | 1,530 | 0 |
+| Farsi (fa) | 306 | 1,530 | 0 |
+| Pashto (ps) | 306 | 1,530 | 0 |
+| **Total** | **1,224** | **6,120** | **0** |
+
+Each page-load runs five checks: page renders, correct RTL direction, no sideways page scroll, no leftover English chrome (headers, buttons, labels, options, titles, placeholders, aria-labels), no page errors.
+
+* 99 pages run together (5,940/5,940) and the three slow report-engine pages (Country, Branch, Shipping reports: 180/180) run separately with a longer wait.
+* English regression on the same build: 102 pages at desktop (1440) and phone (390) = 816/816 checks passed, 0 failed (render, direction, no sideways scroll, no page errors).
+* The "no leftover English" check tolerates business data that is never translated (product, supplier and company names, e-mail addresses, account codes, the signed-in user's own name). 216 of 1,224 label checks passed on that basis, on 18 pages (p3, p4, p5–p8, p10, p12, p14, p15, p18, p26, p30, p34, p47, p54, p74, p77).
+
+### Defects fixed during this pass
+* Report header (scope badge, role, "All Countries (Global)", "All Global Branches", Global/Country/Branch scope words) now follows the language.
+* Country names shown in the active language in the shared register bar, Local Purchase (dropdowns, chips, summary strip, table), Business Edit Invoice, Access Register, cash-entry country selector, account general report; "All Countries / All Branches" in the General Ledger no longer freeze in the first-render language.
+* System Forms Directory category pills and column; Shipping landing heading and subtitle; Customer 360 pager, refresh and "Show … per page"; stock journal pager and "Showing x to y of z entries"; outstanding ledger e-mail tooltip; currency placeholder; "Urdu Audit Excel" button; exchange-rate branch labels and placeholder; "Actions for {name}" row-action labels; fallback branch label "Unassigned Branch" replaced by a neutral dash.
+* Goods update with a blank CHS code no longer fails (it called `.trim()` on null); `tsc --noEmit` is clean again.
+* Test harness: spinner cap, hydration wait, text-stability wait and minimum-length options.
+
+### Known characteristics and remaining observations (not blockers)
+* **Brief English before the language applies:** the language store is set after hydration by design (server render is English). On a slow or heavily loaded browser a page can show English for a moment, rarely longer. Not reproduced in 220 one-at-a-time follow-up loads. Recommended follow-up: seed the initial language from the `erp_lang` cookie on the server.
+* **DEV server stability (test environment only):** the DEV Next.js server process was silently terminated about every 1.5–4 hours and, once, stopped answering database-backed pages until restarted (mitigated by a supervisor, a larger resolver thread pool and IPv4-first DNS). I did not review Production server logs for this, so there is no evidence either way for Production; worth watching after deployment.
+* **One rare React hydration warning (#418)** on the Outstanding & Recovery Ledger at phone/tablet width (2 of ~2,500 loads, not reproduced in 24 isolated loads).
+* **Slow first load of report-engine pages (6–9 s)** against the remote DEV database; they finish loading, they do not hang.
+* Business data shown in its original language on 18 pages (see above) — by policy, not translated.
