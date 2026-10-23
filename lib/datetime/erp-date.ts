@@ -98,12 +98,21 @@ function fmt(lang: string, opts: Intl.DateTimeFormatOptions): Intl.DateTimeForma
  * ERP screen, report header and PDF reads the same regardless of the locale's
  * own date ordering. Gregorian calendar, Latin digits, month name localised.
  */
+// Fixed month names: the browser and Node ship different locale data (e.g. Pashto), so Intl output
+// differs between server and client and breaks hydration. These match Node's CLDR short months.
+const MONTHS_SHORT: Record<string, readonly string[]> = {
+  en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  ur: ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"],
+  ar: ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"],
+  fa: ["ژانویه", "فوریه", "مارس", "آوریل", "مه", "ژوئن", "ژوئیه", "اوت", "سپتامبر", "اکتبر", "نوامبر", "دسامبر"],
+  ps: ["جنوري", "فبروري", "مارچ", "اپریل", "مۍ", "جون", "جولای", "اګست", "سپتمبر", "اکتوبر", "نومبر", "دسمبر"],
+};
+
 export function formatErpDate(iso: string | null | undefined, lang: SupportedLanguage | string = "en"): string {
   const d = fromIso(iso ?? null);
   if (!d) return "";
-  const parts = fmt(lang, { day: "2-digit", month: "short", year: "numeric" }).formatToParts(d);
-  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
-  return `${get("day")} ${get("month")} ${get("year")}`.trim();
+  const months = MONTHS_SHORT[lang] ?? MONTHS_SHORT.en;
+  return `${String(d.getDate()).padStart(2, "0")} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 /** "01 Sep 2026 – 17 Sep 2026" (or a single date, or ""). */

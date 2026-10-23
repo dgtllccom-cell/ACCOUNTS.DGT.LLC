@@ -78,7 +78,7 @@ const SECTION_MODULES: Record<BcpSection, SourceModule[] | null> = {
   expenses: null // consolidated: bill_expenses register + Daily-Payment expenses_bills
 };
 
-export function BillExpensesView({ lang: langProp, section = "all" }: { lang?: string; section?: BcpSection }) {
+export function BillExpensesView({ lang: langProp, section = "all", costProfit = false }: { lang?: string; section?: BcpSection; costProfit?: boolean }) {
   const s = useErpScreen("bexp", langProp);
   const lang = s.lang;
   const scope = useErpScope();
@@ -172,7 +172,7 @@ export function BillExpensesView({ lang: langProp, section = "all" }: { lang?: s
 
   function printRegister() {
     void openScopedGenericReport({
-      title: s.t("report_title", "Bill Expenses Register"),
+      title: costProfit ? s.tGlobal("nav.bill_cost_profit", "Bill Cost, Expenses & Profit") : s.t("report_title", "Bill Expenses Register"),
       subtitle: s.t("subtitle", "Additional expenses recorded against submitted Purchase & Sales bills."),
       lang,
       columns: reportColumns,

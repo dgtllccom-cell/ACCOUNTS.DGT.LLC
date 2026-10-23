@@ -14,6 +14,7 @@
  * 5-Language Parity (English, Urdu, Arabic, Persian, Pashto) with full RTL and A-to-Z translation.
  */
 
+import { formatErpDate } from "@/lib/datetime/erp-date";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { t as centralT } from "@/lib/i18n/ui";
 import { locName } from "./location-translations";
@@ -2728,7 +2729,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       <div>
                         <span className="text-[9px] text-slate-400 uppercase tracking-wider block">{t("generatedOn", lang)}</span>
                         <span className="text-[10px] font-mono text-slate-700" suppressHydrationWarning>
-                          {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" })}
+                          {formatErpDate(new Date().toISOString().slice(0, 10), lang)}
                         </span>
                       </div>
                       <div className="text-end">

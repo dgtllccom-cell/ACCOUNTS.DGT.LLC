@@ -8,7 +8,7 @@ export default async function BillCostProfitSalesPage() {
   const lang = await getRequestLanguage();
   return (
     <div className="container mx-auto p-4 md:p-6">
-      <BillExpensesView lang={lang} section="sales" />
+      <BillExpensesView lang={lang} section="sales" costProfit />
     </div>
   );
 }

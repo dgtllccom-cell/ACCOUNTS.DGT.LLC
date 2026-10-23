@@ -33,6 +33,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { cn } from "@/lib/utils";
+import { formatErpDate } from "@/lib/datetime/erp-date";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
 
@@ -593,7 +594,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
               {t(lang, "safd.safd_official_system_audit_directory", "OFFICIAL SYSTEM AUDIT & DIRECTORY")}
             </span>
             <span className="rounded-full bg-blue-500/20 px-3 py-0.5 text-xs font-bold text-blue-300 border border-blue-500/30">
-              {t(lang, "safd.generated_on", "Generated")}: {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" })}
+              {t(lang, "safd.generated_on", "Generated")}: {formatErpDate(new Date().toISOString().slice(0, 10), lang)}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
@@ -629,7 +630,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
           </div>
 
           <div className="text-start sm:text-end text-xs space-y-0.5">
-            <p className="font-extrabold text-foreground">{t(lang, "safd.report_date", "Report Date")}: {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "long", year: "numeric" })}</p>
+            <p className="font-extrabold text-foreground">{t(lang, "safd.report_date", "Report Date")}: {formatErpDate(new Date().toISOString().slice(0, 10), lang)}</p>
             <p className="text-muted-foreground font-mono text-[11px]">{t(lang, "safd.total_registered_forms", "Total Registered Forms")}: {ERP_FORMS_CATALOG.length}</p>
             <p className="text-muted-foreground font-mono text-[11px]">{t(lang, "safd.safd_status_production_ready", "Status: Production Ready / Audited")}</p>
           </div>
