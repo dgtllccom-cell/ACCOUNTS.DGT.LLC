@@ -72,7 +72,7 @@ export interface TransferHubOrderData {
   orderDate: string;
   operationType: string;
   shipmentType: string;
-  status: "Completed" | "In Process" | "Draft" | "Pending";
+  status: "Completed" | "In Process" | "Draft" | "Pending" | "-";
   expectedDispatch: string;
   expectedDelivery: string;
   branch: string;

@@ -426,14 +426,14 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
   // Options converters
   const countryOptions = useMemo(() => {
     return countries.map((c) => {
-      const localizedName = translateCountry(c.name, activeLang);
+      const localizedName = translateCountry(c.name, lang);
       return {
         value: c.id,
         label: `${localizedName} (${c.iso2 || "XX"})`,
         keywords: `${c.name} ${localizedName} ${c.iso2}`
       };
     });
-  }, [countries, activeLang]);
+  }, [countries, lang]);
 
   const stateOptions = useMemo(() => {
     return states.map((s) => ({
@@ -454,7 +454,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
   // Filtered Lists
   const filteredCountries = useMemo(() => {
     return countries.filter((c) => {
-      const localized = translateCountry(c.name, activeLang).toLowerCase();
+      const localized = translateCountry(c.name, lang).toLowerCase();
       const q = searchQuery.toLowerCase();
       const matchesSearch =
         c.name.toLowerCase().includes(q) ||
@@ -463,7 +463,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
       const matchesStatus = statusFilter === "all" ? true : statusFilter === "active" ? c.is_active : !c.is_active;
       return matchesSearch && matchesStatus;
     });
-  }, [countries, searchQuery, statusFilter, activeLang]);
+  }, [countries, searchQuery, statusFilter, lang]);
 
   const filteredStates = useMemo(() => {
     return states.filter((s) => {
@@ -1277,7 +1277,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               }}
               className={cn("hover:text-primary transition-colors", activeTab === "state" && "font-bold text-primary underline")}
             >
-              {translateCountry(drillPath.countryName, activeLang)}
+              {translateCountry(drillPath.countryName, lang)}
             </button>
           </>
         )}
@@ -1518,7 +1518,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                       filteredCountries.map((c) => (
                         <tr key={c.id} className="border-b hover:bg-muted/10">
                           <td className="px-4 py-3 font-mono font-bold text-sky-700">{c.iso2 || "-"}</td>
-                          <td className="px-4 py-3 font-semibold text-foreground">{translateCountry(c.name, activeLang)}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground">{translateCountry(c.name, lang)}</td>
                           <td className="px-4 py-3 text-center font-semibold text-indigo-700">
                             <span className="rounded-md bg-indigo-50 px-2 py-1 border border-indigo-100">{c.total_states}</span>
                           </td>
@@ -1569,7 +1569,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                     <Globe2 className="h-4 w-4 text-indigo-600" />
                     <span>
                       {tt("loc.active_country", "Active Country:")} {" "}
-                      <span className="font-bold text-indigo-700">{translateCountry(drillPath.countryName, activeLang) || tt("loc.selected_country", "Selected Country")}</span>
+                      <span className="font-bold text-indigo-700">{translateCountry(drillPath.countryName, lang) || tt("loc.selected_country", "Selected Country")}</span>
                     </span>
                   </div>
                   <span className="text-xs text-indigo-600 font-medium">{tt("loc.total_states_count", "Total States:")} {filteredStates.length}</span>
