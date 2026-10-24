@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Banknote,
+  Building2,
   ClipboardList,
   Inbox,
   Landmark,
@@ -25,6 +26,7 @@ import {
   PackageOpen,
   Phone,
   ReceiptText,
+  Ship,
   ShoppingCart,
   TrendingUp,
   UserPlus,
@@ -36,6 +38,7 @@ import type { Route } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type LedgerRow = {
@@ -66,9 +69,11 @@ type RecentEntry = {
 
 type BranchDashboardOverviewProps = {
   data: {
+    branchId?: string;
     branchName: string;
     branchCode: string;
     currency: string;
+    canSwitchToShipping?: boolean;
     todayCount: number;
     usersCount: number;
     customersCount: number;
@@ -186,26 +191,77 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
 
   return (
     <div className="space-y-6 text-foreground p-4 lg:p-6 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
-      {/* Branch Banner Section */}
-      <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
-        <div>
-          <span className="inline-flex rounded-full border border-border bg-card px-2 py-0.5 text-[9px] font-bold text-cyan-600 dark:text-cyan-400 uppercase">
-            {tt("cmd.city_branch_dashboard", "City Branch Dashboard")}
-          </span>
-          <h1 className="text-2xl font-black text-foreground mt-1">{data.branchName}</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {tt("bdash.subtitle", "Daily operational view for branch transactions, local balance sheet, cash levels, and stock metrics.")}
-          </p>
-        </div>
-        <div className="rounded-xl border border-border bg-card px-3.5 py-1.5 backdrop-blur shrink-0 flex items-center gap-3">
-          <div>
-            <p className="text-[9px] font-bold uppercase text-muted-foreground">{tt("bdash.branch_code", "Branch Code")}</p>
-            <p className="font-mono text-xs font-black text-foreground">{data.branchCode}</p>
+      {/* 1. Header Bar: Branch Title + Switcher + Code */}
+      <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-500 text-white shadow-md shadow-amber-500/20 shrink-0">
+            <Building2 className="h-6 w-6" />
           </div>
-          <div className="h-6 w-px bg-border" />
           <div>
-            <p className="text-[9px] font-bold uppercase text-muted-foreground">{tt("bdash.base_currency", "Base Currency")}</p>
-            <p className="font-mono text-xs font-black text-foreground">{currency}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">{data.branchName}</h1>
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-black uppercase text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+                <Building2 className="h-3 w-3" />
+                {translateHeader(lang, "Business Dashboard")}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {tt("bdash.subtitle", "Daily operational view for branch transactions, local balance sheet, cash levels, and stock metrics.")}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            href={`/dashboard/city/shipping-line?branchId=${data.branchId || ""}` as Route}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-blue-200 bg-white font-bold text-xs hover:bg-blue-50 text-blue-700 shadow-xs dark:border-blue-900/60 dark:bg-slate-900 dark:text-blue-300 transition-colors"
+          >
+            <Ship className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+            <span>{translateHeader(lang, "Shipping Line Dashboard")}</span>
+          </Link>
+
+          <div className="rounded-xl border border-border bg-card px-3.5 py-1.5 backdrop-blur shrink-0 flex items-center gap-3">
+            <div>
+              <p className="text-[9px] font-bold uppercase text-muted-foreground">{tt("bdash.branch_code", "Branch Code")}</p>
+              <p className="font-mono text-xs font-black text-foreground">{data.branchCode}</p>
+            </div>
+            <div className="h-6 w-px bg-border" />
+            <div>
+              <p className="text-[9px] font-bold uppercase text-muted-foreground">{tt("bdash.base_currency", "Base Currency")}</p>
+              <p className="font-mono text-xs font-black text-foreground">{currency}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. Warehouse & Commercial Operations Hero Banner */}
+      <section className="relative overflow-hidden rounded-3xl border border-amber-900/20 bg-gradient-to-r from-[#0a192f] via-[#102a4e] to-[#1e3a5f] p-6 text-white shadow-xl">
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-overlay"
+          style={{ backgroundImage: `url('/images/dubai_business_hero.jpg')` }}
+        />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-300 ring-1 ring-inset ring-amber-400/30">
+              <Building2 className="h-3.5 w-3.5" />
+              {translateHeader(lang, "Commercial & Business Hub")}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              {data.branchName}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              {translateHeader(lang, "MANAGE PURCHASES, SALES BOOKINGS, DAILY ROZNAMCHA POSTINGS, CUSTOMER LEDGERS, AND BRANCH OPERATIONS FROM HERE.")}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[100px]">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{tt("bdash.branch_code", "Code")}</p>
+              <p className="text-sm font-black text-white">{data.branchCode}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[100px]">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{tt("bdash.base_currency", "Currency")}</p>
+              <p className="text-sm font-black text-white">{currency}</p>
+            </div>
           </div>
         </div>
       </section>
@@ -446,6 +502,17 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
             )) : <p className="col-span-2 py-6 text-center text-muted-foreground">{tt("bdash.no_customers", "No customers registered in this branch scope.")}</p>}
           </CardContent>
         </Card>
+      </section>
+
+      {/* Bottom Branch Badge */}
+      <section className="flex items-center justify-between border-t border-border/80 pt-4 text-xs">
+        <div className="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-1.5 font-bold text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+          <Building2 className="h-4 w-4 text-amber-600" />
+          <span>{data.branchName} · Business</span>
+        </div>
+        <p className="text-muted-foreground font-semibold text-[11px]">
+          DGT LLC ERP SYSTEM • Version 1.0.0
+        </p>
       </section>
     </div>
   );

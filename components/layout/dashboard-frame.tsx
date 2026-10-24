@@ -516,7 +516,7 @@ export function DashboardFrame({
             operationalDomains={operationalDomains}
             ledgerVisibility={ledgerVisibility}
             canViewFinancials={canViewFinancials}
-            brandTitle={brandCompany || "Damaan Business Group"}
+            brandTitle={brandCompany || "DGT LLC ERP SYSTEM"}
             onToggleCollapse={() => setSidebarCollapsed(true)}
           />
         </aside>
@@ -550,7 +550,7 @@ export function DashboardFrame({
               operationalDomains={operationalDomains}
               ledgerVisibility={ledgerVisibility}
               canViewFinancials={canViewFinancials}
-              brandTitle={brandCompany || "Damaan Business Group"}
+              brandTitle={brandCompany || "DGT LLC ERP SYSTEM"}
               onNavigate={() => {
                 setDrawerOpen(false);
                 setMobileOpen(false);

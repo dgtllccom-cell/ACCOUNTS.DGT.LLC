@@ -1,14 +1,17 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
+import Link from "next/link";
+import type { Route } from "next";
 import {
   Globe, Building2, Users2, Users, Building, Activity,
   ShoppingCart, ShoppingBag, Wallet, CreditCard, TrendingUp, Coins,
-  ChevronDown, X
+  ChevronDown, X, Ship
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import {
   SuperAdminOverviewCharts,
   type CountryFinancialSummary,
@@ -211,8 +214,17 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
         <div className="relative z-10 min-h-[140px] sm:min-h-[160px] md:min-h-[184px] w-full p-4 sm:p-6 md:p-8 flex flex-col justify-between">
           {/* Top Tools: Action Buttons & Enclosed Date/Time */}
           <div className="flex flex-col items-end gap-2 self-end z-20">
-            {/* The 3 action buttons in a row */}
+            {/* Action buttons in a row */}
             <div className="flex flex-wrap items-center justify-end gap-2">
+              {/* Department Switcher: Shipping Line Dashboard */}
+              <Link
+                href={"/dashboard/super-admin/shipping-line" as Route}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-blue-400/40 bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-md transition hover:from-blue-700 hover:to-indigo-700 cursor-pointer"
+              >
+                <Ship className="h-3.5 w-3.5 text-cyan-200" />
+                <span>{translateHeader(lang, "Shipping Line Dashboard")}</span>
+              </Link>
+
               {/* 1. Business / Admin Scope Flyout */}
               <div className="relative">
                 <button

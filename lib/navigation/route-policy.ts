@@ -20,8 +20,14 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/ai-assistant": ["dashboard:read", "route:/dashboard/ai-assistant"],
   // the global dashboard: Super Admin only (dashboard:read used to let every login through to the page's own redirect)
   "/dashboard/super-admin": ["super_admin", "route:/dashboard/super-admin"],
+  "/dashboard/super-admin/shipping-line": ["super_admin", "shipping_super_admin", "global_operations_admin", "route:/dashboard/super-admin/shipping-line"],
   "/dashboard/country": ["dashboard:read", "country_admin", "country_user", "route:/dashboard/country"],
+  "/dashboard/country/shipping-line": ["dashboard:read", "country_admin", "country_operations_admin", "shipping_super_admin", "global_operations_admin", "route:/dashboard/country/shipping-line"],
   "/dashboard/city": ["dashboard:read", "main_branch_admin", "city_branch_admin", "staff_user", "accountant", "cashier", "route:/dashboard/city"],
+  "/dashboard/city/shipping-line": ["dashboard:read", "city_branch_admin", "city_operations_admin", "shipping_line_admin", "shipping_line_user", "agent_user", "route:/dashboard/city/shipping-line"],
+  "/dashboard/shipping-line/branch": ["dashboard:read", "city_branch_admin", "city_operations_admin", "shipping_line_admin", "shipping_line_user", "agent_user", "route:/dashboard/shipping-line/branch"],
+  "/dashboard/branch-management/permissions": ["users:read", "users:update", "city_branch_admin", "country_admin", "super_admin", "route:/dashboard/branch-management/permissions"],
+  "/dashboard/reports/branch-reports": ["reports:read", "city_branch_admin", "shipping_line_admin", "shipping_line_user", "route:/dashboard/reports/branch-reports"],
   "/dashboard/logistics": ["shipping_records:read", "route:/dashboard/logistics"],
   "/dashboard/new-entry/users/registration": ["users:create", "users:read", "route:/dashboard/new-entry/users/registration"],
   "/dashboard/new-entry/users/all": ["users:read", "route:/dashboard/new-entry/users/all"],
@@ -372,7 +378,7 @@ export function evaluateRouteAccess(input: RouteAccessInput): RouteDecision {
   const strict = isStrictLogin(input.roles);
   // the Shipping Line Super Admin is strict (no finance) but manages its own branches' users; each user page still needs its
   // own permission below, and the users API keeps it inside its domain
-  const strictUserManager = (input.roles ?? []).includes("shipping_super_admin") && USER_ADMIN_ROUTE_PREFIXES.some((p) => matchesPrefix(path, p));
+  const strictUserManager = (input.roles ?? []).some((r) => ["shipping_super_admin", "country_operations_admin", "city_operations_admin", "shipping_line_admin", "city_branch_admin"].includes(r)) && USER_ADMIN_ROUTE_PREFIXES.some((p) => matchesPrefix(path, p));
   if (strict && !strictUserManager && FINANCIAL_ROUTE_PREFIXES.some((p) => matchesPrefix(path, p))) return { allowed: false, reason: "financial_denied" };
   if (input.canViewFinancials === false && AMOUNT_ROUTE_PREFIXES.some((p) => matchesPrefix(path, p))) return { allowed: false, reason: "financial_denied" };
 

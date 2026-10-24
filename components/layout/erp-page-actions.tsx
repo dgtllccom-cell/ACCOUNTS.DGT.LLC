@@ -178,6 +178,14 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
   // navigation between a report and a non-report page.
   const isReportPage =
     pathname === "/dashboard" ||
+    pathname === "/dashboard/city" ||
+    pathname?.startsWith("/dashboard/city") ||
+    pathname === "/dashboard/shipping-line" ||
+    pathname?.startsWith("/dashboard/shipping-line") ||
+    pathname === "/dashboard/logistics" ||
+    pathname?.startsWith("/dashboard/logistics") ||
+    pathname === "/dashboard/smart-operations" ||
+    pathname?.startsWith("/dashboard/smart-operations") ||
     pathname === "/dashboard/country" ||
     pathname?.startsWith("/dashboard/country") ||
     pathname === "/dashboard/super-admin" ||

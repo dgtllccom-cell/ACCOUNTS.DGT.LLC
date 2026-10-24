@@ -381,7 +381,7 @@ export default async function CityDashboardPage(props: { searchParams?: Promise<
           </CardContent>
         </Card>
       ) : null}
-      <BranchAdminDashboardOverview data={data} financialsHidden={financialsHidden} />
+      <BranchAdminDashboardOverview data={{ ...data, branchId: activeBranchId || undefined, canSwitchToShipping: true }} financialsHidden={financialsHidden} />
     </div>
   );
 }
