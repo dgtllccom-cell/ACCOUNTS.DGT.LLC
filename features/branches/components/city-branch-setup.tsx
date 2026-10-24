@@ -2248,6 +2248,8 @@ function CityBranchSetupContent() {
                               headers: { "content-type": "application/json" },
                               body: JSON.stringify({
                                 countryId: location.countryId,
+                                countryBranchId,
+                                cityBranchId: editingCityBranchId || undefined,
                                 settings: {
                                   smtpHost,
                                   smtpPort: Number(smtpPort),
