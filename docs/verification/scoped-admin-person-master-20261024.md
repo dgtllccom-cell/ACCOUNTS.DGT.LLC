@@ -15,7 +15,7 @@ Confirmed code findings:
 - Country creation targets must match one authoritative country-admin assignment and its operational domain. The UI uses the same delegated-role allowlist. Administrative country/global roles remain restricted.
 - Requested route permissions previously bypassed the creator's permission limit. They must now pass the same limit as other permission tokens.
 
-Still blocked: exact UAE User ID, saved assignment, effective session, actual profile mismatch, both real user-creation workflows and entered-data retention under a real save failure. No role label was replaced or production assignment altered.
+Still blocked: exact UAE signed-in User ID and effective session, both real user-creation workflows and entered-data retention under a real save failure. The only active UAE assignment found in the cloud Production project is Staff at main-branch scope; it is not promoted or assumed to be the reported login. No role label was replaced or production assignment altered.
 
 ## 2. Chaman Branch Admin
 
@@ -26,7 +26,7 @@ Confirmed code findings:
 - City creation requires an explicit effective `users:create` or `users:*` grant, a single active authoritative assignment and an exact country/main/city/domain match. It rejects administrative roles, external agent bindings, administrative access profiles, existing-login scope assignment and multi-scope delegation.
 - No automatic grant was added to any existing user's role template or saved permission set. An authorized administrator must first validate whether Chaman's authoritative assignment includes delegated creation.
 
-Still blocked: exact Chaman User ID, actual delegated permissions, Production branch classification, account-creation/visibility tests, display-name editing and actual shipping isolation. No branch ID or classification was changed. Do not substitute a new Chaman branch for the existing one.
+Live read-only verification later identified the exact Chaman login as Staff and matched its saved Shipping assignment; its branch classification and account-read/cross-country rejection were verified. Remaining blockers: authorized admin designation/delegation, account save/visibility, display-name editing and complete shipping isolation. No branch ID or classification was changed. Do not substitute a new Chaman branch for the existing one.
 
 ## 3. Shared Person / Party Master
 
@@ -45,14 +45,14 @@ Additional security review finding: `app/api/erp/general-office/person-detail/ro
 
 ## Local verification
 
-`npm test -- tests/permissions tests/document-intelligence/party-match-and-modules.test.ts`: 172/172 passed across eight suites. The new API suite calls the real exported POST handler with mocked storage: 16 tests cover allowed UAE branch admin/staff, allowed delegated shipping staff, capped permissions and forbidden roles/countries/branches/domains/profiles/existing-scope changes. These are local API unit tests, not DEV or Production end-to-end evidence.
+`npm test -- tests/permissions tests/document-intelligence/party-match-and-modules.test.ts`: 180/180 passed across nine suites after the live-discovered dashboard gate fix. The new API suite calls the real exported POST handler with mocked storage: 16 tests cover allowed UAE branch admin/staff, allowed delegated shipping staff, capped permissions and forbidden roles/countries/branches/domains/profiles/existing-scope changes. These are local API unit tests, not DEV or Production end-to-end evidence.
 
-Repository safety, five-language UI parity, multilingual contract, navigation and Stock Journal guards passed. `git diff --check` passed. The default 2 GB TypeScript check ran out of heap; a 6 GB retry exited successfully without diagnostics. The clean non-incremental 6 GB TypeScript check also passed. The full Next build passed with offline placeholder credentials pointing only to 127.0.0.1:1. This verifies compilation and prerendering, not a configured DEV/Production deployment. No live build, database workflow, or browser screenshot is claimed here.
+Repository safety, five-language UI parity, multilingual contract, navigation and Stock Journal guards passed. `git diff --check` passed. The default 2 GB TypeScript check ran out of heap; a 6 GB retry exited successfully without diagnostics. The clean non-incremental 6 GB TypeScript check also passed. The full Next build passed with offline placeholder credentials pointing only to 127.0.0.1:1. This verifies compilation and prerendering, not a configured DEV/Production deployment. No deployed-code success or business-record mutation workflow is claimed. The later live-read section records the authenticated browser evidence.
 
 ## Required access and release actions
 
 1. Supabase is now connected and read-only access to both named projects is confirmed. It does not supply the running VPS configuration, SSH access or an authenticated ERP browser session. Securely supply this execution environment with the authorized DEV configuration for project `csesvyxxjivnkkozgopt`, read-only Production database access for `inmayhrxucimxqhgseqi`, and the approved VPS access. Do not put credentials in the repository, PR, or report.
-2. Confirm the DEV integration branch and read the actual signed-in UAE and Chaman User IDs, active assignments, access profiles, permission-set sources, branch IDs/domain classifications and installed schema. Run the real workflows using authorized sessions. Resolve the remaining blockers above before marking this work ready.
+2. Confirm the DEV integration branch and read the exact UAE signed-in User ID and confirm the intended administrative assignments. Chaman's actual signed-in Staff assignment and Shipping branch are now verified; do not promote it without authoritative designation. Confirm access profiles, permission-set sources and runtime database settings for release. Run the real workflows using authorized sessions. Resolve the remaining blockers above before marking this work ready.
 3. Complete the combined build/regression and review against the then-current production source, preserving other agents' changes. Obtain the protected release review; merging this draft into `main` is not a Production deployment.
 4. Follow `docs/production-deployment-control.md`: approved commit on `production`, verified required backups, then the owner's exact-commit approval through `dgt-approve-deploy <commit>` and execution through `dgt-deploy`. Do not use disabled legacy deployment scripts or approve an untested commit.
 5. Verify live authorized workflows without adding fake Production users, accounts, customers or transactions. Attach actual screenshots, page URLs and PASS/FAIL results. Until then, all actual DEV/Production workflow rows are NOT RUN / BLOCKED.
@@ -75,9 +75,32 @@ Read-only queries explicitly targeted DEV `csesvyxxjivnkkozgopt` and the project
 - Production's existing Chaman branch is active, `operational_domain=shipping`, `is_business_branch=false`. Its original branch ID was not changed or replaced.
 - The named Production project's assignment table has no Country Admin or City Branch Admin rows. One active Chaman-linked login is saved as Staff with manual account create/read permissions. This is a candidate record, not proof of the user's currently signed-in identity. Do not promote it by inference.
 - DEV has an active UAE business Country Admin candidate and an active Chaman shipping City Branch Admin candidate. The Chaman candidate has manual account create/read permissions but no saved user-creation grant. This supports keeping explicit delegation, not automatically granting creation to every branch admin.
-- The application supports a direct DATABASE_URL and Supabase-backed reads/authentication. The named cloud project is not proven to be the live VPS datasource. The difference from the reported dashboards must be resolved against the real signed-in User ID and live environment before changing assignments.
+- The application supports a direct DATABASE_URL and Supabase-backed reads/authentication. The named cloud project is not proven to be the live VPS datasource. The later authenticated verification resolves that difference for Chaman: the inspected login really is Staff, matching the saved record, while its dashboard title falsely implies admin status. UAE identity remains unverified.
 - DEV already reuses two person identities as both Employee and Company Owner (three employee links, two company links). This is read-only evidence of existing reuse, not a new owner-relationship creation or approval test.
 - Both projects have installed Employee and Company foreign keys to the shared identity. DEV profile person/employee identifiers are text columns whereas Production uses UUID foreign keys. DEV text values had zero invalid UUID strings; no conversion or migration was attempted.
 - Security advisors were read. They report pre-existing findings, including security-definer views in both projects and public tables without RLS in Production. No bulk security changes were made. Security remains NOT VERIFIED for release.
 
 GitHub CI follow-up: the first build run stopped in the safety guard because the new mocked API test contained a literal synthetic password. The local guard had initially omitted the untracked test file. The fixture now generates its value at runtime; all new files were staged before re-running the full guard. All 172 tests passed again. The guard was not bypassed, and no real credential was involved. The amended commit must pass GitHub CI before integration.
+
+
+## Authenticated Chaman live verification and additional root cause
+
+A secure browser sign-in completed against `https://api.dgt.llc`. The authenticated session API returned Staff as both the saved/effective role, Shipping as the only operational domain and the existing Chaman branch scope. The session User ID and scope exactly match the read-only cloud Production candidate previously inspected. This login has account read/create and the specific account-setup route grant, but no user-management grant. Its Staff profile label is therefore consistent with its authoritative saved assignment; no promotion was performed. The earlier datasource uncertainty is resolved for this particular Chaman login, not for an unseen UAE login or every backend connection.
+
+The live City Dashboard independently displays a hard-coded Branch Admin Dashboard title even for this Staff login. The component now uses the existing translated City Branch Dashboard title, avoiding any claim of administrative authority. The profile remains backed by the saved role.
+
+Actual read-only live API/UI evidence, before deployment:
+
+| Workflow | Observed result |
+| --- | --- |
+| Authenticated session API | Staff, Shipping, assigned Chaman branch; matches saved assignment |
+| Account-list API for assigned Chaman country/branch | Allowed; empty account list |
+| Account-list API requesting UAE | Rejected with FORBIDDEN / country-scope error |
+| User-detail API under Staff login | Rejected as not authorized |
+| New Account Setup page | Sidebar offers it, but content says Form Access Restricted |
+
+The account-form failure is a separate confirmed code defect: DashboardFrame has an extra Shipping-prefix blacklist covering all account and user-entry pages. The server and sidebar use evaluateRouteAccess and permit allotted operational accounts, while the client blacklist overrides that decision. DashboardContentGate now uses the same canonical policy as the server/sidebar; backend row/domain guards remain in place. The canonical policy additionally prevents a lower role's saved route token from opening pages whose sole authority is Super Admin.
+
+Eight rendered-component regression tests cover allotted Shipping account/user-entry forms and denied unallotted, purchase, sales, Super Admin and strict-operations finance access. All 180 selected tests and the full TypeScript check passed after this change. The amended offline full build passed (449 generated pages), as did the full TypeScript check and all local guards. GitHub checks must also pass on the amended commit before integration. The prior commit a6830e1 passed all three GitHub checks.
+
+No Production form was submitted, account created, user promoted or permission set changed during live verification. Account save/visibility, authoritative admin delegation, UAE sign-in and Person Master mutation/approval workflows remain NOT RUN. A private screenshot of the observed account-form restriction was retained outside this public repository.

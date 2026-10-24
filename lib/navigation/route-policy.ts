@@ -350,6 +350,14 @@ export function evaluateRouteAccess(input: RouteAccessInput): RouteDecision {
   const permSet = new Set<string>([...(input.permissions ?? []), ...(input.roles ?? [])]);
   if (permSet.has("*:*") || permSet.has("super_admin")) return { allowed: true, reason: "super" };
 
+  // Pages whose only authority is Super Admin cannot be opened by a saved route
+  // token on a lower role. Keep this in the shared policy, not a client blacklist.
+  const mappedPath = ROUTE_PERMISSION_MAP[path] ? path : SORTED_PREFIXES.find((p) => p !== "/dashboard" && matchesPrefix(path, p));
+  const required = mappedPath ? ROUTE_PERMISSION_MAP[mappedPath] : null;
+  if (required?.includes("super_admin") && required.every((p) => p === "super_admin" || p.startsWith("route:"))) {
+    return { allowed: false, reason: "no_permission" };
+  }
+
   // a business-only login never opens the Shipping & Clearing area
   const domains = input.operationalDomains ?? null;
   if (domains && domains.length > 0 && domains.includes("business") && !domains.includes("shipping") && !domains.includes("both")) {
