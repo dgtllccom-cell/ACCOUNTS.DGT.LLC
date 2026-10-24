@@ -14,7 +14,7 @@ import { MOBILE_PROFILE_ALLOWED, capPermissionsToProfile, normalizeMobileProfile
 import { issueNextUserCode, normalizeUserCode } from "@/lib/services/user-identity-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
-import { SUPER_ADMIN_ONLY_ROLES, assignmentBranchDomainError, domainManagerTargetError, isUserManager, userInManagerScope } from "@/lib/permissions/user-management-scope";
+import { SUPER_ADMIN_ONLY_ROLES, assignmentBranchDomainError, domainManagerTargetError, isUserManager, userInManagerScope, userCreationTargetError } from "@/lib/permissions/user-management-scope";
 import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
 import { assertNoDuplicateAssignment, assertNoDuplicateUser } from "@/lib/branch-network/duplicate-guard";
 
@@ -118,7 +118,6 @@ function normalizePermissions(input: unknown) {
 
 function isPermissionAllowed(permission: string, allowed: Set<string>) {
   if (allowed.has("*:*") || allowed.has(permission)) return true;
-  if (permission.startsWith("route:")) return true;
   const [resource] = permission.split(":");
   return allowed.has(`${resource}:*`);
 }
@@ -163,7 +162,9 @@ async function loadScopePermissionLimit(
 /** Fails when a city-branch assignment contradicts the user's operational domain (Business user ↔ Shipping branch and back). */
 async function assertBranchMatchesDomain(admin: any, cityBranchId: string | null | undefined, userDomain: string | null | undefined) {
   if (!cityBranchId) return;
-  const { data } = await admin.from("city_branches").select("operational_domain").eq("id", cityBranchId).maybeSingle();
+  const { data, error: lookupError } = await admin.from("city_branches").select("operational_domain").eq("id", cityBranchId).is("deleted_at", null).maybeSingle();
+  if (lookupError) throw new Error(lookupError.message);
+  if (!data) throw new ApiClientError("City branch not found.", { status: 404 });
   const error = assignmentBranchDomainError(userDomain, data?.operational_domain ?? null);
   if (error) throw new ApiClientError(error, { status: 422, code: "BRANCH_DOMAIN_MISMATCH" });
 }
@@ -181,7 +182,12 @@ export async function POST(request: NextRequest) {
     // Omitted domain: a Super Admin is the Global Super Admin ("both"); everyone else is Business.
     const requestedDomain = body.operationalDomain ?? (body.role === "super_admin" ? "both" : "business");
     if (!session.isSuperAdmin) {
-      if (!isUserManager(session)) throw new ApiClientError("Not authorized to create users.", { status: 403 });
+      const creationError = userCreationTargetError(session, {
+        role: body.role, countryId: body.countryId, countryBranchId: body.countryBranchId,
+        cityBranchId: body.cityBranchId, operationalDomain: requestedDomain,
+        accessProfile: body.accessProfile, mode: body.mode,
+      });
+      if (creationError) throw new ApiClientError(creationError, { status: 403 });
       const domainError = domainManagerTargetError(session, {
         role: body.role, operationalDomain: requestedDomain, countryBranchId: body.countryBranchId ?? null,
         cityBranchId: body.cityBranchId ?? null, accessProfile: body.accessProfile ?? null,
@@ -192,7 +198,7 @@ export async function POST(request: NextRequest) {
       }
       // A Main Branch Admin creates users only inside its OWN branch tree, never in a sibling branch of the same country.
       const isCountryAdmin = session.roles.includes("country_admin");
-      if (!isCountryAdmin && !managerDomain) {
+      if (!isCountryAdmin && !managerDomain && session.roles.includes("main_branch_admin")) {
         if (!body.countryBranchId || !session.countryBranchIds.includes(body.countryBranchId)) {
           throw new ApiClientError("Branch scope is not allowed.", { status: 403 });
         }
@@ -241,6 +247,25 @@ export async function POST(request: NextRequest) {
       body.ledgerVisibility ?? (domain === "shipping" ? "shipping_only" : "scoped");
 
     const admin = createSupabaseAdminClient() as any;
+    // Never trust a caller-supplied country alongside a branch ID from another country.
+    // Validate the saved hierarchy before allocating a code or creating any Auth/profile row.
+    if (body.cityBranchId) {
+      const { data: branch, error } = await admin.from("city_branches")
+        .select("id, country_id, country_branch_id").eq("id", body.cityBranchId).is("deleted_at", null).maybeSingle();
+      if (error) throw new Error(error.message);
+      if (!branch || branch.country_id !== body.countryId ||
+        (body.countryBranchId && branch.country_branch_id !== body.countryBranchId)) {
+        throw new ApiClientError("City branch does not belong to the selected country and main branch.", { status: 403 });
+      }
+    }
+    if (body.countryBranchId) {
+      const { data: branch, error } = await admin.from("country_branches")
+        .select("id, country_id").eq("id", body.countryBranchId).is("deleted_at", null).maybeSingle();
+      if (error) throw new Error(error.message);
+      if (!branch || branch.country_id !== body.countryId) {
+        throw new ApiClientError("Main branch does not belong to the selected country.", { status: 403 });
+      }
+    }
     await assertBranchMatchesDomain(admin, body.cityBranchId, domain);
 
     const issuedUserCode = normalizeUserCode(

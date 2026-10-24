@@ -56,6 +56,7 @@ import type { LocationCountry } from "@/features/locations/location-api";
 import { listCities, listCountries, type LocationCity } from "@/features/locations/location-api";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
+import { canDelegateUserRole } from "@/lib/permissions/user-management-scope";
 import { 
   buildRbacRoleSummary, 
   buildAllModulesCapabilities, 
@@ -1075,7 +1076,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     setSaving(true);
     try {
       const payload: any = {
-        mode: registrationMode,
+        mode: registrationMode === "use_existing" ? "assign_scope" : "create_login",
         assignExistingUserId: registrationMode === "use_existing" ? selectedExistingUserId : undefined,
         role: role,
         fullName: fullName.trim(),
@@ -2227,6 +2228,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         {/* Option 1: Admin User */}
                         <button
                           type="button"
+                          disabled={!canDelegateUserRole(erpScope, branchType === "main" ? "main_branch_admin" : "city_branch_admin")}
                           onClick={() => {
                             if (branchType === "main") setRole("main_branch_admin");
                             else setRole("city_branch_admin");
@@ -2282,7 +2284,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         {/* Option 1: Shipping Admin */}
                         <button
                           type="button"
-                          onClick={() => setRole("main_branch_admin")}
+                          disabled={!canDelegateUserRole(erpScope, "city_branch_admin")}
+                          onClick={() => setRole("city_branch_admin")}
                           className={`p-3 rounded-xl border text-left transition-all ${
                             role === "main_branch_admin" || role === "city_branch_admin"
                               ? "border-teal-600 bg-teal-600 text-white shadow-sm"
@@ -2305,19 +2308,19 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         {/* Option 2: Shipping / Agent User */}
                         <button
                           type="button"
-                          onClick={() => setRole("agent_user")}
+                          onClick={() => setRole("staff_user")}
                           className={`p-3 rounded-xl border text-left transition-all ${
-                            role === "agent_user"
+                            role === "agent_user" || role === "staff_user"
                               ? "border-teal-600 bg-teal-600 text-white shadow-sm"
                               : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
                           }`}
                         >
                           <div className="flex items-center gap-2 font-bold text-xs">
                             <Globe2 className="h-4 w-4 shrink-0" />
-                            <span>{centralT(activeLang, "urw2.role_agent_user" as never, "Shipping / Agent User")}</span>
+                            <span>{centralT(activeLang, "urw2.role_staff_user" as never, "Normal Staff User")}</span>
                           </div>
                           <p className={`text-[10px] mt-1 line-clamp-2 ${
-                            role === "agent_user"
+                            role === "agent_user" || role === "staff_user"
                               ? "text-teal-100"
                               : "text-slate-500"
                           }`}>
@@ -2382,8 +2385,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       {roleOptions
                         .filter((r) => DOMAIN_ROLES[operationalDomain].includes(r.value))
                         .filter((r) => {
-                          if (erpScope.isSuperAdmin) return true;
-                          return r.value !== "super_admin" && r.value !== "country_admin";
+                          return canDelegateUserRole(erpScope, r.value);
                         })
                         .map((r) => (
                           <option key={r.value} value={r.value}>
