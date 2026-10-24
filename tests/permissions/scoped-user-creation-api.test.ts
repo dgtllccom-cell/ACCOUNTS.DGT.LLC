@@ -36,7 +36,7 @@ const CHAMAN = "44444444-4444-4444-8444-444444444444";
 const ALRAS = "55555555-5555-4555-8555-555555555555";
 const NEW_USER = "66666666-6666-4666-8666-666666666666";
 const assignment = { role: "city_branch_admin", countryId: PK, countryBranchId: MAIN, cityBranchId: CHAMAN, operationalDomain: "shipping" };
-const base = { role: "staff_user", fullName: "DEV Test Staff", email: "test@example.invalid", password: "local-test-only", userCode: "DEV-STAFF", countryId: PK, countryBranchId: MAIN, cityBranchId: CHAMAN, operationalDomain: "shipping", permissions: ["customers:read"] };
+const base = { role: "staff_user", fullName: "DEV Test Staff", email: "test@example.invalid", password: crypto.randomUUID(), userCode: "DEV-STAFF", countryId: PK, countryBranchId: MAIN, cityBranchId: CHAMAN, operationalDomain: "shipping", permissions: ["customers:read"] };
 async function post(patch: Record<string, unknown> = {}) {
   return POST(new NextRequest("http://localhost/api/erp/users", { method: "POST", body: JSON.stringify({ ...base, ...patch }), headers: { "Content-Type": "application/json" } }));
 }

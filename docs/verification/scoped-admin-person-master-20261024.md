@@ -1,6 +1,6 @@
 # Country Admin, Chaman delegation and Person Master — release evidence
 
-Status: DRAFT / NOT APPROVED FOR PRODUCTION. No database connection, migration, user-role change or deployment was performed in this workspace.
+Status: DRAFT / NOT APPROVED FOR PRODUCTION. The follow-up completed read-only audits of both connected Supabase projects. No database write, migration, user-role change or deployment was performed.
 
 Source: isolated `fix/scoped-user-delegation-20261024` branch based on `main` commit `003cae3c669d329598f9349c80ef1d3c45b9518b`. Remote `production` observed at `43ed2160acc11a698080bd2a4f2ca1cb2cf9d02f`. A remote ref is not proof of the running VPS version. The correct existing DEV integration branch must be confirmed before integration; neither `dev` nor `production` was overwritten.
 
@@ -51,8 +51,33 @@ Repository safety, five-language UI parity, multilingual contract, navigation an
 
 ## Required access and release actions
 
-1. The Supabase integration was offered for installation; it is not yet installed or connected. It may supply the database audit access after authorization, but it does not supply VPS SSH access. Securely supply this execution environment with the authorized DEV configuration for project `csesvyxxjivnkkozgopt`, read-only Production database access for `inmayhrxucimxqhgseqi`, and the approved VPS access. Do not put credentials in the repository, PR, or report.
+1. Supabase is now connected and read-only access to both named projects is confirmed. It does not supply the running VPS configuration, SSH access or an authenticated ERP browser session. Securely supply this execution environment with the authorized DEV configuration for project `csesvyxxjivnkkozgopt`, read-only Production database access for `inmayhrxucimxqhgseqi`, and the approved VPS access. Do not put credentials in the repository, PR, or report.
 2. Confirm the DEV integration branch and read the actual signed-in UAE and Chaman User IDs, active assignments, access profiles, permission-set sources, branch IDs/domain classifications and installed schema. Run the real workflows using authorized sessions. Resolve the remaining blockers above before marking this work ready.
 3. Complete the combined build/regression and review against the then-current production source, preserving other agents' changes. Obtain the protected release review; merging this draft into `main` is not a Production deployment.
 4. Follow `docs/production-deployment-control.md`: approved commit on `production`, verified required backups, then the owner's exact-commit approval through `dgt-approve-deploy <commit>` and execution through `dgt-deploy`. Do not use disabled legacy deployment scripts or approve an untested commit.
 5. Verify live authorized workflows without adding fake Production users, accounts, customers or transactions. Attach actual screenshots, page URLs and PASS/FAIL results. Until then, all actual DEV/Production workflow rows are NOT RUN / BLOCKED.
+
+
+## Connected Supabase follow-up — 24 October 2026
+
+Read-only queries explicitly targeted DEV `csesvyxxjivnkkozgopt` and the project named Production `inmayhrxucimxqhgseqi`. No data was changed. Internal user identifiers and names are deliberately excluded from this public repository report.
+
+| Finding | DEV | Named Production project |
+| --- | --- | --- |
+| Non-deleted profiles | 43 | 7 |
+| Active, non-deleted assignments | 36 | 7 |
+| Non-deleted shared identities | 213 | 5 |
+| Employees with person links | 55 | 4 |
+| Companies with owner-person links | 17 | 2 |
+| Orphan employee/person links | 0 | 0 |
+| Duplicate non-null person codes | 0 | 0 |
+
+- Production's existing Chaman branch is active, `operational_domain=shipping`, `is_business_branch=false`. Its original branch ID was not changed or replaced.
+- The named Production project's assignment table has no Country Admin or City Branch Admin rows. One active Chaman-linked login is saved as Staff with manual account create/read permissions. This is a candidate record, not proof of the user's currently signed-in identity. Do not promote it by inference.
+- DEV has an active UAE business Country Admin candidate and an active Chaman shipping City Branch Admin candidate. The Chaman candidate has manual account create/read permissions but no saved user-creation grant. This supports keeping explicit delegation, not automatically granting creation to every branch admin.
+- The application supports a direct DATABASE_URL and Supabase-backed reads/authentication. The named cloud project is not proven to be the live VPS datasource. The difference from the reported dashboards must be resolved against the real signed-in User ID and live environment before changing assignments.
+- DEV already reuses two person identities as both Employee and Company Owner (three employee links, two company links). This is read-only evidence of existing reuse, not a new owner-relationship creation or approval test.
+- Both projects have installed Employee and Company foreign keys to the shared identity. DEV profile person/employee identifiers are text columns whereas Production uses UUID foreign keys. DEV text values had zero invalid UUID strings; no conversion or migration was attempted.
+- Security advisors were read. They report pre-existing findings, including security-definer views in both projects and public tables without RLS in Production. No bulk security changes were made. Security remains NOT VERIFIED for release.
+
+GitHub CI follow-up: the first build run stopped in the safety guard because the new mocked API test contained a literal synthetic password. The local guard had initially omitted the untracked test file. The fixture now generates its value at runtime; all new files were staged before re-running the full guard. All 172 tests passed again. The guard was not bypassed, and no real credential was involved. The amended commit must pass GitHub CI before integration.
