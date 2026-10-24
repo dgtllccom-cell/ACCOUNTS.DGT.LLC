@@ -14,7 +14,7 @@ import { MOBILE_PROFILE_ALLOWED, capPermissionsToProfile, normalizeMobileProfile
 import { issueNextUserCode, normalizeUserCode } from "@/lib/services/user-identity-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
-import { SUPER_ADMIN_ONLY_ROLES, assignmentBranchDomainError, domainManagerTargetError, isUserManager, userInManagerScope, userCreationTargetError } from "@/lib/permissions/user-management-scope";
+import { SUPER_ADMIN_ONLY_ROLES, assignmentBranchDomainError, domainManagerTargetError, isUserManager, userInManagerScope, userCreationTargetError, canDelegateUserRole } from "@/lib/permissions/user-management-scope";
 import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
 import { assertNoDuplicateAssignment, assertNoDuplicateUser } from "@/lib/branch-network/duplicate-guard";
 
@@ -785,6 +785,9 @@ export async function PATCH(request: NextRequest) {
       // Privilege escalation guard: a manager can never promote a user to a role it may not create.
       if (body.role && SUPER_ADMIN_ONLY_ROLES.has(body.role)) {
         throw new ApiClientError("Only Super Admin can assign Super Admin, Reports Auditor or Country Admin roles.", { status: 403 });
+      }
+      if (body.role && !canDelegateUserRole(session, body.role)) {
+        throw new ApiClientError("That role is outside your delegated user-management authority.", { status: 403 });
       }
       if (body.countryBranchId && !session.countryBranchIds.includes(body.countryBranchId)) {
         throw new ApiClientError("Branch scope is not allowed.", { status: 403 });

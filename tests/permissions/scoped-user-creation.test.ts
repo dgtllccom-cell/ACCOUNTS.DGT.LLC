@@ -37,10 +37,10 @@ describe("delegated city staff creation", () => {
 });
 
 describe("country creation delegation", () => {
-  it.each(["city_branch_admin", "main_branch_admin", "staff_user"])("allows %s in the authorized country/domain", (role) => {
+  it.each(["city_branch_admin", "main_branch_admin", "staff_user", "country_user"])("allows %s in the authorized country/domain", (role) => {
     expect(userCreationTargetError(country, { ...target, role, countryId: "UAE", cityBranchId: "ALRAS", operationalDomain: "business" })).toBeNull();
   });
-  it.each(["super_admin", "country_admin", "super_admin_reports", "country_user"])("rejects %s", (role) => {
+  it.each(["super_admin", "country_admin", "super_admin_reports"])("rejects %s", (role) => {
     expect(canDelegateUserRole(country, role)).toBe(false);
   });
   it("rejects another country and another domain", () => {
@@ -49,6 +49,21 @@ describe("country creation delegation", () => {
   });
   it("does not infer authority from scope IDs without an assignment", () => {
     expect(userCreationTargetError({ ...country, assignments: [] }, { ...target, countryId: "UAE", operationalDomain: "business" })).not.toBeNull();
+  });
+});
+
+describe("main branch admin creation delegation", () => {
+  const mainBranchAdmin = {
+    ...country,
+    roles: ["main_branch_admin"],
+    countryBranchIds: ["MAIN-1"],
+    assignments: [{ role: "main_branch_admin", countryId: "UAE", countryBranchId: "MAIN-1", cityBranchId: null, operationalDomain: "business" }]
+  };
+  it.each(["staff_user", "accountant", "cashier", "agent_user", "auditor_viewer"])("allows staff role %s", (role) => {
+    expect(canDelegateUserRole(mainBranchAdmin, role)).toBe(true);
+  });
+  it.each(["city_branch_admin", "main_branch_admin", "country_admin", "super_admin", "country_user"])("rejects admin / country role %s", (role) => {
+    expect(canDelegateUserRole(mainBranchAdmin, role)).toBe(false);
   });
 });
 

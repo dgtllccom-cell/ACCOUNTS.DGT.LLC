@@ -44,8 +44,8 @@ export function canDelegateUserRole(session: ManagerSession, role: string): bool
   if (session.isSuperAdmin) return true;
   if (SUPER_ADMIN_ONLY_ROLES.has(role)) return false;
   if (domainSuperAdminDomain(session.roles)) return BRANCH_STAFF_ROLES.has(role) || role === "main_branch_admin" || role === "city_branch_admin";
-  if (session.roles.includes("country_admin")) return BRANCH_STAFF_ROLES.has(role) || role === "main_branch_admin" || role === "city_branch_admin";
-  if (session.roles.includes("main_branch_admin")) return BRANCH_STAFF_ROLES.has(role) || role === "city_branch_admin";
+  if (session.roles.includes("country_admin")) return BRANCH_STAFF_ROLES.has(role) || role === "main_branch_admin" || role === "city_branch_admin" || role === "country_user";
+  if (session.roles.includes("main_branch_admin")) return BRANCH_STAFF_ROLES.has(role);
   return session.roles.includes("city_branch_admin") && BRANCH_STAFF_ROLES.has(role) && role !== "agent_user";
 }
 

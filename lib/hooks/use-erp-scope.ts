@@ -51,6 +51,14 @@ export type ErpScope = {
   scopeLabel: string | null;
   role: string | null;
   roles: string[];
+  permissions: string[];
+  assignments: Array<{
+    role: string;
+    countryId: string | null;
+    countryBranchId: string | null;
+    cityBranchId: string | null;
+    operationalDomain: string;
+  }>;
   userId: string | null;
   userName: string | null;
 };
@@ -61,7 +69,7 @@ const EMPTY: ErpScope = {
   countryIds: [], countryBranchIds: [], cityBranchIds: [],
   lockedCountryId: null, lockedCountryBranchId: null, lockedCityBranchId: null,
   countryName: null, countryBranchName: null, cityBranchName: null, branchDisplayName: null,
-  scopeLabel: null, role: null, roles: [], userId: null, userName: null,
+  scopeLabel: null, role: null, roles: [], permissions: [], assignments: [], userId: null, userName: null,
 };
 
 export function useErpScope(): ErpScope {
@@ -130,6 +138,8 @@ export function useErpScope(): ErpScope {
           scopeLabel: sum.scopeLabel ?? null,
           role: Array.isArray(p?.roles) ? p.roles[0] ?? null : null,
           roles: Array.isArray(p?.roles) ? p.roles : [],
+          permissions: Array.isArray(p?.permissions) ? p.permissions : [],
+          assignments: Array.isArray(s?.assignments) ? s.assignments : [],
           userId: p?.user?.id ?? null,
           userName: p?.user?.fullName ?? p?.user?.email ?? null,
         });
