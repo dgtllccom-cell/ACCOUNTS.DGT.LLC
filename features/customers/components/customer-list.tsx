@@ -52,6 +52,7 @@ import { Th } from "@/components/ui/translated-th";
 
 type CustomerRow = {
   id: string;
+  is_active?: boolean;
   country_id: string;
   state_province_id: string | null;
   city_id: string | null;

@@ -38,6 +38,16 @@ export type CountryRow = {
   whatsapp_number: string | null;
 };
 
+type CountrySummary = Pick<CountryRow, "id" | "name" | "iso2" | "iso3" | "currency_code" | "is_active"> & {
+  total_states: number; total_cities: number; total_districts: number;
+};
+type StateSummary = Pick<StateRow, "id" | "country_id" | "name" | "code" | "is_active"> & {
+  total_cities: number; total_districts: number;
+};
+type DistrictSummary = Pick<DistrictRow, "id" | "country_id" | "state_province_id" | "name" | "code" | "is_active"> & {
+  total_districts: number;
+};
+
 type CountryInput = {
   id: string;
   name: string;
@@ -1476,12 +1486,12 @@ export class LocationsRepository {
     };
   }
 
-  async listCountrySummaries() {
+  async listCountrySummaries(): Promise<CountrySummary[]> {
     const dbUrl = getDbUrl();
     if (dbUrl) {
       const sql = postgres(dbUrl, { max: 1, prepare: false });
       try {
-        const rows = await sql`
+        const rows = await sql<CountrySummary[]>`
           SELECT 
             c.id,
             c.name,
@@ -1586,12 +1596,12 @@ export class LocationsRepository {
     }
   }
 
-  async listStateSummaries(countryId: string) {
+  async listStateSummaries(countryId: string): Promise<StateSummary[]> {
     const dbUrl = getDbUrl();
     if (dbUrl) {
       const sql = postgres(dbUrl, { max: 1, prepare: false });
       try {
-        const rows = await sql`
+        const rows = await sql<StateSummary[]>`
           SELECT 
             s.id,
             s.country_id,
@@ -1626,12 +1636,12 @@ export class LocationsRepository {
     }));
   }
 
-  async listCitySummaries(stateId: string) {
+  async listCitySummaries(stateId: string): Promise<DistrictSummary[]> {
     const dbUrl = getDbUrl();
     if (dbUrl) {
       const sql = postgres(dbUrl, { max: 1, prepare: false });
       try {
-        const rows = await sql`
+        const rows = await sql<DistrictSummary[]>`
           SELECT 
             d.id,
             d.country_id,

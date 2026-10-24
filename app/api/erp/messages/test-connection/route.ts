@@ -5,6 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { testSmtpConnection } from "@/lib/email/smtp-client";
 import { resolveMailboxAccount } from "@/lib/email/resolve-mailbox-account";
 import { decrypt } from "@/lib/crypto";
+import { canAccessCityBranch } from "@/lib/permissions/middleware";
 
 export const dynamic = "force-dynamic";
 
@@ -24,16 +25,38 @@ export async function POST(request: NextRequest) {
 
     let smtpConfig: any = null;
 
-    if (body.host) {
+    // The branch wizard submits unsaved values under `settings`; never silently
+    // replace them with country/global defaults when testing this form.
+    if (body.host || body.settings) {
+      const settings = body.settings;
       smtpConfig = {
-        host: body.host,
-        port: Number(body.port),
-        secure: Boolean(body.secure),
+        host: settings ? settings.smtpHost : body.host,
+        port: Number(settings ? settings.smtpPort : body.port),
+        secure: settings ? settings.smtpSecure : Boolean(body.secure),
         auth: {
-          user: body.user,
-          pass: body.pass
+          user: settings ? settings.smtpUser : body.user,
+          pass: settings ? settings.smtpPass : body.pass
         }
       };
+
+      // Passwords are not returned to the edit form. Reuse only the saved
+      // credential for this exact branch and mailbox when the field is blank.
+      if (settings && !smtpConfig.auth.pass && body.cityBranchId) {
+        if (!canAccessCityBranch(session, body.cityBranchId)) {
+          return NextResponse.json({ success: false, error: "Branch access denied." }, { status: 403 });
+        }
+        const { data: account, error } = await admin
+          .from("erp_email_accounts")
+          .select("id")
+          .eq("city_branch_id", body.cityBranchId)
+          .eq("email_address", smtpConfig.auth.user)
+          .eq("is_active", true)
+          .is("deleted_at", null)
+          .maybeSingle();
+        if (error) throw error;
+        const saved = account ? await resolveMailboxAccount(account.id) : null;
+        smtpConfig.auth.pass = saved?.smtpPass || "";
+      }
     } else {
       const countryId = body.countryId || null;
       const countryBranchId = body.countryBranchId || null;
