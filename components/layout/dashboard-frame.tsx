@@ -60,6 +60,8 @@ import { TableCardViewController } from "@/components/layout/table-card-view-con
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { ActiveRecordProvider } from "@/lib/support/active-record-context";
+import type { SessionScopeDisplay } from "@/lib/permissions/scope-display";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
 
 export function DashboardFrame({
   children,
@@ -72,7 +74,8 @@ export function DashboardFrame({
   ledgerVisibility,
   canViewFinancials,
   userEmail,
-  userName
+  userName,
+  scopeDisplay
 }: {
   children: React.ReactNode;
   nodes: SidebarNode[];
@@ -85,8 +88,10 @@ export function DashboardFrame({
   canViewFinancials?: boolean;
   userEmail: string;
   userName?: string | null;
+  scopeDisplay?: SessionScopeDisplay | null;
 }) {
   const router = useRouter();
+  const erpScope = useErpScope();
   // The server threads `lang` from the erp_lang cookie, but the client language switcher is the live
   // source of truth (localStorage erp_lang, read reactively by useActiveLanguage). If the two ever
   // diverge (e.g. login set localStorage but not the cookie, or a stale/absent cookie), the sidebar
@@ -386,6 +391,29 @@ export function DashboardFrame({
 
     return (roles[0] && labels[roles[0] as EnterpriseRole]) ?? null;
   }, [roles, lang]);
+
+  const activeScopeLocation = useMemo(() => {
+    if (roles?.includes("super_admin") || erpScope.isSuperAdmin) {
+      return t(lang, "cpage.all_countries_global" as any, "Global Head Office");
+    }
+    return (
+      erpScope.cityBranchName ||
+      erpScope.countryBranchName ||
+      erpScope.countryName ||
+      erpScope.branchDisplayName ||
+      scopeDisplay?.cityBranchName ||
+      scopeDisplay?.countryBranchName ||
+      scopeDisplay?.countryName ||
+      scopeDisplay?.branchDisplayName ||
+      null
+    );
+  }, [roles, erpScope, scopeDisplay, lang]);
+
+  const fullRoleScopeLabel = useMemo(() => {
+    const role = roleLabel || t(lang, "nav.administrator", "Administrator");
+    if (!activeScopeLocation) return role;
+    return `${role} • ${activeScopeLocation}`;
+  }, [roleLabel, activeScopeLocation, lang]);
 
   const searchItems = useMemo(() => {
     return [
@@ -693,32 +721,55 @@ export function DashboardFrame({
                 <button
                   type="button"
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                  className={cn("hidden text-start text-xs sm:flex items-center gap-2.5 hover:bg-muted/50 p-1.5 rounded-lg transition-colors cursor-pointer focus:outline-none")}
+                  className={cn("flex text-start text-xs items-center gap-2 sm:gap-2.5 hover:bg-muted/50 p-1 sm:p-1.5 rounded-lg transition-colors cursor-pointer focus:outline-none")}
+                  aria-label={userName || t(lang, "common.user", "User")}
                 >
-                  <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shadow-sm">
+                  <div className="h-8 w-8 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shadow-sm">
                     {userName ? userName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : "SA"}
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-bold text-foreground leading-none">{userName || t(lang, "role.super_admin", "Super Admin")}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{roleLabel || t(lang, "nav.administrator", "Administrator")}</p>
+                  <div className="min-w-0 max-w-[260px] hidden sm:block">
+                    <p className="font-bold text-foreground leading-none truncate">{userName || t(lang, "role.super_admin", "Super Admin")}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5 truncate" title={fullRoleScopeLabel}>
+                      {fullRoleScopeLabel}
+                    </p>
                   </div>
                 </button>
 
               {profileMenuOpen && (
-                <div className="absolute top-full end-0 mt-2 w-72 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
+                <div className="absolute top-full end-0 mt-2 w-80 max-w-[calc(100vw-1.5rem)] rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
                   <div className="p-4 border-b border-border bg-muted/30">
-                    <p className="font-bold text-sm text-foreground">{userName || t(lang, "common.user", "User")}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{userEmail}</p>
+                    <p className="font-bold text-sm text-foreground truncate">{userName || t(lang, "common.user", "User")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{userEmail}</p>
+                    <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
+                      <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/20">
+                        {roleLabel || t(lang, "nav.administrator", "Administrator")}
+                      </span>
+                      {activeScopeLocation && (
+                        <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          {activeScopeLocation}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="p-4 border-b border-border">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2.5">{t(lang, "nav.assigned_permissions", "Assigned Permissions")}</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t(lang, "nav.assigned_permissions", "Assigned Permissions")}</p>
+                      {activeScopeLocation && (
+                        <span className="text-[10px] font-semibold text-primary truncate max-w-[140px] text-end" title={activeScopeLocation}>{activeScopeLocation}</span>
+                      )}
+                    </div>
                     <div className="flex flex-wrap gap-1.5">
                       {roles?.map((r, i) => (
                         <span key={i} className="inline-flex items-center rounded bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50">
                           {t(lang, `role.${r}` as const, r.replace(/_/g, ' '))}
                         </span>
                       ))}
+                      {activeScopeLocation && (
+                        <span className="inline-flex items-center rounded bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50">
+                          {activeScopeLocation}
+                        </span>
+                      )}
                       {(!roles || roles.length === 0) && (
                         <span className="text-xs text-slate-500 italic">{t(lang, "nav.no_role_assigned", "No specific role assigned")}</span>
                       )}
