@@ -19,7 +19,63 @@ type ManagerSession = {
   countryIds: readonly string[];
   countryBranchIds: readonly string[];
   cityBranchIds: readonly string[];
+  permissions?: readonly string[];
+  assignments?: readonly {
+    role: string;
+    countryId: string | null;
+    countryBranchId: string | null;
+    cityBranchId: string | null;
+    operationalDomain: string;
+  }[];
 };
+
+/** City admins may create staff only when creation has explicitly been delegated.
+ * Keep this separate from isUserManager: creation must not unlock password resets,
+ * global permission-set edits, or administration of existing multi-scope users.
+ */
+export function isUserCreator(session: ManagerSession): boolean {
+  return isUserManager(session) || (session.roles.includes("city_branch_admin") &&
+    Boolean(session.permissions?.some((p) => p === "users:create" || p === "users:*")));
+}
+
+const BRANCH_STAFF_ROLES = new Set(["staff_user", "accountant", "cashier", "agent_user", "auditor_viewer"]);
+
+export function canDelegateUserRole(session: ManagerSession, role: string): boolean {
+  if (session.isSuperAdmin) return true;
+  if (SUPER_ADMIN_ONLY_ROLES.has(role)) return false;
+  if (domainSuperAdminDomain(session.roles)) return BRANCH_STAFF_ROLES.has(role) || role === "main_branch_admin" || role === "city_branch_admin";
+  if (session.roles.includes("country_admin")) return BRANCH_STAFF_ROLES.has(role) || role === "main_branch_admin" || role === "city_branch_admin" || role === "country_user";
+  if (session.roles.includes("main_branch_admin")) return BRANCH_STAFF_ROLES.has(role);
+  return session.roles.includes("city_branch_admin") && BRANCH_STAFF_ROLES.has(role) && role !== "agent_user";
+}
+
+/** Validate the complete target against ONE authoritative assignment, rather than
+ * combining country, branch and domain grants from unrelated assignments.
+ */
+export function userCreationTargetError(session: ManagerSession, target: {
+  role: string; countryId?: string | null; countryBranchId?: string | null;
+  cityBranchId?: string | null; operationalDomain: string; accessProfile?: string | null;
+  mode?: string;
+}): string | null {
+  if (session.isSuperAdmin) return null;
+  if (!isUserCreator(session)) return "Not authorized to create users. Explicit user-creation delegation is required.";
+  if (!canDelegateUserRole(session, target.role)) return "That role is outside your delegated user-creation authority.";
+  if (domainSuperAdminDomain(session.roles)) return domainManagerTargetError(session, target);
+  const cityOnly = !session.roles.includes("country_admin") && !session.roles.includes("main_branch_admin");
+  if (cityOnly && session.assignments?.length !== 1) return "Multi-scope staff delegation requires an authorized user manager's review.";
+  if (cityOnly && target.mode === "assign_scope") return "Only an authorized user manager may modify an existing login's scope.";
+  if (cityOnly && target.accessProfile) return "Branch staff delegation cannot issue administrative access profiles.";
+  const matched = session.assignments?.some((a) => {
+    if (!session.roles.includes(a.role) || !["country_admin", "main_branch_admin", "city_branch_admin"].includes(a.role)) return false;
+    if (!target.countryId || a.countryId !== target.countryId) return false;
+    if (a.operationalDomain !== "both" && a.operationalDomain !== target.operationalDomain) return false;
+    if (a.role === "country_admin") return true;
+    if (a.role === "main_branch_admin") return Boolean(a.countryBranchId && a.countryBranchId === target.countryBranchId);
+    return Boolean(a.cityBranchId && a.cityBranchId === target.cityBranchId &&
+      (a.countryBranchId ?? null) === (target.countryBranchId ?? null));
+  });
+  return matched ? null : "Country, branch or operational domain is outside your delegated scope.";
+}
 
 export function isUserManager(session: ManagerSession): boolean {
   if (session.isSuperAdmin) return true;

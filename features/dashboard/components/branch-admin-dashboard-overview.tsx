@@ -190,7 +190,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
       <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
         <div>
           <span className="inline-flex rounded-full border border-border bg-card px-2 py-0.5 text-[9px] font-bold text-cyan-600 dark:text-cyan-400 uppercase">
-            {tt("bdash.title", "Branch Admin Dashboard")}
+            {tt("cmd.city_branch_dashboard", "City Branch Dashboard")}
           </span>
           <h1 className="text-2xl font-black text-foreground mt-1">{data.branchName}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
