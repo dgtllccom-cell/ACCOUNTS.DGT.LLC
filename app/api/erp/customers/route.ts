@@ -21,13 +21,18 @@ export async function GET(request: NextRequest) {
 
     const query = request.nextUrl.searchParams.get("q");
     let countryId = request.nextUrl.searchParams.get("countryId");
+    const allCountries = request.nextUrl.searchParams.get("allCountries") === "true" || request.nextUrl.searchParams.get("all") === "true";
+    const filterByCountry = request.nextUrl.searchParams.get("filterByCountry");
     const limit = request.nextUrl.searchParams.get("limit");
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
-    // Enforce session scope: if user is not super admin and no countryId provided,
-    // restrict to their assigned country(ies)
-    if (!session.isSuperAdmin && !countryId && session.countryIds.length > 0) {
+    // Enforce session scope only when not searching globally or reusing across ERP:
+    // Person/Customer Master is a global authoritative entity that must be searchable and reusable across countries/branches.
+    if (!session.isSuperAdmin && !countryId && !allCountries && filterByCountry !== "false" && !query && session.countryIds.length > 0) {
       countryId = session.countryIds[0];
+    }
+    if (allCountries || filterByCountry === "false") {
+      countryId = null;
     }
 
     const result = await customersService.search({

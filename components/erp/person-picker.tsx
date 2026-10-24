@@ -81,6 +81,7 @@ function toOption(row: PersonRow, lang: string = "en"): SearchSelectOption {
 
   const label = extraBits.length > 0 ? `${name} (${extraBits.join(" · ")})` : name;
   const keywords = [
+    row.id,
     name, rawName, primaryName, nativeName, row.original_customer_name, row.customer_name_en,
     row.customer_name, row.first_name, row.last_name, row.person_code,
     row.employee_code, row.employee_designation, row.employee_department,
@@ -147,7 +148,12 @@ export function PersonPicker({
     try {
       const qp = new URLSearchParams();
       const targetCountryId = scopedCountryId !== undefined ? scopedCountryId : (filterByCountry ? countryId : null);
-      if (targetCountryId) qp.set("countryId", targetCountryId);
+      if (targetCountryId) {
+        qp.set("countryId", targetCountryId);
+      } else {
+        qp.set("allCountries", "true");
+        qp.set("filterByCountry", "false");
+      }
       qp.set("limit", "500");
       // Resolve customer_name/company_name into the active language server-side
       qp.set("lang", lang);
@@ -170,7 +176,12 @@ export function PersonPicker({
         qp.set("limit", "50");
         qp.set("lang", lang);
         const targetCountryId = filterByCountry ? countryId : null;
-        if (targetCountryId) qp.set("countryId", targetCountryId);
+        if (targetCountryId) {
+          qp.set("countryId", targetCountryId);
+        } else {
+          qp.set("allCountries", "true");
+          qp.set("filterByCountry", "false");
+        }
         const res = await apiGet<{ customers: PersonRow[] }>(`/api/erp/customers?${qp.toString()}`);
         const found = res.customers ?? [];
         if (found.length > 0) {

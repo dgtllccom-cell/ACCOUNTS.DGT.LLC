@@ -266,7 +266,7 @@ export class CustomersRepository {
           AND (${input.countryId ? sql`c.country_id = ${input.countryId}::uuid` : sql`true`})
           AND (${
             like
-              ? sql`(c.customer_name ILIKE ${like} OR c.first_name ILIKE ${like} OR c.last_name ILIKE ${like} OR c.father_name ILIKE ${like} OR c.person_code ILIKE ${like} OR c.company_name ILIKE ${like} OR c.contact_person ILIKE ${like} OR c.email ILIKE ${like} OR c.mobile ILIKE ${like} OR c.whatsapp ILIKE ${like} OR c.address ILIKE ${like} OR c.notes ILIKE ${like}
+              ? sql`(c.id::text ILIKE ${like} OR c.person_code ILIKE ${like} OR c.customer_name ILIKE ${like} OR c.first_name ILIKE ${like} OR c.last_name ILIKE ${like} OR c.father_name ILIKE ${like} OR c.company_name ILIKE ${like} OR c.contact_person ILIKE ${like} OR c.email ILIKE ${like} OR c.mobile ILIKE ${like} OR c.whatsapp ILIKE ${like} OR c.address ILIKE ${like} OR c.notes ILIKE ${like}
                   OR name_trans.english_text ILIKE ${like} OR name_trans.urdu_text ILIKE ${like} OR name_trans.arabic_text ILIKE ${like} OR name_trans.persian_text ILIKE ${like} OR name_trans.pashto_text ILIKE ${like}
                   OR emp.employee_code ILIKE ${like} OR emp.designation ILIKE ${like} OR emp.department ILIKE ${like}
                   OR EXISTS (SELECT 1 FROM public.customer_registrations cr WHERE cr.customer_id = c.id AND cr.deleted_at IS NULL AND cr.registration_value ILIKE ${like}) ${
