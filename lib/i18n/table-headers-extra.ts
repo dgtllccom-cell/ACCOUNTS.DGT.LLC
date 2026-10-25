@@ -536,6 +536,11 @@ export const HEADER_EXTRA: Record<string, Row> = {
   "PERMISSIONS SAVED SUCCESSFULLY": r("اجازتیں کامیابی سے محفوظ ہو گئیں", "تم حفظ الصلاحيات بنجاح", "مجوزها با موفقیت ذخیره شد", "اجازې په بریالیتوب سره خوندي شوې"),
   "AN ERROR OCCURRED WHILE SAVING.": r("محفوظ کرتے وقت خرابی پیش آئی۔", "حدث خطأ أثناء الحفظ.", "هنگام ذخیره خطایی رخ داد.", "د ساتلو پر مهال تېروتنه رامنځته شوه."),
   "PERMISSIONS RESET TO THE DEFAULT ROLE BASELINE. CLICK SAVE RIGHTS & UPDATE TO PERSIST.": r("اجازتیں رول کی بنیادی ڈیفالٹ سطح پر بحال کر دی گئیں۔ محفوظ کرنے کے لیے «حقوق محفوظ کریں اور اپڈیٹ کریں» پر کلک کریں۔", "تمت إعادة الصلاحيات إلى الخط الأساسي الافتراضي للدور. انقر «حفظ الحقوق والتحديث» للتثبيت.", "مجوزها به مبنای پیش‌فرض نقش بازگردانده شد. برای ماندگاری روی «ذخیره حقوق و به‌روزرسانی» کلیک کنید.", "اجازې د رول اصلي پیش‌فرض ته بیرته شوې. د ساتلو لپاره «حقونه ساته او تازه کړه» کېکاږئ."),
+  // shipping-line dashboards, branch reports and permission management (production 658c4be / a86355d screens)
+  "PERMISSIONS": r("اجازتیں", "الصلاحيات", "مجوزها", "اجازې"),
+  "FULL ACCESS (ASSIGNED FORMS)": r("مکمل رسائی (تفویض شدہ فارم)", "وصول كامل (النماذج المعيّنة)", "دسترسی کامل (فرم‌های اختصاص‌یافته)", "بشپړ لاسرسی (ټاکل شوې فورمې)"),
+  // shipping-line dashboards, branch reports and permission management (production 658c4be / a86355d screens)
+  "NO PORT DATA AVAILABLE": r("بندرگاہ کا کوئی ڈیٹا دستیاب نہیں", "لا تتوفر بيانات الموانئ", "داده‌ای از بنادر موجود نیست", "د بندرونو هیڅ معلومات نشته"),
 };
 
 /** Concise English text for English headings that were overly long (same meaning). */

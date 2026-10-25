@@ -143,14 +143,15 @@ export default async function BranchUserPermissionsPage(props: {
       id: a.user_id,
       name: profile?.full_name || profile?.user_code || "Branch User",
       userCode: code,
-      username: profile?.email || `${(profile?.user_code || "user").toLowerCase()}@dgt.llc`,
-      email: profile?.email || `${(profile?.user_code || "user").toLowerCase()}@dgt.llc`,
-      phone: profile?.phone || "+971 50 123 4567",
+      username: profile?.email || "",
+      email: profile?.email || "",
+      phone: profile?.phone || "",
       role: a.role || "shipping_line_user",
       operationalDomain: a.operational_domain || "shipping",
       isActive: a.is_active ?? true,
-      assignedOn: a.created_at ? new Date(a.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "24 Oct 2026, 10:45 AM",
-      lastLogin: "Today, active now",
+      // neutral, language-independent timestamp (server and browser render the same text); last login is not tracked on this screen
+      assignedOn: a.created_at ? new Date(a.created_at).toISOString().slice(0, 16).replace("T", " ") : "",
+      lastLogin: "",
       permissions: permissionsMap[a.user_id] || []
     };
   });

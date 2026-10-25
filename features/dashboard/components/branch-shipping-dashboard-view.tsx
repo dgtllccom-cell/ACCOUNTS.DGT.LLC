@@ -172,13 +172,8 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
         volume: p.volume
       }));
     }
-    return [
-      { port: tr("Karachi"), shipments: 0, volume: 0 },
-      { port: tr("Gwadar"), shipments: 0, volume: 0 },
-      { port: tr("Jebel Ali"), shipments: 0, volume: 0 },
-      { port: tr("Bandar Abbas"), shipments: 0, volume: 0 },
-      { port: tr("Other"), shipments: 0, volume: 0 }
-    ];
+    // no invented ports: a branch without port data shows the empty state below, not zero bars named after other countries' ports
+    return [] as Array<{ port: string; shipments: number; volume: number }>;
   }, [data.portWiseShipments, lang]);
 
   return (
@@ -405,7 +400,11 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
           </CardHeader>
           <CardContent>
             <div className="h-[210px] w-full">
-              {!mounted ? null : (
+              {!mounted ? null : portData.length === 0 ? (
+                <div className="grid h-full place-items-center">
+                  <p className="text-xs font-semibold text-muted-foreground">{tr("No port data available")}</p>
+                </div>
+              ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={portData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "hsl(var(--border))" : "#e2e8f0"} opacity={0.6} />

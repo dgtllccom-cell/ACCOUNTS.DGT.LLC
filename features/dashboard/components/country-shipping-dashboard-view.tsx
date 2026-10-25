@@ -48,6 +48,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { localizeCountryName } from "@/lib/i18n/country-names";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export type CountryShippingBranchSummary = {
@@ -183,7 +184,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                {data.countryName}
+                {localizeCountryName(data.countryName, lang)}
               </h1>
               <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-[10px] font-black uppercase text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300">
                 <Ship className="h-3 w-3" />
@@ -245,7 +246,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
               {tr("Country Shipping Line Authority")}
             </span>
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              {data.countryName} · {tr("Shipping Line Operations")}
+              {localizeCountryName(data.countryName, lang)} · {tr("Shipping Line Operations")}
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
               {tr("Manage nation-wide shipping branches, container vessel manifests, port clearance, and tracking operations across all national hubs.")}
@@ -617,7 +618,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
       <section className="flex items-center justify-between border-t border-border/80 pt-4 text-xs">
         <div className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/60 px-3 py-1.5 font-bold text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300">
           <Globe2 className="h-4 w-4 text-indigo-600" />
-          <span>{data.countryName} · Country Admin</span>
+          <span>{localizeCountryName(data.countryName, lang)} · {tr("Country Admin")}</span>
         </div>
         <p className="text-muted-foreground font-semibold text-[11px]">
           DGT LLC ERP SYSTEM • Version 1.0.0

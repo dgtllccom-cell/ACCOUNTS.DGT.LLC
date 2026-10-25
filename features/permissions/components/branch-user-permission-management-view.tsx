@@ -48,6 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { headerLabel, translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
+import { localizeCountryName } from "@/lib/i18n/country-names";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
 
 export type BranchUserDetails = {
@@ -1030,7 +1031,7 @@ export function BranchUserPermissionManagementView({
                   <FileText className="h-3.5 w-3.5 text-slate-400" />
                   {tr("User ID")}
                 </span>
-                <span className="font-mono font-bold text-foreground">{selectedUser?.userCode || "U-000123"}</span>
+                <span className="font-mono font-bold text-foreground">{selectedUser?.userCode || "—"}</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -1038,7 +1039,7 @@ export function BranchUserPermissionManagementView({
                   <span className="text-slate-400 font-mono">@</span>
                   {tr("Username")}
                 </span>
-                <span className="font-mono text-muted-foreground">{selectedUser?.username || "asmat@dgt.llc"}</span>
+                <span className="font-mono text-muted-foreground">{selectedUser?.username || "—"}</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -1047,7 +1048,7 @@ export function BranchUserPermissionManagementView({
                   {tr("Email")}
                 </span>
                 <span className="font-mono text-muted-foreground truncate max-w-[170px]">
-                  {selectedUser?.email || "asmat@dgt.llc"}
+                  {selectedUser?.email || "—"}
                 </span>
               </div>
 
@@ -1056,7 +1057,7 @@ export function BranchUserPermissionManagementView({
                   <Phone className="h-3.5 w-3.5 text-slate-400" />
                   {tr("Phone")}
                 </span>
-                <span className="font-mono text-muted-foreground">{selectedUser?.phone || "+971 50 123 4567"}</span>
+                <span className="font-mono text-muted-foreground">{selectedUser?.phone || "—"}</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -1066,7 +1067,7 @@ export function BranchUserPermissionManagementView({
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
                   <Ship className="h-3 w-3" />
-                  {selectedUser?.role || "Shipping Line User"}
+                  {roleText(selectedUser?.role)}
                 </span>
               </div>
 
@@ -1083,7 +1084,7 @@ export function BranchUserPermissionManagementView({
                   <Globe className="h-3.5 w-3.5 text-slate-400" />
                   {tr("Country")}
                 </span>
-                <span className="font-semibold text-foreground">{branch.countryName || "United Arab Emirates"}</span>
+                <span className="font-semibold text-foreground">{branch.countryName ? localizeCountryName(branch.countryName, lang) : "—"}</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -1092,7 +1093,7 @@ export function BranchUserPermissionManagementView({
                   {tr("Status")}
                 </span>
                 <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                  {selectedUser?.isActive ? "Active" : "Inactive"}
+                  {selectedUser?.isActive ? tr("Active") : tr("Inactive")}
                 </span>
               </div>
 
@@ -1101,7 +1102,7 @@ export function BranchUserPermissionManagementView({
                   <Calendar className="h-3.5 w-3.5 text-slate-400" />
                   {tr("ASSIGNED ON")}
                 </span>
-                <span className="text-[11px] text-muted-foreground">{selectedUser?.assignedOn || "24 Oct 2026, 10:45 AM"}</span>
+                <span className="text-[11px] text-muted-foreground">{selectedUser?.assignedOn || "—"}</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -1109,7 +1110,7 @@ export function BranchUserPermissionManagementView({
                   <Clock className="h-3.5 w-3.5 text-slate-400" />
                   {tr("Last Login")}
                 </span>
-                <span className="text-[11px] text-muted-foreground">{selectedUser?.lastLogin || "24 Oct 2026, 09:12 AM"}</span>
+                <span className="text-[11px] text-muted-foreground">{selectedUser?.lastLogin || "—"}</span>
               </div>
 
               <div className="flex items-center justify-between pt-1 border-t border-border/50">
@@ -1118,7 +1119,7 @@ export function BranchUserPermissionManagementView({
                   {tr("ACCESS LEVEL")}
                 </span>
                 <span className="font-bold text-blue-600 dark:text-blue-400 text-[11px]">
-                  Full Access (Assigned Forms)
+                  {tr("Full Access (Assigned Forms)")}
                 </span>
               </div>
             </CardContent>
