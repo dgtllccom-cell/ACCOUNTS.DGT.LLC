@@ -1,5 +1,31 @@
 # DGT ERP — Main Master Progress Report
-Owner-facing. Updated 2026-10-18 20:30 Dubai (UTC+4). (No earlier file with this name was found in the repository or on the Desktop — if one exists elsewhere, tell me where and I will merge this into it.)
+Owner-facing. Updated 2026-10-25 23:30 Dubai (UTC+4). (No earlier file with this name was found in the repository or on the Desktop — if one exists elsewhere, tell me where and I will merge this into it.)
+
+## Release candidate 2026-10-25 — expense framework + four languages + customer names (branch `release/rc-expense-framework`)
+
+DEV evidence only (DEV database `csesvyxxjivnkkozgopt`); Production was only READ (schema / counts), never written. Production runs `a86355d`; the release is a strict superset of it (47 commits). Runbook: `docs/release-2026-10-25-runbook.md`.
+
+| Check (on the merged build) | Result |
+|---|---|
+| `tsc --noEmit`, build (`npm run build`), all prebuild guards (i18n 22,215 keys × 5 languages, contract, nav, stock, repo-safety) | PASS |
+| Expense framework e2e (`expense-framework-e2e.mjs`): base currency + tax per country, mixed currency with a rate per row, exclusive / inclusive / exempt, tampering refused, role visibility, DR = CR at rate 1, 6-way race | 50 / 50 |
+| Bill Expenses lines e2e (`bill-expense-lines-e2e.mjs`): same calculator, Business vs Shipping, posting + void + 5-way race, register totals per currency, Job Cost per currency | 41 / 41 |
+| Financial / operational regression (purchase-payment race 4, payment remaining 16, payment kinds 16, sales payment 11, purchase transfer 8, sales transfer 10, local-purchase payment 9, shipping bills 12, transport payment 6, expense registers 32, money exchange 4, delivery status 12, shipment tracking 13, user-creation domain 25, shipping account approval 30, truck print 6) | all PASS |
+| Business / Shipping data-leak scan (existing harness) | 57 PASS, 3 reported items are a Shipping-domain test account that sits on a Business branch (not a leak) |
+| Four-language sweep: ur / ar / fa / ps × 111 screens × 1440 / 820 / 390 px = 1,332 page-loads | first merged build 6,609 PASS / 51 FAIL; all failures were on 5 screens (+3 borderline short pages), fixed; re-run of those screens 660 / 660; Branch / Country / Super-Admin personas on the shipping dashboards, branch reports and permission screen 232 PASS (8 items are customer / BL codes = data) |
+| English regression: 111 screens × 1440 / 820 / 390 px = 333 page-loads | 1,332 / 1,332 |
+
+### Defects found and fixed in this pass
+* Bill Expenses lines: converted with a rate defaulting to 1 and no tax treatment; grand amounts were labelled in the original invoice currency; posting fell back to USD. Now one calculator (original → base currency → tax exclusive / inclusive / exempt with the country's code and rate), base-currency labels, 422 when the base currency is not configured.
+* Job Cost / Profit added charges, expenses and partner bills of different currencies into one number; now one row per currency, no single figure for mixed-currency orders.
+* Production screens added by `658c4be` / `a86355d` (permission management, Branch / Country / Super-Admin shipping dashboards, branch reports) were English in UR / AR / FA / PS: 121 labels + status legends + role names + toasts translated; the permission screen showed a fixed phone number, e-mail, dates, "Today, active now" and a real person's name when data was missing — it now shows only real values.
+* Customer Register row label hard-coded English (found by the sweep, not by the register's own matrix).
+
+### Open items (not hidden)
+* **19 unit tests fail on `origin/production` `a86355d` itself** (permissions: `domain-separation`, `domain-super-admins`, `rbac-v2`, `scoped-user-creation`, `scoped-user-creation-api`, `mobile/app-channel`). They encode the earlier rule "a city branch admin is not a user manager without an explicit grant; shipping-line users hold no financial resource". Commits `658c4be` / `a86355d` deliberately changed that (city admins are now user managers, shipping-line users get customer / account / roznamcha entry). The tests were not updated. Owner decision: keep the new policy and update the tests, or revert the policy.
+* Customer-name rule (saved legal name when no authorized translation) vs the older display-only transliteration still used by the generic record localiser (Truck Registration report, Account Name input, Party Directory report): two behaviours on one screen. Owner decision.
+* Transport payments are recorded without a ledger posting (needs the owner's account mapping); input-VAT is part of the expense posting (no separate tax account).
+* Production authenticated screen checks: no Production login available to Claude (dev-session is disabled on Production by design).
 
 ## Mobile apps — DGT.llc B (Business) and DGT.llc BS (Shipping)
 
