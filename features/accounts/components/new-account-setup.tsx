@@ -642,7 +642,8 @@ export function NewAccountSetup({
               fetch(`/api/erp/customers/${acc.customer_id}?lang=${lang}`)
                 .then((r) => r.json())
                 .then((json) => {
-                  const name = json?.customer?.customer_name ?? json?.data?.customer_name ?? "";
+                  // API shape is { ok, data: { customer } } — the name is already resolved for the selected language
+                  const name = json?.data?.customer?.customer_name ?? json?.customer?.customer_name ?? json?.data?.customer_name ?? "";
                   if (!cancelled) setLinkedCustomerName(name);
                 })
             } else if (acc.company_id) {
@@ -2779,9 +2780,12 @@ export function NewAccountSetup({
                   fetch(`/api/erp/customers/${id}?lang=${lang}`)
                     .then((r) => r.json())
                     .then((json) => {
-                      const name = json?.customer?.customer_name ?? json?.data?.customer_name ?? "";
+                      const found = json?.data?.customer ?? json?.customer ?? json?.data;
+                      const name = found?.customer_name ?? "";
                       setLinkedCustomerName(name);
-                      if (!accountName && name) setAccountName(name);
+                      // The account is named after the SAVED legal name, never a language view of it
+                      const legalName = found?.original_customer_name || name;
+                      if (!accountName && legalName) setAccountName(legalName);
                     })
                     .catch(() => null);
                 }}
