@@ -22,12 +22,12 @@ new columns exist → the migrations change no existing row. Old code ignores th
 
 ```bash
 # on the VPS (root) — 1. verified backup, 2. migrations, 3. approve, 4. deploy
-/usr/local/bin/dgt-db-backup.sh && ls -la /root/backups | tail -3          # backup must be listed and non-empty
+/usr/local/bin/dgt-db-backup.sh && ls -la /var/backups/dgt-database | tail -2   # a fresh dump must be listed and non-empty (dgt-deploy takes its own as well)
 cd /var/www/dgt-nextjs && git fetch -q origin production
 set -a; . ./.env; set +a                                                    # .env keeps the direct :5432 URL
 git show origin/production:supabase/migrations/20261240_expense_posting_uniqueness.sql | psql "$DATABASE_URL" -v ON_ERROR_STOP=1
 git show origin/production:supabase/migrations/20261241_expense_lines_tax_mode_base_currency.sql | psql "$DATABASE_URL" -v ON_ERROR_STOP=1
-dgt-approve-deploy <RELEASE_SHA> --migrations
+dgt-approve-deploy <RELEASE_SHA> --migrations        # RELEASE_SHA = the commit at the head of origin/production when you start (git rev-parse origin/production)
 dgt-deploy --dry-run && dgt-deploy                                          # backup + atomic build; dgt-deploy --rollback restores the previous build
 ```
 
