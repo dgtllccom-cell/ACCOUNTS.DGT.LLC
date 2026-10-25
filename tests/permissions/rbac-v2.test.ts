@@ -36,13 +36,33 @@ describe("deriveEffectiveRole — stored role + access profile", () => {
 });
 
 describe("operational templates never contain a financial resource", () => {
-  for (const role of ["global_operations_admin", "country_operations_admin", "city_operations_admin", "shipping_line_user"] as const) {
+  for (const role of ["global_operations_admin", "country_operations_admin", "city_operations_admin"] as const) {
     it(role, () => {
       const fin = enterpriseRolePermissions[role].filter((p) => FINANCIAL_RESOURCES.includes(p.split(":")[0]));
       expect(fin).toEqual([]);
       expect(enterpriseRolePermissions[role]).not.toContain("*:*");
     });
   }
+  // Branch Shipping Line users hold the OWNER-APPROVED accounting bundle (production a86355d: customers, accounts, roznamcha entry).
+  // This pins that bundle exactly — widening it must be a deliberate change to this list, never a side effect.
+  it("shipping_line_user holds exactly the approved Shipping bundle: no commercial trade, no expenses / payments, no users, no wildcard, no delete / approve / post", () => {
+    const APPROVED = [
+      "dashboard:read",
+      "shipping_records:create", "shipping_records:read", "shipping_records:update",
+      "shipments:create", "shipments:read", "shipments:update",
+      "shipping_transfers:create", "shipping_transfers:read",
+      "shipping:read", "tasks:read", "tasks:update", "documents:create", "documents:read", "messages:read", "record_transfers:read",
+      "customers:create", "customers:read", "customers:update",
+      "accounts:create", "accounts:read", "accounts:update", "ledgers:read",
+      "transactions:create", "transactions:read", "roznamcha:create", "roznamcha:read",
+      "reports:read", "shipping_reports:read"
+    ];
+    const t = enterpriseRolePermissions.shipping_line_user;
+    expect([...t].sort()).toEqual([...APPROVED].sort());
+    expect(t).not.toContain("*:*");
+    expect(t.filter((p) => ["purchases", "sales", "inventory", "warehouses", "payroll", "uae_tax", "expenses", "payments", "users", "roles", "permissions"].includes(p.split(":")[0]))).toEqual([]);
+    expect(t.filter((p) => /:(delete|approve|post|post_cross_branch|\*)$/.test(p))).toEqual([]);
+  });
   it("shipping_line_admin has operational accounting, never commercial trade", () => {
     const commercial = enterpriseRolePermissions.shipping_line_admin.filter((p) => ["purchases", "sales", "inventory", "warehouses", "payroll", "uae_tax"].includes(p.split(":")[0]));
     expect(commercial).toEqual([]);
@@ -71,7 +91,11 @@ describe("deriveCanViewFinancials — field-level financial permission", () => {
   it("explicit deny wins over a business role", () => expect(deriveCanViewFinancials(["accountant"], ["finance_amounts:deny"], false)).toBe(false));
   it("operations / shipping-line logins never, even with the read token", () => {
     expect(deriveCanViewFinancials(["global_operations_admin"], ["finance_amounts:read"], false)).toBe(false);
-    expect(deriveCanViewFinancials(["shipping_line_user"], [], false)).toBe(false);
+    // Branch Shipping Line users hold the approved accounting bundle (accounts, ledgers, roznamcha) so they see amounts — but an
+    // explicit deny still wins, and the pure operations roles above never see them
+    expect(deriveCanViewFinancials(["shipping_line_user"], [], false)).toBe(true);
+    expect(deriveCanViewFinancials(["shipping_line_user"], ["finance_amounts:deny"], false)).toBe(false);
+    expect(deriveCanViewFinancials(["country_operations_admin"], [], false)).toBe(false);
   });
   it("business roles by default", () => expect(deriveCanViewFinancials(["country_admin"], [], false)).toBe(true));
 });
@@ -117,8 +141,12 @@ describe("evaluateRouteAccess — the policy shared by the server gate, client f
 describe("dashboardForRoles — one landing router", () => {
   it("routes each role to its dashboard", () => {
     expect(dashboardForRoles(["super_admin"], { isSuperAdmin: true })).not.toBe("/dashboard/logistics");
-    expect(dashboardForRoles(["country_operations_admin"])).toBe("/dashboard/logistics");
-    expect(dashboardForRoles(["shipping_line_admin"])).toBe("/dashboard/logistics");
+    // Business and Shipping Line dashboards are separate at all three management levels (production 658c4be)
+    expect(dashboardForRoles(["global_operations_admin"])).toBe("/dashboard/super-admin/shipping-line");
+    expect(dashboardForRoles(["country_operations_admin"])).toBe("/dashboard/country/shipping-line");
+    expect(dashboardForRoles(["city_operations_admin"])).toBe("/dashboard/city/shipping-line");
+    expect(dashboardForRoles(["shipping_line_admin"])).toBe("/dashboard/city/shipping-line");
+    expect(dashboardForRoles(["shipping_line_user"])).toBe("/dashboard/city/shipping-line");
   });
   it("never returns /dashboard itself (that page is only a router)", () => {
     for (const r of ["country_admin", "city_branch_admin", "accountant", "agent_user", "staff_user", "global_operations_admin"]) {

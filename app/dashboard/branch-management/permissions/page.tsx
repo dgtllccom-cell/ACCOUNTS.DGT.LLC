@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isUserManager } from "@/lib/permissions/user-management-scope";
+import { resolveScopedCityBranch } from "@/lib/permissions/branch-page-scope";
 import {
   BranchUserPermissionManagementView,
   type BranchInfo,
@@ -34,21 +35,13 @@ export default async function BranchUserPermissionsPage(props: {
   const supabase = createSupabaseAdminClient() as any;
 
   // Resolve Branch Scope
-  let targetBranchId: string | null = null;
-  const userCityBranches = session.cityBranchIds || [];
+  // Only a branch inside the login's own scope (a requested ?branchId= outside it is refused). No "first branch of the database"
+  // fallback for anyone but the Global Super Admin.
+  const scoped = resolveScopedCityBranch(session, searchParams.branchId);
+  if (scoped.denied) redirect("/dashboard");
+  let targetBranchId: string | null = scoped.branchId;
 
-  if (session.isSuperAdmin || session.roles.includes("country_admin")) {
-    targetBranchId = searchParams.branchId || userCityBranches[0] || null;
-  } else {
-    // Branch admin is strictly constrained to their own branch
-    targetBranchId =
-      userCityBranches[0] ||
-      session.assignments?.[0]?.cityBranchId ||
-      null;
-  }
-
-  // If no branch assigned, find the first active city branch (fallback for admins)
-  if (!targetBranchId) {
+  if (!targetBranchId && session.isSuperAdmin) {
     const { data: firstBranch } = await supabase
       .from("city_branches")
       .select("id")
@@ -74,26 +67,28 @@ export default async function BranchUserPermissionsPage(props: {
     .eq("id", targetBranchId)
     .maybeSingle();
 
-  let countryName = "Pakistan";
+  let countryName = "";
+  let countryCurrency = "";
   if (branchData?.country_id) {
     const { data: countryData } = await supabase
       .from("countries")
-      .select("name")
+      .select("name, currency_code")
       .eq("id", branchData.country_id)
       .maybeSingle();
     if (countryData?.name) {
       countryName = countryData.name;
     }
+    countryCurrency = countryData?.currency_code ? String(countryData.currency_code).toUpperCase() : "";
   }
 
   const branchInfo: BranchInfo = {
     id: branchData?.id || targetBranchId,
     name: branchData?.name || branchData?.city_name || "City Branch",
-    code: branchData?.code || "BR",
+    code: branchData?.code || "",
     cityName: branchData?.city_name || undefined,
     countryName,
-    currency: branchData?.local_currency || "PKR",
-    operationalDomain: branchData?.operational_domain || "shipping"
+    currency: String(branchData?.local_currency || countryCurrency || "").toUpperCase(),
+    operationalDomain: branchData?.operational_domain || "business"
   };
 
   // 2. Fetch users in this branch

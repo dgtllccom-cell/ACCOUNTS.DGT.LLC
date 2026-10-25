@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { Route } from "next";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { resolveScopedCityBranch } from "@/lib/permissions/branch-page-scope";
 import {
   BranchShippingReportsView,
   type BranchReportData,
@@ -21,22 +22,13 @@ export default async function BranchReportsPage(props: {
   const searchParams = (await props.searchParams) || {};
   const supabase = createSupabaseAdminClient() as any;
 
-  // Resolve Branch Scope
-  let targetBranchId: string | null = null;
-  const userCityBranches = session.cityBranchIds || [];
+  // Resolve Branch Scope: only a branch the login may access (a requested ?branchId= outside the scope is refused); there is no
+  // "first branch of the database" fallback for anyone but the Global Super Admin.
+  const scoped = resolveScopedCityBranch(session, searchParams.branchId);
+  if (scoped.denied) redirect("/dashboard" as Route);
+  let targetBranchId: string | null = scoped.branchId;
 
-  if (session.isSuperAdmin || session.roles.includes("country_admin")) {
-    targetBranchId = searchParams.branchId || userCityBranches[0] || null;
-  } else {
-    // Branch scoped users are strictly scoped to their own branch
-    targetBranchId =
-      userCityBranches[0] ||
-      session.assignments?.[0]?.cityBranchId ||
-      null;
-  }
-
-  // Fallback to first available city branch if none assigned
-  if (!targetBranchId) {
+  if (!targetBranchId && session.isSuperAdmin) {
     const { data: firstBranch } = await supabase
       .from("city_branches")
       .select("id")
@@ -62,25 +54,28 @@ export default async function BranchReportsPage(props: {
     .eq("id", targetBranchId)
     .maybeSingle();
 
-  let countryName = "Pakistan";
+  let countryName = "";
+  let countryCurrency = "";
   if (branchData?.country_id) {
     const { data: countryData } = await supabase
       .from("countries")
-      .select("name")
+      .select("name, currency_code")
       .eq("id", branchData.country_id)
       .maybeSingle();
     if (countryData?.name) {
       countryName = countryData.name;
     }
+    countryCurrency = countryData?.currency_code ? String(countryData.currency_code).toUpperCase() : "";
   }
 
   const branch: BranchReportBranch = {
     id: branchData?.id || targetBranchId,
     name: branchData?.name || branchData?.city_name || "City Branch",
-    code: branchData?.code || "BR",
+    code: branchData?.code || "",
     cityName: branchData?.city_name || undefined,
     countryName,
-    currency: branchData?.local_currency || "PKR"
+    // the branch's configured currency, else its country's — never an assumed one
+    currency: String(branchData?.local_currency || countryCurrency || "").toUpperCase()
   };
 
   // 2. Fetch parallel data for reports

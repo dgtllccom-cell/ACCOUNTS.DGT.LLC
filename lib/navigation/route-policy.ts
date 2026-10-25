@@ -22,7 +22,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/super-admin": ["super_admin", "route:/dashboard/super-admin"],
   "/dashboard/super-admin/shipping-line": ["super_admin", "shipping_super_admin", "global_operations_admin", "route:/dashboard/super-admin/shipping-line"],
   "/dashboard/country": ["dashboard:read", "country_admin", "country_user", "route:/dashboard/country"],
-  "/dashboard/country/shipping-line": ["dashboard:read", "country_admin", "country_operations_admin", "shipping_super_admin", "global_operations_admin", "route:/dashboard/country/shipping-line"],
+  "/dashboard/country/shipping-line": ["country_admin", "country_operations_admin", "shipping_super_admin", "global_operations_admin", "route:/dashboard/country/shipping-line"],
   "/dashboard/city": ["dashboard:read", "main_branch_admin", "city_branch_admin", "staff_user", "accountant", "cashier", "route:/dashboard/city"],
   "/dashboard/city/shipping-line": ["dashboard:read", "city_branch_admin", "city_operations_admin", "shipping_line_admin", "shipping_line_user", "agent_user", "route:/dashboard/city/shipping-line"],
   "/dashboard/shipping-line/branch": ["dashboard:read", "city_branch_admin", "city_operations_admin", "shipping_line_admin", "shipping_line_user", "agent_user", "route:/dashboard/shipping-line/branch"],
@@ -351,6 +351,15 @@ export function isStrictLogin(roles: readonly string[] | null | undefined): bool
   return r.length > 0 && r.every((x) => NON_FINANCIAL_ROLES.includes(x));
 }
 
+/**
+ * Branch Shipping Line users hold the owner-approved accounting bundle (customers, accounts, roznamcha entry …), so they are NOT
+ * "strict" (financial routes stay open to their tokens) — but they remain DEFAULT-DENY: a page nobody mapped is refused to them.
+ */
+export function isDefaultDenyLogin(roles: readonly string[] | null | undefined): boolean {
+  const r = roles ?? [];
+  return r.length > 0 && r.every((x) => NON_FINANCIAL_ROLES.includes(x) || x === "shipping_line_user");
+}
+
 export function evaluateRouteAccess(input: RouteAccessInput): RouteDecision {
   const path = input.pathname.split("?")[0].replace(/\/+$/, "") || "/dashboard";
   const permSet = new Set<string>([...(input.permissions ?? []), ...(input.roles ?? [])]);
@@ -400,5 +409,5 @@ export function evaluateRouteAccess(input: RouteAccessInput): RouteDecision {
   if (prefix) {
     return grants(ROUTE_PERMISSION_MAP[prefix], prefix) ? { allowed: true, reason: "permission" } : { allowed: false, reason: "no_permission" };
   }
-  return strict ? { allowed: false, reason: "unmapped_denied" } : { allowed: true, reason: "unmapped_legacy_allowed" };
+  return strict || isDefaultDenyLogin(input.roles) ? { allowed: false, reason: "unmapped_denied" } : { allowed: true, reason: "unmapped_legacy_allowed" };
 }
