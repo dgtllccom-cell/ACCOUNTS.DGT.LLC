@@ -3,7 +3,7 @@ import type { Route } from "next";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isUserManager } from "@/lib/permissions/user-management-scope";
-import { resolveScopedCityBranch } from "@/lib/permissions/branch-page-scope";
+import { branchDomainAllowed, resolveScopedCityBranch } from "@/lib/permissions/branch-page-scope";
 import {
   BranchUserPermissionManagementView,
   type BranchInfo,
@@ -66,6 +66,8 @@ export default async function BranchUserPermissionsPage(props: {
     .select("id, name, code, city_name, country_id, local_currency, operational_domain")
     .eq("id", targetBranchId)
     .maybeSingle();
+  // a Business-only / Shipping-only login never opens a branch of the other domain
+  if (!branchDomainAllowed(session, branchData?.operational_domain)) redirect("/dashboard");
 
   let countryName = "";
   let countryCurrency = "";

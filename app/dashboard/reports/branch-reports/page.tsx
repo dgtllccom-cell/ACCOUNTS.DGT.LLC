@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import type { Route } from "next";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { resolveScopedCityBranch } from "@/lib/permissions/branch-page-scope";
+import { branchDomainAllowed, resolveScopedCityBranch } from "@/lib/permissions/branch-page-scope";
 import {
   BranchShippingReportsView,
   type BranchReportData,
@@ -50,9 +50,11 @@ export default async function BranchReportsPage(props: {
   // 1. Fetch branch information
   const { data: branchData } = await supabase
     .from("city_branches")
-    .select("id, name, code, city_name, country_id, local_currency")
+    .select("id, name, code, city_name, country_id, local_currency, operational_domain")
     .eq("id", targetBranchId)
     .maybeSingle();
+  // a Business-only / Shipping-only login never opens a branch of the other domain
+  if (!branchDomainAllowed(session, branchData?.operational_domain)) redirect("/dashboard" as Route);
 
   let countryName = "";
   let countryCurrency = "";
