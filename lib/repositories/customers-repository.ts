@@ -2,6 +2,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { withLocalPg, withReadPg, getDbUrl } from "@/lib/db/local-postgres";
 import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
+import { isAuthorizedNameTranslation } from "@/lib/i18n/customer-name";
 
 export type CustomerRow = {
   id: string;
@@ -53,6 +54,8 @@ export type CustomerRow = {
   customer_name_fa?: string | null;
   customer_name_ps?: string | null;
   native_customer_name?: string | null;
+  /** The stored translations of customer_name are an authorized version (see lib/i18n/customer-name.ts). */
+  name_translation_authorized?: boolean;
 };
 
 export type CustomerLinkedCompany = {
@@ -98,6 +101,20 @@ const CUSTOMER_COLUMNS = [
   "notes", "original_language_code", "is_active", "created_at", "updated_at"
 ];
 
+/** Turns the raw record_translations metadata columns into the single `name_translation_authorized` flag the UI relies on. */
+function withNameAuthorization<T extends Record<string, any>>(row: T): T {
+  const { name_trans_source, name_trans_status, name_trans_engine, name_trans_human, ...rest } = row as any;
+  return {
+    ...rest,
+    name_translation_authorized: isAuthorizedNameTranslation({
+      source: name_trans_source,
+      translation_status: name_trans_status,
+      translated_by_engine: name_trans_engine,
+      human_corrected: Boolean(name_trans_human)
+    })
+  } as T;
+}
+
 function cleanQuery(value: string) {
   return value.trim().replace(/\s+/g, " ");
 }
@@ -134,6 +151,10 @@ export class CustomersRepository {
           name_trans.arabic_text as customer_name_ar,
           name_trans.persian_text as customer_name_fa,
           name_trans.pashto_text as customer_name_ps,
+          name_trans.source as name_trans_source,
+          name_trans.translation_status as name_trans_status,
+          name_trans.translated_by_engine as name_trans_engine,
+          (name_trans.corrected_by IS NOT NULL) as name_trans_human,
           COALESCE(
             NULLIF(name_trans.urdu_text, c.customer_name),
             NULLIF(name_trans.arabic_text, c.customer_name),
@@ -169,7 +190,11 @@ export class CustomersRepository {
             rt.persian_text,
             rt.pashto_text,
             rt.original_text,
-            rt.original_language_code
+            rt.original_language_code,
+            rt.source,
+            rt.translation_status,
+            rt.translated_by_engine,
+            rt.corrected_by
           FROM public.record_translations rt
           WHERE rt.record_table = 'customers' 
             AND rt.record_id = c.id 
@@ -277,7 +302,7 @@ export class CustomersRepository {
         ORDER BY c.customer_name ASC
         LIMIT ${limit}
       `;
-      return { customers: rows as unknown as CustomerRow[], limit };
+      return { customers: (rows as unknown as CustomerRow[]).map(withNameAuthorization), limit };
     });
     if (viaPg) return viaPg;
 
@@ -331,6 +356,10 @@ export class CustomersRepository {
             name_trans.arabic_text as customer_name_ar,
             name_trans.persian_text as customer_name_fa,
             name_trans.pashto_text as customer_name_ps,
+            name_trans.source as name_trans_source,
+            name_trans.translation_status as name_trans_status,
+            name_trans.translated_by_engine as name_trans_engine,
+            (name_trans.corrected_by IS NOT NULL) as name_trans_human,
             COALESCE(
               NULLIF(name_trans.urdu_text, c.customer_name),
               NULLIF(name_trans.arabic_text, c.customer_name),
@@ -358,7 +387,11 @@ export class CustomersRepository {
               rt.persian_text,
               rt.pashto_text,
               rt.original_text,
-              rt.original_language_code
+              rt.original_language_code,
+              rt.source,
+              rt.translation_status,
+              rt.translated_by_engine,
+              rt.corrected_by
             FROM public.record_translations rt
             WHERE rt.record_table = 'customers' 
               AND rt.record_id = c.id 
@@ -425,7 +458,7 @@ export class CustomersRepository {
           ) brs ON true
           WHERE c.id = ${id}::uuid AND c.deleted_at IS NULL LIMIT 1
         `;
-        return (rows[0] as unknown as CustomerRow) ?? null;
+        return rows[0] ? withNameAuthorization(rows[0] as unknown as CustomerRow) : null;
       }));
     }
 

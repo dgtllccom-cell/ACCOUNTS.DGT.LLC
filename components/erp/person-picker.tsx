@@ -8,7 +8,8 @@ import { CustomerForm } from "@/features/customers/components/customer-form";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
-import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeTerm } from "@/lib/i18n/transliteration";
+import { resolveCustomerName, readBilingualNamesPreference } from "@/lib/i18n/customer-name";
 import { nameMatches } from "@/lib/utils/person-duplicate-match";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 
@@ -18,6 +19,11 @@ type PersonRow = {
   original_customer_name?: string | null;
   customer_name_en?: string | null;
   native_customer_name?: string | null;
+  customer_name_ur?: string | null;
+  customer_name_ar?: string | null;
+  customer_name_fa?: string | null;
+  customer_name_ps?: string | null;
+  name_translation_authorized?: boolean;
   first_name: string | null;
   last_name: string | null;
   father_name?: string | null;
@@ -46,13 +52,16 @@ export function personFullName(row: { first_name?: string | null; last_name?: st
   return structured || "";
 }
 
-function toOption(row: PersonRow, lang: string = "en"): SearchSelectOption {
+function toOption(row: PersonRow, lang: string = "en", bilingual: boolean = false): SearchSelectOption {
   const rawName = personFullName(row);
-  const primaryName = row.customer_name_en || rawName;
-  const name = transliterateProperNoun(primaryName, lang as SupportedLanguage);
-  const nativeName = row.native_customer_name || (row.original_customer_name && row.original_customer_name !== primaryName ? row.original_customer_name : null);
+  // Customer-name rule (lib/i18n/customer-name.ts): an authorized translation in the selected language, otherwise the
+  // saved legal name — never an invented spelling. The second-language line only shows when the bilingual option is on.
+  const resolved = resolveCustomerName(row, lang as SupportedLanguage);
+  const primaryName = resolved.primary || rawName;
+  const name = primaryName;
+  const nativeName = bilingual ? resolved.secondary : null;
   const fatherRaw = row.father_name || ((row as any).contact_person && (row as any).contact_person !== rawName ? (row as any).contact_person : null);
-  const father = fatherRaw && !fatherRaw.startsWith("+") && isNaN(Number(fatherRaw)) ? transliterateProperNoun(fatherRaw, lang as SupportedLanguage) : null;
+  const father = fatherRaw && !fatherRaw.startsWith("+") && isNaN(Number(fatherRaw)) ? fatherRaw : null;
   const companyRaw = row.company_name && row.company_name !== rawName ? row.company_name : null;
   const company = companyRaw ? localizeTerm(companyRaw, lang as SupportedLanguage) : null;
   const empDesig = row.employee_designation ? localizeTerm(row.employee_designation, lang as SupportedLanguage) : null;
@@ -135,6 +144,14 @@ export function PersonPicker({
   const [filterByCountry, setFilterByCountry] = useState(defaultFilterByCountry);
   const [loading, setLoading] = useState(false);
   const [people, setPeople] = useState<PersonRow[]>([]);
+  // Second-language name line only when the user enabled the bilingual option (Customer Management, default off).
+  const [bilingual, setBilingual] = useState(false);
+  useEffect(() => {
+    const sync = () => setBilingual(readBilingualNamesPreference());
+    sync();
+    window.addEventListener("erp:customer-bilingual-names", sync);
+    return () => window.removeEventListener("erp:customer-bilingual-names", sync);
+  }, []);
   const [openCreate, setOpenCreate] = useState(false);
   const [editPersonId, setEditPersonId] = useState<string | null>(null);
   const [dupCandidates, setDupCandidates] = useState<PersonDuplicateCandidate[]>([]);
@@ -300,7 +317,7 @@ export function PersonPicker({
     const seen = new Set<string>();
     const opts: SearchSelectOption[] = [];
     for (const p of people) {
-      const opt = toOption(p, lang);
+      const opt = toOption(p, lang, bilingual);
       const cleanKey = opt.label.toLowerCase().trim().replace(/\s+/g, " ");
       if (!seen.has(cleanKey)) {
         seen.add(cleanKey);
@@ -308,8 +325,9 @@ export function PersonPicker({
       }
     }
     return opts;
-  }, [people, lang]);
+  }, [people, lang, bilingual]);
   const [viewPerson, setViewPerson] = useState<PersonRow | null>(null);
+  const viewName = viewPerson ? resolveCustomerName(viewPerson, lang as SupportedLanguage).primary || personFullName(viewPerson) : "";
 
   function handlePrintPerson(personId: string) {
     const row = people.find((p) => p.id === personId);
@@ -409,7 +427,7 @@ export function PersonPicker({
       {/* View Person Modal */}
       {viewPerson ? (
         <SimpleModal
-          title={`${t(lang, "hr.pp_view_title", "Person / Account Details")} — ${transliterateProperNoun(viewPerson.customer_name, lang)}`}
+          title={`${t(lang, "hr.pp_view_title", "Person / Account Details")} — ${viewName}`}
           onClose={() => setViewPerson(null)}
           className="w-[96vw] max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl font-sans shadow-2xl"
         >
@@ -417,7 +435,7 @@ export function PersonPicker({
             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
               <div>
                 <h3 className="text-base font-black tracking-wide text-slate-900 dark:text-white">
-                  {transliterateProperNoun(viewPerson.customer_name, lang)}
+                  {viewName}
                 </h3>
                 {viewPerson.person_code ? (
                   <p className="text-[10px] font-mono font-black text-blue-600 dark:text-blue-400 mt-0.5">{viewPerson.person_code}</p>
@@ -426,7 +444,7 @@ export function PersonPicker({
                   {t(lang, "hr.pp_company", "Company")}: <span className="font-bold text-slate-700 dark:text-slate-300">{viewPerson.company_name ? localizeTerm(viewPerson.company_name, lang) : t(lang, "hr.pp_independent", "Independent Account")}</span>
                 </p>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900">
                   {t(lang, "hr.pp_active_master", "Active Master")}
                 </span>
@@ -436,7 +454,7 @@ export function PersonPicker({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-950">
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "erp.person_dup_father", "Father")}</span>
-                <span className="font-bold text-slate-800 dark:text-white text-sm">{viewPerson.father_name ? transliterateProperNoun(viewPerson.father_name, lang) : "—"}</span>
+                <span className="font-bold text-slate-800 dark:text-white text-sm">{viewPerson.father_name || "—"}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_mobile_phone", "Mobile Phone")}</span>

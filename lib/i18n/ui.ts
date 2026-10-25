@@ -7869,6 +7869,14 @@ export type UiKey =
   | "pjt.export_pdf"
   | "pjt.print_btn"
   | "pjt.row_actions"
+  | "p360.accounts_title"
+  | "p360.chart_of_accounts"
+  | "p360.linked_accounts_heading"
+  | "p360.no_linked_accounts"
+  | "p360.status_active"
+  | "p360.title_fallback"
+  | "cl.show_both_names"
+  | "cl.show_both_names_hint"
   | "users.scope_assigned_existing"
   | "exp.tax_mode"
   | "exp.tax_exclusive"
@@ -37306,6 +37314,14 @@ const en: Dict = {
   "bexp.rc_reporting_currency": "Reporting currency",
   "bexp.rc_mixed_note": "Several currencies exist in this scope. Figures are shown for one currency at a time — different currencies are never added together.",
   "users.scope_assigned_existing": "Additional company/branch scope assigned successfully to existing user.",
+  "p360.accounts_title": "Accounts",
+  "p360.chart_of_accounts": "Chart of Accounts",
+  "p360.linked_accounts_heading": "Linked Chart of Accounts ({n})",
+  "p360.no_linked_accounts": "No linked accounts found in chart of accounts.",
+  "p360.status_active": "Active",
+  "p360.title_fallback": "Party 360",
+  "cl.show_both_names": "Show both names (second language line)",
+  "cl.show_both_names_hint": "Off: one name in the selected language. The saved legal name is never changed.",
 };
 
 const ur: Dict = {
@@ -62413,6 +62429,14 @@ const ur: Dict = {
   "bexp.rc_reporting_currency": "رپورٹ کی کرنسی",
   "bexp.rc_mixed_note": "اس دائرہ کار میں کئی کرنسیاں ہیں۔ رقوم ایک وقت میں ایک کرنسی کی دکھائی جاتی ہیں — مختلف کرنسیاں کبھی جمع نہیں کی جاتیں۔",
   "users.scope_assigned_existing": "موجودہ صارف کو اضافی کمپنی/برانچ کا دائرہ کار کامیابی سے تفویض کر دیا گیا۔",
+  "p360.accounts_title": "کھاتے",
+  "p360.chart_of_accounts": "کھاتہ جات کی فہرست",
+  "p360.linked_accounts_heading": "منسلک کھاتے ({n})",
+  "p360.no_linked_accounts": "کھاتہ جات کی فہرست میں کوئی منسلک کھاتہ موجود نہیں ہے۔",
+  "p360.status_active": "فعال",
+  "p360.title_fallback": "پارٹی 360",
+  "cl.show_both_names": "دونوں نام دکھائیں (دوسری زبان کی لائن)",
+  "cl.show_both_names_hint": "بند: منتخب زبان میں ایک ہی نام۔ محفوظ شدہ قانونی نام کبھی تبدیل نہیں ہوتا۔",
 };
 
 const ar: Dict = {
@@ -87521,6 +87545,14 @@ const ar: Dict = {
   "bexp.rc_reporting_currency": "عملة التقرير",
   "bexp.rc_mixed_note": "توجد عدة عملات في هذا النطاق. تُعرض المبالغ لعملة واحدة في كل مرة — ولا تُجمع العملات المختلفة معًا.",
   "users.scope_assigned_existing": "تم تعيين نطاق الشركة/الفرع الإضافي للمستخدم الحالي بنجاح.",
+  "p360.accounts_title": "الحسابات",
+  "p360.chart_of_accounts": "دليل الحسابات",
+  "p360.linked_accounts_heading": "الحسابات المرتبطة ({n})",
+  "p360.no_linked_accounts": "لا توجد حسابات مرتبطة في دليل الحسابات.",
+  "p360.status_active": "نشط",
+  "p360.title_fallback": "ملف الطرف 360",
+  "cl.show_both_names": "عرض الاسمين (سطر اللغة الثانية)",
+  "cl.show_both_names_hint": "متوقف: اسم واحد باللغة المحددة. لا يتغيّر الاسم القانوني المحفوظ أبدًا.",
 };
 
 const fa: Dict = {
@@ -112628,6 +112660,14 @@ const fa: Dict = {
   "bexp.rc_reporting_currency": "ارز گزارش",
   "bexp.rc_mixed_note": "در این محدوده چند ارز وجود دارد. مبالغ هر بار برای یک ارز نمایش داده می‌شود — ارزهای مختلف هرگز با هم جمع نمی‌شوند.",
   "users.scope_assigned_existing": "حوزه‌ی اضافی شرکت/شعبه با موفقیت به کاربر موجود اختصاص یافت.",
+  "p360.accounts_title": "حساب‌ها",
+  "p360.chart_of_accounts": "سرفصل حساب‌ها",
+  "p360.linked_accounts_heading": "حساب‌های مرتبط ({n})",
+  "p360.no_linked_accounts": "هیچ حساب مرتبطی در سرفصل حساب‌ها یافت نشد.",
+  "p360.status_active": "فعال",
+  "p360.title_fallback": "پرونده طرف ۳۶۰",
+  "cl.show_both_names": "نمایش هر دو نام (خط زبان دوم)",
+  "cl.show_both_names_hint": "خاموش: یک نام به زبان انتخاب‌شده. نام حقوقی ثبت‌شده هرگز تغییر نمی‌کند.",
 };
 
 const ps: Dict = {
@@ -137742,6 +137782,14 @@ const ps: Dict = {
   "bexp.rc_reporting_currency": "د راپور اسعار",
   "bexp.rc_mixed_note": "په دې ساحه کې څو اسعار شته. مبالغ هر ځل د یو اسعارو لپاره ښودل کېږي — مختلف اسعار هیڅکله سره نه راټولېږي.",
   "users.scope_assigned_existing": "اضافي د شرکت/څانګې ساحه په بریالیتوب سره موجود کاروونکي ته وټاکل شوه.",
+  "p360.accounts_title": "حسابونه",
+  "p360.chart_of_accounts": "د حسابونو چارټ",
+  "p360.linked_accounts_heading": "تړلي حسابونه ({n})",
+  "p360.no_linked_accounts": "د حسابونو په چارټ کې هیڅ تړلی حساب ونه موندل شو.",
+  "p360.status_active": "فعال",
+  "p360.title_fallback": "د ګډونوال ۳۶۰ کتنه",
+  "cl.show_both_names": "دواړه نومونه وښایه (د دویمې ژبې کرښه)",
+  "cl.show_both_names_hint": "بند: په ټاکل شوې ژبه کې یو نوم. خوندي شوی قانوني نوم هیڅکله نه بدلېږي.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

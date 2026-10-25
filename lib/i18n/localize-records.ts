@@ -4,6 +4,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { transliterateToLatin, transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { TRANSLATABLE_FIELDS } from "@/lib/i18n/translatable-fields";
 import { VALUE_TRANSLATIONS, translateCountry } from "@/lib/i18n/table-values";
+import { TRUSTED_TRANSLATION_ENGINES } from "@/lib/i18n/customer-name";
 
 /**
  * Central Per-Language Master Data Resolver — the ONE translation source for the whole ERP.
@@ -46,7 +47,7 @@ type DictRow = {
 // else (local_multilingual / local_transliteration / auto_unverified / machine_*)
 // is a raw machine guess — for PROPER NAMES we prefer a fresh on-the-fly script
 // render over a stale unverified guess (e.g. old "Hamd Shryf" for "حامد شریف").
-const TRUSTED_TRANSLATION_ENGINES = new Set(["manual", "local_dictionary", "dictionary", "glossary", "human", "verified"]);
+// (list lives in lib/i18n/customer-name.ts so the customer name display rule and this resolver share one definition)
 function isTrustedStoredTranslation(row: { translation_status?: string | null; translated_by_engine?: string | null } | undefined): boolean {
   if (!row) return true; // no metadata (dictionary rows) → trust
   const status = (row.translation_status || "").toLowerCase();
