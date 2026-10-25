@@ -541,6 +541,8 @@ export const HEADER_EXTRA: Record<string, Row> = {
   "FULL ACCESS (ASSIGNED FORMS)": r("مکمل رسائی (تفویض شدہ فارم)", "وصول كامل (النماذج المعيّنة)", "دسترسی کامل (فرم‌های اختصاص‌یافته)", "بشپړ لاسرسی (ټاکل شوې فورمې)"),
   // shipping-line dashboards, branch reports and permission management (production 658c4be / a86355d screens)
   "NO PORT DATA AVAILABLE": r("بندرگاہ کا کوئی ڈیٹا دستیاب نہیں", "لا تتوفر بيانات الموانئ", "داده‌ای از بنادر موجود نیست", "د بندرونو هیڅ معلومات نشته"),
+  // shipping-line dashboards, branch reports and permission management (production 658c4be / a86355d screens)
+  "GLOBAL EXECUTIVE SHIPPING LINE": r("عالمی ایگزیکٹو شپنگ لائن", "خط الشحن التنفيذي العالمي", "خط حمل اجرایی جهانی", "نړیوال اجرائیوي بار لیږد کرښه"),
 };
 
 /** Concise English text for English headings that were overly long (same meaning). */

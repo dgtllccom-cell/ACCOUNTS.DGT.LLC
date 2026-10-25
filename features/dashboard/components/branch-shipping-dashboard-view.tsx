@@ -49,6 +49,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { localizeCountryName } from "@/lib/i18n/country-names";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export type BranchShippingData = {
@@ -150,7 +151,7 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
   // Chart data
   const statusData = useMemo(() => {
     const list = data.statusBreakdown && data.statusBreakdown.length > 0
-      ? data.statusBreakdown
+      ? data.statusBreakdown.map((x) => ({ ...x, name: tr(x.name) }))
       : [
           { name: tr("In Transit"), value: data.inTransitCount || 0, color: "#2563eb" },
           { name: tr("Arrived"), value: data.arrivedCount || 0, color: "#10b981" },
@@ -255,7 +256,7 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md px-4 py-2.5 text-center min-w-[90px]">
               <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">{tr("Country")}</p>
-              <p className="text-sm font-black text-white mt-0.5">{data.countryName || "Pakistan"}</p>
+              <p className="text-sm font-black text-white mt-0.5">{data.countryName ? localizeCountryName(data.countryName, lang) : "—"}</p>
             </div>
           </div>
         </div>

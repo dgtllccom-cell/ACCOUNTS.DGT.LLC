@@ -152,7 +152,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
 
   const pieData = useMemo(() => {
     const list = data.statusBreakdown || [];
-    if (list.length > 0) return list;
+    if (list.length > 0) return list.map((x) => ({ ...x, name: tr(x.name) }));
     return [
       { name: tr("In Transit"), value: data.inTransitCount || 0, color: "#2563eb" },
       { name: tr("Arrived"), value: data.arrivedCount || 0, color: "#10b981" },

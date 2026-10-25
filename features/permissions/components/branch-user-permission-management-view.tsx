@@ -1007,7 +1007,7 @@ export function BranchUserPermissionManagementView({
             <div className="p-4 border-b border-border/70 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="grid h-8 w-8 place-items-center rounded-full bg-blue-600 text-white font-black text-xs shrink-0 shadow-xs">
-                  {selectedUser?.name ? selectedUser.name.substring(0, 2).toUpperCase() : "AA"}
+                  {selectedUser?.name ? selectedUser.name.substring(0, 2).toUpperCase() : "—"}
                 </div>
                 <h3 className="text-sm font-black text-foreground flex items-center gap-1.5">
                   <User className="h-4 w-4 text-blue-600" />
@@ -1023,7 +1023,7 @@ export function BranchUserPermissionManagementView({
                   <User className="h-3.5 w-3.5 text-slate-400" />
                   {tr("Full Name")}
                 </span>
-                <span className="font-bold text-foreground">{selectedUser?.name || "Asmat Abdullah"}</span>
+                <span className="font-bold text-foreground">{selectedUser?.name === "Branch User" ? tr("Branch User") : selectedUser?.name || "—"}</span>
               </div>
 
               <div className="flex items-center justify-between">

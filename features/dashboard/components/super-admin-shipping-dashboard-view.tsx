@@ -126,7 +126,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
 
   const pieData = useMemo(() => {
     const list = data.statusBreakdown || [];
-    if (list.length > 0) return list;
+    if (list.length > 0) return list.map((x) => ({ ...x, name: tr(x.name) }));
     return [
       { name: tr("In Transit"), value: data.inTransitCount || 0, color: "#2563eb" },
       { name: tr("Arrived"), value: data.arrivedCount || 0, color: "#10b981" },
@@ -539,7 +539,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
       <section className="flex items-center justify-between border-t border-border/80 pt-4 text-xs">
         <div className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/60 px-3 py-1.5 font-bold text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
           <Ship className="h-4 w-4 text-blue-600" />
-          <span>DGT LLC ERP SYSTEM • Global Executive Shipping Line</span>
+          <span>DGT LLC ERP SYSTEM • {tr("Global Executive Shipping Line")}</span>
         </div>
         <p className="text-muted-foreground font-semibold text-[11px]">
           DGT LLC ERP SYSTEM • Version 1.0.0
