@@ -8,6 +8,7 @@ import { customersService } from "@/lib/services/customers-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames, wantsRawRecord } from "@/lib/i18n/localize-records";
+import { resolveCustomerName } from "@/lib/i18n/customer-name";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
@@ -41,6 +42,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     // EXCEPT `?raw=1` — an edit form must load the untranslated original so saving it
     // back never overwrites the source text with a display translation.
     if (data?.customer && !wantsRawRecord(request)) {
+      // Customer-name rule (lib/i18n/customer-name.ts): authorized translation for this language, otherwise the saved
+      // legal name — decided BEFORE the generic field resolver, which may render an unapproved display spelling.
+      const nameView = resolveCustomerName(data.customer as any, lang);
       let [row] = await localizeRecordFields(
         [data.customer as any],
         "customers",
@@ -53,7 +57,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         { idField: "district_id", nameField: "district_name", table: "districts" },
         { idField: "city_id", nameField: "city_name", table: "cities" },
       ]);
-      (data as any).customer = row;
+      (data as any).customer = { ...row, customer_name: nameView.primary, original_customer_name: nameView.savedName };
     }
     return apiOk(data);
   } catch (error) {

@@ -72,6 +72,8 @@ export async function GET(request: NextRequest) {
           original_customer_name: raw.original_customer_name || raw.customer_name,
           customer_name_en: raw.customer_name_en || (raw.original_language_code === "en" ? raw.customer_name : null),
           native_customer_name: raw.native_customer_name || (raw.original_language_code !== "en" && raw.original_language_code ? raw.customer_name : null),
+          // Authorized-translation flag decided server-side from the stored translation metadata (lib/i18n/customer-name.ts)
+          name_translation_authorized: Boolean(raw.name_translation_authorized),
           linked_companies: raw.linked_companies ?? [],
           companies_count: raw.companies_count ?? (raw.linked_companies?.length ?? 0),
           linked_branches: raw.linked_branches ?? [],

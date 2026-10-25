@@ -25,7 +25,8 @@ import {
   BookOpen
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
-import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeTerm } from "@/lib/i18n/transliteration";
+import { translateValue } from "@/lib/i18n/table-values";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { PartyAffiliationSummary } from "@/lib/services/party-360-service";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,8 @@ import { openCompany360Report } from "@/lib/reports/open-company-360-report-wind
 export type Party360ModalProps = {
   customerId?: string;
   name?: string;
+  /** Name already resolved for the selected language by the caller (lib/i18n/customer-name.ts). */
+  displayName?: string;
   employeeId?: string;
   lang?: SupportedLanguage;
   onClose: () => void;
@@ -44,6 +47,7 @@ export type Party360ModalProps = {
 export function Party360Modal({
   customerId,
   name,
+  displayName: displayNameProp,
   employeeId,
   lang: langProp = "en",
   onClose
@@ -83,9 +87,10 @@ export function Party360Modal({
     };
   }, [customerId, name, employeeId, lang]);
 
-  const displayName = summary?.customerName || name || "Party 360";
-  const urduName = transliterateProperNoun(displayName, lang);
-  const fatherName = summary?.fatherName ? transliterateProperNoun(summary.fatherName, lang) : null;
+  // The saved (legal) name is never re-spelled: an authorized translation in the selected language, otherwise the saved name.
+  const displayName = displayNameProp || summary?.customerDisplayName || summary?.customerName || name || t(lang, "p360.title_fallback", "Party 360");
+  const urduName = displayName;
+  const fatherName = summary?.fatherName || null;
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/70 p-3 sm:p-5 backdrop-blur-xs font-sans">
@@ -111,7 +116,7 @@ export function Party360Modal({
               <h2 className="text-lg font-black text-slate-900 dark:text-white leading-tight">
                 {urduName}
                 {fatherName && (
-                  <span className="text-xs font-semibold text-slate-500 mr-2">
+                  <span className="text-xs font-semibold text-slate-500 ms-2">
                     ({t(lang, "p360.father_prefix", "S/o")}: {fatherName})
                   </span>
                 )}
@@ -204,7 +209,7 @@ export function Party360Modal({
                 >
                   <div className="flex items-center justify-between text-sky-600 dark:text-sky-400 mb-1">
                     <span className="text-[10px] font-black uppercase">
-                      {lang === "ur" ? "کھاتے (Accounts)" : "Accounts"}
+                      {t(lang, "p360.accounts_title", "Accounts")}
                     </span>
                     <BookOpen className="h-3.5 w-3.5" />
                   </div>
@@ -212,7 +217,7 @@ export function Party360Modal({
                     {(summary.accounts || []).length}
                   </p>
                   <p className="text-[9.5px] text-slate-500 truncate">
-                    {lang === "ur" ? "کاروباری کھاتے" : "Chart of Accounts"}
+                    {t(lang, "p360.chart_of_accounts", "Chart of Accounts")}
                   </p>
                 </div>
                 {/* Companies Count */}
@@ -385,7 +390,7 @@ export function Party360Modal({
                     <div className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4 text-sky-600" />
                       <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                        {lang === "ur" ? `کاروباری و شپنگ کھاتے (${(summary.accounts || []).length})` : `Linked Chart of Accounts (${(summary.accounts || []).length})`}
+                        {t(lang, "p360.linked_accounts_heading", "Linked Chart of Accounts ({n})").replace("{n}", String((summary.accounts || []).length))}
                       </h3>
                     </div>
                   </div>
@@ -415,12 +420,12 @@ export function Party360Modal({
                               </p>
                             </div>
                           </div>
-                          <div className="text-right shrink-0">
+                          <div className="text-end shrink-0">
                             <span className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200">
                               {Number(ac.currentBalance || 0).toLocaleString()} {ac.currency}
                             </span>
                             <p className="text-[9.5px] font-bold text-emerald-600 capitalize">
-                              {ac.status || "Active"}
+                              {ac.status ? translateValue(lang, ac.status) : t(lang, "p360.status_active", "Active")}
                             </p>
                           </div>
                         </div>
@@ -428,7 +433,7 @@ export function Party360Modal({
                     </div>
                   ) : (
                     <p className="text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-950/30 p-3 rounded-xl">
-                      {lang === "ur" ? "کوئی منسلک کھاتہ موجود نہیں ہے۔" : "No linked accounts found in chart of accounts."}
+                      {t(lang, "p360.no_linked_accounts", "No linked accounts found in chart of accounts.")}
                     </p>
                   )}
                 </div>
@@ -524,7 +529,7 @@ export function Party360Modal({
                             <div className="truncate">
                               <div className="flex items-center gap-1.5">
                                 <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
-                                  {transliterateProperNoun(emp.fullName, lang)}
+                                  {emp.fullName}
                                 </span>
                                 <span className="rounded bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.2 font-mono text-[10px] font-bold text-emerald-700">
                                   {emp.employeeCode}

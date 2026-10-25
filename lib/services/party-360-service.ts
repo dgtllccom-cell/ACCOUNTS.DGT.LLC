@@ -3,11 +3,14 @@ import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-servic
 import { transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { nameMatches } from "@/lib/utils/person-duplicate-match";
+import { isAuthorizedNameTranslation, resolveCustomerName } from "@/lib/i18n/customer-name";
 
 export type PartyAffiliationSummary = {
   customerId?: string;
   customerCode?: string;
   customerName: string;
+  /** The name to show in the selected language: an authorized translation, otherwise the saved (legal) name. */
+  customerDisplayName?: string;
   fatherName?: string | null;
   firstName?: string | null;
   lastName?: string | null;
@@ -320,10 +323,34 @@ export class Party360Service {
         } catch {}
       }
 
+      // Display name in the selected language — authorized translation only, never an invented spelling.
+      let customerDisplayName: string | undefined;
+      if (customerRow?.id) {
+        try {
+          const tr = await sql`
+            SELECT english_text, urdu_text, arabic_text, persian_text, pashto_text, source, translation_status, translated_by_engine,
+                   (corrected_by IS NOT NULL) AS human
+            FROM public.record_translations
+            WHERE record_table = 'customers' AND record_id = ${customerRow.id}::uuid AND field_name = 'customer_name' AND deleted_at IS NULL
+            LIMIT 1
+          `;
+          const row: any = tr[0];
+          customerDisplayName = resolveCustomerName({
+            customer_name: customerRow.customer_name,
+            customer_name_en: row?.english_text, customer_name_ur: row?.urdu_text, customer_name_ar: row?.arabic_text,
+            customer_name_fa: row?.persian_text, customer_name_ps: row?.pashto_text,
+            name_translation_authorized: isAuthorizedNameTranslation({
+              source: row?.source, translation_status: row?.translation_status, translated_by_engine: row?.translated_by_engine, human_corrected: Boolean(row?.human)
+            })
+          }, lang).primary;
+        } catch { /* the saved name is shown */ }
+      }
+
       return {
         customerId: customerRow?.id,
         customerCode: customerRow?.customer_code || (customerRow?.id ? `CUST-${customerRow.id.slice(0, 6).toUpperCase()}` : undefined),
         customerName: customerRow?.customer_name || targetName || "Unknown Party",
+        customerDisplayName,
         fatherName: customerRow?.father_name || (matchedEmployees[0]?.fatherName) || null,
         firstName: customerRow?.first_name || null,
         lastName: customerRow?.last_name || null,

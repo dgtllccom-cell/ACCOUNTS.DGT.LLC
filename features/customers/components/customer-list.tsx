@@ -46,6 +46,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLabel } from "./translations";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { resolveCustomerName, readBilingualNamesPreference, writeBilingualNamesPreference, BILINGUAL_NAMES_STORAGE_KEY } from "@/lib/i18n/customer-name";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
@@ -68,6 +69,7 @@ type CustomerRow = {
   customer_name_fa?: string | null;
   customer_name_ps?: string | null;
   native_customer_name?: string | null;
+  name_translation_authorized?: boolean;
   first_name: string | null;
   last_name: string | null;
   father_name: string | null;
@@ -275,6 +277,15 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
+  // One name line by default; the second (other-language) line only appears when the user turns this option on.
+  const [bilingualNames, setBilingualNames] = useState(false);
+  useEffect(() => {
+    setBilingualNames(readBilingualNamesPreference());
+    const sync = () => setBilingualNames(readBilingualNamesPreference());
+    window.addEventListener("erp:customer-bilingual-names", sync);
+    window.addEventListener("storage", (e) => { if (e.key === BILINGUAL_NAMES_STORAGE_KEY) sync(); });
+    return () => window.removeEventListener("erp:customer-bilingual-names", sync);
+  }, []);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("all");
   const [selectedStatusTab, setSelectedStatusTab] = useState("all");
   const [selectedCountryFilter, setSelectedCountryFilter] = useState("all");
@@ -295,7 +306,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
   // Modals & Drawers
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
-  const [selected360Party, setSelected360Party] = useState<{ id?: string; name: string } | null>(null);
+  const [selected360Party, setSelected360Party] = useState<{ id?: string; name: string; displayName?: string } | null>(null);
   const [showUniversalDirectory, setShowUniversalDirectory] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -371,6 +382,8 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
       return {
         ...c,
+        // Language-aware name: authorized translation for the selected language, otherwise the saved (legal) name
+        nameView: resolveCustomerName(c, lang),
         meta: {
           ...meta,
           source,
@@ -383,7 +396,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         }
       };
     });
-  }, [customers]);
+  }, [customers, lang]);
 
   // Status Tab Counts
   const statusCounts = useMemo(() => {
@@ -531,7 +544,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
     const headers = ["ID", "Name", "Company", "Status", "Assigned To", "Country", "Branch", "Phone", "Created At"];
     const rows = filteredList.map(c => [
       c.person_code || c.id,
-      `"${c.customer_name.replace(/"/g, '""')}"`,
+      `"${c.nameView.primary.replace(/"/g, '""')}"`,
       `"${(c.company_name || "").replace(/"/g, '""')}"`,
       c.meta.leadStatus || "Active",
       `"${c.meta.assignedStaff}"`,
@@ -637,7 +650,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                 <div className="space-y-3">
                   {/* Search Input */}
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                     <input
                       type="text"
                       value={searchQuery}
@@ -646,9 +659,23 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                         setCurrentPage(1);
                       }}
                       placeholder={t(lang, "cl.search_ph_full", "Customer name, company, mobile, etc...")}
-                      className="w-full h-8 pl-8 pr-3 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800 dark:text-slate-200"
+                      className="w-full h-8 ps-8 pe-3 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800 dark:text-slate-200"
                     />
                   </div>
+
+                  {/* Bilingual display option — default OFF: one name line in the selected language */}
+                  <label className="flex items-start gap-2 text-[11px] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={bilingualNames}
+                      onChange={(e) => writeBilingualNamesPreference(e.target.checked)}
+                      className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300"
+                    />
+                    <span>
+                      {t(lang, "cl.show_both_names", "Show both names (second language line)")}
+                      <span className="block text-[10px] font-medium text-slate-400">{t(lang, "cl.show_both_names_hint", "Off: one name in the selected language. The saved legal name is never changed.")}</span>
+                    </span>
+                  </label>
 
                   {/* 2-column selects */}
                   <div className="grid grid-cols-2 gap-2">
@@ -1394,7 +1421,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse" dir={isRtl ? "rtl" : "ltr"}>
+          <table className="w-full text-xs text-start border-collapse" dir={isRtl ? "rtl" : "ltr"}>
             <thead>
               <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 text-slate-500 dark:text-slate-400 font-bold uppercase text-[11px] tracking-wider">
                 {/* Select All Checkbox */}
@@ -1435,7 +1462,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   const globalIdx = (currentPage - 1) * pageSize + idx + 1;
                   const isSelected = selectedRows.has(c.id);
                   const countryBadge = getCountryBadge(c.meta.countryName, lang);
-                  const initials = getInitials(c.customer_name);
+                  const initials = getInitials(c.nameView.primary);
                   const avatarColor = getAvatarColor(c.customer_name);
                   const leadStatus = c.meta.leadStatus || "Active";
                   const customerId = c.person_code || "—";
@@ -1474,9 +1501,8 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                       {/* CUSTOMER NAME with avatar & tags */}
                       <td className="px-4 py-3">
                         {(() => {
-                          const primaryName = c.customer_name_en || c.customer_name;
-                          const originalLangName = c.native_customer_name || (c.customer_name_en && c.customer_name !== c.customer_name_en ? c.customer_name : null);
-                          const subName = originalLangName && originalLangName !== primaryName ? originalLangName : null;
+                          const primaryName = c.nameView.primary;
+                          const subName = bilingualNames ? c.nameView.secondary : null;
                           return (
                             <div className="flex items-center gap-2.5 truncate">
                               <span
@@ -1626,7 +1652,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                             <div
                               onClick={(e) => e.stopPropagation()}
                               className={cn(
-                                "absolute mt-1 w-44 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-left animate-in fade-in zoom-in-95 duration-100",
+                                "absolute mt-1 w-44 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-start animate-in fade-in zoom-in-95 duration-100",
                                 isRtl ? "left-0" : "right-0"
                               )}
                             >
@@ -1634,7 +1660,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                                 type="button"
                                 onClick={() => {
                                   setActiveMenuId(null);
-                                  setSelected360Party({ id: c.id, name: c.customer_name });
+                                  setSelected360Party({ id: c.id, name: c.customer_name, displayName: c.nameView.primary });
                                 }}
                                 className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-lg cursor-pointer"
                               >
@@ -1706,7 +1732,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   setPageSize(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                aria-label="Per page"
+                aria-label={getLabel("perPage", lang)}
                 className="h-7 px-2.5 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer appearance-none pr-6 shadow-2xs"
               >
                 <option value={10}>{`10 ${getLabel("perPage", lang)}`}</option>
@@ -1714,7 +1740,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                 <option value={50}>{`50 ${getLabel("perPage", lang)}`}</option>
                 <option value={100}>{`100 ${getLabel("perPage", lang)}`}</option>
               </select>
-              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400 pointer-events-none" />
+              <ChevronDown className="absolute end-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400 pointer-events-none" />
             </div>
           </div>
 
@@ -1813,7 +1839,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           { key: "address", label: t(lang, "purchase.f_address", "Address") }
         ]}
         data={filteredList.map((c) => ({
-          customer_name: c.customer_name,
+          customer_name: c.nameView.primary,
           company_name: c.company_name || "-",
           contact_person: c.contact_person || "-",
           mobile: c.mobile || "-",
@@ -1828,6 +1854,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         <Party360Modal
           customerId={selected360Party.id}
           name={selected360Party.name}
+          displayName={selected360Party.displayName}
           lang={lang}
           onClose={() => setSelected360Party(null)}
         />
