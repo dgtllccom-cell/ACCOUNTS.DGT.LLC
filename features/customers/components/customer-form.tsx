@@ -367,7 +367,7 @@ export function CustomerForm({
     // Duplicate-prevention: only when registering a brand-new Person Master, not when editing
     // an existing one. Search existing people by the resolved name first; if a close match
     // already exists, warn instead of silently creating a second row for the same person.
-    if (!initialCustomerId) {
+    if (!effectiveCustomerId) {
       try {
         const qp = new URLSearchParams();
         qp.set("q", resolvedCustomerName);
@@ -389,9 +389,11 @@ export function CustomerForm({
           setSaving(false);
           return;
         }
-      } catch {
-        // If the duplicate-check search itself fails, fall through to save — never block
-        // registration on a search-availability issue.
+      } catch (error: unknown) {
+        // A failed lookup is not evidence that the person is new. Keep the form intact.
+        setMessage(error instanceof Error ? error.message : t(lang, "common.error", "Error"));
+        setSaving(false);
+        return;
       }
     }
 

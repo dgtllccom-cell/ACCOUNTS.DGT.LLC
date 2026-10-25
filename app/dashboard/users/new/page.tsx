@@ -3,7 +3,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { dashboardByRole } from "@/lib/permissions/enterprise-roles";
-import { isUserManager } from "@/lib/permissions/user-management-scope";
+import { isUserCreator } from "@/lib/permissions/user-management-scope";
 import { UserRegistrationWizard } from "@/features/users/components/user-registration-wizard";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { t } from "@/lib/i18n/ui";
@@ -12,7 +12,7 @@ export default async function NewUserRegistrationPage() {
   const session = await getCurrentErpSession();
   if (!session) redirect("/auth/login");
 
-  if (!isUserManager(session)) {
+  if (!isUserCreator(session)) {
     const role = session.roles?.[0];
     const target = role ? dashboardByRole[role] : "/dashboard";
     redirect((target || "/dashboard") as Route);

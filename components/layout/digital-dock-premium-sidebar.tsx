@@ -80,6 +80,7 @@ import {
   TrendingUp,
   Trash2,
   Truck,
+  UserCheck,
   Users,
   Wallet,
   Warehouse,
@@ -445,15 +446,22 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Settings,
     children: [
       { label: nt("Customers"), href: "/dashboard/settings/customers", icon: Users },
-      { label: nt("Employees Directory & Registration"), href: "/dashboard/general-office/employees", icon: Users },
-      { label: nt("Employee KYC & Documents"), href: "/dashboard/general-office/employee-kyc", icon: FileText },
-      { label: nt("Attendance & Leave Management"), href: "/dashboard/general-office/leave-attendance", icon: CalendarCheck, upgraded: true },
-      { label: nt("Payroll Runs & Salary Slips"), href: "/dashboard/general-office/payroll", icon: Banknote, upgraded: true },
-      { label: nt("UAE WPS & SIF"), href: "/dashboard/general-office/wps-sif", icon: Landmark },
-      { label: nt("Employee Performance & Appraisal"), href: "/dashboard/general-office/performance", icon: Award },
-      { label: nt("Departments & Designations"), href: "/dashboard/general-office/departments", icon: Building2 },
-      { label: nt("Gratuity & End-of-Service"), href: "/dashboard/general-office/gratuity", icon: Receipt },
-      { label: nt("Share External Forms"), href: "/dashboard/general-office/employees?tab=share-forms", icon: ArrowRightLeft },
+      {
+        key: "sub-employees",
+        label: nt("Employees"),
+        icon: UserCheck,
+        children: [
+          { label: nt("Employees Directory & Registration"), href: "/dashboard/general-office/employees", icon: Users },
+          { label: nt("Employee KYC & Documents"), href: "/dashboard/general-office/employee-kyc", icon: FileText },
+          { label: nt("Attendance & Leave Management"), href: "/dashboard/general-office/leave-attendance", icon: CalendarCheck, upgraded: true },
+          { label: nt("Payroll Runs & Salary Slips"), href: "/dashboard/general-office/payroll", icon: Banknote, upgraded: true },
+          { label: nt("UAE WPS & SIF"), href: "/dashboard/general-office/wps-sif", icon: Landmark },
+          { label: nt("Employee Performance & Appraisal"), href: "/dashboard/general-office/performance", icon: Award },
+          { label: nt("Departments & Designations"), href: "/dashboard/general-office/departments", icon: Building2 },
+          { label: nt("Gratuity & End-of-Service"), href: "/dashboard/general-office/gratuity", icon: Receipt },
+          { label: nt("Share External Forms"), href: "/dashboard/general-office/employees?tab=share-forms", icon: ArrowRightLeft },
+        ],
+      },
       { label: nt("Goods Master"), href: "/dashboard/settings/management/goods", icon: Package, upgraded: true },
       { label: nt("CHS Product Management"), href: "/dashboard/settings/management/chs-products", icon: Boxes },
       { label: nt("Dynamic Location & Route Management"), href: "/dashboard/settings/location-master", icon: MapPin, tone: "red" },
@@ -1262,7 +1270,7 @@ export function DigitalDockPremiumSidebar({
                             ? "text-[#2563eb]"
                             : "text-[#0f172a]"
                       }`} />
-                      <span className={`truncate text-left tracking-tight ${isRed ? "text-red-600 font-bold" : ""}`}>
+                      <span className={`truncate text-start tracking-tight ${isRed ? "text-red-600 font-bold" : ""}`}>
                         {tr(item.label)}
                       </span>
                       {hasUpgraded(item) && <UpgradedMark lang={lang} />}
@@ -1285,7 +1293,7 @@ export function DigitalDockPremiumSidebar({
                             : "text-[#0f172a]"
                       }`} />
                     ) : (
-                      <ChevronRight className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                      <ChevronRight className={`h-4 w-4 shrink-0 transition-transform duration-200 rtl:rotate-180 ${
                         isRed ? "text-red-500" : "text-[#0f172a]"
                       }`} />
                     )}
@@ -1327,7 +1335,7 @@ export function DigitalDockPremiumSidebar({
                                       ? isSubRed ? "text-red-600" : "text-[#2563eb]"
                                       : isSubRed ? "text-red-500" : "text-[#0f172a]"
                                   }`} />
-                                  <span className={`truncate text-left tracking-tight ${isSubRed ? "text-red-600 font-bold" : ""}`}>
+                                  <span className={`truncate text-start tracking-tight ${isSubRed ? "text-red-600 font-bold" : ""}`}>
                                     {tr(sub.label)}
                                   </span>
                                   {hasUpgraded(sub) && <UpgradedMark lang={lang} />}
@@ -1335,13 +1343,13 @@ export function DigitalDockPremiumSidebar({
                                 {isSubOpen ? (
                                   <ChevronDown className={`h-3.5 w-3.5 shrink-0 ${isSubRed ? "text-red-600" : "text-[#2563eb]"}`} />
                                 ) : (
-                                  <ChevronRight className={`h-3.5 w-3.5 shrink-0 ${isSubRed ? "text-red-400" : "text-slate-400"}`} />
+                                  <ChevronRight className={`h-3.5 w-3.5 shrink-0 rtl:rotate-180 ${isSubRed ? "text-red-400" : "text-slate-400"}`} />
                                 )}
                               </button>
 
                               {/* Level 3 Deep Children (e.g. Local Purchase, Completed Bills...) */}
                               {isSubOpen && sub.children && (
-                                <div className={`ms-5 ps-3 pe-1 py-1 space-y-0.5 border-l-2 my-0.5 animate-in fade-in-50 duration-150 ${
+                                <div className={`ms-5 ps-3 pe-1 py-1 space-y-0.5 border-s-2 my-0.5 animate-in fade-in-50 duration-150 ${
                                   isSubRed ? "border-red-300" : "border-blue-200/60"
                                 }`}>
                                   {sub.children.map((leaf) => {
@@ -1453,13 +1461,13 @@ export function DigitalDockPremiumSidebar({
                       <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${
                         isDirectActive || crmPanelOpen ? "text-[#2563eb]" : "text-[#0f172a]"
                       }`} />
-                      <span className="truncate text-left tracking-tight">
+                      <span className="truncate text-start tracking-tight">
                         {tr(item.label)}
                       </span>
                       {hasUpgraded(item) && <UpgradedMark lang={lang} />}
                     </div>
 
-                    <ChevronRight className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                    <ChevronRight className={`h-4 w-4 shrink-0 transition-transform duration-200 rtl:rotate-180 ${
                       isDirectActive || crmPanelOpen ? "text-[#2563eb] translate-x-0.5" : "text-[#0f172a]"
                     }`} />
                   </Link>

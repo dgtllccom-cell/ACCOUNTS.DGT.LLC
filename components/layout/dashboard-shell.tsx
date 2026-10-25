@@ -1,5 +1,6 @@
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import type { SessionScopeDisplay } from "@/lib/permissions/scope-display";
 import { sidebarTree } from "@/lib/navigation/sidebar";
 import { DashboardFrame } from "@/components/layout/dashboard-frame";
 import { InstallAppBanner } from "@/components/layout/install-app-banner";
@@ -18,7 +19,8 @@ export function DashboardShell({
   operationalDomains,
   ledgerVisibility,
   canViewFinancials,
-  lang
+  lang,
+  scopeDisplay
 }: {
   children: React.ReactNode;
   userEmail: string;
@@ -31,6 +33,7 @@ export function DashboardShell({
   ledgerVisibility?: "scoped" | "shipping_only" | "full";
   canViewFinancials?: boolean;
   lang: SupportedLanguage;
+  scopeDisplay?: SessionScopeDisplay | null;
 }) {
   const isDemoMode = userEmail === "Demo mode" || userEmail === "Template preview";
 
@@ -48,6 +51,7 @@ export function DashboardShell({
         lang={lang}
         userEmail={userEmail}
         userName={userName}
+        scopeDisplay={scopeDisplay}
       >
         {isDemoMode ? (
           <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">

@@ -8,14 +8,15 @@ export function normalizeNameStem(name?: string | null): string {
   return name
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]/g, "")
+    .normalize("NFKC")
+    .replace(/[^\p{L}\p{N}]/gu, "")
     .replace(/(ullah|ollah|ulla|olla|khan|abdullah|jan|sahib)/g, "");
 }
 
 export function nameMatches(a?: string | null, b?: string | null): boolean {
   if (!a || !b) return false;
-  const cleanA = a.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
-  const cleanB = b.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
+  const cleanA = a.normalize("NFKC").toLowerCase().trim().replace(/[^\p{L}\p{N}]/gu, "");
+  const cleanB = b.normalize("NFKC").toLowerCase().trim().replace(/[^\p{L}\p{N}]/gu, "");
   if (!cleanA || !cleanB) return false;
   if (cleanA === cleanB || cleanA.includes(cleanB) || cleanB.includes(cleanA)) return true;
 

@@ -6,6 +6,7 @@ import { getCurrentErpSession } from "@/lib/auth/session";
 import { MOBILE_PROFILE_HOME } from "@/lib/permissions/mobile-profiles";
 import { appChannelFromUserAgent, channelAllowsSession } from "@/lib/mobile/app-channel";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
+import { resolveSessionScopeDisplay } from "@/lib/permissions/scope-display";
 
 function normalizeLanguage(value: string | undefined): SupportedLanguage | null {
   if (!value) return null;
@@ -50,6 +51,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     if (!decision.allowed) forbidden();
   }
 
+  const scopeDisplay = await resolveSessionScopeDisplay(session);
+
   return (
     <DashboardShell
       userEmail={session.email ?? "User"}
@@ -62,6 +65,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       ledgerVisibility={session.ledgerVisibility}
       canViewFinancials={session.canViewFinancials}
       lang={cookieLang ?? session.preferredLanguage ?? "en"}
+      scopeDisplay={scopeDisplay}
     >
       {children}
     </DashboardShell>
