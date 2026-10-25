@@ -25,8 +25,14 @@ for (const lang of (process.env.LANGS || "en,ur,ar,fa,ps").split(",")) {
   const p = await ctx.newPage();
   try {
     await p.goto(BASE + "/dashboard/settings/bank/new", { waitUntil: "domcontentloaded", timeout: 120000 });
-    await p.getByText(OPEN[i], { exact: true }).first().click({ timeout: 60000 });
-    await p.getByText(PERSON[i], { exact: true }).first().click({ timeout: 120000 });
+    // the entry-method chooser can swallow a click that lands before React hydrates: retry until the form is open
+    const chip = p.getByText(PERSON[i], { exact: true }).first();
+    for (let attempt = 0; attempt < 5; attempt++) {
+      await p.getByText(OPEN[i], { exact: true }).first().click({ timeout: 60000 }).catch(() => null);
+      if (await chip.isVisible({ timeout: 15000 }).catch(() => false)) break;
+      await p.waitForTimeout(2000);
+    }
+    await chip.click({ timeout: 60000 });
     await p.waitForTimeout(3000);
     // open the picker (the combobox button right under the "Account Owner (Person)" label) and search for the fixture
     const label = p.getByText(OWNER[i], { exact: true }).first();

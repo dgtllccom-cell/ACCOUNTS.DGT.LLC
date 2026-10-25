@@ -628,8 +628,8 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               <div
                 onClick={(e) => e.stopPropagation()}
                 className={cn(
-                  "fixed inset-x-3 top-28 max-h-[78vh] overflow-y-auto sm:absolute sm:inset-x-auto sm:top-auto sm:mt-2 sm:w-[380px] sm:max-h-none sm:overflow-visible rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-100",
-                  isRtl ? "sm:left-0" : "sm:right-0"
+                  "fixed inset-x-3 top-28 max-h-[78vh] overflow-y-auto sm:inset-x-auto sm:end-3 sm:w-[400px] lg:absolute lg:top-auto lg:end-auto lg:mt-2 lg:w-[380px] lg:max-h-none lg:overflow-visible rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-100",
+                  isRtl ? "lg:left-0" : "lg:right-0"
                 )}
               >
                 <div className="flex items-center justify-between border-b pb-3 mb-3">
