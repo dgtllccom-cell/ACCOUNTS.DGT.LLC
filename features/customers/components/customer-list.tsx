@@ -1484,7 +1484,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                           type="checkbox"
                           checked={isSelected}
                           onChange={(e) => handleToggleRow(c.id, e as any)}
-                          aria-label={`Select lead ${c.customer_name}`}
+                          aria-label={`${t(lang, "cl.aria_select_row", "Select customer")} ${c.customer_name}`}
                           className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                         />
                       </td>

@@ -12199,6 +12199,7 @@ export type UiKey =
   | "bexp.v_tax_code_required"
   | "bexp.no_tax_config"
   | "bexp.same_currency_note"
+  | "cl.aria_select_row"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37370,6 +37371,7 @@ const en: Dict = {
   "cl.all_users_filter": "All Users",
   "cl.apply_filters_btn": "Apply Filters",
   "cl.erp_usage_360": "360° ERP Usage",
+  "cl.aria_select_row": "Select customer",
 };
 
 const ur: Dict = {
@@ -62509,6 +62511,7 @@ const ur: Dict = {
   "cl.all_users_filter": "تمام صارفین",
   "cl.apply_filters_btn": "فلٹرز لاگو کریں",
   "cl.erp_usage_360": "360° پارٹی کا استعمال",
+  "cl.aria_select_row": "کسٹمر منتخب کریں",
 };
 
 const ar: Dict = {
@@ -87649,6 +87652,7 @@ const ar: Dict = {
   "cl.all_users_filter": "جميع المستخدمين",
   "cl.apply_filters_btn": "تطبيق عوامل التصفية",
   "cl.erp_usage_360": "استخدام الطرف 360°",
+  "cl.aria_select_row": "تحديد العميل",
 };
 
 const fa: Dict = {
@@ -112788,6 +112792,7 @@ const fa: Dict = {
   "cl.all_users_filter": "همه کاربران",
   "cl.apply_filters_btn": "اعمال فیلترها",
   "cl.erp_usage_360": "کاربرد طرف ۳۶۰°",
+  "cl.aria_select_row": "انتخاب مشتری",
 };
 
 const ps: Dict = {
@@ -137934,6 +137939,7 @@ const ps: Dict = {
   "cl.all_users_filter": "ټول کاروونکي",
   "cl.apply_filters_btn": "فلټرونه پلي کړئ",
   "cl.erp_usage_360": "د ډلې 360° کارونه",
+  "cl.aria_select_row": "پیرودونکی وټاکئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

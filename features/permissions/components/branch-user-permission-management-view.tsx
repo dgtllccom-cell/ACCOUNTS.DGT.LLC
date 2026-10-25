@@ -47,6 +47,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { headerLabel, translateHeader } from "@/lib/i18n/table-headers";
+import { t } from "@/lib/i18n/ui";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
 
 export type BranchUserDetails = {
@@ -383,6 +384,8 @@ export function BranchUserPermissionManagementView({
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tr = (s: string) => translateHeader(lang, s);
+  // role.<key> five-language labels (same convention as the handover Access Register); unknown roles fall back to the header dictionary
+  const roleText = (r: string | null | undefined) => (r ? t(lang, ("role." + r.trim().toLowerCase().replace(/[\s/]+/g, "_")) as never, tr(r.replace(/_/g, " "))) : "-");
 
   const [users, setUsers] = useState<BranchUserDetails[]>(initialUsers);
   const [selectedUserId, setSelectedUserId] = useState<string>(
@@ -520,12 +523,12 @@ export function BranchUserPermissionManagementView({
 
       setToast({
         kind: "ok",
-        text: `Permissions for ${selectedUser.name} saved successfully.`
+        text: `${tr("Permissions saved successfully")} — ${selectedUser.name}`
       });
     } catch (err: any) {
       setToast({
         kind: "err",
-        text: err.message || "An error occurred while saving."
+        text: err.message || tr("An error occurred while saving.")
       });
     } finally {
       setSaving(false);
@@ -539,7 +542,7 @@ export function BranchUserPermissionManagementView({
     setCurrentPermissions(new Set(defaults));
     setToast({
       kind: "ok",
-      text: `Permissions reset to default role baseline for ${selectedUser.role}. Click 'Save Rights & Update' to persist.`
+      text: `${tr("Permissions reset to the default role baseline. Click Save Rights & Update to persist.")} (${roleText(selectedUser.role)})`
     });
   };
 
@@ -579,7 +582,7 @@ export function BranchUserPermissionManagementView({
             >
               {users.map((u) => (
                 <option key={u.id} value={u.id} className="text-slate-900 bg-white">
-                  {u.name} ({u.role})
+                  {u.name === "Branch User" ? tr("Branch User") : u.name} ({roleText(u.role)})
                 </option>
               ))}
             </select>
@@ -963,7 +966,7 @@ export function BranchUserPermissionManagementView({
                 <span>{tr("Role Assignment")}</span>
               </h3>
               <div className="p-4 rounded-xl border bg-muted/30 text-xs space-y-2">
-                <p className="font-bold text-foreground">{tr("Role:")} <span className="font-mono text-blue-600">{selectedUser?.role}</span></p>
+                <p className="font-bold text-foreground">{tr("Role:")} <span className="font-mono text-blue-600">{roleText(selectedUser?.role)}</span></p>
                 <p className="text-muted-foreground">{tr("Operational Domain:")} <span className="font-semibold text-foreground uppercase">{selectedUser?.operationalDomain || "Shipping"}</span></p>
                 <p className="text-[11px] text-slate-500">
                   {tr("Role decides the baseline permissions template and hierarchy level.")}
