@@ -34,6 +34,12 @@ if (!hadRate) {
     values (${UAE.country}::uuid, ${today}::date, 3.6725, 3.673, 3.673, 3.6725, ${RATE_TAG}, 'Country-wide (All Branches)', '00:01', now() - interval '2 hours', 'AED')`);
 }
 
+// leftovers of an interrupted earlier run: void what is posted, then remove the E2E lines
+for (const l of await devQuery((sql) => sql`select id, bill_expense_id, posting_status from public.bill_expense_lines where deleted_at is null and details like 'E2E %'`)) {
+  if (l.posting_status === "posted") await sa("POST", `/api/erp/bill-expenses/${l.bill_expense_id}/lines/${l.id}/void`);
+  await sa("DELETE", `/api/erp/bill-expenses/${l.bill_expense_id}/lines`, { lineId: l.id });
+}
+
 const addLine = async (api, beId, body) => {
   const r = await api("POST", `/api/erp/bill-expenses/${beId}/lines`, body);
   const id = r.json?.data?.id ?? r.json?.id;
@@ -140,7 +146,7 @@ let L1, L2, L3, L4;
   const rb0 = await bal();
   const res = await race(5, () => sa("POST", `/api/erp/bill-expenses/${BE_BIZ}/lines/${R.id}/post`, { expenseAccountId: LEDGER_DR, counterAccountId: LEDGER_CR }));
   const rb1 = await bal();
-  const [ec] = await devQuery((sql) => sql`select count(*)::int n from public.roznamcha_entries where source_module = 'bill_expenses' and source_transaction_id = ${R.id}::uuid and deleted_at is null and status <> 'reversed'`);
+  const [ec] = await devQuery((sql) => sql`select count(*)::int n from public.roznamcha_entries where source_module = 'bill_expenses' and source_transaction_id = ${R.id}::uuid and deleted_at is null and status = 'posted'`);
   check("I7 5-way race: exactly one post succeeds", res.filter((x) => x.status === 200).length === 1, res.map((x) => x.status).join(","));
   check("I8 race: ledger moved by 40.00 AED once, one live entry", n2(rb1[LEDGER_DR].d - rb0[LEDGER_DR].d) === 40 && ec.n === 1, `Δ=${rb1[LEDGER_DR].d - rb0[LEDGER_DR].d} entries=${ec.n}`);
 
@@ -172,7 +178,7 @@ let L1, L2, L3, L4;
   check("J3 every register row's expense_total equals the sum of its live lines (nothing counted twice)", bad.length === 0, bad.slice(0, 3).map((b) => `${b.id.slice(0, 8)}:${b.expense_total}/${b.live}`).join(" "));
   const dupe = await devQuery((sql) => sql`select roznamcha_entry_id, count(*)::int n from public.bill_expense_lines where roznamcha_entry_id is not null and deleted_at is null group by 1 having count(*) > 1`);
   check("J4 no ledger entry is referenced by two expense lines", dupe.length === 0);
-  const live = await devQuery((sql) => sql`select source_transaction_id, count(*)::int n from public.roznamcha_entries where source_module = 'bill_expenses' and deleted_at is null and status <> 'reversed' group by 1 having count(*) > 1`);
+  const live = await devQuery((sql) => sql`select source_transaction_id, count(*)::int n from public.roznamcha_entries where source_module = 'bill_expenses' and deleted_at is null and status = 'posted' group by 1 having count(*) > 1`);
   check("J5 no expense line has two live ledger entries", live.length === 0, live.map((x) => `${x.source_transaction_id}:${x.n}`).join(","));
 }
 
