@@ -87,7 +87,7 @@ export const COUNTRY_LEVEL_ROLES: readonly string[] = ["country_admin", "country
 export const GLOBAL_SCOPE_ROLES: readonly string[] = ["super_admin", "super_admin_reports", "global_operations_admin", "business_super_admin", "shipping_super_admin"];
 /** Operational / shipping-line roles: financial modules are denied by construction. */
 export const NON_FINANCIAL_ROLES: readonly string[] = [
-  "global_operations_admin", "country_operations_admin", "city_operations_admin", "shipping_line_user"
+  "global_operations_admin", "country_operations_admin", "city_operations_admin"
 ];
 /**
  * Domain super admins (stored role super_admin + operational_domain business|shipping). NOT Super Admins: no wildcard, no
@@ -196,13 +196,19 @@ const SHIPPING_LINE_ADMIN_PERMISSIONS: string[] = [
 
 const SHIPPING_LINE_USER_PERMISSIONS: string[] = [
   "dashboard:read",
-  "shipping_records:read", "shipping_records:update",
-  "shipments:read", "shipments:update",
-  "shipping_transfers:read",
+  "shipping_records:create", "shipping_records:read", "shipping_records:update",
+  "shipments:create", "shipments:read", "shipments:update",
+  "shipping_transfers:create", "shipping_transfers:read",
   "shipping:read",
   "tasks:read", "tasks:update",
   "documents:create", "documents:read",
-  "messages:read", "record_transfers:read"
+  "messages:read", "record_transfers:read",
+  "customers:create", "customers:read", "customers:update",
+  "accounts:create", "accounts:read", "accounts:update",
+  "ledgers:read",
+  "transactions:create", "transactions:read",
+  "roznamcha:create", "roznamcha:read",
+  "reports:read", "shipping_reports:read"
 ];
 
 /**
