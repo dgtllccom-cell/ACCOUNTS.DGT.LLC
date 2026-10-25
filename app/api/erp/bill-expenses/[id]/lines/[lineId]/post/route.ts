@@ -8,6 +8,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { withKeyedLock } from "@/lib/db/keyed-lock";
 import { assertBillExpenseModuleAllowed } from "@/lib/permissions/bill-expense-domain";
 import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/posting";
+import { resolveBillExpenseContext } from "@/lib/finance/expense-branch-context";
 import {
   acquireIdempotencyLock,
   commitIdempotencySuccess,
@@ -55,11 +56,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const prepared = await withLocalPg(async (sql) => {
       const [be] = await sql`
         select be.id, be.source_module, be.source_id, be.bill_no, be.manual_bill_no,
-               be.country_id, be.country_branch_id, be.city_branch_id, be.eligibility,
-               c.currency_code as country_currency, cib.local_currency as branch_currency
+               be.country_id, be.country_branch_id, be.city_branch_id, be.eligibility
         from public.bill_expenses be
-        left join public.countries c on c.id = be.country_id
-        left join public.city_branches cib on cib.id = be.city_branch_id
         where be.id = ${id}::uuid and be.deleted_at is null limit 1`;
       if (!be) throw new ApiClientError("Bill expense not found", { status: 404, code: "NOT_FOUND" });
       assertBillExpenseModuleAllowed(session, be.source_module);
@@ -106,7 +104,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         }
       }
 
-      const functionalCurrency = String(be.branch_currency || be.country_currency || "USD").toUpperCase().slice(0, 3) || "USD";
+      // the base currency comes from the branch / country configuration; an unconfigured one is refused, never defaulted to USD
+      const functionalCurrency = (await resolveBillExpenseContext(sql, be)).baseCurrency;
       const amount = Number(line.grand_amount);
       // The roznamcha posting `type` must be compatible with the selected ledgers' scope
       // (isLedgerScopeCompatible in roznamcha/posting.ts). Derive it from the accounts,

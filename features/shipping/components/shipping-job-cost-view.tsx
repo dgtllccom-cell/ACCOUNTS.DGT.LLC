@@ -73,11 +73,14 @@ interface JobCostReport {
   orderId: string;
   orderNo: string | null;
   customerName: string | null;
-  customerCharges: { total: number; postedTotal: number; currency: string; count: number };
-  jobExpenses: { total: number; postedTotal: number; currency: string; lines: JobCostLine[] };
+  customerCharges: { total: number | null; postedTotal: number | null; currency: string | null; count: number };
+  jobExpenses: { total: number | null; postedTotal: number | null; currency: string | null; lines: JobCostLine[] };
+  /** one row per currency the order's bills are in (money is never added across currencies) */
+  byCurrency: Array<{ currency: string; revenue: number; revenuePosted: number; expense: number; expensePosted: number; net: number }>;
+  mixedCurrency: boolean;
   partnerBills?: PartnerBill[];
   interBranchClaims: Claim[];
-  profit: { revenue: number; expense: number; net: number; currency: string };
+  profit: { revenue: number | null; expense: number | null; net: number | null; currency: string | null };
 }
 
 export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguage }) {
@@ -235,19 +238,24 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
             <h2 className="text-lg font-semibold text-white mb-4">
               {report.orderNo} — {report.customerName}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-emerald-950/40 border border-emerald-800/50 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold uppercase"><TrendingUp className="w-4 h-4" />{tt("customer_revenue", "Customer Revenue (posted)")}</div>
-                <div className="text-2xl font-bold text-white font-mono mt-1">{report.profit.currency} {report.profit.revenue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
-              </div>
-              <div className="bg-rose-950/40 border border-rose-800/50 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-rose-300 text-xs font-bold uppercase"><TrendingDown className="w-4 h-4" />{tt("job_expense", "Job Expense (posted)")}</div>
-                <div className="text-2xl font-bold text-white font-mono mt-1">{report.profit.currency} {report.profit.expense.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
-              </div>
-              <div className={`rounded-xl p-4 border ${report.profit.net >= 0 ? "bg-blue-950/40 border-blue-800/50" : "bg-amber-950/40 border-amber-800/50"}`}>
-                <div className={`text-xs font-bold uppercase ${report.profit.net >= 0 ? "text-blue-300" : "text-amber-300"}`}>{tt("net_profit", "Net Job Profit / Loss")}</div>
-                <div className="text-2xl font-bold text-white font-mono mt-1">{report.profit.currency} {report.profit.net.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
-              </div>
+            {/* Money is never added across currencies: one row of figures per currency the order's bills are in. */}
+            <div className="space-y-3">
+              {(report.byCurrency.length ? report.byCurrency : [{ currency: "", revenuePosted: 0, expensePosted: 0, net: 0 }]).map((row: { currency: string; revenuePosted: number; expensePosted: number; net: number }) => (
+                <div key={row.currency || "none"} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-emerald-950/40 border border-emerald-800/50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold uppercase"><TrendingUp className="w-4 h-4" />{tt("customer_revenue", "Customer Revenue (posted)")}</div>
+                    <div className="text-2xl font-bold text-white font-mono mt-1">{row.currency} {row.revenuePosted.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                  </div>
+                  <div className="bg-rose-950/40 border border-rose-800/50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-rose-300 text-xs font-bold uppercase"><TrendingDown className="w-4 h-4" />{tt("job_expense", "Job Expense (posted)")}</div>
+                    <div className="text-2xl font-bold text-white font-mono mt-1">{row.currency} {row.expensePosted.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                  </div>
+                  <div className={`rounded-xl p-4 border ${row.net >= 0 ? "bg-blue-950/40 border-blue-800/50" : "bg-amber-950/40 border-amber-800/50"}`}>
+                    <div className={`text-xs font-bold uppercase ${row.net >= 0 ? "text-blue-300" : "text-amber-300"}`}>{tt("net_profit", "Net Job Profit / Loss")}</div>
+                    <div className="text-2xl font-bold text-white font-mono mt-1">{row.currency} {row.net.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

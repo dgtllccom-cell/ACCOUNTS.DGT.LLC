@@ -17,6 +17,7 @@ import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports
 import { printStore } from "@/lib/store/print-store";
 import { Th } from "@/components/ui/translated-th";
 import { formatCurrencyTotals, type CurrencyTotal } from "@/lib/finance/currency-totals";
+import { calculateExpenseLine, type TaxMode } from "@/lib/finance/expense-line-calculator";
 
 type SourceModule =
   | "purchase_booking"
@@ -53,6 +54,8 @@ type Line = {
   amount: number;
   exchangeRate: number;
   localAmount: number;
+  taxMode?: TaxMode;
+  taxCode?: string | null;
   taxPct: number;
   taxAmount: number;
   grandAmount: number;
@@ -585,7 +588,7 @@ function BillExpenseDetailModal({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [form, setForm] = useState({ expenseType: "shipping", details: "", currency: "", amount: "", exchangeRate: "1", taxPct: "0" });
+  const [form, setForm] = useState({ expenseType: "shipping", details: "", currency: "", amount: "", exchangeRate: "", taxMode: "exempt" as TaxMode, taxCode: "" });
   const formRef = useRef<HTMLDivElement>(null);
 
   // Phase 7 — AI receipt intake (reuses the existing AI Document Intake engine).
@@ -696,14 +699,33 @@ function BillExpenseDetailModal({
   const lines: Line[] = data?.lines ?? [];
   const src = data?.sourceBill;
 
-  const localAmount = (Number(form.amount) || 0) * (Number(form.exchangeRate) || 0);
-  const grand = localAmount + localAmount * ((Number(form.taxPct) || 0) / 100);
+  // BASE currency of this bill's branch / country and the tax codes configured for that country (both read by the server)
+  const baseCurrency: string = (be?.functionalCurrency || "").toUpperCase();
+  const taxOptions: Array<{ code: string; name: string; rate: number }> = be?.taxOptions ?? [];
+  const pickedTax = taxOptions.find((o) => o.code === form.taxCode);
+  const sameCurrency = !!baseCurrency && form.currency.trim().toUpperCase() === baseCurrency;
+  // the same calculation the server runs: original → converted into the base currency → tax → grand (display only, the server recalculates)
+  const preview = useMemo(() => {
+    if (!baseCurrency || !(Number(form.amount) > 0) || !form.currency.trim()) return null;
+    try {
+      return calculateExpenseLine({
+        amount: Number(form.amount), currency: form.currency, baseCurrency, operation: "*",
+        exchangeRate: Number(form.exchangeRate) || null,
+        taxMode: form.taxMode, taxPct: form.taxMode === "exempt" ? 0 : pickedTax?.rate ?? 0
+      });
+    } catch {
+      return null;
+    }
+  }, [form.amount, form.currency, form.exchangeRate, form.taxMode, baseCurrency, pickedTax?.rate]);
+  const localAmount = preview?.convertedAmount ?? 0;
+  const grand = preview?.grandAmount ?? 0;
 
   async function addExpense() {
     setErr(null);
     if (!(Number(form.amount) > 0)) return setErr(s.t("v_amount_required", "Enter an amount greater than zero."));
     if (!form.currency.trim()) return setErr(s.t("v_currency_required", "Select a currency."));
-    if (!(Number(form.exchangeRate) > 0)) return setErr(s.t("v_rate_required", "Exchange rate must be greater than zero."));
+    if (!sameCurrency && !(Number(form.exchangeRate) > 0)) return setErr(s.t("v_rate_required", "Exchange rate must be greater than zero."));
+    if (form.taxMode !== "exempt" && !pickedTax) return setErr(s.t("v_tax_code_required", "Choose the tax code, or mark the expense tax-exempt."));
     setBusy(true);
     try {
       const res = await fetch(`/api/erp/bill-expenses/${id}/lines`, {
@@ -714,22 +736,27 @@ function BillExpenseDetailModal({
           details: form.details || null,
           currency: form.currency.trim().toUpperCase(),
           amount: Number(form.amount),
-          exchangeRate: Number(form.exchangeRate),
-          taxPct: Number(form.taxPct)
+          exchangeRate: sameCurrency ? undefined : Number(form.exchangeRate),
+          taxMode: form.taxMode,
+          taxPct: form.taxMode === "exempt" ? 0 : pickedTax?.rate ?? 0,
+          taxCode: form.taxMode === "exempt" ? null : pickedTax?.code ?? null
         })
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const failure = await res.json().catch(() => ({}));
+        throw new Error(failure?.error?.message || (typeof failure?.error === "string" ? failure.error : ""));
+      }
       const created = await res.json().catch(() => null);
       const newLineId = created?.data?.id ?? created?.id;
       if (aiPrefilled && newLineId) {
         await intake.consume(newLineId);
         setAiPrefilled(false);
       }
-      setForm((f) => ({ ...f, details: "", amount: "", taxPct: "0" }));
+      setForm((f) => ({ ...f, details: "", amount: "" }));
       await reload();
       onChanged();
-    } catch {
-      setErr(s.t("toast_error", "Could not save the expense. Please try again."));
+    } catch (e) {
+      setErr(e instanceof Error && e.message ? e.message : s.t("toast_error", "Could not save the expense. Please try again."));
     } finally {
       setBusy(false);
     }
@@ -766,9 +793,9 @@ function BillExpenseDetailModal({
           <td>${escapeHtml(s.t(`et_${l.expenseType}`, l.expenseType))}</td>
           <td>${escapeHtml(l.details || "-")}</td>
           <td style="text-align:right">${escapeHtml(l.currency)} ${money(l.amount)}</td>
-          <td style="text-align:right">${l.exchangeRate}</td>
+          <td style="text-align:right">${baseCurrency && l.currency.toUpperCase() === baseCurrency ? "-" : l.exchangeRate}</td>
           <td style="text-align:right">${money(l.localAmount)}</td>
-          <td style="text-align:right">${l.taxPct}%</td>
+          <td style="text-align:right">${l.taxPct > 0 ? `${money(l.taxAmount)} (${l.taxPct}%)` : "-"}</td>
           <td style="text-align:right;font-weight:bold">${money(l.grandAmount)}</td>
         </tr>`
       )
@@ -799,7 +826,7 @@ function BillExpenseDetailModal({
         <thead><tr>
           <th>#</th><th>${escapeHtml(s.t("expense_type", "Expense Type"))}</th><th>${escapeHtml(s.t("f_details", "Details / Narration"))}</th>
           <th>${escapeHtml(s.t("f_amount", "Amount"))}</th><th>${escapeHtml(s.t("f_exchange_rate", "Exchange Rate"))}</th>
-          <th>${escapeHtml(s.t("f_local_amount", "Local Amount"))}</th><th>${escapeHtml(s.t("f_tax_pct", "Tax %"))}</th><th>${escapeHtml(s.t("f_grand_amount", "Grand Amount"))}</th>
+          <th>${escapeHtml(s.t("f_converted", "Converted amount"))}${baseCurrency ? ` (${escapeHtml(baseCurrency)})` : ""}</th><th>${escapeHtml(s.t("f_tax_amount", "Tax amount"))}</th><th>${escapeHtml(s.t("f_grand_amount", "Grand Amount"))}${baseCurrency ? ` (${escapeHtml(baseCurrency)})` : ""}</th>
         </tr></thead>
         <tbody>${rowsHtml || `<tr><td colspan="8" style="text-align:center;color:#94a3b8">${escapeHtml(s.t("no_lines", "No additional expenses recorded against this bill yet."))}</td></tr>`}</tbody>
         <tfoot><tr><td colspan="7" style="text-align:${s.isRtl ? "left" : "right"}">${escapeHtml(s.t("f_grand_amount", "Grand Amount"))}</td><td style="text-align:right">${money(be.expenseTotal)}</td></tr></tfoot>
@@ -858,7 +885,7 @@ function BillExpenseDetailModal({
                   <CardTitle className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-slate-600 dark:text-slate-300">
                     <Calculator className="h-3.5 w-3.5" /> {s.t("additional_expenses", "Additional Expenses")}
                   </CardTitle>
-                  <span className="font-mono text-xs font-bold text-rose-600">{money(be.expenseTotal)}</span>
+                  <span className="font-mono text-xs font-bold text-rose-600">{baseCurrency ? `${baseCurrency} ` : ""}{money(be.expenseTotal)}</span>
                 </CardHeader>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
@@ -869,8 +896,9 @@ function BillExpenseDetailModal({
                         <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("f_details", "Details / Narration")}</Th>
                         <Th className="px-3 py-2 text-right font-semibold">{s.t("f_amount", "Amount")}</Th>
                         <Th className="px-3 py-2 text-right font-semibold">{s.t("f_exchange_rate", "Exchange Rate")}</Th>
-                        <Th className="px-3 py-2 text-right font-semibold">{s.t("f_tax_pct", "Tax %")}</Th>
-                        <Th className="px-3 py-2 text-right font-black bg-slate-100 dark:bg-slate-800">{s.t("f_grand_amount", "Grand Amount")}</Th>
+                        <Th className="px-3 py-2 text-right font-semibold">{s.t("f_converted", "Converted amount")}{baseCurrency ? ` (${baseCurrency})` : ""}</Th>
+                        <Th className="px-3 py-2 text-right font-semibold">{s.t("f_tax_amount", "Tax amount")}</Th>
+                        <Th className="px-3 py-2 text-right font-black bg-slate-100 dark:bg-slate-800">{s.t("f_grand_amount", "Grand Amount")}{baseCurrency ? ` (${baseCurrency})` : ""}</Th>
                         <Th className="px-3 py-2 text-center font-semibold">{s.t("f_posting", "Accounting")}</Th>
                         <Th className="px-3 py-2 text-center font-semibold w-8">{s.t("col_actions", "Actions")}</Th>
                       </tr>
@@ -878,7 +906,7 @@ function BillExpenseDetailModal({
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {lines.length === 0 ? (
                         <tr>
-                          <td colSpan={9} className="px-3 py-10 text-center text-slate-400">
+                          <td colSpan={10} className="px-3 py-10 text-center text-slate-400">
                             <Calculator className="mx-auto mb-2 h-6 w-6 opacity-20" />
                             {s.t("no_lines", "No additional expenses recorded against this bill yet.")}
                           </td>
@@ -890,15 +918,19 @@ function BillExpenseDetailModal({
                             <td className="px-3 py-2 font-semibold">{s.t(`et_${l.expenseType}`, l.expenseType)}</td>
                             <td className="px-3 py-2 text-slate-500">{l.details || "—"}</td>
                             <td className="px-3 py-2 text-right font-mono">{l.currency} {money(l.amount)}</td>
-                            <td className="px-3 py-2 text-right font-mono">{Number(l.exchangeRate).toFixed(4)}</td>
+                            <td className="px-3 py-2 text-right font-mono">{baseCurrency && l.currency.toUpperCase() === baseCurrency ? "—" : Number(l.exchangeRate).toFixed(4)}</td>
+                            <td className="px-3 py-2 text-right font-mono">{money(l.localAmount)}</td>
                             <td className="px-3 py-2 text-right font-mono">
                               {l.taxPct > 0 ? (
-                                <span className="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-600">
-                                  <BadgePercent className="mr-0.5 h-3 w-3" /> {l.taxPct}%
+                                <span className="inline-flex flex-col items-end">
+                                  <span>{money(l.taxAmount)}</span>
+                                  <span className="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-600" title={l.taxCode || undefined}>
+                                    <BadgePercent className="mr-0.5 h-3 w-3" /> {l.taxPct}% · {l.taxMode === "inclusive" ? s.t("tax_inclusive", "Tax included in price") : s.t("tax_exclusive", "Tax added on top")}
+                                  </span>
                                 </span>
                               ) : "—"}
                             </td>
-                            <td className="bg-slate-50/50 px-3 py-2 text-right font-mono font-bold dark:bg-slate-800/40">{l.currency} {money(l.grandAmount)}</td>
+                            <td className="bg-slate-50/50 px-3 py-2 text-right font-mono font-bold dark:bg-slate-800/40">{baseCurrency || l.currency} {money(l.grandAmount)}</td>
                             <td className="px-3 py-2 text-center">
                               {l.postingStatus === "posted" ? (
                                 <span className="inline-flex flex-col items-center gap-1">
@@ -989,15 +1021,39 @@ function BillExpenseDetailModal({
                         <input type="number" inputMode="decimal" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-right font-mono text-xs dark:border-slate-700 dark:bg-slate-950" />
                       </label>
                       <label className="text-xs">
-                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_exchange_rate", "Exchange Rate")}</span>
-                        <input type="number" inputMode="decimal" value={form.exchangeRate} onChange={(e) => setForm({ ...form, exchangeRate: e.target.value })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-right font-mono text-xs dark:border-slate-700 dark:bg-slate-950" />
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_exchange_rate", "Exchange Rate")}{baseCurrency ? ` (${s.t("f_rate_to_base", "Rate to base currency")}: ${baseCurrency})` : ""}</span>
+                        <input type="number" inputMode="decimal" value={sameCurrency ? "" : form.exchangeRate} disabled={sameCurrency} placeholder={sameCurrency ? s.t("same_currency_note", "Same as the base currency — no conversion.") : ""} onChange={(e) => setForm({ ...form, exchangeRate: e.target.value })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-right font-mono text-xs disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:disabled:bg-slate-900" />
                       </label>
                       <label className="text-xs">
-                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_tax_pct", "Tax %")}</span>
-                        <input type="number" inputMode="decimal" value={form.taxPct} onChange={(e) => setForm({ ...form, taxPct: e.target.value })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-right font-mono text-xs dark:border-slate-700 dark:bg-slate-950" />
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_tax_mode", "Tax treatment")}</span>
+                        <select value={form.taxMode} onChange={(e) => setForm({ ...form, taxMode: e.target.value === "inclusive" ? "inclusive" : e.target.value === "exclusive" ? "exclusive" : "exempt", taxCode: "" })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-xs dark:border-slate-700 dark:bg-slate-950">
+                          <option value="exempt">{s.t("tax_exempt", "No tax (exempt)")}</option>
+                          {taxOptions.length > 0 && <option value="exclusive">{s.t("tax_exclusive", "Tax added on top")}</option>}
+                          {taxOptions.length > 0 && <option value="inclusive">{s.t("tax_inclusive", "Tax included in price")}</option>}
+                        </select>
                       </label>
+                      {form.taxMode !== "exempt" && (
+                        <label className="text-xs">
+                          <span className="mb-1 block font-semibold text-slate-500">{s.t("f_tax_code", "Tax code")}</span>
+                          <select value={form.taxCode} onChange={(e) => setForm({ ...form, taxCode: e.target.value })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-xs dark:border-slate-700 dark:bg-slate-950">
+                            <option value="">{s.t("f_tax_code_pick", "Select tax code")}</option>
+                            {taxOptions.map((o) => <option key={o.code} value={o.code}>{o.name} ({o.rate}%)</option>)}
+                          </select>
+                        </label>
+                      )}
+                      {taxOptions.length === 0 && baseCurrency && (
+                        <p className="col-span-2 text-[11px] text-amber-700 dark:text-amber-300 md:col-span-3">{s.t("no_tax_config", "No tax code is configured for this country, so the expense can only be saved as tax-exempt.")}</p>
+                      )}
+                      <div className="text-xs">
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_converted", "Converted amount")}{baseCurrency ? ` (${baseCurrency})` : ""}</span>
+                        <div className="rounded-md bg-slate-100 px-2.5 py-2 text-right font-mono dark:bg-slate-900">{money(localAmount)}</div>
+                      </div>
+                      <div className="text-xs">
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_tax_amount", "Tax amount")}</span>
+                        <div className="rounded-md bg-slate-100 px-2.5 py-2 text-right font-mono dark:bg-slate-900">{money(preview?.taxAmount ?? 0)}</div>
+                      </div>
                       <div className="col-span-2 text-xs md:col-span-1">
-                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_grand_amount", "Grand Amount")}</span>
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_grand_amount", "Grand Amount")}{baseCurrency ? ` (${baseCurrency})` : ""}</span>
                         <div className="rounded-md bg-primary/5 px-2.5 py-2 text-right font-mono font-bold text-primary">{money(grand)}</div>
                       </div>
                     </div>

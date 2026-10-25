@@ -59,8 +59,11 @@ export interface ShippingJobCostReport {
   orderNo: string | null;
   customerName: string | null;
   orderScope: { countryId: string | null; countryBranchId: string | null; cityBranchId: string | null; countryName: string | null };
-  customerCharges: { total: number; postedTotal: number; currency: string; count: number };
-  jobExpenses: { total: number; postedTotal: number; currency: string; lines: ShippingJobCostExpenseLine[] };
+  /** totals are null when the order mixes currencies — use `byCurrency` then (money is never added across currencies) */
+  customerCharges: { total: number | null; postedTotal: number | null; currency: string | null; count: number };
+  jobExpenses: { total: number | null; postedTotal: number | null; currency: string | null; lines: ShippingJobCostExpenseLine[] };
+  byCurrency: ShippingJobCostCurrencyRow[];
+  mixedCurrency: boolean;
   partnerBills: ShippingJobCostPartnerBill[];
   interBranchClaims: Array<{
     id: string;
@@ -75,7 +78,17 @@ export interface ShippingJobCostReport {
     createdAt: string;
     decidedAt: string | null;
   }>;
-  profit: { revenue: number; expense: number; net: number; currency: string };
+  profit: { revenue: number | null; expense: number | null; net: number | null; currency: string | null };
+}
+
+/** Revenue / expense / profit of ONE currency. A job whose bills are in several currencies has one row per currency. */
+export interface ShippingJobCostCurrencyRow {
+  currency: string;
+  revenue: number;
+  revenuePosted: number;
+  expense: number;
+  expensePosted: number;
+  net: number;
 }
 
 /**
@@ -104,7 +117,8 @@ export async function getShippingOrderJobCost(orderId: string): Promise<Shipping
     const expenseLines = await sql`
       SELECT bel.id, bel.expense_type, bel.grand_amount, bel.currency, bel.posting_status,
              be.id AS bill_expense_id, be.country_id, be.country_branch_id, be.city_branch_id, be.bill_no,
-             c.name AS country_name, cb.name AS branch_name
+             c.name AS country_name, cb.name AS branch_name,
+             upper(coalesce(nullif(cb.local_currency, ''), c.currency_code)) AS base_currency
       FROM public.bill_expense_lines bel
       JOIN public.bill_expenses be ON be.id = bel.bill_expense_id AND be.deleted_at IS NULL
       LEFT JOIN public.countries c ON c.id = be.country_id
@@ -165,10 +179,39 @@ export async function getShippingOrderJobCost(orderId: string): Promise<Shipping
     if (c.source_table === "bill_expense_lines" && c.source_id) claimsByLineId.set(c.source_id, c);
   }
 
-  const currency = expenseLines[0]?.currency || partnerBillRows[0]?.currency_code || charges[0]?.currency_code || "USD";
-
-  const chargesTotal = charges.reduce((s: number, c: any) => s + Number(c.amount || 0), 0);
-  const chargesPostedTotal = charges.filter((c: any) => c.posting_status === "posted").reduce((s: number, c: any) => s + Number(c.amount || 0), 0);
+  // Money is never added across currencies: every figure below is totalled PER currency. Expense lines are stored in the BASE currency of
+  // their bill's branch / country (not in the currency of the original invoice), charges and partner bills in their own currency.
+  const cur = (v: unknown) => String(v || "").trim().toUpperCase() || "—";
+  const rows = new Map<string, ShippingJobCostCurrencyRow>();
+  const rowFor = (currency: string) => {
+    const hit = rows.get(currency) ?? { currency, revenue: 0, revenuePosted: 0, expense: 0, expensePosted: 0, net: 0 };
+    rows.set(currency, hit);
+    return hit;
+  };
+  for (const c of charges) {
+    const r = rowFor(cur(c.currency_code));
+    r.revenue += Number(c.amount || 0);
+    if (c.posting_status === "posted") r.revenuePosted += Number(c.amount || 0);
+  }
+  for (const l of expenseLines) {
+    const r = rowFor(cur(l.base_currency));
+    r.expense += Number(l.grand_amount || 0);
+    if (l.posting_status === "posted") r.expensePosted += Number(l.grand_amount || 0);
+  }
+  for (const b of partnerBillRows) {
+    const r = rowFor(cur(b.currency_code));
+    r.expense += Number(b.total_amount || 0);
+    if ((b.posting_status || "unposted") === "posted") r.expensePosted += Number(b.total_amount || 0);
+  }
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const byCurrency = [...rows.values()]
+    .map((r) => ({ currency: r.currency, revenue: round2(r.revenue), revenuePosted: round2(r.revenuePosted), expense: round2(r.expense), expensePosted: round2(r.expensePosted), net: round2(r.revenuePosted - r.expensePosted) }))
+    .sort((a, b) => a.currency.localeCompare(b.currency));
+  const mixedCurrency = byCurrency.length > 1;
+  const only = byCurrency.length === 1 ? byCurrency[0] : null;
+  const noRows = byCurrency.length === 0;
+  const single = (pick: (r: ShippingJobCostCurrencyRow) => number): number | null => (mixedCurrency ? null : only ? pick(only) : noRows ? 0 : null);
+  const currency: string | null = only ? only.currency : null;
 
   // Partner bills mapping
   const partnerBills: ShippingJobCostPartnerBill[] = partnerBillRows.map((b: any) => ({
@@ -205,23 +248,14 @@ export async function getShippingOrderJobCost(orderId: string): Promise<Shipping
       }))
   }));
 
-  const partnerBillsTotal = partnerBills.reduce((s: number, b) => s + b.totalAmount, 0);
-  const partnerBillsPostedTotal = partnerBills
-    .filter((b) => b.postingStatus === "posted")
-    .reduce((s: number, b) => s + b.totalAmount, 0);
-
-  const expenseTotal = expenseLines.reduce((s: number, l: any) => s + Number(l.grand_amount || 0), 0) + partnerBillsTotal;
-  const expensePostedTotal = expenseLines
-    .filter((l: any) => l.posting_status === "posted")
-    .reduce((s: number, l: any) => s + Number(l.grand_amount || 0), 0) + partnerBillsPostedTotal;
-
   const lines: ShippingJobCostExpenseLine[] = expenseLines.map((l: any) => {
     const claim = claimsByLineId.get(l.id);
     return {
       id: l.id,
       expenseType: l.expense_type,
       grandAmount: Number(l.grand_amount),
-      currency: l.currency,
+      // grand_amount is in the base currency of the bill's branch / country, so that is the label (never the original invoice currency)
+      currency: cur(l.base_currency),
       postingStatus: l.posting_status,
       countryId: l.country_id,
       countryBranchId: l.country_branch_id,
@@ -252,8 +286,10 @@ export async function getShippingOrderJobCost(orderId: string): Promise<Shipping
       cityBranchId: order.city_branch_id,
       countryName: order.country_name
     },
-    customerCharges: { total: chargesTotal, postedTotal: chargesPostedTotal, currency, count: charges.length },
-    jobExpenses: { total: expenseTotal, postedTotal: expensePostedTotal, currency, lines },
+    customerCharges: { total: single((r) => r.revenue), postedTotal: single((r) => r.revenuePosted), currency, count: charges.length },
+    jobExpenses: { total: single((r) => r.expense), postedTotal: single((r) => r.expensePosted), currency, lines },
+    byCurrency,
+    mixedCurrency,
     partnerBills,
     interBranchClaims: claims.map((c: any) => ({
       id: c.id,
@@ -269,9 +305,9 @@ export async function getShippingOrderJobCost(orderId: string): Promise<Shipping
       decidedAt: c.decided_at
     })),
     profit: {
-      revenue: chargesPostedTotal,
-      expense: expensePostedTotal,
-      net: chargesPostedTotal - expensePostedTotal,
+      revenue: single((r) => r.revenuePosted),
+      expense: single((r) => r.expensePosted),
+      net: single((r) => r.net),
       currency
     }
   };

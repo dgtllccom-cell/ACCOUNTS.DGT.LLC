@@ -88,3 +88,19 @@ export async function requireConfiguredTax(sql: Sql, ctx: Pick<BranchExpenseCont
   }
   return hit;
 }
+
+/**
+ * Base currency + country of a Bill Expenses register row (bill_expenses): the city branch's configured currency, else the country's.
+ * There is deliberately no fallback currency — an unconfigured branch / country is refused (422) instead of being posted in "USD".
+ */
+export async function resolveBillExpenseContext(sql: Sql, be: { city_branch_id?: string | null; country_id?: string | null }): Promise<BranchExpenseContext> {
+  if (be.city_branch_id) return resolveBranchExpenseContext(sql, be.city_branch_id);
+  if (be.country_id) {
+    const [c] = await sql`select id, name, upper(nullif(currency_code, '')) as currency_code from public.countries where id = ${be.country_id}::uuid limit 1`;
+    if (!c?.currency_code) {
+      throw new ApiClientError("The base currency of this country is not configured. Set it in the country settings first.", { status: 422, code: "NO_BASE_CURRENCY" });
+    }
+    return { cityBranchId: "", countryBranchId: null, countryId: c.id, countryName: c.name ?? null, baseCurrency: String(c.currency_code).toUpperCase() };
+  }
+  throw new ApiClientError("This bill has no branch or country, so its base currency cannot be determined.", { status: 422, code: "NO_BASE_CURRENCY" });
+}

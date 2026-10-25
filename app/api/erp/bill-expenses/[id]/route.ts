@@ -5,6 +5,7 @@ import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { billExpenseModuleAllowed } from "@/lib/permissions/bill-expense-domain";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { listCountryTaxOptions, resolveBillExpenseContext, type BranchExpenseContext, type TaxOption } from "@/lib/finance/expense-branch-context";
 import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
       const lines = await sql`
         select id, row_serial, expense_type, details, currency, amount, exchange_rate,
-               local_amount, tax_pct, tax_amount, grand_amount,
+               local_amount, tax_mode, tax_code, tax_pct, tax_amount, tax_base, grand_amount,
                expense_account_id, counter_account_id, roznamcha_entry_id,
                ledger_posting_batch_id, posting_status, posted_at, created_at, updated_at
         from public.bill_expense_lines
@@ -127,6 +128,16 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         }
       }
 
+      // the BASE currency of this bill's branch / country and the tax codes configured for that country (the line editor needs both)
+      let baseCtx: BranchExpenseContext | null = null;
+      let taxOptions: TaxOption[] = [];
+      try {
+        baseCtx = await resolveBillExpenseContext(sql, be);
+        taxOptions = await listCountryTaxOptions(sql, baseCtx);
+      } catch {
+        // an unconfigured base currency is reported by the line save itself (422); the register still opens
+      }
+
       return {
         billExpense: {
           id: be.id,
@@ -147,6 +158,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           partyAccountNo: be.party_account_no,
           partyName: beLoc.party_name,
           currency: be.currency,
+          functionalCurrency: baseCtx?.baseCurrency ?? null,
+          taxOptions,
           originalBillAmount: Number(be.original_bill_amount || 0),
           expenseTotal: Number(be.expense_total || 0),
           expenseCount: Number(be.expense_count || 0),
@@ -165,8 +178,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           amount: Number(l.amount || 0),
           exchangeRate: Number(l.exchange_rate || 1),
           localAmount: Number(l.local_amount || 0),
+          taxMode: l.tax_mode === "inclusive" || l.tax_mode === "exempt" ? l.tax_mode : "exclusive",
+          taxCode: l.tax_code ?? null,
           taxPct: Number(l.tax_pct || 0),
           taxAmount: Number(l.tax_amount || 0),
+          taxBase: l.tax_base == null ? null : Number(l.tax_base),
           grandAmount: Number(l.grand_amount || 0),
           expenseAccountId: l.expense_account_id,
           roznamchaEntryId: l.roznamcha_entry_id,

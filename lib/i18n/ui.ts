@@ -12175,6 +12175,19 @@ export type UiKey =
   | "com.choose_warehouse"
   | "com.manifest_in_right_panel"
   | "pa.breadcrumb"
+  | "bexp.f_tax_mode"
+  | "bexp.tax_exempt"
+  | "bexp.tax_exclusive"
+  | "bexp.tax_inclusive"
+  | "bexp.f_tax_code"
+  | "bexp.f_tax_code_pick"
+  | "bexp.f_converted"
+  | "bexp.f_tax_amount"
+  | "bexp.f_base_currency"
+  | "bexp.f_rate_to_base"
+  | "bexp.v_tax_code_required"
+  | "bexp.no_tax_config"
+  | "bexp.same_currency_note"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37322,6 +37335,19 @@ const en: Dict = {
   "p360.title_fallback": "Party 360",
   "cl.show_both_names": "Show both names (second language line)",
   "cl.show_both_names_hint": "Off: one name in the selected language. The saved legal name is never changed.",
+  "bexp.f_tax_mode": "Tax treatment",
+  "bexp.tax_exempt": "No tax (exempt)",
+  "bexp.tax_exclusive": "Tax added on top",
+  "bexp.tax_inclusive": "Tax included in price",
+  "bexp.f_tax_code": "Tax code",
+  "bexp.f_tax_code_pick": "Select tax code",
+  "bexp.f_converted": "Converted amount",
+  "bexp.f_tax_amount": "Tax amount",
+  "bexp.f_base_currency": "Base currency",
+  "bexp.f_rate_to_base": "Rate to base currency",
+  "bexp.v_tax_code_required": "Choose the tax code, or mark the expense tax-exempt.",
+  "bexp.no_tax_config": "No tax code is configured for this country, so the expense can only be saved as tax-exempt.",
+  "bexp.same_currency_note": "Same as the base currency — no conversion.",
 };
 
 const ur: Dict = {
@@ -62437,6 +62463,19 @@ const ur: Dict = {
   "p360.title_fallback": "پارٹی 360",
   "cl.show_both_names": "دونوں نام دکھائیں (دوسری زبان کی لائن)",
   "cl.show_both_names_hint": "بند: منتخب زبان میں ایک ہی نام۔ محفوظ شدہ قانونی نام کبھی تبدیل نہیں ہوتا۔",
+  "bexp.f_tax_mode": "ٹیکس کا طریقہ",
+  "bexp.tax_exempt": "ٹیکس نہیں (مستثنیٰ)",
+  "bexp.tax_exclusive": "ٹیکس اوپر سے شامل",
+  "bexp.tax_inclusive": "قیمت میں ٹیکس شامل",
+  "bexp.f_tax_code": "ٹیکس کوڈ",
+  "bexp.f_tax_code_pick": "ٹیکس کوڈ منتخب کریں",
+  "bexp.f_converted": "تبدیل شدہ رقم",
+  "bexp.f_tax_amount": "ٹیکس کی رقم",
+  "bexp.f_base_currency": "بنیادی کرنسی",
+  "bexp.f_rate_to_base": "بنیادی کرنسی کی شرح",
+  "bexp.v_tax_code_required": "ٹیکس کوڈ منتخب کریں یا اخراجات کو ٹیکس سے مستثنیٰ رکھیں۔",
+  "bexp.no_tax_config": "اس ملک کے لیے کوئی ٹیکس کوڈ ترتیب نہیں دیا گیا، اس لیے اخراجات صرف ٹیکس سے مستثنیٰ محفوظ ہو سکتا ہے۔",
+  "bexp.same_currency_note": "بنیادی کرنسی کے برابر، تبدیلی نہیں۔",
 };
 
 const ar: Dict = {
@@ -87553,6 +87592,19 @@ const ar: Dict = {
   "p360.title_fallback": "ملف الطرف 360",
   "cl.show_both_names": "عرض الاسمين (سطر اللغة الثانية)",
   "cl.show_both_names_hint": "متوقف: اسم واحد باللغة المحددة. لا يتغيّر الاسم القانوني المحفوظ أبدًا.",
+  "bexp.f_tax_mode": "معاملة الضريبة",
+  "bexp.tax_exempt": "بدون ضريبة (معفى)",
+  "bexp.tax_exclusive": "الضريبة تُضاف فوق السعر",
+  "bexp.tax_inclusive": "الضريبة مشمولة في السعر",
+  "bexp.f_tax_code": "رمز الضريبة",
+  "bexp.f_tax_code_pick": "اختر رمز الضريبة",
+  "bexp.f_converted": "المبلغ المحوّل",
+  "bexp.f_tax_amount": "مبلغ الضريبة",
+  "bexp.f_base_currency": "العملة الأساسية",
+  "bexp.f_rate_to_base": "السعر إلى العملة الأساسية",
+  "bexp.v_tax_code_required": "اختر رمز الضريبة أو اجعل المصروف معفى من الضريبة.",
+  "bexp.no_tax_config": "لا يوجد رمز ضريبة مضبوط لهذه الدولة، لذا يمكن حفظ المصروف كمعفى من الضريبة فقط.",
+  "bexp.same_currency_note": "نفس العملة الأساسية، دون تحويل.",
 };
 
 const fa: Dict = {
@@ -112668,6 +112720,19 @@ const fa: Dict = {
   "p360.title_fallback": "پرونده طرف ۳۶۰",
   "cl.show_both_names": "نمایش هر دو نام (خط زبان دوم)",
   "cl.show_both_names_hint": "خاموش: یک نام به زبان انتخاب‌شده. نام حقوقی ثبت‌شده هرگز تغییر نمی‌کند.",
+  "bexp.f_tax_mode": "نحوه محاسبه مالیات",
+  "bexp.tax_exempt": "بدون مالیات (معاف)",
+  "bexp.tax_exclusive": "مالیات به قیمت اضافه می‌شود",
+  "bexp.tax_inclusive": "مالیات در قیمت لحاظ شده",
+  "bexp.f_tax_code": "کد مالیات",
+  "bexp.f_tax_code_pick": "کد مالیات را انتخاب کنید",
+  "bexp.f_converted": "مبلغ تبدیل‌شده",
+  "bexp.f_tax_amount": "مبلغ مالیات",
+  "bexp.f_base_currency": "ارز پایه",
+  "bexp.f_rate_to_base": "نرخ تبدیل به ارز پایه",
+  "bexp.v_tax_code_required": "کد مالیات را انتخاب کنید یا هزینه را معاف از مالیات قرار دهید.",
+  "bexp.no_tax_config": "برای این کشور کد مالیاتی تنظیم نشده است، بنابراین هزینه فقط به صورت معاف از مالیات ذخیره می‌شود.",
+  "bexp.same_currency_note": "همان ارز پایه است، بدون تبدیل.",
 };
 
 const ps: Dict = {
@@ -137790,6 +137855,19 @@ const ps: Dict = {
   "p360.title_fallback": "د ګډونوال ۳۶۰ کتنه",
   "cl.show_both_names": "دواړه نومونه وښایه (د دویمې ژبې کرښه)",
   "cl.show_both_names_hint": "بند: په ټاکل شوې ژبه کې یو نوم. خوندي شوی قانوني نوم هیڅکله نه بدلېږي.",
+  "bexp.f_tax_mode": "د مالیې حساب",
+  "bexp.tax_exempt": "مالیه نشته (معاف)",
+  "bexp.tax_exclusive": "مالیه پر بیه اضافه کېږي",
+  "bexp.tax_inclusive": "مالیه په بیه کې شامله ده",
+  "bexp.f_tax_code": "د مالیې کوډ",
+  "bexp.f_tax_code_pick": "د مالیې کوډ وټاکئ",
+  "bexp.f_converted": "اړول شوې اندازه",
+  "bexp.f_tax_amount": "د مالیې اندازه",
+  "bexp.f_base_currency": "بنسټیز اسعار",
+  "bexp.f_rate_to_base": "بنسټیز اسعارو ته نرخ",
+  "bexp.v_tax_code_required": "د مالیې کوډ وټاکئ یا لګښت له مالیې معاف کړئ.",
+  "bexp.no_tax_config": "د دې هیواد لپاره د مالیې کوډ نه دی تنظیم شوی، نو لګښت یوازې له مالیې معاف ذخیره کېدای شي.",
+  "bexp.same_currency_note": "د بنسټیز اسعارو سره یو شان، بدون تبدیلۍ.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
