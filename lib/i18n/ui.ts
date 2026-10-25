@@ -7869,6 +7869,17 @@ export type UiKey =
   | "pjt.export_pdf"
   | "pjt.print_btn"
   | "pjt.row_actions"
+  | "cl.type_all_parties"
+  | "cl.type_customers"
+  | "cl.type_employees"
+  | "cl.type_drivers"
+  | "cl.type_owners"
+  | "cl.type_banks_accounts"
+  | "cl.type_shipping_clearing"
+  | "cl.all_users_filter"
+  | "cl.apply_filters_btn"
+  | "cl.erp_usage_360"
+  | "cl.customer_list_menu"
   | "p360.accounts_title"
   | "p360.chart_of_accounts"
   | "p360.linked_accounts_heading"
@@ -37322,6 +37333,17 @@ const en: Dict = {
   "p360.title_fallback": "Party 360",
   "cl.show_both_names": "Show both names (second language line)",
   "cl.show_both_names_hint": "Off: one name in the selected language. The saved legal name is never changed.",
+  "cl.customer_list_menu": "Customer List",
+  "cl.type_all_parties": "All Parties",
+  "cl.type_customers": "Customers",
+  "cl.type_employees": "Employees",
+  "cl.type_drivers": "Drivers",
+  "cl.type_owners": "Owners",
+  "cl.type_banks_accounts": "Banks & Accounts",
+  "cl.type_shipping_clearing": "Shipping & Clearing",
+  "cl.all_users_filter": "All Users",
+  "cl.apply_filters_btn": "Apply Filters",
+  "cl.erp_usage_360": "360° ERP Usage",
 };
 
 const ur: Dict = {
@@ -62437,6 +62459,17 @@ const ur: Dict = {
   "p360.title_fallback": "پارٹی 360",
   "cl.show_both_names": "دونوں نام دکھائیں (دوسری زبان کی لائن)",
   "cl.show_both_names_hint": "بند: منتخب زبان میں ایک ہی نام۔ محفوظ شدہ قانونی نام کبھی تبدیل نہیں ہوتا۔",
+  "cl.customer_list_menu": "کسٹمر فہرست",
+  "cl.type_all_parties": "تمام پارٹیاں",
+  "cl.type_customers": "گاہک",
+  "cl.type_employees": "ملازمین",
+  "cl.type_drivers": "ڈرائیورز",
+  "cl.type_owners": "مالکان",
+  "cl.type_banks_accounts": "بینک و کھاتے",
+  "cl.type_shipping_clearing": "شپنگ و کلیئرنگ",
+  "cl.all_users_filter": "تمام صارفین",
+  "cl.apply_filters_btn": "فلٹرز لاگو کریں",
+  "cl.erp_usage_360": "360° پارٹی کا استعمال",
 };
 
 const ar: Dict = {
@@ -87553,6 +87586,17 @@ const ar: Dict = {
   "p360.title_fallback": "ملف الطرف 360",
   "cl.show_both_names": "عرض الاسمين (سطر اللغة الثانية)",
   "cl.show_both_names_hint": "متوقف: اسم واحد باللغة المحددة. لا يتغيّر الاسم القانوني المحفوظ أبدًا.",
+  "cl.customer_list_menu": "قائمة العملاء",
+  "cl.type_all_parties": "جميع الأطراف",
+  "cl.type_customers": "العملاء",
+  "cl.type_employees": "الموظفون",
+  "cl.type_drivers": "السائقون",
+  "cl.type_owners": "المالكون",
+  "cl.type_banks_accounts": "البنوك والحسابات",
+  "cl.type_shipping_clearing": "الشحن والتخليص",
+  "cl.all_users_filter": "جميع المستخدمين",
+  "cl.apply_filters_btn": "تطبيق عوامل التصفية",
+  "cl.erp_usage_360": "استخدام الطرف 360°",
 };
 
 const fa: Dict = {
@@ -112668,6 +112712,17 @@ const fa: Dict = {
   "p360.title_fallback": "پرونده طرف ۳۶۰",
   "cl.show_both_names": "نمایش هر دو نام (خط زبان دوم)",
   "cl.show_both_names_hint": "خاموش: یک نام به زبان انتخاب‌شده. نام حقوقی ثبت‌شده هرگز تغییر نمی‌کند.",
+  "cl.customer_list_menu": "فهرست مشتریان",
+  "cl.type_all_parties": "همه طرف‌ها",
+  "cl.type_customers": "مشتریان",
+  "cl.type_employees": "کارمندان",
+  "cl.type_drivers": "رانندگان",
+  "cl.type_owners": "مالکان",
+  "cl.type_banks_accounts": "بانک‌ها و حساب‌ها",
+  "cl.type_shipping_clearing": "حمل‌ونقل و ترخیص",
+  "cl.all_users_filter": "همه کاربران",
+  "cl.apply_filters_btn": "اعمال فیلترها",
+  "cl.erp_usage_360": "کاربرد طرف ۳۶۰°",
 };
 
 const ps: Dict = {
@@ -137790,6 +137845,17 @@ const ps: Dict = {
   "p360.title_fallback": "د ګډونوال ۳۶۰ کتنه",
   "cl.show_both_names": "دواړه نومونه وښایه (د دویمې ژبې کرښه)",
   "cl.show_both_names_hint": "بند: په ټاکل شوې ژبه کې یو نوم. خوندي شوی قانوني نوم هیڅکله نه بدلېږي.",
+  "cl.customer_list_menu": "د پیرودونکو لیست",
+  "cl.type_all_parties": "ټولې ډلې",
+  "cl.type_customers": "پیرودونکي",
+  "cl.type_employees": "کارکوونکي",
+  "cl.type_drivers": "چلوونکي",
+  "cl.type_owners": "مالکین",
+  "cl.type_banks_accounts": "بانکونه او حسابونه",
+  "cl.type_shipping_clearing": "بار وړل او کلیرنګ",
+  "cl.all_users_filter": "ټول کاروونکي",
+  "cl.apply_filters_btn": "فلټرونه پلي کړئ",
+  "cl.erp_usage_360": "د ډلې 360° کارونه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -50,6 +50,7 @@ import { resolveCustomerName, readBilingualNamesPreference, writeBilingualNamesP
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { formatErpDate, toIso } from "@/lib/datetime/erp-date";
 
 type CustomerRow = {
   id: string;
@@ -575,7 +576,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
     const s = (st || "active").toLowerCase();
     if (s === "active") return lang === "ur" ? "فعال" : lang === "ar" ? "نشط" : lang === "fa" ? "فعال" : lang === "ps" ? "فعال" : "Active";
     if (s === "inactive") return lang === "ur" ? "غیر فعال" : lang === "ar" ? "غير نشط" : lang === "fa" ? "غیرفعال" : lang === "ps" ? "غیر فعال" : "Inactive";
-    return st || (lang === "ur" ? "فعال" : "Active");
+    return st || t(lang, "p360.status_active", "Active");
   };
 
   return (
@@ -585,7 +586,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         {/* Left: Breadcrumbs */}
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
           <span className="hover:text-blue-600 cursor-pointer" onClick={() => router.push("/dashboard" as Route)}>
-            {getLabel("home", lang) || "Home"}
+            {t(lang, "common.home", "Home")}
           </span>
           <span className="text-slate-400">›</span>
           <span className="hover:text-blue-600 cursor-pointer">
@@ -627,8 +628,8 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               <div
                 onClick={(e) => e.stopPropagation()}
                 className={cn(
-                  "absolute mt-2 w-[340px] sm:w-[380px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-100",
-                  isRtl ? "left-0" : "right-0"
+                  "fixed inset-x-3 top-28 max-h-[78vh] overflow-y-auto sm:absolute sm:inset-x-auto sm:top-auto sm:mt-2 sm:w-[380px] sm:max-h-none sm:overflow-visible rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-100",
+                  isRtl ? "sm:left-0" : "sm:right-0"
                 )}
               >
                 <div className="flex items-center justify-between border-b pb-3 mb-3">
@@ -725,13 +726,13 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                         }}
                         className="w-full h-8 mt-1 px-2 text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 font-medium"
                       >
-                        <option value="all">{lang === "ur" ? "تمام پارٹیاں" : "All Parties"}</option>
-                        <option value="customer">{lang === "ur" ? "گاہک" : "Customers"}</option>
-                        <option value="employee">{lang === "ur" ? "ملازمین" : "Employees"}</option>
-                        <option value="driver">{lang === "ur" ? "ڈرائیورز" : "Drivers"}</option>
-                        <option value="owner">{lang === "ur" ? "مالکان" : "Owners"}</option>
-                        <option value="bank_accounts">{lang === "ur" ? "بینک و کھاتے" : "Banks & Accounts"}</option>
-                        <option value="shipping_clearing">{lang === "ur" ? "شپنگ و کلیئرنگ" : "Shipping & Clearing"}</option>
+                        <option value="all">{t(lang, "cl.type_all_parties", "All Parties")}</option>
+                        <option value="customer">{t(lang, "cl.type_customers", "Customers")}</option>
+                        <option value="employee">{t(lang, "cl.type_employees", "Employees")}</option>
+                        <option value="driver">{t(lang, "cl.type_drivers", "Drivers")}</option>
+                        <option value="owner">{t(lang, "cl.type_owners", "Owners")}</option>
+                        <option value="bank_accounts">{t(lang, "cl.type_banks_accounts", "Banks & Accounts")}</option>
+                        <option value="shipping_clearing">{t(lang, "cl.type_shipping_clearing", "Shipping & Clearing")}</option>
                       </select>
                     </div>
 
@@ -767,7 +768,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                       }}
                       className="w-full h-8 mt-1 px-2 text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 font-medium"
                     >
-                      <option value="all">{lang === "ur" ? "تمام صارفین" : "All Users"}</option>
+                      <option value="all">{t(lang, "cl.all_users_filter", "All Users")}</option>
                       {filterOptions.assignees.map((a) => (
                         <option key={a} value={a}>{a}</option>
                       ))}
@@ -775,14 +776,14 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">{getLabel("createdDateLabel", lang) || "Created Date"}</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cl.col_created_date", "Created Date")}</label>
                     <button
                       type="button"
                       className="w-full h-8 mt-1 px-2.5 flex items-center justify-between text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 font-medium text-slate-600"
                     >
                       <span className="flex items-center gap-1.5">
                         <Calendar className="h-3 w-3 text-slate-400" />
-                        <span>All Dates (2026)</span>
+                        <span>{t(lang, "nav.all_dates", "All Dates")} ({new Date().getFullYear()})</span>
                       </span>
                       <ChevronDown className="h-3 w-3 text-slate-400" />
                     </button>
@@ -809,7 +810,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                       onClick={() => setShowSearchFiltersPopover(false)}
                       className="h-8 px-3.5 rounded-lg bg-[#1d63ed] text-white text-xs font-bold shadow-xs hover:bg-blue-700 cursor-pointer"
                     >
-                      {lang === "ur" ? "فلٹرز لاگو کریں" : "Apply Filters"}
+                      {t(lang, "cl.apply_filters_btn", "Apply Filters")}
                     </button>
                   </div>
                 </div>
@@ -851,7 +852,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                     <FileText className="h-3.5 w-3.5" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("customerList", lang) || "Customer List"}</p>
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{t(lang, "cl.customer_list_menu", "Customer List")}</p>
                     <p className="text-[10px] text-slate-400">{getLabel("customerListSub", lang)}</p>
                   </div>
                 </div>
@@ -1627,11 +1628,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
                       {/* CREATED DATE */}
                       <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap font-medium">
-                        {new Date(c.created_at || Date.now()).toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric"
-                        })}
+                        {formatErpDate(toIso(new Date(c.created_at || Date.now())), lang)}
                       </td>
 
                       {/* ACTIONS */}
@@ -1665,7 +1662,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                                 className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-lg cursor-pointer"
                               >
                                 <Layers className="h-3.5 w-3.5 text-indigo-500" />
-                                <span>{lang === "ur" ? "360° پارٹی کا استعمال" : "360° ERP Usage"}</span>
+                                <span>{t(lang, "cl.erp_usage_360", "360° ERP Usage")}</span>
                               </button>
                               <button
                                 type="button"
