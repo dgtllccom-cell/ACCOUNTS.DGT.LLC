@@ -619,13 +619,20 @@ export function TruckRecreationWizard({
     return transliterateProperNoun(v, activeLang);
   };
 
+  // owner / driver are Person Master (customer) names: the verified dictionary, else the saved name — no re-spelled transliteration
+  const personText = (raw?: string | null): string => {
+    const v = String(raw ?? "").trim();
+    if (!v) return "";
+    return VERIFIED_TRUCK_NAMES[v]?.[activeLang] || VERIFIED_TRUCK_NAMES[v.toLowerCase()]?.[activeLang] || v;
+  };
+
   const getLocalizedOwner = (row: TruckRow): string => {
     if (activeLang === "en" && row.owner_name_en) return row.owner_name_en;
     if (activeLang === "ur" && row.owner_name_ur) return row.owner_name_ur;
     if (activeLang === "ar" && row.owner_name_ar) return row.owner_name_ar;
     if (activeLang === "fa" && row.owner_name_fa) return row.owner_name_fa;
     if (activeLang === "ps" && row.owner_name_ps) return row.owner_name_ps;
-    return nameText(row.owner_display_name || row.owner_name);
+    return personText(row.owner_display_name || row.owner_name);
   };
 
   const getLocalizedDriver = (row: TruckRow): string => {
@@ -634,7 +641,7 @@ export function TruckRecreationWizard({
     if (activeLang === "ar" && row.driver_name_ar) return row.driver_name_ar;
     if (activeLang === "fa" && row.driver_name_fa) return row.driver_name_fa;
     if (activeLang === "ps" && row.driver_name_ps) return row.driver_name_ps;
-    return nameText(row.driver_display_name || row.driver_name);
+    return personText(row.driver_display_name || row.driver_name);
   };
 
   const getLocalizedCompany = (row: TruckRow): string => {
@@ -1426,7 +1433,7 @@ export function TruckRecreationWizard({
           r.owner_name_en,
           r.owner_name_ur,
           r.owner_display_name,
-          nameText(r.owner_display_name),
+          personText(r.owner_display_name),
           getLocalizedOwner(r),
           r.company_display_name,
           r.transport_company,
@@ -1436,12 +1443,12 @@ export function TruckRecreationWizard({
           r.transporter_display_name,
           nameText(r.transporter_display_name),
           r.driver_display_name,
-          nameText(r.driver_display_name),
+          personText(r.driver_display_name),
           r.driver_name,
           r.driver_name_en,
           r.driver_name_ur,
           getLocalizedDriver(r),
-          nameText(r.driver_name),
+          personText(r.driver_name),
           r.driver_mobile,
           r.owner_mobile,
         ].some((v) => (v || "").toLowerCase().includes(q));
@@ -1467,8 +1474,8 @@ export function TruckRecreationWizard({
         valA = a.model || a.manufacturing_year || "";
         valB = b.model || b.manufacturing_year || "";
       } else if (sortKey === "owner_display_name") {
-        valA = nameText(a.owner_display_name) || "";
-        valB = nameText(b.owner_display_name) || "";
+        valA = personText(a.owner_display_name) || "";
+        valB = personText(b.owner_display_name) || "";
       } else if (sortKey === "company_display_name") {
         valA = nameText(a.company_display_name) || "";
         valB = nameText(b.company_display_name) || "";
@@ -1476,8 +1483,8 @@ export function TruckRecreationWizard({
         valA = nameText(a.transporter_display_name) || "";
         valB = nameText(b.transporter_display_name) || "";
       } else if (sortKey === "driver_display_name") {
-        valA = nameText(a.driver_display_name || a.driver_name) || "";
-        valB = nameText(b.driver_display_name || b.driver_name) || "";
+        valA = personText(a.driver_display_name || a.driver_name) || "";
+        valB = personText(b.driver_display_name || b.driver_name) || "";
       } else if (sortKey === "driver_mobile") {
         valA = a.driver_mobile || "";
         valB = b.driver_mobile || "";
@@ -1540,10 +1547,10 @@ export function TruckRecreationWizard({
         truck_no: r.truck_number,
         truck_name: nameText(r.truck_name) || "—",
         model: r.model || r.manufacturing_year || "—",
-        owner: nameText(r.owner_display_name) || "—",
+        owner: personText(r.owner_display_name) || "—",
         company: nameText(r.company_display_name) || "—",
         transporter: nameText(r.transporter_display_name) || "—",
-        driver: nameText(r.driver_display_name || (r.driver_name ? nameText(r.driver_name) : "")) || "—",
+        driver: personText(r.driver_display_name || r.driver_name) || "—",
         mobile: r.driver_mobile || r.owner_mobile || "—",
         status: statusLabel(r.status),
       })),
@@ -1574,10 +1581,10 @@ export function TruckRecreationWizard({
           r.truck_number,
           nameText(r.truck_name) || "—",
           r.model || r.manufacturing_year || "—",
-          nameText(r.owner_display_name) || "—",
+          personText(r.owner_display_name) || "—",
           nameText(r.company_display_name) || "—",
           nameText(r.transporter_display_name) || "—",
-          nameText(r.driver_display_name || (r.driver_name ? nameText(r.driver_name) : "")) || "—",
+          personText(r.driver_display_name || r.driver_name) || "—",
           r.driver_mobile || r.owner_mobile || "—",
           statusLabel(r.status),
         ]

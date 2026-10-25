@@ -67,6 +67,11 @@ function isTrustedStoredTranslation(row: { translation_status?: string | null; t
 const ARABIC_SCRIPT_RE = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
 const LATIN_LETTER_RE = /[A-Za-z]/;
 
+// Customer / Person Master names are LEGAL names (owner rule 2026-10-24): the display shows an authorized translation for the viewer's
+// language, otherwise the saved name — the tier-4 script-rendering below is never applied to them, so every screen agrees with the
+// Customer Register (lib/i18n/customer-name.ts). Companies, banks, ports, places … keep the display rendering.
+const LEGAL_NAME_TABLES = new Set(["customers"]);
+
 // (table, field) -> mode. "transliterate" = proper noun (script-render on display).
 const FIELD_MODE = new Map<string, "translate" | "transliterate">();
 for (const [table, defs] of Object.entries(TRANSLATABLE_FIELDS)) {
@@ -441,7 +446,7 @@ export async function localizeRecordNames<T extends { id: string }>(
       // Tier 4 — DISPLAY-ONLY: render a proper name in the viewer's script when
       // there is no approved translation, so an EN viewer never sees Perso-Arabic
       // script (and vice-versa). Never written back; free text is untouched.
-      if (properNoun) {
+      if (properNoun && !LEGAL_NAME_TABLES.has(table)) {
         const disp = properNameForDisplay(rawValue, lang);
         if (disp) return { ...record, [field]: disp };
       }
@@ -530,7 +535,7 @@ export async function localizeRecordFields<T extends { id: string }>(
         if (!resolved && isEn && trustStored && englishVal && englishVal !== rawValue) resolved = englishVal;
 
         // Tier 4 — DISPLAY-ONLY proper-name script rendering (see localizeRecordNames).
-        if (!resolved && !options?.noPhrase && proper) {
+        if (!resolved && !options?.noPhrase && proper && !LEGAL_NAME_TABLES.has(table)) {
           const disp = properNameForDisplay(rawValue, lang);
           if (disp) resolved = disp;
         }
@@ -630,7 +635,7 @@ export async function localizeRecordGroups(
             }
             if (!resolved && isEn && trustStored && englishVal && englishVal !== rawValue) resolved = englishVal;
             // Tier 4 — DISPLAY-ONLY proper-name script rendering (see localizeRecordNames).
-            if (!resolved && proper) {
+            if (!resolved && proper && !LEGAL_NAME_TABLES.has(g.table)) {
               const disp = properNameForDisplay(rawValue, lang);
               if (disp) resolved = disp;
             }

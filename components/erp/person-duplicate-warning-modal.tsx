@@ -48,13 +48,13 @@ export function PersonDuplicateWarningModal({
             >
               <div className="min-w-0">
                 <div className="font-bold text-slate-900 dark:text-white truncate">
-                  {transliterateProperNoun(c.name, lang)}
+                  {c.name}
                   {c.personCode ? (
                     <span className="ms-2 font-mono text-[10px] font-black text-amber-700 dark:text-amber-400">{c.personCode}</span>
                   ) : null}
                 </div>
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-3 mt-0.5">
-                  {c.fatherName ? <span>{t(lang, "erp.person_dup_father", "Father")}: {transliterateProperNoun(c.fatherName, lang)}</span> : null}
+                  {c.fatherName ? <span>{t(lang, "erp.person_dup_father", "Father")}: {c.fatherName}</span> : null}
                   {c.mobile ? <span dir="ltr">{t(lang, "erp.person_dup_mobile", "Mobile")}: {c.mobile}</span> : null}
                   {c.email ? <span dir="ltr">{t(lang, "erp.person_dup_email", "Email")}: {c.email}</span> : null}
                 </div>

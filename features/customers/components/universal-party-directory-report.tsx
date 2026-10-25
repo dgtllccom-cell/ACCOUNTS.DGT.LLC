@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { PartyAffiliationSummary } from "@/lib/services/party-360-service";
@@ -103,8 +104,8 @@ export function UniversalPartyDirectoryReport({
         orientation: "landscape",
         columns: [
           { key: (r: Record<string, unknown>) => (r as any).customerCode || "-", label: "Customer Code" },
-          { key: (r: Record<string, unknown>) => transliterateProperNoun((r as any).customerName, lang), label: "Full Name" },
-          { key: (r: Record<string, unknown>) => (r as any).fatherName ? transliterateProperNoun((r as any).fatherName, lang) : "-", label: "Father Name" },
+          { key: (r: Record<string, unknown>) => String((r as any).customerName ?? ""), label: translateHeader(lang, "Full Name") },
+          { key: (r: Record<string, unknown>) => (r as any).fatherName ? String((r as any).fatherName) : "-", label: translateHeader(lang, "Father Name") },
           { key: (r: Record<string, unknown>) => (r as any).countryName || "-", label: "Country" },
           { key: (r: Record<string, unknown>) => (r as any).cityName || "-", label: "City" },
           { key: (r: Record<string, unknown>) => (r as any).address || "-", label: "Address" },
@@ -128,8 +129,8 @@ export function UniversalPartyDirectoryReport({
     const rows = filteredParties.map((p, idx) => [
       idx + 1,
       p.customerCode || "-",
-      transliterateProperNoun(p.customerName, lang),
-      p.fatherName ? transliterateProperNoun(p.fatherName, lang) : "-",
+      p.customerName,
+      p.fatherName ? p.fatherName : "-",
       p.countryName || "-",
       p.cityName || "-",
       `"${(p.address || "-").replace(/"/g, '""')}"`,
@@ -308,8 +309,9 @@ export function UniversalPartyDirectoryReport({
                 </tr>
               ) : (
                 filteredParties.map((party, idx) => {
-                  const urduName = transliterateProperNoun(party.customerName, lang);
-                  const fatherUrdu = party.fatherName ? transliterateProperNoun(party.fatherName, lang) : "-";
+                  // saved legal names (customer-name rule): no transliterated spelling is shown
+                  const urduName = party.customerName;
+                  const fatherUrdu = party.fatherName ? party.fatherName : "-";
 
                   return (
                     <tr

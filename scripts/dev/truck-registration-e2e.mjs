@@ -40,8 +40,9 @@ await p.waitForTimeout(2500);
 // ── 1) English selected, Urdu-registered owner & driver
 let txt = await reportText();
 const fullName = await rowValue("Full Name");
-check("EN screen: owner Full Name is Latin (not the stored Urdu text)", fullName && !ARABIC.test(fullName), fullName);
-check("EN screen: report has no Arabic-script names at all", !ARABIC.test(txt.replace(/\s+/g, " ")), (txt.match(/[؀-ۿ][؀-ۿ ]+/) || [""])[0]);
+// customer-name rule (owner, 2026-10-24/25): no authorized English translation exists for this Urdu-registered owner, so every screen shows the saved legal name
+check("EN screen: owner Full Name is the saved legal name (never an invented Latin spelling)", fullName && ARABIC.test(fullName), fullName);
+check("EN screen: report labels stay English (only the saved name is in Urdu script)", /Full Name/.test(txt) && !ARABIC.test(txt.replace(/\s+/g, " ").replace(/[؀-ۿ][؀-ۿ ]+/g, "")), "");
 const formText = (await p.locator("form").first().innerText().catch(() => "")) || "";
 // Customer-name rule (owner, 2026-10-25): the shared picker shows the saved legal name when there is no authorized translation for the selected
 // language (never an invented spelling). This Urdu-registered owner has none for English, so the picker keeps the saved Urdu name. NOTE: the report

@@ -256,7 +256,7 @@ export function AccountLiveReportPanel({
           <div className="space-y-1.5 text-xs">
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("customerName", lang)}</span>
-              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">{trName(customerDetail?.customer_name) || "-"}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">{customerDetail?.customer_name || "-"}</span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("customerType", lang)}</span>
@@ -268,7 +268,7 @@ export function AccountLiveReportPanel({
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("contactPerson", lang)}</span>
-              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">{trName(customerDetail?.contact_person) || "-"}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">{customerDetail?.contact_person || "-"}</span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("phone", lang)}</span>
