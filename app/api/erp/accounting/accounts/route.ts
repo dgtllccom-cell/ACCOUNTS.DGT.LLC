@@ -494,12 +494,14 @@ export async function POST(request: NextRequest) {
     if (body.countryId) {
       const dupCountryId = body.countryId;
       const dupCustomerId = body.customerId ?? null;
+      const dupCityBranchId = body.cityBranchId ?? null;
       const dup = await withLocalPg(async (sql) => {
         const rows = await sql`
           select id, code, name, operational_domain, city_branch_id
           from public.enterprise_accounts
           where deleted_at is null
             and country_id = ${dupCountryId}::uuid
+            and (${dupCityBranchId ? sql`city_branch_id = ${dupCityBranchId}::uuid` : sql`city_branch_id is null`})
             and upper(currency) = ${String(body.currency).toUpperCase()}
             and (
               ${dupCustomerId ? sql`customer_id = ${dupCustomerId}::uuid` : sql`false`}
@@ -511,7 +513,7 @@ export async function POST(request: NextRequest) {
       });
       if (dup) {
         throw new ApiClientError(
-          `An account for this party already exists in this country (${dup.code}). Reuse the existing Account ID.`,
+          `An account for this party already exists in this branch (${dup.code}). Reuse the existing Account ID or select a different currency.`,
           { status: 409, code: "DUPLICATE_ACCOUNT", details: { existingAccountId: dup.id, existingCode: dup.code, existingDomain: dup.operational_domain, existingCityBranchId: dup.city_branch_id } }
         );
       }

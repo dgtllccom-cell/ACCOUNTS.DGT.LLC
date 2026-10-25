@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import type { Route } from "next";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import {
   Building2,
   Globe2,
@@ -435,6 +437,19 @@ export function AdminUserManagementPanel() {
             </Button>
 
             <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="h-8 px-2.5 text-xs gap-1 hover:bg-blue-50 text-blue-700 dark:hover:bg-blue-950/40 dark:text-blue-300"
+              title={translateHeader(lang, "Manage User Rights & Form Allocation")}
+            >
+              <Link href={`/dashboard/branch-management/permissions?userId=${u.id}` as Route}>
+                <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+                <span>{translateHeader(lang, "USER RIGHTS & FORM ALLOCATION")}</span>
+              </Link>
+            </Button>
+
+            <Button
               size="sm"
               variant="outline"
               className="h-8 px-2.5 text-xs gap-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-amber-700 dark:text-amber-400"
@@ -601,6 +616,13 @@ export function AdminUserManagementPanel() {
             <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm">
               <UserPlus className="h-4 w-4" />
               <span>{tt("aump.register_new_user", "Register New User")}</span>
+            </Button>
+          </Link>
+
+          <Link href={"/dashboard/branch-management/permissions" as Route}>
+            <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm">
+              <ShieldCheck className="h-4 w-4" />
+              <span>{translateHeader(lang, "USER RIGHTS & FORM ALLOCATION")}</span>
             </Button>
           </Link>
 

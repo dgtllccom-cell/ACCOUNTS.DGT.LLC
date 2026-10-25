@@ -87,7 +87,7 @@ export const COUNTRY_LEVEL_ROLES: readonly string[] = ["country_admin", "country
 export const GLOBAL_SCOPE_ROLES: readonly string[] = ["super_admin", "super_admin_reports", "global_operations_admin", "business_super_admin", "shipping_super_admin"];
 /** Operational / shipping-line roles: financial modules are denied by construction. */
 export const NON_FINANCIAL_ROLES: readonly string[] = [
-  "global_operations_admin", "country_operations_admin", "city_operations_admin", "shipping_line_user"
+  "global_operations_admin", "country_operations_admin", "city_operations_admin"
 ];
 /**
  * Domain super admins (stored role super_admin + operational_domain business|shipping). NOT Super Admins: no wildcard, no
@@ -196,13 +196,19 @@ const SHIPPING_LINE_ADMIN_PERMISSIONS: string[] = [
 
 const SHIPPING_LINE_USER_PERMISSIONS: string[] = [
   "dashboard:read",
-  "shipping_records:read", "shipping_records:update",
-  "shipments:read", "shipments:update",
-  "shipping_transfers:read",
+  "shipping_records:create", "shipping_records:read", "shipping_records:update",
+  "shipments:create", "shipments:read", "shipments:update",
+  "shipping_transfers:create", "shipping_transfers:read",
   "shipping:read",
   "tasks:read", "tasks:update",
   "documents:create", "documents:read",
-  "messages:read", "record_transfers:read"
+  "messages:read", "record_transfers:read",
+  "customers:create", "customers:read", "customers:update",
+  "accounts:create", "accounts:read", "accounts:update",
+  "ledgers:read",
+  "transactions:create", "transactions:read",
+  "roznamcha:create", "roznamcha:read",
+  "reports:read", "shipping_reports:read"
 ];
 
 /**
@@ -592,6 +598,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "country_company_profiles:read",
     "city_branches:read",
     "users:read",
+    "users:create",
+    "users:update",
     "customers:create",
     "customers:read",
     "customers:update",
@@ -885,29 +893,49 @@ export const dashboardByRole: Record<EnterpriseRole, string> = {
   city_branch_admin: "/dashboard/city",
   accountant: "/dashboard/city",
   cashier: "/dashboard/city",
-  agent_user: "/dashboard/agent",
+  agent_user: "/dashboard/city/shipping-line",
   staff_user: "/dashboard/city",
   auditor_viewer: "/dashboard/reports",
   business_super_admin: "/dashboard/country",
-  shipping_super_admin: "/dashboard/logistics",
-  // The existing, already-scoped operational dashboards (shipments, routes, BL/containers, tasks) — no duplicate dashboards.
-  global_operations_admin: "/dashboard/logistics",
-  country_operations_admin: "/dashboard/logistics",
-  city_operations_admin: "/dashboard/logistics",
-  // no separate page: the logistics dashboard filters every card by the login's shipping line(s) (session.shippingLineIds)
-  shipping_line_admin: "/dashboard/logistics",
-  shipping_line_user: "/dashboard/logistics"
+  shipping_super_admin: "/dashboard/super-admin/shipping-line",
+  global_operations_admin: "/dashboard/super-admin/shipping-line",
+  country_operations_admin: "/dashboard/country/shipping-line",
+  city_operations_admin: "/dashboard/city/shipping-line",
+  shipping_line_admin: "/dashboard/city/shipping-line",
+  shipping_line_user: "/dashboard/city/shipping-line"
 };
 
 /**
- * The landing dashboard for a set of EFFECTIVE roles. The single implementation behind both /dashboard and the login redirect
- * (there used to be two hand-written copies). Broadest business role first; operational roles land on the existing scoped
- * operational dashboards; a login whose roles are unknown lands on the branch dashboard, which itself refuses without a branch.
+ * The landing dashboard for a set of EFFECTIVE roles. The single implementation behind both /dashboard and the login redirect.
+ * Strict separation between Business and Shipping Line dashboards at all 3 management levels:
+ *  - Super Management: /dashboard/super-admin (Business) vs /dashboard/super-admin/shipping-line (Shipping Line)
+ *  - Country Management: /dashboard/country (Business) vs /dashboard/country/shipping-line (Shipping Line)
+ *  - Branch Management: /dashboard/city (Business) vs /dashboard/city/shipping-line (Shipping Line)
  */
-export function dashboardForRoles(roles: readonly string[], opts: { isSuperAdmin?: boolean; isShippingScoped?: boolean } = {}): string {
-  if (opts.isSuperAdmin || roles.includes("super_admin")) return "/dashboard/super-admin";
-  if (roles.includes("business_super_admin")) return dashboardByRole.business_super_admin;
-  if (roles.includes("shipping_super_admin")) return dashboardByRole.shipping_super_admin;
+export function dashboardForRoles(
+  roles: readonly string[],
+  opts: { isSuperAdmin?: boolean; isShippingScoped?: boolean; operationalDomains?: readonly string[] } = {}
+): string {
+  const isShippingOnly =
+    opts.isShippingScoped === true ||
+    (Boolean(opts.operationalDomains?.length) &&
+      opts.operationalDomains!.includes("shipping") &&
+      !opts.operationalDomains!.includes("business") &&
+      !opts.operationalDomains!.includes("both"));
+
+  if (opts.isSuperAdmin || roles.includes("super_admin")) {
+    return isShippingOnly ? "/dashboard/super-admin/shipping-line" : "/dashboard/super-admin";
+  }
+  if (roles.includes("business_super_admin")) return "/dashboard/country";
+  if (roles.includes("shipping_super_admin")) return "/dashboard/super-admin/shipping-line";
+
+  if (isShippingOnly) {
+    if (roles.includes("country_admin") || roles.includes("country_operations_admin")) {
+      return "/dashboard/country/shipping-line";
+    }
+    return "/dashboard/city/shipping-line";
+  }
+
   const order: EnterpriseRole[] = [
     "country_admin", "country_user",
     "main_branch_admin", "city_branch_admin", "accountant", "cashier",
@@ -916,9 +944,6 @@ export function dashboardForRoles(roles: readonly string[], opts: { isSuperAdmin
     "agent_user", "staff_user",
     "super_admin_reports", "auditor_viewer"
   ];
-  if (opts.isShippingScoped && !roles.some((r) => ["country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier"].includes(r))) {
-    return "/dashboard/logistics";
-  }
   for (const r of order) if (roles.includes(r)) return dashboardByRole[r];
   return "/dashboard/city";
 }

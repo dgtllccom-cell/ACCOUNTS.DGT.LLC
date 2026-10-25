@@ -44,7 +44,8 @@ import {
   AlertCircle,
   Lock,
   ShieldCheck,
-  Globe2
+  Globe2,
+  ExternalLink
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -1175,13 +1176,12 @@ export function CashEntryForm({
     [ledgerRowsWithAccount, cashLedgerId, counterLedgerId]
   );
 
-  const selectedCounterLedger = useMemo(
-    () =>
-      selectedLookupLedger?.ledgerId === counterLedgerId
-        ? selectedLookupLedger
-        : ledgerRowsWithAccount.find((row) => row.ledgerId === counterLedgerId) ?? null,
-    [ledgerRowsWithAccount, counterLedgerId, selectedLookupLedger]
-  );
+  const selectedCounterLedger = useMemo(() => {
+    if (selectedLookupLedger?.ledgerId === counterLedgerId) return selectedLookupLedger;
+    const match = ledgers.find((row) => row.ledgerId === counterLedgerId);
+    if (match) return match;
+    return ledgerRowsWithAccount.find((row) => row.ledgerId === counterLedgerId) ?? null;
+  }, [ledgers, ledgerRowsWithAccount, counterLedgerId, selectedLookupLedger]);
 
   const isSamePostingLedger = Boolean(
     selectedCashLedger?.ledgerId &&
@@ -1738,10 +1738,10 @@ export function CashEntryForm({
       setLoadingLedgers(true);
       try {
         const res = await listLedgerReportLedgers({
-          reportScope: countryId ? "country" : "super_admin",
+          reportScope: cityBranchId || countryBranchId ? "branch" : countryId ? "country" : "super_admin",
           countryId: countryId || null,
-          countryBranchId: null,
-          cityBranchId: null,
+          countryBranchId: countryBranchId || null,
+          cityBranchId: cityBranchId || null,
           limit: 3000,
           language: lang
         });
@@ -1757,14 +1757,24 @@ export function CashEntryForm({
 
           setLedgers(finalRows);
 
-          // Sensible defaults: pick first "cash" ledger that has a linked account.
-          const validRows = finalRows.filter((row) => Boolean(row.accountId && row.ledgerId));
+          // Sensible defaults: pick cash ledger matching the current branch and country.
+          // Never default to a cross-country cash ledger (e.g. PK ledger in UAE session).
+          const scopedRows = finalRows.filter((row) => {
+            if (countryId && row.countryId && row.countryId !== countryId) return false;
+            if (cityBranchId && row.cityBranchId && row.cityBranchId !== cityBranchId) return false;
+            if (countryBranchId && row.countryBranchId && row.countryBranchId !== countryBranchId) return false;
+            return true;
+          });
+          const candidateList = scopedRows.length > 0 ? scopedRows : finalRows;
+          const validRows = candidateList.filter((row) => Boolean(row.accountId && row.ledgerId));
+          const listToSearch = validRows.length > 0 ? validRows : candidateList;
           const cashGuess =
-            validRows.find((r) => (r.ledgerName ?? "").toLowerCase().includes("cash")) ??
-            validRows.find((r) => (r.accountName ?? "").toLowerCase().includes("cash")) ??
+            listToSearch.find((r) => (r.ledgerName ?? "").toLowerCase().includes("cash")) ??
+            listToSearch.find((r) => (r.accountName ?? "").toLowerCase().includes("cash")) ??
+            listToSearch.find((r) => (r.ledgerCurrency ?? "").toUpperCase() === (branchCurrency || "").toUpperCase()) ??
+            listToSearch[0] ??
             null;
           if (cashGuess?.ledgerId) setCashLedgerId(cashGuess.ledgerId);
-          else if (validRows[0]?.ledgerId) setCashLedgerId(validRows[0].ledgerId);
         }
       } finally {
         if (!cancelled) setLoadingLedgers(false);
@@ -1774,16 +1784,25 @@ export function CashEntryForm({
     return () => {
       cancelled = true;
     };
-  }, [cityBranchId, countryId, countryBranchId, ledgerRefreshCount]);
+  }, [cityBranchId, countryId, countryBranchId, ledgerRefreshCount, branchCurrency]);
 
-  // Keep currency aligned with ledger currency when a ledger is selected.
+  // Keep currency aligned with branch currency or counter ledger currency
   useEffect(() => {
-    const next = (selectedCounterLedger?.ledgerCurrency || selectedCashLedger?.ledgerCurrency || "").trim();
-    if (next && next.length === 3) setCurrency(next.toUpperCase());
-  }, [selectedCashLedger, selectedCounterLedger]);
+    if (selectedCounterLedger?.ledgerCurrency) {
+      setCurrency(selectedCounterLedger.ledgerCurrency.toUpperCase());
+    } else if (branchCurrency) {
+      setCurrency(branchCurrency.toUpperCase());
+    }
+  }, [selectedCounterLedger, branchCurrency]);
 
-  const isForeignCurrency = (currency || "").trim().toUpperCase() !== "USD";
-  const isRatePending = isForeignCurrency && (!dailyRate || !dailyRate.found || Number(exchangeRate) <= 0);
+  // When country or branch changes, re-sync currency to local branch currency
+  useEffect(() => {
+    if (branchCurrency) {
+      setCurrency(branchCurrency.toUpperCase());
+    }
+  }, [countryId, countryBranchId, cityBranchId, branchCurrency]);
+
+  const isRatePending = !dailyRate || !dailyRate.found || Number(exchangeRate) <= 0;
 
   const canSave =
     Boolean(countryId && (countryBranchId || cityBranchId)) &&
@@ -2432,7 +2451,23 @@ export function CashEntryForm({
     setLastEntryId(null);
 
     if (!canSave) {
-      setMessage("Please select account, Debit/Credit transaction type, currency, and amount.");
+      if (!countryId || (!countryBranchId && !cityBranchId)) {
+        setMessage("Please select a Country and Branch before posting.");
+      } else if (!counterLedgerId && !selectedCrossBranchAccount) {
+        setMessage("Please select an Account (Step 2).");
+      } else if (!paymentType) {
+        setMessage("Please select a Transaction Type (Customer, Supplier, etc.).");
+      } else if (!paymentMode) {
+        setMessage("Please select Payment Mode (Debit or Credit).");
+      } else if (!amount || amount <= 0) {
+        setMessage("Please enter a valid Amount greater than 0.");
+      } else if ((currency || "").trim().length !== 3) {
+        setMessage("Please select a valid 3-letter currency.");
+      } else if (isRatePending) {
+        setMessage(`Cannot post: No approved exchange rate for ${currency || branchCurrency} on ${entryDate}. Country Admin must enter today's rate in Daily Exchange Rate module.`);
+      } else {
+        setMessage("Please select account, Debit/Credit transaction type, currency, and amount.");
+      }
       savingRef.current = false;
       return null;
     }
@@ -3652,6 +3687,39 @@ export function CashEntryForm({
 
               {/* ── MODAL BODY (TWO COLUMNS: LEFT 7 COLS, RIGHT 5 COLS) ── */}
               <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {message ? (
+                  <div
+                    className={cn(
+                      "rounded-xl border p-3 text-xs font-semibold flex items-center justify-between gap-2 shadow-xs",
+                      message.toLowerCase().includes("fail") ||
+                      message.toLowerCase().includes("error") ||
+                      message.toLowerCase().includes("cannot") ||
+                      message.toLowerCase().includes("please")
+                        ? "border-rose-200 bg-rose-50 text-rose-900 dark:bg-rose-950/30 dark:border-rose-800 dark:text-rose-300"
+                        : "border-emerald-200 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      {message.toLowerCase().includes("fail") ||
+                      message.toLowerCase().includes("error") ||
+                      message.toLowerCase().includes("cannot") ||
+                      message.toLowerCase().includes("please") ? (
+                        <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      )}
+                      <span>{message}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMessage(null)}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : null}
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                   
                   {/* ════════ LEFT COLUMN: MAIN ENTRY FLOW (STEPS 1 TO 6) ════════ */}
@@ -4551,8 +4619,31 @@ export function CashEntryForm({
                         </div>
                       </div>
 
+                      {/* Rate Pending Warning Banner */}
+                      {isRatePending && (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs">
+                          <div className="flex items-start gap-2">
+                            <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                            <div>
+                              <span className="font-bold">{tr("cj.mRatePendingTitle", "TODAY'S EXCHANGE RATE PENDING / MISSING:")}</span>{" "}
+                              {tr("cj.mRatePendingBody", "No approved exchange rate for {cur} on {date}. Country Admin must enter today's rate in Daily Exchange Rate module before financial postings can be saved.").replace("{cur}", String(currency || branchCurrency)).replace("{date}", String(entryDate))}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push("/dashboard/currency/daily-rates")}
+                            className="shrink-0 h-8 px-3 rounded-lg text-xs font-bold gap-1.5 border-amber-300 dark:border-amber-700 bg-white/80 dark:bg-slate-900 hover:bg-amber-100/50 text-amber-900 dark:text-amber-100 cursor-pointer"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            <span>{t(lang, "nav.super_admin_exchange_rate", "Daily Exchange Rate")}</span>
+                          </Button>
+                        </div>
+                      )}
+
                       {/* Footer Actions */}
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                         <Button
                           type="button"
                           variant="outline"
@@ -4560,42 +4651,38 @@ export function CashEntryForm({
                             resetPaymentDraft();
                             setMessage(t(lang, "cef.form_reset_msg", "Form reset."));
                           }}
-                          className="h-9 px-4 rounded-xl text-xs font-bold gap-1.5 border-slate-200 dark:border-slate-700"
+                          className="h-10 px-4 rounded-xl text-xs font-bold gap-1.5 border-slate-200 dark:border-slate-700"
                         >
                           <RefreshCw className="h-3.5 w-3.5" />
                           <span>{t(lang, "common.reset", "Reset")}</span>
                         </Button>
 
-                        {isRatePending && (
-                          <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold">
-                            <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 animate-pulse" />
-                            <div className="flex-1">
-                              <span className="font-bold">{tr("cj.mRatePendingTitle", "TODAY'S EXCHANGE RATE PENDING / MISSING:")}</span> {tr("cj.mRatePendingBody", "No approved exchange rate for {cur} on {date}. Country Admin must enter today's rate in Daily Exchange Rate module before financial postings can be saved.").replace("{cur}", String(currency || branchCurrency)).replace("{date}", String(entryDate))}
-                            </div>
-                          </div>
-                        )}
-
-                        <Button
-                          type="button"
-                          disabled={saving || !canSave}
-                          onClick={save}
-                          className={cn(
-                            "h-9 px-6 rounded-xl text-xs font-black gap-2 shadow-xs cursor-pointer",
-                            "dgt-cj-post",
-                            isRatePending
-                              ? "dgt-cj-post-pending bg-amber-600 hover:bg-amber-700 text-white cursor-not-allowed opacity-80"
-                              : "bg-blue-600 hover:bg-blue-700 text-white"
+                        <div className="flex items-center gap-3">
+                          {isRatePending && (
+                            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 hidden sm:inline-block">
+                              {tr("cj.mRatePendingBtn", "Today's Exchange Rate Pending / Missing")}
+                            </span>
                           )}
-                        >
-                          <Send className="h-3.5 w-3.5" />
-                          <span>
-                            {saving
-                              ? tr("cj.mPosting", "Posting...")
-                              : isRatePending
-                              ? tr("cj.mRatePendingBtn", "Today's Exchange Rate Pending / Missing")
-                              : tr("cj.mPost", "Post Entry")}
-                          </span>
-                        </Button>
+                          <Button
+                            type="button"
+                            disabled={saving}
+                            onClick={save}
+                            className={cn(
+                              "h-10 px-6 rounded-xl text-xs font-black gap-2 shadow-xs cursor-pointer",
+                              "dgt-cj-post",
+                              isRatePending || !canSave
+                                ? "dgt-cj-post-pending bg-amber-600 hover:bg-amber-700 text-white"
+                                : "bg-blue-600 hover:bg-blue-700 text-white"
+                            )}
+                          >
+                            <Send className="h-4 w-4" />
+                            <span>
+                              {saving
+                                ? tr("cj.mPosting", "Posting...")
+                                : tr("cj.mPost", "Save Entry")}
+                            </span>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -4630,7 +4717,9 @@ export function CashEntryForm({
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
-                                {selectedCrossBranchAccount ? (selectedCrossBranchAccount.name || selectedCrossBranchAccount.customerName) : (selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "—")}
+                                {selectedCrossBranchAccount
+                                  ? (selectedCrossBranchAccount.name || selectedCrossBranchAccount.customerName)
+                                  : (selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || t(lang, "ledger.select_account_ph", "Select account"))}
                               </h4>
                               {selectedCrossBranchAccount ? (
                                 <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200">
@@ -4641,12 +4730,20 @@ export function CashEntryForm({
                                   {localizeTerm(selectedCounterLedger.accountKind, lang)}
                                 </span>
                               ) : null}
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
-                                {tr("cj.mActive", "Active")}
+                              <span className={cn(
+                                "px-2 py-0.5 rounded-full text-[9px] font-bold border",
+                                (selectedCrossBranchAccount || selectedCounterLedger)
+                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200"
+                                  : "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200"
+                              )}>
+                                {(selectedCrossBranchAccount || selectedCounterLedger) ? tr("cj.mActive", "Active") : t(lang, "common.pending", "Pending")}
                               </span>
                             </div>
                             <p className="text-[11px] font-mono text-slate-500 font-bold mt-0.5">
-                              {tr("cj.mAccountNoDot", "Account No.")} {selectedCrossBranchAccount ? (selectedCrossBranchAccount.accountNumber || selectedCrossBranchAccount.code) : (selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "—")}
+                              {tr("cj.mAccountNoDot", "Account No.")}{" "}
+                              {selectedCrossBranchAccount
+                                ? (selectedCrossBranchAccount.accountNumber || selectedCrossBranchAccount.code)
+                                : (selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "—")}
                             </p>
                           </div>
                         </div>
@@ -4662,14 +4759,18 @@ export function CashEntryForm({
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">{tr("cj.mAccountName", "Account Name")}</span>
                               <span className="font-bold text-slate-900 dark:text-white">
-                                {selectedCrossBranchAccount ? (selectedCrossBranchAccount.name || selectedCrossBranchAccount.customerName) : (selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "—")}
+                                {selectedCrossBranchAccount
+                                  ? (selectedCrossBranchAccount.name || selectedCrossBranchAccount.customerName)
+                                  : (selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "—")}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">{tr("cj.mAccountNoDot", "Account No.")}</span>
                               <span className="font-mono font-bold text-slate-900 dark:text-white">
-                                {selectedCrossBranchAccount ? (selectedCrossBranchAccount.accountNumber || selectedCrossBranchAccount.code) : (selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "—")}
+                                {selectedCrossBranchAccount
+                                  ? (selectedCrossBranchAccount.accountNumber || selectedCrossBranchAccount.code)
+                                  : (selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "—")}
                               </span>
                             </div>
 

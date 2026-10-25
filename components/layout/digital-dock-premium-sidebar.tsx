@@ -81,6 +81,7 @@ import {
   Trash2,
   Truck,
   UserCheck,
+  UserPlus,
   Users,
   Wallet,
   Warehouse,
@@ -258,8 +259,16 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Final Payment"), href: "/dashboard/journal/sales-order-payment/final", icon: CheckCircle2 },
         ],
       },
+    ],
+  },
+  {
+    key: "expenses",
+    label: nt("Expenses"),
+    icon: Banknote,
+    children: [
       { label: nt("Daily Operational Expenses"), href: "/dashboard/roznamcha/daily-expenses-bill", icon: Banknote },
       { label: nt("Office / Home Expenses Bill"), href: "/dashboard/roznamcha/expenses-bill", icon: FileSpreadsheet },
+      { label: nt("Bill Expenses"), href: "/dashboard/expenses/bill-expenses", icon: Receipt },
     ],
   },
   {
@@ -355,7 +364,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: FileSpreadsheet,
         children: [
           { label: nt("Bill Cost & Profit Overview"), href: "/dashboard/bill-cost-profit", icon: BarChart3 },
-          { label: nt("Bill Expenses Entry"), href: "/dashboard/expenses/bill-expenses", icon: Banknote },
+          { label: nt("Bill Expenses Entry"), href: "/dashboard/expenses/bill-expenses?source=bcp", icon: Banknote },
           { label: nt("Business Edit Invoice"), href: "/dashboard/business-edit-invoice?source=bcp", icon: FileText },
           { label: nt("BCP Purchase Cost Audit"), href: "/dashboard/bill-cost-profit/purchase", icon: ShoppingCart },
           { label: nt("BCP Sales Profit Analytics"), href: "/dashboard/bill-cost-profit/sales", icon: TrendingUp },
@@ -415,7 +424,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       },
       { label: nt("Shipping Lines"), href: "/dashboard/shipping-line", icon: Ship },
       { label: nt("BL Entry"), href: "/dashboard/shipping-line/bl-entry", icon: FileText, upgraded: true },
-      { label: nt("Track Shipment (Container & Vessel)"), href: "/dashboard/shipping-line/tracking", icon: Compass, tone: "red" },
+      { label: nt("Track Shipment (Container & Vessel)"), href: "/dashboard/shipping-line/tracking?type=vessel", icon: Compass, tone: "red" },
       { label: nt("Free Country Shipping Claims"), href: "/dashboard/inter-country-transfers?category=shipping_line", icon: ArrowRightLeft },
       { label: nt("Clearing Workspace"), href: "/dashboard/clearing-agent/clearing-workspace", icon: FileCheck2 },
       { label: nt("Logistics Tracking Dashboard"), href: "/dashboard/logistics", icon: BarChart3 },
@@ -423,6 +432,13 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: nt("Shipping Account Approvals"), href: "/dashboard/shipping-line/account-approvals", icon: ShieldCheck },
       { label: nt("Shipping Accounts Setup"), href: "/dashboard/accounts/setup?domain=shipping", icon: BookOpen, upgraded: true },
     ],
+  },
+  {
+    key: "shipping-tracking",
+    label: nt("Tracking"),
+    icon: Compass,
+    href: "/dashboard/shipping-line/tracking",
+    tone: "red",
   },
   {
     key: "transfer-handover-center",
@@ -879,20 +895,23 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
 
   if (isShippingOnly) {
     // Shipping Line ecosystem:
-    // 1. Dashboard (Logistics Tracking / Agent dashboard)
-    // 2. New Entry (User Accounts, Accounts & Ledger Setup: New Account, New Ledger, General Report)
-    // 3. Daily Payment (Daily Cash Entry Roznamcha, Daily Expenses Bill, Office/Home Expenses)
-    // 4. Ledgers (Detailed Statement, General Report, Outstanding Ledgers)
-    // 5. Shipping & Clearing (All shipping modules)
-    // 6. Transfer & Handover Center
-    // 7. Communication (Email, WhatsApp, Communication Center Hub, SMS)
-    // 8. Reports & Settings (Shipping Reports, Document Center, Settings)
+    // 1. Dashboard (City Shipping Line / Country Shipping Line / Super Shipping Line)
+    // 2. Shipping & Clearing
+    // 3. Tracking (mandatory for all shipping users)
+    // 4. Accounts
+    // 5. Customers
+    // 6. Suppliers
+    // 7. Reports
+    // 8. Settings
+    // (Branch Admin also receives: New User, New Account, User Permission Management, Branch Reports)
+    // Expenses submenu is REMOVED from Shipping Line user menu as explicitly instructed.
     const ALLOWED_SHIPPING_KEYS = new Set([
       "dashboard",
+      "shipping-tracking",
+      "shipping-cleaning",
       "new-entry",
       "daily-payment",
       "ledgers",
-      "shipping-cleaning",
       "transfer-handover-center",
       "general-office",
       "crm-reports",
@@ -903,24 +922,39 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     ]);
 
     return items
-      .filter((it: any) => ALLOWED_SHIPPING_KEYS.has(it.key) && (it.key === "dashboard" || isPermitted(it)))
+      .filter((it: any) => ALLOWED_SHIPPING_KEYS.has(it.key) && (it.key === "dashboard" || it.key === "shipping-tracking" || isPermitted(it)))
       .map((it: any) => {
         if (it.key === "dashboard") {
-          // the Logistics dashboard is the Shipping home only for a login that may open it; one unrelated token must not unlock it
-          const logisticsAllowed = evaluateRouteAccess({
-            pathname: "/dashboard/logistics",
-            permissions: [...userPermissions],
-            roles: [...userRoles],
-            operationalDomains: shippingContext?.operationalDomains ?? null,
-            canViewFinancials: shippingContext?.canViewFinancials ?? null,
-          }).allowed;
-          return { ...it, href: logisticsAllowed ? "/dashboard/logistics" : "/dashboard" };
+          const isSuperShipping = userRoles.has("shipping_super_admin") || userRoles.has("global_operations_admin") || userRoles.has("super_admin");
+          const isCountryShipping = userRoles.has("country_operations_admin") || userRoles.has("country_admin");
+          const targetHref = isSuperShipping
+            ? "/dashboard/super-admin/shipping-line"
+            : isCountryShipping
+            ? "/dashboard/country/shipping-line"
+            : "/dashboard/city/shipping-line";
+          return { ...it, href: targetHref };
+        }
+        if (it.key === "shipping-tracking") {
+          return it;
         }
         if (it.key === "shipping-cleaning") {
           return { ...it, defaultOpen: true, children: filterTree(it.children || []) };
         }
         if (it.key === "new-entry") {
+          const isBranchAdmin = userRoles.has("city_branch_admin") || userRoles.has("shipping_line_admin") || userRoles.has("country_admin") || userRoles.has("super_admin");
           const kids = filterTree(it.children || []);
+          if (isBranchAdmin) {
+            const adminKids: any[] = [
+              { label: nt("Branch User Registration"), href: "/dashboard/new-entry/users/registration?scope=branch", icon: UserPlus },
+              { label: nt("Branch Account Setup"), href: "/dashboard/accounts/setup?domain=shipping&scope=branch", icon: BookOpen },
+              { label: nt("User Permission Management"), href: "/dashboard/branch-management/permissions", icon: ShieldCheck },
+            ];
+            return {
+              ...it,
+              defaultOpen: false,
+              children: [...adminKids, ...kids.filter((k: any) => !["/dashboard/new-entry/users/registration", "/dashboard/accounts/setup"].includes(k.href))]
+            };
+          }
           return kids.length > 0 ? { ...it, defaultOpen: false, children: kids } : null;
         }
         if (it.key === "general-office") {
@@ -931,16 +965,13 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
           return isPermitted(it) ? it : null;
         }
         if (it.key === "daily-payment") {
-          const hasRoznamchaOrExpense =
+          const hasRoznamcha =
             userPermissions.has("roznamcha:read") ||
-            userPermissions.has("roznamcha:*") ||
-            userPermissions.has("expenses:read") ||
-            userPermissions.has("expenses:*");
-          if (!hasRoznamchaOrExpense) return null;
+            userPermissions.has("roznamcha:*");
+          if (!hasRoznamcha) return null;
+          // In Shipping Line user menu, Expenses submenu (all 3 options) is removed
           const allowedHrefs = new Set([
-            "/dashboard/roznamcha/cash-entry",
-            "/dashboard/roznamcha/daily-expenses-bill",
-            "/dashboard/roznamcha/expenses-bill"
+            "/dashboard/roznamcha/cash-entry"
           ]);
           const kids = filterTree((it.children || []).filter((c: any) => allowedHrefs.has(c.href)));
           return kids.length > 0 ? { ...it, defaultOpen: false, children: kids } : null;
@@ -970,8 +1001,13 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
           return kids.length > 0 ? { ...it, defaultOpen: false, children: kids } : null;
         }
         if (it.key === "reports-all") {
+          const branchReportItem = { label: nt("Branch Reports"), href: "/dashboard/reports/branch-reports", icon: BarChart3 };
           const kids = filterTree(it.children || []);
-          return kids.length > 0 ? { ...it, defaultOpen: false, children: kids } : null;
+          return {
+            ...it,
+            defaultOpen: false,
+            children: [branchReportItem, ...kids]
+          };
         }
         if (it.key === "settings-menu") {
           const allowedSettingsHrefs = new Set([
@@ -1203,7 +1239,7 @@ export function DigitalDockPremiumSidebar({
 
   return (
     <div className="flex h-full w-full flex-col bg-white text-[#0f172a] select-none font-sans overflow-hidden">
-      {/* 1. Header: Damaan Business Group */}
+      {/* 1. Header: DGT LLC ERP SYSTEM */}
       <div className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800/80">
         <Link
           href="/dashboard"
@@ -1211,16 +1247,16 @@ export function DigitalDockPremiumSidebar({
           className="flex items-center gap-3 group"
         >
           <img
-            src="/images/damaan-logo.png"
-            alt={nt("Damaan Business Group")}
-            className="h-10 w-10 rounded-full object-contain shadow-md border border-amber-500/30 shrink-0 group-hover:scale-105 transition-transform"
+            src="/assets/dgt-icon.svg"
+            alt={nt("DGT LLC ERP SYSTEM")}
+            className="h-10 w-10 rounded-xl object-contain shadow-md shrink-0 group-hover:scale-105 transition-transform"
           />
           <div className="min-w-0">
             <h1 className="text-[15px] font-black tracking-tight text-[#0a192f] group-hover:text-[#2563eb] transition-colors leading-tight truncate">
-              {displayBrand}
+              DGT LLC
             </h1>
-            <p className="text-[10px] font-bold text-amber-700 dark:text-amber-500 tracking-wider uppercase truncate mt-0.5">
-              {isSuper ? "DGT.LLC • Global Group" : `DGT.LLC • ${displayBrand}`}
+            <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 tracking-wider uppercase truncate mt-0.5">
+              ERP SYSTEM
             </p>
           </div>
         </Link>

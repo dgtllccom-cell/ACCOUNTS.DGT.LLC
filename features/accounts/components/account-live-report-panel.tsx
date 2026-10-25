@@ -401,7 +401,7 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("accountTitle", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {trName(effectiveBank?.account_title || accountName) || "-"}
+                {trName(effectiveBank?.account_title) || (effectiveBank ? trName(accountName) : "-")}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">

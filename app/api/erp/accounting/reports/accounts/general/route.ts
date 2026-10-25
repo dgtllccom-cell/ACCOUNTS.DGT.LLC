@@ -1267,7 +1267,7 @@ export async function GET(request: NextRequest) {
         profile?.full_name ||
         "-";
       const warehouseVal = findContact("warehouse") || "-";
-      const bankVal = linkedBnk?.bank_name || (account.is_control_account ? accountName : "-");
+      const bankVal = linkedBnk?.bank_name || "-";
       // Linked company name (raw); localized as a batch below (companies table) via the
       // central resolver so linked company names follow the same policy as account names.
       const companyVal = linkedComp?.name || company?.name || profile?.full_name || "-";

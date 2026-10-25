@@ -1522,45 +1522,57 @@ export function AccountProfileView({
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Mobile / WhatsApp:</span>
                   <div className="flex items-center gap-2">
-                    <a
-                      href={`tel:${selectedRow.customer?.mobile_number || selectedRow.customer?.phone_number || "+971501234567"}`}
-                      className="font-mono font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
-                    >
-                      {selectedRow.customer?.mobile_number || selectedRow.customer?.phone_number || (selectedRow as any).contactPhone || "+971 50 123 4567"}
-                    </a>
-                    <a
-                      href={`https://wa.me/${(selectedRow.customer?.mobile_number || "+971501234567").replace(/[^0-9]/g, "")}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                      title="Direct WhatsApp"
-                    >
-                      <MessageCircle className="h-3 w-3" />
-                    </a>
+                    {selectedRow.customer?.mobile_number || selectedRow.customer?.phone_number || (selectedRow as any).contactPhone ? (
+                      <>
+                        <a
+                          href={`tel:${selectedRow.customer?.mobile_number || selectedRow.customer?.phone_number || (selectedRow as any).contactPhone}`}
+                          className="font-mono font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+                        >
+                          {selectedRow.customer?.mobile_number || selectedRow.customer?.phone_number || (selectedRow as any).contactPhone}
+                        </a>
+                        <a
+                          href={`https://wa.me/${(selectedRow.customer?.mobile_number || selectedRow.customer?.phone_number || (selectedRow as any).contactPhone || "").replace(/[^0-9]/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                          title={t(lang, "common.whatsapp", "WhatsApp")}
+                        >
+                          <MessageCircle className="h-3 w-3" />
+                        </a>
+                      </>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Official Email:</span>
-                  <a
-                    href={`mailto:${selectedRow.customer?.email_address || "contact@abctrading.ae"}`}
-                    className="font-mono font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    {selectedRow.customer?.email_address || (selectedRow as any).contactEmail || "contact@abctrading.ae"}
-                  </a>
+                  {selectedRow.customer?.email_address || (selectedRow as any).contactEmail ? (
+                    <a
+                      href={`mailto:${selectedRow.customer?.email_address || (selectedRow as any).contactEmail}`}
+                      className="font-mono font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      {selectedRow.customer?.email_address || (selectedRow as any).contactEmail}
+                    </a>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Registered Address:</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {selectedRow.customer?.address || "Office 402, Al Ras Tower, Deira, Dubai, UAE"}
+                    {selectedRow.customer?.address || "—"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Primary Bank Name:</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRow.bankName || "Emirates NBD PJSC"}</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRow.bankName || "—"}</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Bank Account Title:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.accountName}</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {(selectedRow as any).bankAccountTitle || (selectedRow.bankName ? selectedRow.accountName : "—")}
+                  </span>
                 </div>
                 {selectedRow.contacts && selectedRow.contacts.length > 0 && (
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">

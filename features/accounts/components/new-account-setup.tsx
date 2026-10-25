@@ -45,7 +45,8 @@ import {
   Warehouse,
   ShieldCheck,
   Layers,
-  HelpCircle
+  HelpCircle,
+  AlertCircle
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -1705,6 +1706,15 @@ export function NewAccountSetup({
             </div>
           ) : (
             <>
+              {message && !saved && currentStep !== activeSteps[activeSteps.length - 1] && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50/90 p-3 text-xs font-semibold text-rose-800 flex items-center justify-between gap-2 shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+                    <span>{message}</span>
+                  </div>
+                  <button type="button" onClick={() => setMessage("")} className="text-rose-600 hover:text-rose-800 text-xs font-bold cursor-pointer">✕</button>
+                </div>
+              )}
           {/* Step 1: Account Info */}
           {currentStep === 1 && (
             <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm space-y-5">
@@ -3619,9 +3629,22 @@ export function NewAccountSetup({
               {message && (
                 <div className={saved
                   ? "rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-semibold text-emerald-800"
-                  : "rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs font-semibold text-amber-800"
+                  : "rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-800"
                 }>
                   {message}
+                </div>
+              )}
+
+              {!readyToSave && !message && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-3.5 py-2 text-xs font-medium text-amber-800 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
+                  <span>
+                    {!country ? getLabel("countryRequired", lang) || "Country is required." :
+                     (ownershipLevel !== "country" && !branch) ? getLabel("branchRequired", lang) || "Branch is required." :
+                     !category ? getLabel("categoryRequired", lang) || "Category is required." :
+                     !accountName.trim() ? getLabel("accountNameRequired", lang) || "Account Name is required." :
+                     getLabel("completeRequiredFields", lang) || "Please fill all required fields before saving."}
+                  </span>
                 </div>
               )}
 
@@ -3641,7 +3664,7 @@ export function NewAccountSetup({
                   type="button"
                   size="default"
                   onClick={saveEntry}
-                  disabled={!readyToSave || saving}
+                  disabled={saving}
                   className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-6 h-10 font-bold tracking-wide rounded-xl shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {saving ? (

@@ -31,9 +31,13 @@ export function channelAllowsSession(channel: AppChannel, session: ChannelSessio
 
 /** Where the Shipping app sends a login after sign-in (the Business app keeps the normal role dashboard). */
 export function landingForChannel(channel: AppChannel | null, session: Pick<ErpSession, "roles" | "isSuperAdmin" | "isShippingScoped" | "operationalDomains">): string {
-  const normal = dashboardForRoles(session.roles, { isSuperAdmin: session.isSuperAdmin, isShippingScoped: session.isShippingScoped });
+  const normal = dashboardForRoles(session.roles, {
+    isSuperAdmin: session.isSuperAdmin,
+    isShippingScoped: session.isShippingScoped,
+    operationalDomains: session.operationalDomains
+  });
   if (channel !== "bs") return normal;
   // a shipping / clearing login already gets a shipping-side dashboard; a Super Admin or a "both" login gets the shipping home
-  const shippingSide = /\/(logistics|shipping-line|clearing-agent|agent)/.test(normal);
-  return shippingSide ? normal : "/dashboard/shipping-line";
+  const shippingSide = /\/(logistics|shipping-line|clearing-agent|agent|city\/shipping-line|country\/shipping-line|super-admin\/shipping-line)/.test(normal);
+  return shippingSide ? normal : "/dashboard/city/shipping-line";
 }

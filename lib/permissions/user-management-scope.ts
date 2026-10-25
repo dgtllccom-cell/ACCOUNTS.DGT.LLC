@@ -38,7 +38,7 @@ export function isUserCreator(session: ManagerSession): boolean {
     Boolean(session.permissions?.some((p) => p === "users:create" || p === "users:*")));
 }
 
-const BRANCH_STAFF_ROLES = new Set(["staff_user", "accountant", "cashier", "agent_user", "auditor_viewer"]);
+const BRANCH_STAFF_ROLES = new Set(["staff_user", "accountant", "cashier", "agent_user", "shipping_line_user", "auditor_viewer"]);
 
 export function canDelegateUserRole(session: ManagerSession, role: string): boolean {
   if (session.isSuperAdmin) return true;
@@ -46,7 +46,7 @@ export function canDelegateUserRole(session: ManagerSession, role: string): bool
   if (domainSuperAdminDomain(session.roles)) return BRANCH_STAFF_ROLES.has(role) || role === "main_branch_admin" || role === "city_branch_admin";
   if (session.roles.includes("country_admin")) return BRANCH_STAFF_ROLES.has(role) || role === "main_branch_admin" || role === "city_branch_admin" || role === "country_user";
   if (session.roles.includes("main_branch_admin")) return BRANCH_STAFF_ROLES.has(role);
-  return session.roles.includes("city_branch_admin") && BRANCH_STAFF_ROLES.has(role) && role !== "agent_user";
+  return session.roles.includes("city_branch_admin") && BRANCH_STAFF_ROLES.has(role);
 }
 
 /** Validate the complete target against ONE authoritative assignment, rather than
@@ -71,15 +71,15 @@ export function userCreationTargetError(session: ManagerSession, target: {
     if (a.operationalDomain !== "both" && a.operationalDomain !== target.operationalDomain) return false;
     if (a.role === "country_admin") return true;
     if (a.role === "main_branch_admin") return Boolean(a.countryBranchId && a.countryBranchId === target.countryBranchId);
-    return Boolean(a.cityBranchId && a.cityBranchId === target.cityBranchId &&
-      (a.countryBranchId ?? null) === (target.countryBranchId ?? null));
+    if (a.role === "city_branch_admin") return Boolean(a.cityBranchId && a.cityBranchId === target.cityBranchId);
+    return false;
   });
   return matched ? null : "Country, branch or operational domain is outside your delegated scope.";
 }
 
 export function isUserManager(session: ManagerSession): boolean {
   if (session.isSuperAdmin) return true;
-  return session.roles.some((r) => r === "country_admin" || r === "main_branch_admin") || domainSuperAdminDomain(session.roles) !== null;
+  return session.roles.some((r) => r === "country_admin" || r === "main_branch_admin" || r === "city_branch_admin") || domainSuperAdminDomain(session.roles) !== null;
 }
 
 /** Roles only the Global Super Admin may grant or edit. */
@@ -120,6 +120,9 @@ export function userInManagerScope(session: ManagerSession, assignment: Assignme
   if (own && (assignment.operational_domain ?? "business") !== own) return false;
   if (!assignment.country_id || !session.countryIds.includes(assignment.country_id)) return false;
   if (session.roles.includes("country_admin")) return true;
+  if (session.roles.includes("city_branch_admin")) {
+    return Boolean(assignment.city_branch_id && session.cityBranchIds.includes(assignment.city_branch_id));
+  }
   return Boolean(assignment.country_branch_id && session.countryBranchIds.includes(assignment.country_branch_id));
 }
 

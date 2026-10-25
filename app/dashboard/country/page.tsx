@@ -1,12 +1,13 @@
 import Link from "next/link";
 import type { Route } from "next";
 import postgres from "postgres";
-import { ArrowRight, Banknote, Building, Database, GitBranch, Globe, ReceiptText, ShieldCheck, ShoppingCart, Users, Activity, ListFilter, RefreshCw, CheckCircle2, ChevronRight } from "lucide-react";
+import { ArrowRight, Banknote, Building, Database, GitBranch, Globe, ReceiptText, ShieldCheck, Ship, ShoppingCart, Users, Activity, ListFilter, RefreshCw, CheckCircle2, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/layout/stat-card";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { CountryProductsDashboard } from "@/features/dashboard/components/country-products-dashboard";
 import { CountryDashboardOverview } from "@/features/dashboard/components/country-dashboard-overview";
@@ -448,8 +449,15 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
               </p>
             </div>
 
-            {/* Action Buttons: View Products / View Overview toggle */}
-            <div className="flex items-center gap-2.5 self-start md:self-center shrink-0">
+            {/* Action Buttons: Shipping Line Dashboard & View Products / View Overview toggle */}
+            <div className="flex items-center gap-2.5 self-start md:self-center shrink-0 flex-wrap">
+              <Link
+                href={`/dashboard/country/shipping-line?countryId=${countryId}` as Route}
+                className="h-9 px-4 rounded-xl border border-blue-200 bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold inline-flex items-center gap-2 shadow-xs transition-all cursor-pointer dark:border-blue-900/50 dark:bg-slate-900 dark:text-blue-300"
+              >
+                <Ship className="h-4 w-4 text-blue-600" />
+                <span>{translateHeader(lang, "Shipping Line Dashboard")}</span>
+              </Link>
               <Link
                 href={`/dashboard/country?countryId=${countryId}&tab=${currentTab === "overview" ? "products" : "overview"}` as Route}
                 className="h-9 px-4 rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] text-white text-xs font-bold inline-flex items-center gap-2 shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
