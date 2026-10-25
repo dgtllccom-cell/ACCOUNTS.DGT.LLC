@@ -107,6 +107,7 @@ export type RoznamchaCashEntryReportData = {
     convertedAmount?: number;
   }>;
 
+  showUsdReporting?: boolean;
   totalDebit?: number;
   totalCredit?: number;
   balanceDirection?: "DR" | "CR" | "—";
@@ -627,6 +628,7 @@ export function openA4ReportWindow(input: {
     `;
   } else if (input.cashEntryData) {
     const c = input.cashEntryData;
+    const showUsdCols = Boolean(c.showUsdReporting);
     const fmtM = (n: number) => new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
     const linesHtml = (c.financialLines || []).map((l, i) => `
       <tr>
@@ -642,10 +644,12 @@ export function openA4ReportWindow(input: {
         <td style="text-align: right; font-family: monospace; font-size: 11px; font-weight: 800; color: ${l.credit ? '#16a34a' : '#94a3b8'};">
           ${l.credit ? fmtM(l.credit) : "—"}
         </td>
-        <td style="text-align: center; font-family: monospace; font-size: 10px; color: #64748b;">${Number(l.exchangeRate || 1).toFixed(4)}</td>
-        <td style="text-align: right; font-family: monospace; font-size: 11px; font-weight: 800; color: #0f172a;">
-          ${l.convertedAmount ? "$" + fmtM(l.convertedAmount) : "—"}
-        </td>
+        ${showUsdCols ? `
+          <td style="text-align: center; font-family: monospace; font-size: 10px; color: #64748b;">${Number(l.exchangeRate || 1).toFixed(4)}</td>
+          <td style="text-align: right; font-family: monospace; font-size: 11px; font-weight: 800; color: #0f172a;">
+            ${l.convertedAmount ? "$" + fmtM(l.convertedAmount) : "—"}
+          </td>
+        ` : ""}
       </tr>
     `).join("");
 
@@ -743,12 +747,14 @@ export function openA4ReportWindow(input: {
           <thead style="background: #fafafa; border-bottom: 1px solid #e2e8f0;">
             <tr>
               <th style="padding: 6px 8px; width: 5%; text-align: center; font-size: 9px;">#</th>
-              <th style="padding: 6px 8px; width: 35%; text-align: left; font-size: 9px;">Description / Account</th>
-              <th style="padding: 6px 8px; width: 8%; text-align: center; font-size: 9px;">Curr</th>
-              <th style="padding: 6px 8px; width: 14%; text-align: right; font-size: 9px; color: #e11d48;">Debit</th>
-              <th style="padding: 6px 8px; width: 14%; text-align: right; font-size: 9px; color: #16a34a;">Credit</th>
-              <th style="padding: 6px 8px; width: 10%; text-align: center; font-size: 9px;">Rate</th>
-              <th style="padding: 6px 8px; width: 14%; text-align: right; font-size: 9px;">Converted (USD)</th>
+              <th style="padding: 6px 8px; width: ${showUsdCols ? '35%' : '47%'}; text-align: left; font-size: 9px;">Description / Account</th>
+              <th style="padding: 6px 8px; width: ${showUsdCols ? '8%' : '12%'}; text-align: center; font-size: 9px;">Curr</th>
+              <th style="padding: 6px 8px; width: ${showUsdCols ? '14%' : '18%'}; text-align: right; font-size: 9px; color: #e11d48;">Debit</th>
+              <th style="padding: 6px 8px; width: ${showUsdCols ? '14%' : '18%'}; text-align: right; font-size: 9px; color: #16a34a;">Credit</th>
+              ${showUsdCols ? `
+                <th style="padding: 6px 8px; width: 10%; text-align: center; font-size: 9px;">Rate</th>
+                <th style="padding: 6px 8px; width: 14%; text-align: right; font-size: 9px;">Converted (USD)</th>
+              ` : ""}
             </tr>
           </thead>
           <tbody style="divide-y: 1px solid #f1f5f9;">
@@ -765,7 +771,7 @@ export function openA4ReportWindow(input: {
               <td style="padding: 8px 10px; text-align: right; font-family: monospace; font-size: 11px; font-weight: 900; color: #16a34a;">
                 ${fmtM(c.totalCredit || 0)}
               </td>
-              <td colspan="2" style="padding: 8px 10px; text-align: right;">
+              <td colspan="${showUsdCols ? '2' : '1'}" style="padding: 8px 10px; text-align: right;">
                 <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
                   <span style="font-size: 8px; text-transform: uppercase; color: #64748b;">Final:</span>
                   <span style="font-family: monospace; font-size: 12px; font-weight: 900; color: #2563eb;">

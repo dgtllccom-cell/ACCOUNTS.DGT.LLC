@@ -5,6 +5,7 @@ import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permis
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
+import { assertBillExpenseModuleAllowed, canChooseExpenseSection, effectiveExpenseSection, modulesForSection } from "@/lib/permissions/bill-expense-domain";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,11 @@ export async function GET(request: NextRequest) {
     const from = sp.get("from") || null;
     const to = sp.get("to") || null;
     const moduleF = sp.get("module") && sp.get("module") !== "all" ? sp.get("module") : null;
+    // Business and Shipping Line expenses stay separate: the login's operational domain decides which source modules a report may include.
+    if (moduleF) assertBillExpenseModuleAllowed(session, moduleF);
+    const section = effectiveExpenseSection(session, sp.get("section"));
+    const domainModules = [...modulesForSection(section)];
+    const functionalCurrencyF = (sp.get("functionalCurrency") || "").trim().toUpperCase().slice(0, 3);
     const partyF = (sp.get("party") || "").trim();
     const expenseTypeF = sp.get("expenseType") && sp.get("expenseType") !== "all" ? sp.get("expenseType") : null;
     const currencyF = sp.get("currency") && sp.get("currency") !== "all" ? sp.get("currency") : null;
@@ -98,6 +104,7 @@ export async function GET(request: NextRequest) {
           where l.bill_expense_id = be.id and l.deleted_at is null
         ) pl on true
         where be.deleted_at is null
+          and be.source_module = any(${domainModules})
           ${effectiveCountryId ? sql`and be.country_id = ${effectiveCountryId}` : sql``}
           ${effectiveBranchId ? sql`and be.city_branch_id = ${effectiveBranchId}` : sql``}
           ${from ? sql`and be.transaction_date >= ${from}` : sql``}
@@ -114,6 +121,18 @@ export async function GET(request: NextRequest) {
       } catch {
         // keep original values on failure
       }
+
+      // ONE functional currency per report. Bills of several countries can have different functional currencies; adding them
+      // would produce a meaningless total, so the report runs for a single currency (default: the one with most bills) and the
+      // caller gets the list of available currencies to switch between.
+      const currencyCounts = new Map<string, number>();
+      for (const b of bills) {
+        const c = String(b.functional_currency || "USD").toUpperCase().slice(0, 3);
+        currencyCounts.set(c, (currencyCounts.get(c) || 0) + 1);
+      }
+      const availableCurrencies = [...currencyCounts.entries()].map(([currency, bills]) => ({ currency, bills })).sort((a, b) => b.bills - a.bills || a.currency.localeCompare(b.currency));
+      const selectedFc = availableCurrencies.some((x) => x.currency === functionalCurrencyF) ? functionalCurrencyF : (availableCurrencies[0]?.currency || "USD");
+      bills = bills.filter((b: any) => String(b.functional_currency || "USD").toUpperCase().slice(0, 3) === selectedFc);
 
       const billIds = bills.map((b: any) => b.id);
 
@@ -275,7 +294,7 @@ export async function GET(request: NextRequest) {
       });
 
       // ---- report shaping --------------------------------------------------
-      const fcOf = model[0]?.functionalCurrency || "USD";
+      const fcOf = selectedFc;
       let columns: Col[] = [];
       let rows: Record<string, any>[] = [];
       let totals: Record<string, any> = {};
@@ -543,6 +562,10 @@ export async function GET(request: NextRequest) {
       return {
         report,
         functionalCurrency: fcOf,
+        section,
+        canChooseSection: canChooseExpenseSection(session),
+        availableCurrencies,
+        mixedCurrencyScope: availableCurrencies.length > 1,
         scope: { level: scope.level, countryId: effectiveCountryId, branchId: effectiveBranchId, label: scope.scopeLabel },
         filters: { from, to, module: moduleF, party: partyF || null, expenseType: expenseTypeF, currency: currencyF, status: statusF, postingStatus: postingF },
         columns,

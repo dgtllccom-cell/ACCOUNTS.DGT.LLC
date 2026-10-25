@@ -5,6 +5,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 import { auditApiAction } from "@/lib/api/audit";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { assertBillExpenseModuleAllowed } from "@/lib/permissions/bill-expense-domain";
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +24,12 @@ const patchSchema = lineSchema.partial().extend({ lineId: z.string().uuid() });
 const deleteSchema = z.object({ lineId: z.string().uuid() });
 
 /** Loads the parent register row and enforces country/branch scope + eligibility. */
-async function loadParentInScope(sql: any, id: string, scope: ReturnType<typeof resolveReportScope>) {
+async function loadParentInScope(sql: any, id: string, scope: ReturnType<typeof resolveReportScope>, session: Parameters<typeof assertBillExpenseModuleAllowed>[0]) {
   const [be] = await sql`
-    select id, country_id, city_branch_id, eligibility, currency
+    select id, source_module, country_id, city_branch_id, eligibility, currency
     from public.bill_expenses where id = ${id}::uuid and deleted_at is null limit 1`;
   if (!be) throw new ApiClientError("Bill expense not found", { status: 404, code: "NOT_FOUND" });
+  assertBillExpenseModuleAllowed(session, be.source_module);
   if (scope.level === "country" && scope.countryId && be.country_id !== scope.countryId) {
     throw new ApiClientError("This bill is outside your authorized scope.", { status: 403, code: "FORBIDDEN" });
   }
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const scope = resolveReportScope(session);
 
     const created = await withLocalPg(async (sql) => {
-      await loadParentInScope(sql, id, scope);
+      await loadParentInScope(sql, id, scope, session);
       const [{ next_serial }] = await sql`
         select coalesce(max(row_serial), 0) + 1 as next_serial
         from public.bill_expense_lines where bill_expense_id = ${id}::uuid and deleted_at is null`;
@@ -99,7 +101,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const scope = resolveReportScope(session);
 
     const ok = await withLocalPg(async (sql) => {
-      await loadParentInScope(sql, id, scope);
+      await loadParentInScope(sql, id, scope, session);
       const [existing] = await sql`
         select id, currency, amount, exchange_rate, tax_pct, posting_status
         from public.bill_expense_lines
@@ -147,7 +149,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     const scope = resolveReportScope(session);
 
     const ok = await withLocalPg(async (sql) => {
-      await loadParentInScope(sql, id, scope);
+      await loadParentInScope(sql, id, scope, session);
       const [existing] = await sql`
         select posting_status from public.bill_expense_lines
         where id = ${body.lineId}::uuid and bill_expense_id = ${id}::uuid and deleted_at is null limit 1`;

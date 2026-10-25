@@ -5,6 +5,8 @@ import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permis
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeJoinedNames } from "@/lib/i18n/localize-records";
+import { SHIPPING_EXPENSE_BILL_TITLES, canChooseExpenseSection, effectiveExpenseSection } from "@/lib/permissions/bill-expense-domain";
+import { sumByCurrency, singleCurrency } from "@/lib/finance/currency-totals";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +34,9 @@ export async function GET(request: NextRequest) {
     );
     const q = (sp.get("q") || "").trim();
     const limit = Math.min(Math.max(Number(sp.get("limit") || 500), 1), 2000);
+    // Business and Shipping Line expense bills stay separate (by bill title).
+    const shippingTitles = [...SHIPPING_EXPENSE_BILL_TITLES];
+    const domainMode = effectiveExpenseSection(session, sp.get("section"));
 
     const rows = await withLocalPg(async (sql) => {
       return sql`
@@ -51,6 +56,7 @@ export async function GET(request: NextRequest) {
         left join public.city_branches cb on cb.id = b.branch_id
         left join public.countries c on c.id = cb.country_id
         where b.deleted_at is null
+          ${domainMode === "shipping" ? sql`and b.bill_title = any(${shippingTitles})` : domainMode === "business" ? sql`and not (b.bill_title = any(${shippingTitles}))` : sql``}
           ${effectiveCountryId ? sql`and cb.country_id = ${effectiveCountryId}` : sql``}
           ${effectiveBranchId ? sql`and cb.id = ${effectiveBranchId}` : sql``}
           ${q ? sql`and (b.serial_no ilike ${`%${q}%`} or b.bill_title ilike ${`%${q}%`} or b.reference_no ilike ${`%${q}%`})` : sql``}
@@ -82,16 +88,24 @@ export async function GET(request: NextRequest) {
       countryId: r.country_id,
       countryName: r.country_name,
       branchLabel: r.city_branch_name || r.country_name || "—",
-      currency: r.line_currency || r.country_currency || "",
+      // grand_amount is stored in the BRANCH's currency (the line's own currency is only the currency it was typed in)
+      currency: r.country_currency || "",
+      lineCurrency: r.line_currency || null,
       grandTotal: Number(r.grand_total || 0),
       createdAt: r.created_at
     }));
 
+    const grandTotalByCurrency = sumByCurrency(list, (x) => x.currency, (x) => x.grandTotal);
+
     return apiOk({
       scope: { level: scope.level, countryId: effectiveCountryId, branchId: effectiveBranchId, label: scope.scopeLabel },
+      section: domainMode,
+      canChooseSection: canChooseExpenseSection(session),
       summary: {
         totalBills: list.length,
-        grandTotal: list.reduce((s, x) => s + x.grandTotal, 0),
+        grandTotalByCurrency,
+        grandTotal: singleCurrency(grandTotalByCurrency) ? grandTotalByCurrency[0].total : null,
+        mixedCurrency: grandTotalByCurrency.length > 1,
         transferred: list.filter((x) => x.transferredToRoznamcha).length
       },
       rows: list,

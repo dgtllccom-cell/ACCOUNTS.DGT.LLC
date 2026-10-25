@@ -98,6 +98,9 @@ export function TransportPaymentBookingWorkspace() {
   // Payment form state
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentCurrency, setPaymentCurrency] = useState("USD");
+  // rate to the charges currency (needed only when the payment currency differs) + a request id so a repeated submit cannot add a second payment
+  const [paymentRate, setPaymentRate] = useState("");
+  const [paymentRequestId, setPaymentRequestId] = useState("");
   const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [paymentMethod, setPaymentMethod] = useState("Bank Transfer");
   const [bankOrCashAccount, setBankOrCashAccount] = useState("");
@@ -169,6 +172,8 @@ export function TransportPaymentBookingWorkspace() {
     setSelectedRecordForPayment(r);
     setPaymentAmount(r.transportBalance > 0 ? String(r.transportBalance) : "");
     setPaymentCurrency(r.transportCurrency || "USD");
+    setPaymentRate("");
+    setPaymentRequestId(crypto.randomUUID());
     setPaymentDate(new Date().toISOString().slice(0, 10));
     setPaymentMethod("Bank Transfer");
     setBankOrCashAccount("");
@@ -208,6 +213,8 @@ export function TransportPaymentBookingWorkspace() {
           loadingRecordId: selectedRecordForPayment.id,
           amount: amt,
           currency: paymentCurrency,
+          exchangeRate: paymentCurrency !== (selectedRecordForPayment.transportCurrency || "USD").toUpperCase() && Number(paymentRate) > 0 ? Number(paymentRate) : undefined,
+          clientRequestId: paymentRequestId || undefined,
           paymentDate,
           paymentMethod,
           bankOrCashAccountName: bankOrCashAccount || "Main Cash / Bank Account",
@@ -827,6 +834,12 @@ export function TransportPaymentBookingWorkspace() {
                   />
                 </div>
               </div>
+              {paymentCurrency !== (selectedRecordForPayment.transportCurrency || "USD").toUpperCase() && (
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold">{`Exchange rate: 1 ${paymentCurrency || "?"} = ? ${(selectedRecordForPayment.transportCurrency || "USD").toUpperCase()}`}</Label>
+                  <Input type="number" step="0.0001" min="0.0001" value={paymentRate} onChange={(e) => setPaymentRate(e.target.value)} required className="h-9 font-mono font-bold" />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">

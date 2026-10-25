@@ -764,24 +764,7 @@ export function CashEntryForm({
   // Daily Cash Position states
   const [cashPositionRoleFilter, setCashPositionRoleFilter] = useState("Super Admin");
   const [cashPositionCountryFilter, setCashPositionCountryFilter] = useState("all");
-  const [cashPositionsList, setCashPositionsList] = useState<any[]>([
-    { country: "PK", creditLocal: "2,450,000 PKR", debitLocal: "2,650,000 PKR", creditUsd: "$8,757.45", debitUsd: "$9,481.22" },
-    { country: "AF", creditLocal: "212,000 AFN", debitLocal: "180,000 AFN", creditUsd: "$3,128.45", debitUsd: "$2,612.48" },
-    { country: "IN", creditLocal: "425,000 INR", debitLocal: "380,000 INR", creditUsd: "$5,077.66", debitUsd: "$4,539.38" },
-    { country: "AE", creditLocal: "42,000 AED", debitLocal: "35,000 AED", creditUsd: "$11,436.35", debitUsd: "$9,530.73" },
-    { country: "IR", creditLocal: "600,000,000 IRR", debitLocal: "610,000,000 IRR", creditUsd: "$14,533.91", debitUsd: "$14,832.01" },
-  ]);
-
-
-
-
-
-
-
-  const filteredCashPositions = useMemo(() => {
-    if (cashPositionCountryFilter === "all") return cashPositionsList;
-    return cashPositionsList.filter((p) => p.country.toLowerCase() === cashPositionCountryFilter.toLowerCase());
-  }, [cashPositionsList, cashPositionCountryFilter]);
+  const [cashPositionsList] = useState<any[]>([]);
 
   const isSuperAdmin = session?.scopes?.isSuperAdmin ?? false;
 
@@ -805,6 +788,40 @@ export function CashEntryForm({
       (!session?.scopes?.isSuperAdmin && session?.scopes?.countryIds && session.scopes.countryIds.length > 0 && (!session.scopes.countryBranchIds || session.scopes.countryBranchIds.length === 0))
     );
   }, [isSuperAdmin, session, userRoleLevel]);
+
+  const canViewUsd = useMemo(() => {
+    if (!session) return false;
+    if (session.scopes?.isSuperAdmin) return true;
+    if (session.roles?.some((r: string) => r === "super_admin" || r === "financial_controller")) return true;
+    if ((session as any).permissions?.some((p: string) => p === "reports:view_usd" || p === "view_usd_reporting")) return true;
+    return false;
+  }, [session]);
+
+  const userRoleLabel = useMemo(() => {
+    if (session?.scopes?.isSuperAdmin) return tr("cj.roleSuperAdmin", "Super Admin");
+    const primaryRole = session?.roles?.[0] || "";
+    if (primaryRole === "country_admin") return tr("cj.roleCountryAdmin", "Country Admin");
+    if (primaryRole === "city_branch_admin" || primaryRole === "branch_admin" || primaryRole === "main_branch_admin") {
+      return tr("cj.roleBranchAdmin", "Branch Admin");
+    }
+    if (primaryRole) {
+      return primaryRole.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    }
+    return "Staff User";
+  }, [session, tr]);
+
+  const currentSerialDisplay = useMemo(() => {
+    if (isSuperAdmin) {
+      return savedSerials?.superAdmin || liveSerials.superAdmin;
+    }
+    if (isCountryAdmin) {
+      return savedSerials?.country || liveSerials.country;
+    }
+    if (userRoleLevel === "branch" || session?.roles?.includes("city_branch_admin") || session?.roles?.includes("main_branch_admin")) {
+      return (savedSerials as any)?.cityBranch || liveSerials.cityBranch || savedSerials?.branch || liveSerials.branch;
+    }
+    return (savedSerials as any)?.entrySerial || liveSerials.entrySerial || (savedSerials as any)?.cityBranch || liveSerials.cityBranch;
+  }, [isSuperAdmin, isCountryAdmin, userRoleLevel, session, savedSerials, liveSerials]);
 
   const canCrossBranchLookup = useMemo(() => {
     if (isSuperAdmin) return true;
@@ -1172,11 +1189,18 @@ export function CashEntryForm({
       selectedCashLedger.ledgerId === selectedCounterLedger.ledgerId
   );
 
+  const assignedCountryCurrency = useMemo(() => {
+    const cid = countryId || session?.scopes?.countryIds?.[0] || (session?.scopes as any)?.summary?.branchCountryId;
+    const c = countries.find((x) => x.id === cid);
+    return c?.currency_code || null;
+  }, [countryId, session, countries]);
+
   const branchCurrency =
     selectedCityBranch?.local_currency ||
     selectedMainBranch?.local_currency ||
     selectedCountry?.currency_code ||
-    "USD";
+    assignedCountryCurrency ||
+    (isSuperAdmin ? "USD" : "PKR");
 
   const cashBalanceText = useMemo(() => {
     if (!selectedCashLedger) return "—";
@@ -1198,13 +1222,13 @@ export function CashEntryForm({
     const list = [
       branchCurrency,
       targetAccountCurrency,
-      // Support multi-currency operations across the ERP
-      "USD", "AED", "PKR", "AFN", "INR", "IRR"
+      ...(canViewUsd ? ["USD"] : []),
+      "AED", "PKR", "AFN", "INR", "IRR"
     ]
       .map((v) => (v ?? "").toString().trim().toUpperCase())
       .filter(Boolean);
     return new Set(list);
-  }, [branchCurrency, targetAccountCurrency]);
+  }, [branchCurrency, targetAccountCurrency, canViewUsd]);
 
   const isLocalCurrency = normalizedCurrency === targetAccountCurrency.toUpperCase();
 
@@ -2105,8 +2129,8 @@ export function CashEntryForm({
     const entrySerial = firstLine?.entry_serial_number || (isDebit ? `DR-${header.id?.slice(0, 6)?.toUpperCase()}` : `CR-${header.id?.slice(0, 6)?.toUpperCase()}`);
 
     const rowsForPrint: { label: string; value: string }[] = [
-      { label: t(lang, "cef.print_global_serial", "Global Serial (Super Admin)"), value: header.super_admin_serial_number || "-" },
-      { label: t(lang, "cef.print_country_serial", "Country Serial"), value: header.country_transaction_serial_number || "-" },
+      ...(canViewUsd ? [{ label: t(lang, "cef.print_global_serial", "Global Serial (Super Admin)"), value: header.super_admin_serial_number || "-" }] : []),
+      ...((canViewUsd || isCountryAdmin) ? [{ label: t(lang, "cef.print_country_serial", "Country Serial"), value: header.country_transaction_serial_number || "-" }] : []),
       { label: t(lang, "cef.print_branch_serial", "Branch Serial"), value: header.branch_transaction_serial_number || "-" },
       { label: t(lang, "cef.print_entry_serial", "Entry Serial (DR/CR)"), value: entrySerial || "-" },
       { label: t(lang, "cef.print_date", "Date"), value: header.entry_date || "-" },
@@ -2121,7 +2145,7 @@ export function CashEntryForm({
       const isLineDebit = Number(firstLine.debit || 0) > 0;
       rowsForPrint.push({
         label: t(lang, "cef.print_counterparty_account", "Counterparty Account"),
-        value: `${firstLine.account_number || firstLine.ledgers?.code || "-"} | ${firstLine.ledgers?.name || "-"} | ${isLineDebit ? t(lang, "cef.print_debit_receive", "Debit (Receive)") : t(lang, "cef.print_credit_pay", "Credit (Pay)")} ${fmtAmount(lineAmt)} ${firstLine.currency || "AED"}`
+        value: `${firstLine.account_number || firstLine.ledgers?.code || "-"} | ${firstLine.ledgers?.name || "-"} | ${isLineDebit ? t(lang, "cef.print_debit_receive", "Debit (Receive)") : t(lang, "cef.print_credit_pay", "Credit (Pay)")} ${fmtAmount(lineAmt)} ${firstLine.currency || header.countries?.currency_code || branchCurrency || "PKR"}`
       });
     }
     if (secondLine) {
@@ -2129,7 +2153,7 @@ export function CashEntryForm({
       const isLineDebit = Number(secondLine.debit || 0) > 0;
       rowsForPrint.push({
         label: t(lang, "cef.print_cash_bank_account", "Cash/Bank Account"),
-        value: `${secondLine.account_number || secondLine.ledgers?.code || "-"} | ${secondLine.ledgers?.name || "-"} | ${isLineDebit ? t(lang, "cef.print_debit_receive", "Debit (Receive)") : t(lang, "cef.print_credit_pay", "Credit (Pay)")} ${fmtAmount(lineAmt)} ${secondLine.currency || "AED"}`
+        value: `${secondLine.account_number || secondLine.ledgers?.code || "-"} | ${secondLine.ledgers?.name || "-"} | ${isLineDebit ? t(lang, "cef.print_debit_receive", "Debit (Receive)") : t(lang, "cef.print_credit_pay", "Credit (Pay)")} ${fmtAmount(lineAmt)} ${secondLine.currency || header.countries?.currency_code || branchCurrency || "PKR"}`
       });
     }
     return rowsForPrint;
@@ -2148,13 +2172,13 @@ export function CashEntryForm({
         const financialLines = lines.map((l: any) => {
           const deb = Number(l.debit || 0);
           const cred = Number(l.credit || 0);
-          const rate = Number(l.usd_rate || header.exchange_rate || 1.0);
-          const conv = Number(l.usd_amount || (deb ? deb / (rate || 1) : cred / (rate || 1)) || 0);
+          const rate = canViewUsd ? Number(l.usd_rate || header.exchange_rate || 1.0) : 0;
+          const conv = canViewUsd ? Number(l.usd_amount || (deb ? deb / (rate || 1) : cred / (rate || 1)) || 0) : 0;
           return {
             description: l.description || header.narration || "Cash Entry",
             accountCode: l.account_number || l.ledgers?.code || "-",
             accountName: l.ledgers?.name || l.accounts?.name || "-",
-            currency: l.currency || header.countries?.currency_code || "AED",
+            currency: l.currency || header.countries?.currency_code || branchCurrency || "PKR",
             debit: deb,
             credit: cred,
             exchangeRate: rate,
@@ -2190,10 +2214,11 @@ export function CashEntryForm({
             totalCredit,
             balanceDirection: balDir,
             finalBalance: Math.abs(diff) || totalDebit || totalCredit,
-            currency: financialLines[0]?.currency || "AED",
+            currency: financialLines[0]?.currency || header.countries?.currency_code || branchCurrency || "PKR",
             narration: resolveVerifiedTranslation(header.translations?.narration, lang) || translateNarrationBlock(header.narration, lang) || header.narration || "-",
             createdBy: header.profiles?.full_name || header.created_by || "User",
-            approvedBy: header.approver_profile?.full_name || header.approved_by || "System"
+            approvedBy: header.approver_profile?.full_name || header.approved_by || "System",
+            showUsdReporting: canViewUsd
           },
           autoPrint: false,
           lang
@@ -3068,17 +3093,19 @@ export function CashEntryForm({
           </div>
 
           {/* Card 1B: Amount & Payment — sums of the USD columns shown in the journal table below */}
-          <CjSummaryCard
-            lang={lang}
-            creditText={`${fmtAmount(journalSummary.credit)} USD`}
-            debitText={`${fmtAmount(journalSummary.debit)} USD`}
-            diffText={`${fmtAmount(Math.abs(journalSummary.credit - journalSummary.debit))} USD${journalSummary.credit - journalSummary.debit > 0.005 ? " Cr" : journalSummary.credit - journalSummary.debit < -0.005 ? " Dr" : ""}`}
-            diffZero={Math.abs(journalSummary.credit - journalSummary.debit) < 0.005}
-            creditCount={journalSummary.creditCount}
-            debitCount={journalSummary.debitCount}
-            missingRate={journalSummary.missingRate}
-            scopeText={`${selectedCountry?.name || t(lang, "roz.all_countries", "All Countries")} · ${tableDateMode === "day" ? (tableDate || entryDate) : tableDateMode === "range" ? `${tableFromDate} → ${tableToDate}` : t(lang, "common.all", "All")}`}
-          />
+          {canViewUsd && (
+            <CjSummaryCard
+              lang={lang}
+              creditText={`${fmtAmount(journalSummary.credit)} USD`}
+              debitText={`${fmtAmount(journalSummary.debit)} USD`}
+              diffText={`${fmtAmount(Math.abs(journalSummary.credit - journalSummary.debit))} USD${journalSummary.credit - journalSummary.debit > 0.005 ? " Cr" : journalSummary.credit - journalSummary.debit < -0.005 ? " Dr" : ""}`}
+              diffZero={Math.abs(journalSummary.credit - journalSummary.debit) < 0.005}
+              creditCount={journalSummary.creditCount}
+              debitCount={journalSummary.debitCount}
+              missingRate={journalSummary.missingRate}
+              scopeText={`${selectedCountry?.name || t(lang, "roz.all_countries", "All Countries")} · ${tableDateMode === "day" ? (tableDate || entryDate) : tableDateMode === "range" ? `${tableFromDate} → ${tableToDate}` : t(lang, "common.all", "All")}`}
+            />
+          )}
 
         </div>
 
@@ -3093,15 +3120,21 @@ export function CashEntryForm({
             </div>
             <div className="flex items-center gap-1">
               <span className="text-[10px] font-bold text-slate-500">{tr("cj.role", "Role:")}</span>
-              <select
-                value={serialRoleFilter}
-                onChange={(e) => setSerialRoleFilter(e.target.value)}
-                className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
-              >
-                <option value="Super Admin">{tr("cj.roleSuperAdmin", "Super Admin")}</option>
-                <option value="Country Admin">{tr("cj.roleCountryAdmin", "Country Admin")}</option>
-                <option value="Branch Admin">{tr("cj.roleBranchAdmin", "Branch Admin")}</option>
-              </select>
+              {isSuperAdmin ? (
+                <select
+                  value={serialRoleFilter}
+                  onChange={(e) => setSerialRoleFilter(e.target.value)}
+                  className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                >
+                  <option value="Super Admin">{tr("cj.roleSuperAdmin", "Super Admin")}</option>
+                  <option value="Country Admin">{tr("cj.roleCountryAdmin", "Country Admin")}</option>
+                  <option value="Branch Admin">{tr("cj.roleBranchAdmin", "Branch Admin")}</option>
+                </select>
+              ) : (
+                <span className="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-[11px]">
+                  {userRoleLabel}
+                </span>
+              )}
             </div>
           </div>
 
@@ -3114,7 +3147,7 @@ export function CashEntryForm({
                     {tr("cj.currentSerial", "CURRENT SERIAL")}
                   </span>
                   <span className="font-mono text-xs font-black text-blue-700 dark:text-blue-400" dir="ltr">
-                    {savedSerials?.superAdmin || liveSerials.superAdmin}
+                    {currentSerialDisplay}
                   </span>
                 </div>
                 <button
@@ -3129,10 +3162,15 @@ export function CashEntryForm({
               {/* View Serials Expanded Box */}
               {showSerialsDropdown && (
                 <div className="mb-3 p-2.5 rounded-lg border border-blue-200 bg-blue-50/40 dark:border-blue-900 dark:bg-blue-950/20 text-xs grid grid-cols-2 gap-2 font-mono">
-                  <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialSuperAdmin", "Super Admin:")}</span> <strong className="text-blue-700 dark:text-blue-300">{savedSerials?.superAdmin || liveSerials.superAdmin}</strong></div>
-                  <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialCountry", "Country:")}</span> <strong className="text-blue-700 dark:text-blue-300">{savedSerials?.country || liveSerials.country}</strong></div>
+                  {canViewUsd && (
+                    <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialSuperAdmin", "Super Admin:")}</span> <strong className="text-blue-700 dark:text-blue-300">{savedSerials?.superAdmin || liveSerials.superAdmin}</strong></div>
+                  )}
+                  {(isSuperAdmin || isCountryAdmin) && (
+                    <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialCountry", "Country:")}</span> <strong className="text-blue-700 dark:text-blue-300">{savedSerials?.country || liveSerials.country}</strong></div>
+                  )}
                   <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialMainBranch", "Main Branch:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.mainBranch || liveSerials.mainBranch}</strong></div>
                   <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialCityBranch", "City Branch:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.cityBranch || liveSerials.cityBranch}</strong></div>
+                  <div><span className="text-[10px] text-slate-500 block">{t(lang, "cef.print_entry_serial", "Entry Serial:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.entrySerial || liveSerials.entrySerial}</strong></div>
                 </div>
               )}
 
@@ -4021,13 +4059,13 @@ export function CashEntryForm({
                             {tr("cj.mCurrencyType", "Currency Type")} <span className="text-red-500">*</span>
                           </Label>
                           <select
-                            value={currency}
+                            value={currency || branchCurrency}
                             onChange={(e) => setCurrency(e.target.value)}
                             className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
                           >
-                            <option value="USD">USD</option>
-                            <option value="AED">AED</option>
+                            {canViewUsd && <option value="USD">USD</option>}
                             <option value="PKR">PKR</option>
+                            <option value="AED">AED</option>
                             <option value="INR">INR</option>
                             <option value="SAR">SAR</option>
                             <option value="AFN">AFN</option>
@@ -5042,24 +5080,32 @@ export function CashEntryForm({
                 <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">B2B</Th>
                 <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Number</Th>
                 <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 min-w-[200px]">Details</Th>
-                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 whitespace-nowrap">Credit</Th>
-                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400 whitespace-nowrap">Debit</Th>
-                <Th className="p-2.5 font-bold text-center border border-slate-200 dark:border-slate-800 whitespace-nowrap">Exchange Rate</Th>
-                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-emerald-600 whitespace-nowrap">USD Credit</Th>
-                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-rose-600 whitespace-nowrap">USD Debit</Th>
+                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+                  {`Credit (${branchCurrency})`}
+                </Th>
+                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400 whitespace-nowrap">
+                  {`Debit (${branchCurrency})`}
+                </Th>
+                {canViewUsd && (
+                  <>
+                    <Th className="p-2.5 font-bold text-center border border-slate-200 dark:border-slate-800 whitespace-nowrap">Exchange Rate</Th>
+                    <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-emerald-600 whitespace-nowrap">USD Credit</Th>
+                    <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-rose-600 whitespace-nowrap">USD Debit</Th>
+                  </>
+                )}
                 <Th className="p-2.5 font-bold text-center border border-slate-200 dark:border-slate-800 whitespace-nowrap">Actions</Th>
               </tr>
             </thead>
             <tbody>
               {loadingEntries ? (
                 <tr>
-                  <td colSpan={13} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
+                  <td colSpan={canViewUsd ? 13 : 10} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
                     {t(lang, "roz.loading_entries", "Loading entries...")}
                   </td>
                 </tr>
               ) : filteredRecentEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="p-12 text-center text-slate-400 font-medium border border-slate-200 dark:border-slate-800">
+                  <td colSpan={canViewUsd ? 13 : 10} className="p-12 text-center text-slate-400 font-medium border border-slate-200 dark:border-slate-800">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                       <span>{t(lang, "roz.no_entries_found", "No Roznamcha journal entries found for the selected filter / date.")}</span>
@@ -5170,37 +5216,41 @@ export function CashEntryForm({
                           {isDebit ? `${fmtAmount(Number(line.debit))} ${line.currency || ""}` : <span className="text-slate-300 dark:text-slate-700">—</span>}
                         </td>
 
-                        {/* 10. Exchange Rate */}
-                        <td className="p-2.5 text-center whitespace-nowrap border border-slate-200 dark:border-slate-800 align-top">
-                          {lineExchangeRate ? (
-                            <div className="text-[11px] font-mono font-bold text-blue-700 dark:text-blue-400 leading-tight">
-                              <span>{Number(lineExchangeRate).toFixed(4)}</span>
-                              <span className="block text-[9px] text-slate-400 font-sans">{line.currency || "AED"}/USD</span>
-                            </div>
-                          ) : (
-                            <span className="text-amber-600 dark:text-amber-400 text-[10px] font-bold">
-                              {translateHeader(lang, "Rate Missing")}
-                            </span>
-                          )}
-                        </td>
+                        {canViewUsd && (
+                          <>
+                            {/* 10. Exchange Rate */}
+                            <td className="p-2.5 text-center whitespace-nowrap border border-slate-200 dark:border-slate-800 align-top">
+                              {lineExchangeRate ? (
+                                <div className="text-[11px] font-mono font-bold text-blue-700 dark:text-blue-400 leading-tight">
+                                  <span>{Number(lineExchangeRate).toFixed(4)}</span>
+                                  <span className="block text-[9px] text-slate-400 font-sans">{line.currency || branchCurrency}/USD</span>
+                                </div>
+                              ) : (
+                                <span className="text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                                  {translateHeader(lang, "Rate Missing")}
+                                </span>
+                              )}
+                            </td>
 
-                        {/* 11. USD Credit */}
-                        <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 align-top">
-                          {isCredit ? (
-                            usdCredit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
-                          ) : (
-                            <span className="text-slate-300 dark:text-slate-700">—</span>
-                          )}
-                        </td>
+                            {/* 11. USD Credit */}
+                            <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 align-top">
+                              {isCredit ? (
+                                usdCredit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
+                              ) : (
+                                <span className="text-slate-300 dark:text-slate-700">—</span>
+                              )}
+                            </td>
 
-                        {/* 12. USD Debit */}
-                        <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-rose-600 dark:text-rose-400 align-top">
-                          {isDebit ? (
-                            usdDebit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
-                          ) : (
-                            <span className="text-slate-300 dark:text-slate-700">—</span>
-                          )}
-                        </td>
+                            {/* 12. USD Debit */}
+                            <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-rose-600 dark:text-rose-400 align-top">
+                              {isDebit ? (
+                                usdDebit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
+                              ) : (
+                                <span className="text-slate-300 dark:text-slate-700">—</span>
+                              )}
+                            </td>
+                          </>
+                        )}
 
                         {/* 13. Actions */}
                         <td className="p-2.5 text-center border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">

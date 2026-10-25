@@ -10,6 +10,8 @@ import { ledgerScopeSchema, supportedLanguageSchema, uuidSchema } from "@/lib/ap
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames, getPhraseTranslator } from "@/lib/i18n/localize-records";
 import { getAppEnvironment } from "@/lib/env/environment";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { translateCountry } from "@/lib/i18n/table-values";
 
 /**
  * Localize the free-form account NAME of a set of report rows through the single ERP
@@ -759,7 +761,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
     r.mainBranchName = tpHead(r.mainBranchName);
     r.cityBranchName = tpHead(r.cityBranchName);
     r.cityName = tpFallback(r.cityName);
-    r.countryName = tpFallback(r.countryName);
+    r.countryName = translateCountry(r.countryName, effectiveQuery.language);
     if (r.companyName && r.companyName !== "-") r.companyName = tpFallback(r.companyName);
   }
   return viaPg;
@@ -768,6 +770,9 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    const reqLang = await getRequestLanguage(
+      request.nextUrl.searchParams.get("language") || request.nextUrl.searchParams.get("lang")
+    );
     const query = querySchema.parse({
       q: request.nextUrl.searchParams.get("q") ?? undefined,
       scope: request.nextUrl.searchParams.get("scope") ?? undefined,
@@ -778,9 +783,9 @@ export async function GET(request: NextRequest) {
       fromDate: request.nextUrl.searchParams.get("fromDate") ?? undefined,
       toDate: request.nextUrl.searchParams.get("toDate") ?? undefined,
       limit: request.nextUrl.searchParams.get("limit") ?? undefined,
-      language: request.nextUrl.searchParams.get("language") ?? undefined
+      language: reqLang
     });
-    const effectiveQuery = { ...query };
+    const effectiveQuery = { ...query, language: reqLang };
 
     const isDomainSuperAdmin = Boolean(
       session.roles?.some((r) => (DOMAIN_SUPER_ADMIN_ROLES as readonly string[]).includes(r))
@@ -1393,7 +1398,7 @@ export async function GET(request: NextRequest) {
       r.mainBranchName = tpHead(r.mainBranchName);
       r.cityBranchName = tpHead(r.cityBranchName);
       r.cityName = tp(r.cityName);
-      r.countryName = tp(r.countryName);
+      r.countryName = translateCountry(r.countryName, effectiveQuery.language);
     }
 
     const q = normalizeSearch(effectiveQuery.q ?? "");

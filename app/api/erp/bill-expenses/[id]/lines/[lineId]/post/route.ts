@@ -5,6 +5,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 import { auditApiAction } from "@/lib/api/audit";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { withKeyedLock } from "@/lib/db/keyed-lock";
+import { assertBillExpenseModuleAllowed } from "@/lib/permissions/bill-expense-domain";
 import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/posting";
 import {
   acquireIdempotencyLock,
@@ -49,6 +51,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new ApiClientError("The expense account and the counter account must be different.", { status: 400, code: "SAME_ACCOUNT" });
     }
 
+    return await withKeyedLock(`bill-expense-line:${lineId}`, async () => {
     const prepared = await withLocalPg(async (sql) => {
       const [be] = await sql`
         select be.id, be.source_module, be.source_id, be.bill_no, be.manual_bill_no,
@@ -59,6 +62,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         left join public.city_branches cib on cib.id = be.city_branch_id
         where be.id = ${id}::uuid and be.deleted_at is null limit 1`;
       if (!be) throw new ApiClientError("Bill expense not found", { status: 404, code: "NOT_FOUND" });
+      assertBillExpenseModuleAllowed(session, be.source_module);
 
       // scope enforcement — never trust the id alone
       if (scope.level === "country" && scope.countryId && be.country_id !== scope.countryId) {
@@ -168,10 +172,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       narration,
       referenceNo: prepared.billRef,
       roznamchaCategory: "business" as const,
+      // One ledger entry per expense LINE: the ledger's unique source key (module + type + id) makes a second live posting of
+      // the same line impossible, and lets several lines of one bill post independently.
       sourceModule: "bill_expenses",
-      sourceTransactionType: prepared.be.source_module,
-      sourceTransactionId: prepared.be.source_id ?? undefined,
-      sourceReferenceNo: prepared.billRef,
+      sourceTransactionType: "bill_expense_line",
+      sourceTransactionId: lineId,
+      sourceReferenceNo: `${prepared.billRef}#${prepared.line.row_serial} (${prepared.be.source_module})`,
       lines: [
         {
           ledgerId: body.expenseAccountId,
@@ -196,7 +202,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     const { entryId } = await postRoznamchaWithErpSession({
       sessionUserId: session.userId,
-      body: roznamchaBody as never
+      body: roznamchaBody as never,
+      requireBalanced: true
     });
 
     await withLocalPg(async (sql) => {
@@ -220,6 +227,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const responseBody = { ok: true, entryId, amount: prepared.amount, currency: prepared.functionalCurrency };
     await commitIdempotencySuccess(idemKey, tenantHash, 200, responseBody);
     return apiOk(responseBody);
+    }, { busyMessage: "This expense line is being posted or voided right now. Please wait a moment and refresh before trying again." });
   } catch (error) {
     if (idemKey) await releaseIdempotencyLock(idemKey, tenantHash).catch(() => {});
     return handleApiError(error);

@@ -12,6 +12,7 @@ import { Th } from "@/components/ui/translated-th";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
+import { translateCountry } from "@/lib/i18n/table-values";
 
 type LocationRecord = {
   id: string;
@@ -141,7 +142,7 @@ export function LocationRegistry() {
                   <td>${(page - 1) * pageSize + idx + 1}</td>
                   <td>${loc.name}</td>
                   <td>${loc.code || "-"}</td>
-                  <td>${loc.country?.name || "-"}</td>
+                  <td>${translateCountry(loc.country?.name, s.lang) || "-"}</td>
                   <td>${loc.state?.name || "-"}</td>
                   <td>${loc.district?.name || "-"}</td>
                   <td><span class="${loc.is_active ? "active" : "inactive"}">${loc.is_active ? s.t("status_active", "Active") : s.t("status_inactive", "Inactive")}</span></td>
@@ -271,7 +272,7 @@ export function LocationRegistry() {
                       </td>
                       <td className="p-3 font-semibold text-slate-900">{loc.name}</td>
                       <td className="p-3 text-slate-600 font-mono">{loc.code || "-"}</td>
-                      <td className="p-3 text-slate-600">{loc.country?.name || "-"}</td>
+                      <td className="p-3 text-slate-600">{translateCountry(loc.country?.name, s.lang) || "-"}</td>
                       <td className="p-3 text-slate-600">{loc.state?.name || "-"}</td>
                       <td className="p-3 text-slate-600">{loc.district?.name || "-"}</td>
                       <td className="p-3 text-center">
@@ -374,7 +375,7 @@ export function LocationRegistry() {
         data={filtered.map(l => ({
           name: l.name,
           code: l.code || "-",
-          country: l.country?.name || "-",
+          country: translateCountry(l.country?.name, s.lang) || "-",
           state: l.state?.name || "-",
           district: l.district?.name || "-",
           city: l.city?.name || "-",

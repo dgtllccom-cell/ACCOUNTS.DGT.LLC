@@ -51,7 +51,8 @@ function buildCountryBranchQuery(
   selectColumns: string,
   id: string | null,
   countryId: string | null,
-  session: Awaited<ReturnType<typeof requireErpSession>>
+  session: Awaited<ReturnType<typeof requireErpSession>>,
+  operationalDomain?: string | null
 ) {
   let query = supabase
     .from("country_branches")
@@ -73,6 +74,14 @@ function buildCountryBranchQuery(
       "country_id",
       session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]
     );
+  }
+
+  if (operationalDomain) {
+    if (operationalDomain === "business") {
+      query = query.or("operational_domain.eq.business,operational_domain.is.null,is_main.eq.true");
+    } else {
+      query = query.or(`operational_domain.eq.${operationalDomain},is_main.eq.true`);
+    }
   }
 
   return query;
@@ -112,7 +121,7 @@ export async function GET(request: Request) {
           and (${id && isUuid(id) ? sql`id = ${id}` : sql`true`})
           and (${countryId ? sql`country_id = ${countryId}::uuid` : sql`true`})
           and (${!countryId && !session.isSuperAdmin ? sql`country_id = any(${session.countryIds})` : sql`true`})
-          and (${operationalDomain ? sql`operational_domain = ${operationalDomain}` : sql`true`})
+          and (${operationalDomain ? sql`(coalesce(operational_domain, 'business') = ${operationalDomain} or is_main = true)` : sql`true`})
         order by created_at asc
       `;
       return { countryBranches: normalizeCountryBranchRows(rows as any[]) };
@@ -123,12 +132,12 @@ export async function GET(request: Request) {
       countryBranches = viaPg.countryBranches;
     } else {
       const supabase = createSupabaseAdminClient() as any;
-      let query = buildCountryBranchQuery(supabase, countryBranchSelect, id, countryId, session);
+      let query = buildCountryBranchQuery(supabase, countryBranchSelect, id, countryId, session, operationalDomain);
       if (!query) return NextResponse.json({ countryBranches: [] }, { status: 200 });
 
       let { data, error } = await query;
       if (error && isMissingOptionalColumn(error.message)) {
-        const fallbackQuery = buildCountryBranchQuery(supabase, countryBranchFallbackSelect, id, countryId, session);
+        const fallbackQuery = buildCountryBranchQuery(supabase, countryBranchFallbackSelect, id, countryId, session, operationalDomain);
         const fallbackResult = fallbackQuery ? await fallbackQuery : { data: [], error: null };
         data = fallbackResult.data;
         error = fallbackResult.error;
@@ -183,7 +192,7 @@ export async function POST(request: Request) {
         select id, country_id, name, code, local_currency, is_main, status
         from public.country_branches
         where country_id = ${parsed.data.countryId}::uuid
-          and operational_domain = ${domain}
+          and coalesce(operational_domain, 'business') = ${domain}
           and is_main = true
           and deleted_at is null
         limit 1
@@ -262,7 +271,7 @@ export async function POST(request: Request) {
           ${JSON.stringify(payload.contacts)}::jsonb,
           ${JSON.stringify(payload.documents)}::jsonb,
           ${payload.permission_template},
-          ${payload.permission_grants},
+          ${JSON.stringify(payload.permission_grants)}::jsonb,
           ${payload.created_by ? payload.created_by : null}::uuid,
           ${payload.created_at},
           ${payload.updated_at}
@@ -355,28 +364,31 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Country not found." }, { status: 404 });
     }
 
-    const { data: duplicateMainBranch, error: duplicateError } = await supabase
-      .from("country_branches")
-      .select("id")
-      .eq("country_id", parsed.data.countryId)
-      .eq("is_main", true)
-      .neq("id", id)
-      .is("deleted_at", null)
-      .maybeSingle();
+    const domain = parsed.data.operationalDomain || "business";
 
-    if (duplicateError) {
-      return NextResponse.json({ error: duplicateError.message }, { status: 403 });
-    }
+    const duplicateMainBranch = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id from public.country_branches
+        where country_id = ${parsed.data.countryId}::uuid
+          and coalesce(operational_domain, 'business') = ${domain}
+          and is_main = true
+          and id <> ${id}::uuid
+          and deleted_at is null
+        limit 1
+      `;
+      return rows[0] ?? null;
+    });
 
     if (duplicateMainBranch?.id) {
       return NextResponse.json(
-        { error: "A main branch already exists for this country. Edit the existing main branch instead." },
+        { error: `A main branch already exists for this country under the ${domain === "shipping" ? "Shipping Line & Clearing Agent" : "Business"} section. Edit the existing main branch instead.` },
         { status: 409 }
       );
     }
 
     const payload = {
       country_id: parsed.data.countryId,
+      operational_domain: domain,
       name: parsed.data.name.trim(),
       code: parsed.data.code.trim().toUpperCase(),
       local_currency: String(country.currency_code).trim().toUpperCase(),
@@ -406,6 +418,7 @@ export async function PUT(request: Request) {
         update public.country_branches
         set
           country_id = ${payload.country_id}::uuid,
+          operational_domain = ${payload.operational_domain},
           name = ${payload.name},
           code = ${payload.code},
           local_currency = ${payload.local_currency},
@@ -425,7 +438,7 @@ export async function PUT(request: Request) {
           contacts = ${JSON.stringify(payload.contacts)}::jsonb,
           documents = ${JSON.stringify(payload.documents)}::jsonb,
           permission_template = ${payload.permission_template},
-          permission_grants = ${payload.permission_grants},
+          permission_grants = ${JSON.stringify(payload.permission_grants)}::jsonb,
           updated_at = ${payload.updated_at}
         where id = ${id}::uuid and deleted_at is null
         returning id

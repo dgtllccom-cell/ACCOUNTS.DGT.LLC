@@ -34,6 +34,7 @@ import { BranchFinalReview } from "./branch-final-review";
 type CountryBranchRow = {
   id: string;
   country_id: string;
+  operational_domain?: string | null;
   name: string;
   code: string;
   local_currency: string;
@@ -41,6 +42,8 @@ type CountryBranchRow = {
   status: string;
   company_id?: string | null;
   owner_name?: string | null;
+  owner_customer_id?: string | null;
+  owner_profile_id?: string | null;
   contacts?: unknown;
   documents?: unknown;
   permission_template?: string | null;
@@ -54,16 +57,19 @@ type CountryBranchRow = {
 };
 
 type ContactRow = { type: string; value: string };
-type CompanyRow = { id: string; name: string; legal_name: string | null; base_currency: string };
+type CompanyRow = { id: string; name: string; legal_name: string | null; base_currency: string; owner_person_id?: string | null };
 type OwnerCustomerRow = {
   id: string;
   customer_name: string;
+  person_code?: string | null;
   company_name: string | null;
   contact_person: string | null;
   mobile: string | null;
   whatsapp: string | null;
   email: string | null;
   address: string | null;
+  country_name?: string | null;
+  city_name?: string | null;
 };
 type OwnerProfileRow = {
   userId: string;
@@ -169,8 +175,12 @@ function CountryBranchSetupContent() {
   const tt = useCallback((key: string, fallback: string) => t(lang as never, key as never, fallback), [lang]);
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
+  const stepParam = searchParams.get("step");
+  const parsedStep = stepParam ? parseInt(stepParam, 10) : 1;
   const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
-  const [activeStep, setActiveStep] = useState(1);
+  const [activeStep, setActiveStep] = useState(() =>
+    Number.isFinite(parsedStep) && parsedStep >= 1 && parsedStep <= 9 ? parsedStep : 1
+  );
   const [location, setLocation] = useState<LocationHierarchyValue>({
     countryId: "",
     stateProvinceId: "",
@@ -203,6 +213,7 @@ function CountryBranchSetupContent() {
   const [countryBranches, setCountryBranches] = useState<CountryBranchRow[]>([]);
   const [countryBranchSearch, setCountryBranchSearch] = useState("");
   const [branchType, setBranchType] = useState("");
+  const [operationalDomain, setOperationalDomain] = useState<"business" | "shipping">("business");
   const [branchCategory, setBranchCategory] = useState<"business" | "clearing_agent">("business");
   const [branchCode, setBranchCode] = useState("");
   const [permissionTemplate, setPermissionTemplate] = useState("country-standard");
@@ -238,7 +249,14 @@ function CountryBranchSetupContent() {
       }
       try {
         const res = await apiGet<{ company: CompanyRow }>(`/api/erp/companies/${encodeURIComponent(companyId)}`);
-        if (!cancelled) setCompany(res.company);
+        if (!cancelled && res.company) {
+          setCompany(res.company);
+          if (res.company.owner_person_id) {
+            setOwnerId(res.company.owner_person_id);
+            setOwnerCustomerId(res.company.owner_person_id);
+            setOwnerProfileId(null);
+          }
+        }
       } catch {
         if (!cancelled) setCompany(null);
       }
@@ -250,81 +268,42 @@ function CountryBranchSetupContent() {
 
   useEffect(() => {
     let cancelled = false;
-    const q = ownerName.trim();
-    if (!q) {
-      setOwnerPreview(null);
+    const targetCustomerId = ownerCustomerId || (isUuid(ownerId) ? ownerId : null);
+    if (!targetCustomerId) {
+      if (!ownerName) setOwnerPreview(null);
       return;
     }
 
     (async () => {
       try {
-        const [customersRes, usersRes] = await Promise.all([
-          apiGet<{ customers: OwnerCustomerRow[] }>(`/api/erp/customers?q=${encodeURIComponent(q)}&limit=10`),
-          apiGet<{ rows: OwnerProfileRow[] }>(`/api/erp/users/journal-report?q=${encodeURIComponent(q)}&limit=10`)
-        ]);
+        const res = await apiGet<{ customer: OwnerCustomerRow }>(`/api/erp/customers/${encodeURIComponent(targetCustomerId)}`);
+        if (cancelled || !res.customer) return;
 
-        if (cancelled) return;
-
-        const normalized = normalizeSearch(q);
-        const customer =
-          customersRes.customers?.find((row) =>
-            [row.customer_name, row.company_name, row.contact_person, row.mobile, row.whatsapp, row.email]
-              .filter(Boolean)
-              .some((value) => normalizeSearch(String(value)) === normalized || normalizeSearch(String(value)).includes(normalized))
-          ) ?? customersRes.customers?.[0] ?? null;
-
-        if (customer) {
-          setOwnerPreview({
-            source: "customer",
-            code: compactCode(customer.id, "CUST"),
-            name: customer.customer_name,
-            companyName: customer.company_name ?? "-",
-            contactPerson: customer.contact_person ?? "-",
-            mobile: customer.mobile ?? "-",
-            whatsapp: customer.whatsapp ?? "-",
-            email: customer.email ?? "-",
-            address: customer.address ?? "-",
-            country: locationMeta.country?.name ?? "-",
-            branch: existingMainBranch?.name ?? "-",
-            role: "Customer / Owner"
-          });
-          return;
-        }
-
-        const profile =
-          usersRes.rows?.find((row) => {
-            const haystack = normalizeSearch([row.userCode, row.fullName, row.countryName, row.branchName, row.role].filter(Boolean).join(" "));
-            return haystack.includes(normalized);
-          }) ?? usersRes.rows?.[0] ?? null;
-
-        if (profile) {
-          setOwnerPreview({
-            source: "profile",
-            code: profile.userCode || compactCode(profile.userId, "USR"),
-            name: profile.fullName,
-            companyName: company?.name ?? "-",
-            contactPerson: profile.fullName,
-            mobile: "-",
-            whatsapp: "-",
-            email: "-",
-            address: "-",
-            country: profile.countryName || locationMeta.country?.name || "-",
-            branch: profile.branchName || existingMainBranch?.name || "-",
-            role: profile.role
-          });
-          return;
-        }
-
-        setOwnerPreview(null);
+        const customer = res.customer;
+        setOwnerPreview({
+          source: "customer",
+          code: customer.person_code || compactCode(customer.id, "PER"),
+          name: customer.customer_name,
+          companyName: customer.company_name ?? company?.name ?? "-",
+          contactPerson: customer.contact_person ?? customer.customer_name,
+          mobile: customer.mobile ?? "-",
+          whatsapp: customer.whatsapp ?? customer.mobile ?? "-",
+          email: customer.email ?? "-",
+          address: customer.address ?? "-",
+          country: customer.country_name || locationMeta.country?.name || "-",
+          branch: customer.city_name || existingMainBranch?.name || "-",
+          role: "Company Owner"
+        });
+        setOwnerName(customer.customer_name);
       } catch {
-        if (!cancelled) setOwnerPreview(null);
+        // Keep existing preview if fetch fails
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [ownerName, company, existingMainBranch?.name, locationMeta.country?.name]);
+  }, [ownerCustomerId, ownerId, company?.name, existingMainBranch?.name, locationMeta.country?.name]);
 
   const zip = locationMeta.area?.postal_code ?? locationMeta.city?.zip_code ?? "";
   const previewCountry = locationMeta.country?.name || "-";
@@ -651,6 +630,9 @@ function CountryBranchSetupContent() {
   function beginEditCountryBranch(row: CountryBranchRow) {
     setEditingCountryBranchId(row.id);
     setExistingMainBranch(row);
+    const domain = (row.operational_domain === "shipping" ? "shipping" : "business") as "business" | "shipping";
+    setOperationalDomain(domain);
+    setBranchCategory(domain === "shipping" ? "clearing_agent" : "business");
     setLocation({
       countryId: row.country_id,
       stateProvinceId: row.state_province_id ?? "",
@@ -665,6 +647,9 @@ function CountryBranchSetupContent() {
     setFullAddress(row.address ?? "");
     setCompanyId(row.company_id ?? "");
     setOwnerName(row.owner_name ?? "");
+    setOwnerCustomerId(row.owner_customer_id ?? null);
+    setOwnerProfileId(row.owner_profile_id ?? null);
+    setOwnerId(row.owner_customer_id || row.owner_profile_id || "");
     setContacts(normalizeContacts(row.contacts));
     setPermissionTemplate(row.permission_template ?? "country-standard");
     setPermissionGrants(Array.isArray(row.permission_grants) ? row.permission_grants : getPermissionKeysForTemplate("country-standard"));
@@ -795,14 +780,15 @@ function CountryBranchSetupContent() {
     downloadCsv(`country-branch_${new Date().toISOString().slice(0, 10)}.csv`, rows);
   }
 
-  async function loadExistingMainBranch(nextCountryId: string) {
+  async function loadExistingMainBranch(nextCountryId: string, domain?: "business" | "shipping") {
+    const effectiveDomain = domain ?? operationalDomain;
     if (!isUuid(nextCountryId)) {
       setExistingMainBranch(null);
       setCountryBranches([]);
       return;
     }
 
-    const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}`, {
+    const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}&operationalDomain=${effectiveDomain}`, {
       cache: "no-store"
     });
     if (!res.ok) {
@@ -825,6 +811,9 @@ function CountryBranchSetupContent() {
       setFullAddress(main.address ?? "");
       setCompanyId(main.company_id ?? "");
       setOwnerName(main.owner_name ?? "");
+      setOwnerCustomerId(main.owner_customer_id ?? null);
+      setOwnerProfileId(main.owner_profile_id ?? null);
+      setOwnerId(main.owner_customer_id || main.owner_profile_id || "");
       setContacts(normalizeContacts(main.contacts));
       setPermissionTemplate(main.permission_template ?? "country-standard");
       setPermissionGrants(Array.isArray(main.permission_grants) ? main.permission_grants : getPermissionKeysForTemplate("country-standard"));
@@ -832,10 +821,34 @@ function CountryBranchSetupContent() {
     return { list, main };
   }
 
-  function nextSuggestedCode(country: LocationCountry | null, existingCount: number) {
+  function nextSuggestedCode(country: LocationCountry | null, existingCount: number, domain: "business" | "shipping" = "business") {
     const prefix = asIso3(country);
+    if (domain === "shipping") {
+      const num = String(Math.max(1, existingCount + 1)).padStart(2, "0");
+      return `${prefix}-MAIN-SHIP-${num}`;
+    }
     const num = String(Math.max(1, existingCount + 1)).padStart(3, "0");
     return `${prefix}-MAIN-${num}`;
+  }
+
+  async function onOperationalDomainChange(nextDomain: "business" | "shipping") {
+    setOperationalDomain(nextDomain);
+    setBranchCategory(nextDomain === "shipping" ? "clearing_agent" : "business");
+    setBanner(null);
+
+    if (!isUuid(location.countryId)) return;
+
+    const existing = await loadExistingMainBranch(location.countryId, nextDomain);
+    if (existing?.main) {
+      setBranchCode(existing.main.code);
+      setBanner({
+        type: "error",
+        message: `${nextDomain === "shipping" ? "Shipping Line" : "Business"} Main Branch Already Exists for this country.\nBranch Name: ${existing.main.name}\nBranch Code: ${existing.main.code}\nStatus: ${existing.main.status}`
+      });
+    } else {
+      setExistingMainBranch(null);
+      setBranchCode(nextSuggestedCode(locationMeta.country, existing?.list?.length ?? 0, nextDomain));
+    }
   }
 
   async function onLocationChange(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
@@ -880,18 +893,18 @@ function CountryBranchSetupContent() {
 
       if (!isUuid(next.countryId)) return;
 
-      const existing = await loadExistingMainBranch(next.countryId);
+      const existing = await loadExistingMainBranch(next.countryId, operationalDomain);
       if (existing?.main) {
         setBranchCode(existing.main.code);
         setBanner({
           type: "error",
           message:
-            `Country Branch Already Exists\nBranch Name: ${existing.main.name}\nBranch Code: ${existing.main.code}\nStatus: ${existing.main.status}`
+            `${operationalDomain === "shipping" ? "Shipping Line" : "Business"} Main Branch Already Exists\nBranch Name: ${existing.main.name}\nBranch Code: ${existing.main.code}\nStatus: ${existing.main.status}`
         });
         return;
       }
 
-      setBranchCode(nextSuggestedCode(meta.country, existing?.list?.length ?? 0));
+      setBranchCode(nextSuggestedCode(meta.country, existing?.list?.length ?? 0, operationalDomain));
     }
   }
 
@@ -937,7 +950,9 @@ function CountryBranchSetupContent() {
     }
 
     const countryName = locationMeta.country?.name || "Country";
-    const branchName = `${countryName} Main Branch`;
+    const branchName = operationalDomain === "shipping"
+      ? `${countryName} Shipping Line Main Branch`
+      : `${countryName} Main Branch`;
 
     setSaving(true);
     try {
@@ -955,6 +970,7 @@ function CountryBranchSetupContent() {
         body: JSON.stringify({
           id: editingCountryBranchId || undefined,
           countryId: location.countryId,
+          operationalDomain,
           name: branchName,
           code: branchCode,
           stateProvinceId: location.stateProvinceId || undefined,
@@ -1000,7 +1016,7 @@ function CountryBranchSetupContent() {
       }
       setBanner({ type: "success", message: `${editingCountryBranchId ? "Updated" : "Saved"}: ${branchName} (${branchCode})` });
       setEditingCountryBranchId("");
-      await loadExistingMainBranch(location.countryId);
+      await loadExistingMainBranch(location.countryId, operationalDomain);
     } catch (err) {
       setBanner({ type: "error", message: err instanceof Error ? err.message : "Failed to save country branch." });
     } finally {
@@ -1134,7 +1150,19 @@ function CountryBranchSetupContent() {
             ["8", t(lang, "cnbs.step8_title"), t(lang, "cnbs.step8_desc")],
             ["9", t(lang, "cnbs.step9_title"), t(lang, "cnbs.step9_desc")]
           ].map(([no, title, desc]) => (
-            <div key={no} className={cn("rounded-xl border px-3 py-2 transition min-w-[120px] max-w-[140px] flex-shrink-0", Number(no) === activeStep ? "border-cyan-500 bg-cyan-50 shadow-sm ring-1 ring-cyan-200 dark:border-cyan-500 dark:bg-cyan-950/40" : "border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50")}>
+            <div
+              key={no}
+              role="button"
+              tabIndex={0}
+              onClick={() => setActiveStep(Number(no))}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setActiveStep(Number(no)); }}
+              className={cn(
+                "rounded-xl border px-3 py-2 transition min-w-[120px] max-w-[140px] flex-shrink-0 cursor-pointer select-none hover:border-cyan-400",
+                Number(no) === activeStep
+                  ? "border-cyan-500 bg-cyan-50 shadow-sm ring-1 ring-cyan-200 dark:border-cyan-500 dark:bg-cyan-950/40"
+                  : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/70 dark:border-slate-800 dark:bg-slate-900/50"
+              )}
+            >
               <div className="flex items-start gap-2">
                 <span className={cn("flex h-6 w-6 min-w-6 min-h-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold", Number(no) === activeStep ? "bg-cyan-600 text-white" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200")}>{no}</span>
                 <span className="text-[10px] font-bold uppercase tracking-wide text-slate-900 dark:text-slate-100 leading-tight line-clamp-2">{title}</span>
@@ -1246,9 +1274,9 @@ function CountryBranchSetupContent() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <button
                         type="button"
-                        onClick={() => setBranchCategory("business")}
+                        onClick={() => void onOperationalDomainChange("business")}
                         className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
-                          branchCategory === "business"
+                          operationalDomain === "business"
                             ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-200 font-bold shadow-xs ring-1 ring-indigo-400/30"
                             : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
                         }`}
@@ -1261,9 +1289,9 @@ function CountryBranchSetupContent() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setBranchCategory("clearing_agent")}
+                        onClick={() => void onOperationalDomainChange("shipping")}
                         className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
-                          branchCategory === "clearing_agent"
+                          operationalDomain === "shipping"
                             ? "border-blue-500 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-200 font-bold shadow-xs ring-1 ring-blue-400/30"
                             : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
                         }`}
@@ -1343,11 +1371,38 @@ function CountryBranchSetupContent() {
                   <div className="space-y-2">
                     <BranchOwnerPicker
                       value={ownerId}
+                      companyId={companyId}
+                      countryId={location.countryId}
                       onValueChange={setOwnerId}
-                      onOwnerResolved={(owner) => {
-                        setOwnerName(owner?.name || "");
-                        setOwnerCustomerId(owner?.kind === "customer" ? owner.id : null);
-                        setOwnerProfileId(owner?.kind === "profile" ? owner.id : null);
+                      onOwnerResolved={(owner, customer) => {
+                        if (customer) {
+                          setOwnerName(customer.customer_name);
+                          setOwnerCustomerId(customer.id);
+                          setOwnerProfileId(null);
+                          setOwnerPreview({
+                            source: "customer",
+                            code: customer.person_code || compactCode(customer.id, "PER"),
+                            name: customer.customer_name,
+                            companyName: customer.company_name ?? company?.name ?? "-",
+                            contactPerson: customer.contact_person ?? customer.customer_name,
+                            mobile: customer.mobile ?? "-",
+                            whatsapp: customer.whatsapp ?? customer.mobile ?? "-",
+                            email: customer.email ?? "-",
+                            address: customer.address ?? "-",
+                            country: customer.country_name || locationMeta.country?.name || "-",
+                            branch: customer.city_name || existingMainBranch?.name || "-",
+                            role: "Company Owner"
+                          });
+                        } else if (!owner) {
+                          setOwnerName("");
+                          setOwnerCustomerId(null);
+                          setOwnerProfileId(null);
+                          setOwnerPreview(null);
+                        } else {
+                          setOwnerName(owner.name);
+                          setOwnerCustomerId(owner.kind === "customer" ? owner.id : null);
+                          setOwnerProfileId(owner.kind === "profile" ? owner.id : null);
+                        }
                       }}
                       placeholder={t(lang, "cnbs.search_owner")}
                       createButtonPlacement="below"
@@ -1441,7 +1496,7 @@ function CountryBranchSetupContent() {
                 />
               </section>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-slate-200 dark:border-slate-800">
+              <div className="order-last flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"

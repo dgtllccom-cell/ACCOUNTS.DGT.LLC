@@ -1,5 +1,6 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translateHeader, hasHeaderTranslation } from "@/lib/i18n/table-headers";
+import { localizeTerm } from "@/lib/i18n/transliteration";
 
 /**
  * Cell VALUE translations for the finite, enumerable vocabulary that appears inside
@@ -92,13 +93,34 @@ export const VALUE_TRANSLATIONS: Record<string, Row> = {
   "REMAINING": { ur: "باقی", ar: "المتبقي", fa: "باقی‌مانده", ps: "پاتې" },
   "FINAL": { ur: "حتمی", ar: "نهائي", fa: "نهایی", ps: "وروستی" },
 
-  // ── Common origin countries (goods origin column) ────────────────────────
+  // ── Common origin / operating countries & territories ────────────────────────
   "PAKISTAN": { ur: "پاکستان", ar: "باكستان", fa: "پاکستان", ps: "پاکستان" },
   "INDIA": { ur: "بھارت", ar: "الهند", fa: "هند", ps: "هند" },
   "CHINA": { ur: "چین", ar: "الصين", fa: "چین", ps: "چین" },
   "IRAN": { ur: "ایران", ar: "إيران", fa: "ایران", ps: "ایران" },
   "AFGHANISTAN": { ur: "افغانستان", ar: "أفغانستان", fa: "افغانستان", ps: "افغانستان" },
   "UNITED ARAB EMIRATES": { ur: "متحدہ عرب امارات", ar: "الإمارات العربية المتحدة", fa: "امارات متحده عربی", ps: "متحده عربي امارات" },
+  "UAE": { ur: "متحدہ عرب امارات", ar: "الإمارات", fa: "امارات", ps: "امارات" },
+  "DUBAI": { ur: "دبئی", ar: "دبي", fa: "دبی", ps: "دوبۍ" },
+  "SAUDI ARABIA": { ur: "سعودی عرب", ar: "المملكة العربية السعودية", fa: "عربستان سعودی", ps: "سعودي عربستان" },
+  "KSA": { ur: "سعودی عرب", ar: "السعودية", fa: "عربستان", ps: "سعودي" },
+  "UNITED STATES": { ur: "امریکہ", ar: "الولايات المتحدة", fa: "ایالات متحده", ps: "متحده ایالات" },
+  "USA": { ur: "امریکہ", ar: "أمريكا", fa: "آمریکا", ps: "امریکا" },
+  "UNITED KINGDOM": { ur: "برطانیہ", ar: "المملكة المتحدة", fa: "بریتانیا", ps: "برتانیه" },
+  "UK": { ur: "برطانیہ", ar: "بريطانيا", fa: "بریتانیا", ps: "برتانیه" },
+  "RUSSIA": { ur: "روس", ar: "روسيا", fa: "روسیه", ps: "روسیه" },
+  "TURKEY": { ur: "ترکی", ar: "تركيا", fa: "ترکیه", ps: "ترکیه" },
+  "TURKIYE": { ur: "ترکیہ", ar: "تركيا", fa: "ترکیه", ps: "ترکیه" },
+  "KAZAKHSTAN": { ur: "قازقستان", ar: "كازاخستان", fa: "قزاقستان", ps: "قزاقستان" },
+  "TAJIKISTAN": { ur: "تاجکستان", ar: "طاجيكستان", fa: "تاجیکستان", ps: "تاجکستان" },
+  "TURKMENISTAN": { ur: "ترکمانستان", ar: "تركمانستان", fa: "ترکمنستان", ps: "ترکمنستان" },
+  "UZBEKISTAN": { ur: "ازبکستان", ar: "أوزبكستان", fa: "ازبکستان", ps: "ازبکستان" },
+  "OMAN": { ur: "عمان", ar: "عُمان", fa: "عمان", ps: "عمان" },
+  "QATAR": { ur: "قطر", ar: "قطر", fa: "قطر", ps: "قطر" },
+  "KUWAIT": { ur: "کویت", ar: "الكويت", fa: "کویت", ps: "کویت" },
+  "BAHRAIN": { ur: "بحرین", ar: "البحرين", fa: "بحرین", ps: "بحرین" },
+  "GERMANY": { ur: "جرمنی", ar: "ألمانيا", fa: "آلمان", ps: "جرمني" },
+  "JAPAN": { ur: "جاپان", ar: "اليابان", fa: "ژاپن", ps: "جاپان" },
   "LOCAL": { ur: "مقامی", ar: "محلي", fa: "محلی", ps: "سیمه ییز" },
 
   // ── Inventory / stock movement types & statuses ──────────────────────────
@@ -186,3 +208,22 @@ export function hasValueTranslation(value: string | null | undefined): boolean {
   if (!value || !value.trim()) return false;
   return Boolean(VALUE_TRANSLATIONS[normalize(value)]) || hasHeaderTranslation(value);
 }
+
+/**
+ * Translate a country name into the active language across all 5 supported languages.
+ * Order: exact country dictionary -> header dictionary -> authentic names transliteration -> original text.
+ */
+export function translateCountry(
+  name: string | null | undefined,
+  lang: SupportedLanguage | string | null | undefined
+): string {
+  if (!name) return "";
+  const code = (lang || "en") as SupportedLanguage;
+  if (code === "en") return name;
+  const translatedVal = translateValue(code, name);
+  if (translatedVal && translatedVal !== name) return translatedVal;
+  const translit = localizeTerm(name, code);
+  if (translit && translit !== name) return translit;
+  return name;
+}
+

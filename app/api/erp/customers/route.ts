@@ -42,16 +42,13 @@ export async function GET(request: NextRequest) {
     // showed whatever script each record happened to be typed in, mixed record-to-record
     // regardless of the selected UI language (the exact "mixed English/Urdu names in the same
     // dropdown" bug). See lib/services/customers-service.ts for the write side.
-    let customers: any[] = (result as any).customers ?? [];
-    // Always resolve (see [id]/route.ts comment — skipping for lang === "en" would leak
-    // non-English source text into the English view whenever a record's original language
-    // wasn't English). ONE row → the viewer's language for EVERY human-readable column:
-    // the customer's own name fields AND the denormalised location join names.
-    if (Array.isArray(customers) && customers.length > 0) {
-      // the two passes touch disjoint fields (own names vs joined location names) → run together
+    let rawCustomers: any[] = (result as any).customers ?? [];
+    let customers: any[] = rawCustomers;
+    if (Array.isArray(rawCustomers) && rawCustomers.length > 0) {
+      // Localize metadata fields without destructively overwriting registered proper names
       const [ownNames, joined] = await Promise.all([
-        localizeRecordFields<any>(customers, "customers", ["customer_name", "company_name", "contact_person"], lang),
-        localizeJoinedNames<any>(customers, lang, [
+        localizeRecordFields<any>(rawCustomers, "customers", ["company_name", "contact_person"], lang),
+        localizeJoinedNames<any>(rawCustomers, lang, [
           { idField: "country_id", nameField: "country_name", table: "countries" },
           { idField: "state_province_id", nameField: "state_province_name", table: "states_provinces" },
           { idField: "district_id", nameField: "district_name", table: "districts" },
@@ -59,11 +56,24 @@ export async function GET(request: NextRequest) {
         ]),
       ]);
       const joinedById = new Map(joined.map((r: any) => [r.id, r]));
+      const rawById = new Map(rawCustomers.map((r: any) => [r.id, r]));
       customers = ownNames.map((r: any) => {
+        const raw = rawById.get(r.id) || r;
         const j = joinedById.get(r.id);
-        return j ? { ...r, country_name: j.country_name, state_province_name: j.state_province_name, district_name: j.district_name, city_name: j.city_name } : r;
+        return {
+          ...r,
+          // Preserve registered spelling and original language uncorrupted
+          customer_name: raw.original_customer_name || raw.customer_name,
+          original_customer_name: raw.original_customer_name || raw.customer_name,
+          customer_name_en: raw.customer_name_en || (raw.original_language_code === "en" ? raw.customer_name : null),
+          native_customer_name: raw.native_customer_name || (raw.original_language_code !== "en" && raw.original_language_code ? raw.customer_name : null),
+          linked_companies: raw.linked_companies ?? [],
+          companies_count: raw.companies_count ?? (raw.linked_companies?.length ?? 0),
+          linked_branches: raw.linked_branches ?? [],
+          branches_count: raw.branches_count ?? (raw.linked_branches?.length ?? 0),
+          ...(j ? { country_name: j.country_name, state_province_name: j.state_province_name, district_name: j.district_name, city_name: j.city_name } : {})
+        };
       });
-
     }
 
     return apiOk({ ...(result as any), customers });

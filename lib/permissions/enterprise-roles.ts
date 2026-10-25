@@ -821,7 +821,11 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "inventory:read",
     ...SHIPPING_APPROVED_BUNDLE
   ],
-  staff_user: ["transactions:create", "transactions:read", "customers:read", "companies:read", "shipping_records:read", "whatsapp:read", "location_master:read", "route_templates:read"],
+  staff_user: [
+    "transactions:create", "transactions:read",
+    "roznamcha:create", "roznamcha:read",
+    "customers:read", "companies:read", "shipping_records:read", "whatsapp:read", "location_master:read", "route_templates:read"
+  ],
   auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read", "uae_tax:read", "uae_tax_filing:read", "pk_tax:read", "pk_tax_filing:read", "contracts:read"],
   global_operations_admin: [...OPERATIONS_PERMISSIONS],
   country_operations_admin: [...OPERATIONS_PERMISSIONS],

@@ -42,7 +42,8 @@ import {
   DollarSign,
   Clock,
   Layers,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -239,6 +240,16 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     photoUrl?: string;
   }>({});
 
+  // Multi-login & username verification state
+  const [registrationMode, setRegistrationMode] = useState<"create_login" | "use_existing">("create_login");
+  const [existingLogins, setExistingLogins] = useState<any[]>([]);
+  const [loadingExistingLogins, setLoadingExistingLogins] = useState(false);
+  const [selectedExistingUserId, setSelectedExistingUserId] = useState<string>("");
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [usernameConflict, setUsernameConflict] = useState<string | null>(null);
+  const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
+
   // Step 1: User Core State
   const [userCode, setUserCode] = useState("");
   useEffect(() => {
@@ -248,6 +259,63 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [lastName, setLastName] = useState("");
   const [fullName, setFullName] = useState("");
   const [loginUsername, setLoginUsername] = useState("");
+
+  async function checkEmployeeExistingLogins(empId: string, personId?: string, empName?: string) {
+    if (!empId) {
+      setExistingLogins([]);
+      return;
+    }
+    setLoadingExistingLogins(true);
+    try {
+      const res = await fetch(`/api/erp/users/check-username?employeeId=${encodeURIComponent(empId)}&personMasterId=${encodeURIComponent(personId || "")}&fullName=${encodeURIComponent(empName || "")}`).then((r) => r.json());
+      if (res?.data?.existingLogins && Array.isArray(res.data.existingLogins)) {
+        setExistingLogins(res.data.existingLogins);
+        if (res.data.existingLogins.length > 0) {
+          setSelectedExistingUserId(res.data.existingLogins[0].userId);
+        }
+      } else {
+        setExistingLogins([]);
+      }
+    } catch (e) {
+      console.error("Failed to check existing logins for employee", e);
+    } finally {
+      setLoadingExistingLogins(false);
+    }
+  }
+
+  async function verifyUsername(uname: string, overrideContext?: any) {
+    const clean = uname.trim();
+    if (!clean) {
+      setUsernameAvailable(null);
+      setUsernameConflict(null);
+      setUsernameSuggestions([]);
+      return;
+    }
+    setIsCheckingUsername(true);
+    try {
+      const cName = overrideContext?.countryName || selectedCountry?.name || "";
+      const bCode = overrideContext?.branchCode || branchCode || selectedMainBranch?.code || "";
+      const dom = overrideContext?.operationalDomain || operationalDomain || "business";
+      const empName = fullName || employeeProfile.fullName || "";
+
+      const res = await fetch(`/api/erp/users/check-username?username=${encodeURIComponent(clean)}&country=${encodeURIComponent(cName)}&branch=${encodeURIComponent(bCode)}&operationalDomain=${encodeURIComponent(dom)}&fullName=${encodeURIComponent(empName)}`).then((r) => r.json());
+      if (res?.data) {
+        if (res.data.available) {
+          setUsernameAvailable(true);
+          setUsernameConflict(null);
+          setUsernameSuggestions([]);
+        } else {
+          setUsernameAvailable(false);
+          setUsernameConflict(clean);
+          setUsernameSuggestions(res.data.suggestions || []);
+        }
+      }
+    } catch (e) {
+      console.error("Error verifying username", e);
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  }
   const [contactPhone, setContactPhone] = useState("");
   const [personalEmail, setPersonalEmail] = useState("");
   const [designation, setDesignation] = useState("Staff");
@@ -545,6 +613,24 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         cityName: emp.city_branch?.name || emp.city_branch?.cityName,
         photoUrl: emp.photo_url || emp.person?.photo_url
       });
+
+      const isCust = selectedEmployeeId.startsWith("cust_");
+      const custId = isCust ? selectedEmployeeId.replace(/^cust_/, "") : null;
+      const cust = isCust ? customersList.find((c) => c.id === custId) : null;
+      const personId = isCust ? custId : (emp.person_master_id || emp.person?.id);
+      const name = isCust
+        ? (cust?.customer_name || cust?.contact_person || cust?.company_name || "")
+        : empName;
+      checkEmployeeExistingLogins(selectedEmployeeId, personId, name);
+      const candUser = (name || "user").toLowerCase().trim().replace(/[^a-z0-9]/g, ".");
+      verifyUsername(candUser, {
+        countryName: emp.country?.name,
+        branchCode: code,
+        operationalDomain
+      });
+    } else {
+      setExistingLogins([]);
+      setRegistrationMode("create_login");
     }
   }, [selectedEmployeeId, hrEmployees, customersList, activeLang]);
 
@@ -883,6 +969,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       return true;
     }
     if (currentStep === 3) {
+      if (registrationMode === "use_existing") return Boolean(selectedExistingUserId);
       if (!loginUsername.trim()) return false;
       const cleanEmail = personalEmail.trim();
       if (!cleanEmail || !/\S+@\S+\.\S+/.test(cleanEmail)) return false;
@@ -897,10 +984,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   }
 
   function next() {
-    if (step === 2 && !personalEmail.trim()) {
-      const codeClean = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
-      const userClean = (loginUsername || firstName || fullName || "user").toLowerCase().replace(/[^a-z0-9]/g, "");
-      setPersonalEmail(`${userClean}.${codeClean}@dgt.llc`);
+    if (step === 2 && registrationMode === "create_login") {
+      verifyUsername(loginUsername);
+      if (!personalEmail.trim()) {
+        const codeClean = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
+        const userClean = (loginUsername || firstName || fullName || "user").toLowerCase().replace(/[^a-z0-9]/g, "");
+        setPersonalEmail(`${userClean}.${codeClean}@dgt.llc`);
+      }
     }
     if (step < 4) setStep((s) => (s + 1) as WizardStep);
   }
@@ -924,29 +1014,36 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     }
 
     const cleanEmail = personalEmail.trim();
-    if (!cleanEmail || !/\S+@\S+\.\S+/.test(cleanEmail)) {
-      setBanner({
-        tone: "err",
-        text: centralT(activeLang, "urw2.err_email_valid" as never, "A valid Login Email Address (e.g. user@dgt.llc or personal@email.com) is required for user login access.")
-      });
-      return;
-    }
-
     const isEdit = Boolean(editUserId);
 
-    if (!isEdit && (!password || password.length < 8)) {
-      setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_pw_login" as never, "Password must be at least 8 characters for login access.") });
-      return;
-    }
+    if (registrationMode === "use_existing") {
+      if (!selectedExistingUserId) {
+        setBanner({ tone: "err", text: "Please select an existing user account to assign this scope to." });
+        return;
+      }
+    } else {
+      if (!cleanEmail || !/\S+@\S+\.\S+/.test(cleanEmail)) {
+        setBanner({
+          tone: "err",
+          text: centralT(activeLang, "urw2.err_email_valid" as never, "A valid Login Email Address (e.g. user@dgt.llc or personal@email.com) is required for user login access.")
+        });
+        return;
+      }
 
-    if (password && password.length < 8) {
-      setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_pw_len" as never, "Password must be at least 8 characters.") });
-      return;
-    }
+      if (!isEdit && (!password || password.length < 8)) {
+        setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_pw_login" as never, "Password must be at least 8 characters for login access.") });
+        return;
+      }
 
-    if (password && password !== confirmPassword) {
-      setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_pw_match" as never, "Confirm Password does not match.") });
-      return;
+      if (password && password.length < 8) {
+        setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_pw_len" as never, "Password must be at least 8 characters.") });
+        return;
+      }
+
+      if (password && password !== confirmPassword) {
+        setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_pw_match" as never, "Confirm Password does not match.") });
+        return;
+      }
     }
 
     let fallbackCountryId = countries[0]?.id || null;
@@ -978,6 +1075,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     setSaving(true);
     try {
       const payload: any = {
+        mode: registrationMode,
+        assignExistingUserId: registrationMode === "use_existing" ? selectedExistingUserId : undefined,
         role: role,
         fullName: fullName.trim(),
         userCode: issuedCode,
@@ -1019,9 +1118,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         const json = await fetchRes.json();
         if (!fetchRes.ok) throw new Error(json?.error?.message || json?.error || "Failed to update user.");
       } else {
-        payload.email = cleanEmail;
-        payload.password = password;
-        payload.preferredLanguage = preferredLanguage;
+        if (registrationMode === "create_login") {
+          payload.email = cleanEmail;
+          payload.password = password;
+          payload.preferredLanguage = preferredLanguage;
+        } else {
+          const selectedLogin = existingLogins.find((l) => l.userId === selectedExistingUserId);
+          payload.email = selectedLogin?.email || cleanEmail;
+        }
         const createRes = await apiPost<{ userId: string; userCode: string; email?: string }>("/api/erp/users", payload);
         if (createRes && (createRes as any).userId) {
           resUserId = (createRes as any).userId;
@@ -1070,10 +1174,17 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       };
 
       setSavedUserData(completedUser);
-      setBanner({ tone: "ok", text: isEdit ? "User profile & customized RBAC permissions updated successfully." : "User registered & customized RBAC permissions saved successfully." });
+      setBanner({ tone: "ok", text: isEdit ? "User profile & customized RBAC permissions updated successfully." : registrationMode === "use_existing" ? "Additional company/branch scope assigned to existing user successfully." : "User registered & customized RBAC permissions saved successfully." });
     } catch (e: any) {
       const errMsg = e?.message || (typeof e === "string" ? e : "User registration operation failed.");
-      if (errMsg.includes("already registered") || errMsg.includes("already exists")) {
+      if (errMsg.includes("username") && (errMsg.includes("already in use") || errMsg.includes("duplicate") || errMsg.includes("DUPLICATE_USER"))) {
+        setUsernameConflict(loginUsername.trim());
+        verifyUsername(loginUsername.trim());
+        setBanner({
+          tone: "err",
+          text: errMsg
+        });
+      } else if (errMsg.includes("already registered") || errMsg.includes("already exists")) {
         setBanner({
           tone: "err",
           text: `A user with email address '${cleanEmail}' has already been registered. Please click "+ Auto-Generate @dgt.llc Email" or use a unique email identifier.`
@@ -1725,6 +1836,122 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     />
                   </div>
 
+                  {/* Multi-Login & Scope Assignment Option Selector */}
+                  {selectedEmployeeId && (
+                    <div className="rounded-xl border border-blue-200 bg-blue-50/60 dark:border-blue-900/60 dark:bg-blue-950/20 p-3.5 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          <div>
+                            <span className="text-xs font-bold text-blue-950 dark:text-blue-200">
+                              Authoritative Employee Master Linked:{" "}
+                              <span className="text-emerald-700 dark:text-emerald-300 font-extrabold">{fullName || employeeProfile.fullName}</span>
+                            </span>
+                            <p className="text-[11px] text-blue-700/90 dark:text-blue-400">
+                              {loadingExistingLogins
+                                ? "Checking existing employee user accounts..."
+                                : existingLogins.length > 0
+                                ? `This authoritative employee currently has ${existingLogins.length} active login account${existingLogins.length > 1 ? "s" : ""}. One employee can support multiple user accounts.`
+                                : "No existing login accounts found for this employee. A new login will be created and linked to this employee."}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/80 dark:text-blue-200 font-bold">
+                          EMP ID: {employeeCode || "EMP-LINKED"}
+                        </span>
+                      </div>
+
+                      {existingLogins.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                          {/* Option 1: Use Existing User */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRegistrationMode("use_existing");
+                              if (existingLogins.length > 0 && !selectedExistingUserId) {
+                                setSelectedExistingUserId(existingLogins[0].userId);
+                              }
+                            }}
+                            className={`p-3 rounded-lg border text-left transition flex flex-col justify-between cursor-pointer ${
+                              registrationMode === "use_existing"
+                                ? "border-blue-600 bg-white shadow-sm ring-2 ring-blue-500/20 dark:bg-slate-900"
+                                : "border-blue-200/80 bg-white/70 hover:bg-white dark:border-blue-900/60 dark:bg-slate-900/50"
+                            }`}
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                                  <span className={`h-2.5 w-2.5 rounded-full ${registrationMode === "use_existing" ? "bg-blue-600" : "bg-slate-300"}`} />
+                                  Use Existing User
+                                </span>
+                                <span className="text-[9.5px] uppercase font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 px-1.5 py-0.2 rounded">
+                                  Add Scope
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                                Assign an additional permitted company/branch scope to the existing account without creating another login ID.
+                              </p>
+                            </div>
+                            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[10.5px] font-mono text-slate-700 dark:text-slate-300">
+                              Account: <strong className="text-blue-600 dark:text-blue-400">{existingLogins[0]?.username || existingLogins[0]?.userCode}</strong> ({existingLogins[0]?.userCode})
+                            </div>
+                          </button>
+
+                          {/* Option 2: Create Additional Login */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRegistrationMode("create_login");
+                              setUserCode(makeAutoUserCode());
+                            }}
+                            className={`p-3 rounded-lg border text-left transition flex flex-col justify-between cursor-pointer ${
+                              registrationMode === "create_login"
+                                ? "border-emerald-600 bg-white shadow-sm ring-2 ring-emerald-500/20 dark:bg-slate-900"
+                                : "border-blue-200/80 bg-white/70 hover:bg-white dark:border-blue-900/60 dark:bg-slate-900/50"
+                            }`}
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                                  <span className={`h-2.5 w-2.5 rounded-full ${registrationMode === "create_login" ? "bg-emerald-600" : "bg-slate-300"}`} />
+                                  Create Additional Login
+                                </span>
+                                <span className="text-[9.5px] uppercase font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.2 rounded">
+                                  New Login
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                                Create a separate login with its own unique User ID and login username linked to this same Employee ID.
+                              </p>
+                            </div>
+                            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[10.5px] font-mono text-emerald-600 dark:text-emerald-400">
+                              + New Unique User ID & Credentials
+                            </div>
+                          </button>
+                        </div>
+                      )}
+
+                      {registrationMode === "use_existing" && existingLogins.length > 1 && (
+                        <div className="space-y-1 pt-1">
+                          <Label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            Select which existing user account to expand scope for:
+                          </Label>
+                          <select
+                            value={selectedExistingUserId}
+                            onChange={(e) => setSelectedExistingUserId(e.target.value)}
+                            className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs font-mono text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                          >
+                            {existingLogins.map((lg) => (
+                              <option key={lg.userId} value={lg.userId}>
+                                {lg.userCode} — {lg.username} ({lg.countryName || "Global"} / {lg.cityBranchName || lg.countryBranchName || "Main"}) [{lg.role}]
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Editable Full Name & Personal Information (Direct & Override) */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3.5 space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
@@ -1843,14 +2070,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {/* STEP 2: Role & Branch Access Scope */}
               {step === 2 && (
                 <div className="space-y-4">
-                  {/* 1. Geographic & Branch Scopes */}
+                  {/* 1. Country & Operational Section */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 p-3.5 space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                       <MapPin className="h-4 w-4 text-emerald-600" />
-                      <span>{centralT(activeLang, "urw2.branch_scope_heading" as never, "1. Country, City & Branch Assignment")}</span>
+                      <span>{centralT(activeLang, "urw2.branch_scope_heading" as never, "1. Country & Operational Section")}</span>
                     </Label>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-3 sm:grid-cols-1">
                       <SearchSelect
                         label={loadingCountries ? `${tr("country")} (...)` : tr("country")}
                         value={countryId}
@@ -1859,7 +2086,71 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         options={countryOptions}
                         onValueChange={setCountryId}
                       />
+                    </div>
 
+                    {/* Operational Section Selector (Business vs Shipping Line) */}
+                    <div className="space-y-1.5 pt-1">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Operational Section *
+                      </Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button
+                          type="button"
+                          disabled={role === "super_admin"}
+                          onClick={() => {
+                            setOperationalDomain("business");
+                            setClearingAgentId("");
+                            if (branchType === "main") setRole("main_branch_admin");
+                            else setRole("city_branch_admin");
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            operationalDomain === "business"
+                              ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-1 ring-emerald-500/30 font-bold shadow-xs"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 text-xs font-bold">
+                            <span className="text-lg">🏢</span>
+                            <span>{centralT(activeLang, "urw2.domain_business" as never, "Business Section")}</span>
+                          </div>
+                          <p className="text-[10.5px] mt-1 text-slate-500 dark:text-slate-400 font-normal">
+                            Commercial trading, general branches, sales, cashier & accounting operations.
+                          </p>
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={role === "super_admin"}
+                          onClick={() => {
+                            setOperationalDomain("shipping");
+                            setRole("agent_user");
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            operationalDomain === "shipping"
+                              ? "border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 ring-1 ring-blue-500/30 font-bold shadow-xs"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 text-xs font-bold">
+                            <span className="text-lg">🚢</span>
+                            <span>{centralT(activeLang, "urw2.domain_shipping" as never, "Shipping Line Section")}</span>
+                          </div>
+                          <p className="text-[10.5px] mt-1 text-slate-500 dark:text-slate-400 font-normal">
+                            Shipping lines, port clearance, customs clearing agents & container tracking.
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Branch Assignment (scoped to Country and Operational Section) */}
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 p-3.5 space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Shield className="h-4 w-4 text-emerald-600" />
+                      <span>{`2. Assigned Branch (${operationalDomain === "shipping" ? "Shipping Line Section" : "Business Section"})`}</span>
+                    </Label>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
                       <SearchSelect
                         label={tr("branchType")}
                         value={branchType}
@@ -1875,9 +2166,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
                       {branchType === "main" ? (
                         <SearchSelect
-                          label={tr("assignedBranch")}
+                          label={`${operationalDomain === "shipping" ? "Shipping Line" : "Business"} Main Branch *`}
                           value={countryBranchId}
-                          placeholder={centralT(activeLang, "urw2.select_main_branch" as never, "Select main branch")}
+                          placeholder={
+                            !countryId
+                              ? centralT(activeLang, "urw2.select_country" as never, "Select country first")
+                              : mainBranches.length === 0
+                              ? `No ${operationalDomain === "shipping" ? "Shipping Line" : "Business"} Main Branch found`
+                              : centralT(activeLang, "urw2.select_main_branch" as never, "Select main branch")
+                          }
                           options={mainBranches.map((b) => ({
                             value: b.id,
                             label: `${b.name} (${b.code})`,
@@ -1888,9 +2185,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         />
                       ) : (
                         <SearchSelect
-                          label={tr("assignedBranch")}
+                          label={`${operationalDomain === "shipping" ? "Shipping Line" : "Business"} City Branch *`}
                           value={cityBranchId}
-                          placeholder={centralT(activeLang, "urw2.select_city_branch" as never, "Select city branch")}
+                          placeholder={
+                            !countryId
+                              ? centralT(activeLang, "urw2.select_country" as never, "Select country first")
+                              : cityBranches.length === 0
+                              ? `No ${operationalDomain === "shipping" ? "Shipping Line" : "Business"} City Branch found`
+                              : centralT(activeLang, "urw2.select_city_branch" as never, "Select city branch")
+                          }
                           options={cityBranches.map((b) => ({
                             value: b.id,
                             label: `${b.city_name || b.cityName || ""} - ${b.name} (${b.code})`,
@@ -1901,10 +2204,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         />
                       )}
 
-                      <div className="space-y-1">
+                      <div className="space-y-1 sm:col-span-2">
                         <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{th("Branch Code & Scope")}</Label>
                         <Input
-                          value={`${branchCode || "MAIN"} (${effectiveCurrency})`}
+                          value={`${branchCode || "MAIN"} (${effectiveCurrency}) [${operationalDomain.toUpperCase()}]`}
                           readOnly
                           className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200"
                         />
@@ -1912,97 +2215,117 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
                   </div>
 
-                  {/* 2. User Category Selection: Admin vs Normal vs Shipping Line */}
+                  {/* 3. User Role & Authority Tier */}
                   <div className="rounded-xl border border-teal-200 dark:border-teal-900 bg-teal-50/50 dark:bg-teal-950/20 p-3.5 space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-teal-900 dark:text-teal-300 flex items-center gap-1.5">
-                      <Shield className="h-4 w-4 text-teal-600" />
-                      <span>{centralT(activeLang, "urw2.user_type_heading" as never, "2. User Category & Authority Tier")}</span>
+                      <ShieldCheck className="h-4 w-4 text-teal-600" />
+                      <span>{centralT(activeLang, "urw2.user_type_heading" as never, "3. User Category & Authority Tier")}</span>
                     </Label>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                      {/* Option 1: Admin User */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOperationalDomain("business");
-                          setClearingAgentId("");
-                          if (branchType === "main") setRole("main_branch_admin");
-                          else setRole("city_branch_admin");
-                        }}
-                        className={`p-3 rounded-xl border text-left transition-all ${
-                          (role === "city_branch_admin" || role === "main_branch_admin" || role === "country_admin" || role === "super_admin") && operationalDomain === "business"
-                            ? "border-teal-600 bg-teal-600 text-white shadow-sm"
-                            : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 font-bold text-xs">
-                          <ShieldCheck className="h-4 w-4 shrink-0" />
-                          <span>Admin User</span>
-                        </div>
-                        <p className={`text-[10px] mt-1 line-clamp-2 ${
-                          (role === "city_branch_admin" || role === "main_branch_admin" || role === "country_admin" || role === "super_admin") && operationalDomain === "business"
-                            ? "text-teal-100"
-                            : "text-slate-500"
-                        }`}>
-                          Branch & City Administrator with management and approval authority.
-                        </p>
-                      </button>
+                    {operationalDomain === "business" ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {/* Option 1: Admin User */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (branchType === "main") setRole("main_branch_admin");
+                            else setRole("city_branch_admin");
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            role === "city_branch_admin" || role === "main_branch_admin" || role === "country_admin" || role === "super_admin"
+                              ? "border-teal-600 bg-teal-600 text-white shadow-sm"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 font-bold text-xs">
+                            <ShieldCheck className="h-4 w-4 shrink-0" />
+                            <span>{centralT(activeLang, "urw2.role_country_admin" as never, "Admin User")}</span>
+                          </div>
+                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                            role === "city_branch_admin" || role === "main_branch_admin" || role === "country_admin" || role === "super_admin"
+                              ? "text-teal-100"
+                              : "text-slate-500"
+                          }`}>
+                            Branch & City Administrator with management and approval authority.
+                          </p>
+                        </button>
 
-                      {/* Option 2: Normal Operational Staff */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOperationalDomain("business");
-                          setClearingAgentId("");
-                          if (role !== "staff_user" && role !== "cashier" && role !== "accountant" && role !== "auditor_viewer") {
-                            setRole("staff_user");
-                          }
-                        }}
-                        className={`p-3 rounded-xl border text-left transition-all ${
-                          (role === "staff_user" || role === "cashier" || role === "accountant" || role === "auditor_viewer" || role === "country_user") && operationalDomain === "business"
-                            ? "border-teal-600 bg-teal-600 text-white shadow-sm"
-                            : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 font-bold text-xs">
-                          <Users className="h-4 w-4 shrink-0" />
-                          <span>Normal Staff User</span>
-                        </div>
-                        <p className={`text-[10px] mt-1 line-clamp-2 ${
-                          (role === "staff_user" || role === "cashier" || role === "accountant" || role === "auditor_viewer" || role === "country_user") && operationalDomain === "business"
-                            ? "text-teal-100"
-                            : "text-slate-500"
-                        }`}>
-                          Daily transactional operations, cash register, sales, and accounting.
-                        </p>
-                      </button>
+                        {/* Option 2: Normal Operational Staff */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (role !== "staff_user" && role !== "cashier" && role !== "accountant" && role !== "auditor_viewer") {
+                              setRole("staff_user");
+                            }
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            role === "staff_user" || role === "cashier" || role === "accountant" || role === "auditor_viewer" || role === "country_user"
+                              ? "border-teal-600 bg-teal-600 text-white shadow-sm"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 font-bold text-xs">
+                            <Users className="h-4 w-4 shrink-0" />
+                            <span>{centralT(activeLang, "urw2.role_staff_user" as never, "Normal Staff User")}</span>
+                          </div>
+                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                            role === "staff_user" || role === "cashier" || role === "accountant" || role === "auditor_viewer" || role === "country_user"
+                              ? "text-teal-100"
+                              : "text-slate-500"
+                          }`}>
+                            Daily transactional operations, cash register, sales, and accounting.
+                          </p>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {/* Option 1: Shipping Admin */}
+                        <button
+                          type="button"
+                          onClick={() => setRole("main_branch_admin")}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            role === "main_branch_admin" || role === "city_branch_admin"
+                              ? "border-teal-600 bg-teal-600 text-white shadow-sm"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 font-bold text-xs">
+                            <ShieldCheck className="h-4 w-4 shrink-0" />
+                            <span>{centralT(activeLang, "urw2.role_main_branch_admin" as never, "Shipping Branch Admin")}</span>
+                          </div>
+                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                            role === "main_branch_admin" || role === "city_branch_admin"
+                              ? "text-teal-100"
+                              : "text-slate-500"
+                          }`}>
+                            Managerial and supervisory authority for the Shipping Line branch.
+                          </p>
+                        </button>
 
-                      {/* Option 3: Shipping Line / Clearing Agent */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOperationalDomain("shipping");
-                          setRole("agent_user");
-                        }}
-                        className={`p-3 rounded-xl border text-left transition-all ${
-                          operationalDomain === "shipping" || role === "agent_user"
-                            ? "border-teal-600 bg-teal-600 text-white shadow-sm"
-                            : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 font-bold text-xs">
-                          <Globe2 className="h-4 w-4 shrink-0" />
-                          <span>Shipping / Agent User</span>
-                        </div>
-                        <p className={`text-[10px] mt-1 line-clamp-2 ${
-                          operationalDomain === "shipping" || role === "agent_user"
-                            ? "text-teal-100"
-                            : "text-slate-500"
-                        }`}>
-                          Port clearance, container tracking, customs documentation & bills.
-                        </p>
-                      </button>
-                    </div>
+                        {/* Option 2: Shipping / Agent User */}
+                        <button
+                          type="button"
+                          onClick={() => setRole("agent_user")}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            role === "agent_user"
+                              ? "border-teal-600 bg-teal-600 text-white shadow-sm"
+                              : "border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 font-bold text-xs">
+                            <Globe2 className="h-4 w-4 shrink-0" />
+                            <span>{centralT(activeLang, "urw2.role_agent_user" as never, "Shipping / Agent User")}</span>
+                          </div>
+                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                            role === "agent_user"
+                              ? "text-teal-100"
+                              : "text-slate-500"
+                          }`}>
+                            Port clearance, container tracking, customs documentation & bills.
+                          </p>
+                        </button>
+                      </div>
+                    )}
 
                     {/* Specific Designation Picker for Normal Staff */}
                     {(role === "staff_user" || role === "cashier" || role === "accountant" || role === "auditor_viewer") && operationalDomain === "business" && (
@@ -2084,59 +2407,154 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {/* STEP 3: Login Credentials & Mobile Access */}
               {step === 3 && (
                 <div className="space-y-4">
-                  {/* Primary Login Email Address */}
-                  <div className="space-y-1.5 rounded-xl border border-blue-200 bg-blue-50/50 p-3.5 dark:border-blue-900 dark:bg-blue-950/20">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs font-black uppercase tracking-wide text-blue-950 dark:text-blue-200 flex items-center gap-1.5">
-                        <Mail className="h-3.5 w-3.5 text-blue-600" />
-                        <span>{centralT(activeLang, "urw2.login_email_required" as never, "Login Email Address (لاگ ان ای میل ایڈریس) *")}</span>
-                      </Label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const codeClean = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
-                          const userClean = (loginUsername || firstName || fullName || "user").toLowerCase().replace(/[^a-z0-9]/g, "");
-                          setPersonalEmail(`${userClean}.${codeClean}@dgt.llc`);
-                        }}
-                        className="text-[10.5px] font-bold text-blue-700 hover:text-blue-900 dark:text-blue-300 hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <Sparkles className="h-3 w-3" />
-                        <span>{centralT(activeLang, "urw2.autogen_email" as never, "+ Auto-Generate @dgt.llc Email")}</span>
-                      </button>
+                  {registrationMode === "use_existing" ? (
+                    /* Existing User Account Scope Assignment Overview */
+                    <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900 dark:bg-blue-950/20 space-y-3">
+                      <div className="flex items-center gap-2 text-xs font-bold text-blue-950 dark:text-blue-200">
+                        <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                        <span>{centralT(activeLang, "urw2.assign_scope_title" as never, "Assigning Additional Scope to Existing User Account")}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-xs bg-white dark:bg-slate-900 p-3 rounded-lg border border-blue-100 dark:border-blue-900/40">
+                        <div>
+                          <span className="text-slate-400 block text-[10.5px]">User ID / Code:</span>
+                          <strong className="font-mono text-blue-700 dark:text-blue-300">
+                            {existingLogins.find((l) => l.userId === selectedExistingUserId)?.userCode || userCode}
+                          </strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[10.5px]">Login Username:</span>
+                          <strong className="font-mono text-emerald-600">
+                            {existingLogins.find((l) => l.userId === selectedExistingUserId)?.username || loginUsername}
+                          </strong>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-400 block text-[10.5px]">Login Email:</span>
+                          <strong className="font-mono text-slate-800 dark:text-slate-200">
+                            {existingLogins.find((l) => l.userId === selectedExistingUserId)?.email || personalEmail}
+                          </strong>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-blue-700/90 dark:text-blue-400">
+                        This existing user account&apos;s login username and password will remain unchanged. Completing this wizard will assign the new branch scope, operational domain, and role permissions directly to this account.
+                      </p>
                     </div>
-                    <div className="relative">
-                      <Mail className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                      <Input
-                        type="email"
-                        value={personalEmail}
-                        onChange={(e) => setPersonalEmail(e.target.value)}
-                        placeholder="e.g. user@dgt.llc or user@gmail.com"
-                        className="h-9 pl-8 text-xs font-mono font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-900 border-blue-300 dark:border-blue-800"
-                        required
-                      />
-                    </div>
-                    <p className="text-[11px] text-blue-700/90 dark:text-blue-400">
-                      {centralT(
-                        activeLang,
-                        "urw2.login_email_hint" as never,
-                        "CRITICAL: This email address will be required along with your password when logging into the ERP system at /auth/login."
-                      )}
-                    </p>
-                  </div>
+                  ) : (
+                    <>
+                      {/* Primary Login Email Address */}
+                      <div className="space-y-1.5 rounded-xl border border-blue-200 bg-blue-50/50 p-3.5 dark:border-blue-900 dark:bg-blue-950/20">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-black uppercase tracking-wide text-blue-950 dark:text-blue-200 flex items-center gap-1.5">
+                            <Mail className="h-3.5 w-3.5 text-blue-600" />
+                            <span>{centralT(activeLang, "urw2.login_email_required" as never, "Login Email Address (لاگ ان ای میل ایڈریس) *")}</span>
+                          </Label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const codeClean = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
+                              const userClean = (loginUsername || firstName || fullName || "user").toLowerCase().replace(/[^a-z0-9]/g, "");
+                              setPersonalEmail(`${userClean}.${codeClean}@dgt.llc`);
+                            }}
+                            className="text-[10.5px] font-bold text-blue-700 hover:text-blue-900 dark:text-blue-300 hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            <span>{centralT(activeLang, "urw2.autogen_email" as never, "+ Auto-Generate @dgt.llc Email")}</span>
+                          </button>
+                        </div>
+                        <div className="relative">
+                          <Mail className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            type="email"
+                            value={personalEmail}
+                            onChange={(e) => setPersonalEmail(e.target.value)}
+                            placeholder="e.g. user@dgt.llc or user@gmail.com"
+                            className="h-9 pl-8 text-xs font-mono font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-900 border-blue-300 dark:border-blue-800"
+                            required
+                          />
+                        </div>
+                        <p className="text-[11px] text-blue-700/90 dark:text-blue-400">
+                          {centralT(
+                            activeLang,
+                            "urw2.login_email_hint" as never,
+                            "CRITICAL: This email address will be required along with your password when logging into the ERP system at /auth/login."
+                          )}
+                        </p>
+                      </div>
 
-                  {/* Username */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("username")}</Label>
-                      <span className="text-[10.5px] font-mono text-emerald-600 font-bold">User Code: {userCode}</span>
-                    </div>
-                    <Input
-                      value={loginUsername}
-                      onChange={(e) => setLoginUsername(e.target.value)}
-                      placeholder={th("e.g. muhammad.ali")}
-                      className="h-9 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
-                    />
-                  </div>
+                      {/* Username */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <span>{tr("username")} *</span>
+                            {isCheckingUsername ? (
+                              <span className="text-[10px] text-slate-400 font-normal">Checking...</span>
+                            ) : usernameAvailable === true ? (
+                              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200">
+                                ✓ Available
+                              </span>
+                            ) : usernameAvailable === false ? (
+                              <span className="text-[10px] text-rose-600 font-bold bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.2 rounded border border-rose-200">
+                                ✗ Already in use
+                              </span>
+                            ) : null}
+                          </Label>
+                          <span className="text-[10.5px] font-mono text-emerald-600 font-bold">User Code: {userCode}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={loginUsername}
+                            onChange={(e) => {
+                              setLoginUsername(e.target.value);
+                              setUsernameAvailable(null);
+                              setUsernameConflict(null);
+                            }}
+                            onBlur={() => verifyUsername(loginUsername)}
+                            placeholder={th("e.g. muhammad.ali")}
+                            className={`h-9 text-xs font-mono font-bold ${
+                              usernameAvailable === false
+                                ? "border-rose-400 text-rose-700 dark:border-rose-700 dark:text-rose-300"
+                                : "text-emerald-600 dark:text-emerald-400"
+                            }`}
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => verifyUsername(loginUsername)}
+                            className="h-9 px-3 text-xs shrink-0"
+                            disabled={isCheckingUsername || !loginUsername.trim()}
+                          >
+                            Check
+                          </Button>
+                        </div>
+
+                        {usernameAvailable === false && usernameSuggestions.length > 0 && (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5 dark:border-amber-900/60 dark:bg-amber-950/30 space-y-1.5">
+                            <span className="text-[11px] font-bold text-amber-900 dark:text-amber-200">
+                              Suggested Available Alternatives (Click to apply):
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {usernameSuggestions.map((sug) => (
+                                <button
+                                  key={sug}
+                                  type="button"
+                                  onClick={() => {
+                                    setLoginUsername(sug);
+                                    setUsernameAvailable(true);
+                                    setUsernameConflict(null);
+                                    const codeClean = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
+                                    setPersonalEmail(`${sug.replace(/[^a-z0-9.]/g, "")}.${codeClean}@dgt.llc`);
+                                  }}
+                                  className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 dark:bg-slate-900 dark:text-emerald-300 dark:border-emerald-700 shadow-2xs cursor-pointer"
+                                >
+                                  + {sug}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
 
                   {/* Password & Confirm Password */}
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -2231,10 +2649,98 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {step === 4 && (
                 <div className="space-y-4">
                   {editUserId && effectiveAccess !== undefined && <EffectiveAccessSummary access={effectiveAccess} lang={activeLang} />}
+
+                  {/* USERNAME CONFLICT & SUGGESTIONS RESOLUTION CARD (Step 4 Quick Action) */}
+                  {registrationMode === "create_login" && (usernameConflict || usernameAvailable === false) && (
+                    <div className="rounded-xl border-2 border-amber-400 bg-amber-50/95 dark:bg-amber-950/40 p-4 space-y-3 shadow-sm animate-in fade-in">
+                      <div className="flex items-start gap-2.5">
+                        <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                            Username Conflict: <span className="font-mono text-red-600 font-bold">"{loginUsername}"</span> is already in use
+                          </h4>
+                          <p className="text-[11px] text-amber-800 dark:text-amber-300">
+                            One employee can have multiple user accounts. All 22 module permissions, role scopes, and entered details are preserved. Select an available alternative below or specify a custom username, then click <strong>{tr("saveUser")}</strong>:
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Clickable Suggestion Chips */}
+                      {usernameSuggestions && usernameSuggestions.length > 0 && (
+                        <div className="space-y-1.5 pt-2 border-t border-amber-200 dark:border-amber-900">
+                          <div className="text-[11px] font-semibold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                            <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                            <span>Available Pre-Verified Alternatives (Click to Apply):</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {usernameSuggestions.map((sug) => (
+                              <button
+                                key={sug}
+                                type="button"
+                                onClick={() => {
+                                  setLoginUsername(sug);
+                                  setUsernameConflict(null);
+                                  setUsernameAvailable(true);
+                                  setBanner(null);
+                                  verifyUsername(sug);
+                                }}
+                                className="px-3 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-700 text-xs font-mono font-bold text-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-emerald-950 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                                <span>{sug}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Inline Quick Username Editor */}
+                      <div className="pt-2 border-t border-amber-200 dark:border-amber-900 flex flex-wrap items-center gap-2">
+                        <span className="text-[11px] font-medium text-amber-900 dark:text-amber-200">Or type custom username:</span>
+                        <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+                          <input
+                            type="text"
+                            value={loginUsername}
+                            onChange={(e) => {
+                              const val = e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, "");
+                              setLoginUsername(val);
+                              setUsernameConflict(null);
+                              setUsernameAvailable(null);
+                            }}
+                            placeholder="e.g. asmatullah.abdullah.branch01"
+                            className="flex-1 px-3 py-1.5 text-xs font-mono rounded-lg border border-slate-300 bg-white dark:bg-slate-900 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => verifyUsername(loginUsername)}
+                            disabled={isCheckingUsername || !loginUsername}
+                            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all disabled:opacity-50"
+                          >
+                            {isCheckingUsername ? "Checking..." : "Verify"}
+                          </button>
+                        </div>
+                        {usernameAvailable === true && (
+                          <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Available
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Summary of Steps 1-3 */}
                   <div className="rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-900/60 p-3.5 space-y-2 text-xs">
                     <div className="font-bold text-slate-900 dark:text-slate-100 border-b pb-1 flex items-center justify-between">
-                      <span>{centralT(activeLang, "urw2.summary_title" as never, "User & Master Profile Summary")}</span>
+                      <span className="flex items-center gap-2">
+                        <span>{centralT(activeLang, "urw2.summary_title" as never, "User & Master Profile Summary")}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                          registrationMode === "create_login"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        }`}>
+                          {registrationMode === "create_login" ? "Create Additional Login" : "Assign Scope to Existing User"}
+                        </span>
+                      </span>
                       <span className="text-[10px] font-mono text-emerald-600 font-bold">{userCode}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
@@ -2243,8 +2749,22 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         <strong className="text-slate-900 dark:text-slate-100">{fullName || "-"}</strong>
                       </div>
                       <div>
+                        <span className="text-slate-500">Authoritative Employee:</span>{" "}
+                        <strong className="text-indigo-600 font-semibold">
+                          {employeeProfile.fullName || fullName} ({employeeProfile.employeeCode || selectedEmployeeId || "EMP-MASTER"})
+                        </strong>
+                      </div>
+                      <div>
                         <span className="text-slate-500">{th("Username")}:</span>{" "}
-                        <strong className="text-emerald-600 font-mono">{loginUsername || userCode}</strong>
+                        <strong className={`font-mono ${usernameConflict ? "text-red-600" : "text-emerald-600 font-bold"}`}>
+                          {loginUsername || userCode}
+                        </strong>
+                        {usernameConflict && (
+                          <span className="ml-1 text-[10px] text-red-600 font-bold">(In Use)</span>
+                        )}
+                        {usernameAvailable === true && (
+                          <span className="ml-1 text-[10px] text-emerald-600 font-semibold">(Verified)</span>
+                        )}
                       </div>
                       <div>
                         <span className="text-slate-500">{centralT(activeLang, "urw2.login_email" as never, "Login Email")}:</span>{" "}

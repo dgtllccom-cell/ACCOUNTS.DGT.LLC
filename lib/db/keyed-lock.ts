@@ -11,7 +11,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
  * The lock-holding transaction writes nothing; `fn` does its own work on its own connections. If DATABASE_URL is not set the
  * function simply runs (local/dev without a database cannot race).
  */
-export async function withKeyedLock<T>(key: string, fn: () => Promise<T>, opts: { waitMs?: number; pollMs?: number } = {}): Promise<T> {
+export async function withKeyedLock<T>(key: string, fn: () => Promise<T>, opts: { waitMs?: number; pollMs?: number; busyMessage?: string } = {}): Promise<T> {
   const waitMs = opts.waitMs ?? 45_000;
   const pollMs = opts.pollMs ?? 150;
   const holder = await withLocalPg(async (pg) =>
@@ -21,7 +21,7 @@ export async function withKeyedLock<T>(key: string, fn: () => Promise<T>, opts: 
         const rows = await tx`select pg_try_advisory_xact_lock(hashtext(${key})) as got`;
         if (rows[0]?.got) break;
         if (Date.now() >= deadline) {
-          throw new ApiClientError("Another payment for this order is still being processed. Please wait a moment and check the order before trying again.", { status: 409, code: "ORDER_BUSY" });
+          throw new ApiClientError(opts.busyMessage ?? "Another payment for this order is still being processed. Please wait a moment and check the order before trying again.", { status: 409, code: "ORDER_BUSY" });
         }
         await new Promise((resolve) => setTimeout(resolve, pollMs));
       }

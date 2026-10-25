@@ -79,12 +79,23 @@ export function invalidateLocationCache() {
   cache.clear();
 }
 
-export async function listCountries(params?: { q?: string; withBranchesOnly?: boolean; all?: boolean }) {
+function getClientLang(): string {
+  if (typeof document === "undefined") return "en";
+  try {
+    return localStorage.getItem("erp_lang") || document.documentElement.lang || "en";
+  } catch {
+    return "en";
+  }
+}
+
+export async function listCountries(params?: { q?: string; withBranchesOnly?: boolean; all?: boolean; lang?: string }) {
+  const lang = params?.lang || getClientLang();
   const qp = new URLSearchParams();
   if (params?.q) qp.set("q", params.q);
   if (params?.withBranchesOnly) qp.set("withBranchesOnly", "true");
   if (params?.all) qp.set("all", "true");
-  const cacheKey = `countries:${qp.toString()}`;
+  if (lang) qp.set("lang", lang);
+  const cacheKey = `countries:${lang}:${qp.toString()}`;
   const cached = getCached<LocationCountry[]>(cacheKey);
   if (cached) return cached;
 
@@ -94,11 +105,13 @@ export async function listCountries(params?: { q?: string; withBranchesOnly?: bo
   return countries;
 }
 
-export async function listStates(params: { countryId: string; q?: string }) {
+export async function listStates(params: { countryId: string; q?: string; lang?: string }) {
   if (!params.countryId) return [];
+  const lang = params?.lang || getClientLang();
   const qp = new URLSearchParams({ countryId: params.countryId });
   if (params.q) qp.set("q", params.q);
-  const cacheKey = `states:${qp.toString()}`;
+  if (lang) qp.set("lang", lang);
+  const cacheKey = `states:${lang}:${qp.toString()}`;
   const cached = getCached<LocationState[]>(cacheKey);
   if (cached) return cached;
 
@@ -108,13 +121,15 @@ export async function listStates(params: { countryId: string; q?: string }) {
   return states;
 }
 
-export async function listDistricts(params: { countryId?: string; stateProvinceId?: string; q?: string }) {
+export async function listDistricts(params: { countryId?: string; stateProvinceId?: string; q?: string; lang?: string }) {
   if (!params.countryId && !params.stateProvinceId) return [];
+  const lang = params?.lang || getClientLang();
   const qp = new URLSearchParams();
   if (params.countryId) qp.set("countryId", params.countryId);
   if (params.stateProvinceId) qp.set("stateProvinceId", params.stateProvinceId);
   if (params.q) qp.set("q", params.q);
-  const cacheKey = `districts:${qp.toString()}`;
+  if (lang) qp.set("lang", lang);
+  const cacheKey = `districts:${lang}:${qp.toString()}`;
   const cached = getCached<LocationDistrict[]>(cacheKey);
   if (cached) return cached;
 
@@ -124,13 +139,15 @@ export async function listDistricts(params: { countryId?: string; stateProvinceI
   return districts;
 }
 
-export async function listCities(params: { countryId: string; stateProvinceId?: string | null; districtId?: string | null; q?: string }) {
+export async function listCities(params: { countryId: string; stateProvinceId?: string | null; districtId?: string | null; q?: string; lang?: string }) {
   if (!params.countryId) return [];
+  const lang = params?.lang || getClientLang();
   const qp = new URLSearchParams({ countryId: params.countryId });
   if (params.stateProvinceId) qp.set("stateProvinceId", params.stateProvinceId);
   if (params.districtId) qp.set("districtId", params.districtId);
   if (params.q) qp.set("q", params.q);
-  const cacheKey = `cities:${qp.toString()}`;
+  if (lang) qp.set("lang", lang);
+  const cacheKey = `cities:${lang}:${qp.toString()}`;
   const cached = getCached<LocationCity[]>(cacheKey);
   if (cached) return cached;
 

@@ -3,6 +3,7 @@ import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { billExpenseModuleAllowed } from "@/lib/permissions/bill-expense-domain";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
@@ -35,6 +36,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         limit 1
       `;
       if (!be) return { notFound: true } as const;
+      // Business and Shipping Line expenses stay separate.
+      if (!billExpenseModuleAllowed(session, be.source_module)) return { forbidden: true } as const;
 
       // Server-side scope enforcement — never trust the id alone.
       if (scope.level === "country" && scope.countryId && be.country_id !== scope.countryId) {

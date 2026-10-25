@@ -295,6 +295,8 @@ export async function postRoznamchaWithErpSession(input: {
   sessionUserId: string;
   session?: any;
   body: ReturnType<typeof roznamchaPostingSchema.parse>;
+  /** When true the entry is refused unless total debit equals total credit (every expense / payable posting passes true). */
+  requireBalanced?: boolean;
 }) {
   const viaPg = await withLocalPg((sql) => postRoznamchaWithErpSessionPg(sql, input));
   if (viaPg) return viaPg;
@@ -507,9 +509,17 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
   sessionUserId: string;
   session?: any;
   body: ReturnType<typeof roznamchaPostingSchema.parse>;
+  requireBalanced?: boolean;
 }) {
   const actorId = await resolveProfileActorPg(sql, input.sessionUserId);
   const body = input.body;
+  if (input.requireBalanced) {
+    const totalDebit = body.lines.reduce((sum, l) => sum + toNumber(l.debit), 0);
+    const totalCredit = body.lines.reduce((sum, l) => sum + toNumber(l.credit), 0);
+    if (Math.abs(totalDebit - totalCredit) > 0.005) {
+      throw new Error(`Unbalanced entry refused: debit ${totalDebit.toFixed(2)} does not equal credit ${totalCredit.toFixed(2)}.`);
+    }
+  }
   const effectiveCountryId = await resolveEntryCountryIdPg(sql, body);
   const transactionSerials = await generateTransactionSerialsPg(sql, { ...body, countryId: effectiveCountryId });
 
@@ -553,6 +563,31 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
     }
   }
 
+  // The header, every line, the ledger totals and the daily balances are written in ONE transaction: if any step fails
+  // (missing exchange rate, inactive ledger, scope refusal ...) nothing is left behind — no orphan "posted" header that
+  // would block a retry through the unique source key.
+  const posted = await sql.begin(async (tx: any) =>
+    postRoznamchaEntryAtomically(tx, { input, body, actorId, effectiveCountryId, transactionSerials, entryCategory, bankId, operationalDomain })
+  );
+
+  if (body.narration) {
+    void translateMasterRecord("roznamcha_entries", posted.entryId, { narration: body.narration }, input.session?.preferredLanguage ?? "en", actorId);
+  }
+
+  return posted;
+}
+
+async function postRoznamchaEntryAtomically(sql: any, ctx: {
+  input: { sessionUserId: string; session?: any; body: ReturnType<typeof roznamchaPostingSchema.parse> };
+  body: ReturnType<typeof roznamchaPostingSchema.parse>;
+  actorId: any;
+  effectiveCountryId: string | null;
+  transactionSerials: any;
+  entryCategory: any;
+  bankId: any;
+  operationalDomain: string | null;
+}) {
+  const { input, body, actorId, effectiveCountryId, transactionSerials, entryCategory, bankId, operationalDomain } = ctx;
   const entryRows = await sql`
     insert into public.roznamcha_entries (
       type, country_id, country_branch_id, city_branch_id, journal_no, voucher_no, entry_date,
@@ -575,18 +610,16 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
   `;
   const entryId = entryRows[0].id as string;
 
-  if (body.narration) {
-    void translateMasterRecord("roznamcha_entries", entryId, { narration: body.narration }, input.session?.preferredLanguage ?? "en", actorId);
-  }
-
   try {
     const s = await allocateFormSerials("journal_roznamcha", { countryId: (body as any).countryId ?? null, branchKey: (body as any).countryBranchId ?? (body as any).cityBranchId ?? null });
-    await sql`
-      update public.roznamcha_entries
-      set super_admin_serial = ${s.superAdminSerial}, country_serial = ${s.countrySerial},
-          branch_serial = ${s.branchSerial}, entry_serial = ${s.entrySerial}
-      where id = ${entryId}
-    `;
+    await sql.savepoint(async (sp: any) => {
+      await sp`
+        update public.roznamcha_entries
+        set super_admin_serial = ${s.superAdminSerial}, country_serial = ${s.countrySerial},
+            branch_serial = ${s.branchSerial}, entry_serial = ${s.entrySerial}
+        where id = ${entryId}
+      `;
+    });
   } catch { /* non-fatal — never affects posting */ }
 
   for (const line of body.lines) {
@@ -682,18 +715,17 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       }
     }
 
-    const currentLedgerRows = await sql`select debit_total, credit_total, current_balance from public.ledgers where id = ${ledgerId} limit 1`;
-    const currentLedger = currentLedgerRows[0];
-    if (!currentLedger) throw new Error("Ledger not found while updating totals");
-
-    await sql`
+    // Atomic increment: two postings touching the same ledger at the same moment can never overwrite each other's total.
+    const updatedLedgerRows = await sql`
       update public.ledgers
-      set debit_total = ${toNumber(currentLedger.debit_total) + debit},
-          credit_total = ${toNumber(currentLedger.credit_total) + credit},
-          current_balance = ${toNumber(currentLedger.current_balance) + debit - credit},
+      set debit_total = coalesce(debit_total, 0) + ${debit},
+          credit_total = coalesce(credit_total, 0) + ${credit},
+          current_balance = coalesce(current_balance, 0) + ${debit} - ${credit},
           updated_at = now()
       where id = ${ledgerId}
+      returning id
     `;
+    if (!updatedLedgerRows[0]) throw new Error("Ledger not found while updating totals");
 
     let accountIdentity: any = null;
     if (enterpriseAccountId) {
@@ -743,12 +775,13 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
     `;
 
     if (enterpriseAccountId && accountIdentity) {
-      const nextBalance = toNumber(accountIdentity.current_balance) + debit - credit;
-      await sql`
+      const balanceRows = await sql`
         update public.enterprise_accounts
-        set current_balance = ${nextBalance}, updated_at = now()
+        set current_balance = coalesce(current_balance, 0) + ${debit} - ${credit}, updated_at = now()
         where id = ${enterpriseAccountId}
+        returning current_balance
       `;
+      const nextBalance = toNumber(balanceRows[0]?.current_balance);
 
       await sql`
         insert into public.enterprise_account_history (
@@ -779,32 +812,19 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       `;
     }
 
-    const balanceRows = await sql`
-      select id, debit_total, credit_total, closing_balance
-      from public.ledger_balances
-      where ledger_id = ${ledgerId} and balance_date = ${body.entryDate}
-      limit 1
+    await sql`
+      insert into public.ledger_balances (ledger_id, balance_date, opening_balance, debit_total, credit_total, closing_balance)
+      values (${ledgerId}, ${body.entryDate}, 0, ${debit}, ${credit}, ${debit - credit})
+      on conflict (ledger_id, balance_date) do update
+      set debit_total = coalesce(public.ledger_balances.debit_total, 0) + excluded.debit_total,
+          credit_total = coalesce(public.ledger_balances.credit_total, 0) + excluded.credit_total,
+          closing_balance = coalesce(public.ledger_balances.closing_balance, 0) + excluded.debit_total - excluded.credit_total,
+          updated_at = now()
     `;
-    const balance = balanceRows[0];
-
-    if (balance?.id) {
-      await sql`
-        update public.ledger_balances
-        set debit_total = ${toNumber(balance.debit_total) + debit},
-            credit_total = ${toNumber(balance.credit_total) + credit},
-            closing_balance = ${toNumber(balance.closing_balance) + debit - credit},
-            updated_at = now()
-        where id = ${balance.id}
-      `;
-    } else {
-      await sql`
-        insert into public.ledger_balances (ledger_id, balance_date, opening_balance, debit_total, credit_total, closing_balance)
-        values (${ledgerId}, ${body.entryDate}, 0, ${debit}, ${credit}, ${debit - credit})
-      `;
-    }
 
     if (isCrossBranchLine) {
       try {
+        await sql.savepoint(async (sql: any) => {
         const transferNo = await nextEntitySerialPg(sql, "global", "global", "inter_branch_transfer", "IBT");
         const sourceLedgerId = body.lines.find((l) => l.ledgerId !== ledgerId)?.ledgerId ?? ledgerId;
         const transferAmount = debit > 0 ? debit : credit;
@@ -860,6 +880,7 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
             `;
           }
         }
+        });
       } catch (ibtErr: any) {
         console.warn("[posting][pg] inter_branch_ledger_transfers recording error:", ibtErr?.message);
       }

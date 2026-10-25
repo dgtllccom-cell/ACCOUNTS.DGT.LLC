@@ -5,6 +5,8 @@ import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 import { auditApiAction } from "@/lib/api/audit";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withKeyedLock } from "@/lib/db/keyed-lock";
+import { assertBillExpenseModuleAllowed } from "@/lib/permissions/bill-expense-domain";
 
 export const dynamic = "force-dynamic";
 
@@ -22,11 +24,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const { id, lineId } = await context.params;
     const scope = resolveReportScope(session);
 
+    // Same per-line lock as posting: a void and a post (or two voids) of one line can never interleave.
+    return await withKeyedLock(`bill-expense-line:${lineId}`, async () => {
     const target = await withLocalPg(async (sql) => {
       const [be] = await sql`
-        select id, country_id, city_branch_id, eligibility
+        select id, source_module, country_id, city_branch_id, eligibility
         from public.bill_expenses where id = ${id}::uuid and deleted_at is null limit 1`;
       if (!be) throw new ApiClientError("Bill expense not found", { status: 404, code: "NOT_FOUND" });
+      assertBillExpenseModuleAllowed(session, be.source_module);
       if (scope.level === "country" && scope.countryId && be.country_id !== scope.countryId) {
         throw new ApiClientError("This bill is outside your authorized scope.", { status: 403, code: "FORBIDDEN" });
       }
@@ -41,6 +46,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       if (!line) throw new ApiClientError("Expense line not found", { status: 404, code: "NOT_FOUND" });
       if (line.posting_status !== "posted" || !line.roznamcha_entry_id) {
         throw new ApiClientError("This expense line is not posted.", { status: 409, code: "NOT_POSTED" });
+      }
+      const [claim] = await sql`
+        select id, status from public.shipping_expense_transfers
+        where source_table = 'bill_expense_lines' and source_id = ${lineId}::uuid and deleted_at is null
+          and status in ('pending', 'accepted') limit 1`;
+      if (claim) {
+        throw new ApiClientError(`This expense line has an inter-branch claim (${claim.status}). Reject or cancel the claim before voiding the posting.`, { status: 409, code: "HAS_CLAIM" });
       }
       return { entryId: line.roznamcha_entry_id as string };
     });
@@ -82,6 +94,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     });
 
     return apiOk({ ok: true, reversalId });
+    }, { busyMessage: "This expense line is being posted or voided right now. Please wait a moment and refresh before trying again." });
   } catch (error) {
     return handleApiError(error);
   }

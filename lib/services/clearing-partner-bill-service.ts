@@ -1,5 +1,6 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/posting";
+import { withKeyedLock } from "@/lib/db/keyed-lock";
 import { ApiClientError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { NextRequest } from "next/server";
@@ -254,7 +255,18 @@ export async function createOrUpdatePartnerBill(
  * (DR Expense Ledger / CR Provider Payable Ledger) at proper exchange rate.
  * Prevents duplicate posting.
  */
+/** Approval and payments of ONE bill run one at a time (database advisory lock), so the posted/paid checks below can never be raced. */
 export async function approveAndPostPartnerBill(
+  billId: string,
+  actorId: string,
+  sessionScope: { isSuperAdmin: boolean; countryId?: string | null; countryBranchId?: string | null; cityBranchId?: string | null }
+) {
+  return withKeyedLock(`partner-bill:${billId}`, () => approveAndPostPartnerBillUnlocked(billId, actorId, sessionScope), {
+    busyMessage: "This bill is being approved or paid right now. Please wait a moment and refresh before trying again."
+  });
+}
+
+async function approveAndPostPartnerBillUnlocked(
   billId: string,
   actorId: string,
   sessionScope: { isSuperAdmin: boolean; countryId?: string | null; countryBranchId?: string | null; cityBranchId?: string | null }
@@ -379,7 +391,8 @@ export async function approveAndPostPartnerBill(
 
   const { entryId } = await postRoznamchaWithErpSession({
     sessionUserId: actorId,
-    body: roznamchaBody as never
+    body: roznamchaBody as never,
+    requireBalanced: true
   });
 
   // Update bill to posted status
@@ -417,6 +430,15 @@ export async function approveAndPostPartnerBill(
  * Automatically updates paid_amount, remaining_balance, and payment_status.
  */
 export async function recordPartnerBillPayment(
+  input: PartnerPaymentInput,
+  actorId: string
+) {
+  return withKeyedLock(`partner-bill:${input.billId}`, () => recordPartnerBillPaymentUnlocked(input, actorId), {
+    busyMessage: "This bill is being approved or paid right now. Please wait a moment and refresh before trying again."
+  });
+}
+
+async function recordPartnerBillPaymentUnlocked(
   input: PartnerPaymentInput,
   actorId: string
 ) {
@@ -540,7 +562,8 @@ export async function recordPartnerBillPayment(
 
   const { entryId } = await postRoznamchaWithErpSession({
     sessionUserId: actorId,
-    body: roznamchaBody as never
+    body: roznamchaBody as never,
+    requireBalanced: true
   });
 
   // Insert payment record

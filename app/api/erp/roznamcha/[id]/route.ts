@@ -62,6 +62,12 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const id = uuidSchema.parse(params.id);
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
+    const canViewUsd = Boolean(
+      session.isSuperAdmin ||
+      session.roles.some((r) => ["super_admin", "business_super_admin", "shipping_super_admin", "super_admin_reports"].includes(r)) ||
+      session.permissions.some((p) => p === "*:*" || p === "view_usd_reporting" || p === "usd_reporting")
+    );
+
     // Try direct PostgreSQL first for maximum performance and schema resilience
     const viaPg = await withLocalPg(async (sql) => {
       const headerRows = await sql`
@@ -155,6 +161,13 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       const [localizedHeader] = await localizeRecordNames([viaPg.header as { id: string; narration?: string | null }], "roznamcha_entries", "narration", lang);
       const localizedLines = await localizeRecordNames(viaPg.lines as unknown as Array<{ id: string; description?: string | null }>, "roznamcha_lines", "description", lang);
 
+      if (!canViewUsd) {
+        for (const line of localizedLines as any[]) {
+          line.usd_rate = null;
+          line.usd_amount = null;
+        }
+      }
+
       return apiOk({
         found: true,
         id,
@@ -235,6 +248,13 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const [localizedHeader] = await localizeRecordNames([header as RoznamchaHeader], "roznamcha_entries", "narration", lang);
     const localizedLines = await localizeRecordNames(safeLines, "roznamcha_lines", "description", lang);
+
+    if (!canViewUsd) {
+      for (const line of localizedLines as any[]) {
+        line.usd_rate = null;
+        line.usd_amount = null;
+      }
+    }
 
     return apiOk({
       found: true,

@@ -15,7 +15,10 @@ const paymentSchema = z.object({
   loadingRecordId: z.string().uuid(),
   amount: z.coerce.number().positive("Payment amount must be greater than 0"),
   currency: z.string().trim().length(3).default("USD"),
-  exchangeRate: z.coerce.number().positive().default(1),
+  // 1 unit of the PAYMENT currency = exchangeRate units of the CHARGES currency (required only when the two currencies differ)
+  exchangeRate: z.coerce.number().positive().optional(),
+  // generated once per payment dialog: a repeated submit (double click, retry) returns the same payment instead of adding another
+  clientRequestId: z.string().uuid().optional(),
   paymentDate: z.string().trim().default(() => new Date().toISOString().slice(0, 10)),
   paymentMethod: z.string().trim().default("Bank Transfer"),
   bankOrCashAccountId: z.string().trim().nullish(),
@@ -102,7 +105,8 @@ export async function GET(request: NextRequest) {
       // Transport charges & payments
       const transportCharges = Number(payload.transportCharges ?? payload.freightAmount ?? poForm.freightCharges ?? 0);
       const transportPayments = Array.isArray(payload.transportPayments) ? payload.transportPayments : [];
-      const transportPaid = transportPayments.reduce((acc: number, p: any) => acc + Number(p.amount || 0), 0)
+      // each payment is added in the charges currency (settledAmount); legacy same-currency payments only have `amount`
+      const transportPaid = transportPayments.reduce((acc: number, p: any) => acc + Number(p.settledAmount ?? p.amount ?? 0), 0)
         || Number(payload.transportPaid || 0);
       const transportBalance = Math.max(0, transportCharges - transportPaid);
       const transportCurrency = String(payload.transportCurrency || poForm.currency || row.country_currency || "USD");
@@ -197,14 +201,37 @@ async function postTransportPayment(request: NextRequest) {
     const currentPayload = parseJsonish(loadingRecord.report_payload) || {};
     const existingPayments = Array.isArray(currentPayload.transportPayments) ? currentPayload.transportPayments : [];
 
+    // A repeated submit of the same dialog returns the payment that was already recorded.
+    if (body.clientRequestId) {
+      const replay = existingPayments.find((p: any) => p?.clientRequestId === body.clientRequestId);
+      if (replay) {
+        const paidSoFar = existingPayments.reduce((sum: number, p: any) => sum + Number(p.settledAmount ?? p.amount ?? 0), 0);
+        const charges = Number(currentPayload.transportCharges || currentPayload.freightAmount || 0);
+        return apiOk({ payment: replay, totalPaid: paidSoFar, balanceRemaining: Math.max(0, charges - paidSoFar), isFullyPaid: charges > 0 ? charges - paidSoFar <= 0.005 : paidSoFar > 0, replayed: true });
+      }
+    }
+
+    // Currencies are never added raw: every payment is converted into the charges currency with its own stated rate.
+    const chargesCurrencyForPayment = String(currentPayload.transportCurrency || body.currency).toUpperCase();
+    const paymentCurrency = body.currency.toUpperCase();
+    if (paymentCurrency !== chargesCurrencyForPayment && !(Number(body.exchangeRate) > 0)) {
+      throw new ApiClientError(`An exchange rate is required: 1 ${paymentCurrency} = ? ${chargesCurrencyForPayment}.`, { status: 422, code: "NO_RATE" });
+    }
+    const settledAmount = paymentCurrency === chargesCurrencyForPayment ? body.amount : Math.round(body.amount * Number(body.exchangeRate) * 100) / 100;
+
     const paymentRecord = {
       id: crypto.randomUUID(),
+      clientRequestId: body.clientRequestId ?? null,
+      settledAmount,
+      chargesCurrency: chargesCurrencyForPayment,
+      // honest status: this booking records the payment; it is not a ledger posting
+      postingStatus: "not_posted",
       loadingRecordId: body.loadingRecordId,
       loadingRecordNo: loadingRecord.loading_record_no,
       purchaseOrderNo: loadingRecord.purchase_order_no,
       amount: body.amount,
       currency: body.currency,
-      exchangeRate: body.exchangeRate,
+      exchangeRate: paymentCurrency === chargesCurrencyForPayment ? 1 : Number(body.exchangeRate),
       paymentDate: body.paymentDate,
       paymentMethod: body.paymentMethod,
       bankOrCashAccountId: body.bankOrCashAccountId,
@@ -221,12 +248,12 @@ async function postTransportPayment(request: NextRequest) {
     };
 
     const newPayments = [paymentRecord, ...existingPayments];
-    const newTotalPaid = newPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const newTotalPaid = newPayments.reduce((sum, p) => sum + Number(p.settledAmount ?? p.amount ?? 0), 0);
     const transportCharges = Number(currentPayload.transportCharges || currentPayload.freightAmount || 0);
     const newBalance = Math.max(0, transportCharges - newTotalPaid);
     const chargesCcy = String(currentPayload.transportCurrency || body.currency).toUpperCase();
-    if (transportCharges > 0 && body.currency.toUpperCase() === chargesCcy && newTotalPaid > transportCharges + 0.01) {
-      const remainingBefore = Math.max(0, transportCharges - existingPayments.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0));
+    if (transportCharges > 0 && newTotalPaid > transportCharges + 0.01) {
+      const remainingBefore = Math.max(0, transportCharges - existingPayments.reduce((sum: number, p: any) => sum + Number(p.settledAmount ?? p.amount ?? 0), 0));
       throw new ApiClientError(`Payment amount cannot exceed remaining transport balance (${remainingBefore.toFixed(2)} ${chargesCcy}).`, { status: 409, code: "BUSINESS_RULE" });
     }
 
@@ -297,7 +324,7 @@ async function putTransportCharges(request: NextRequest) {
 
     const currentPayload = parseJsonish(loadingRecord.report_payload) || {};
     const existingPayments = Array.isArray(currentPayload.transportPayments) ? currentPayload.transportPayments : [];
-    const totalPaid = existingPayments.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+    const totalPaid = existingPayments.reduce((sum: number, p: any) => sum + Number(p.settledAmount ?? p.amount ?? 0), 0);
     const newBalance = Math.max(0, body.transportCharges - totalPaid);
 
     const updatedPayload = {

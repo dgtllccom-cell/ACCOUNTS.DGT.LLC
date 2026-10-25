@@ -1,4 +1,5 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { translateCountry } from "@/lib/i18n/table-values";
 
 type CountryNames = { ur: string; ar: string; fa: string; ps: string };
 
@@ -26,7 +27,7 @@ const COUNTRY_NAMES: Record<string, CountryNames> = {
   "uzbekistan": { ur: "ازبکستان", ar: "أوزبكستان", fa: "ازبکستان", ps: "ازبکستان" },
 };
 
-/** Country names are standard geography, not user data: show them in the active language, unknown names stay as stored. */
+/** Country names are standard geography, not user data: show them in the active language (explicit list first, then the shared translator); unknown names stay as stored. */
 export function localizeCountryName(name: string | null | undefined, lang: SupportedLanguage | string): string {
   const raw = (name ?? "").trim();
   if (!raw || lang === "en") return raw;
@@ -34,5 +35,8 @@ export function localizeCountryName(name: string | null | undefined, lang: Suppo
   const prefix = m ? m[1] : "";
   const bare = m ? m[2].trim() : raw;
   const hit = COUNTRY_NAMES[bare.toLowerCase()];
-  return hit ? prefix + (hit[lang as keyof CountryNames] ?? bare) : raw;
+  if (hit) return prefix + (hit[lang as keyof CountryNames] ?? bare);
+  // Not in the explicit list: fall back to the shared translator (country dictionary → transliteration) used elsewhere.
+  const viaShared = translateCountry(bare, lang);
+  return viaShared && viaShared !== bare ? prefix + viaShared : raw;
 }

@@ -32,7 +32,8 @@ import {
   Copy,
   Globe,
   CheckCircle2,
-  PhoneCall
+  PhoneCall,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
@@ -51,6 +52,7 @@ import { Th } from "@/components/ui/translated-th";
 
 type CustomerRow = {
   id: string;
+  is_active?: boolean;
   country_id: string;
   state_province_id: string | null;
   city_id: string | null;
@@ -59,6 +61,13 @@ type CustomerRow = {
   state_province_name?: string | null;
   city_name?: string | null;
   customer_name: string;
+  original_customer_name?: string | null;
+  customer_name_en?: string | null;
+  customer_name_ur?: string | null;
+  customer_name_ar?: string | null;
+  customer_name_fa?: string | null;
+  customer_name_ps?: string | null;
+  native_customer_name?: string | null;
   first_name: string | null;
   last_name: string | null;
   father_name: string | null;
@@ -82,6 +91,25 @@ type CustomerRow = {
   accounts_count?: number;
   banks_count?: number;
   is_clearing_agent?: boolean;
+  companies_count?: number;
+  linked_companies?: Array<{
+    id: string;
+    name: string;
+    code?: string | null;
+    legal_name?: string | null;
+    country_id?: string | null;
+  }>;
+  branches_count?: number;
+  linked_branches?: Array<{
+    id: string;
+    name: string;
+    code?: string | null;
+    type: string;
+    country_id?: string | null;
+    country_name?: string | null;
+    company_id?: string | null;
+    company_name?: string | null;
+  }>;
 };
 
 // Map countries to flag emojis and ISO short codes
@@ -140,7 +168,9 @@ function getAvatarColor(str: string): string {
 }
 
 const STATUS_TABS = [
-  { id: "all", en: "All Leads" },
+  { id: "all", en: "All Customers" },
+  { id: "Active", en: "Active" },
+  { id: "Inactive", en: "Inactive" },
   { id: "New", en: "New" },
   { id: "Contacted", en: "Contacted" },
   { id: "Qualified", en: "Qualified" },
@@ -149,6 +179,20 @@ const STATUS_TABS = [
   { id: "Closed", en: "Closed" },
   { id: "Lost", en: "Lost" }
 ];
+
+function getCustomerTabLabel(id: string, en: string, lang: SupportedLanguage = "en"): string {
+  if (id === "all") return lang === "ur" ? "تمام کسٹمرز" : lang === "ar" ? "جميع العملاء" : lang === "fa" ? "همه مشتریان" : lang === "ps" ? "ټول پیرودونکي" : "All Customers";
+  if (id === "Active") return lang === "ur" ? "فعال کسٹمرز" : lang === "ar" ? "العملاء النشطون" : lang === "fa" ? "مشتریان فعال" : lang === "ps" ? "فعال پیرودونکي" : "Active Customers";
+  if (id === "Inactive") return lang === "ur" ? "غیر فعال کسٹمرز" : lang === "ar" ? "العملاء غير النشطين" : lang === "fa" ? "مشتریان غیرفعال" : lang === "ps" ? "غیر فعال پیرودونکي" : "Inactive Customers";
+  if (id === "New") return lang === "ur" ? "نیا" : lang === "ar" ? "جديد" : lang === "fa" ? "جدید" : lang === "ps" ? "نوی" : "New";
+  if (id === "Contacted") return lang === "ur" ? "رابطہ شدہ" : lang === "ar" ? "تم الاتصال" : lang === "fa" ? "تماس گرفته شد" : lang === "ps" ? "اړیکه ونیول شوه" : "Contacted";
+  if (id === "Qualified") return lang === "ur" ? "اہل" : lang === "ar" ? "مؤهل" : lang === "fa" ? "واجد شرایط" : lang === "ps" ? "وړ" : "Qualified";
+  if (id === "Proposal") return lang === "ur" ? "تجویز" : lang === "ar" ? "عرض أسعار" : lang === "fa" ? "پیشنهاد" : lang === "ps" ? "وړاندیز" : "Proposal";
+  if (id === "Negotiation") return lang === "ur" ? "مذاکرات" : lang === "ar" ? "تفاوض" : lang === "fa" ? "مذاکره" : lang === "ps" ? "خبرې اترې" : "Negotiation";
+  if (id === "Closed") return lang === "ur" ? "بند شدہ" : lang === "ar" ? "مغلق" : lang === "fa" ? "بسته" : lang === "ps" ? "تړل شوی" : "Closed";
+  if (id === "Lost") return lang === "ur" ? "ضائع شدہ" : lang === "ar" ? "مفقود" : lang === "fa" ? "از دست رفته" : lang === "ps" ? "له لاسه وتلی" : "Lost";
+  return en;
+}
 
 export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
   const router = useRouter();
@@ -169,6 +213,64 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
       .then((r) => r.json())
       .then((json) => setSession(json?.data ?? json ?? null))
       .catch(() => setSession(null));
+  }, []);
+
+  // Live dynamic User Counts (distinct users within permitted scope)
+  const [userStats, setUserStats] = useState<{
+    totalUsers: number;
+    activeUsers: number;
+    inactiveUsers: number;
+  } | null>(null);
+  const [userStatsLoading, setUserStatsLoading] = useState(true);
+  const [userStatsError, setUserStatsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    setUserStatsLoading(true);
+    setUserStatsError(null);
+    apiGet<{ summary?: { totalUsers: number; activeUsers: number }; rows?: Array<{ userId: string; userCode?: string; fullName?: string; status: string }> }>(
+      "/api/erp/users/journal-report?limit=1000"
+    )
+      .then((res) => {
+        if (!isMounted) return;
+        const rows = res.rows ?? [];
+        if (rows.length > 0) {
+          const distinctUserIds = new Set<string>();
+          const activeUserIds = new Set<string>();
+          for (const r of rows) {
+            // Filter out test fixture accounts to count genuine distinct operational users within permitted scope
+            const isTestUser = (r.userCode && (r.userCode.includes("TEST") || r.userCode.startsWith("RBAC-") || r.userCode.startsWith("E2E-") || r.userCode.startsWith("SA-00000"))) ||
+                               (r.fullName && (r.fullName.includes("TEST") || r.fullName.includes("[E2E TEST]") || r.fullName.includes("RBAC-TEST")));
+            if (isTestUser) continue;
+
+            distinctUserIds.add(r.userId);
+            if (r.status === "active") {
+              activeUserIds.add(r.userId);
+            }
+          }
+          const total = distinctUserIds.size;
+          const active = activeUserIds.size;
+          const inactive = Math.max(0, total - active);
+          setUserStats({ totalUsers: total, activeUsers: active, inactiveUsers: inactive });
+        } else if (res.summary) {
+          const total = res.summary.totalUsers ?? 0;
+          const active = res.summary.activeUsers ?? 0;
+          const inactive = Math.max(0, total - active);
+          setUserStats({ totalUsers: total, activeUsers: active, inactiveUsers: inactive });
+        } else {
+          setUserStats({ totalUsers: 0, activeUsers: 0, inactiveUsers: 0 });
+        }
+      })
+      .catch((err: any) => {
+        if (!isMounted) return;
+        setUserStatsError(err.message || "Failed to load user summary");
+      })
+      .finally(() => {
+        if (isMounted) setUserStatsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Search & Filter state
@@ -257,7 +359,9 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
       }
 
       const source = meta.source || "";
-      const leadStatus = meta.leadStatus || meta.status || "Active";
+      const leadStatus = c.is_active === false || meta.leadStatus?.toLowerCase() === "inactive" || meta.status?.toLowerCase() === "inactive"
+        ? "Inactive"
+        : (meta.leadStatus || meta.status || "Active");
       const assignedStaff = meta.assignedTo || "";
       const phone = c.mobile || c.whatsapp || meta.phone || "—";
 
@@ -304,12 +408,17 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
       list = list.filter(
         (c) =>
           c.customer_name.toLowerCase().includes(q) ||
+          (c.original_customer_name && c.original_customer_name.toLowerCase().includes(q)) ||
+          (c.customer_name_en && c.customer_name_en.toLowerCase().includes(q)) ||
+          (c.native_customer_name && c.native_customer_name.toLowerCase().includes(q)) ||
           (c.company_name && c.company_name.toLowerCase().includes(q)) ||
           (c.person_code && c.person_code.toLowerCase().includes(q)) ||
           (c.meta.phone && c.meta.phone.toLowerCase().includes(q)) ||
           (c.meta.countryName && c.meta.countryName.toLowerCase().includes(q)) ||
           (c.meta.cityName && c.meta.cityName.toLowerCase().includes(q)) ||
-          (c.meta.assignedStaff && c.meta.assignedStaff.toLowerCase().includes(q))
+          (c.meta.assignedStaff && c.meta.assignedStaff.toLowerCase().includes(q)) ||
+          (c.linked_companies && c.linked_companies.some((co) => co.name.toLowerCase().includes(q) || (co.code && co.code.toLowerCase().includes(q)))) ||
+          (c.linked_branches && c.linked_branches.some((b) => b.name.toLowerCase().includes(q) || (b.code && b.code.toLowerCase().includes(q))))
       );
     }
 
@@ -990,7 +1099,9 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                 <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 mt-1 px-2 space-y-1 text-[11px] text-slate-500 font-medium">
                   <div className="flex justify-between">
                     <span>{getLabel("totalBranches", lang)}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">7</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">
+                      {parsedCustomers.reduce((acc, c) => acc + (c.branches_count || (c.meta.cityName ? 1 : 0)), 0)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>{getLabel("customersThisBranch", lang)}</span>
@@ -998,7 +1109,21 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div className="flex justify-between">
                     <span>{getLabel("topCountry", lang)}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">Pakistan (17)</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">
+                      {(() => {
+                        const counts: Record<string, number> = {};
+                        for (const c of parsedCustomers) {
+                          const name = c.country_name || c.meta.countryName;
+                          if (name) counts[name] = (counts[name] || 0) + 1;
+                        }
+                        let top = "—";
+                        let max = 0;
+                        for (const [k, v] of Object.entries(counts)) {
+                          if (v > max) { max = v; top = `${k} (${v})`; }
+                        }
+                        return top;
+                      })()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1042,15 +1167,39 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
               <span>{getLabel("totalUsers", lang)}</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">28</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">
+                {userStatsLoading ? (
+                  <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" />
+                ) : userStatsError ? (
+                  <span className="text-[10px] text-rose-500 font-medium">{t(lang, "cl.error", "Error")}</span>
+                ) : (
+                  userStats?.totalUsers ?? 0
+                )}
+              </span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
               <span>{getLabel("activeUsers", lang)}</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">24</span>
+              <span className="font-black text-emerald-600 dark:text-emerald-400">
+                {userStatsLoading ? (
+                  <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" />
+                ) : userStatsError ? (
+                  "—"
+                ) : (
+                  userStats?.activeUsers ?? 0
+                )}
+              </span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
               <span>{getLabel("inactiveUsers", lang)}</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">4</span>
+              <span className="font-black text-slate-500 dark:text-slate-400">
+                {userStatsLoading ? (
+                  <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" />
+                ) : userStatsError ? (
+                  "—"
+                ) : (
+                  userStats?.inactiveUsers ?? 0
+                )}
+              </span>
             </div>
           </div>
         </div>
@@ -1068,28 +1217,30 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
               <span>{t(lang, "cl.f_total_customers", "Total Customers")}</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{parsedCustomers.length || 23}</span>
+              <span className="font-black text-slate-900 dark:text-slate-100">
+                {loading ? <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" /> : error ? <span className="text-[10px] text-rose-500">{t(lang, "cl.error", "Error")}</span> : parsedCustomers.length}
+              </span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
               <span>{t(lang, "cl.f_active_customers", "Active Customers")}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">
-                {parsedCustomers.filter(c => (c.meta.leadStatus || "active").toLowerCase() === "active").length || 18}
+                {loading ? <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" /> : error ? "—" : parsedCustomers.filter(c => (c.meta.leadStatus || "active").toLowerCase() === "active").length}
               </span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
               <span>{getLabel("newThisMonth", lang)}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">
-                {parsedCustomers.filter(c => {
+                {loading ? <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" /> : error ? "—" : parsedCustomers.filter(c => {
                   const d = new Date(c.created_at);
                   const now = new Date();
                   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                }).length || 7}
+                }).length}
               </span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
               <span>{t(lang, "cl.f_inactive_customers", "Inactive Customers")}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">
-                {parsedCustomers.filter(c => (c.meta.leadStatus || "").toLowerCase() === "inactive").length || 0}
+                {loading ? <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" /> : error ? "—" : parsedCustomers.filter(c => (c.meta.leadStatus || "").toLowerCase() === "inactive").length}
               </span>
             </div>
           </div>
@@ -1102,39 +1253,42 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               <SlidersHorizontal className="h-4 w-4" />
             </div>
             <h3 className="text-xs font-bold text-amber-900 dark:text-amber-300">
-              {t(lang, "cl.kpi_pipeline_summary", "Customer Pipeline / Status Summary")}
+              {t(lang, "cl.kpi_pipeline_summary", "Customer Status & Pipeline Summary")}
             </h3>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>{t(lang, "cl.status_new", "New")}</span>
+              <span className="font-semibold text-emerald-700 dark:text-emerald-400">{getCustomerTabLabel("Active", "Active", lang)}</span>
+              <span className="font-black text-emerald-700 dark:text-emerald-400">{statusCounts["Active"] ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span className="font-semibold text-slate-500">{getCustomerTabLabel("Inactive", "Inactive", lang)}</span>
+              <span className="font-black text-slate-500">{statusCounts["Inactive"] ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>{getCustomerTabLabel("New", "New", lang)}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["New"] ?? 0}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>{t(lang, "cl.status_negotiation", "Negotiation")}</span>
+              <span>{getCustomerTabLabel("Negotiation", "Negotiation", lang)}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Negotiation"] ?? 0}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>{t(lang, "cl.status_contacted", "Contacted")}</span>
+              <span>{getCustomerTabLabel("Contacted", "Contacted", lang)}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Contacted"] ?? 0}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>{t(lang, "cl.status_closed", "Closed")}</span>
+              <span>{getCustomerTabLabel("Closed", "Closed", lang)}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Closed"] ?? 0}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>{t(lang, "cl.status_qualified", "Qualified")}</span>
+              <span>{getCustomerTabLabel("Qualified", "Qualified", lang)}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Qualified"] ?? 0}</span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>{t(lang, "cl.status_lost", "Lost")}</span>
+              <span>{getCustomerTabLabel("Lost", "Lost", lang)}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Lost"] ?? 0}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>{t(lang, "cl.status_proposal", "Proposal")}</span>
-              <span className="font-black text-slate-900 dark:text-slate-100">{statusCounts["Proposal"] ?? 0}</span>
-            </div>
-            <div />
           </div>
         </div>
       </div>
@@ -1143,7 +1297,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-1">
         {STATUS_TABS.map((tab) => {
           const isSelected = selectedStatusTab.toLowerCase() === tab.id.toLowerCase();
-          const count = statusCounts[tab.id] ?? (tab.id === "all" ? (parsedCustomers.length || 23) : 0);
+          const count = statusCounts[tab.id] ?? (tab.id === "all" ? parsedCustomers.length : 0);
           return (
             <button
               key={tab.id}
@@ -1159,7 +1313,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   : "bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60"
               )}
             >
-              <span>{tab.id === "all" ? getLabel("allLeads", lang) : tab.en}</span>
+              <span>{getCustomerTabLabel(tab.id, tab.en, lang)}</span>
               <span
                 className={cn(
                   "text-[10px] font-black px-1.5 py-0.2 rounded-full",
@@ -1319,43 +1473,77 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
                       {/* CUSTOMER NAME with avatar & tags */}
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5 truncate">
-                          <span
-                            className={cn(
-                              "grid h-7 w-7 place-items-center rounded-full text-[11px] font-black shrink-0 border",
-                              avatarColor
-                            )}
-                          >
-                            {initials}
-                          </span>
-                          <div className="truncate">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate max-w-[150px]">
-                                {c.customer_name}
+                        {(() => {
+                          const primaryName = c.customer_name_en || c.customer_name;
+                          const originalLangName = c.native_customer_name || (c.customer_name_en && c.customer_name !== c.customer_name_en ? c.customer_name : null);
+                          const subName = originalLangName && originalLangName !== primaryName ? originalLangName : null;
+                          return (
+                            <div className="flex items-center gap-2.5 truncate">
+                              <span
+                                className={cn(
+                                  "grid h-7 w-7 place-items-center rounded-full text-[11px] font-black shrink-0 border",
+                                  avatarColor
+                                )}
+                              >
+                                {initials}
                               </span>
-                              {c.is_truck_driver && (
-                                <span className="shrink-0 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                                  {getRoleBadgeLabel("driver")}
-                                </span>
-                              )}
-                              {c.is_truck_owner && (
-                                <span className="shrink-0 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                                  {getRoleBadgeLabel("owner")}
-                                </span>
-                              )}
-                              {c.is_employee && (
-                                <span className="shrink-0 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  {getRoleBadgeLabel("staff")}
-                                </span>
-                              )}
+                              <div className="truncate">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate max-w-[180px]">
+                                    {primaryName}
+                                  </span>
+                                  {c.is_truck_driver && (
+                                    <span className="shrink-0 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                      {getRoleBadgeLabel("driver")}
+                                    </span>
+                                  )}
+                                  {c.is_truck_owner && (
+                                    <span className="shrink-0 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                      {getRoleBadgeLabel("owner")}
+                                    </span>
+                                  )}
+                                  {c.is_employee && (
+                                    <span className="shrink-0 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                      {getRoleBadgeLabel("staff")}
+                                    </span>
+                                  )}
+                                </div>
+                                {subName && (
+                                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[180px]" dir="auto">
+                                    {subName}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </div>
+                          );
+                        })()}
                       </td>
 
                       {/* COMPANY */}
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-xs font-semibold truncate max-w-[130px]">
-                        {c.company_name || c.meta.companyName || "—"}
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-xs font-semibold max-w-[180px]">
+                        {c.linked_companies && c.linked_companies.length > 1 ? (
+                          <div className="flex flex-col gap-1 items-start">
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                              title={c.linked_companies.map((co) => `${co.name}${co.code ? ` (${co.code})` : ""}`).join("\n")}
+                            >
+                              <Building2 className="h-3 w-3" />
+                              {c.linked_companies.length} {t(lang, "cl.companies", "Companies")}
+                            </span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[160px]" title={c.linked_companies.map((co) => co.name).join(", ")}>
+                              {c.linked_companies.map((co) => co.name).join(", ")}
+                            </span>
+                          </div>
+                        ) : c.linked_companies && c.linked_companies.length === 1 ? (
+                          <div className="truncate max-w-[160px]" title={c.linked_companies[0].name}>
+                            <span className="text-slate-800 dark:text-slate-200 font-bold">{c.linked_companies[0].name}</span>
+                            {c.linked_companies[0].code && (
+                              <span className="block text-[10px] font-mono text-slate-400">{c.linked_companies[0].code}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="truncate">{c.company_name || c.meta.companyName || "—"}</span>
+                        )}
                       </td>
 
                       {/* COUNTRY with flag & code */}
@@ -1367,8 +1555,30 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                       </td>
 
                       {/* BRANCH */}
-                      <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        {branch}
+                      <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 max-w-[180px]">
+                        {c.linked_branches && c.linked_branches.length > 1 ? (
+                          <div className="flex flex-col gap-1 items-start">
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800"
+                              title={c.linked_branches.map((b) => `${b.name}${b.country_name ? ` (${b.country_name})` : ""}`).join("\n")}
+                            >
+                              <Building2 className="h-3 w-3" />
+                              {c.linked_branches.length} {t(lang, "cl.branches", "Branches")}
+                            </span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[160px]" title={c.linked_branches.map((b) => b.name).join(", ")}>
+                              {c.linked_branches.map((b) => b.name).join(", ")}
+                            </span>
+                          </div>
+                        ) : c.linked_branches && c.linked_branches.length === 1 ? (
+                          <div className="truncate max-w-[160px]" title={c.linked_branches[0].name}>
+                            <span className="text-slate-800 dark:text-slate-200 font-semibold">{c.linked_branches[0].name}</span>
+                            {c.linked_branches[0].code && (
+                              <span className="block text-[10px] font-mono text-slate-400">{c.linked_branches[0].code}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="truncate">{branch}</span>
+                        )}
                       </td>
 
                       {/* STATUS (styled pill badge with ● matching Image 2) */}

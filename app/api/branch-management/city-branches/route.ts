@@ -141,7 +141,7 @@ export async function GET(request: Request) {
           and (${countryId ? sql`country_id = ${countryId}` : sql`true`})
           and (${!countryId && !session.isSuperAdmin ? sql`country_id = any(${session.countryIds})` : sql`true`})
           and (${countryBranchId ? sql`country_branch_id = ${countryBranchId}` : sql`true`})
-          and (${operationalDomain ? sql`operational_domain = ${operationalDomain}` : sql`true`})
+          and (${operationalDomain ? sql`coalesce(operational_domain, 'business') = ${operationalDomain}` : sql`true`})
           and (${!session.isSuperAdmin && domainSuperAdminDomain(session.roles) ? sql`id = any(${session.cityBranchIds})` : sql`true`})
           and ${sqlRowDomainCondition(sql, session, "")}
         order by created_at asc
@@ -218,10 +218,10 @@ export async function POST(request: Request) {
     }
 
     // Check main branch via Postgres or Supabase
-    let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any } | null = null;
+    let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any; operational_domain?: string | null; is_main?: boolean | null } | null = null;
     const mbViaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
-        select id, country_id, local_currency, permission_grants
+        select id, country_id, local_currency, permission_grants, operational_domain, is_main
         from public.country_branches
         where id = ${parsed.data.countryBranchId}
           and deleted_at is null
@@ -236,7 +236,7 @@ export async function POST(request: Request) {
       const supabase = createSupabaseAdminClient() as any;
       const { data, error } = await supabase
         .from("country_branches")
-        .select("id,country_id,local_currency,permission_grants")
+        .select("id,country_id,local_currency,permission_grants,operational_domain,is_main")
         .eq("id", parsed.data.countryBranchId)
         .is("deleted_at", null)
         .single();
@@ -249,6 +249,17 @@ export async function POST(request: Request) {
 
     if (String(mainBranch.country_id) !== parsed.data.countryId) {
       return NextResponse.json({ error: formatError("Main branch does not belong to selected country.", session.isSuperAdmin) }, { status: 400 });
+    }
+
+    const mbDomain = (mainBranch as any)?.operational_domain || "business";
+    const mbIsMain = Boolean((mainBranch as any)?.is_main);
+    if (!mbIsMain && mbDomain !== parsed.data.operationalDomain) {
+      return NextResponse.json({
+        error: formatError(
+          `Selected Main Branch belongs to "${mbDomain === "shipping" ? "Shipping Line" : "Business"}" section, but this City Branch is for "${parsed.data.operationalDomain === "shipping" ? "Shipping Line" : "Business"}". Please select a matching Main Branch from the same section.`,
+          session.isSuperAdmin
+        )
+      }, { status: 400 });
     }
 
     const permissionGrants = constrainToParentPermissions(mainBranch.permission_grants, parsed.data.permissionGrants);
@@ -276,13 +287,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check duplicate branch name in the same city
+    // Check duplicate branch name in the same city for the same operational domain
     const existingNameId = await withLocalPg(async (sql) => {
       const rows = await sql`
         select id from public.city_branches
         where country_id = ${parsed.data.countryId}
           and lower(city_name) = lower(${normCityName})
           and lower(name) = lower(${normName})
+          and coalesce(operational_domain, 'business') = ${parsed.data.operationalDomain}
           and deleted_at is null
         limit 1
       `;
@@ -393,7 +405,7 @@ export async function POST(request: Request) {
           ${payload.whatsapp_number}, ${payload.company_id}, ${payload.owner_name},
           ${payload.owner_customer_id}, ${payload.owner_profile_id},
           ${sql.json(payload.contacts as any)}, ${sql.json(payload.documents as any)},
-          ${payload.permission_template}, ${payload.permission_grants},
+          ${payload.permission_template}, ${JSON.stringify(payload.permission_grants)}::jsonb,
           ${payload.created_by}, ${payload.created_at}, ${payload.updated_at}
         )
         returning id
@@ -528,10 +540,10 @@ export async function PUT(request: Request) {
       }
     }
 
-    let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any } | null = null;
+    let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any; operational_domain?: string | null; is_main?: boolean | null } | null = null;
     const mbViaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
-        select id, country_id, local_currency, permission_grants
+        select id, country_id, local_currency, permission_grants, operational_domain, is_main
         from public.country_branches
         where id = ${parsed.data.countryBranchId}
           and deleted_at is null
@@ -546,7 +558,7 @@ export async function PUT(request: Request) {
       const supabase = createSupabaseAdminClient() as any;
       const { data, error } = await supabase
         .from("country_branches")
-        .select("id,country_id,local_currency,permission_grants")
+        .select("id,country_id,local_currency,permission_grants,operational_domain,is_main")
         .eq("id", parsed.data.countryBranchId)
         .is("deleted_at", null)
         .single();
@@ -559,6 +571,17 @@ export async function PUT(request: Request) {
 
     if (String(mainBranch.country_id) !== parsed.data.countryId) {
       return NextResponse.json({ error: formatError("Main branch does not belong to selected country.", session.isSuperAdmin) }, { status: 400 });
+    }
+
+    const mbDomain = (mainBranch as any)?.operational_domain || "business";
+    const mbIsMain = Boolean((mainBranch as any)?.is_main);
+    if (!mbIsMain && mbDomain !== parsed.data.operationalDomain) {
+      return NextResponse.json({
+        error: formatError(
+          `Selected Main Branch belongs to "${mbDomain === "shipping" ? "Shipping Line" : "Business"}" section, but this City Branch is for "${parsed.data.operationalDomain === "shipping" ? "Shipping Line" : "Business"}". Please select a matching Main Branch from the same section.`,
+          session.isSuperAdmin
+        )
+      }, { status: 400 });
     }
 
     const permissionGrants = constrainToParentPermissions(mainBranch.permission_grants, parsed.data.permissionGrants);
@@ -587,13 +610,14 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Check duplicate branch name in the same city excluding self
+    // Check duplicate branch name in the same city excluding self (scoped to operational domain)
     const existingNameId = await withLocalPg(async (sql) => {
       const rows = await sql`
         select id from public.city_branches
         where country_id = ${parsed.data.countryId}
           and lower(city_name) = lower(${normCityName})
           and lower(name) = lower(${normName})
+          and coalesce(operational_domain, 'business') = ${parsed.data.operationalDomain}
           and id <> ${id}
           and deleted_at is null
         limit 1
@@ -614,7 +638,7 @@ export async function PUT(request: Request) {
         select o.id, o.name, o.code from public.city_branches o
         where o.country_id = ${parsed.data.countryId}
           and lower(btrim(o.city_name)) = lower(${normCityName})
-          and coalesce(o.operational_domain, 'business') = coalesce((select operational_domain from public.city_branches where id = ${id}), 'business')
+          and coalesce(o.operational_domain, 'business') = ${parsed.data.operationalDomain}
           and o.id <> ${id}
           and o.deleted_at is null
         limit 1
@@ -635,6 +659,7 @@ export async function PUT(request: Request) {
     const payload = {
       country_id: parsed.data.countryId,
       country_branch_id: parsed.data.countryBranchId,
+      operational_domain: parsed.data.operationalDomain,
       city_name: normCityName,
       name: normName,
       code: normCode,
@@ -674,6 +699,7 @@ export async function PUT(request: Request) {
         set
           country_id = ${payload.country_id},
           country_branch_id = ${payload.country_branch_id},
+          operational_domain = ${payload.operational_domain},
           city_name = ${payload.city_name},
           name = ${payload.name},
           code = ${payload.code},
@@ -694,7 +720,7 @@ export async function PUT(request: Request) {
           contacts = ${sql.json(payload.contacts as any)},
           documents = ${sql.json(payload.documents as any)},
           permission_template = ${payload.permission_template},
-          permission_grants = ${payload.permission_grants},
+          permission_grants = ${JSON.stringify(payload.permission_grants)}::jsonb,
           updated_at = ${payload.updated_at}
         where id = ${id}
           and deleted_at is null

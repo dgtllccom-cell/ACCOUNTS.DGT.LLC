@@ -16,6 +16,7 @@ import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
 import { printStore } from "@/lib/store/print-store";
 import { Th } from "@/components/ui/translated-th";
+import { formatCurrencyTotals, type CurrencyTotal } from "@/lib/finance/currency-totals";
 
 type SourceModule =
   | "purchase_booking"
@@ -89,7 +90,10 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
   const [moduleTab, setModuleTab] = useState<"all" | SourceModule>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in_progress" | "closed">("all");
   const [search, setSearch] = useState("");
-  const [summary, setSummary] = useState<{ originalTotal: number; expenseTotal: number; withExpenses: number; byModule: Record<string, number> } | null>(null);
+  const [summary, setSummary] = useState<{ originalTotal: number | null; expenseTotal: number | null; originalByCurrency?: CurrencyTotal[]; expenseByCurrency?: CurrencyTotal[]; mixedCurrency?: boolean; currency?: string | null; withExpenses: number; byModule: Record<string, number> } | null>(null);
+  // Section filter (All Sections | Business | Shipping Line) — offered only to logins explicitly authorized for both sections
+  const [sectionFilter, setSectionFilter] = useState<"all" | "business" | "shipping">("all");
+  const [canChooseSection, setCanChooseSection] = useState(false);
 
   const [openId, setOpenId] = useState<string | null>(null);
   const [openFocusForm, setOpenFocusForm] = useState(false);
@@ -108,16 +112,21 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
       if (moduleTab !== "all") qs.set("module", moduleTab);
       else if (sectionModules) qs.set("modules", sectionModules.join(","));
       if (statusFilter !== "all") qs.set("status", statusFilter);
+      if (sectionFilter !== "all") qs.set("section", sectionFilter);
       if (search.trim()) qs.set("q", search.trim());
       const res = await fetch(`/api/erp/bill-expenses?${qs.toString()}`);
       const j = await res.json();
       if (j.ok) {
         setRows(j.data.rows || []);
         setSummary(j.data.summary || null);
+        setCanChooseSection(Boolean(j.data.canChooseSection));
       }
       // Consolidated "Expenses" section — also pull the Daily-Payment expenses_bills (read-only)
       if (section === "expenses") {
-        const eb = await fetch(`/api/erp/bill-expenses/expenses-bills${search.trim() ? `?q=${encodeURIComponent(search.trim())}` : ""}`)
+        const ebQs = new URLSearchParams();
+        if (search.trim()) ebQs.set("q", search.trim());
+        if (sectionFilter !== "all") ebQs.set("section", sectionFilter);
+        const eb = await fetch(`/api/erp/bill-expenses/expenses-bills${ebQs.toString() ? `?${ebQs.toString()}` : ""}`)
           .then((r) => r.json())
           .catch(() => null);
         setExpensesBills(eb?.ok ? (eb.data.rows || []) : []);
@@ -127,11 +136,11 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     } finally {
       setLoading(false);
     }
-  }, [moduleTab, statusFilter, search, section, sectionModules]);
+  }, [moduleTab, statusFilter, search, section, sectionModules, sectionFilter]);
 
   useEffect(() => {
     load();
-  }, [moduleTab, statusFilter, section]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [moduleTab, statusFilter, section, sectionFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const moduleLabel = useCallback(
     (m: SourceModule) =>
@@ -203,8 +212,9 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
   const summaryCards = summary
     ? [
         { label: s.t("summary_bills", "Bills"), value: String(rows.length), accent: "border-t-indigo-500", icon: FileText },
-        { label: s.t("summary_original", "Original Total"), value: money(summary.originalTotal), accent: "border-t-blue-500", icon: Receipt },
-        { label: s.t("summary_expenses", "Expenses Total"), value: money(summary.expenseTotal), accent: "border-t-rose-500", icon: Calculator },
+        // Money is never added across currencies: one currency => one figure, several => one line per currency
+        { label: s.t("summary_original", "Original Total"), value: summary.mixedCurrency || summary.originalTotal === null ? formatCurrencyTotals(summary.originalByCurrency) : `${summary.currency ? summary.currency + " " : ""}${money(summary.originalTotal)}`, accent: "border-t-blue-500", icon: Receipt },
+        { label: s.t("summary_expenses", "Expenses Total"), value: summary.mixedCurrency || summary.expenseTotal === null ? formatCurrencyTotals(summary.expenseByCurrency) : `${summary.currency ? summary.currency + " " : ""}${money(summary.expenseTotal)}`, accent: "border-t-rose-500", icon: Calculator },
         { label: s.t("summary_with_expenses", "Bills with Expenses"), value: String(summary.withExpenses), accent: "border-t-emerald-500", icon: BadgePercent },
         {
           label: s.t("tab_purchase_booking", "Purchase Booking"),
@@ -284,6 +294,18 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              {canChooseSection && (
+                <select
+                  aria-label={s.t("section_label", "Section")}
+                  value={sectionFilter}
+                  onChange={(e) => setSectionFilter(e.target.value as "all" | "business" | "shipping")}
+                  className={`rounded-md border px-2.5 py-2 text-xs font-semibold ${sectionFilter !== "all" ? "border-amber-400 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950/40" : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"}`}
+                >
+                  <option value="all">{s.t("section_all", "All Sections")}</option>
+                  <option value="business">{s.t("section_business", "Business")}</option>
+                  <option value="shipping">{s.t("section_shipping", "Shipping Line")}</option>
+                </select>
+              )}
               <div className="relative">
                 <Search className={`absolute top-2.5 h-3.5 w-3.5 text-slate-400 ${s.isRtl ? "right-2.5" : "left-2.5"}`} />
                 <input

@@ -154,7 +154,8 @@ const DICT = {
     col_total_amount: "Total (USD)",
     col_transfer_ledger: "Transfer Ledger",
     col_ledger_remaining: "Remaining Balance",
-    showing: "Showing 1 to 10 of 125 records",
+    no_records_found: "No expense records found in database.",
+    showing: "Showing",
     per_page: "10 / page",
     lang_auto_note: "Language switched: layout, buttons, dropdowns, and filters automatically follow active language direction."
   },
@@ -234,7 +235,8 @@ const DICT = {
     col_total_amount: "کل رقم (USD)",
     col_transfer_ledger: "ٹرانسفر لیجر",
     col_ledger_remaining: "بقایا بیلنس",
-    showing: "125 میں سے 1 سے 10 ریکارڈ دکھائے جا رہے ہیں",
+    no_records_found: "ڈیٹا بیس میں کوئی اخراجات کا ریکارڈ نہیں ملا۔",
+    showing: "دکھائے جا رہے ہیں",
     per_page: "10 / صفحہ",
     lang_auto_note: "زبان تبدیل کرنے پر تمام بٹن، ڈراپ ڈاؤن، فلٹرز اور لے آؤٹ کی سمت خودکار طور پر تبدیل ہو جاتی ہے۔"
   },
@@ -314,7 +316,8 @@ const DICT = {
     col_total_amount: "مبلغ کل (دلار)",
     col_transfer_ledger: "انتقال به دفتر کل",
     col_ledger_remaining: "مانده باقیمانده",
-    showing: "نمایش ۱ تا ۱۰ از ۱۲۵ رکورد",
+    no_records_found: "هیچ رکوردی از هزینه‌ها در پایگاه داده یافت نشد.",
+    showing: "نمایش",
     per_page: "۱۰ / صفحه",
     lang_auto_note: "با تغییر زبان، دکمه‌ها، منوهای کشویی، فیلترها و جهت چیدمان به صورت خودکار به‌روزرسانی می‌شوند."
   },
@@ -347,7 +350,7 @@ const DICT = {
     filter_btn: "تصفية",
     bill_date_btn: "تاريخ الفاتورة",
     actions_btn: "إجراءات",
-    filters_header: "تصفية البيانات",
+    filters_header: "خيارات التصفية",
     country: "الدولة",
     select_country: "اختر الدولة",
     branch: "الفرع",
@@ -356,18 +359,18 @@ const DICT = {
     select_user: "اختر المستخدم",
     customer: "العميل",
     select_customer: "اختر العميل",
-    party: "المستفيد / الشاحنة",
+    party: "الطرف / الشاحنة",
     select_party: "اختر الطرف",
     expense_type: "نوع المصروف",
     select_expense_type: "اختر نوع المصروف",
-    voucher_number: "رقم القيد / الإذن",
-    enter_voucher: "أدخل رقم القيد",
+    voucher_number: "رقم السند",
+    enter_voucher: "أدخل رقم السند",
     status: "الحالة",
     select_status: "اختر الحالة",
     apply_filter: "تطبيق التصفية",
-    clear: "إعادة تعيين",
+    clear: "مسح",
     all_countries: "جميع الدول",
-    uae: "الإمارات العربية المتحدة",
+    uae: "الإمارات",
     pakistan: "باكستان",
     afghanistan: "أفغانستان",
     uzbekistan: "أوزبكستان",
@@ -376,9 +379,9 @@ const DICT = {
     col_date: "التاريخ",
     col_country: "الدولة",
     col_branch: "الفرع",
-    col_entry_user: "المستخدم المدخل",
+    col_entry_user: "مدخل البيانات",
     col_customer: "العميل",
-    col_party: "المستفيد",
+    col_party: "الطرف / الشاحنة",
     col_expense_type: "نوع المصروف",
     col_credit_acc: "رقم حساب الدائن",
     col_debit_acc: "رقم حساب المدين",
@@ -387,16 +390,17 @@ const DICT = {
     col_status: "الحالة",
     col_actions: "الإجراءات",
     col_total_usd: "إجمالي الفواتير",
-    col_total_transfer: "إجمالي التحويل (دولار أمريكي)",
-    col_transferred: "المحول للأستاذ",
-    col_pending: "قيد الانتظار",
-    col_remaining: "الرصيد المتبقي",
-    col_total_amount: "إجمالي المبلغ (دولار)",
-    col_transfer_ledger: "المحول للأستاذ",
+    col_total_transfer: "إجمالي التحويل (دولار)",
+    col_transferred: "تم التحويل",
+    col_pending: "معلق",
+    col_remaining: "المتبقي",
+    col_total_amount: "المبلغ الإجمالي (دولار)",
+    col_transfer_ledger: "ترحيل للأستاذ",
     col_ledger_remaining: "الرصيد المتبقي",
-    showing: "عرض 1 إلى 10 من أصل 125 سجل",
+    no_records_found: "لا توجد سجلات مصاريف في قاعدة البيانات.",
+    showing: "عرض",
     per_page: "10 / صفحة",
-    lang_auto_note: "عند تغيير اللغة، سيتم تحديث الأزرار والقوائم المنسدلة والفلاتر واتجاه الصفحة تلقائياً."
+    lang_auto_note: "عند تغيير اللغة، يتم تحديث الأزرار والقوائم المنسدلة والفلاتر واتجاه الصفحة تلقائياً."
   },
   ps: {
     customer_title: "د پیرودونکي لګښتونو راجستر",
@@ -474,7 +478,8 @@ const DICT = {
     col_total_amount: "ټول مقدار (ډالر)",
     col_transfer_ledger: "لیجر ته لیږدول",
     col_ledger_remaining: "پاتې بیلانس",
-    showing: "له ۱۲۵ ریکارډونو څخه ۱ تر ۱۰ ښودل کیږي",
+    no_records_found: "په ډیټابیس کې د لګښت هیڅ ریکارډ ونه موندل شو.",
+    showing: "ښودل کیږي",
     per_page: "۱۰ / پاڼه",
     lang_auto_note: "د ژبې په بدلولو سره، تڼۍ، انتخابي لستونه، فلټرونه او د پاڼې لوری په خپله بدلیږي."
   }
@@ -500,6 +505,33 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
   const [filterExpenseType, setFilterExpenseType] = useState("all");
   const [filterVoucher, setFilterVoucher] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+
+  // Fetch real database records
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    fetch(`/api/erp/clearing-agent/expenses-register?category=${category}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (isMounted) {
+          if (json.success && Array.isArray(json.data)) {
+            setRawRows(json.data);
+          } else {
+            setRawRows([]);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load expenses register:", err);
+        if (isMounted) setRawRows([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [category]);
 
   // Determine category-specific text
   const categoryTitle =
@@ -552,7 +584,8 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
         const mapped: RegisterRow[] = bills.map((b) => {
           const lines: any[] = Array.isArray(b.expenses_bill_lines) ? b.expenses_bill_lines : [];
           const amountValue = lines.reduce((sum, l) => sum + Number(l.grand_amount || 0), 0);
-          const currency = lines.find((l) => l.currency)?.currency || b.city_branches?.countries?.currency_code || "";
+          // grand_amount is stored in the branch BASE currency (a line's own currency is only what it was typed in)
+          const currency = String(b.base_currency || b.city_branches?.countries?.currency_code || "");
           const country = b.city_branches?.countries;
           const iso2 = String(country?.iso2 || "");
           return {
@@ -638,15 +671,31 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
   // Filter rows based on search, country tab, and filter form
   const filteredRows = useMemo(() => {
     return rawRows.filter((r) => {
-      // Tab filter
+      // 1. Country Tab
       if (selectedCountryTab !== "all" && r.countryCode !== selectedCountryTab) {
         return false;
       }
-      // Form country filter
+      // 2. Dropdown Filter: Country
       if (filterCountry !== "all" && r.countryCode !== filterCountry) {
         return false;
       }
-      // Form status filter
+      // 3. Dropdown Filter: Branch
+      if (filterBranch !== "all" && !r.branch.includes(filterBranch)) {
+        return false;
+      }
+      // 4. Dropdown Filter: User
+      if (filterUser !== "all" && !r.entryUser.includes(filterUser)) {
+        return false;
+      }
+      // 5. Dropdown Filter: Customer / Party
+      if (filterCustomer !== "all" && !r.party.includes(filterCustomer)) {
+        return false;
+      }
+      // 6. Dropdown Filter: Expense Type
+      if (filterExpenseType !== "all" && !r.expenseType.includes(filterExpenseType)) {
+        return false;
+      }
+      // 7. Dropdown Filter: Status
       if (filterStatus !== "all" && r.status !== filterStatus) {
         return false;
       }
@@ -657,18 +706,56 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
       // Search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const hit =
+        const match =
           r.expenseNo.toLowerCase().includes(q) ||
           r.party.toLowerCase().includes(q) ||
           r.branch.toLowerCase().includes(q) ||
           r.expenseType.toLowerCase().includes(q) ||
-          r.entryUser.toLowerCase().includes(q);
-        if (!hit) return false;
+          r.entryUser.toLowerCase().includes(q) ||
+          r.creditAcc.toLowerCase().includes(q);
+        if (!match) return false;
       }
       return true;
     });
   }, [rawRows, selectedCountryTab, filterCountry, filterBranch, filterCustomer, filterExpenseType, filterVoucher, filterStatus, searchQuery]);
 
+  // Derived KPI metrics strictly from real data
+  const totalBills = filteredRows.length;
+  const totalBillsAmount = filteredRows.reduce((acc, r) => acc + (Number(r.amount) || 0), 0);
+
+  const transferredRows = filteredRows.filter((r) => r.status === "approved" || r.status === "transferred");
+  const transferredAmount = transferredRows.reduce((acc, r) => acc + (Number(r.amount) || 0), 0);
+  const transferredCount = transferredRows.length;
+
+  const pendingRows = filteredRows.filter((r) => r.status === "pending");
+  const pendingAmount = pendingRows.reduce((acc, r) => acc + (Number(r.amount) || 0), 0);
+  const pendingCount = pendingRows.length;
+
+  const remainingAmount = Math.max(0, totalBillsAmount - transferredAmount);
+  const remainingCount = Math.max(0, totalBills - transferredCount);
+
+  // Derived Country Breakdown from real data
+  const countryBreakdown = useMemo(() => {
+    const map = new Map<string, { country: string; flag: string; total: number; transferred: number; pending: number; remaining: number }>();
+    for (const r of filteredRows) {
+      const code = r.countryCode || "OTHER";
+      const name = r.countryName || code;
+      const flag = r.flag || "🌐";
+      const amt = Number(r.amount) || 0;
+      const isTr = r.status === "approved" || r.status === "transferred";
+      const isPend = r.status === "pending";
+
+      const cur = map.get(code) || { country: name, flag, total: 0, transferred: 0, pending: 0, remaining: 0 };
+      cur.total += amt;
+      if (isTr) cur.transferred += amt;
+      if (isPend) cur.pending += amt;
+      cur.remaining = Math.max(0, cur.total - cur.transferred);
+      map.set(code, cur);
+    }
+    return Array.from(map.values());
+  }, [filteredRows]);
+
+  // Reset all filters
   const handleResetFilters = () => {
     setFilterCountry("all");
     setFilterBranch("all");
@@ -680,6 +767,35 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
     setSelectedCountryTab("all");
     setSearchQuery("");
   };
+
+  // Dynamic Showing String
+  const showingText = useMemo(() => {
+    if (totalBills === 0) return `0 ${t.records}`;
+    const start = 1;
+    const end = Math.min(10, totalBills);
+    if (lang === "ur") return `${totalBills} میں سے ${start} تا ${end} ${t.records} دکھائے جا رہے ہیں`;
+    if (lang === "ar") return `عرض ${start} إلى ${end} من أصل ${totalBills} ${t.records}`;
+    if (lang === "fa") return `نمایش ${start} تا ${end} از ${totalBills} ${t.records}`;
+    if (lang === "ps") return `له ${totalBills} ریکارډونو څخه ${start} تر ${end} ښودل کیږي`;
+    return `Showing ${start} to ${end} of ${totalBills} records`;
+  }, [totalBills, lang, t.records]);
+
+  // Dynamic filter lists from data
+  const availableBranches = useMemo(() => {
+    return Array.from(new Set(rawRows.map((r) => r.branch).filter(Boolean)));
+  }, [rawRows]);
+
+  const availableUsers = useMemo(() => {
+    return Array.from(new Set(rawRows.map((r) => r.entryUser).filter(Boolean)));
+  }, [rawRows]);
+
+  const availableParties = useMemo(() => {
+    return Array.from(new Set(rawRows.map((r) => r.party).filter(Boolean)));
+  }, [rawRows]);
+
+  const availableExpenseTypes = useMemo(() => {
+    return Array.from(new Set(rawRows.map((r) => r.expenseType).filter(Boolean)));
+  }, [rawRows]);
 
   return (
     <div className={`space-y-4 animate-in fade-in duration-200 ${isRtl ? "rtl" : "ltr"}`} dir={isRtl ? "rtl" : "ltr"}>
@@ -788,9 +904,9 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
                         className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                       >
                         <option value="all">{t.select_user}</option>
-                        <option value="Ali Khan">Ali Khan / علی خان</option>
-                        <option value="Sara Ahmed">Sara Ahmed / سارہ احمد</option>
-                        <option value="Mohammad Iqbal">Mohammad Iqbal / محمد اقبال</option>
+                        {availableUsers.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -875,30 +991,30 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
               )}
             </div>
 
-            {/* Bill Date Button (Purple) */}
+            {/* Bill Date Button */}
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white px-3.5 text-xs font-bold shadow-2xs transition"
+              className="inline-flex items-center gap-1.5 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 text-xs font-semibold text-slate-700 shadow-2xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
             >
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="h-3.5 w-3.5 text-slate-500" />
               <span>{t.bill_date_btn}</span>
             </button>
 
-            {/* Actions Button (Blue) */}
+            {/* Actions Button */}
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-3.5 text-xs font-bold shadow-2xs transition"
+              className="inline-flex items-center gap-1.5 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 text-xs font-semibold text-slate-700 shadow-2xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
             >
-              <Settings className="h-3.5 w-3.5" />
+              <Settings className="h-3.5 w-3.5 text-slate-500" />
               <span>{t.actions_btn}</span>
             </button>
 
-            {/* + New Entry Button */}
+            {/* New Entry Button */}
             {onOpenEntryForm && (
               <button
                 type="button"
                 onClick={onOpenEntryForm}
-                className="inline-flex items-center gap-1 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 text-xs font-bold shadow-2xs transition"
+                className="inline-flex items-center gap-1.5 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 text-xs font-bold shadow-2xs transition"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>{translateHeader(activeLang, "+ New")}</span>
@@ -1120,80 +1236,88 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredRows.map((row) => {
-                const isApproved = row.status === "approved";
-                const isPending = row.status === "pending";
-                const statusLabel = isApproved ? t.approved : isPending ? t.pending : t.rejected;
-                const statusBadge = isApproved
-                  ? "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300"
-                  : isPending
-                  ? "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300"
-                  : "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300";
+              {filteredRows.length === 0 ? (
+                <tr>
+                  <td colSpan={14} className="py-12 text-center text-slate-400 font-sans font-medium">
+                    {loading ? "Loading..." : t.no_records_found}
+                  </td>
+                </tr>
+              ) : (
+                filteredRows.map((row, idx) => {
+                  const isApproved = row.status === "approved";
+                  const isPending = row.status === "pending";
+                  const statusLabel = isApproved ? t.approved : isPending ? t.pending : t.rejected;
+                  const statusBadge = isApproved
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300"
+                    : isPending
+                    ? "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300"
+                    : "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300";
 
-                return (
-                  <tr key={row.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
-                    <td className="py-2.5 px-3 text-center font-medium text-slate-400">{row.id}</td>
-                    <td className="py-2.5 px-3 font-mono font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                      {row.expenseNo}
-                    </td>
-                    <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                      {row.date}
-                    </td>
-                    <td className="py-2.5 px-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-200">
-                        <span>{row.flag}</span>
-                        <span>{row.countryName}</span>
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">{row.branch}</td>
-                    <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">{row.entryUser}</td>
-                    <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                      {row.party}
-                    </td>
-                    <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                      {row.expenseType}
-                    </td>
-                    <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                      {row.creditAcc}
-                    </td>
-                    <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                      {row.debitAcc}
-                    </td>
-                    <td className="py-2.5 px-3 font-mono font-bold text-slate-900 dark:text-slate-100 text-right whitespace-nowrap">
-                      {row.amount}
-                    </td>
-                    <td className="py-2.5 px-3 font-mono text-slate-500 text-center">{row.currency}</td>
-                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold border ${statusBadge}`}>
-                        {statusLabel}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-1 text-slate-400">
-                        <button
-                          type="button"
-                          className="p-1 hover:text-blue-600 rounded transition"
-                          title={tc(activeLang, "common.view_details", "View Details")}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          className="p-1 hover:text-slate-600 rounded transition"
-                          title={tc(activeLang, "common.more_options", "More Options")}
-                        >
-                          <MoreVertical className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr key={row.id || idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                      <td className="py-2.5 px-3 text-center font-medium text-slate-400">{idx + 1}</td>
+                      <td className="py-2.5 px-3 font-mono font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                        {row.expenseNo}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                        {row.date}
+                      </td>
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-200">
+                          <span>{row.flag}</span>
+                          <span>{row.countryName}</span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">{row.branch}</td>
+                      <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">{row.entryUser}</td>
+                      <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                        {row.party}
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                        {row.expenseType}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                        {row.creditAcc}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                        {row.debitAcc}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono font-bold text-slate-900 dark:text-slate-100 text-right whitespace-nowrap">
+                        {Number(row.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-slate-500 text-center">{row.currency}</td>
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold border ${statusBadge}`}>
+                          {statusLabel}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1 text-slate-400">
+                          <button
+                            type="button"
+                            className="p-1 hover:text-blue-600 rounded transition"
+                            title={tc(activeLang, "common.view_details", "View Details")}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            className="p-1 hover:text-slate-600 rounded transition"
+                            title={tc(activeLang, "common.more_options", "More Options")}
+                          >
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Table Footer: Pagination & Note */}
+        {/* Table Footer: Dynamic Pagination & Showing */}
         <div className="p-3 bg-slate-50/50 border-t border-slate-100 dark:border-slate-800 dark:bg-slate-800/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
           <div className="text-slate-500 font-medium">
             {filteredRows.length} {t.records}
@@ -1203,12 +1327,6 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             <span className="text-slate-400">{t.per_page}</span>
             <div className="flex items-center gap-1 font-mono">
               <span className="h-7 w-7 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center">1</span>
-              <span className="h-7 w-7 rounded-lg hover:bg-slate-100 text-slate-600 flex items-center justify-center cursor-pointer">2</span>
-              <span className="h-7 w-7 rounded-lg hover:bg-slate-100 text-slate-600 flex items-center justify-center cursor-pointer">3</span>
-              <span className="h-7 w-7 rounded-lg hover:bg-slate-100 text-slate-600 flex items-center justify-center cursor-pointer">4</span>
-              <span className="h-7 w-7 rounded-lg hover:bg-slate-100 text-slate-600 flex items-center justify-center cursor-pointer">5</span>
-              <span className="text-slate-400 px-1">...</span>
-              <span className="h-7 w-7 rounded-lg hover:bg-slate-100 text-slate-600 flex items-center justify-center cursor-pointer">13</span>
             </div>
           </div>
         </div>

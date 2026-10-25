@@ -3,6 +3,7 @@ import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { billExpenseModuleAllowed } from "@/lib/permissions/bill-expense-domain";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +29,12 @@ export async function GET(request: NextRequest) {
 
     const result = await withLocalPg(async (sql) => {
       const [be] = await sql`
-        select id, country_id, city_branch_id, eligibility
+        select id, source_module, country_id, city_branch_id, eligibility
         from public.bill_expenses
         where source_id = ${sourceId}::uuid and deleted_at is null
         limit 1`;
       if (!be) return { id: null as string | null, eligible: false };
+      if (!billExpenseModuleAllowed(session, be.source_module)) return { forbidden: true } as const;
       if (scope.level === "country" && scope.countryId && be.country_id !== scope.countryId) {
         return { forbidden: true } as const;
       }

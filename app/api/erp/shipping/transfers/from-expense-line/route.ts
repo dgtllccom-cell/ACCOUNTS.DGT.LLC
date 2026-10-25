@@ -4,6 +4,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { withKeyedLock } from "@/lib/db/keyed-lock";
 import { createShippingTransfer } from "@/lib/services/shipping-transfer-service";
 
 /**
@@ -36,6 +37,9 @@ export async function POST(req: NextRequest) {
       cityBranchId: originCityBranchId
     });
 
+    // One claim per expense line, whatever the number of simultaneous clicks: check + create run under one database lock
+    // (the unique index shipping_expense_transfers_one_active_claim_uidx is the final backstop).
+    const result = await withKeyedLock(`expense-claim:${expenseLineId}`, async () => {
     const data = await withLocalPg(async (sql) => {
       const [order] = await sql`
         SELECT id, order_no, country_id, country_branch_id, city_branch_id
@@ -45,13 +49,25 @@ export async function POST(req: NextRequest) {
 
       const [line] = await sql`
         SELECT bel.id, bel.expense_type, bel.grand_amount, bel.currency, bel.posting_status,
-               be.bill_no, be.id AS bill_expense_id
+               be.bill_no, be.id AS bill_expense_id, be.country_id, be.country_branch_id, be.city_branch_id,
+               upper(coalesce(cib.local_currency, c.currency_code, be.currency)) AS functional_currency
         FROM public.bill_expense_lines bel
         JOIN public.bill_expenses be ON be.id = bel.bill_expense_id
+        LEFT JOIN public.city_branches cib ON cib.id = be.city_branch_id
+        LEFT JOIN public.countries c ON c.id = be.country_id
         WHERE bel.id = ${expenseLineId} AND bel.deleted_at IS NULL LIMIT 1
       `;
       if (!line) throw new Error("Expense line not found.");
       if (line.posting_status !== "posted") throw new Error("Only a posted expense line can be claimed.");
+
+      // The line itself must sit inside the caller's authorized scope — never trust the id alone.
+      authorizeApiScope(session, {
+        resource: "shipping_transfers",
+        action: "create",
+        countryId: line.country_id ?? null,
+        countryBranchId: line.country_branch_id ?? null,
+        cityBranchId: line.city_branch_id ?? null
+      });
 
       const existingClaim = await sql`
         SELECT id FROM public.shipping_expense_transfers
@@ -63,7 +79,7 @@ export async function POST(req: NextRequest) {
     });
     if (!data) throw new Error("Claim creation needs a direct database connection.");
 
-    const result = await createShippingTransfer({
+    return await createShippingTransfer({
       session,
       orderId,
       sourceTable: "bill_expense_lines",
@@ -75,12 +91,14 @@ export async function POST(req: NextRequest) {
         countryBranchId: data.order.country_branch_id,
         cityBranchId: data.order.city_branch_id
       },
+      // grand_amount is the branch-functional-currency amount, so the claim carries THAT currency (not the currency the line was typed in)
       amount: Number(data.line.grand_amount),
-      currencyCode: data.line.currency,
+      currencyCode: data.line.functional_currency || data.line.currency,
       category: data.line.expense_type,
       blReference: data.order.order_no,
       supportingDocument: note ?? null
     });
+    }, { busyMessage: "A claim for this expense line is being created right now. Please wait a moment and refresh." });
 
     return NextResponse.json({ success: true, data: result });
   } catch (error: any) {

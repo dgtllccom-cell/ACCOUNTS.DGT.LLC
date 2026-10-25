@@ -3,6 +3,7 @@ import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { billExpenseModuleAllowed } from "@/lib/permissions/bill-expense-domain";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
 
@@ -55,6 +56,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         limit 1
       `;
       if (!be) return { notFound: true } as const;
+      if (!billExpenseModuleAllowed(session, be.source_module)) return { forbidden: true } as const;
 
       try {
         const [localizedBe] = await localizeRecordFields<any>([be], "bill_expenses", ["party_name"], lang);

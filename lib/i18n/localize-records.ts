@@ -3,6 +3,7 @@ import { getSharedPg } from "@/lib/db/local-postgres";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { transliterateToLatin, transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { TRANSLATABLE_FIELDS } from "@/lib/i18n/translatable-fields";
+import { VALUE_TRANSLATIONS, translateCountry } from "@/lib/i18n/table-values";
 
 /**
  * Central Per-Language Master Data Resolver — the ONE translation source for the whole ERP.
@@ -203,13 +204,30 @@ function phraseTranslate(dict: Map<string, DictRow>, raw: string, lang: Supporte
 async function loadDictionary(sql: ReturnType<typeof postgres>): Promise<Map<string, DictRow>> {
   const now = Date.now();
   if (dictCache && now - dictLoadedAt < DICT_TTL_MS) return dictCache;
+  const map = new Map<string, DictRow>();
+
+  // Seed dictionary with curated static vocabulary (countries, statuses, common terms)
+  for (const [k, v] of Object.entries(VALUE_TRANSLATIONS)) {
+    const key = k.toLowerCase().trim();
+    if (key) {
+      map.set(key, {
+        english_text: k,
+        urdu_text: v.ur,
+        arabic_text: v.ar,
+        persian_text: v.fa,
+        pashto_text: v.ps,
+        translation_status: "verified",
+        translated_by_engine: "local_dictionary"
+      });
+    }
+  }
+
   const rows = await sql.unsafe(
     `select english_text, original_text, urdu_text, arabic_text, persian_text, pashto_text
      from record_translations
      where record_table = 'system_dictionary' and deleted_at is null
        and coalesce(translation_status,'') <> 'needs_review'`
   ).catch(() => [] as any[]);
-  const map = new Map<string, DictRow>();
   for (const r of rows as any[]) {
     const key = String(r.english_text || r.original_text || "").trim().toLowerCase();
     if (key) map.set(key, r);
@@ -229,21 +247,55 @@ export async function getPhraseTranslator(lang: SupportedLanguage): Promise<(val
   const identity = (v: string | null | undefined) => (v ?? "").toString();
   if (lang === "en") return identity;
   const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl) return identity;
   let dict = dictCache;
   if (!dict || Date.now() - dictLoadedAt >= DICT_TTL_MS) {
-    const sql = getSharedPg()!;
-    try {
-      dict = await loadDictionary(sql);
-    } finally {
-      /* shared process-lifetime pool — deliberately not closed */ void 0;
+    if (dbUrl) {
+      const sql = getSharedPg()!;
+      try {
+        dict = await loadDictionary(sql);
+      } catch {
+        // Fallback to static dictionary when DB fails
+        const map = new Map<string, DictRow>();
+        for (const [k, v] of Object.entries(VALUE_TRANSLATIONS)) {
+          const key = k.toLowerCase().trim();
+          if (key) {
+            map.set(key, {
+              english_text: k,
+              urdu_text: v.ur,
+              arabic_text: v.ar,
+              persian_text: v.fa,
+              pashto_text: v.ps
+            });
+          }
+        }
+        dict = map;
+      }
+    } else {
+      const map = new Map<string, DictRow>();
+      for (const [k, v] of Object.entries(VALUE_TRANSLATIONS)) {
+        const key = k.toLowerCase().trim();
+        if (key) {
+          map.set(key, {
+            english_text: k,
+            urdu_text: v.ur,
+            arabic_text: v.ar,
+            persian_text: v.fa,
+            pashto_text: v.ps
+          });
+        }
+      }
+      dict = map;
     }
   }
   const d = dict;
   return (value) => {
     const raw = (value ?? "").toString().trim();
     if (!raw) return (value ?? "").toString();
-    return phraseTranslate(d, raw, lang) ?? raw;
+    const translated = phraseTranslate(d, raw, lang);
+    if (translated) return translated;
+    const country = translateCountry(raw, lang);
+    if (country && country !== raw) return country;
+    return raw;
   };
 }
 
@@ -359,6 +411,12 @@ export async function localizeRecordNames<T extends { id: string }>(
       const recVal = genuine(targetText, rawValue, englishVal, isEn);
       if (recVal) return { ...record, [field]: recVal };
 
+      // Country name: authentic 5-language translation from curated dictionary
+      if (table === "countries" && field === "name" && !isEn) {
+        const cName = translateCountry(rawValue, lang);
+        if (cName && cName !== rawValue) return { ...record, [field]: cName };
+      }
+
       // Tier 2 — central dictionary (exact term match, approved only).
       if (dict) {
         const d = dict.get(rawValue.toLowerCase());
@@ -454,6 +512,11 @@ export async function localizeRecordFields<T extends { id: string }>(
 
         const targetText = trans && trustStored ? (trans[targetCol as keyof DictRow] as string) : null;
         resolved = genuine(targetText, rawValue, englishVal, isEn);
+
+        if (!resolved && table === "countries" && field === "name" && !isEn) {
+          const cName = translateCountry(rawValue, lang);
+          if (cName && cName !== rawValue) resolved = cName;
+        }
 
         if (!resolved && dict) {
           const d = dict.get(rawValue.toLowerCase());

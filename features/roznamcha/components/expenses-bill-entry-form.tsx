@@ -25,6 +25,7 @@ import { Th } from "@/components/ui/translated-th";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { Sparkles } from "lucide-react";
+import { calculateExpenseLine, ExpenseCalcError, type TaxMode } from "@/lib/finance/expense-line-calculator";
 
 type TaxCodeRow = {
   id: string;
@@ -126,6 +127,8 @@ type RowEntry = {
   taxPct: number | "";
   taxAmt: number;
   grandAmount: number;
+  taxMode: TaxMode;
+  taxCode: string;
 };
 
 const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger: any, colorClass: string, borderColorClass: string }) => {
@@ -319,14 +322,16 @@ export function ExpensesBillEntryForm({
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedMainBranch, setSelectedMainBranch] = useState("");
   const [branch, setBranch] = useState(""); // City Branch ID
-  const [branchCurrency, setBranchCurrency] = useState("AED");
+  // BASE currency of the selected branch, read from the configuration by the server (empty until a branch is chosen — never assumed)
+  const [branchCurrency, setBranchCurrency] = useState("");
+  const [contextError, setContextError] = useState("");
 
   // Row Entry State
   const [details, setDetails] = useState("");
   const [qty, setQty] = useState<number | "">("");
   const [unitPrice, setUnitPrice] = useState<number | "">("");
   const [amount, setAmount] = useState(0);
-  const [currency, setCurrency] = useState("AED");
+  const [currency, setCurrency] = useState("");
   const [operation, setOperation] = useState("*");
   const [exchangeRate, setExchangeRate] = useState<number | "">("");
   const [finalAmount, setFinalAmount] = useState(0);
@@ -334,25 +339,40 @@ export function ExpensesBillEntryForm({
   // Tax State
   const [taxOn, setTaxOn] = useState(false);
   const [taxPct, setTaxPct] = useState<number | "">("");
+  const [taxMode, setTaxMode] = useState<"exclusive" | "inclusive">("exclusive");
+  const [taxCode, setTaxCode] = useState("");
+  const [taxBase, setTaxBase] = useState(0);
+  const [calcError, setCalcError] = useState("");
   const [taxAmt, setTaxAmt] = useState(0);
   const [grandAmount, setGrandAmount] = useState(0);
 
-  const [taxes, setTaxes] = useState<TaxCodeRow[]>([]);
+  const [taxOptions, setTaxOptions] = useState<Array<{ code: string; name: string; rate: number }>>([]);
+  const [contextCountryName, setContextCountryName] = useState("");
   const [newTaxOpen, setNewTaxOpen] = useState(false);
   const [newTaxForm, setNewTaxForm] = useState({ taxName: "", taxPct: "", countryName: "" });
 
-  const fetchTaxes = async () => {
+  // Base currency + this country's configured tax codes for the selected branch (server-resolved).
+  const fetchBranchContext = async (branchId: string) => {
+    if (!branchId) {
+      setBranchCurrency("");
+      setTaxOptions([]);
+      setContextCountryName("");
+      setContextError("");
+      return;
+    }
     try {
-      const data = await apiGet<any>("/api/erp/master-data/taxes");
-      setTaxes(data || []);
-    } catch (err) {
-      console.error("Failed to fetch taxes", err);
+      const res = await apiGet<any>(`/api/erp/expenses/branch-context?branchId=${encodeURIComponent(branchId)}`);
+      const d = res?.data ?? res;
+      setBranchCurrency(String(d?.baseCurrency || "").toUpperCase());
+      setTaxOptions(Array.isArray(d?.taxOptions) ? d.taxOptions : []);
+      setContextCountryName(String(d?.countryName || ""));
+      setContextError("");
+    } catch (err: any) {
+      setBranchCurrency("");
+      setTaxOptions([]);
+      setContextError(err?.message || "The base currency of this branch could not be determined.");
     }
   };
-
-  useEffect(() => {
-    fetchTaxes();
-  }, []);
 
   const saveNewTax = async () => {
     if (!newTaxForm.taxName || !newTaxForm.taxPct || !newTaxForm.countryName) {
@@ -364,11 +384,12 @@ export function ExpensesBillEntryForm({
       const data = await apiPost<any>("/api/erp/master-data/taxes", {
         taxName: newTaxForm.taxName,
         taxPct: newTaxForm.taxPct,
-        countryName: newTaxForm.countryName
+        countryName: newTaxForm.countryName || contextCountryName
       });
       
-      await fetchTaxes();
+      await fetchBranchContext(branch);
       setTaxPct(data.taxPct);
+      setTaxCode(String(data.taxName || ""));
       setNewTaxOpen(false);
       setNewTaxForm({ taxName: "", taxPct: "", countryName: "" });
     } catch (err: any) {
@@ -519,7 +540,7 @@ export function ExpensesBillEntryForm({
     branch: b.city_branches?.name || b.branch_id || "",
     type: [b.bill_mode, b.bill_title].filter(Boolean).join(" - "),
     user: b.profiles?.full_name || "",
-    currency: b.city_branches?.countries?.currency_code || "",
+    currency: b.base_currency || b.city_branches?.countries?.currency_code || "",
     total: b.expenses_bill_lines?.reduce((sum: number, l: any) => sum + Number(l.grand_amount), 0) || 0,
     transfer_status: b.transferred_to_roznamcha ? tt("exp.transferred", "Transferred") : tt("exp.no_transfer", "No Transfer"),
   }) as Record<string, unknown>;
@@ -610,7 +631,9 @@ export function ExpensesBillEntryForm({
         taxOn: l.tax_on,
         taxPct: l.tax_pct,
         taxAmt: l.tax_amt,
-        grandAmount: l.grand_amount
+        grandAmount: l.grand_amount,
+        taxMode: (l.tax_mode === "inclusive" || l.tax_mode === "exempt" ? l.tax_mode : l.tax_on ? "exclusive" : "exempt") as TaxMode,
+        taxCode: l.tax_code || ""
       })));
     }
     setViewMode("form");
@@ -687,13 +710,11 @@ export function ExpensesBillEntryForm({
     }
   }, [selectedMainBranch]);
 
-  // Update Currency when City Branch changes
+  // Base currency + tax codes when the City Branch changes
   useEffect(() => {
-    const cb = cityBranches.find(b => b.id === branch);
-    if (cb && cb.local_currency) {
-      setBranchCurrency(cb.local_currency);
-    }
-  }, [branch, cityBranches]);
+    void fetchBranchContext(branch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branch]);
 
   const generateNextSerial = () => "AUTO";
 
@@ -713,27 +734,37 @@ export function ExpensesBillEntryForm({
     }
   }, [qty, unitPrice]);
 
+  // Original → converted (base currency) → tax → final, by the SAME calculator the server re-runs on save.
   useEffect(() => {
-    let final = amount;
-    if (currency !== branchCurrency) {
-      const rate = Number(exchangeRate) || 0;
-      if (rate > 0) {
-        final = operation === "*" ? amount * rate : amount / rate;
-      }
+    if (!branchCurrency || !currency || !(amount > 0)) {
+      setFinalAmount(0); setTaxAmt(0); setTaxBase(0); setGrandAmount(0); setCalcError("");
+      return;
     }
-    setFinalAmount(final);
-
-    let tPct = 0, tAmt = 0, grand = final;
-    if (taxOn) {
-      tPct = Number(taxPct) || 0;
-      tAmt = final * (tPct / 100);
-      grand = final + tAmt;
+    try {
+      const r = calculateExpenseLine({
+        amount, currency, baseCurrency: branchCurrency, operation: operation === "/" ? "/" : "*",
+        exchangeRate: Number(exchangeRate) || 0,
+        taxMode: taxOn ? taxMode : "exempt", taxPct: taxOn ? Number(taxPct) || 0 : 0
+      });
+      setFinalAmount(r.convertedAmount); setTaxAmt(r.taxAmount); setTaxBase(r.taxBase); setGrandAmount(r.grandAmount); setCalcError("");
+    } catch (e) {
+      setFinalAmount(0); setTaxAmt(0); setTaxBase(0); setGrandAmount(0);
+      setCalcError(e instanceof ExpenseCalcError ? e.message : String(e));
     }
-    setTaxAmt(tAmt);
-    setGrandAmount(grand);
-  }, [amount, currency, branchCurrency, operation, exchangeRate, taxOn, taxPct]);
+  }, [amount, currency, branchCurrency, operation, exchangeRate, taxOn, taxMode, taxPct]);
 
-  const showFx = currency !== branchCurrency;
+  const showFx = Boolean(currency) && Boolean(branchCurrency) && currency !== branchCurrency;
+  // Currencies a row can be entered in: every currency configured on a country, plus the branch base currency and USD
+  const currencyChoices = useMemo(() => {
+    const set = new Set<string>();
+    if (branchCurrency) set.add(branchCurrency);
+    for (const c of countries) {
+      const code = String(c?.currency_code ?? c?.currencyCode ?? "").toUpperCase();
+      if (code) set.add(code);
+    }
+    set.add("USD");
+    return [...set];
+  }, [countries, branchCurrency]);
 
   const toggleHeaderLock = () => {
     setHeaderLocked(!headerLocked);
@@ -758,12 +789,24 @@ export function ExpensesBillEntryForm({
       alert(tt("ebef.alert_enter_bill_details", "Enter details for the bill."));
       return;
     }
+    if (!branchCurrency) {
+      alert(contextError || tt("ebef.alert_select_city_branch", "Please select a City Branch first."));
+      return;
+    }
+    if (calcError) {
+      alert(calcError);
+      return;
+    }
     if (finalAmount <= 0) {
       alert(tt("ebef.alert_final_amount_zero", "Final amount must be greater than 0. Check Qty, Unit Price and FX rate."));
       return;
     }
     if (taxOn && (taxPct === "" || isNaN(Number(taxPct)))) {
       alert(tt("ebef.alert_valid_tax_pct", "Enter a valid Tax %"));
+      return;
+    }
+    if (taxOn && Number(taxPct) > 0 && !taxCode) {
+      alert(tt("ebef.alert_tax_code_required", "Choose the tax code that applies to this expense."));
       return;
     }
 
@@ -786,7 +829,9 @@ export function ExpensesBillEntryForm({
       taxOn,
       taxPct: taxOn ? Number(taxPct) : 0,
       taxAmt,
-      grandAmount
+      grandAmount,
+      taxMode: taxOn ? taxMode : "exempt",
+      taxCode: taxOn ? taxCode : ""
     };
 
     setRows([...rows, newRow]);
@@ -799,6 +844,8 @@ export function ExpensesBillEntryForm({
     setOperation("*");
     setTaxOn(false);
     setTaxPct("");
+    setTaxCode("");
+    setTaxMode("exclusive");
     
     // Focus details for next row
     setTimeout(() => {
@@ -837,7 +884,7 @@ export function ExpensesBillEntryForm({
           creditLedgerId: formCreditLedgerId || undefined
         },
         entries: rows.map(r => ({
-          rowSerial: r.rowSerial,
+          rowSerial: Number(r.rowSerial),
           details: r.details,
           qty: r.qty,
           unitPrice: r.unitPrice,
@@ -849,7 +896,9 @@ export function ExpensesBillEntryForm({
           taxOn: r.taxOn,
           taxPct: r.taxPct,
           taxAmt: r.taxAmt,
-          grandAmount: r.grandAmount
+          grandAmount: r.grandAmount,
+          taxMode: r.taxMode,
+          taxCode: r.taxCode || undefined
         }))
       };
       const res = await apiPost<any>("/api/erp/expenses", payload);
@@ -1334,10 +1383,9 @@ export function ExpensesBillEntryForm({
                 onChange={e => setCurrency(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="AED">AED</option>
-                <option value="USD">USD</option>
-                <option value="PKR">PKR</option>
-                <option value="AFN">AFN</option>
+                {currencyChoices.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
             </div>
             
@@ -1362,7 +1410,7 @@ export function ExpensesBillEntryForm({
             )}
 
             <div className="w-32 space-y-1">
-              <Label className="text-xs font-semibold text-slate-600">{tt("exp.final_amount", "Final Amount")}</Label>
+              <Label className="text-xs font-semibold text-slate-600">{tt("exp.final_amount", "Final Amount")}{branchCurrency ? ` (${branchCurrency})` : ""}</Label>
               <Input readOnly value={finalAmount.toFixed(2)} className="bg-slate-100 text-right font-mono font-semibold" />
             </div>
 
@@ -1393,7 +1441,7 @@ export function ExpensesBillEntryForm({
                   <Label className="text-xs text-amber-600 font-bold">{tt("exp.tax_code", "Tax Code")}</Label>
                   <div className="flex flex-col gap-1">
                     <select
-                      value={taxPct ? String(taxPct) : ""}
+                      value={taxCode}
                       onChange={e => {
                         const selectedVal = e.target.value;
                         if (selectedVal === "NEW_TAX_CODE") {
@@ -1401,21 +1449,34 @@ export function ExpensesBillEntryForm({
                           return;
                         }
                         if (!selectedVal) {
+                          setTaxCode("");
                           setTaxPct("");
                           return;
                         }
-                        // since value is taxPct for now to match UI state without refactoring everything
-                        setTaxPct(Number(selectedVal));
+                        const opt = taxOptions.find((o) => o.code === selectedVal);
+                        setTaxCode(selectedVal);
+                        setTaxPct(opt ? opt.rate : "");
                       }}
                       className="flex h-9 w-full rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900 font-semibold cursor-pointer"
                     >
                       <option value="">{tt("exp.select_placeholder", "Select...")}</option>
-                      {taxes.filter(t => selectedCountry === "UAE" ? t.country === "United Arab Emirates" : t.country === selectedCountry).map(t => (
-                        <option key={t.id} value={t.tax_pct}>{t.tax_code} ({t.tax_pct}%)</option>
+                      {taxOptions.map(t => (
+                        <option key={t.code} value={t.code}>{t.code} ({t.rate}%)</option>
                       ))}
                       <option value="NEW_TAX_CODE" className="font-bold text-primary">{tt("exp.add_new_tax", "+ Add New Tax")}</option>
                     </select>
                   </div>
+                </div>
+                <div className="w-32 space-y-1 animate-in fade-in zoom-in duration-200">
+                  <Label className="text-xs text-slate-500">{tt("exp.tax_mode", "Tax treatment")}</Label>
+                  <select
+                    value={taxMode}
+                    onChange={(e) => setTaxMode(e.target.value === "inclusive" ? "inclusive" : "exclusive")}
+                    className="flex h-9 w-full rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900 font-semibold cursor-pointer"
+                  >
+                    <option value="exclusive">{tt("exp.tax_exclusive", "Tax added on top")}</option>
+                    <option value="inclusive">{tt("exp.tax_inclusive", "Tax included in price")}</option>
+                  </select>
                 </div>
                 <div className="w-28 space-y-1 animate-in fade-in zoom-in duration-200">
                   <Label className="text-xs text-slate-500">{tt("exp.tax_amt", "Tax Amt")}</Label>
@@ -1425,7 +1486,7 @@ export function ExpensesBillEntryForm({
             )}
 
             <div className="w-32 space-y-1">
-              <Label className="text-xs font-black text-slate-800">{tt("exp.total_incl_tax", "Total (Incl. Tax)")}</Label>
+              <Label className="text-xs font-black text-slate-800">{tt("exp.total_incl_tax", "Total (Incl. Tax)")}{branchCurrency ? ` (${branchCurrency})` : ""}</Label>
               <Input readOnly value={grandAmount.toFixed(2)} onKeyDown={handleKeyDown} className="bg-primary/5 border-primary/20 text-right font-mono font-bold text-primary cursor-pointer focus:ring-2 focus:ring-primary" title={tt("ebef.press_enter_add_row", "Press Enter to Add Row")} />
             </div>
 
@@ -1502,7 +1563,7 @@ export function ExpensesBillEntryForm({
                   {tt("exp.grand_total", "GRAND TOTAL (Incl. Tax)")}
                 </td>
                 <td className="px-4 py-3 text-right font-mono font-black text-lg text-primary">
-                  {totalFinal.toFixed(2)}
+                  {branchCurrency ? `${branchCurrency} ` : ""}{totalFinal.toFixed(2)}
                 </td>
                 <td></td>
               </tr>
@@ -1583,7 +1644,7 @@ export function ExpensesBillEntryForm({
                   recentBills.map((b: any) => {
                     const total = b.expenses_bill_lines?.reduce((sum: number, l: any) => sum + Number(l.grand_amount), 0) || 0;
                     const countryName = b.city_branches?.countries?.name || "-";
-                    const currencyCode = b.city_branches?.countries?.currency_code || "";
+                    const currencyCode = b.base_currency || b.city_branches?.countries?.currency_code || "";
                     const branchName = b.city_branches?.name || b.branch_id;
                     const userName = b.profiles?.full_name || "—";
 
@@ -1711,7 +1772,7 @@ export function ExpensesBillEntryForm({
                 <h3 className="font-black text-lg text-slate-800 flex justify-between items-center">
                   <span>{transferBill.serial_no}</span>
                   <span className="text-primary font-mono">
-                    {transferBill.city_branches?.countries?.currency_code}{" "}
+                    {transferBill.base_currency || transferBill.city_branches?.countries?.currency_code}{" "}
                     {(transferBill.expenses_bill_lines?.reduce((sum: number, l: any) => sum + Number(l.grand_amount), 0) || 0).toFixed(2)}
                   </span>
                 </h3>

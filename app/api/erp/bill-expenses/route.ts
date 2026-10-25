@@ -5,6 +5,8 @@ import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permis
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
+import { assertBillExpenseModuleAllowed, canChooseExpenseSection, effectiveExpenseSection, modulesForSection } from "@/lib/permissions/bill-expense-domain";
+import { sumByCurrency, singleCurrency } from "@/lib/finance/currency-totals";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +40,11 @@ export async function GET(request: NextRequest) {
     );
 
     const moduleFilter = MODULES.includes((sp.get("module") ?? "") as any) ? sp.get("module") : null;
+    // Business and Shipping Line expenses stay separate: the login's operational domain decides which source modules it may see.
+    if (moduleFilter) assertBillExpenseModuleAllowed(session, moduleFilter);
+    // section = all | business | shipping (only logins explicitly authorized for both domains can pick; everyone else is pinned to theirs)
+    const section = effectiveExpenseSection(session, sp.get("section"));
+    const domainModules = [...modulesForSection(section)];
     // `modules=a,b,c` — restrict to a set (used by the top-menu Purchase/Sales sections)
     const modulesSet = (sp.get("modules") || "")
       .split(",")
@@ -58,6 +65,7 @@ export async function GET(request: NextRequest) {
           be.currency, be.original_bill_amount, be.expense_total, be.expense_count,
           be.eligibility, be.source_status, be.status, be.created_at, be.updated_at,
           c.name  as country_name, c.iso2 as country_code,
+          upper(coalesce(cib.local_currency, c.currency_code, be.currency)) as functional_currency,
           cb.name as country_branch_name, cb.code as country_branch_code,
           cib.city_name as city_branch_name, cib.code as city_branch_code
         from public.bill_expenses be
@@ -65,6 +73,7 @@ export async function GET(request: NextRequest) {
         left join public.country_branches cb  on cb.id  = be.country_branch_id
         left join public.city_branches    cib on cib.id = be.city_branch_id
         where be.deleted_at is null
+          and be.source_module = any(${domainModules})
           ${eligibility === "all" ? sql`` : sql`and be.eligibility = ${eligibility}`}
           ${moduleFilter ? sql`and be.source_module = ${moduleFilter}` : sql``}
           ${modulesSet.length ? sql`and be.source_module = any(${modulesSet})` : sql``}
@@ -113,6 +122,7 @@ export async function GET(request: NextRequest) {
       partyAccountNo: r.party_account_no,
       partyName: r.party_name,
       currency: r.currency,
+      functionalCurrency: r.functional_currency,
       originalBillAmount: Number(r.original_bill_amount || 0),
       expenseTotal: Number(r.expense_total || 0),
       expenseCount: Number(r.expense_count || 0),
@@ -123,19 +133,29 @@ export async function GET(request: NextRequest) {
       updatedAt: r.updated_at
     }));
 
+    const originalByCurrency = sumByCurrency(list, (x) => x.functionalCurrency, (x) => x.originalBillAmount);
+    const expenseByCurrency = sumByCurrency(list, (x) => x.functionalCurrency, (x) => x.expenseTotal);
     const summary = {
       totalBills: list.length,
       byModule: MODULES.reduce<Record<string, number>>((acc, m) => {
         acc[m] = list.filter((x) => x.sourceModule === m).length;
         return acc;
       }, {}),
-      originalTotal: list.reduce((s, x) => s + x.originalBillAmount, 0),
-      expenseTotal: list.reduce((s, x) => s + x.expenseTotal, 0),
+      // Money is totalled PER currency — never one number across countries. The scalar totals are kept only when every row
+      // is in one currency (otherwise null, and the UI shows the per-currency lists).
+      originalByCurrency,
+      expenseByCurrency,
+      currency: singleCurrency(originalByCurrency),
+      originalTotal: singleCurrency(originalByCurrency) ? originalByCurrency[0].total : null,
+      expenseTotal: originalByCurrency.length <= 1 && expenseByCurrency.length <= 1 ? (expenseByCurrency[0]?.total ?? 0) : null,
+      mixedCurrency: originalByCurrency.length > 1,
       withExpenses: list.filter((x) => x.expenseCount > 0).length
     };
 
     return apiOk({
       scope: { level: scope.level, countryId: effectiveCountryId, branchId: effectiveBranchId, label: scope.scopeLabel },
+      section,
+      canChooseSection: canChooseExpenseSection(session),
       summary,
       rows: list,
       generatedAt: new Date().toISOString()

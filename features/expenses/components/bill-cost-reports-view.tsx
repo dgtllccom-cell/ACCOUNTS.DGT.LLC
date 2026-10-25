@@ -86,6 +86,9 @@ export function BillCostReportsView({ lang: langProp }: { lang?: string }) {
   const [currency, setCurrency] = useState("all");
   const [status, setStatus] = useState<(typeof BILL_STATUSES)[number]>("all");
   const [postingStatus, setPostingStatus] = useState<(typeof POSTING_STATUSES)[number]>("all");
+  // Section (All Sections | Business | Shipping Line) — only for logins explicitly authorized for both; and ONE reporting currency at a time
+  const [sectionF, setSectionF] = useState<"all" | "business" | "shipping">("all");
+  const [functionalCurrencyF, setFunctionalCurrencyF] = useState("");
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -111,6 +114,8 @@ export function BillCostReportsView({ lang: langProp }: { lang?: string }) {
       if (currency !== "all") qs.set("currency", currency);
       if (status !== "all") qs.set("status", status);
       if (postingStatus !== "all") qs.set("postingStatus", postingStatus);
+      if (sectionF !== "all") qs.set("section", sectionF);
+      if (functionalCurrencyF) qs.set("functionalCurrency", functionalCurrencyF);
       const res = await fetch(`/api/erp/bill-expenses/reports?${qs.toString()}`);
       const j = await res.json();
       if (!res.ok || !j?.ok) throw new Error(j?.error?.message || `HTTP ${res.status}`);
@@ -121,11 +126,11 @@ export function BillCostReportsView({ lang: langProp }: { lang?: string }) {
     } finally {
       setLoading(false);
     }
-  }, [report, from, to, moduleF, party, expenseType, currency, status, postingStatus]);
+  }, [report, from, to, moduleF, party, expenseType, currency, status, postingStatus, sectionF, functionalCurrencyF]);
 
   useEffect(() => {
     void load();
-  }, [report]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [report, sectionF, functionalCurrencyF]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cellText = (col: any, row: any) => {
     const v = row[col.key];
@@ -233,6 +238,26 @@ export function BillCostReportsView({ lang: langProp }: { lang?: string }) {
               size="sm"
             />
           </div>
+          {data?.canChooseSection && (
+            <label className="flex flex-col gap-1 text-xs text-slate-500">
+              {s.t("rc_section", "Section")}
+              <select value={sectionF} onChange={(e) => setSectionF(e.target.value as "all" | "business" | "shipping")} className={selectCls}>
+                <option value="all">{s.t("section_all", "All Sections")}</option>
+                <option value="business">{s.t("section_business", "Business")}</option>
+                <option value="shipping">{s.t("section_shipping", "Shipping Line")}</option>
+              </select>
+            </label>
+          )}
+          {Array.isArray(data?.availableCurrencies) && data.availableCurrencies.length > 1 && (
+            <label className="flex flex-col gap-1 text-xs text-slate-500">
+              {s.t("rc_reporting_currency", "Reporting currency")}
+              <select value={data.functionalCurrency} onChange={(e) => setFunctionalCurrencyF(e.target.value)} className={selectCls}>
+                {data.availableCurrencies.map((c: any) => (
+                  <option key={c.currency} value={c.currency}>{c.currency} ({c.bills})</option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="flex flex-col gap-1 text-xs text-slate-500">
             {s.t("rc_source", "Source")}
             <select value={moduleF} onChange={(e) => setModuleF(e.target.value as any)} className={selectCls}>
@@ -328,7 +353,7 @@ export function BillCostReportsView({ lang: langProp }: { lang?: string }) {
                 </tbody>
               </table>
               <p className="mt-3 text-[11px] text-slate-400">
-                {s.t("rc_footnote", "All functional-currency figures are read as posted — no exchange rate is recomputed.")} · {data.functionalCurrency} · {data.rowCount} {s.t("rc_rows", "rows")}
+                {data.mixedCurrencyScope ? `${s.t("rc_mixed_note", "Several currencies exist in this scope. Figures are shown for one currency at a time — different currencies are never added together.")} ` : ""}{s.t("rc_footnote", "All functional-currency figures are read as posted — no exchange rate is recomputed.")} · {data.functionalCurrency} · {data.rowCount} {s.t("rc_rows", "rows")}
               </p>
             </div>
           )}

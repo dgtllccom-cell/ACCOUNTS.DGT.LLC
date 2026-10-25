@@ -7869,6 +7869,18 @@ export type UiKey =
   | "pjt.export_pdf"
   | "pjt.print_btn"
   | "pjt.row_actions"
+  | "users.scope_assigned_existing"
+  | "exp.tax_mode"
+  | "exp.tax_exclusive"
+  | "exp.tax_inclusive"
+  | "ebef.alert_tax_code_required"
+  | "bexp.section_label"
+  | "bexp.section_all"
+  | "bexp.section_business"
+  | "bexp.section_shipping"
+  | "bexp.rc_section"
+  | "bexp.rc_reporting_currency"
+  | "bexp.rc_mixed_note"
   | "fx.country_wide_all_branches"
   | "fx.country_level"
   | "fx.rate_in_placeholder"
@@ -31052,6 +31064,9 @@ const en: Dict = {
   "cl.f_inactive_users": "Inactive Users",
   "cl.kpi_customer_summary": "Customer Summary",
   "cl.f_total_customers": "Total Customers",
+  "cl.error": "Error",
+  "cl.companies": "Companies",
+  "cl.branches": "Branches",
   "cl.f_active_customers": "Active Customers",
   "cl.f_new_this_month": "New This Month",
   "cl.f_inactive_customers": "Inactive Customers",
@@ -37279,6 +37294,18 @@ const en: Dict = {
   "fx.country_level": "Country level",
   "fx.rate_in_placeholder": "e.g. Rate in {code}",
   "common.actions_for": "Actions for {name}",
+  "exp.tax_mode": "Tax treatment",
+  "exp.tax_exclusive": "Tax added on top",
+  "exp.tax_inclusive": "Tax included in price",
+  "ebef.alert_tax_code_required": "Choose the tax code that applies to this expense.",
+  "bexp.section_label": "Section",
+  "bexp.section_all": "All Sections",
+  "bexp.section_business": "Business",
+  "bexp.section_shipping": "Shipping Line",
+  "bexp.rc_section": "Section",
+  "bexp.rc_reporting_currency": "Reporting currency",
+  "bexp.rc_mixed_note": "Several currencies exist in this scope. Figures are shown for one currency at a time — different currencies are never added together.",
+  "users.scope_assigned_existing": "Additional company/branch scope assigned successfully to existing user.",
 };
 
 const ur: Dict = {
@@ -56012,6 +56039,9 @@ const ur: Dict = {
   "cl.f_inactive_users": "غیر فعال صارفین",
   "cl.kpi_customer_summary": "کسٹمر خلاصہ",
   "cl.f_total_customers": "کل کسٹمرز",
+  "cl.error": "خرابی",
+  "cl.companies": "کمپنیاں",
+  "cl.branches": "برانچیں",
   "cl.f_active_customers": "فعال کسٹمرز",
   "cl.f_new_this_month": "اس ماہ نئے",
   "cl.f_inactive_customers": "غیر فعال کسٹمرز",
@@ -62371,6 +62401,18 @@ const ur: Dict = {
   "fx.country_level": "ملکی سطح",
   "fx.rate_in_placeholder": "مثلاً {code} میں ریٹ",
   "common.actions_for": "{name} کے لیے کارروائیاں",
+  "exp.tax_mode": "ٹیکس کا طریقہ",
+  "exp.tax_exclusive": "ٹیکس اوپر سے شامل",
+  "exp.tax_inclusive": "قیمت میں ٹیکس شامل",
+  "ebef.alert_tax_code_required": "اس خرچ پر لاگو ہونے والا ٹیکس کوڈ منتخب کریں۔",
+  "bexp.section_label": "شعبہ",
+  "bexp.section_all": "تمام شعبے",
+  "bexp.section_business": "کاروبار",
+  "bexp.section_shipping": "شپنگ لائن",
+  "bexp.rc_section": "شعبہ",
+  "bexp.rc_reporting_currency": "رپورٹ کی کرنسی",
+  "bexp.rc_mixed_note": "اس دائرہ کار میں کئی کرنسیاں ہیں۔ رقوم ایک وقت میں ایک کرنسی کی دکھائی جاتی ہیں — مختلف کرنسیاں کبھی جمع نہیں کی جاتیں۔",
+  "users.scope_assigned_existing": "موجودہ صارف کو اضافی کمپنی/برانچ کا دائرہ کار کامیابی سے تفویض کر دیا گیا۔",
 };
 
 const ar: Dict = {
@@ -81054,6 +81096,9 @@ const ar: Dict = {
   "cl.f_inactive_users": "المستخدمون غير النشطين",
   "cl.kpi_customer_summary": "ملخص العملاء",
   "cl.f_total_customers": "إجمالي العملاء",
+  "cl.error": "خطأ",
+  "cl.companies": "الشركات",
+  "cl.branches": "الفروع",
   "cl.f_active_customers": "العملاء النشطون",
   "cl.f_new_this_month": "جديد هذا الشهر",
   "cl.f_inactive_customers": "العملاء غير النشطين",
@@ -87464,6 +87509,18 @@ const ar: Dict = {
   "fx.country_level": "على مستوى الدولة",
   "fx.rate_in_placeholder": "مثال: السعر بـ {code}",
   "common.actions_for": "إجراءات {name}",
+  "exp.tax_mode": "معاملة الضريبة",
+  "exp.tax_exclusive": "الضريبة تُضاف فوق السعر",
+  "exp.tax_inclusive": "الضريبة مشمولة في السعر",
+  "ebef.alert_tax_code_required": "اختر رمز الضريبة المطبّق على هذا المصروف.",
+  "bexp.section_label": "القسم",
+  "bexp.section_all": "جميع الأقسام",
+  "bexp.section_business": "الأعمال",
+  "bexp.section_shipping": "خط الشحن",
+  "bexp.rc_section": "القسم",
+  "bexp.rc_reporting_currency": "عملة التقرير",
+  "bexp.rc_mixed_note": "توجد عدة عملات في هذا النطاق. تُعرض المبالغ لعملة واحدة في كل مرة — ولا تُجمع العملات المختلفة معًا.",
+  "users.scope_assigned_existing": "تم تعيين نطاق الشركة/الفرع الإضافي للمستخدم الحالي بنجاح.",
 };
 
 const fa: Dict = {
@@ -106146,6 +106203,9 @@ const fa: Dict = {
   "cl.f_inactive_users": "کاربران غیرفعال",
   "cl.kpi_customer_summary": "خلاصه مشتریان",
   "cl.f_total_customers": "کل مشتریان",
+  "cl.error": "خطا",
+  "cl.companies": "شرکت‌ها",
+  "cl.branches": "شعبات",
   "cl.f_active_customers": "مشتریان فعال",
   "cl.f_new_this_month": "جدید این ماه",
   "cl.f_inactive_customers": "مشتریان غیرفعال",
@@ -112556,6 +112616,18 @@ const fa: Dict = {
   "fx.country_level": "سطح کشور",
   "fx.rate_in_placeholder": "مثلاً نرخ به {code}",
   "common.actions_for": "عملیات برای {name}",
+  "exp.tax_mode": "نحوه محاسبه مالیات",
+  "exp.tax_exclusive": "مالیات به قیمت اضافه می‌شود",
+  "exp.tax_inclusive": "مالیات در قیمت لحاظ شده",
+  "ebef.alert_tax_code_required": "کد مالیاتی مربوط به این هزینه را انتخاب کنید.",
+  "bexp.section_label": "بخش",
+  "bexp.section_all": "همه بخش‌ها",
+  "bexp.section_business": "کسب‌وکار",
+  "bexp.section_shipping": "خط کشتیرانی",
+  "bexp.rc_section": "بخش",
+  "bexp.rc_reporting_currency": "ارز گزارش",
+  "bexp.rc_mixed_note": "در این محدوده چند ارز وجود دارد. مبالغ هر بار برای یک ارز نمایش داده می‌شود — ارزهای مختلف هرگز با هم جمع نمی‌شوند.",
+  "users.scope_assigned_existing": "حوزه‌ی اضافی شرکت/شعبه با موفقیت به کاربر موجود اختصاص یافت.",
 };
 
 const ps: Dict = {
@@ -131236,6 +131308,9 @@ const ps: Dict = {
   "cl.f_inactive_users": "غیر فعال کاروونکي",
   "cl.kpi_customer_summary": "د پیرودونکو لنډیز",
   "cl.f_total_customers": "ټول پیرودونکي",
+  "cl.error": "تېروتنه",
+  "cl.companies": "شرکتونه",
+  "cl.branches": "څانګې",
   "cl.f_active_customers": "فعال پیرودونکي",
   "cl.f_new_this_month": "پدې میاشت کې نوي",
   "cl.f_inactive_customers": "غیر فعال پیرودونکي",
@@ -137655,6 +137730,18 @@ const ps: Dict = {
   "fx.country_level": "د هېواد کچه",
   "fx.rate_in_placeholder": "د بېلګې په توګه په {code} کې نرخ",
   "common.actions_for": "د {name} لپاره کړنې",
+  "exp.tax_mode": "د مالیې حساب",
+  "exp.tax_exclusive": "مالیه پر بیه اضافه کېږي",
+  "exp.tax_inclusive": "مالیه په بیه کې شامله ده",
+  "ebef.alert_tax_code_required": "د دې لګښت لپاره د تطبیق وړ د مالیې کوډ وټاکئ.",
+  "bexp.section_label": "برخه",
+  "bexp.section_all": "ټولې برخې",
+  "bexp.section_business": "سوداګري",
+  "bexp.section_shipping": "د بار وړلو کرښه",
+  "bexp.rc_section": "برخه",
+  "bexp.rc_reporting_currency": "د راپور اسعار",
+  "bexp.rc_mixed_note": "په دې ساحه کې څو اسعار شته. مبالغ هر ځل د یو اسعارو لپاره ښودل کېږي — مختلف اسعار هیڅکله سره نه راټولېږي.",
+  "users.scope_assigned_existing": "اضافي د شرکت/څانګې ساحه په بریالیتوب سره موجود کاروونکي ته وټاکل شوه.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

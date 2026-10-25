@@ -9,21 +9,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 
-const ROLE_KEY_MAP: Record<string, string> = {
-  "staff user": "role.staff_user",
-  "super_admin": "role.super_admin",
-  "country_admin": "role.country_admin",
-  "Global": "common.global"
-};
-
-function localizeRoleDesc(role: string, lang: string): string {
-  if (!role) return role;
-  const key = ROLE_KEY_MAP[role];
-  if (!key) return role;
-  return t(lang as never, key as never, role);
-}
-
-type OwnerCustomerRow = {
+export type OwnerCustomerRow = {
   id: string;
   customer_name: string;
   person_code?: string | null;
@@ -35,34 +21,65 @@ type OwnerCustomerRow = {
   address?: string | null;
   country_name?: string | null;
   city_name?: string | null;
+  country_id?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
 };
-
-type OwnerProfileRow = {
-  userId: string;
-  userCode: string;
-  fullName: string;
-  countryName: string;
-  branchName: string;
-  branchType: string;
-  role: string;
-};
-
-function toOwnerOption(
-  value: string,
-  label: string,
-  keywords?: string,
-  rich?: { primaryText?: string; secondaryText?: string; code?: string; branch?: string; country?: string }
-): SearchSelectOption {
-  return { value, label, keywords, ...rich };
-}
-
-// Some bootstrap/demo profiles (dev seed users) carry non-UUID ids like "temp-super-admin"
-// instead of a real profiles.id — those can't be stored in owner_profile_id (a real FK column),
-// so they're excluded from the picker rather than letting a save silently fail downstream.
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type OwnerKind = "customer" | "profile";
-export type ResolvedOwner = { kind: OwnerKind; id: string; name: string } | null;
+export type ResolvedOwner = {
+  kind: OwnerKind;
+  id: string;
+  name: string;
+  customer?: OwnerCustomerRow | null;
+} | null;
+
+function toOwnerOption(
+  row: OwnerCustomerRow,
+  isCompanyOwner: boolean = false,
+  lang: string = "en"
+): SearchSelectOption {
+  const customerName = row.customer_name;
+  const companyName = row.company_name;
+  const label = companyName ? `${customerName} (${companyName})` : customerName;
+
+  let secondaryText: string | undefined = companyName || undefined;
+  if (isCompanyOwner) {
+    const ownerBadge = t(lang as never, "bop.company_owner" as never, "Company Owner");
+    secondaryText = companyName ? `★ ${ownerBadge} • ${companyName}` : `★ ${ownerBadge}`;
+  } else if (row.mobile || row.whatsapp) {
+    secondaryText = [companyName, row.mobile || row.whatsapp].filter(Boolean).join(" • ");
+  }
+
+  const keywords = [
+    row.customer_name,
+    row.first_name,
+    row.last_name,
+    row.person_code,
+    row.mobile,
+    row.whatsapp,
+    row.email,
+    row.company_name,
+    row.contact_person,
+    row.address,
+    row.city_name,
+    row.country_name,
+    isCompanyOwner ? "company owner linked owner" : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    value: row.id,
+    label,
+    keywords,
+    primaryText: row.customer_name,
+    secondaryText,
+    code: row.person_code || undefined,
+    branch: row.city_name || undefined,
+    country: row.country_name || undefined
+  };
+}
 
 function guessOriginalLanguage(): "en" | "ar" | "ur" | "fa" | "ps" {
   const lang = (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
@@ -74,23 +91,29 @@ export function BranchOwnerPicker({
   value,
   onValueChange,
   onOwnerResolved,
+  onCustomerSelected,
+  companyId,
+  countryId,
   disabled,
   placeholder,
   createButtonPlacement = "below"
 }: {
   value: string;
   onValueChange: (value: string) => void;
-  onOwnerResolved?: (owner: ResolvedOwner) => void;
+  onOwnerResolved?: (owner: ResolvedOwner, customer?: OwnerCustomerRow | null) => void;
+  onCustomerSelected?: (customer: OwnerCustomerRow | null) => void;
+  companyId?: string;
+  countryId?: string;
   disabled?: boolean;
   placeholder?: string;
-  createButtonPlacement?: "modal" | "trigger" | "both" | "below";
+  createButtonPlacement?: "modal" | "trigger" | "both" | "below" | "inside";
 }) {
   const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
-  const [options, setOptions] = useState<SearchSelectOption[]>([]);
-  const [openCreate, setOpenCreate] = useState(false);
-  const [ownerKindById, setOwnerKindById] = useState<Map<string, OwnerKind>>(new Map());
   const [customerRowById, setCustomerRowById] = useState<Map<string, OwnerCustomerRow>>(new Map());
+  const [companyOwnerId, setCompanyOwnerId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [openCreate, setOpenCreate] = useState(false);
   const [viewOwner, setViewOwner] = useState<OwnerCustomerRow | null>(null);
   const [editOwnerId, setEditOwnerId] = useState<string | null>(null);
 
@@ -98,81 +121,184 @@ export function BranchOwnerPicker({
   const defaultCreateLabel = t(lang as never, "bop.new_owner" as never, "New Owner");
   const defaultOwnerLabel = t(lang as never, "bop.owner_name" as never, "Owner Name");
 
-  async function loadList() {
+  // 1. Initial list of customers (up to 100)
+  async function loadInitialList() {
     setLoading(true);
     try {
-      const [customersRes, usersRes] = await Promise.all([
-        apiGet<{ customers: OwnerCustomerRow[] }>("/api/erp/customers?limit=50"),
-        apiGet<{ rows: OwnerProfileRow[] }>("/api/erp/users/journal-report?limit=50")
-      ]);
-
-      const next: SearchSelectOption[] = [];
-      const kindById = new Map<string, OwnerKind>();
-      const customerRows = new Map<string, OwnerCustomerRow>();
-      for (const row of customersRes.customers ?? []) {
-        const label = row.company_name ? `${row.customer_name} (${row.company_name})` : row.customer_name;
-        next.push(
-          toOwnerOption(
-            row.id,
-            label,
-            [row.customer_name, row.company_name, row.contact_person, row.mobile, row.whatsapp, row.email].filter(Boolean).join(" "),
-            {
-              primaryText: row.customer_name,
-              secondaryText: row.company_name || undefined,
-              code: row.person_code || undefined,
-              branch: row.city_name || undefined,
-              country: row.country_name || undefined
-            }
-          )
-        );
-        kindById.set(row.id, "customer");
-        customerRows.set(row.id, row);
-      }
-      for (const row of usersRes.rows ?? []) {
-        if (!UUID_RE.test(row.userId)) continue;
-        const localizedRole = localizeRoleDesc(row.role, lang);
-        const localizedBranch = row.branchName === "Global" ? localizeRoleDesc("Global", lang) : row.branchName;
-        const label = [row.fullName, localizedRole, localizedBranch].filter(Boolean).join(" · ");
-        next.push(
-          toOwnerOption(
-            row.userId,
-            label,
-            [row.userCode, row.fullName, row.countryName, row.branchName, row.role].join(" "),
-            {
-              primaryText: row.fullName,
-              secondaryText: localizedRole || undefined,
-              code: row.userCode || undefined,
-              branch: row.branchName === "Global" ? undefined : row.branchName || undefined,
-              country: row.countryName || undefined
-            }
-          )
-        );
-        kindById.set(row.userId, "profile");
-      }
-
-      const unique = new Map<string, SearchSelectOption>();
-      for (const item of next) {
-        if (!unique.has(item.value)) unique.set(item.value, item);
-      }
-      setOptions(Array.from(unique.values()));
-      setOwnerKindById(kindById);
-      setCustomerRowById(customerRows);
+      const url = `/api/erp/customers?limit=100${countryId ? `&countryId=${encodeURIComponent(countryId)}` : ""}`;
+      const res = await apiGet<{ customers: OwnerCustomerRow[] }>(url);
+      setCustomerRowById((prev) => {
+        const next = new Map(prev);
+        for (const row of res.customers ?? []) {
+          next.set(row.id, row);
+        }
+        return next;
+      });
+    } catch (err) {
+      console.error("Failed to load customer list for owner picker:", err);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadList().catch(() => null);
+    loadInitialList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lang]);
+  }, [lang, countryId]);
 
-  const finalOptions = useMemo(() => {
-    if (value && !options.some((opt) => opt.value === value)) {
-      return [...options, { value, label: value }];
+  // 2. When companyId changes, fetch the company to discover the linked owner_person_id
+  useEffect(() => {
+    let cancelled = false;
+    if (!companyId) {
+      setCompanyOwnerId(null);
+      return;
     }
-    return options;
-  }, [options, value]);
+    (async () => {
+      try {
+        const res = await apiGet<{ company: { owner_person_id?: string | null; owner_name?: string | null } }>(
+          `/api/erp/companies/${encodeURIComponent(companyId)}`
+        );
+        if (cancelled) return;
+        const ownerPersonId = res.company?.owner_person_id || null;
+        setCompanyOwnerId(ownerPersonId);
+
+        if (ownerPersonId) {
+          // If customer record not already loaded, fetch it directly
+          if (!customerRowById.has(ownerPersonId)) {
+            try {
+              const custRes = await apiGet<{ customer: OwnerCustomerRow }>(
+                `/api/erp/customers/${encodeURIComponent(ownerPersonId)}`
+              );
+              if (!cancelled && custRes.customer) {
+                setCustomerRowById((prev) => {
+                  const next = new Map(prev);
+                  next.set(custRes.customer.id, custRes.customer);
+                  return next;
+                });
+              }
+            } catch {
+              // Ignore single customer load error
+            }
+          }
+        }
+      } catch {
+        if (!cancelled) setCompanyOwnerId(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId]);
+
+  // 3. Debounced server-side search when user types in SearchSelect
+  useEffect(() => {
+    let cancelled = false;
+    const q = searchTerm.trim();
+    if (!q) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const url = `/api/erp/customers?q=${encodeURIComponent(q)}&limit=100${
+          countryId ? `&countryId=${encodeURIComponent(countryId)}` : ""
+        }`;
+        const res = await apiGet<{ customers: OwnerCustomerRow[] }>(url);
+        if (cancelled || !res.customers) return;
+
+        setCustomerRowById((prev) => {
+          const next = new Map(prev);
+          for (const row of res.customers) {
+            next.set(row.id, row);
+          }
+          return next;
+        });
+      } catch {
+        // Ignore search error
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchTerm, countryId]);
+
+  // 4. If a value is provided and not yet in customerRowById, fetch it
+  useEffect(() => {
+    let cancelled = false;
+    if (!value) return;
+
+    if (customerRowById.has(value)) {
+      const row = customerRowById.get(value)!;
+      onOwnerResolved?.(
+        { kind: "customer", id: row.id, name: row.customer_name, customer: row },
+        row
+      );
+      onCustomerSelected?.(row);
+      return;
+    }
+
+    (async () => {
+      try {
+        const res = await apiGet<{ customer: OwnerCustomerRow }>(
+          `/api/erp/customers/${encodeURIComponent(value)}`
+        );
+        if (cancelled || !res.customer) return;
+        const row = res.customer;
+        setCustomerRowById((prev) => {
+          const next = new Map(prev);
+          next.set(row.id, row);
+          return next;
+        });
+        onOwnerResolved?.(
+          { kind: "customer", id: row.id, name: row.customer_name, customer: row },
+          row
+        );
+        onCustomerSelected?.(row);
+      } catch {
+        // Value might be a non-UUID or deleted record
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [value, customerRowById.has(value)]);
+
+  // 5. Build options with Company Linked Owner prioritized at the top
+  const options = useMemo(() => {
+    const list: SearchSelectOption[] = [];
+    const seen = new Set<string>();
+
+    // 1. Company Linked Owner at the very top
+    if (companyOwnerId && customerRowById.has(companyOwnerId)) {
+      const row = customerRowById.get(companyOwnerId)!;
+      list.push(toOwnerOption(row, true, lang));
+      seen.add(row.id);
+    }
+
+    // 2. Selected value if loaded and not already added
+    if (value && customerRowById.has(value) && !seen.has(value)) {
+      const row = customerRowById.get(value)!;
+      list.push(toOwnerOption(row, row.id === companyOwnerId, lang));
+      seen.add(row.id);
+    }
+
+    // 3. All other eligible Person / Customer master records
+    for (const [id, row] of customerRowById.entries()) {
+      if (!seen.has(id)) {
+        list.push(toOwnerOption(row, false, lang));
+        seen.add(id);
+      }
+    }
+
+    // 4. Fallback if value exists but row not yet fetched
+    if (value && !seen.has(value)) {
+      list.push({ value, label: value });
+    }
+
+    return list;
+  }, [customerRowById, companyOwnerId, value, lang]);
 
   return (
     <>
@@ -181,25 +307,20 @@ export function BranchOwnerPicker({
         value={value}
         placeholder={placeholder ?? (loading ? t(lang as never, "common.loading" as never, "Loading...") : defaultPlaceholder)}
         disabled={disabled || loading}
-        options={finalOptions}
+        options={options}
         richList
+        onSearchValueChange={setSearchTerm}
         viewTitle={t(lang as never, "common.view" as never, "View Details")}
         editTitle={t(lang as never, "common.edit" as never, "Edit")}
         printTitle={t(lang as never, "common.print" as never, "Print")}
         onViewOption={(id) => {
-          const kind = ownerKindById.get(id);
-          if (kind !== "customer") return;
           const row = customerRowById.get(id);
           if (row) setViewOwner(row);
         }}
         onEditOption={(id) => {
-          const kind = ownerKindById.get(id);
-          if (kind !== "customer") return;
           setEditOwnerId(id);
         }}
         onPrintOption={(id) => {
-          const kind = ownerKindById.get(id);
-          if (kind !== "customer") return;
           const row = customerRowById.get(id);
           if (!row) return;
           openMasterProfileReportWindow({
@@ -230,14 +351,19 @@ export function BranchOwnerPicker({
         }}
         onValueChange={(id) => {
           onValueChange(id);
-          if (!onOwnerResolved) return;
           if (!id) {
-            onOwnerResolved(null);
+            onOwnerResolved?.(null, null);
+            onCustomerSelected?.(null);
             return;
           }
-          const kind = ownerKindById.get(id) ?? null;
-          const label = options.find((opt) => opt.value === id)?.label ?? id;
-          onOwnerResolved(kind ? { kind, id, name: label } : null);
+          const row = customerRowById.get(id) || null;
+          const label = row
+            ? row.company_name
+              ? `${row.customer_name} (${row.company_name})`
+              : row.customer_name
+            : id;
+          onOwnerResolved?.({ kind: "customer", id, name: label, customer: row }, row);
+          onCustomerSelected?.(row);
         }}
         createLabel={defaultCreateLabel}
         createButtonPlacement={createButtonPlacement}
@@ -256,72 +382,26 @@ export function BranchOwnerPicker({
             onSave={(newCustomerId) => {
               (async () => {
                 try {
-                  // Wait a brief moment for database commit consistency
                   await new Promise((resolve) => setTimeout(resolve, 150));
-
-                  // 1. Fetch list of customers to see if we find it
-                  const customersRes = await apiGet<{ customers: OwnerCustomerRow[] }>("/api/erp/customers?limit=250");
-                  const found = customersRes.customers?.find((c) => c.id === newCustomerId);
-
-                  let label = "";
-                  let rawCustomer: any = null;
-
-                  if (found) {
-                    rawCustomer = found;
-                    const customerName = found.customer_name || (found as any).customerName;
-                    const companyName = found.company_name || (found as any).companyName;
-                    label = companyName ? `${customerName} (${companyName})` : customerName;
-                  } else {
-                    // Fallback to fetch single customer
-                    const res = await apiGet<{ customer: OwnerCustomerRow }>(`/api/erp/customers/${encodeURIComponent(newCustomerId)}`);
-                    if (res.customer) {
-                      rawCustomer = res.customer;
-                      const customerName = res.customer.customer_name || (res.customer as any).customerName;
-                      const companyName = res.customer.company_name || (res.customer as any).companyName;
-                      label = companyName ? `${customerName} (${companyName})` : customerName;
-                    }
-                  }
-
-                  if (label && rawCustomer) {
-                    const customerName = rawCustomer.customer_name || rawCustomer.customerName || "";
-                    const companyName = rawCustomer.company_name || rawCustomer.companyName || "";
-                    const option = toOwnerOption(
-                      newCustomerId,
-                      label,
-                      [
-                        customerName,
-                        companyName,
-                        rawCustomer.contact_person || rawCustomer.contactPerson,
-                        rawCustomer.mobile,
-                        rawCustomer.whatsapp,
-                        rawCustomer.email
-                      ]
-                        .filter(Boolean)
-                        .join(" ")
-                    );
-
-                    // Add new option immediately to local state
-                    setOptions((current) => {
-                      if (current.some((item) => item.value === newCustomerId)) return current;
-                      return [option, ...current];
-                    });
-                    setOwnerKindById((current) => {
-                      const next = new Map(current);
-                      next.set(newCustomerId, "customer");
+                  const res = await apiGet<{ customer: OwnerCustomerRow }>(
+                    `/api/erp/customers/${encodeURIComponent(newCustomerId)}`
+                  );
+                  if (res.customer) {
+                    const row = res.customer;
+                    setCustomerRowById((prev) => {
+                      const next = new Map(prev);
+                      next.set(row.id, row);
                       return next;
                     });
-
-                    // Trigger selection
+                    const label = row.company_name ? `${row.customer_name} (${row.company_name})` : row.customer_name;
                     onValueChange(newCustomerId);
-                    onOwnerResolved?.({ kind: "customer", id: newCustomerId, name: label });
+                    onOwnerResolved?.({ kind: "customer", id: newCustomerId, name: label, customer: row }, row);
+                    onCustomerSelected?.(row);
                   }
-
-                  // Reload full list to ensure data is synced
-                  await loadList();
+                  await loadInitialList();
                 } catch (err) {
                   console.error("Error loading new owner customer details:", err);
-                  // Reload list as ultimate fallback
-                  loadList().catch(() => null);
+                  loadInitialList().catch(() => null);
                 } finally {
                   setOpenCreate(false);
                 }
@@ -404,7 +484,25 @@ export function BranchOwnerPicker({
             onSave={async (savedId) => {
               setEditOwnerId(null);
               onValueChange(savedId);
-              await loadList();
+              try {
+                const res = await apiGet<{ customer: OwnerCustomerRow }>(
+                  `/api/erp/customers/${encodeURIComponent(savedId)}`
+                );
+                if (res.customer) {
+                  const row = res.customer;
+                  setCustomerRowById((prev) => {
+                    const next = new Map(prev);
+                    next.set(row.id, row);
+                    return next;
+                  });
+                  const label = row.company_name ? `${row.customer_name} (${row.company_name})` : row.customer_name;
+                  onOwnerResolved?.({ kind: "customer", id: savedId, name: label, customer: row }, row);
+                  onCustomerSelected?.(row);
+                }
+              } catch {
+                // Ignore
+              }
+              await loadInitialList();
             }}
           />
         </SimpleModal>
@@ -412,4 +510,3 @@ export function BranchOwnerPicker({
     </>
   );
 }
-
