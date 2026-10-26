@@ -11,15 +11,17 @@ import {
   Package,
   Clock,
   CheckCircle2,
-  FolderPlus
+  FolderPlus,
+  MapPin
 } from "lucide-react";
-import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeTerm } from "@/lib/i18n/transliteration";
 import { getLabel } from "./translations";
 
 export type AccountLiveReportProps = {
   // Wizard States
   accountName: string;
   accountCode: string;
+  globalAccountNumber?: string;
   accountTitle: string;
   subType: string;
   category: string;
@@ -28,6 +30,16 @@ export type AccountLiveReportProps = {
   status?: string;
   lang?: SupportedLanguage;
   contacts?: Array<{ type: string; value: string }>;
+
+  // Account Address fields
+  addressCountryName?: string;
+  addressStateName?: string;
+  addressCityName?: string;
+  addressPostalCode?: string;
+  fullAddress?: string;
+
+  // Operational Branch details
+  branchAddress?: string;
 
   // Connected Master details
   customerDetail?: any;
@@ -71,6 +83,7 @@ export type AccountLiveReportProps = {
 export function AccountLiveReportPanel({
   accountName,
   accountCode,
+  globalAccountNumber,
   accountTitle,
   subType,
   category,
@@ -79,6 +92,12 @@ export function AccountLiveReportPanel({
   status = "In Progress",
   lang = "en",
   contacts,
+  addressCountryName,
+  addressStateName,
+  addressCityName,
+  addressPostalCode,
+  fullAddress,
+  branchAddress,
   customerDetail,
   companyDetail,
   bankDetail,
@@ -91,13 +110,15 @@ export function AccountLiveReportPanel({
   warehouseRequired = false,
   selectedCountryName,
   selectedBranchName,
+  selectedBranchCode,
   onEditStep,
   auditCreatedBy = "Super Admin",
   auditCreatedOn,
   auditLastModifiedBy,
   auditLastModifiedOn
 }: AccountLiveReportProps) {
-  const trName = (val: string | null | undefined) => (val ? transliterateProperNoun(val, lang) : "-");
+  // Names (branch, company, bank, account title) are data: show the saved name or the approved variant the API sent, never a re-spelling.
+  const showName = (val: string | null | undefined) => (val ? String(val) : "-");
   const trTerm = (val: string | null | undefined) => (val ? localizeTerm(val, lang) : "-");
 
   const now = useMemo(() => new Date(), []);
@@ -121,7 +142,7 @@ export function AccountLiveReportPanel({
   const primaryWhItem = linkedWarehouses?.find((w) => w.isPrimary) || linkedWarehouses?.[0];
   const effectiveWarehouse = warehouseDetail || primaryWhItem?.detail || primaryWhItem || null;
 
-  // What applies is decided by the selected Account Type + linked-master toggles (same rules as the wizard steps and the print / PDF report)
+  // What applies is decided by the selected Account Type + linked-master toggles
   const hasData = (o: any) => Boolean(o && typeof o === "object" && Object.values(o).some((v) => v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0)));
   const show = accountSectionsFor({
     accountTitle, subType, category,
@@ -147,15 +168,15 @@ export function AccountLiveReportPanel({
     "-";
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+    <div className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
       {/* ── Header ── */}
       <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-2xs">
-            <FolderPlus className="h-5 w-5" />
+          <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
+            <FileText className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
               {getLabel("liveSummaryTitle", lang)}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -164,14 +185,14 @@ export function AccountLiveReportPanel({
           </div>
         </div>
 
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           {getLabel("inProgress", lang)}
         </span>
       </div>
 
-      {/* ── 6 Cards Structured Grid ── */}
-      <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* ── Structured Cards Stack ── */}
+      <div className="p-5 space-y-4">
         {/* Card 1: Account Information */}
         <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
@@ -179,7 +200,7 @@ export function AccountLiveReportPanel({
               <span className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                 <User className="h-3.5 w-3.5" />
               </span>
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 {getLabel("step1Label", lang)}
               </h3>
             </div>
@@ -187,45 +208,129 @@ export function AccountLiveReportPanel({
               <button
                 type="button"
                 onClick={() => onEditStep(1)}
-                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline"
+                className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline cursor-pointer"
               >
                 {getLabel("edit", lang)}
               </button>
             )}
           </div>
 
-          <div className="space-y-1.5 text-xs">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-slate-500 dark:text-slate-400">{getLabel("accountCode", lang)}</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white">{accountCode || "-"}</span>
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("localAccountCodeAuto", lang)}</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white text-sm" dir="ltr">{accountCode || "-"}</span>
             </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-slate-500 dark:text-slate-400">{getLabel("accountName", lang)}</span>
-              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">{accountName || "-"}</span>
+            {globalAccountNumber && (
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("globalAccountNumber", lang)}</span>
+                <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-sm" dir="ltr">{globalAccountNumber}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("accountName", lang)}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[220px] truncate">{accountName || "-"}</span>
             </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-slate-500 dark:text-slate-400">{getLabel("accountType", lang)}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("accountType", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200">{trTerm(accountTitle) || "Customer"}</span>
             </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-slate-500 dark:text-slate-400">{getLabel("subType", lang)}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("subType", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200">{trTerm(subType) || "-"}</span>
             </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-slate-500 dark:text-slate-400">{getLabel("category", lang)}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("category", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200">{trTerm(category) || "-"}</span>
             </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-slate-500 dark:text-slate-400">{getLabel("country", lang)}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("country", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200">{trTerm(selectedCountryName) || "-"}</span>
             </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-slate-500 dark:text-slate-400">{getLabel("branch", lang)}</span>
-              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">{trName(selectedBranchName) || "-"}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("cityBranch", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[220px] truncate">{showName(selectedBranchName) || "-"}</span>
             </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-slate-500 dark:text-slate-400">{getLabel("referenceNo", lang)}</span>
-              <span className="font-mono text-slate-700 dark:text-slate-300" dir="ltr">{manualReferenceNumber || "-"}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("referenceNo", lang)}</span>
+              <span className="font-mono font-medium text-slate-700 dark:text-slate-300" dir="ltr">{manualReferenceNumber || "-"}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Account Address */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                <MapPin className="h-3.5 w-3.5" />
+              </span>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                {getLabel("accountAddress", lang)}
+              </h3>
+            </div>
+            {onEditStep && (
+              <button
+                type="button"
+                onClick={() => onEditStep(1)}
+                className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline cursor-pointer"
+              >
+                {getLabel("edit", lang)}
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("country", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{addressCountryName || trTerm(selectedCountryName) || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("stateProvince", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{addressStateName || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("city", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{addressCityName || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("zipPostalCode", lang)}</span>
+              <span className="font-mono text-slate-800 dark:text-slate-200" dir="ltr">{addressPostalCode || "-"}</span>
+            </div>
+            <div className="flex items-start justify-between gap-4 pt-0.5">
+              <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0">{getLabel("fullFinalAddress", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 text-right">{fullAddress || "-"}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Operational Branch (From Branch Master) */}
+        <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                <Building2 className="h-3.5 w-3.5" />
+              </span>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                {getLabel("operationalBranchFromMaster", lang)}
+              </h3>
+            </div>
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800">
+              {getLabel("automaticFromBranchMaster", lang)}
+            </span>
+          </div>
+
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("branchName", lang)}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[220px] truncate">{showName(selectedBranchName) || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("branchCode", lang)}</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white" dir="ltr">{selectedBranchCode || "-"}</span>
+            </div>
+            <div className="flex items-start justify-between gap-4 pt-0.5">
+              <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0">{getLabel("branchAddress", lang)}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 text-right">{branchAddress || "-"}</span>
             </div>
           </div>
         </div>
@@ -324,7 +429,7 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("companyName", lang)}</span>
               <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">
-                {trName(effectiveCompany?.name || effectiveCompany?.legal_name || effectiveCompany?.companyName) || "-"}
+                {showName(effectiveCompany?.name || effectiveCompany?.legal_name || effectiveCompany?.companyName) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
@@ -354,7 +459,7 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("branch", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {trName(effectiveCompany?.city_name || effectiveCompany?.country || selectedBranchName) || "-"}
+                {showName(effectiveCompany?.city_name || effectiveCompany?.country || selectedBranchName) || "-"}
               </span>
             </div>
           </div>
@@ -395,13 +500,13 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("bankName", lang)}</span>
               <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">
-                {trName(effectiveBank?.bank_name || effectiveBank?.bankName || effectiveBank?.name) || "-"}
+                {showName(effectiveBank?.bank_name || effectiveBank?.bankName || effectiveBank?.name) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("accountTitle", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {trName(effectiveBank?.account_title) || (effectiveBank ? trName(accountName) : "-")}
+                {showName(effectiveBank?.account_title) || (effectiveBank ? showName(accountName) : "-")}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
@@ -419,7 +524,7 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("bankBranch", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {trName(effectiveBank?.branch_name || effectiveBank?.branchName || selectedBranchName) || "-"}
+                {showName(effectiveBank?.branch_name || effectiveBank?.branchName || selectedBranchName) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">

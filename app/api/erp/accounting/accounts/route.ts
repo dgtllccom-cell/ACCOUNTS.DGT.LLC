@@ -40,6 +40,70 @@ function sequencePrefix(value: string | null | undefined, fallback: string, leng
   return normalizeCodePart(value, fallback).slice(0, length) || fallback;
 }
 
+export function extractMasterCountryCode(country: { iso2?: string | null; name?: string | null } | null | undefined): string {
+  const iso2 = (country?.iso2 ?? "").trim().toUpperCase();
+  if (iso2 && iso2.length === 2) return iso2;
+  const name = (country?.name ?? "").trim().toUpperCase();
+  if (name.includes("EMIRATES") || name.includes("UAE")) return "AE";
+  if (name.includes("PAKISTAN")) return "PK";
+  if (name.includes("AFGHANISTAN")) return "AF";
+  if (name.includes("INDIA")) return "IN";
+  if (name.includes("IRAN")) return "IR";
+  if (name.includes("CHINA")) return "CN";
+  return normalizeCodePart(name, "GL").slice(0, 2);
+}
+
+export function extractMasterBranchCode(branch: { code?: string | null; name?: string | null; city_name?: string | null } | null | undefined): string {
+  const code = (branch?.code ?? "").trim().toUpperCase();
+  const match = code.match(/^[A-Z0-9]+-([A-Z0-9]+)-\d+$/i);
+  if (match && match[1]) {
+    const part = match[1].toUpperCase();
+    if (part === "ALRAS" || part === "ALR") return "ALR";
+    return part.slice(0, 5);
+  }
+  if (code.includes("ALRAS") || code.includes("ALR")) return "ALR";
+  if (code.includes("DEI") || code.includes("DEIRA")) return "DEI";
+  if (code.includes("CHM") || code.includes("CHAMAN")) return "CHM";
+  if (code.includes("KBL") || code.includes("KABUL")) return "KBL";
+  if (code.includes("KDH") || code.includes("KANDAHAR")) return "KDH";
+  if (code.includes("QTA") || code.includes("QUE") || code.includes("QUETTA")) return "QTA";
+  if (code.includes("KHI") || code.includes("KARACHI")) return "KHI";
+  if (code.includes("BOM") || code.includes("MUMBAI")) return "BOM";
+  if (code.includes("THR") || code.includes("TEHRAN")) return "THR";
+  if (code.includes("DXB") || code.includes("DUBAI")) return "DXB";
+
+  const cityName = (branch?.city_name ?? "").trim().toUpperCase();
+  if (cityName.includes("CHAMAN")) return "CHM";
+  if (cityName.includes("QUETTA")) return "QTA";
+  if (cityName.includes("KABUL")) return "KBL";
+  if (cityName.includes("KANDAHAR")) return "KDH";
+  if (cityName.includes("KARACHI")) return "KHI";
+  if (cityName.includes("MUMBAI")) return "BOM";
+  if (cityName.includes("TEHRAN")) return "THR";
+  if (cityName.includes("DUBAI")) return "DXB";
+
+  const name = (branch?.name ?? "").trim().toUpperCase();
+  if (name.includes("AL-RAS") || name.includes("ALRAS")) return "ALR";
+  if (name.includes("DEIRA")) return "DEI";
+
+  const raw = code.replace(/[^A-Z0-9]/g, "");
+  return raw.slice(0, 4) || "BR";
+}
+
+export function extractMasterCategoryCode(category: string | null | undefined): string {
+  if (!category) return "GEN";
+  const clean = category.trim().toUpperCase();
+  if (clean === "B/C" || clean === "BC") return "BC";
+  if (clean === "P/S" || clean === "PS") return "PS";
+  if (clean === "B/P" || clean === "BP") return "BP";
+  if (clean === "EX") return "EX";
+  if (clean === "S") return "S";
+  if (clean === "SP") return "SP";
+  const stripped = clean.replace(/[^A-Z0-9]/g, "");
+  return stripped.slice(0, 4) || "GEN";
+}
+
+
 function isMissingPrivilegedSupabaseKey(error: unknown) {
   const message = error instanceof Error ? error.message : String(error ?? "");
   return message.includes("SUPABASE_SECRET_KEY") || message.includes("SUPABASE_SERVICE_ROLE_KEY");
@@ -115,6 +179,13 @@ async function buildAccountListViaLocalPg(
         ea.branch_code,
         ea.manual_reference_number,
         ea.account_number,
+        ea.account_serial_number,
+        ea.super_admin_serial,
+        ea.address_country_id,
+        ea.address_state_id,
+        ea.address_city_id,
+        ea.address_postal_code,
+        ea.full_address,
         ea.created_at
       from public.enterprise_accounts ea
       where ea.deleted_at is null
@@ -575,95 +646,80 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const requestedCode = body.code.trim().toUpperCase();
-        let issuedCode = requestedCode === "AUTO" ? "SA-AC" : requestedCode;
-
-        if (requestedCode === "AUTO") {
-          let prefix = "SA-AC";
-          if (body.scope !== "super_admin" && body.countryId) {
-            const countryRows = await tx`
-              select name, iso2
-              from countries
-              where id = ${body.countryId}::uuid
-              limit 1;
-            `;
-            const country = (countryRows[0] as any) ?? {};
-            const countryName = String(country?.name ?? "");
-            const normalizedIso = normalizeCodePart(country?.iso2 ?? null, "CT");
-            const countryPrefix =
-              countryName.toLowerCase().includes("united arab emirates")
-                ? "UAE"
-                : normalizedIso;
-
-            prefix = `${countryPrefix}-AC`;
-
-            if ((body.scope === "main_branch" || body.scope === "city_branch") && body.cityBranchId) {
-              const cityBranchRows = await tx`
-                select city_name, code
-                from city_branches
-                where id = ${body.cityBranchId}::uuid
-                limit 1;
-              `;
-              const cityBranch = (cityBranchRows[0] as any) ?? {};
-              const cityPrefix =
-                cityShortCode(cityBranch?.city_name ?? null, "") ||
-                normalizeCodePart(cityBranch?.code ?? null, "BR").slice(0, 3);
-              prefix = `${countryPrefix}-${cityPrefix}-AC`;
-            }
-          }
-
-          const existingRows = await tx`
-            select code
-            from enterprise_accounts
-            where code ilike ${`${prefix}-%`}
-            order by code desc
-            limit 1;
-          `;
-          const latest = String((existingRows[0] as any)?.code ?? "");
-          const latestNo = latest ? Number(latest.split("-").pop()) : 0;
-          const nextNo = Number.isFinite(latestNo) ? latestNo + 1 : 1;
-          issuedCode = `${prefix}-${String(nextNo).padStart(4, "0")}`;
-        }
-
-        const branchCode = (() => {
-          if (body.scope === "super_admin") return "SUPER";
-          return "BRANCH";
-        })();
-
-        let countryPrefix = "SA";
-        let branchPrefix = branchCode;
-
-        if (body.scope !== "super_admin" && body.countryId) {
+        // 1. Resolve Country Code from master
+        let masterCountryCode = "CT";
+        let resolvedCountry: any = null;
+        if (body.countryId) {
           const countryRows = await tx`
-            select name, iso2
+            select id, name, iso2
             from countries
             where id = ${body.countryId}::uuid
             limit 1;
           `;
-          const country = (countryRows[0] as any) ?? {};
-          countryPrefix = countrySerialPrefix(country);
+          resolvedCountry = (countryRows[0] as any) ?? null;
+          masterCountryCode = extractMasterCountryCode(resolvedCountry);
         }
 
-        if (body.scope === "city_branch" && body.cityBranchId) {
+        // 2. Resolve Branch Code from master
+        let masterBranchCode = "MAIN";
+        let resolvedCityBranch: any = null;
+        let resolvedCountryBranch: any = null;
+        if (body.cityBranchId) {
           const cityBranchRows = await tx`
-            select code, name, city_name
+            select id, code, name, city_name
             from city_branches
             where id = ${body.cityBranchId}::uuid
             limit 1;
           `;
-          const cityBranch = (cityBranchRows[0] as any) ?? {};
-          branchPrefix = cityShortCode(cityBranch?.city_name ?? cityBranch?.name ?? cityBranch?.code ?? null, "CITY");
-        } else if ((body.scope === "main_branch" || body.scope === "country") && body.countryBranchId) {
+          resolvedCityBranch = (cityBranchRows[0] as any) ?? null;
+          masterBranchCode = extractMasterBranchCode(resolvedCityBranch);
+        } else if (body.countryBranchId) {
           const branchRows = await tx`
-            select code, name
+            select id, code, name
             from country_branches
             where id = ${body.countryBranchId}::uuid
             limit 1;
           `;
-          const countryBranch = (branchRows[0] as any) ?? {};
-          branchPrefix = normalizeCodePart(countryBranch?.code ?? countryBranch?.name ?? null, "MAIN");
+          resolvedCountryBranch = (branchRows[0] as any) ?? null;
+          masterBranchCode = extractMasterBranchCode(resolvedCountryBranch);
+        } else if (body.scope === "super_admin") {
+          masterBranchCode = "HQ";
         }
 
+        // 3. Resolve Category Code from master
+        const masterCategoryCode = extractMasterCategoryCode(body.category);
+
+        // 4. Build prefix for Local Account Code: Country Code + Branch Code + Category Code
+        const localCodePrefix = `${masterCountryCode}-${masterBranchCode}-${masterCategoryCode}`;
+
+        // 5. Prevent duplicates during simultaneous saves using transactional advisory lock
+        await tx`SELECT pg_advisory_xact_lock(hashtext(${'acct_code_lock_' + localCodePrefix}));`;
+
+        // 6. Find max existing sequence for this exact Country + Branch + Category combination
+        const existingPrefixRows = await tx`
+          select code
+          from enterprise_accounts
+          where code like ${localCodePrefix + '-%'}
+        `;
+
+        let maxLocalSeq = 0;
+        for (const row of existingPrefixRows) {
+          const c = String((row as any)?.code ?? "");
+          const suffix = c.slice(localCodePrefix.length + 1);
+          const num = parseInt(suffix, 10);
+          if (Number.isFinite(num) && num > maxLocalSeq) {
+            maxLocalSeq = num;
+          }
+        }
+        const nextLocalSeq = maxLocalSeq + 1;
+        const localSeqStr = nextLocalSeq < 1000 ? String(nextLocalSeq).padStart(3, "0") : String(nextLocalSeq);
+        const issuedCode = `${localCodePrefix}-${localSeqStr}`;
+
+        const branchCode = masterBranchCode;
+        const countryPrefix = countrySerialPrefix(resolvedCountry);
+        const branchPrefix = masterBranchCode;
+
+        // 7. Global ERP Account Number: Unique running sequence across entire ERP for Super Admin tracking
         const serials = await allocateFormSerials("account", {
           countryId: body.countryId ?? null,
           branchKey: body.cityBranchId ?? body.countryBranchId ?? null,
@@ -671,8 +727,9 @@ export async function POST(request: NextRequest) {
         });
 
         const accountSerialNumber = Number(serials.superAdminSerial?.split("-").pop() ?? 1);
+        const globalAccountNumber = `ACC-${String(accountSerialNumber).padStart(6, "0")}`;
         const countrySerialNumber = serials.countrySerial ?? `${countryPrefix}-00000001`;
-        const branchSequence = Number(serials.branchSerial?.split("-").pop() ?? 1);
+        const branchSequence = nextLocalSeq;
         const branchSerialNumber = serials.branchSerial ?? `${branchPrefix}-00000001`;
         const customerNumber = `CUST-${issuedCode}`;
         const manualReferenceNumber = body.manualReferenceNumber?.trim() || null;
@@ -753,8 +810,42 @@ export async function POST(request: NextRequest) {
           return id ? arr.findIndex((x: any) => String(x?.id).trim() === id) === idx : true;
         });
 
+        let validAddressCountryId = null;
+        if (body.addressCountryId) {
+          try {
+            const rows = await tx`select id from countries where id = ${body.addressCountryId}::uuid limit 1;`;
+            if (rows.length > 0) validAddressCountryId = rows[0].id;
+          } catch {}
+        }
+
+        let validAddressStateId = null;
+        if (body.addressStateId) {
+          try {
+            const rows = await tx`select id from states_provinces where id = ${body.addressStateId}::uuid limit 1;`;
+            if (rows.length > 0) validAddressStateId = rows[0].id;
+          } catch {}
+        }
+
+        let validAddressCityId = null;
+        if (body.addressCityId) {
+          try {
+            const rows = await tx`select id from cities where id = ${body.addressCityId}::uuid limit 1;`;
+            if (rows.length > 0) validAddressCityId = rows[0].id;
+          } catch {}
+        }
+
         try {
-          await tx`alter table enterprise_accounts add column if not exists linked_companies jsonb default '[]'::jsonb, add column if not exists linked_banks jsonb default '[]'::jsonb;`;
+          await tx`
+            alter table enterprise_accounts 
+              add column if not exists linked_companies jsonb default '[]'::jsonb, 
+              add column if not exists linked_banks jsonb default '[]'::jsonb,
+              add column if not exists address_country_id uuid,
+              add column if not exists address_state_id uuid,
+              add column if not exists address_city_id uuid,
+              add column if not exists address_postal_code text,
+              add column if not exists full_address text,
+              add column if not exists account_address jsonb;
+          `;
         } catch (_) {}
 
         const accountRows = await tx`
@@ -775,7 +866,7 @@ export async function POST(request: NextRequest) {
             linked_companies: tx.json(dedupedCompanies),
             linked_banks: tx.json(dedupedBanks),
             code: issuedCode,
-            account_number: issuedCode,
+            account_number: globalAccountNumber,
             customer_number: customerNumber,
             super_admin_serial: serials.superAdminSerial,
             country_serial: serials.countrySerial,
@@ -785,6 +876,18 @@ export async function POST(request: NextRequest) {
             country_serial_number: countrySerialNumber,
             branch_serial_number: branchSerialNumber,
             manual_reference_number: manualReferenceNumber,
+            address_country_id: validAddressCountryId,
+            address_state_id: validAddressStateId,
+            address_city_id: validAddressCityId,
+            address_postal_code: body.addressPostalCode || null,
+            full_address: body.fullAddress || null,
+            account_address: tx.json(body.accountAddress || {
+              country_id: validAddressCountryId,
+              state_id: validAddressStateId,
+              city_id: validAddressCityId,
+              postal_code: body.addressPostalCode || null,
+              full_address: body.fullAddress || null
+            }),
             creation_date: nowIso,
             branch_code: branchCode,
             branch_account_sequence: branchSequence,
@@ -987,7 +1090,8 @@ export async function POST(request: NextRequest) {
           accountId,
           ledgerId,
           accountCode: issuedCode,
-          accountNumber: issuedCode,
+          accountNumber: globalAccountNumber,
+          globalAccountNumber,
           customerNumber,
           accountSerialNumber,
           countrySerialNumber,
@@ -995,6 +1099,11 @@ export async function POST(request: NextRequest) {
           manualReferenceNumber,
           branchCode,
           branchAccountSequence: branchSequence,
+          addressCountryId: validAddressCountryId,
+          addressStateId: validAddressStateId,
+          addressCityId: validAddressCityId,
+          addressPostalCode: body.addressPostalCode || null,
+          fullAddress: body.fullAddress || null,
           approvalRequestId,
           status: accountStatus
         };

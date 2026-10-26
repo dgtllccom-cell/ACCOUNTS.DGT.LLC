@@ -793,7 +793,13 @@ export const enterpriseAccountCreateSchema = scopeSchema.extend({
   shippingLineId: optionalUuidSchema,
   status: z.string().trim().max(80).optional(),
   contacts: z.array(z.object({ type: z.string(), value: z.string() })).default([]),
-  linkedCountries: z.array(z.string()).default([])
+  linkedCountries: z.array(z.string()).default([]),
+  addressCountryId: optionalUuidSchema,
+  addressStateId: optionalUuidSchema,
+  addressCityId: optionalUuidSchema,
+  addressPostalCode: z.string().trim().max(50).optional().nullable(),
+  fullAddress: z.string().trim().max(1000).optional().nullable(),
+  accountAddress: z.record(z.any()).optional().nullable()
 });
 
 export const enterpriseLedgerCreateSchema = scopeSchema.extend({

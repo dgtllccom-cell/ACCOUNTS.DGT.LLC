@@ -6156,6 +6156,30 @@ function Step1BookingCustomer({
     return filtered.length > 0 ? filtered : ports;
   };
 
+  const getBorderPresets = (countryName?: string, type: "exit" | "entry" = "exit"): string[] => {
+    const norm = String(countryName || "").toLowerCase();
+    const isAfg = norm.includes("afghan");
+    const isPak = norm.includes("pakistan");
+    const isIrn = norm.includes("iran");
+    const isUae = norm.includes("emirates") || norm.includes("uae") || norm.includes("dubai");
+
+    if (isAfg) {
+      return ["Spin Boldak", "Torkham", "Islam Qala", "Zaranj", "Hairatan", "Shir Khan", "Aqina", "Torghundi"];
+    }
+    if (isPak) {
+      return ["Chaman", "Torkham", "Taftan", "Gwadar", "Karachi Port", "Port Qasim", "Wagah", "Sost"];
+    }
+    if (isIrn) {
+      return ["Dogharoun", "Milak", "Mirjaveh", "Bandar Abbas", "Chabahar"];
+    }
+    if (isUae) {
+      return ["Jebel Ali", "Port Rashid", "Sharjah Port", "Khalifa Port", "Fujairah"];
+    }
+    return type === "exit"
+      ? ["Spin Boldak", "Torkham", "Islam Qala", "Zaranj", "Hairatan", "Chaman", "Taftan"]
+      : ["Chaman", "Torkham", "Spin Boldak", "Taftan", "Islam Qala", "Gwadar", "Karachi Port"];
+  };
+
   const rebuildRouteFromCurrentState = (
     mode: "direct" | "transit",
     stages: typeof intermediateStages,
@@ -6760,76 +6784,520 @@ function Step1BookingCustomer({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {/* Left Box: Loading Country (Origin) */}
-              <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  <Upload className="h-3.5 w-3.5 text-blue-600" />
-                  <span>{tt("loading_country_title", "Loading Country (Origin)")} *</span>
-                </label>
-
-                <div className="flex items-center gap-2">
-                  <select
-                    value={formData.loading_country_id || ""}
-                    onChange={(e) => {
-                      const cId = e.target.value;
-                      const cName = countries.find((c) => c.id === cId)?.name || "";
-                      setFormData((c) => ({ ...c, loading_country_id: cId, loading_country_name: cName }));
-                      handleLoadingCountryChange(cId);
-                      rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingCountryId: cId, loadingCountryName: cName });
-                    }}
-                    className="flex-1 h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
-                  >
-                    <option value="">{tt("select_loading_country", "Select Loading Country...")}</option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+            {/* Vertically Stacked Routing Cards: Loading on Top, Receiving Below */}
+            <div className="space-y-3.5">
+              {/* TOP CARD: LOADING COUNTRY & ORIGIN LOGISTICS */}
+              <div className="rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-white dark:bg-slate-900 p-4 shadow-2xs space-y-3.5">
+                {/* Header */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-blue-100/80 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-7 w-7 rounded-xl bg-blue-100 dark:bg-blue-950/70 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold shrink-0">
+                      <Upload className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                          {tt("loading_country_title", "Loading Country (Origin)")} *
+                        </span>
+                        {formData.loading_country_name && (
+                          <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 font-semibold text-[10.5px]">
+                            {formData.loading_country_name}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10.5px] text-slate-400 dark:text-slate-500">
+                        {tt("origin_overlay_sub", "Configure origin country, loading branch/location, loading date and exit border or port.")}
+                      </p>
+                    </div>
+                  </div>
 
                   <button
                     type="button"
                     onClick={() => setIsOriginOverlayOpen(true)}
-                    className="h-9 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-900 transition shrink-0 inline-flex items-center gap-1 cursor-pointer"
+                    className="h-8 px-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-900 transition shrink-0 inline-flex items-center gap-1 cursor-pointer"
                     title={tt("edit_origin_details", "Edit Details ➔")}
                   >
                     <span>{tt("edit_origin_details", "Edit Details ➔")}</span>
                   </button>
                 </div>
+
+                {/* Main Form Fields */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* 1. Loading Country */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("loading_country_title", "Loading Country (Origin)")} *
+                    </label>
+                    <select
+                      value={formData.loading_country_id || ""}
+                      onChange={(e) => {
+                        const cId = e.target.value;
+                        const cName = countries.find((c) => c.id === cId)?.name || "";
+                        setFormData((c) => ({ ...c, loading_country_id: cId, loading_country_name: cName }));
+                        handleLoadingCountryChange(cId);
+                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingCountryId: cId, loadingCountryName: cName });
+                      }}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                    >
+                      <option value="">{tt("select_loading_country", "Select Loading Country...")}</option>
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 2. Transport Mode */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("transport_mode_star", "Transport Mode")} *
+                    </label>
+                    <select
+                      value={formData.transport_mode || "by_road"}
+                      onChange={(e) => {
+                        const mId = e.target.value;
+                        const newExitType = mId === "by_sea" ? "port" : "border";
+                        const newEntryType = mId === "by_sea" ? "port" : "border";
+                        setFormData((c) => ({
+                          ...c,
+                          transport_mode: mId as any,
+                          exit_point_type: newExitType,
+                          entry_point_type: newEntryType
+                        }));
+                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { transportMode: mId });
+                      }}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                    >
+                      <option value="by_road">🚛 {tt("opt_road_full", "By Road")}</option>
+                      <option value="by_sea">🚢 {tt("opt_sea_full", "By Sea")}</option>
+                      <option value="by_air">✈️ {tt("opt_air_full", "By Air")}</option>
+                      <option value="by_rail">🚆 {tt("opt_rail_full", "By Rail")}</option>
+                    </select>
+                  </div>
+
+                  {/* 3. Loading City / Warehouse / Place */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("loading_location_place", "Loading Location / Warehouse")} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.loading_place || formData.loading_source_name || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData((c) => ({ ...c, loading_place: val, loading_source_name: val }));
+                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingLoc: val });
+                      }}
+                      placeholder={tt("loading_location_place", "Loading Location / Warehouse")}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+
+                  {/* 4. Loading Date */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("loading_date", "Loading Date")} *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.loading_date || formData.planned_dispatch_date || ""}
+                      onChange={(e) => setFormData((c) => ({ ...c, loading_date: e.target.value, planned_dispatch_date: e.target.value }))}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+                </div>
+
+                {/* Branch Quick Suggestions (if branches exist for loading country) */}
+                {getBranchesForCountry(formData.loading_country_id).length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      {tt("loading_branch", "Loading Branch (Filtered by Country)")}:
+                    </span>
+                    {getBranchesForCountry(formData.loading_country_id).map((b) => {
+                      const isSelected = formData.loading_customs_branch_id === b.id || formData.loading_place === b.name;
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={() => {
+                            setFormData((c) => ({
+                              ...c,
+                              loading_customs_branch_id: b.id,
+                              loading_customs_branch_name: b.name,
+                              loading_place: b.name,
+                              loading_source_name: b.name
+                            }));
+                            rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingLoc: b.name });
+                          }}
+                          className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold transition cursor-pointer border ${
+                            isSelected
+                              ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
+                              : "bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          🏢 {b.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Exit Point Section: Border or Port */}
+                <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3 dark:border-slate-800 dark:bg-slate-850/50 space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        {tt("exit_point_lbl", "Exit Point")} *
+                      </span>
+                      <span className="text-[10.5px] text-slate-400">
+                        ({formData.exit_point_type === "port" ? tt("exit_port", "Exit Port") : tt("exit_border", "Exit Border")})
+                      </span>
+                    </div>
+
+                    <div className="inline-flex rounded-lg bg-white dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => setFormData((c) => ({ ...c, exit_point_type: "border" }))}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
+                          (formData.exit_point_type || "border") === "border"
+                            ? "bg-blue-600 text-white shadow-2xs"
+                            : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                        }`}
+                      >
+                        <Truck className="h-3 w-3 inline mr-1" />
+                        {tt("exit_border", "Exit Border")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((c) => ({ ...c, exit_point_type: "port" }))}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
+                          formData.exit_point_type === "port"
+                            ? "bg-blue-600 text-white shadow-2xs"
+                            : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                        }`}
+                      >
+                        <Ship className="h-3 w-3 inline mr-1" />
+                        {tt("exit_port", "Exit Port")}
+                      </button>
+                    </div>
+                  </div>
+
+                  {formData.exit_point_type === "port" ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <select
+                        value={formData.loading_port_id || ""}
+                        onChange={(e) => {
+                          const pId = e.target.value;
+                          const pName = ports.find((p) => p.id === pId)?.port_name || "";
+                          setFormData((c) => ({
+                            ...c,
+                            loading_port_id: pId,
+                            loading_port_name: pName,
+                            exit_border_port_name: pName
+                          }));
+                        }}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="">{tt("select_port", "Select port...")}</option>
+                        {getPortsForCountry(formData.loading_country_id).map((p) => (
+                          <option key={p.id} value={p.id}>{p.port_name}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={formData.exit_border_port_name || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, exit_border_port_name: e.target.value, loading_port_name: e.target.value }))}
+                        placeholder={tt("corresponding_port", "Corresponding Exit Port")}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={formData.exit_border_port_name || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, exit_border_port_name: e.target.value }))}
+                        placeholder={tt("corresponding_border", "Corresponding Exit Border")}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                      />
+                      {/* Quick Pick Border Tag Pills */}
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          {tt("corresponding_border", "Corresponding Exit Border")}:
+                        </span>
+                        {getBorderPresets(formData.loading_country_name || countries.find((c) => c.id === formData.loading_country_id)?.name, "exit").map((border) => {
+                          const isSelected = formData.exit_border_port_name === border;
+                          return (
+                            <button
+                              key={border}
+                              type="button"
+                              onClick={() => setFormData((c) => ({ ...c, exit_point_type: "border", exit_border_port_name: border }))}
+                              className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold transition cursor-pointer border ${
+                                isSelected
+                                  ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
+                                  : "bg-white hover:bg-blue-100 text-slate-700 hover:text-blue-800 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                              }`}
+                            >
+                              📍 {border}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Right Box: Receiving Country (Destination) */}
-              <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  <Download className="h-3.5 w-3.5 text-purple-600" />
-                  <span>{tt("receiving_country_title", "Receiving Country (Destination)")} *</span>
-                </label>
-
-                <div className="flex items-center gap-2">
-                  <select
-                    value={formData.receiving_country_id || ""}
-                    onChange={(e) => {
-                      const cId = e.target.value;
-                      const cName = countries.find((c) => c.id === cId)?.name || "";
-                      setFormData((c) => ({ ...c, receiving_country_id: cId, receiving_country_name: cName }));
-                      handleReceivingCountryChange(cId);
-                      rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingCountryId: cId, receivingCountryName: cName });
-                    }}
-                    className="flex-1 h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
-                  >
-                    <option value="">{tt("select_receiving_country", "Select Destination Country...")}</option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+              {/* BOTTOM CARD: RECEIVING COUNTRY & DESTINATION LOGISTICS */}
+              <div className="rounded-2xl border border-purple-200 dark:border-purple-900/60 bg-white dark:bg-slate-900 p-4 shadow-2xs space-y-3.5">
+                {/* Header */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-purple-100/80 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-7 w-7 rounded-xl bg-purple-100 dark:bg-purple-950/70 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold shrink-0">
+                      <Download className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                          {tt("receiving_country_title", "Receiving Country (Destination)")} *
+                        </span>
+                        {formData.receiving_country_name && (
+                          <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 font-semibold text-[10.5px]">
+                            {formData.receiving_country_name}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10.5px] text-slate-400 dark:text-slate-500">
+                        {tt("dest_overlay_sub", "Configure destination country, receiving branch/location, arrival date and entry border or port.")}
+                      </p>
+                    </div>
+                  </div>
 
                   <button
                     type="button"
                     onClick={() => setIsDestinationOverlayOpen(true)}
-                    className="h-9 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 text-xs font-bold border border-purple-200 dark:border-purple-900 transition shrink-0 inline-flex items-center gap-1 cursor-pointer"
+                    className="h-8 px-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 text-xs font-bold border border-purple-200 dark:border-purple-900 transition shrink-0 inline-flex items-center gap-1 cursor-pointer"
                     title={tt("edit_dest_details", "Edit Details ➔")}
                   >
                     <span>{tt("edit_dest_details", "Edit Details ➔")}</span>
                   </button>
+                </div>
+
+                {/* Main Form Fields */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* 1. Receiving Country */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("receiving_country_title", "Receiving Country (Destination)")} *
+                    </label>
+                    <select
+                      value={formData.receiving_country_id || ""}
+                      onChange={(e) => {
+                        const cId = e.target.value;
+                        const cName = countries.find((c) => c.id === cId)?.name || "";
+                        setFormData((c) => ({ ...c, receiving_country_id: cId, receiving_country_name: cName }));
+                        handleReceivingCountryChange(cId);
+                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingCountryId: cId, receivingCountryName: cName });
+                      }}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+                    >
+                      <option value="">{tt("select_receiving_country", "Select Destination Country...")}</option>
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 2. Receiving Transport Mode */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("transport_mode_star", "Transport Mode")}
+                    </label>
+                    <select
+                      value={formData.transport_mode || "by_road"}
+                      onChange={(e) => {
+                        const mId = e.target.value;
+                        setFormData((c) => ({ ...c, transport_mode: mId as any }));
+                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { transportMode: mId });
+                      }}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+                    >
+                      <option value="by_road">🚛 {tt("opt_road_full", "By Road")}</option>
+                      <option value="by_sea">🚢 {tt("opt_sea_full", "By Sea")}</option>
+                      <option value="by_air">✈️ {tt("opt_air_full", "By Air")}</option>
+                      <option value="by_rail">🚆 {tt("opt_rail_full", "By Rail")}</option>
+                    </select>
+                  </div>
+
+                  {/* 3. Receiving City / Delivery Warehouse */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("receiving_location_place", "Receiving Location / Warehouse")} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.receiving_place || formData.destination_city || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData((c) => ({ ...c, receiving_place: val, destination_city: val }));
+                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingLoc: val });
+                      }}
+                      placeholder={tt("receiving_location_place", "Receiving Location / Warehouse")}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                    />
+                  </div>
+
+                  {/* 4. Receiving Date */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("receiving_date", "Receiving Date")} *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.receiving_date || formData.planned_arrival_date || ""}
+                      onChange={(e) => setFormData((c) => ({ ...c, receiving_date: e.target.value, planned_arrival_date: e.target.value }))}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                    />
+                  </div>
+                </div>
+
+                {/* Branch Quick Suggestions (if branches exist for receiving country) */}
+                {getBranchesForCountry(formData.receiving_country_id).length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      {tt("receiving_branch", "Receiving Branch (Filtered by Country)")}:
+                    </span>
+                    {getBranchesForCountry(formData.receiving_country_id).map((b) => {
+                      const isSelected = formData.receiving_customs_branch_id === b.id || formData.receiving_place === b.name;
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={() => {
+                            setFormData((c) => ({
+                              ...c,
+                              receiving_customs_branch_id: b.id,
+                              receiving_customs_branch_name: b.name,
+                              receiving_place: b.name,
+                              destination_city: b.name
+                            }));
+                            rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingLoc: b.name });
+                          }}
+                          className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold transition cursor-pointer border ${
+                            isSelected
+                              ? "bg-purple-600 text-white border-purple-600 shadow-2xs"
+                              : "bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-purple-700 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          🏢 {b.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Entry Point Section: Border or Port */}
+                <div className="rounded-xl border border-purple-100 bg-purple-50/40 p-3 dark:border-slate-800 dark:bg-slate-850/50 space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        {tt("entry_point_lbl", "Entry Point")} *
+                      </span>
+                      <span className="text-[10.5px] text-slate-400">
+                        ({formData.entry_point_type === "port" ? tt("entry_port", "Entry Port") : tt("entry_border", "Entry Border")})
+                      </span>
+                    </div>
+
+                    <div className="inline-flex rounded-lg bg-white dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => setFormData((c) => ({ ...c, entry_point_type: "border" }))}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
+                          (formData.entry_point_type || "border") === "border"
+                            ? "bg-purple-600 text-white shadow-2xs"
+                            : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                        }`}
+                      >
+                        <Truck className="h-3 w-3 inline mr-1" />
+                        {tt("entry_border", "Entry Border")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((c) => ({ ...c, entry_point_type: "port" }))}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
+                          formData.entry_point_type === "port"
+                            ? "bg-purple-600 text-white shadow-2xs"
+                            : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                        }`}
+                      >
+                        <Ship className="h-3 w-3 inline mr-1" />
+                        {tt("entry_port", "Entry Port")}
+                      </button>
+                    </div>
+                  </div>
+
+                  {formData.entry_point_type === "port" ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <select
+                        value={formData.destination_port_id || ""}
+                        onChange={(e) => {
+                          const pId = e.target.value;
+                          const pName = ports.find((p) => p.id === pId)?.port_name || "";
+                          setFormData((c) => ({
+                            ...c,
+                            destination_port_id: pId,
+                            destination_port_name: pName,
+                            entry_border_port_name: pName
+                          }));
+                        }}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="">{tt("select_port", "Select port...")}</option>
+                        {getPortsForCountry(formData.receiving_country_id).map((p) => (
+                          <option key={p.id} value={p.id}>{p.port_name}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={formData.entry_border_port_name || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, entry_border_port_name: e.target.value, destination_port_name: e.target.value }))}
+                        placeholder={tt("corresponding_entry_port", "Corresponding Entry Port")}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={formData.entry_border_port_name || ""}
+                        onChange={(e) => setFormData((c) => ({ ...c, entry_border_port_name: e.target.value }))}
+                        placeholder={tt("corresponding_entry_border", "Corresponding Entry Border")}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                      />
+                      {/* Quick Pick Border Tag Pills */}
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          {tt("corresponding_entry_border", "Corresponding Entry Border")}:
+                        </span>
+                        {getBorderPresets(formData.receiving_country_name || countries.find((c) => c.id === formData.receiving_country_id)?.name, "entry").map((border) => {
+                          const isSelected = formData.entry_border_port_name === border;
+                          return (
+                            <button
+                              key={border}
+                              type="button"
+                              onClick={() => setFormData((c) => ({ ...c, entry_point_type: "border", entry_border_port_name: border }))}
+                              className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold transition cursor-pointer border ${
+                                isSelected
+                                  ? "bg-purple-600 text-white border-purple-600 shadow-2xs"
+                                  : "bg-white hover:bg-purple-100 text-slate-700 hover:text-purple-800 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                              }`}
+                            >
+                              📍 {border}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
