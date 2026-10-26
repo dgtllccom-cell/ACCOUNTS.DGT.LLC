@@ -43,14 +43,20 @@ const updateSchema = scopeSchema.extend({
   warehouseId: optionalUuidSchema,
   warehouseIds: z.array(z.string()).optional(),
   linkedCountries: z.array(z.string()).optional(),
-  contacts: z.array(z.object({ type: z.string(), value: z.string() })).optional()
+  contacts: z.array(z.object({ type: z.string(), value: z.string() })).optional(),
+  addressCountryId: optionalUuidSchema,
+  addressStateId: optionalUuidSchema,
+  addressCityId: optionalUuidSchema,
+  addressPostalCode: z.string().trim().max(50).optional().nullable(),
+  fullAddress: z.string().trim().max(1000).optional().nullable(),
+  accountAddress: z.record(z.any()).optional().nullable()
 });
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 async function loadAccount(id: string) {
   const admin = createSupabaseAdminClient() as any;
-  const selectFields = "id, scope, operational_domain, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, shipping_line_id, linked_countries, linked_companies, linked_banks, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at, deleted_at";
+  const selectFields = "id, scope, operational_domain, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, shipping_line_id, linked_countries, linked_companies, linked_banks, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, address_country_id, address_state_id, address_city_id, address_postal_code, full_address, account_address, created_at, updated_at, deleted_at";
 
   let data = null;
   if (isUuid(id)) {
@@ -443,6 +449,12 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       }
     }
     if (body.contacts !== undefined) updatePayload.contacts = body.contacts;
+    if (rawHas("addressCountryId")) updatePayload.address_country_id = body.addressCountryId;
+    if (rawHas("addressStateId")) updatePayload.address_state_id = body.addressStateId;
+    if (rawHas("addressCityId")) updatePayload.address_city_id = body.addressCityId;
+    if (rawHas("addressPostalCode")) updatePayload.address_postal_code = body.addressPostalCode;
+    if (rawHas("fullAddress")) updatePayload.full_address = body.fullAddress;
+    if (rawHas("accountAddress")) updatePayload.account_address = body.accountAddress;
     if (nextScope === "super_admin") {
       updatePayload.country_id = null;
       updatePayload.country_branch_id = null;

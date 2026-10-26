@@ -53,7 +53,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VoiceFormFill } from "@/components/voice-form-fill";
-import { listCountries, type LocationCountry } from "@/features/locations/location-api";
+import {
+  listCountries,
+  listStates,
+  listCities,
+  type LocationCountry,
+  type LocationState,
+  type LocationCity
+} from "@/features/locations/location-api";
 import { apiPost, apiPatch } from "@/lib/api/client";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
@@ -195,6 +202,7 @@ type CityBranchRow = {
   name: string;
   code: string;
   local_currency: string;
+  address?: string;
 };
 
 type AccountCreateResponse = {
@@ -490,11 +498,24 @@ export function NewAccountSetup({
   const [catSaving, setCatSaving] = useState(false);
   const [catError, setCatError] = useState("");
   const [accountCode, setAccountCode] = useState("");
+  const [globalAccountNumber, setGlobalAccountNumber] = useState("");
   const [manualReferenceNumber, setManualReferenceNumber] = useState("");
   const [accountName, setAccountName] = useState("");
   const [contacts, setContacts] = useState<Array<{ type: string; value: string }>>([{ type: "Mobile", value: "" }]);
   const [journalCounter, setJournalCounter] = useState(0);
   const [lastBranchCode, setLastBranchCode] = useState("");
+
+  // Account Address fields (Directly below Account Name)
+  const [addressCountries, setAddressCountries] = useState<LocationCountry[]>([]);
+  const [addressStates, setAddressStates] = useState<LocationState[]>([]);
+  const [addressCities, setAddressCities] = useState<LocationCity[]>([]);
+  const [addressCountryId, setAddressCountryId] = useState("");
+  const [addressStateId, setAddressStateId] = useState("");
+  const [addressCityId, setAddressCityId] = useState("");
+  const [addressPostalCode, setAddressPostalCode] = useState("");
+  const [fullAddress, setFullAddress] = useState("");
+  const [addressStatesLoading, setAddressStatesLoading] = useState(false);
+  const [addressCitiesLoading, setAddressCitiesLoading] = useState(false);
 
   // Authenticated, server-resolved scope — the single source of truth for which
   // country / branch this user may create accounts in. The create API enforces
@@ -761,10 +782,26 @@ export function NewAccountSetup({
             }
 
             setSubType(acc.is_control_account ? "Control Account" : "Normal Account");
-            setAccountCode(acc.account_number || acc.code || "");
+            setAccountCode(acc.code || acc.account_number || "");
+            setGlobalAccountNumber(acc.account_number || "");
             setManualReferenceNumber(acc.manual_reference_number || "");
             setAccountName(acc.name || "");
             setContacts(Array.isArray(acc.contacts) && acc.contacts.length > 0 ? acc.contacts : [{ type: "Mobile", value: "" }]);
+
+            // Restore Account Address
+            if (acc.address_country_id) setAddressCountryId(acc.address_country_id);
+            if (acc.address_state_id) setAddressStateId(acc.address_state_id);
+            if (acc.address_city_id) setAddressCityId(acc.address_city_id);
+            if (acc.address_postal_code) setAddressPostalCode(acc.address_postal_code);
+            if (acc.full_address) setFullAddress(acc.full_address);
+            if (acc.account_address && typeof acc.account_address === "object") {
+              const aa = acc.account_address;
+              if (!acc.address_country_id && aa.countryId) setAddressCountryId(aa.countryId);
+              if (!acc.address_state_id && aa.stateId) setAddressStateId(aa.stateId);
+              if (!acc.address_city_id && aa.cityId) setAddressCityId(aa.cityId);
+              if (!acc.address_postal_code && aa.postalCode) setAddressPostalCode(aa.postalCode);
+              if (!acc.full_address && aa.fullAddress) setFullAddress(aa.fullAddress);
+            }
 
             if (acc.shipping_line_id) {
               setLinkedShippingLineId(acc.shipping_line_id);
@@ -902,11 +939,22 @@ export function NewAccountSetup({
     fetch(`/api/erp/customers/${linkedCustomerId}?lang=${lang}`)
       .then((r) => r.json())
       .then((json) => {
-        if (!cancelled && json?.ok && (json?.data || json?.customer)) setCustomerDetail(json.data ?? json.customer);
+        if (!cancelled && json?.ok && (json?.data || json?.customer)) {
+          const cust = json.data?.customer ?? json.data ?? json.customer;
+          setCustomerDetail(cust);
+          // Pre-fill address from customer master if currently empty
+          if (!addressCountryId && cust?.country_id) {
+            setAddressCountryId(cust.country_id);
+            if (cust?.state_id || cust?.state_province_id) setAddressStateId(cust.state_id || cust.state_province_id);
+            if (cust?.city_id) setAddressCityId(cust.city_id);
+            if (cust?.postal_code || cust?.zip_code) setAddressPostalCode(cust.postal_code || cust.zip_code);
+            if (cust?.address || cust?.full_address) setFullAddress(cust.address || cust.full_address);
+          }
+        }
       })
       .catch(() => null);
     return () => { cancelled = true; };
-  }, [linkedCustomerId, lang]);
+  }, [linkedCustomerId, lang, addressCountryId]);
 
   // Fetch company details when linkedCompanyId changes
   useEffect(() => {
@@ -932,6 +980,13 @@ export function NewAccountSetup({
         } else if (comp.id) {
           setCompanyDetail(comp);
         }
+        if (!addressCountryId && (comp?.country_id || comp?.countryId)) {
+          setAddressCountryId(comp.country_id || comp.countryId);
+          if (comp?.state_id || comp?.stateId) setAddressStateId(comp.state_id || comp.stateId);
+          if (comp?.city_id || comp?.cityId) setAddressCityId(comp.city_id || comp.cityId);
+          if (comp?.postal_code || comp?.postalCode) setAddressPostalCode(comp.postal_code || comp.postalCode);
+          if (comp?.address || comp?.full_address) setFullAddress(comp.address || comp.full_address);
+        }
       })
       .catch(() => {
         if (typeof window !== "undefined") {
@@ -946,7 +1001,74 @@ export function NewAccountSetup({
         }
       });
     return () => { cancelled = true; };
-  }, [linkedCompanyId, lang]);
+  }, [linkedCompanyId, lang, addressCountryId]);
+
+  // Keep addressCountries synced with location master
+  useEffect(() => {
+    if (countries.length > 0) {
+      setAddressCountries(countries);
+    } else {
+      listCountries({ all: true, lang })
+        .then((res) => {
+          if (Array.isArray(res)) setAddressCountries(res);
+        })
+        .catch(() => null);
+    }
+  }, [countries, lang]);
+
+  // Default address country to operational country if empty
+  useEffect(() => {
+    if (country && !addressCountryId) {
+      setAddressCountryId(country);
+    }
+  }, [country, addressCountryId]);
+
+  // Load States whenever Address Country changes
+  useEffect(() => {
+    if (!addressCountryId) {
+      setAddressStates([]);
+      setAddressCities([]);
+      return;
+    }
+    let cancelled = false;
+    setAddressStatesLoading(true);
+    listStates({ countryId: addressCountryId, lang })
+      .then((res) => {
+        if (!cancelled) {
+          setAddressStates(Array.isArray(res) ? res : []);
+          setAddressStatesLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setAddressStatesLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [addressCountryId, lang]);
+
+  // Load Cities whenever Address Country or State changes
+  useEffect(() => {
+    if (!addressCountryId) {
+      setAddressCities([]);
+      return;
+    }
+    let cancelled = false;
+    setAddressCitiesLoading(true);
+    listCities({
+      countryId: addressCountryId,
+      stateProvinceId: addressStateId || undefined,
+      lang
+    })
+      .then((res) => {
+        if (!cancelled) {
+          setAddressCities(Array.isArray(res) ? res : []);
+          setAddressCitiesLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setAddressCitiesLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [addressCountryId, addressStateId, lang]);
 
   // Fetch bank details when linkedBankId changes
   useEffect(() => {
@@ -1275,7 +1397,7 @@ export function NewAccountSetup({
       return { company, code: "", city: erpScope.cityBranchName || selectedCountry.name, address: "-", phone: "-", email: "-", manager: "-", opening: "-", currency: fallbackCurrency };
     }
     if (!row) return null;
-    return { company, code: row.code, city: row.city_name, address: "-", phone: "-", email: "-", manager: "-", opening: "-", currency: row.local_currency || fallbackCurrency };
+    return { company, code: row.code, city: row.city_name, address: row.address || "-", phone: "-", email: "-", manager: "-", opening: "-", currency: row.local_currency || fallbackCurrency };
   }, [branch, branchType, ownershipLevel, cityBranches, mainBranches, selectedCountry, brandCompanyName, branchLocked, erpScope.lockedCountryBranchId, erpScope.lockedCityBranchId, erpScope.countryBranchName, erpScope.cityBranchName]);
 
   const branchCode = branchInfo?.code ?? "";
@@ -1286,10 +1408,10 @@ export function NewAccountSetup({
     const cCode = selectedCountry?.iso2 || (selectedCountry?.name?.slice(0, 2).toUpperCase()) || "GL";
     const bCode = branchInfo?.code ? branchInfo.code.replace(/[^A-Z0-9]/gi, "").slice(-4) : "001";
     const catCode = category ? (category.includes("P/S") ? "PS" : category.replace(/[^A-Z0-9]/gi, "").slice(0, 3).toUpperCase()) : "ACC";
-    return `${cCode}-${bCode}-${catCode}`;
+    return `${cCode}-${bCode}-${catCode}-001`;
   }, [accountCode, selectedCountry, branchInfo, category]);
 
-  const accountPreview = lastCreated?.accountNumber || accountCode || (branchCode ? generatedPreviewCode : "AUTO");
+  const accountPreview = accountCode || (branchCode ? generatedPreviewCode : "AUTO");
   const readyToSave = Boolean(
     country &&
     (ownershipLevel === "country" || branch) &&
@@ -1396,6 +1518,18 @@ export function NewAccountSetup({
           code: accountCode || undefined,  // omit code if empty so PATCH doesn't fail min(2) validation
           manualReferenceNumber: manualReferenceNumber.trim() || null,
           name: accountName.trim(),
+          addressCountryId: addressCountryId || null,
+          addressStateId: addressStateId || null,
+          addressCityId: addressCityId || null,
+          addressPostalCode: addressPostalCode.trim() || null,
+          fullAddress: fullAddress.trim() || null,
+          accountAddress: {
+            countryId: addressCountryId || null,
+            stateId: addressStateId || null,
+            cityId: addressCityId || null,
+            postalCode: addressPostalCode.trim() || null,
+            fullAddress: fullAddress.trim() || null
+          },
           kind: accountTitle === "Expenses Account" || category === "EX" ? "expense" : category === "P/S" ? "income" : "asset",
           currency: branchInfo.currency || selectedCountry?.currency_code || "USD",
           isControlAccount: accountTitle === "Bank",
@@ -1453,6 +1587,18 @@ export function NewAccountSetup({
           code: "AUTO",
           manualReferenceNumber: manualReferenceNumber.trim() || null,
           name: accountName.trim(),
+          addressCountryId: addressCountryId || null,
+          addressStateId: addressStateId || null,
+          addressCityId: addressCityId || null,
+          addressPostalCode: addressPostalCode.trim() || null,
+          fullAddress: fullAddress.trim() || null,
+          accountAddress: {
+            countryId: addressCountryId || null,
+            stateId: addressStateId || null,
+            cityId: addressCityId || null,
+            postalCode: addressPostalCode.trim() || null,
+            fullAddress: fullAddress.trim() || null
+          },
           kind: accountTitle === "Expenses Account" || category === "EX" ? "expense" : category === "P/S" ? "income" : "asset",
           currency: branchInfo.currency || selectedCountry?.currency_code || "USD",
           openingBalance: 0,
@@ -1467,7 +1613,7 @@ export function NewAccountSetup({
           {
             id: response.accountId,
             journalCode: issuedJournal,
-            accountCode: response.accountNumber,
+            accountCode: response.accountCode || response.accountNumber,
             manualReferenceNumber: response.manualReferenceNumber ?? null,
             customerNumber: response.customerNumber,
             accountName,
@@ -1482,7 +1628,8 @@ export function NewAccountSetup({
           },
           ...current
         ]);
-        setAccountCode(response.accountNumber);
+        setAccountCode(response.accountCode || response.accountNumber);
+        setGlobalAccountNumber(response.accountNumber || (response as any).globalAccountNumber || "");
         if (typeof window !== "undefined" && (effectiveWhId || linkedWarehouses.length > 0)) {
           try {
             const whData = JSON.stringify({ id: effectiveWhId, warehouses: linkedWarehouses, detail: warehouseDetail });
@@ -1697,9 +1844,9 @@ export function NewAccountSetup({
       </div>
 
       {/* â”€â”€ Left Column Form + Right Column Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-5 items-start" dir="ltr">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start" dir="ltr">
         {/* Left Side: Step View */}
-        <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
+        <div className="lg:col-span-6 space-y-5" dir={isRtl ? "rtl" : "ltr"}>
           {loadingAccount ? (
             <div className="rounded-xl border border-slate-100 bg-white p-10 shadow-sm flex flex-col items-center justify-center space-y-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -2550,52 +2697,218 @@ export function NewAccountSetup({
                 </div>
               </div>
 
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="accountCode">{getLabel("accountCodeAuto", lang)}</Label>
-                    {branchInfo?.code ? (
-                      <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
-                        {branchInfo.code}
-                      </span>
-                    ) : null}
-                  </div>
-                  <Input
-                    id="accountCode"
-                    value={accountCode || (branchInfo || selectedCountry ? generatedPreviewCode : getLabel("generatedOnSave", lang))}
-                    readOnly
-                    className="bg-blue-50/50 dark:bg-blue-950/30 font-mono text-xs font-bold text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 shadow-inner"
-                  />
-                </div>
+              {/* ── Two Automatic Numbers for ONE Account ── */}
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                {/* Local Account Code (Auto) */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="manualReferenceNumber" className="font-semibold text-slate-800 dark:text-slate-200">
-                      {getLabel("manualReference", lang)}
+                    <Label htmlFor="localAccountCode" className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      {getLabel("localAccountCodeAuto", lang)}
                     </Label>
-                    <span
-                      dir="ltr"
-                      className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
-                    >
-                      {getLabel("manualReferenceBadge", lang)}
+                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                      {branchInfo?.code || selectedCountry?.iso2 || ""}
                     </span>
                   </div>
                   <Input
-                    id="manualReferenceNumber"
+                    id="localAccountCode"
                     dir="ltr"
-                    value={manualReferenceNumber}
-                    onChange={(event) => setManualReferenceNumber(normalizeManualReference(event.target.value))}
-                    placeholder={getLabel("manualReferencePlaceholder", lang)}
-                    className="font-mono text-left tracking-wider font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 placeholder:font-mono"
+                    value={accountCode || (branchInfo || selectedCountry ? (generatedPreviewCode.endsWith("-001") ? generatedPreviewCode : `${generatedPreviewCode}-001`) : getLabel("generatedOnSave", lang))}
+                    readOnly
+                    className="bg-blue-50/60 dark:bg-blue-950/30 font-mono text-xs font-bold text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 shadow-xs"
                   />
-                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
-                    {getLabel("manualReferenceHint", lang)}
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <HelpCircle className="h-3 w-3 text-blue-500 shrink-0" />
+                    <span>{getLabel("autoGeneratedFromSystem", lang)}</span>
+                  </p>
+                </div>
+
+                {/* Global ERP Account Number */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="globalAccountNumber" className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      {getLabel("globalAccountNumber", lang)}
+                    </Label>
+                    <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                      GLOBAL
+                    </span>
+                  </div>
+                  <Input
+                    id="globalAccountNumber"
+                    dir="ltr"
+                    value={globalAccountNumber || (initialAccountId ? "ACC-000000" : getLabel("generatedOnSave", lang))}
+                    readOnly
+                    className="bg-emerald-50/40 dark:bg-emerald-950/20 font-mono text-xs font-bold text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 shadow-xs"
+                  />
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <HelpCircle className="h-3 w-3 text-emerald-500 shrink-0" />
+                    <span>{getLabel("autoGeneratedFromSystem", lang)}</span>
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="accountName">{getLabel("accountName", lang)} *</Label>
-                <Input id="accountName" value={accountName} onChange={(event) => setAccountName(event.target.value)} placeholder={getLabel("accountNamePlaceholder", lang)} />
+              {/* Manual Reference Number */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="manualReferenceNumber" className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    {getLabel("manualReference", lang)}
+                  </Label>
+                  <span
+                    dir="ltr"
+                    className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                  >
+                    {getLabel("manualReferenceBadge", lang)}
+                  </span>
+                </div>
+                <Input
+                  id="manualReferenceNumber"
+                  dir="ltr"
+                  value={manualReferenceNumber}
+                  onChange={(event) => setManualReferenceNumber(normalizeManualReference(event.target.value))}
+                  placeholder={getLabel("manualReferencePlaceholder", lang)}
+                  className="h-9 text-xs font-mono text-left tracking-wider font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 placeholder:font-mono"
+                />
+                <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                  {getLabel("manualReferenceHint", lang)}
+                </p>
+              </div>
+
+              {/* Account Name */}
+              <div className="space-y-1.5">
+                <Label htmlFor="accountName" className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {getLabel("accountName", lang)} *
+                </Label>
+                <Input
+                  id="accountName"
+                  value={accountName}
+                  onChange={(event) => setAccountName(event.target.value)}
+                  placeholder={getLabel("accountNamePlaceholder", lang)}
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              {/* ── Account Address Card (Directly below Account Name) ── */}
+              <div className="rounded-xl border border-blue-100 bg-blue-50/20 p-4 space-y-3 dark:border-blue-950 dark:bg-blue-950/10">
+                <div className="flex items-center justify-between border-b border-blue-100/70 pb-2 dark:border-blue-900/40">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                      {getLabel("accountAddress", lang)}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                    {getLabel("linkedToLocationMaster", lang)}
+                  </span>
+                </div>
+
+                {/* Row 1: Country * | State / Province * */}
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="addressCountry" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      {getLabel("country", lang)} *
+                    </Label>
+                    <select
+                      id="addressCountry"
+                      value={addressCountryId}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAddressCountryId(val);
+                        setAddressStateId("");
+                        setAddressCityId("");
+                      }}
+                      className={selectClass() + " h-9 text-xs"}
+                    >
+                      <option value="">{getLabel("selectCountry", lang)}</option>
+                      {addressCountries.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} {c.iso2 ? `(${c.iso2})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="addressState" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      {getLabel("stateProvince", lang)} *
+                    </Label>
+                    <select
+                      id="addressState"
+                      value={addressStateId}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAddressStateId(val);
+                        setAddressCityId("");
+                      }}
+                      disabled={!addressCountryId}
+                      className={selectClass() + " h-9 text-xs"}
+                    >
+                      <option value="">
+                        {addressStatesLoading
+                          ? getLabel("loading", lang)
+                          : getLabel("selectStateProvince", lang) || "-- Select State / Province --"}
+                      </option>
+                      {addressStates.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} {s.code ? `(${s.code})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Row 2: City * | ZIP / Postal Code */}
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="addressCity" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      {getLabel("city", lang)} *
+                    </Label>
+                    <select
+                      id="addressCity"
+                      value={addressCityId}
+                      onChange={(e) => setAddressCityId(e.target.value)}
+                      disabled={!addressCountryId}
+                      className={selectClass() + " h-9 text-xs"}
+                    >
+                      <option value="">
+                        {addressCitiesLoading
+                          ? getLabel("loading", lang)
+                          : getLabel("selectCity", lang) || "-- Select City --"}
+                      </option>
+                      {addressCities.map((ct) => (
+                        <option key={ct.id} value={ct.id}>
+                          {ct.name} {ct.code ? `(${ct.code})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="addressPostalCode" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      {getLabel("zipPostalCode", lang)}
+                    </Label>
+                    <Input
+                      id="addressPostalCode"
+                      dir="ltr"
+                      value={addressPostalCode}
+                      onChange={(e) => setAddressPostalCode(e.target.value)}
+                      placeholder={getLabel("postalCodePlaceholder", lang)}
+                      className="h-9 text-xs font-mono text-left"
+                    />
+                  </div>
+                </div>
+
+                {/* Row 3: Full / Final Address across full width */}
+                <div className="space-y-1">
+                  <Label htmlFor="fullAddress" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {getLabel("fullFinalAddress", lang)}
+                  </Label>
+                  <Input
+                    id="fullAddress"
+                    value={fullAddress}
+                    onChange={(e) => setFullAddress(e.target.value)}
+                    placeholder={getLabel("fullAddressPlaceholder", lang)}
+                    className="h-9 text-xs"
+                  />
+                </div>
               </div>
 
               {/* Contacts List */}
@@ -3691,11 +4004,12 @@ export function NewAccountSetup({
         </div>
 
         {/* Right Side: High-fidelity Live Report Preview */}
-        <div className="h-fit lg:sticky lg:top-24 space-y-4" dir={isRtl ? "rtl" : "ltr"}>
+        <div className="lg:col-span-6 h-fit lg:sticky lg:top-24 space-y-4" dir={isRtl ? "rtl" : "ltr"}>
           <AccountLiveReportPanel
             accountName={accountName}
             lang={lang}
-            accountCode={accountPreview}
+            accountCode={accountCode || (branchInfo || selectedCountry ? (generatedPreviewCode.endsWith("-001") ? generatedPreviewCode : `${generatedPreviewCode}-001`) : "AUTO")}
+            globalAccountNumber={globalAccountNumber || (initialAccountId ? "ACC-000000" : undefined)}
             accountTitle={accountTitle}
             subType={subType}
             category={category}
@@ -3703,6 +4017,12 @@ export function NewAccountSetup({
             currency={branchInfo?.currency || selectedCountry?.currency_code || "AED"}
             status={saved ? "Active" : "In Progress"}
             contacts={contacts}
+            addressCountryName={addressCountries.find((c) => c.id === addressCountryId)?.name || (addressCountryId === country ? selectedCountry?.name : undefined)}
+            addressStateName={addressStates.find((s) => s.id === addressStateId)?.name}
+            addressCityName={addressCities.find((ct) => ct.id === addressCityId)?.name}
+            addressPostalCode={addressPostalCode}
+            fullAddress={fullAddress}
+            branchAddress={branchInfo?.address && branchInfo.address !== "-" ? branchInfo.address : undefined}
             customerDetail={customerDetail}
             companyDetail={companyDetail}
             bankDetail={bankDetail}
