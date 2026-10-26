@@ -24,8 +24,17 @@ type TranslationRow = {
   source: string;
 };
 
-function buildTranslationColumns(originalText: string, originalLanguage: SupportedLanguage, overrides?: Partial<Record<SupportedLanguage, string>>) {
-  const generated = createFiveLanguageText(originalText, originalLanguage);
+function buildTranslationColumns(
+  originalText: string,
+  originalLanguage: SupportedLanguage,
+  overrides?: Partial<Record<SupportedLanguage, string>>,
+  personEntry = false
+) {
+  // A person's entry ("manual") marks the whole row as authorized, so a language the person left empty keeps the original
+  // text — never a machine rendering that would then be shown as an approved variant of a name.
+  const generated = personEntry
+    ? { en: originalText, ar: originalText, ur: originalText, fa: originalText, ps: originalText }
+    : createFiveLanguageText(originalText, originalLanguage);
   return {
     en: overrides?.en || generated.en,
     ar: overrides?.ar || generated.ar,
@@ -100,7 +109,7 @@ export async function POST(request: NextRequest) {
 
     const body = recordTranslationSchema.parse(await request.json());
     const supabase = await createApiSupabaseClient();
-    const translations = buildTranslationColumns(body.originalText, body.originalLanguage, body.translations);
+    const translations = buildTranslationColumns(body.originalText, body.originalLanguage, body.translations, body.source === "manual");
     const payload = multilingualService.createRecordTranslationPayload({
       recordTable: body.recordTable,
       recordId: body.recordId,
