@@ -201,7 +201,7 @@ export function AccountLiveReportPanel({
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("accountName", lang)}</span>
-              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">{trName(accountName) || "-"}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">{accountName || "-"}</span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("accountType", lang)}</span>

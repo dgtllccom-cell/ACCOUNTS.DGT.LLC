@@ -88,12 +88,7 @@ export function generateLocalTranslations(inputText: string | null | undefined):
     return localTermDictionary[lowerKey];
   }
 
-  // 2. Check substring match
-  for (const [key, trans] of Object.entries(localTermDictionary)) {
-    if (lowerKey.includes(key)) {
-      return trans;
-    }
-  }
+  // (no substring matching: a name that merely CONTAINS a dictionary word must never be replaced by that word's entry)
 
   // 3. Script-aware local transliteration generator
   const isArabic = ARABIC_SCRIPT_REGEX.test(raw);

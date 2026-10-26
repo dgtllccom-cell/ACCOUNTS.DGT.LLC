@@ -228,8 +228,10 @@ export async function saveEnterpriseRecordTranslations(
       pashto: translations.ps ?? originalText,
       languageTexts: columns.language_texts,
       source: input.source ?? "auto",
-      status: "complete",
-      engine: "local_dictionary",
+      // only a person's entry is "complete"; an automatic rendering (dictionary substitution / transliteration) is search material that
+      // still needs a human check, so no screen may show it as the person's name (see lib/i18n/customer-name.ts)
+      status: input.source === "manual" ? "complete" : "needs_review",
+      engine: input.source === "manual" ? "manual" : "auto_unverified",
       actorId: input.source === "manual" ? input.actorId ?? null : null
     }, db);
     saved.push({ recordId: input.recordId, fieldName: field.fieldName });

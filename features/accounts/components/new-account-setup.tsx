@@ -763,7 +763,9 @@ export function NewAccountSetup({
             setSubType(acc.is_control_account ? "Control Account" : "Normal Account");
             setAccountCode(acc.account_number || acc.code || "");
             setManualReferenceNumber(acc.manual_reference_number || "");
-            setAccountName(acc.name || "");
+            // The Account Name input holds the SAVED name (raw_name), never the language view of it: Save sends this field back, so a
+            // translated / transliterated display value here would overwrite the legal name the user entered.
+            setAccountName(acc.raw_name ?? acc.name ?? "");
             setContacts(Array.isArray(acc.contacts) && acc.contacts.length > 0 ? acc.contacts : [{ type: "Mobile", value: "" }]);
 
             if (acc.shipping_line_id) {
@@ -2901,7 +2903,15 @@ export function NewAccountSetup({
                         setLinkedCompanyId(pickerCompanyId);
                         setLinkedCompanyName(name);
                         if (pickerCompanyRecord) setCompanyDetail(pickerCompanyRecord);
-                        if (!accountName) setAccountName(name);
+                        // the account is named after the SAVED company name, not the display variant shown in the picker
+                        if (!accountName) {
+                          const idForName = pickerCompanyId;
+                          setAccountName(name);
+                          fetch(`/api/erp/companies/${idForName}?raw=1`).then((r) => r.json()).then((j) => {
+                            const saved = j?.company?.name ?? j?.data?.company?.name ?? j?.company?.legal_name ?? "";
+                            if (saved) setAccountName((cur) => (cur === name ? String(saved) : cur));
+                          }).catch(() => null);
+                        }
                       }
                       setPickerCompanyId("");
                       setPickerCompanyRecord(null);
@@ -3129,7 +3139,15 @@ export function NewAccountSetup({
                         setLinkedBankId(pickerBankId);
                         setLinkedBankName(name);
                         if (pickerBankRecord) setBankDetail(pickerBankRecord);
-                        if (!accountName) setAccountName(name);
+                        // the account is named after the SAVED bank name, not the display variant shown in the picker
+                        if (!accountName) {
+                          const idForName = pickerBankId;
+                          setAccountName(name);
+                          fetch(`/api/erp/banks/${idForName}?raw=1`).then((r) => r.json()).then((j) => {
+                            const saved = j?.data?.bank?.bank_name ?? j?.bank?.bank_name ?? j?.bank_name ?? "";
+                            if (saved) setAccountName((cur) => (cur === name ? String(saved) : cur));
+                          }).catch(() => null);
+                        }
                       }
                       setPickerBankId("");
                       setPickerBankRecord(null);

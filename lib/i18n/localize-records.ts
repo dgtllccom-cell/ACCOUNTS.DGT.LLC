@@ -82,7 +82,7 @@ const LATIN_LETTER_RE = /[A-Za-z]/;
 // Customer / Person Master names are LEGAL names (owner rule 2026-10-24): the display shows an authorized translation for the viewer's
 // language, otherwise the saved name — the tier-4 script-rendering below is never applied to them, so every screen agrees with the
 // Customer Register (lib/i18n/customer-name.ts). Companies, banks, ports, places … keep the display rendering.
-const LEGAL_NAME_TABLES = new Set(["customers"]);
+const LEGAL_NAME_TABLES = new Set(["customers", "accounts", "enterprise_accounts", "ledgers"]);
 
 // (table, field) -> mode. "transliterate" = proper noun (script-render on display).
 const FIELD_MODE = new Map<string, "translate" | "transliterate">();
