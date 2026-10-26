@@ -12200,6 +12200,14 @@ export type UiKey =
   | "bexp.no_tax_config"
   | "bexp.same_currency_note"
   | "cl.aria_select_row"
+  | "ble.q_moisture"
+  | "ble.q_purity"
+  | "ble.q_defect"
+  | "ble.q_inspection_status"
+  | "ble.q_not_inspected"
+  | "ble.q_not_recorded"
+  | "ble.d_price_divide"
+  | "ble.d_rates_conversion"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37372,6 +37380,14 @@ const en: Dict = {
   "cl.apply_filters_btn": "Apply Filters",
   "cl.erp_usage_360": "360° ERP Usage",
   "cl.aria_select_row": "Select customer",
+  "ble.q_moisture": "Moisture %",
+  "ble.q_purity": "Purity Grade",
+  "ble.q_defect": "Defect Tolerance",
+  "ble.q_inspection_status": "Inspection Status",
+  "ble.q_not_inspected": "Not inspected",
+  "ble.q_not_recorded": "Not recorded",
+  "ble.d_price_divide": "Price & Divide Basis",
+  "ble.d_rates_conversion": "Rates & Conversion",
 };
 
 const ur: Dict = {
@@ -62512,6 +62528,14 @@ const ur: Dict = {
   "cl.apply_filters_btn": "فلٹرز لاگو کریں",
   "cl.erp_usage_360": "360° پارٹی کا استعمال",
   "cl.aria_select_row": "کسٹمر منتخب کریں",
+  "ble.q_moisture": "نمی %",
+  "ble.q_purity": "خالص پن کا درجہ",
+  "ble.q_defect": "نقص کی حد",
+  "ble.q_inspection_status": "معائنے کی حیثیت",
+  "ble.q_not_inspected": "معائنہ نہیں ہوا",
+  "ble.q_not_recorded": "درج نہیں",
+  "ble.d_price_divide": "قیمت اور تقسیم کی بنیاد",
+  "ble.d_rates_conversion": "نرخ اور تبدیلی",
 };
 
 const ar: Dict = {
@@ -87653,6 +87677,14 @@ const ar: Dict = {
   "cl.apply_filters_btn": "تطبيق عوامل التصفية",
   "cl.erp_usage_360": "استخدام الطرف 360°",
   "cl.aria_select_row": "تحديد العميل",
+  "ble.q_moisture": "الرطوبة %",
+  "ble.q_purity": "درجة النقاء",
+  "ble.q_defect": "حد العيوب المسموح",
+  "ble.q_inspection_status": "حالة الفحص",
+  "ble.q_not_inspected": "لم يتم الفحص",
+  "ble.q_not_recorded": "غير مسجل",
+  "ble.d_price_divide": "أساس السعر والتقسيم",
+  "ble.d_rates_conversion": "الأسعار والتحويل",
 };
 
 const fa: Dict = {
@@ -112793,6 +112825,14 @@ const fa: Dict = {
   "cl.apply_filters_btn": "اعمال فیلترها",
   "cl.erp_usage_360": "کاربرد طرف ۳۶۰°",
   "cl.aria_select_row": "انتخاب مشتری",
+  "ble.q_moisture": "رطوبت %",
+  "ble.q_purity": "درجه خلوص",
+  "ble.q_defect": "حد مجاز عیب",
+  "ble.q_inspection_status": "وضعیت بازرسی",
+  "ble.q_not_inspected": "بازرسی نشده",
+  "ble.q_not_recorded": "ثبت نشده",
+  "ble.d_price_divide": "مبنای قیمت و تقسیم",
+  "ble.d_rates_conversion": "نرخ‌ها و تبدیل",
 };
 
 const ps: Dict = {
@@ -137940,6 +137980,14 @@ const ps: Dict = {
   "cl.apply_filters_btn": "فلټرونه پلي کړئ",
   "cl.erp_usage_360": "د ډلې 360° کارونه",
   "cl.aria_select_row": "پیرودونکی وټاکئ",
+  "ble.q_moisture": "رطوبت %",
+  "ble.q_purity": "د خالصوالي درجه",
+  "ble.q_defect": "د نیمګړتیا حد",
+  "ble.q_inspection_status": "د معاینې حالت",
+  "ble.q_not_inspected": "معاینه شوې نه ده",
+  "ble.q_not_recorded": "نه دی ثبت شوی",
+  "ble.d_price_divide": "د بیې او وېش بنسټ",
+  "ble.d_rates_conversion": "نرخونه او تبادله",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
