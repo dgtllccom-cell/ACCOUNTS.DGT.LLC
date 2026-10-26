@@ -12209,6 +12209,7 @@ export type UiKey =
   | "ble.q_not_recorded"
   | "ble.d_price_divide"
   | "ble.d_rates_conversion"
+  | "ble.opt_edit_bl"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37390,6 +37391,7 @@ const en: Dict = {
   "ble.q_not_recorded": "Not recorded",
   "ble.d_price_divide": "Price & Divide Basis",
   "ble.d_rates_conversion": "Rates & Conversion",
+  "ble.opt_edit_bl": "Edit BL",
 };
 
 const ur: Dict = {
@@ -62539,6 +62541,7 @@ const ur: Dict = {
   "ble.q_not_recorded": "درج نہیں",
   "ble.d_price_divide": "قیمت اور تقسیم کی بنیاد",
   "ble.d_rates_conversion": "نرخ اور تبدیلی",
+  "ble.opt_edit_bl": "بی ایل میں ترمیم",
 };
 
 const ar: Dict = {
@@ -87689,6 +87692,7 @@ const ar: Dict = {
   "ble.q_not_recorded": "غير مسجل",
   "ble.d_price_divide": "أساس السعر والتقسيم",
   "ble.d_rates_conversion": "الأسعار والتحويل",
+  "ble.opt_edit_bl": "تعديل بوليصة الشحن",
 };
 
 const fa: Dict = {
@@ -112838,6 +112842,7 @@ const fa: Dict = {
   "ble.q_not_recorded": "ثبت نشده",
   "ble.d_price_divide": "مبنای قیمت و تقسیم",
   "ble.d_rates_conversion": "نرخ‌ها و تبدیل",
+  "ble.opt_edit_bl": "ویرایش بارنامه",
 };
 
 const ps: Dict = {
@@ -137994,6 +137999,7 @@ const ps: Dict = {
   "ble.q_not_recorded": "نه دی ثبت شوی",
   "ble.d_price_divide": "د بیې او وېش بنسټ",
   "ble.d_rates_conversion": "نرخونه او تبادله",
+  "ble.opt_edit_bl": "د بارنامې سمون",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

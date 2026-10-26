@@ -322,6 +322,9 @@ export function BlEntryView({
   const _ = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
   // a form label without its required-field mark, for summaries and print
   const plain = (key: Parameters<typeof t>[1], fallback: string) => _(key, fallback).replace(/\s*\*\s*$/, "");
+  // the stored BL mode is a fixed value; show its label in the viewer's language
+  const blTypeLabel = (v: string) =>
+    v === "New BL" ? _("ble.opt_new_bl", "New BL") : v === "Old BL" ? _("ble.opt_old_bl", "Old BL") : v === "Edit BL" ? _("ble.opt_edit_bl", "Edit BL") : v;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const moduleEyebrow = context === "shipping" ? _("ble.eyebrow_shipping", "Shipping Line / B/L Entry") : _("ble.eyebrow_purchase", "Purchase Workflow / B/L");
 
@@ -864,7 +867,7 @@ export function BlEntryView({
         <div class="cards">
           <div class="card">
             <div class="card-title">${_("ble.lbl_bl_details", "BL Details")}</div>
-            <div class="line"><span>${_("ble.ml_mode", "Mode")}:</span> <span>${form.blType || "-"}</span></div>
+            <div class="line"><span>${_("ble.ml_mode", "Mode")}:</span> <span>${form.blType ? blTypeLabel(form.blType) : "-"}</span></div>
             <div class="line"><span>${_("ble.ml_bl_no", "BL No")}:</span> <span>${form.blNumber || "-"}</span></div>
             <div class="line"><span>${_("plrf.issue_date", "Issue Date")}:</span> <span>${form.issueDate || "-"}</span></div>
             <div class="line"><span>${_("ble.ml_issue_serial", "Issue Serial")}:</span> <span>${form.issueSerial || "-"}</span></div>
@@ -1056,7 +1059,7 @@ export function BlEntryView({
             {_("ble.title", "Bill of Lading (B/L)")}
           </h1>
           <span className="rounded bg-cyan-950/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-400 border border-cyan-800/60">
-            {form.blType}
+            {blTypeLabel(form.blType)}
           </span>
           {form.id ? (
             <span className="rounded bg-amber-950/80 px-2 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-800/60">
@@ -1715,7 +1718,7 @@ export function BlEntryView({
               <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[10px]">
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
                   <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.ml_mode", "Mode")}</span>
-                  <span className="font-extrabold text-blue-400">{form.blType || "—"}</span>
+                  <span className="font-extrabold text-blue-400">{form.blType ? blTypeLabel(form.blType) : "—"}</span>
                 </div>
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
                   <span className="text-[9px] font-bold uppercase text-slate-500">{_("plrf.issue_date", "Issue Date")}</span>
