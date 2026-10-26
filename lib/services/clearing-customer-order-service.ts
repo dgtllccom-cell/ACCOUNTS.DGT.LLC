@@ -55,6 +55,14 @@ export type ClearingCustomerOrderInput = {
   loadingPortName?: string | null;
   destinationPortId?: string | null;
   destinationPortName?: string | null;
+  exitBorderPortName?: string | null;
+  exitBorderPortId?: string | null;
+  exitPointType?: string | null;
+  entryBorderPortName?: string | null;
+  entryBorderPortId?: string | null;
+  entryPointType?: string | null;
+  loadingPlace?: string | null;
+  receivingPlace?: string | null;
   cargoDetails?: string | null;
   expectedLoadingDate?: string | null;
   remarks?: string | null;
@@ -722,10 +730,18 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         loading_country_name: trimOrNull(input.loadingCountryName),
         receiving_country_id: trimOrNull(input.receivingCountryId),
         receiving_country_name: trimOrNull(input.receivingCountryName),
-        loading_port_id: trimOrNull(input.loadingPortId),
-        loading_port_name: trimOrNull(input.loadingPortName),
-        destination_port_id: trimOrNull(input.destinationPortId),
-        destination_port_name: trimOrNull(input.destinationPortName),
+        loading_port_id: trimOrNull(input.loadingPortId) ?? trimOrNull(input.exitBorderPortId),
+        loading_port_name: trimOrNull(input.loadingPortName) ?? trimOrNull(input.exitBorderPortName),
+        destination_port_id: trimOrNull(input.destinationPortId) ?? trimOrNull(input.entryBorderPortId),
+        destination_port_name: trimOrNull(input.destinationPortName) ?? trimOrNull(input.entryBorderPortName),
+        exit_border_port_name: trimOrNull(input.exitBorderPortName) ?? trimOrNull(input.loadingPortName),
+        exit_border_port_id: trimOrNull(input.exitBorderPortId) ?? trimOrNull(input.loadingPortId),
+        exit_point_type: trimOrNull(input.exitPointType) ?? "border",
+        entry_border_port_name: trimOrNull(input.entryBorderPortName) ?? trimOrNull(input.destinationPortName),
+        entry_border_port_id: trimOrNull(input.entryBorderPortId) ?? trimOrNull(input.destinationPortId),
+        entry_point_type: trimOrNull(input.entryPointType) ?? "border",
+        loading_place: trimOrNull(input.loadingPlace),
+        receiving_place: trimOrNull(input.receivingPlace),
         cargo_details: trimOrNull(input.cargoDetails),
         expected_loading_date: input.expectedLoadingDate || new Date().toISOString(),
         remarks: trimOrNull(input.remarks),
@@ -869,6 +885,14 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
               loading_port_name = ${orderPayload.loading_port_name},
               destination_port_id = ${orderPayload.destination_port_id},
               destination_port_name = ${orderPayload.destination_port_name},
+              exit_border_port_name = ${orderPayload.exit_border_port_name},
+              exit_border_port_id = ${orderPayload.exit_border_port_id}::uuid,
+              exit_point_type = ${orderPayload.exit_point_type},
+              entry_border_port_name = ${orderPayload.entry_border_port_name},
+              entry_border_port_id = ${orderPayload.entry_border_port_id}::uuid,
+              entry_point_type = ${orderPayload.entry_point_type},
+              loading_place = ${orderPayload.loading_place},
+              receiving_place = ${orderPayload.receiving_place},
               cargo_details = ${orderPayload.cargo_details},
               expected_loading_date = ${orderPayload.expected_loading_date},
               remarks = ${orderPayload.remarks},
@@ -927,7 +951,11 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             consignee_name,
             loading_source, loading_source_name, loading_country_id, loading_country_name,
             receiving_country_id, receiving_country_name, loading_port_id, loading_port_name,
-            destination_port_id, destination_port_name, cargo_details, expected_loading_date, remarks,
+            destination_port_id, destination_port_name,
+            exit_border_port_name, exit_border_port_id, exit_point_type,
+            entry_border_port_name, entry_border_port_id, entry_point_type,
+            loading_place, receiving_place,
+            cargo_details, expected_loading_date, remarks,
             status,
             country_id, country_branch_id, city_branch_id, clearing_agent_id, created_by,
             super_admin_serial, country_serial, branch_serial, entry_serial,
@@ -952,6 +980,9 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             ${orderPayload.loading_source_name}, ${orderPayload.loading_country_id}, ${orderPayload.loading_country_name},
             ${orderPayload.receiving_country_id}, ${orderPayload.receiving_country_name}, ${orderPayload.loading_port_id},
             ${orderPayload.loading_port_name}, ${orderPayload.destination_port_id}, ${orderPayload.destination_port_name},
+            ${orderPayload.exit_border_port_name}, ${orderPayload.exit_border_port_id}::uuid, ${orderPayload.exit_point_type},
+            ${orderPayload.entry_border_port_name}, ${orderPayload.entry_border_port_id}::uuid, ${orderPayload.entry_point_type},
+            ${orderPayload.loading_place}, ${orderPayload.receiving_place},
             ${orderPayload.cargo_details}, ${orderPayload.expected_loading_date}, ${orderPayload.remarks},
             ${orderPayload.status},
             ${orderPayload.country_id}::uuid, ${orderPayload.country_branch_id}::uuid, ${orderPayload.city_branch_id}::uuid,
