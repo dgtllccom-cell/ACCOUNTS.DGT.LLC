@@ -553,11 +553,11 @@ export function AccountSetupReport({
 
   const fallbackCountry = !isSuperAdminUser && (uniqueCountries[0] || selectedCountry)
     ? (selectedCountry && selectedCountry !== "all" ? selectedCountry : uniqueCountries[0])
-    : (reportSeed?.countryName ?? (isSuperAdminUser ? "All Countries" : "Country"));
+    : (reportSeed?.countryName ?? (isSuperAdminUser ? t(lang, "common.all_countries", "All Countries") : t(lang, "common.country", "Country")));
 
   const fallbackBranch = !isSuperAdminUser && (uniqueBranches[0] || selectedBranch)
-    ? (selectedBranch && selectedBranch !== "all" ? selectedBranch : (uniqueBranches.length === 1 ? uniqueBranches[0] : "All Branches"))
-    : (reportSeed?.branchName ?? "All Branches");
+    ? (selectedBranch && selectedBranch !== "all" ? selectedBranch : (uniqueBranches.length === 1 ? uniqueBranches[0] : t(lang, "common.all_branches", "All Branches")))
+    : (reportSeed?.branchName ?? t(lang, "common.all_branches", "All Branches"));
 
   const reportContext = {
     // empty register (no accounts yet) leaves the fallback undefined — never print "undefined" in titles
@@ -567,7 +567,7 @@ export function AccountSetupReport({
     branchCode: reportSeed?.branchCode || "-",
     userName: sessionInfo?.user.fullName ?? meta.companyOwner ?? "Current User",
     userId: sessionInfo?.user.id ? sessionInfo.user.id.slice(0, 12).toUpperCase() : "-",
-    userRole: sessionInfo?.roles?.[0]?.replace(/_/g, " ") ?? "-",
+    userRole: sessionInfo?.roles?.[0] ? t(lang, ("role." + String(sessionInfo.roles[0]).trim().toLowerCase().replace(/[\s/]+/g, "_")) as never, String(sessionInfo.roles[0]).replace(/_/g, " ")) : "-",
     userPassword: "Protected",
     branchPassword: "Protected",
     date: fmt(generatedAt),

@@ -112,11 +112,14 @@ T.check("Branch Admin (Shipping): cannot create a Business-domain user", r.statu
 // a city admin whose permission set no longer carries users:update / users:create loses user management (explicit grant is respected)
 const gAdmin = await ensureTestUser(g, { key: "e2e.gwadar.admin", name: "Gwadar Shipping Branch Admin", role: "city_branch_admin", domain: "shipping", ...PK_GWADAR, ledgerVisibility: "scoped" });
 if (gAdmin.id && gwadarStaff.id) {
+  // start every run from the role template (a previous run strips users:update / users:create from this shared test admin)
+  await g.req("PATCH", "/api/erp/users", { userId: gAdmin.id, role: "city_branch_admin" });
   const sess = await loginAsUser(gAdmin.id);
   const before = await sess.req("PATCH", "/api/erp/users", { userId: gwadarStaff.id, isActive: true });
   T.check("DB-backed Branch Admin with the role template: manages its branch staff", before.status === 200, status(before));
   const made = await mk(sess, "e2e.gwadar.staff2", "staff_user", PK_GWADAR);
-  T.check("DB-backed Branch Admin: creates staff inside its own branch (or it already exists)", [200, 201, 409].includes(made.status), status(made));
+  // DEV's Gwadar branch carries a Business-only permission ceiling (like Chaman in Production), so the refusal must be the explained 422, never a 500
+  T.check("DB-backed Branch Admin: staff creation inside its own branch succeeds, or is refused with the explained ceiling message (never a 500)", [200, 201, 409].includes(made.status) || (made.status === 422 && made.json?.error?.code === "NO_ASSIGNABLE_PERMISSIONS"), status(made) + " " + (made.json?.error?.code ?? ""));
   const cur = (await g.get(`/api/erp/users?userId=${gAdmin.id}`)).json;
   const perms = (cur?.data?.permissions ?? cur?.permissions ?? []).filter((p) => p !== "users:update" && p !== "users:create" && p !== "users:*");
   const strip = await g.req("PATCH", "/api/erp/users", { userId: gAdmin.id, permissions: perms });
