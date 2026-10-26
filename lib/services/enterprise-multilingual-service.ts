@@ -337,8 +337,12 @@ export async function saveVerifiedEnterpriseRecordTranslations(
     // honest) and flag needs_review for a human/glossary pass.
     let usedUnverifiedFallback = false;
     const auto5 = autoTranslate5Languages(originalText, originalLanguage);
+    const personEntry = verified.engine === "manual";
     for (const lng of LANG_KEYS) {
       if (!verified.translations[lng]?.trim()) {
+        // a person's entry is "complete" for the languages the person typed — the others keep the saved text, never a machine guess
+        // (the row is read as authorized, so a guess in it would be shown as an approved name)
+        if (personEntry) { verified.translations[lng] = originalText; continue; }
         const guess = auto5[lng]?.trim();
         const mixed = lng !== "en" && !!guess && /\p{Lu}?[a-z]{2,}/u.test(guess);
         verified.translations[lng] = guess && !mixed ? guess : originalText;

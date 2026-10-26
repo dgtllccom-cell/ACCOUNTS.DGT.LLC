@@ -89,6 +89,20 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ r
         fields: [{ fieldName: field.fieldName, value: originalText, translations: field.translations }]
       });
       results.push(result);
+      if (params.recordTable === "enterprise_accounts") {
+        // the account's ledger carries the same name — keep both views of it identical
+        const { data: ledgerRows } = await supabase.from("ledgers").select("id").eq("enterprise_account_id", params.recordId).is("deleted_at", null);
+        for (const ledger of (ledgerRows ?? []) as Array<{ id: string }>) {
+          await saveVerifiedEnterpriseRecordTranslations({
+            recordTable: "ledgers",
+            recordId: ledger.id,
+            originalLanguage,
+            actorId: session.userId,
+            source: "manual",
+            fields: [{ fieldName: field.fieldName, value: originalText, translations: field.translations }]
+          });
+        }
+      }
     }
 
     await writeAuditLog({

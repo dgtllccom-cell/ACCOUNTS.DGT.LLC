@@ -94,7 +94,8 @@ for (const lang of langs) {
   const t2 = await reportText();
   const first = (await p.locator("#trk-live-report .flex.items-center.justify-between").first().innerText().catch(() => "")) || "";
   const fnm = await p.evaluate(() => { const rows = [...document.querySelectorAll("#trk-live-report .flex.items-center.justify-between")]; const hit = rows.find((r) => /PER-/.test(r.textContent || "")); return hit ? hit.textContent : ""; });
-  if (lang === "en") check("EN: labels in English", /Registration No\./.test(t2) && !ARABIC.test(t2.replace(/\s+/g, " ")), "");
+  // labels stay English; the only Urdu-script text left is the saved legal name of the Urdu-registered owner / driver (customer-name rule)
+  if (lang === "en") check("EN: labels in English", /Registration No\./.test(t2) && !ARABIC.test(t2.replace(/\s+/g, " ").replace(/[؀-ۿ][؀-ۿ ]*/g, "")), "");
   else {
     check(`${lang.toUpperCase()}: report labels are translated (no English label rows)`, ARABIC.test(t2) && !/Registration No\.|Father's Name|Mobile Number|Final Address/.test(t2), "");
     check(`${lang.toUpperCase()}: owner name shown in Arabic script`, /احمد|ﺍﺣﻤﺪ/.test(t2) || ARABIC.test(t2));
