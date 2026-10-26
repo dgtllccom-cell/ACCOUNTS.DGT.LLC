@@ -54,7 +54,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
-import { transliterateProperNoun, transliterateToLatin } from "@/lib/i18n/transliteration";
+import { localizeName } from "@/lib/i18n/transliteration";
 import "./truck-registration.css";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
@@ -608,15 +608,14 @@ export function TruckRecreationWizard({
     "asmatullah abdullah": { en: "Asmatullah Abdullah", ur: "عصمت اللہ عبداللہ", ar: "عصمت الله عبد الله", fa: "عصمت‌الله عبدالله", ps: "عصمت الله عبد الله" },
   };
 
-  const ARABIC_SCRIPT = /[\u0600-\u06FF]/;
   const nameText = (raw?: string | null): string => {
     const v = String(raw ?? "").trim();
     if (!v) return "";
     const lower = v.toLowerCase();
     if (VERIFIED_TRUCK_NAMES[v]?.[activeLang]) return VERIFIED_TRUCK_NAMES[v][activeLang];
     if (VERIFIED_TRUCK_NAMES[lower]?.[activeLang]) return VERIFIED_TRUCK_NAMES[lower][activeLang];
-    if (activeLang === "en") return ARABIC_SCRIPT.test(v) ? transliterateToLatin(v) : v;
-    return transliterateProperNoun(v, activeLang);
+    // truck / company / transporter names: an approved variant, else the saved name — never a phonetic re-spelling
+    return localizeName(v, activeLang);
   };
 
   // owner / driver are Person Master (customer) names: the verified dictionary, else the saved name — no re-spelled transliteration

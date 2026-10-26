@@ -8,7 +8,7 @@ import { CustomerForm } from "@/features/customers/components/customer-form";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
-import { localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeTerm, localizeName } from "@/lib/i18n/transliteration";
 import { resolveCustomerName, readBilingualNamesPreference } from "@/lib/i18n/customer-name";
 import { nameMatches } from "@/lib/utils/person-duplicate-match";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
@@ -63,7 +63,7 @@ function toOption(row: PersonRow, lang: string = "en", bilingual: boolean = fals
   const fatherRaw = row.father_name || ((row as any).contact_person && (row as any).contact_person !== rawName ? (row as any).contact_person : null);
   const father = fatherRaw && !fatherRaw.startsWith("+") && isNaN(Number(fatherRaw)) ? fatherRaw : null;
   const companyRaw = row.company_name && row.company_name !== rawName ? row.company_name : null;
-  const company = companyRaw ? localizeTerm(companyRaw, lang as SupportedLanguage) : null;
+  const company = companyRaw ? localizeName(companyRaw, lang) : null;
   const empDesig = row.employee_designation ? localizeTerm(row.employee_designation, lang as SupportedLanguage) : null;
   const empDept = row.employee_department ? localizeTerm(row.employee_department, lang as SupportedLanguage) : null;
   const displayCode = row.employee_code || row.person_code || undefined;
@@ -452,7 +452,7 @@ export function PersonPicker({
                   <p className="text-[10px] font-mono font-black text-blue-600 dark:text-blue-400 mt-0.5">{viewPerson.person_code}</p>
                 ) : null}
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  {t(lang, "hr.pp_company", "Company")}: <span className="font-bold text-slate-700 dark:text-slate-300">{viewPerson.company_name ? localizeTerm(viewPerson.company_name, lang) : t(lang, "hr.pp_independent", "Independent Account")}</span>
+                  {t(lang, "hr.pp_company", "Company")}: <span className="font-bold text-slate-700 dark:text-slate-300">{viewPerson.company_name ? localizeName(viewPerson.company_name, lang) : t(lang, "hr.pp_independent", "Independent Account")}</span>
                 </p>
               </div>
               <div className="text-end">

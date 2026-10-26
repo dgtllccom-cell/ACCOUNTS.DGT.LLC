@@ -14,7 +14,7 @@ import {
   FolderPlus,
   MapPin
 } from "lucide-react";
-import { localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeTerm, localizeName } from "@/lib/i18n/transliteration";
 import { getLabel } from "./translations";
 
 export type AccountLiveReportProps = {
@@ -118,7 +118,7 @@ export function AccountLiveReportPanel({
   auditLastModifiedOn
 }: AccountLiveReportProps) {
   // Names (branch, company, bank, account title) are data: show the saved name or the approved variant the API sent, never a re-spelling.
-  const showName = (val: string | null | undefined) => (val ? String(val) : "-");
+  const showName = (val: string | null | undefined) => (val ? localizeName(val, lang) : "-");
   const trTerm = (val: string | null | undefined) => (val ? localizeTerm(val, lang) : "-");
 
   const now = useMemo(() => new Date(), []);

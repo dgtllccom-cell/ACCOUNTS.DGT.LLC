@@ -28,7 +28,8 @@ import { EmployeeLedgerPanel } from "@/features/hr-payroll/components/employee-l
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
 import { translateHeader } from "@/lib/i18n/table-headers";
-import { transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { transliterateProperNoun, localizeName } from "@/lib/i18n/transliteration";
+import { translateCountry } from "@/lib/i18n/table-values";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
 import { Layers } from "lucide-react";
 import { EmployeeProfileDrawer } from "@/features/hr-payroll/components/employee-profile-drawer";
@@ -608,7 +609,8 @@ export function GeneralOfficeDashboardView() {
   const localizeVisibleName = useCallback((value: string | null | undefined) => {
     const raw = String(value || "").trim();
     if (!raw) return "";
-    return lang === "en" ? raw : transliterateProperNoun(raw, lang);
+    // company / branch / employee names: an approved variant, else the saved name — never a phonetic re-spelling
+    return localizeName(raw, lang);
   }, [lang]);
 
   // Employees State
@@ -1107,7 +1109,7 @@ export function GeneralOfficeDashboardView() {
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
               <span>{tr("Country")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{localizeVisibleName(sessionCtx?.countryName || "Pakistan / UAE")}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{translateCountry(sessionCtx?.countryName || "Pakistan / UAE", lang)}</span>
             </div>
             <div className="flex justify-between">
               <span>{tr("Branch Name")}:</span>
@@ -1357,7 +1359,7 @@ export function GeneralOfficeDashboardView() {
               ) : (
                 employeesByDate.map((emp, idx) => {
                   const companyName = localizeVisibleName(emp.person?.company_name || emp.company_name || "");
-                  const countryName = localizeVisibleName(emp.country?.name || emp.country_name || "");
+                  const countryName = translateCountry(emp.country?.name || emp.country_name || "", lang);
                   const branchName = localizeVisibleName(emp.country_branch?.name || emp.city_branch?.name || emp.branch_name || "");
                   const isMenuOpen = actionMenuOpenId === emp.id;
 

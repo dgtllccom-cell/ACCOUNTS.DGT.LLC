@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
-import { localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeTerm, localizeName } from "@/lib/i18n/transliteration";
 import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
 import { openMasterProfile } from "@/lib/reports/master-profiles";
 import { Th } from "@/components/ui/translated-th";
@@ -291,7 +291,7 @@ export function Group360ProfileModal({
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                    {localizeTerm(group.consortiumName, activeLang)}
+                    {localizeName(group.consortiumName, activeLang)}
                   </h2>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-white/20 border border-white/30 text-white backdrop-blur-xs">
                     {group.totalCompaniesCount} {activeLang === "ur" ? "کمپنیاں" : "Sister Companies"}
@@ -307,7 +307,7 @@ export function Group360ProfileModal({
                   <span>•</span>
                   <span>{localizeTerm(group.branchRules, activeLang)}</span>
                   <span>•</span>
-                  <span>Owner: <strong className="text-white">{localizeTerm(group.ownerName, activeLang)}</strong></span>
+                  <span>Owner: <strong className="text-white">{localizeName(group.ownerName, activeLang)}</strong></span>
                 </div>
               </div>
             </div>
@@ -452,7 +452,7 @@ export function Group360ProfileModal({
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Full Name:</span>
-                      <strong className="text-slate-900 dark:text-slate-100 font-black">{localizeTerm(group.ownerName, activeLang)}</strong>
+                      <strong className="text-slate-900 dark:text-slate-100 font-black">{localizeName(group.ownerName, activeLang)}</strong>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Contact Mobile:</span>
@@ -522,7 +522,7 @@ export function Group360ProfileModal({
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Manager Name:</span>
                       <strong className="text-slate-900 dark:text-slate-100 font-black">
-                        {localizeTerm(group.managerName || group.ownerName, activeLang)}
+                        {localizeName(group.managerName || group.ownerName, activeLang)}
                       </strong>
                     </div>
                     <div className="flex justify-between items-center">
@@ -634,7 +634,7 @@ export function Group360ProfileModal({
                           {/* Company Name & Subtitle */}
                           <div className="mt-3 space-y-1">
                             <h5 className="font-black text-sm text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition">
-                              {localizeTerm(comp.name, activeLang)}
+                              {localizeName(comp.name, activeLang)}
                             </h5>
                             <div className="text-[11px] text-slate-500 font-medium">
                               Account #{comp.company_code || comp.id} • Branch: {compCity || "Main"} Branch
@@ -766,7 +766,7 @@ export function Group360ProfileModal({
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-black text-sm sm:text-base text-slate-900 dark:text-slate-100">
-                                {localizeTerm(comp.name, activeLang)}
+                                {localizeName(comp.name, activeLang)}
                               </h4>
                               <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-950 dark:text-blue-300">
                                 {comp.base_currency || "USD"}
@@ -1170,7 +1170,7 @@ export function Group360ProfileModal({
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-black text-base text-slate-900 dark:text-slate-100">
-                      {localizeTerm(selectedCompanyForPreview.name, activeLang)}
+                      {localizeName(selectedCompanyForPreview.name, activeLang)}
                     </h3>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
                       {selectedCompanyForPreview.base_currency || "USD"}

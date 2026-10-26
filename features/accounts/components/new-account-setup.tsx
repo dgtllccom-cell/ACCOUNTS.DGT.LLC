@@ -69,7 +69,7 @@ import { WarehousePicker } from "@/features/warehouses/components/warehouse-pick
 import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
 import { rtlLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
-import { localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeTerm, localizeName } from "@/lib/i18n/transliteration";
 import { getLabel } from "./translations";
 import { AccountLiveReportPanel } from "./account-live-report-panel";
 import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-window";
@@ -2299,8 +2299,8 @@ export function NewAccountSetup({
                           return (
                             <option key={item.id} value={item.id}>
                               {ownershipLevel === "main_branch" || branchType === "Main"
-                                ? `${localizeTerm(mainName, lang)} (${code})`
-                                : `${localizeTerm(cityName, lang)} - ${localizeTerm(branchName, lang)} (${code})`}
+                                ? `${localizeName(mainName, lang)} (${code})`
+                                : `${localizeTerm(cityName, lang)} - ${localizeName(branchName, lang)} (${code})`}
                             </option>
                           );
                         })}

@@ -1,7 +1,7 @@
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeName } from "@/lib/i18n/transliteration";
 
 export type CompanyDuplicateCandidate = {
   id: string;
@@ -47,13 +47,13 @@ export function CompanyDuplicateWarningModal({
             >
               <div className="min-w-0">
                 <div className="font-bold text-slate-900 dark:text-white truncate">
-                  {localizeTerm(c.name, lang)}
+                  {localizeName(c.name, lang)}
                   {c.companyCode ? (
                     <span className="ms-2 font-mono text-[10px] font-black text-amber-700 dark:text-amber-400">{c.companyCode}</span>
                   ) : null}
                 </div>
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-3 mt-0.5">
-                  {c.legalName ? <span>{t(lang, "erp.company_dup_legal_name", "Legal Name")}: {localizeTerm(c.legalName, lang)}</span> : null}
+                  {c.legalName ? <span>{t(lang, "erp.company_dup_legal_name", "Legal Name")}: {localizeName(c.legalName, lang)}</span> : null}
                   {c.ownerName ? <span>{t(lang, "erp.company_dup_owner", "Owner")}: {c.ownerName}</span> : null}
                 </div>
               </div>

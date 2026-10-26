@@ -79,10 +79,14 @@ function isTrustedStoredTranslation(row: { translation_status?: string | null; t
 const ARABIC_SCRIPT_RE = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
 const LATIN_LETTER_RE = /[A-Za-z]/;
 
-// Customer / Person Master names are LEGAL names (owner rule 2026-10-24): the display shows an authorized translation for the viewer's
-// language, otherwise the saved name — the tier-4 script-rendering below is never applied to them, so every screen agrees with the
-// Customer Register (lib/i18n/customer-name.ts). Companies, banks, ports, places … keep the display rendering.
-const LEGAL_NAME_TABLES = new Set(["customers", "accounts", "enterprise_accounts", "ledgers"]);
+// Account, customer / Person Master, company, bank and branch names are LEGAL names (owner rule 2026-10-24, extended 2026-10-26 to
+// companies, banks and branches): the display shows an authorized translation for the viewer's language, otherwise the saved name —
+// the tier-4 script-rendering below is never applied to them, so every screen agrees with the Customer Register
+// (lib/i18n/customer-name.ts) and the pickers (localizeName). Ports, cities and other places keep the display rendering.
+const LEGAL_NAME_TABLES = new Set([
+  "customers", "accounts", "enterprise_accounts", "ledgers",
+  "companies", "banks", "city_branches", "country_branches"
+]);
 
 // (table, field) -> mode. "transliterate" = proper noun (script-render on display).
 const FIELD_MODE = new Map<string, "translate" | "transliterate">();

@@ -42,7 +42,7 @@ import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
-import { localizeTerm, transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { localizeTerm, localizeName } from "@/lib/i18n/transliteration";
 
 type AccountGeneralReportRow = {
   accountId: string;
@@ -2212,7 +2212,7 @@ export function AccountGeneralReportView({
                             <div className="flex flex-col">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-bold text-[11.5px] text-slate-900 dark:text-slate-100 leading-snug">
-                                  {localizeTerm(row.accountName, lang)}
+                                  {localizeName(row.accountName, lang)}
                                 </span>
                                 {isCountryAccountRow(row) && (
                                   <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 font-mono font-bold text-[9px] uppercase tracking-wider">
@@ -2249,7 +2249,7 @@ export function AccountGeneralReportView({
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-bold text-[11px] text-slate-900 dark:text-slate-100">
-                                  {localizeTerm(row.branchName || "—", lang)}
+                                  {localizeName(row.branchName || "—", lang)}
                                 </span>
                                 {row.branchCode && row.branchCode !== "—" && (
                                   <span className="inline-block px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 font-mono font-bold text-[9.5px] text-indigo-700 dark:text-indigo-300">
@@ -2283,7 +2283,7 @@ export function AccountGeneralReportView({
                           {/* 6. Linked Companies */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
                             <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] block truncate max-w-[160px]">
-                              {row.companyName ? localizeTerm(row.companyName, lang) : "—"}
+                              {row.companyName ? localizeName(row.companyName, lang) : "—"}
                             </span>
                           </td>
 
@@ -2297,7 +2297,7 @@ export function AccountGeneralReportView({
                                 className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 text-[10px] font-bold hover:border-emerald-400 dark:hover:border-emerald-600 hover:underline cursor-pointer transition-colors"
                               >
                                 <Landmark className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                <span className="truncate max-w-[120px]">{localizeTerm(row.bankName, lang)}</span>
+                                <span className="truncate max-w-[120px]">{localizeName(row.bankName, lang)}</span>
                               </button>
                             ) : (
                               <span className="text-slate-300 dark:text-slate-600 font-mono text-xs">—</span>

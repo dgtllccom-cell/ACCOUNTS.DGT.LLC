@@ -28,7 +28,7 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { listCountries, type LocationCountry } from "@/features/locations/location-api";
-import { localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeTerm, localizeName } from "@/lib/i18n/transliteration";
 import { Th } from "@/components/ui/translated-th";
 
 export type ShippingLineItem = {
@@ -388,7 +388,7 @@ export function ShippingLineMasterSetup() {
                       <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-white">
                         <div className="flex items-center gap-2">
                           <Ship className="h-4 w-4 text-primary shrink-0" />
-                          <span>{localizeTerm(line.name, lang)}</span>
+                          <span>{localizeName(line.name, lang)}</span>
                         </div>
                         {line.website && (
                           <a
