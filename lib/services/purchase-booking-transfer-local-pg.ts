@@ -284,7 +284,8 @@ export async function transferPurchaseBookingViaLocalPg(input: {
             city_branch_id = ${effectiveCityBranchId}::uuid,
             type = ${rozType},
             status = 'posted',
-            entry_category = 'business'
+            entry_category = 'business',
+            operational_domain = 'business' -- a Business entry must never stay unclassified (Shipping logins would see it)
         where id = ${roznamchaEntryId}::uuid
       `;
 

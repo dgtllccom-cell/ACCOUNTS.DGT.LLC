@@ -562,6 +562,31 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       operationalDomain = shippingOnlySession ? "shipping" : requested === "shipping" || requested === "business" ? requested : "business";
     }
   }
+  // The first ledger is often a system / control ledger without an account (purchase, sales and transfer postings): the entry
+  // then takes the domain of another line's account, else of its branch — never "unclassified", which every domain could see.
+  if (!operationalDomain) {
+    const ledgerIds = (body.lines ?? []).map((l: any) => l.ledgerId).filter(Boolean);
+    const fromLines = ledgerIds.length
+      ? await sql`
+          select ea.operational_domain
+          from public.ledgers l
+          join public.enterprise_accounts ea on ea.id = l.enterprise_account_id
+          where l.id = any(${ledgerIds}) and ea.operational_domain in ('business', 'shipping')
+          limit 1
+        `
+      : [];
+    operationalDomain = fromLines[0]?.operational_domain ?? null;
+  }
+  if (!operationalDomain && (body.cityBranchId || body.countryBranchId)) {
+    const branchRows = await sql`
+      select coalesce(
+        (select operational_domain from public.city_branches where id = ${body.cityBranchId ?? null}),
+        (select operational_domain from public.country_branches where id = ${body.countryBranchId ?? null})
+      ) as operational_domain
+    `;
+    const branchDomain = branchRows[0]?.operational_domain ?? null;
+    operationalDomain = branchDomain === "business" || branchDomain === "shipping" ? branchDomain : null;
+  }
 
   // The header, every line, the ledger totals and the daily balances are written in ONE transaction: if any step fails
   // (missing exchange rate, inactive ledger, scope refusal ...) nothing is left behind — no orphan "posted" header that

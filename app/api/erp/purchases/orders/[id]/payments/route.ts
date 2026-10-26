@@ -746,7 +746,9 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           country_branch_id = ${orderRow.country_branch_id || null}::uuid,
           city_branch_id = ${orderRow.city_branch_id || null}::uuid,
           type = ${rozType},
-          bank_id = coalesce(${(body.typeDetails as any)?.bankId || null}::uuid, bank_id)
+          bank_id = coalesce(${(body.typeDetails as any)?.bankId || null}::uuid, bank_id),
+          -- a purchase payment is a Business posting: never leave it unclassified (Shipping logins would see it)
+          operational_domain = coalesce(operational_domain, 'business')
         where id = ${paymentRecord.roznamcha_entry_id}::uuid
       `;
 

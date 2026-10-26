@@ -87,6 +87,9 @@ export async function GET(request: NextRequest) {
       // (Branch Operations Admin) see every domain; a single-domain user only sees their
       // own domain, PLUS any legacy/unclassified entry (operational_domain IS NULL) posted
       // before this column was populated, so existing historical data never disappears.
+      // An unclassified entry belongs to its branch's domain: one posted on a Business branch is
+      // Business data and is not shown to a Shipping-only login (and vice versa). Only entries on a
+      // shared ("both") branch or without a branch domain stay visible to both.
       const domainAllowed = session.isSuperAdmin || session.operationalDomains?.includes("both")
         ? null
         : (session.operationalDomains ?? ["business"]);
@@ -121,7 +124,14 @@ export async function GET(request: NextRequest) {
             ? sql`true`
             : sql`(e.city_branch_id = any(${cityIds}) or e.country_branch_id = any(${countryBranchIds}) or e.country_id = any(${countryIds}))`})
           and (${isStaffOnly ? sql`e.created_by = ${session.userId}::uuid` : sql`true`})
-          and (${domainAllowed ? sql`(e.operational_domain is null or e.operational_domain = any(${domainAllowed}))` : sql`true`})
+          and (${domainAllowed ? sql`(
+                e.operational_domain = any(${domainAllowed})
+                or (e.operational_domain is null and (
+                  coalesce(cib.operational_domain, cb.operational_domain) is null
+                  or coalesce(cib.operational_domain, cb.operational_domain) = 'both'
+                  or coalesce(cib.operational_domain, cb.operational_domain) = any(${domainAllowed})
+                ))
+              )` : sql`true`})
           and (${fromDate ? sql`e.entry_date::date >= ${fromDate}::date` : sql`true`})
           and (${toDate ? sql`e.entry_date::date <= ${toDate}::date` : sql`true`})
           and (${safeSearch ? sql`(
@@ -189,7 +199,7 @@ export async function GET(request: NextRequest) {
       .select(
         // Disambiguate profiles embedding (created_by vs approved_by) by pinning to the FK.
         // We keep the `profiles` key in the response for backward compatibility with the UI types.
-        "id, type, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code), city_branch_id, city_branches(name,code), journal_no, voucher_no, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number, entry_date, payment_method_id, payment_methods(name,code), reference_no, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), approved_by, approver_profile:profiles!roznamcha_entries_approved_by_fkey(full_name), approved_at, posted_at, created_at, updated_at, source_module, source_transaction_type, source_transaction_id, source_reference_no, operational_domain, roznamcha_lines(id, payment_entry_type, description, debit, credit, currency, ledger_id, ledgers(name, city_branches(name), country_branches(name)), account_number, manual_reference_number, customer_number, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, entry_serial_number, country_serial_number, branch_serial_number, usd_rate, usd_amount)"
+        "id, type, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code,operational_domain), city_branch_id, city_branches(name,code,operational_domain), journal_no, voucher_no, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number, entry_date, payment_method_id, payment_methods(name,code), reference_no, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), approved_by, approver_profile:profiles!roznamcha_entries_approved_by_fkey(full_name), approved_at, posted_at, created_at, updated_at, source_module, source_transaction_type, source_transaction_id, source_reference_no, operational_domain, roznamcha_lines(id, payment_entry_type, description, debit, credit, currency, ledger_id, ledgers(name, city_branches(name), country_branches(name)), account_number, manual_reference_number, customer_number, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, entry_serial_number, country_serial_number, branch_serial_number, usd_rate, usd_amount)"
       )
       .is("deleted_at", null)
       .order("entry_date", { ascending: false });
@@ -257,7 +267,16 @@ export async function GET(request: NextRequest) {
       throw new Error(error.message);
     }
 
-    const entries = data ?? [];
+    // Same Business/Shipping rule as the direct-SQL path above (an unclassified entry belongs to its branch's domain).
+    const fallbackDomains: string[] | null = session.isSuperAdmin || session.operationalDomains?.includes("both")
+      ? null
+      : (session.operationalDomains ?? ["business"]);
+    const entries = (data ?? []).filter((entry: any) => {
+      if (!fallbackDomains) return true;
+      if (entry.operational_domain) return fallbackDomains.includes(entry.operational_domain);
+      const branchDomain = entry.city_branches?.operational_domain ?? entry.country_branches?.operational_domain ?? null;
+      return !branchDomain || branchDomain === "both" || fallbackDomains.includes(branchDomain);
+    });
     const entryIds = entries.map((entry: any) => entry.id);
     if (entryIds.length) {
       // record_translations sits over per-language base tables with RLS gated on
