@@ -12150,6 +12150,7 @@ export type UiKey =
   | "com.corresponding_port"
   | "com.corresponding_border"
   | "com.select_port"
+  | "com.select_border"
   | "com.cancel_btn"
   | "com.apply_close_btn"
   | "com.dest_overlay_title"
@@ -37281,6 +37282,7 @@ const en: Dict = {
   "com.corresponding_port": "Corresponding Exit Port",
   "com.corresponding_border": "Corresponding Exit Border",
   "com.select_port": "Select port...",
+  "com.select_border": "Select border...",
   "com.cancel_btn": "Cancel",
   "com.apply_close_btn": "Apply & Close",
   "com.dest_overlay_title": "Receiving Country & Destination Logistics Details",
@@ -62429,6 +62431,7 @@ const ur: Dict = {
   "com.corresponding_port": "متعلقہ خروجی بندرگاہ",
   "com.corresponding_border": "متعلقہ خروجی سرحد",
   "com.select_port": "بندرگاہ منتخب کریں...",
+  "com.select_border": "سرحد منتخب کریں...",
   "com.cancel_btn": "منسوخ کریں",
   "com.apply_close_btn": "لاگو کریں اور بند کریں",
   "com.dest_overlay_title": "وصولی ملک اور منزل لاجسٹکس کی تفصیلات",
@@ -87578,6 +87581,7 @@ const ar: Dict = {
   "com.corresponding_port": "ميناء الخروج المقابل",
   "com.corresponding_border": "حدود الخروج المقابلة",
   "com.select_port": "اختر الميناء...",
+  "com.select_border": "اختر المنفذ الحدودي...",
   "com.cancel_btn": "إلغاء",
   "com.apply_close_btn": "تطبيق وإغلاق",
   "com.dest_overlay_title": "تفاصيل دولة الاستلام ولوجستيات الوجهة",
@@ -112726,6 +112730,7 @@ const fa: Dict = {
   "com.corresponding_port": "بندر خروج مربوط",
   "com.corresponding_border": "مرز خروج مربوط",
   "com.select_port": "بندر را انتخاب کنید...",
+  "com.select_border": "گذرگاه مرزی را انتخاب کنید...",
   "com.cancel_btn": "انصراف",
   "com.apply_close_btn": "اعمال و بستن",
   "com.dest_overlay_title": "جزئیات کشور دریافت و لجستیک مقصد",
@@ -137881,6 +137886,7 @@ const ps: Dict = {
   "com.corresponding_port": "اړونده د وتلو بندر",
   "com.corresponding_border": "اړونده د وتلو پولې",
   "com.select_port": "بندر وټاکئ...",
+  "com.select_border": "سرحد وټاکئ...",
   "com.cancel_btn": "لغوه کړئ",
   "com.apply_close_btn": "پلي کړئ او وتړئ",
   "com.dest_overlay_title": "د ترلاسه هیواد او د منزل لوژستیکي تفصیلات",

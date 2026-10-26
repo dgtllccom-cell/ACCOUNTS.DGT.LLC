@@ -2288,11 +2288,15 @@ export function CustomerOrderManagementView() {
       planned_dispatch_date: o.planned_dispatch_date || "",
       actual_dispatch_date: o.actual_dispatch_date || "",
       goods_items: loadedGoodsItems,
+      loading_place: o.loading_place || o.loading_source_name || "",
+      receiving_place: o.receiving_place || o.destination_city || "",
+      exit_point_type: (o.exit_point_type as "border" | "port") || (o.loading_port_id && !o.exit_border_port_id ? "port" : "border"),
+      entry_point_type: (o.entry_point_type as "border" | "port") || (o.destination_port_id && !o.entry_border_port_id ? "port" : "border"),
       exit_border_port_id: o.exit_border_port_id || "",
-      exit_border_port_name: o.exit_border_port_name || "",
+      exit_border_port_name: o.exit_border_port_name || o.loading_port_name || "",
       planned_border_exit_date: o.planned_border_exit_date || "",
       entry_border_port_id: o.entry_border_port_id || "",
-      entry_border_port_name: o.entry_border_port_name || "",
+      entry_border_port_name: o.entry_border_port_name || o.destination_port_name || "",
       border_entry_date: o.border_entry_date || "",
       destination_state_province: o.destination_state_province || "",
       destination_city: o.destination_city || "",
@@ -2721,10 +2725,10 @@ export function CustomerOrderManagementView() {
                 fromCountryName: formData.loading_country_name || null,
                 toCountryId: formData.receiving_country_id || null,
                 toCountryName: formData.receiving_country_name || null,
-                fromLocationText: formData.loading_source_name || firstGoods.warehouseName || null,
-                toLocationText: formData.final_delivery_location || formData.destination_port_name || null,
-                portOfLoading: formData.loading_port_name || null,
-                portOfDischarge: formData.destination_port_name || null,
+                fromLocationText: formData.loading_place || formData.loading_source_name || firstGoods.warehouseName || null,
+                toLocationText: formData.receiving_place || formData.final_delivery_location || formData.destination_port_name || null,
+                portOfLoading: formData.exit_border_port_name || formData.loading_port_name || null,
+                portOfDischarge: formData.entry_border_port_name || formData.destination_port_name || null,
                 truckId: formData.transport_mode === "by_road" ? effTruckId : null,
                 truckRegistrationType: formData.transport_mode === "by_road" ? legTruckRegistrationType({ assignmentMode: formData.truck_assignment_mode, orderRegistrationType: formData.truck_registration_type }) : null,
                 truckNumber: formData.transport_mode === "by_road" ? effTruckNumber : null,
@@ -6153,7 +6157,59 @@ function Step1BookingCustomer({
   const getPortsForCountry = (countryId: string) => {
     if (!countryId) return ports;
     const filtered = ports.filter((p) => p.country_id === countryId);
-    return filtered.length > 0 ? filtered : ports;
+    const seaOnly = filtered.filter((p) => (p.transport_type || "").toLowerCase() === "sea");
+    return seaOnly.length > 0 ? seaOnly : (filtered.length > 0 ? filtered : ports);
+  };
+
+  const getBordersForCountry = (countryId?: string | null, countryName?: string | null): { id?: string; name: string }[] => {
+    const cPorts = countryId ? ports.filter((p) => p.country_id === countryId) : ports;
+    const roadPorts = cPorts.filter((p) => {
+      const tt = (p.transport_type || "").toLowerCase();
+      const n = (p.port_name || "").toLowerCase();
+      return (
+        tt === "road" ||
+        tt === "land" ||
+        n.includes("border") ||
+        n.includes("dry port") ||
+        n.includes("customs") ||
+        n.includes("gumruk") ||
+        n.includes("station") ||
+        n.includes("terminal")
+      );
+    });
+
+    const cObj = countries.find((c) => c.id === countryId);
+    const presets = getBorderPresets(countryName || cObj?.name);
+
+    const seen = new Set<string>();
+    const list: { id?: string; name: string }[] = [];
+
+    for (const p of roadPorts) {
+      const trimmed = p.port_name.trim();
+      const lower = trimmed.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        list.push({ id: p.id, name: trimmed });
+      }
+    }
+
+    for (const preset of presets) {
+      const trimmed = preset.trim();
+      const lower = trimmed.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        const match = cPorts.find((p) => p.port_name.trim().toLowerCase() === lower) || ports.find((p) => p.port_name.trim().toLowerCase() === lower);
+        list.push({ id: match?.id, name: trimmed });
+      }
+    }
+
+    if (list.length === 0 && cPorts.length > 0) {
+      for (const p of cPorts) {
+        list.push({ id: p.id, name: p.port_name });
+      }
+    }
+
+    return list;
   };
 
   const getBorderPresets = (countryName?: string, type: "exit" | "entry" = "exit"): string[] => {
@@ -6191,6 +6247,8 @@ function Step1BookingCustomer({
       loadingLoc?: string;
       receivingLoc?: string;
       transportMode?: string;
+      exitBorder?: string;
+      entryBorder?: string;
     }
   ) => {
     const lCId = override?.loadingCountryId ?? formData.loading_country_id;
@@ -6216,6 +6274,8 @@ function Step1BookingCustomer({
         toCountryName: rCName,
         fromLocationText: originPlace || lCName,
         toLocationText: destPlace || rCName,
+        portOfLoading: override?.exitBorder ?? (formData.exit_border_port_name || formData.loading_port_name || ""),
+        portOfDischarge: override?.entryBorder ?? (formData.entry_border_port_name || formData.destination_port_name || ""),
         transportMode: tMode as any,
         handlerType: "our_branch",
         branchCountryId: lCId || "",
@@ -6906,41 +6966,6 @@ function Step1BookingCustomer({
                   </div>
                 </div>
 
-                {/* Branch Quick Suggestions (if branches exist for loading country) */}
-                {getBranchesForCountry(formData.loading_country_id).length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      {tt("loading_branch", "Loading Branch (Filtered by Country)")}:
-                    </span>
-                    {getBranchesForCountry(formData.loading_country_id).map((b) => {
-                      const isSelected = formData.loading_customs_branch_id === b.id || formData.loading_place === b.name;
-                      return (
-                        <button
-                          key={b.id}
-                          type="button"
-                          onClick={() => {
-                            setFormData((c) => ({
-                              ...c,
-                              loading_customs_branch_id: b.id,
-                              loading_customs_branch_name: b.name,
-                              loading_place: b.name,
-                              loading_source_name: b.name
-                            }));
-                            rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingLoc: b.name });
-                          }}
-                          className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold transition cursor-pointer border ${
-                            isSelected
-                              ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                              : "bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                          }`}
-                        >
-                          🏢 {b.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
                 {/* Exit Point Section: Border or Port */}
                 <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3 dark:border-slate-800 dark:bg-slate-850/50 space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -6992,10 +7017,12 @@ function Step1BookingCustomer({
                             ...c,
                             loading_port_id: pId,
                             loading_port_name: pName,
-                            exit_border_port_name: pName
+                            exit_border_port_name: pName,
+                            exit_border_port_id: pId
                           }));
+                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { exitBorder: pName });
                         }}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                       >
                         <option value="">{tt("select_port", "Select port...")}</option>
                         {getPortsForCountry(formData.loading_country_id).map((p) => (
@@ -7005,43 +7032,50 @@ function Step1BookingCustomer({
                       <input
                         type="text"
                         value={formData.exit_border_port_name || ""}
-                        onChange={(e) => setFormData((c) => ({ ...c, exit_border_port_name: e.target.value, loading_port_name: e.target.value }))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData((c) => ({ ...c, exit_border_port_name: val, loading_port_name: val }));
+                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { exitBorder: val });
+                        }}
                         placeholder={tt("corresponding_port", "Corresponding Exit Port")}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <select
+                        value={formData.exit_border_port_id || ""}
+                        onChange={(e) => {
+                          const bId = e.target.value;
+                          const bList = getBordersForCountry(formData.loading_country_id, formData.loading_country_name);
+                          const bItem = bList.find((b) => b.id === bId || b.name === bId);
+                          const bName = bItem?.name || bId;
+                          setFormData((c) => ({
+                            ...c,
+                            exit_border_port_id: bItem?.id || "",
+                            exit_border_port_name: bName,
+                            loading_port_name: bName
+                          }));
+                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { exitBorder: bName });
+                        }}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                      >
+                        <option value="">{tt("select_border", "Select border...")}</option>
+                        {getBordersForCountry(formData.loading_country_id, formData.loading_country_name).map((b) => (
+                          <option key={b.id || b.name} value={b.id || b.name}>{b.name}</option>
+                        ))}
+                      </select>
                       <input
                         type="text"
                         value={formData.exit_border_port_name || ""}
-                        onChange={(e) => setFormData((c) => ({ ...c, exit_border_port_name: e.target.value }))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData((c) => ({ ...c, exit_border_port_name: val, loading_port_name: val }));
+                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { exitBorder: val });
+                        }}
                         placeholder={tt("corresponding_border", "Corresponding Exit Border")}
                         className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                       />
-                      {/* Quick Pick Border Tag Pills */}
-                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                          {tt("corresponding_border", "Corresponding Exit Border")}:
-                        </span>
-                        {getBorderPresets(formData.loading_country_name || countries.find((c) => c.id === formData.loading_country_id)?.name, "exit").map((border) => {
-                          const isSelected = formData.exit_border_port_name === border;
-                          return (
-                            <button
-                              key={border}
-                              type="button"
-                              onClick={() => setFormData((c) => ({ ...c, exit_point_type: "border", exit_border_port_name: border }))}
-                              className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold transition cursor-pointer border ${
-                                isSelected
-                                  ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                                  : "bg-white hover:bg-blue-100 text-slate-700 hover:text-blue-800 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                              }`}
-                            >
-                              📍 {border}
-                            </button>
-                          );
-                        })}
-                      </div>
                     </div>
                   )}
                 </div>
@@ -7160,41 +7194,6 @@ function Step1BookingCustomer({
                   </div>
                 </div>
 
-                {/* Branch Quick Suggestions (if branches exist for receiving country) */}
-                {getBranchesForCountry(formData.receiving_country_id).length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      {tt("receiving_branch", "Receiving Branch (Filtered by Country)")}:
-                    </span>
-                    {getBranchesForCountry(formData.receiving_country_id).map((b) => {
-                      const isSelected = formData.receiving_customs_branch_id === b.id || formData.receiving_place === b.name;
-                      return (
-                        <button
-                          key={b.id}
-                          type="button"
-                          onClick={() => {
-                            setFormData((c) => ({
-                              ...c,
-                              receiving_customs_branch_id: b.id,
-                              receiving_customs_branch_name: b.name,
-                              receiving_place: b.name,
-                              destination_city: b.name
-                            }));
-                            rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingLoc: b.name });
-                          }}
-                          className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold transition cursor-pointer border ${
-                            isSelected
-                              ? "bg-purple-600 text-white border-purple-600 shadow-2xs"
-                              : "bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-purple-700 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                          }`}
-                        >
-                          🏢 {b.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
                 {/* Entry Point Section: Border or Port */}
                 <div className="rounded-xl border border-purple-100 bg-purple-50/40 p-3 dark:border-slate-800 dark:bg-slate-850/50 space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -7246,10 +7245,12 @@ function Step1BookingCustomer({
                             ...c,
                             destination_port_id: pId,
                             destination_port_name: pName,
-                            entry_border_port_name: pName
+                            entry_border_port_name: pName,
+                            entry_border_port_id: pId
                           }));
+                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { entryBorder: pName });
                         }}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
                       >
                         <option value="">{tt("select_port", "Select port...")}</option>
                         {getPortsForCountry(formData.receiving_country_id).map((p) => (
@@ -7259,43 +7260,50 @@ function Step1BookingCustomer({
                       <input
                         type="text"
                         value={formData.entry_border_port_name || ""}
-                        onChange={(e) => setFormData((c) => ({ ...c, entry_border_port_name: e.target.value, destination_port_name: e.target.value }))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData((c) => ({ ...c, entry_border_port_name: val, destination_port_name: val }));
+                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { entryBorder: val });
+                        }}
                         placeholder={tt("corresponding_entry_port", "Corresponding Entry Port")}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
                       />
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <select
+                        value={formData.entry_border_port_id || ""}
+                        onChange={(e) => {
+                          const bId = e.target.value;
+                          const bList = getBordersForCountry(formData.receiving_country_id, formData.receiving_country_name);
+                          const bItem = bList.find((b) => b.id === bId || b.name === bId);
+                          const bName = bItem?.name || bId;
+                          setFormData((c) => ({
+                            ...c,
+                            entry_border_port_id: bItem?.id || "",
+                            entry_border_port_name: bName,
+                            destination_port_name: bName
+                          }));
+                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { entryBorder: bName });
+                        }}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+                      >
+                        <option value="">{tt("select_border", "Select border...")}</option>
+                        {getBordersForCountry(formData.receiving_country_id, formData.receiving_country_name).map((b) => (
+                          <option key={b.id || b.name} value={b.id || b.name}>{b.name}</option>
+                        ))}
+                      </select>
                       <input
                         type="text"
                         value={formData.entry_border_port_name || ""}
-                        onChange={(e) => setFormData((c) => ({ ...c, entry_border_port_name: e.target.value }))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData((c) => ({ ...c, entry_border_port_name: val, destination_port_name: val }));
+                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { entryBorder: val });
+                        }}
                         placeholder={tt("corresponding_entry_border", "Corresponding Entry Border")}
                         className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
                       />
-                      {/* Quick Pick Border Tag Pills */}
-                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                          {tt("corresponding_entry_border", "Corresponding Entry Border")}:
-                        </span>
-                        {getBorderPresets(formData.receiving_country_name || countries.find((c) => c.id === formData.receiving_country_id)?.name, "entry").map((border) => {
-                          const isSelected = formData.entry_border_port_name === border;
-                          return (
-                            <button
-                              key={border}
-                              type="button"
-                              onClick={() => setFormData((c) => ({ ...c, entry_point_type: "border", entry_border_port_name: border }))}
-                              className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold transition cursor-pointer border ${
-                                isSelected
-                                  ? "bg-purple-600 text-white border-purple-600 shadow-2xs"
-                                  : "bg-white hover:bg-purple-100 text-slate-700 hover:text-purple-800 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                              }`}
-                            >
-                              📍 {border}
-                            </button>
-                          );
-                        })}
-                      </div>
                     </div>
                   )}
                 </div>
@@ -8170,7 +8178,7 @@ function Step1BookingCustomer({
                       : tt("corresponding_border", "Corresponding Exit Border")} *
                   </label>
                   {formData.exit_point_type === "port" ? (
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <select
                         value={formData.loading_port_id || ""}
                         onChange={(e) => {
@@ -8180,10 +8188,11 @@ function Step1BookingCustomer({
                             ...c,
                             loading_port_id: pId,
                             loading_port_name: pName,
-                            exit_border_port_name: pName
+                            exit_border_port_name: pName,
+                            exit_border_port_id: pId
                           }));
                         }}
-                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                       >
                         <option value="">{tt("select_port", "Select port...")}</option>
                         {getPortsForCountry(formData.loading_country_id).map((p) => (
@@ -8194,31 +8203,40 @@ function Step1BookingCustomer({
                         type="text"
                         value={formData.exit_border_port_name || ""}
                         onChange={(e) => setFormData((c) => ({ ...c, exit_border_port_name: e.target.value, loading_port_name: e.target.value }))}
-                        placeholder="Or enter custom port name..."
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        placeholder={tt("corresponding_port", "Corresponding Exit Port")}
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <select
+                        value={formData.exit_border_port_id || ""}
+                        onChange={(e) => {
+                          const bId = e.target.value;
+                          const bList = getBordersForCountry(formData.loading_country_id, formData.loading_country_name);
+                          const bItem = bList.find((b) => b.id === bId || b.name === bId);
+                          const bName = bItem?.name || bId;
+                          setFormData((c) => ({
+                            ...c,
+                            exit_border_port_id: bItem?.id || "",
+                            exit_border_port_name: bName,
+                            loading_port_name: bName
+                          }));
+                        }}
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                      >
+                        <option value="">{tt("select_border", "Select border...")}</option>
+                        {getBordersForCountry(formData.loading_country_id, formData.loading_country_name).map((b) => (
+                          <option key={b.id || b.name} value={b.id || b.name}>{b.name}</option>
+                        ))}
+                      </select>
                       <input
                         type="text"
                         value={formData.exit_border_port_name || ""}
-                        onChange={(e) => setFormData((c) => ({ ...c, exit_border_port_name: e.target.value }))}
-                        placeholder="e.g. Spin Boldak / Torkham / Islam Qala / Zaranj"
+                        onChange={(e) => setFormData((c) => ({ ...c, exit_border_port_name: e.target.value, loading_port_name: e.target.value }))}
+                        placeholder={tt("corresponding_border", "Corresponding Exit Border")}
                         className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                       />
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {["Spin Boldak", "Torkham", "Islam Qala", "Zaranj", "Hairatan", "Shir Khan"].map((b) => (
-                          <button
-                            key={b}
-                            type="button"
-                            onClick={() => setFormData((c) => ({ ...c, exit_border_port_name: b }))}
-                            className="px-2 py-0.5 rounded-md bg-slate-200 hover:bg-blue-100 text-slate-700 hover:text-blue-800 dark:bg-slate-800 dark:text-slate-300 text-[10.5px] font-semibold transition"
-                          >
-                            {b}
-                          </button>
-                        ))}
-                      </div>
                     </div>
                   )}
                 </div>
@@ -8372,7 +8390,7 @@ function Step1BookingCustomer({
                       : tt("corresponding_entry_border", "Corresponding Entry Border")} *
                   </label>
                   {formData.entry_point_type === "port" ? (
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <select
                         value={formData.destination_port_id || ""}
                         onChange={(e) => {
@@ -8382,10 +8400,11 @@ function Step1BookingCustomer({
                             ...c,
                             destination_port_id: pId,
                             destination_port_name: pName,
-                            entry_border_port_name: pName
+                            entry_border_port_name: pName,
+                            entry_border_port_id: pId
                           }));
                         }}
-                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
                       >
                         <option value="">{tt("select_port", "Select port...")}</option>
                         {getPortsForCountry(formData.receiving_country_id).map((p) => (
@@ -8396,31 +8415,40 @@ function Step1BookingCustomer({
                         type="text"
                         value={formData.entry_border_port_name || ""}
                         onChange={(e) => setFormData((c) => ({ ...c, entry_border_port_name: e.target.value, destination_port_name: e.target.value }))}
-                        placeholder="Or enter custom entry port name..."
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        placeholder={tt("corresponding_entry_port", "Corresponding Entry Port")}
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
                       />
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <select
+                        value={formData.entry_border_port_id || ""}
+                        onChange={(e) => {
+                          const bId = e.target.value;
+                          const bList = getBordersForCountry(formData.receiving_country_id, formData.receiving_country_name);
+                          const bItem = bList.find((b) => b.id === bId || b.name === bId);
+                          const bName = bItem?.name || bId;
+                          setFormData((c) => ({
+                            ...c,
+                            entry_border_port_id: bItem?.id || "",
+                            entry_border_port_name: bName,
+                            destination_port_name: bName
+                          }));
+                        }}
+                        className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+                      >
+                        <option value="">{tt("select_border", "Select border...")}</option>
+                        {getBordersForCountry(formData.receiving_country_id, formData.receiving_country_name).map((b) => (
+                          <option key={b.id || b.name} value={b.id || b.name}>{b.name}</option>
+                        ))}
+                      </select>
                       <input
                         type="text"
                         value={formData.entry_border_port_name || ""}
-                        onChange={(e) => setFormData((c) => ({ ...c, entry_border_port_name: e.target.value }))}
-                        placeholder="e.g. Chaman / Torkham / Taftan / Wagah / Sost"
+                        onChange={(e) => setFormData((c) => ({ ...c, entry_border_port_name: e.target.value, destination_port_name: e.target.value }))}
+                        placeholder={tt("corresponding_entry_border", "Corresponding Entry Border")}
                         className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
                       />
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {["Chaman", "Torkham", "Taftan", "Wagah", "Sost", "Khunjerab"].map((b) => (
-                          <button
-                            key={b}
-                            type="button"
-                            onClick={() => setFormData((c) => ({ ...c, entry_border_port_name: b }))}
-                            className="px-2 py-0.5 rounded-md bg-slate-200 hover:bg-purple-100 text-slate-700 hover:text-purple-800 dark:bg-slate-800 dark:text-slate-300 text-[10.5px] font-semibold transition"
-                          >
-                            {b}
-                          </button>
-                        ))}
-                      </div>
                     </div>
                   )}
                 </div>
