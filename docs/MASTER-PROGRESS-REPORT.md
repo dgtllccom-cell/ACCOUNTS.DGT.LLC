@@ -1,5 +1,28 @@
 # DGT ERP — Main Master Progress Report
-Owner-facing. Updated 2026-10-25 23:30 Dubai (UTC+4). (No earlier file with this name was found in the repository or on the Desktop — if one exists elsewhere, tell me where and I will merge this into it.)
+Owner-facing. Updated 2026-10-26 (Dubai, UTC+4). (No earlier file with this name was found in the repository or on the Desktop — if one exists elsewhere, tell me where and I will merge this into it.)
+
+## Production release ca7383d — LIVE 2026-10-25 23:54 Dubai; follow-up rc2 (2026-10-26)
+
+**ca7383d is deployed.** Sequence (all through the owner's gate): verified full backup (72.8 MB, gzip integrity OK, 1,773 tables) → migration pre-checks (new objects absent, target tables empty) → migrations 20261240 + 20261241 applied (7 columns, 5 unique indexes, 2 CHECKs — verified) → `dgt-approve-deploy ca7383d… --migrations` → `dgt-deploy` (own backup `prod-before-deploy-20261025-194435.dump`, atomic build, rollback kept). Live checks: VPS HEAD = ca7383d, pm2 online, /login 307, expense APIs 401 unauthenticated, no new error-log lines. **Production data identical before and after** (customers 6, companies 3, ledgers 21 with zero totals, profiles 9, assignments 9, branches 3, 0 transactions).
+
+### rc2 (branch `release/rc2`) — found while verifying Chaman Branch Admin and the UAE Country Admin
+SECURITY (present in production since 658c4be / a86355d):
+* Branch Reports and User Permission Management accepted `?branchId=` from a Country Admin of ANY country and, for a login without a branch, fell back to the first active branch of the whole database (roznamcha, expenses, ledger balances, users with phones / permission sets). Now: only a branch inside the login's scope and operational domain; no fallback except the Global Super Admin.
+* Country shipping dashboard: `?countryId=` reached any country and dashboard:read alone opened it for a branch login. Now role-gated and pinned to the session's country.
+* City Branch Admin as user manager: requires users:update / users:create in its permission set (template has them, a per-user set can withhold them), manages the branch's STAFF only, an explicit main-branch id must match.
+* Shipping Line user stays default-deny; menu entries offered only when the route gate lets the login in (no dead links, one token never unlocks a menu entry).
+* The permission screen showed invented values (a fixed phone, e-mail, dates, "Today, active now", a real person's name) — removed.
+
+Unit tests: the 19 failures on production a86355d are resolved (562 pass, 0 fail). They encoded the earlier delegation rule; the approved policy (city admin manages local users, Shipping Line user holds the approved accounting bundle, tier dashboards) is now pinned by tests instead, plus invariants: scope fencing, no wildcard / no commercial trade for the shipping template, user-manager only with the token.
+
+Customer names: one rule on every screen — an authorized translation (human-entered / corrected, verified, curated dictionary), else the saved legal name. Generic record tier, duplicate warning, account live report, Party Directory, Truck registry/report now agree with the Register.
+
+### Open items needing the owner
+* **Chaman City Branch permission grants** (Production): stored as a JSON *string* (ignored by the code) and equal to Quetta's BUSINESS list (purchase / sales groups). Fixing the type alone would cap Shipping staff creation to Business groups. Owner decides the Shipping grant list; nothing was changed.
+* **Production has no Country Admin assignment** (UAE or Pakistan): the top UAE login is a Main Branch Admin with users:read only. If a UAE Country Admin is expected, it must be created.
+* **SMTP:** MX / SPF / DKIM are Titan; DMARC missing; provider `smtp.titan.email:465` correct and reachable from the VPS; four mailboxes have no stored passwords, never tested; stray "DGT Staging" provider. Needs mailbox passwords (entered by the owner in Mail Management) and a DMARC TXT record.
+* **Transport payments / Transport ledger:** no ledger posting — needs the accrual mapping (which account is debited and which credited when a transport charge is booked) before the payment leg can be posted without a one-sided entry.
+* **VAT Management:** postponed by the owner (not cancelled); no tax rule or mapping was changed.
 
 ## Release candidate 2026-10-25 — expense framework + four languages + customer names (branch `release/rc-expense-framework`)
 
