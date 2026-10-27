@@ -74,3 +74,17 @@ dgt-deploy --dry-run && dgt-deploy                     # backup + atomic build; 
   2. Roznamcha → Cash Entry → New Entry → Save Entry on the empty form (UR): a red Urdu notice, nothing posted.
   3. Accounts → open an account → type in "Reference" → switch the language → the typed text stays; the Account Name is the saved name.
   4. Ledger → Outstanding: "All Branches" / "All Countries" appear in the selected language.
+
+## Release of 2026-10-28 (night) — issue #36: saved data in the viewer's language
+* On top of Production `cf954e5` (merged into `release/rc2` as `613e20f`; work commit `01caeec`). No migration, no data change.
+* Two parts of `9b6814c` (already live) are deliberately not kept, per the owner's written rules for this issue: account /
+  ledger names stay approved-only (they had been opened to machine renderings), and an automatic save no longer stamps a machine
+  rendering of an account name "verified". No Production row carried that stamp (read-only check before the release).
+* Gate steps (VPS): `git fetch origin production` → superset + no new migration → `dgt-approve-deploy <sha>` (no `--migrations`)
+  → `dgt-deploy --dry-run` → `dgt-deploy` (backup, isolated build, atomic swap, pm2 reload; rollback: `dgt-deploy --rollback`).
+* Owner's signed-in checks (read-only, about 3 minutes, English selected):
+  1. Settings → ERP Translations & Languages → Review queue: the Urdu account and customer names are listed with an English
+     suggestion. Accept one → open Accounts: that account now reads in English; switch to Urdu → the saved Urdu name.
+  2. Accounts / Customers / Party Directory / Truck Registration: Urdu names not yet approved show the saved Urdu with a small "UR"
+     marker — never a machine spelling such as "Namt Allah …".
+  3. Ledger report on an Urdu account: the saved name (or the approved English after step 1), not a machine spelling.

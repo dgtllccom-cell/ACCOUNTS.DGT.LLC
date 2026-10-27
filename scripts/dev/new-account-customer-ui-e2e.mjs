@@ -87,11 +87,12 @@ async function gotoStepWith(p, selector) {
 // the linked customer is shown on the shared customer card (b8535f7 replaced the old "Linked:" box)
 // the card shows "Loading…" until the customer record arrives (a few seconds on a busy DEV box) — read the name once it is there
 const LOADING = new Set(["en", "ur", "ar", "fa", "ps"].map((l) => { const s = ui.indexOf(`const ${l}: Dict = {`); const m = ui.slice(s, ui.indexOf("\n};", s)).match(/"nas\.loading": "([^"]*)"/); return m ? m[1] : ""; }));
-const linkedLabel = async (p) => {
+// with an expected name: wait (up to ~30 s) for it — after a language switch the card first still shows the previous language
+const linkedLabel = async (p, expected) => {
   let text = null;
   for (let i = 0; i < 15; i++) {
     text = await p.locator('[data-testid="customer-account-card-name"]').first().textContent({ timeout: 4000 }).then((t) => (t || "").trim()).catch(() => null);
-    if (text && !LOADING.has(text) && !/^[0-9a-f]{8}-[0-9a-f]{4}-/.test(text)) return text;
+    if (text && !LOADING.has(text) && !/^[0-9a-f]{8}-[0-9a-f]{4}-/.test(text) && (expected === undefined || text === expected)) return text;
     await p.waitForTimeout(2000);
   }
   return text;
@@ -100,7 +101,7 @@ async function switchLanguage(p, lang) {
   await p.evaluate((l) => { localStorage.setItem("erp_lang", l); document.cookie = `erp_lang=${l}; path=/`; window.dispatchEvent(new Event("erp_language_changed")); }, lang);
   await p.waitForTimeout(3500);
 }
-async function readState(p) {
+async function readState(p, expectedLinked) {
   // the form may still be loading (slow DEV server): look for the field for up to ~30 s
   let okName = false;
   for (let i = 0; i < 6 && !okName; i++) {
@@ -110,7 +111,7 @@ async function readState(p) {
   const name = okName ? await p.locator("#accountName").first().inputValue().catch(() => null) : null;
   await gotoStepWith(p, '[data-testid="customer-account-card-name"]');
   await p.waitForTimeout(1500);
-  return { name, linked: await linkedLabel(p), dir: await p.evaluate(() => document.documentElement.dir) };
+  return { name, linked: await linkedLabel(p, expectedLinked), dir: await p.evaluate(() => document.documentElement.dir) };
 }
 
 const ONLY = process.env.ONLY ? process.env.ONLY.split(",").map(Number) : null; // run selected cases (index)
@@ -146,13 +147,13 @@ for (const c of CASES.filter((_, i) => !ONLY || ONLY.includes(i))) {
   check(`${tag} the picker lists the customer as "${shown}"`, await option.isVisible().catch(() => false));
   await option.click({ timeout: 5000 }).catch(() => {});
   await p.waitForTimeout(3000);
-  check(`${tag} linked label after picking shows "${shown}"`, (await linkedLabel(p)) === shown, `got "${await linkedLabel(p)}"`);
+  check(`${tag} linked label after picking shows "${shown}"`, (await linkedLabel(p, shown)) === shown, `got "${await linkedLabel(p)}"`);
   if (c.approved) {
     // before saving: a live language switch must move the "Linked" name to that language's approved variant
     for (const l of ["ar", c.ui]) {
       await switchLanguage(p, l);
       await gotoStepWith(p, '[data-testid="customer-account-card-name"]');
-      check(`${tag} create mode, live switch to ${l}: linked customer = "${exp.per[l]}"`, (await linkedLabel(p)) === exp.per[l], `got "${await linkedLabel(p)}"`);
+      check(`${tag} create mode, live switch to ${l}: linked customer = "${exp.per[l]}"`, (await linkedLabel(p, exp.per[l])) === exp.per[l], `got "${await linkedLabel(p)}"`);
     }
   }
   // the last step holds the Save button
@@ -185,13 +186,13 @@ for (const c of CASES.filter((_, i) => !ONLY || ONLY.includes(i))) {
   const editUrl = `${BASE}/dashboard/accounts/setup?accountId=${id}`;
   await gotoRetry(q, editUrl, { waitUntil: "domcontentloaded", timeout: 180000 });
   await settle(q, 6000);
-  let st = await readState(q);
   const wantFor = (l) => (c.approved ? exp.per[l] : exp.saved);
+  let st = await readState(q, wantFor(c.ui));
   check(`${tag} reopen in ${c.ui}: Account Name input = saved name`, st.name === exp.saved, `"${st.name}"`);
   check(`${tag} reopen in ${c.ui}: linked customer = "${wantFor(c.ui)}"`, st.linked === wantFor(c.ui), `"${st.linked}"`);
   for (const l of [...LANGS.filter((x) => x !== c.ui), c.ui]) {
     await switchLanguage(q, l);
-    st = await readState(q);
+    st = await readState(q, wantFor(l));
     check(`${tag} live switch to ${l}: Account Name input = saved name`, st.name === exp.saved, `"${st.name}"`);
     check(`${tag} live switch to ${l}: linked customer = "${wantFor(l)}"`, st.linked === wantFor(l), `"${st.linked}"`);
     check(`${tag} live switch to ${l}: direction`, st.dir === (l === "en" ? "ltr" : "rtl"), st.dir);
@@ -212,14 +213,14 @@ for (const c of CASES.filter((_, i) => !ONLY || ONLY.includes(i))) {
   await switchLanguage(q, refreshLang);
   await q.reload({ waitUntil: "domcontentloaded", timeout: 180000 });
   await settle(q, 6000);
-  st = await readState(q);
+  st = await readState(q, wantFor(refreshLang));
   check(`${tag} after refresh (${refreshLang}): Account Name input = saved name`, st.name === exp.saved, `"${st.name}"`);
   check(`${tag} after refresh (${refreshLang}): linked customer = "${wantFor(refreshLang)}"`, st.linked === wantFor(refreshLang), `"${st.linked}"`);
   await gotoRetry(q, `${BASE}/dashboard/accounts`, { waitUntil: "domcontentloaded", timeout: 180000 });
   await settle(q, 2000);
   await gotoRetry(q, editUrl, { waitUntil: "domcontentloaded", timeout: 180000 });
   await settle(q, 6000);
-  st = await readState(q);
+  st = await readState(q, wantFor(refreshLang));
   check(`${tag} reopen again (${refreshLang}): Account Name input = saved name`, st.name === exp.saved, `"${st.name}"`);
   check(`${tag} reopen again (${refreshLang}): linked customer = "${wantFor(refreshLang)}"`, st.linked === wantFor(refreshLang), `"${st.linked}"`);
   const t2 = stepTabs(q); const n2 = await t2.count();
