@@ -1,4 +1,6 @@
 "use client";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 import React from "react";
 import Link from "next/link";
@@ -38,8 +40,11 @@ export function MailPageHeader({
   className,
 }: MailPageHeaderProps) {
   const pathname = usePathname();
+  const lang = useActiveLanguage();
 
-  const timestampDisplay = lastHealthCheck || lastUpdated || "Just now";
+  // the pages start with the English placeholder "Just now" until their first refresh: show it in the selected language
+  const rawTimestamp = lastHealthCheck || lastUpdated || "Just now";
+  const timestampDisplay = rawTimestamp === "Just now" ? translateHeader(lang, "Just now") : rawTimestamp;
 
   return (
     <div className={cn("space-y-4 pb-2 border-b border-slate-200 dark:border-slate-800", className)}>

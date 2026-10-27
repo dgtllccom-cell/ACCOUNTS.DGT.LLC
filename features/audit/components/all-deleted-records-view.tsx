@@ -659,7 +659,7 @@ export function AllDeletedRecordsView() {
 
                       {/* Record / Party */}
                       <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
-                        {row.party_name || "General Entry"}
+                        {row.party_name || translateHeader(lang, "General Entry")}
                       </td>
 
                       {/* Deleted By */}

@@ -1,5 +1,36 @@
 # DGT ERP — Main Master Progress Report
-Owner-facing. Updated 2026-10-26 (Dubai, UTC+4). (No earlier file with this name was found in the repository or on the Desktop — if one exists elsewhere, tell me where and I will merge this into it.)
+Owner-facing. Updated 2026-10-27 (Dubai, UTC+4). (No earlier file with this name was found in the repository or on the Desktop — if one exists elsewhere, tell me where and I will merge this into it.)
+
+## rc2 final (2026-10-27) — ready for the owner's gate, NOT deployed
+
+Production runs `dffd724` (deployed through the gate 2026-10-26 20:35Z). Branch `release/rc2` contains it (strict superset) and
+adds **no database migration**. Runbook: `docs/release-2026-10-27-rc2-runbook.md`. Evidence below is DEV only
+(`csesvyxxjivnkkozgopt`); Production was only read.
+
+| Card | Result |
+|---|---|
+| 1. Names in five languages (account, customer, company, bank, branch) | PASS — approved variant, else the exact saved name; no phonetic re-spelling, no word-by-word substitution; places (country / city) still translated. Company API 10 / 10, approved-variant 5 / 5, place fields correct |
+| 2. Save → Reopen → language switch → refresh → logout / login, 5 languages | PASS — 192 / 192 |
+| 3. Merge Production into rc2 | PASS — 5d2a4b9 + a6c7c93 + dffd724 merged; one conflict resolved; all rc2 fixes kept |
+| 4. Users page Grid / List toggle (phone / tablet / desktop) | PASS — 120 / 120 (10 pages × 3 widths, counted from first paint) |
+| 5. DEV clean-up of test accounts | PASS — the 8 reported + 5 more from an interrupted run archived through the app (soft delete, history kept); 28 test accounts archived in total, 0 active ledgers; no real data touched |
+| 6. Shipping Line & BL Entry | PASS — 95 / 95 (menu link, Goods Master source, five languages, phone / desktop); both work cards closed. BL Entry no longer shows invented values |
+| 7. Regression / security / permissions | PASS — 20 scripts (financial, operational, user creation, account approval, branch-admin permissions, direct-URL / API matrix); unit tests 570 / 570; tsc, build and all guards green. Leak scan: 156 PASS + 4 items that are Shipping-domain DEV test records on Business branches (not leaks) after the Roznamcha fix below |
+| 8. Deployment gate | PREPARED — release branch pushed, draft pull request to `production`; waiting for the owner's written approval |
+| 9. Figma | PREPARED — editable Figma plugin (3 concepts × 20 screens, EN + UR) in `design-review/04-figma-plugin`; the Figma connector still needs the owner's sign-in |
+
+**Found and fixed during the final verification (all live in Production before rc2):**
+* **Security — Business ↔ Shipping:** purchase / sales payments, booking transfers and local-purchase payments saved their Roznamcha
+  entry without an operational domain; the Roznamcha list shows such entries to every domain, so a Shipping-only login saw Business
+  payments (DEV: several hundred rows; Production: 0 transactions, nothing leaked). Read rule + write stamping fixed; the Supabase
+  fallback path had no domain filter at all.
+* **Invented figures:** Super Admin dashboard (sample shipments / activities, a sample profit curve, sample sales split, "$" sums of
+  mixed currencies), Shipping Line dashboard (24 / 56 / 342 / 286 … whenever the real count was 0, fake trend %, sample rows), KYC
+  Reports, Audit Monitoring (1,842 added to the real count; branches floored at 9, countries at 5), purchase reports (sample HS code,
+  brand, origin, weights, price, supplier; serials built from the booking number), BL Entry (sample BL / truck / seal numbers, a fixed
+  "Passed" quality report), City / Country Branch reports (sample accounts, company type), Account Setup ("Created by: Super Admin").
+* **Five languages:** menu labels and headings fall back to the central dictionary; ~80 leftover English labels on ~40 screens; two
+  hydration errors (CHS Products, Outstanding Ledger).
 
 ## Production release ca7383d — LIVE 2026-10-25 23:54 Dubai; follow-up rc2 (2026-10-26)
 
