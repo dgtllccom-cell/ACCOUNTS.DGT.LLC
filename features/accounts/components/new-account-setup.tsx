@@ -548,6 +548,8 @@ export function NewAccountSetup({
     setCompanyRequired(!isPersonalSubType(subType));
   }, [subType, initialAccountId]);
   const linkedMastersRef = useRef<HTMLDivElement | null>(null);
+  // which account the editable form fields were filled from: a later language switch must not overwrite what the user typed
+  const formLoadedForRef = useRef<string | null>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -627,7 +629,44 @@ export function NewAccountSetup({
     if (!initialAccountId) return;
     let cancelled = false;
 
+    // Same account, language switched: refresh only the names shown for the linked records (approved variant for this
+    // language, else the saved name). The editable fields keep what the user has typed — reloading them wiped unsaved edits.
+    async function refreshLinkedLabels() {
+      try {
+        const res = await fetch(`/api/erp/accounting/accounts/${initialAccountId}?language=${encodeURIComponent(lang)}`).then((r) => r.json());
+        const acc = res?.ok ? res.data?.account : null;
+        if (cancelled || !acc) return;
+        if (acc.customer_id) {
+          const json = await fetch(`/api/erp/customers/${acc.customer_id}?lang=${lang}`).then((r) => r.json()).catch(() => null);
+          const name = json?.data?.customer?.customer_name ?? json?.customer?.customer_name ?? json?.data?.customer_name ?? "";
+          if (!cancelled && name) setLinkedCustomerName(name);
+        }
+        if (acc.company_id) {
+          const json = await fetch(`/api/erp/companies/${acc.company_id}?lang=${lang}`).then((r) => r.json()).catch(() => null);
+          const name = json?.company?.name ?? json?.company?.legal_name ?? "";
+          if (!cancelled && name) {
+            setLinkedCompanyName(name);
+            setLinkedCompanies((prev) => prev.map((c) => (c.id === acc.company_id ? { ...c, name } : c)));
+          }
+        }
+        if (acc.bank_id) {
+          const json = await fetch(`/api/erp/banks/${acc.bank_id}?lang=${lang}`).then((r) => r.json()).catch(() => null);
+          const name = json?.data?.bank?.bank_name ?? json?.bank?.bank_name ?? json?.bank_name ?? "";
+          if (!cancelled && name) {
+            setLinkedBankName(name);
+            setLinkedBanks((prev) => prev.map((b) => (b.id === acc.bank_id ? { ...b, name } : b)));
+          }
+        }
+        if (acc.shipping_line_id) {
+          const json = await fetch(`/api/erp/shipping-lines/${acc.shipping_line_id}?lang=${lang}`).then((r) => r.json()).catch(() => null);
+          const shl = json?.data?.shippingLine || json?.shippingLine;
+          if (!cancelled && shl) { setShippingLineDetail(shl); setLinkedShippingLineName(shl.name || ""); }
+        }
+      } catch { /* labels keep their previous language; nothing else changes */ }
+    }
+
     async function loadAccountDetails() {
+      if (formLoadedForRef.current === initialAccountId) { await refreshLinkedLabels(); return; }
       setLoadingAccount(true);
       setMessage("");
       try {
@@ -636,6 +675,7 @@ export function NewAccountSetup({
         if (res && res.ok && res.data) {
           const acc = res.data.account;
           if (acc) {
+            formLoadedForRef.current = initialAccountId ?? null;
             setCountry(acc.country_id || "");
             if (acc.operational_domain === "shipping") {
               setOperationalDomain("shipping");
@@ -944,6 +984,9 @@ export function NewAccountSetup({
         if (!cancelled && json?.ok && (json?.data || json?.customer)) {
           const cust = json.data?.customer ?? json.data ?? json.customer;
           setCustomerDetail(cust);
+          // the "Linked" label follows the language too (approved variant for this language, else the saved name) —
+          // it was set once when the customer was picked and kept the previous language after a switch
+          if (cust?.customer_name) setLinkedCustomerName(cust.customer_name);
           // Pre-fill address from customer master if currently empty
           if (!addressCountryId && cust?.country_id) {
             setAddressCountryId(cust.country_id);

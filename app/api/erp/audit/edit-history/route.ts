@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { requireErpSession } from "@/lib/auth/session";
 import { resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -19,6 +22,7 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     const scope = resolveReportScope(session);
     const { searchParams } = new URL(request.url);
+    const lang = await getRequestLanguage(searchParams.get("lang"));
 
     const requestedCountryId = searchParams.get("countryId") || null;
     const requestedBranchId = searchParams.get("cityBranchId") || null;
@@ -41,7 +45,7 @@ export async function GET(request: NextRequest) {
     const result = await withLocalPg(async (sql) => {
       const countryRows = effectiveCountryId
         ? await sql`select id, name from public.countries where deleted_at is null and id = ${effectiveCountryId}::uuid limit 1`
-        : [{ id: "all", name: "All Countries" }];
+        : [{ id: "all", name: t(lang, "audit.filter_all_countries", "All Countries") }];
       if (!countryRows[0]) return null;
       const countryName = countryRows[0].name as string;
 
@@ -109,9 +113,9 @@ export async function GET(request: NextRequest) {
         reference_no: row.reference,
         module: row.module,
         country_id: null,
-        country_name: row.country === "—" ? "Global" : row.country,
+        country_name: row.country === "—" ? translateHeader(lang, "Global") : row.country,
         city_branch_id: null,
-        branch_name: row.cityBranch === "—" ? (row.mainBranch === "—" ? "Main Branch" : row.mainBranch) : row.cityBranch,
+        branch_name: row.cityBranch === "—" ? (row.mainBranch === "—" ? translateHeader(lang, "Main Branch") : row.mainBranch) : row.cityBranch,
         party_name: null,
         user_id: row.loginUserId,
         user_name: row.user,

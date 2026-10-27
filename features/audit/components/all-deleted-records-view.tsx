@@ -635,7 +635,7 @@ export function AllDeletedRecordsView() {
 
                       {/* Country */}
                       <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">
-                        {row.country_name || "Global"}
+                        {row.country_name || translateHeader(lang, "Global")}
                       </td>
 
                       {/* Branch */}

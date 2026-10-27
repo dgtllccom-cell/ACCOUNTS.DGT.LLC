@@ -307,7 +307,7 @@ export default function DashboardSettingsPage() {
             <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <SlidersHorizontal className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
               Module Allotment & Screen Controls for:{" "}
-              <span className="text-cyan-600 dark:text-cyan-400">{roleScopes.find((r) => r.key === selectedRole)?.title}</span>
+              <span className="text-cyan-600 dark:text-cyan-400">{translateHeader(lang, roleScopes.find((r) => r.key === selectedRole)?.title ?? "")}</span>
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground mt-0.5">
               Toggle screen visibility or input custom alert messages shown when access is restricted.
