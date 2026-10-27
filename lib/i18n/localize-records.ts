@@ -85,7 +85,7 @@ const LATIN_LETTER_RE = /[A-Za-z]/;
 // (lib/i18n/customer-name.ts) and the pickers (localizeName). Ports, cities and other places keep the display rendering.
 // null = every field of the table is a legal name; otherwise only the listed name fields (a company's city / country stay places).
 const LEGAL_NAME_FIELDS: Record<string, ReadonlySet<string> | null> = {
-  customers: null, accounts: null, enterprise_accounts: null, ledgers: null,
+  customers: null,
   companies: new Set(["name", "legal_name", "owner_name"]),
   banks: new Set(["bank_name", "branch_name", "short_name", "account_title"]),
   city_branches: new Set(["name", "owner_name"]),
