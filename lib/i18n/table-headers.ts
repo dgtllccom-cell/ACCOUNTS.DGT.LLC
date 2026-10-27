@@ -3134,6 +3134,32 @@ function normalize(label: string): string {
   return label.trim().replace(/\s+/g, " ").toUpperCase();
 }
 
+// Central dictionary fallback. lib/i18n/ui.ts registers its dictionaries here when it loads (it imports this module, so importing
+// it back would be a cycle). A heading / menu label that is not in HEADER_TRANSLATIONS but IS the English value of a central
+// dictionary entry then shows that entry's translation instead of staying English ("Master Data", "All Branches" in the menu).
+type UiDicts = Readonly<Record<string, Readonly<Record<string, string>>>>;
+let uiDictionaries: (() => UiDicts) | null = null;
+let uiReverseIndex: Map<string, string> | null = null;
+export function registerUiDictionaryFallback(get: () => UiDicts): void {
+  uiDictionaries = get;
+  uiReverseIndex = null;
+}
+function fromUiDictionary(code: string, norm: string): string | null {
+  if (!uiDictionaries) return null;
+  const dicts = uiDictionaries();
+  if (!uiReverseIndex) {
+    uiReverseIndex = new Map();
+    for (const [key, value] of Object.entries(dicts.en ?? {})) {
+      const n = normalize(String(value));
+      if (n && !uiReverseIndex.has(n)) uiReverseIndex.set(n, key);
+    }
+  }
+  const key = uiReverseIndex.get(norm);
+  if (!key) return null;
+  const value = dicts[code]?.[key];
+  return value && value !== dicts.en?.[key] ? value : null;
+}
+
 /**
  * Translate a table/column header into the active language.
  * Returns the original English text for `en`, unknown labels, or empty input,
@@ -3177,7 +3203,7 @@ export function translateHeader(
     }
   }
 
-  if (!row) return original;
+  if (!row) return fromUiDictionary(code, norm) ?? original;
   const value = row[code as keyof Row];
   return value || original;
 }

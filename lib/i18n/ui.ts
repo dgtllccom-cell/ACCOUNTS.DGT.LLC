@@ -1,5 +1,5 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { translateHeader } from "@/lib/i18n/table-headers";
+import { translateHeader, registerUiDictionaryFallback } from "@/lib/i18n/table-headers";
 
 export type UiKey =
   | "invtpl.center_template_tab"
@@ -12210,6 +12210,10 @@ export type UiKey =
   | "ble.d_price_divide"
   | "ble.d_rates_conversion"
   | "ble.opt_edit_bl"
+  | "dash.no_activity_yet"
+  | "dash.no_shipments_yet"
+  | "dash.no_sales_yet"
+  | "dash.mixed_currencies"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37392,6 +37396,10 @@ const en: Dict = {
   "ble.d_price_divide": "Price & Divide Basis",
   "ble.d_rates_conversion": "Rates & Conversion",
   "ble.opt_edit_bl": "Edit BL",
+  "dash.no_activity_yet": "No activity recorded yet.",
+  "dash.no_shipments_yet": "No shipments recorded yet.",
+  "dash.no_sales_yet": "No sales recorded yet.",
+  "dash.mixed_currencies": "Several currencies",
 };
 
 const ur: Dict = {
@@ -62542,6 +62550,10 @@ const ur: Dict = {
   "ble.d_price_divide": "قیمت اور تقسیم کی بنیاد",
   "ble.d_rates_conversion": "نرخ اور تبدیلی",
   "ble.opt_edit_bl": "بی ایل میں ترمیم",
+  "dash.no_activity_yet": "ابھی تک کوئی سرگرمی درج نہیں ہوئی۔",
+  "dash.no_shipments_yet": "ابھی تک کوئی شپمنٹ درج نہیں ہوئی۔",
+  "dash.no_sales_yet": "ابھی تک کوئی فروخت درج نہیں ہوئی۔",
+  "dash.mixed_currencies": "متعدد کرنسیاں",
 };
 
 const ar: Dict = {
@@ -87693,6 +87705,10 @@ const ar: Dict = {
   "ble.d_price_divide": "أساس السعر والتقسيم",
   "ble.d_rates_conversion": "الأسعار والتحويل",
   "ble.opt_edit_bl": "تعديل بوليصة الشحن",
+  "dash.no_activity_yet": "لم يتم تسجيل أي نشاط بعد.",
+  "dash.no_shipments_yet": "لم يتم تسجيل أي شحنات بعد.",
+  "dash.no_sales_yet": "لم يتم تسجيل أي مبيعات بعد.",
+  "dash.mixed_currencies": "عملات متعددة",
 };
 
 const fa: Dict = {
@@ -112843,6 +112859,10 @@ const fa: Dict = {
   "ble.d_price_divide": "مبنای قیمت و تقسیم",
   "ble.d_rates_conversion": "نرخ‌ها و تبدیل",
   "ble.opt_edit_bl": "ویرایش بارنامه",
+  "dash.no_activity_yet": "هنوز فعالیتی ثبت نشده است.",
+  "dash.no_shipments_yet": "هنوز محموله‌ای ثبت نشده است.",
+  "dash.no_sales_yet": "هنوز فروشی ثبت نشده است.",
+  "dash.mixed_currencies": "چند ارز",
 };
 
 const ps: Dict = {
@@ -138000,6 +138020,10 @@ const ps: Dict = {
   "ble.d_price_divide": "د بیې او وېش بنسټ",
   "ble.d_rates_conversion": "نرخونه او تبادله",
   "ble.opt_edit_bl": "د بارنامې سمون",
+  "dash.no_activity_yet": "تر اوسه هېڅ فعالیت نه دی ثبت شوی.",
+  "dash.no_shipments_yet": "تر اوسه هېڅ بار نه دی ثبت شوی.",
+  "dash.no_sales_yet": "تر اوسه هېڅ پلور نه دی ثبت شوی.",
+  "dash.mixed_currencies": "څو اسعار",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
@@ -138015,6 +138039,8 @@ const dictionaries: Record<SupportedLanguage, Dict> = {
 export function getUiDictionaries(): Readonly<Record<SupportedLanguage, Dict>> {
   return dictionaries;
 }
+// translateHeader() falls back to this dictionary for labels its own table does not know (see table-headers.ts)
+registerUiDictionaryFallback(getUiDictionaries);
 
 export function t(lang: SupportedLanguage | string | null | undefined, key: string | null | undefined, defaultValue?: string): string {
   if (!key) return defaultValue ?? "";

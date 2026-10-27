@@ -112,7 +112,7 @@ export function AccountLiveReportPanel({
   selectedBranchName,
   selectedBranchCode,
   onEditStep,
-  auditCreatedBy = "Super Admin",
+  auditCreatedBy = "-", // never an invented creator: the form passes the real one when it has it
   auditCreatedOn,
   auditLastModifiedBy,
   auditLastModifiedOn

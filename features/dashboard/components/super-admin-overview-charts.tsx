@@ -54,6 +54,7 @@ import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { translateCountry } from "@/lib/i18n/table-values";
 
 export type CountryFinancialSummary = {
   id: string;
@@ -64,6 +65,8 @@ export type CountryFinancialSummary = {
   totalDebit: number;
   totalCredit: number;
   totalLedgerBalance: number;
+  /** the one currency of this country's ledgers, "MIXED" when they differ, null when there are none */
+  ledgerCurrency?: string | null;
   totalBranches: number;
   totalUsers: number;
   isActive: boolean;
@@ -185,50 +188,20 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
     });
   }, [monthlyFinancials]);
 
-  // Demo curved profit trend data that matches the preview graphic if all live records are 0
-  const profitTrendData = useMemo(() => {
-    const hasData = fullYearChartData.some((d) => d.Profit > 0);
-    if (hasData) return fullYearChartData;
-    // Visually rich curve matching the screenshot mockup: Jan $180K -> Sep $850K -> Dec $600K
-    return [
-      { name: "Jan", Profit: 180000 },
-      { name: "Feb", Profit: 280000 },
-      { name: "Mar", Profit: 410000 },
-      { name: "Apr", Profit: 380000 },
-      { name: "May", Profit: 520000 },
-      { name: "Jun", Profit: 630000 },
-      { name: "Jul", Profit: 720000 },
-      { name: "Aug", Profit: 850000 },
-      { name: "Sep", Profit: 780000 },
-      { name: "Oct", Profit: 650000 },
-      { name: "Nov", Profit: 710000 },
-      { name: "Dec", Profit: 620000 }
-    ];
-  }, [fullYearChartData]);
+  // The real monthly figures only — no sample curve when nothing is posted yet (a flat line is the truth then).
+  const profitTrendData = fullYearChartData;
 
-  // Donut chart distribution by country
+  // Donut: countries that actually have sales; empty when none (no sample distribution, no equal fake slices)
   const donutData = useMemo(() => {
-    const items = countrySummaries.map((c) => ({
-      name: c.name,
-      value: c.totalSales > 0 ? c.totalSales : 1
-    }));
-    if (items.length === 0) {
-      return [
-        { name: "Pakistan", value: 35, color: "#3b82f6" },
-        { name: "Afghanistan", value: 25, color: "#ef4444" },
-        { name: "China", value: 15, color: "#eab308" },
-        { name: "India", value: 10, color: "#f97316" },
-        { name: "Iran", value: 10, color: "#14b8a6" },
-        { name: "Others", value: 5, color: "#94a3b8" }
-      ];
-    }
     const colors = ["#3b82f6", "#ef4444", "#eab308", "#f97316", "#14b8a6", "#8b5cf6", "#ec4899", "#94a3b8"];
-    return items.map((it, idx) => ({ ...it, color: colors[idx % colors.length] }));
+    return countrySummaries
+      .filter((c) => c.totalSales > 0)
+      .map((c, idx) => ({ name: c.name, value: c.totalSales, currency: "USD", color: colors[idx % colors.length] })); // sales are summed in USD (page.tsx)
   }, [countrySummaries]);
 
-  const totalSalesSum = useMemo(() => {
-    return countrySummaries.reduce((sum, c) => sum + c.totalSales, 0);
-  }, [countrySummaries]);
+  // Each country's sales are in its own currency: a single total exists only when they share one
+  const salesCurrencies = useMemo(() => [...new Set(donutData.map((d) => d.currency).filter(Boolean))], [donutData]);
+  const totalSalesSum = useMemo(() => donutData.reduce((sum, d) => sum + d.value, 0), [donutData]);
 
   const gridColor = isDark ? "#334155" : "#f1f5f9";
   const tooltipStyle = {
@@ -240,98 +213,10 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
     fontSize: 11
   };
 
-  // Recent ERP activity list matching the mockup
-  const recentActivities = [
-    {
-      id: "act-1",
-      title: translateHeader(lang, "USER REGISTRATION"),
-      subtitle: "Branch Admin - Quetta",
-      time: "10 minutes ago",
-      icon: UserCheck,
-      color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
-    },
-    {
-      id: "act-2",
-      title: translateHeader(lang, "CONTAINER TRACKING"),
-      subtitle: "BL# DGT-2026-091",
-      time: "25 minutes ago",
-      icon: Truck,
-      color: "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
-    },
-    {
-      id: "act-3",
-      title: translateHeader(lang, "CUSTOMER DIRECTORY"),
-      subtitle: "ABG Trading Ltd",
-      time: "1 hour ago",
-      icon: UserPlus,
-      color: "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400"
-    },
-    {
-      id: "act-4",
-      title: translateHeader(lang, "INVOICE"),
-      subtitle: "INV-2026-0435",
-      time: "2 hours ago",
-      icon: FileText,
-      color: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
-    },
-    {
-      id: "act-5",
-      title: translateHeader(lang, "PAYMENT"),
-      subtitle: "Customer Payment",
-      time: "3 hours ago",
-      icon: CreditCard,
-      color: "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400"
-    }
-  ];
-
-  // Latest Shipments list matching the mockup
-  const latestShipments = [
-    {
-      code: "DGT-SHP-001",
-      customer: "ABC Trading",
-      country: "Pakistan",
-      mode: "Sea",
-      status: "In Transit",
-      statusTone: "green",
-      eta: "10 Oct 2026"
-    },
-    {
-      code: "DGT-SHP-002",
-      customer: "XYZ LLC",
-      country: "Afghanistan",
-      mode: "Road",
-      status: "Loading",
-      statusTone: "blue",
-      eta: "12 Oct 2026"
-    },
-    {
-      code: "DGT-SHP-003",
-      customer: "Global Traders",
-      country: "India",
-      mode: "Air",
-      status: "Pending",
-      statusTone: "amber",
-      eta: "12 Oct 2026"
-    },
-    {
-      code: "DGT-SHP-004",
-      customer: "Kabul Group",
-      country: "Afghanistan",
-      mode: "Train",
-      status: "Pending",
-      statusTone: "amber",
-      eta: "20 Oct 2026"
-    },
-    {
-      code: "DGT-SHP-005",
-      customer: "Silk Road Co",
-      country: "Iran",
-      mode: "Sea",
-      status: "Departed",
-      statusTone: "green",
-      eta: "28 Oct 2026"
-    }
-  ];
+  // Recent activity and latest shipments: this widget has no live feed yet, so it shows none — never sample records
+  // (the full lists are one click away: Activity Logs / Shipment Tracking).
+  const recentActivities: Array<{ id: string; title: string; subtitle: string; time: string; icon: typeof Clock; color: string }> = [];
+  const latestShipments: Array<{ code: string; customer: string; country: string; mode: string; status: string; statusTone: string; eta: string }> = [];
 
   return (
     <div className="space-y-6">
@@ -501,7 +386,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                         >
                           <td className="py-2 px-2.5 flex items-center gap-1.5 font-semibold text-foreground">
                             <span>{getCountryFlag(row.name)}</span>
-                            <span>{row.name}</span>
+                            <span>{translateCountry(row.name, lang)}</span>
                           </td>
                           <td className="py-2 px-1 text-center text-muted-foreground">{row.b}</td>
                           <td className="py-2 px-1 text-center text-muted-foreground">{row.u}</td>
@@ -523,7 +408,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                           <td className="py-2 px-2.5 flex items-center gap-1.5 font-semibold text-foreground">
                             <span>{getCountryFlag(row.name)}</span>
                             <span className="hover:text-blue-600 hover:underline">
-                              {row.name}
+                              {translateCountry(row.name, lang)}
                             </span>
                           </td>
                           <td className="py-2 px-1 text-center text-muted-foreground">{row.totalBranches}</td>
@@ -561,6 +446,9 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
             </CardHeader>
             <CardContent className="px-4 pb-4 pt-1 flex-1">
               <div className="space-y-3 mt-1">
+                {recentActivities.length === 0 ? (
+                  <p className="py-6 text-center text-xs text-muted-foreground">{t(lang, "dash.no_activity_yet", "No activity recorded yet.")}</p>
+                ) : null}
                 {recentActivities.map((act) => {
                   const Icon = act.icon;
                   return (
@@ -624,7 +512,13 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                  <span className="text-base font-extrabold text-foreground">${totalSalesSum.toLocaleString()}</span>
+                  <span className="text-base font-extrabold text-foreground" dir="ltr">
+                    {donutData.length === 0
+                      ? "0"
+                      : salesCurrencies.length === 1
+                        ? `${totalSalesSum.toLocaleString()} ${salesCurrencies[0]}`
+                        : t(lang, "dash.mixed_currencies", "Several currencies")}
+                  </span>
                   <span className="text-[9.5px] font-bold text-muted-foreground uppercase tracking-wider">
                     {t(lang, "dash.total_sales", "Total Sales")}
                   </span>
@@ -632,13 +526,19 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
               </div>
 
               <div className="flex-1 w-full space-y-1.5 text-[11px] font-semibold">
+                {donutData.length === 0 ? (
+                  <p className="text-center text-xs text-muted-foreground">{t(lang, "dash.no_sales_yet", "No sales recorded yet.")}</p>
+                ) : null}
                 {donutData.map((item) => (
                   <div key={item.name} className="flex items-center justify-between text-muted-foreground">
                     <div className="flex items-center gap-2 truncate">
                       <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                      <span className="truncate text-foreground font-medium">{item.name}</span>
+                      <span className="truncate text-foreground font-medium">{translateCountry(item.name, lang)}</span>
                     </div>
-                    <span className="font-bold text-foreground">0%</span>
+                    {/* a share is meaningful only within one currency */}
+                    <span className="font-bold text-foreground" dir="ltr">
+                      {salesCurrencies.length === 1 && totalSalesSum > 0 ? `${Math.round((item.value / totalSalesSum) * 100)}%` : `${item.value.toLocaleString()} ${item.currency}`}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -675,6 +575,11 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/50 font-medium">
+                    {latestShipments.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-6 text-center text-xs text-muted-foreground">{t(lang, "dash.no_shipments_yet", "No shipments recorded yet.")}</td>
+                      </tr>
+                    ) : null}
                     {latestShipments.map((shp) => (
                       <tr key={shp.code} className="hover:bg-muted/40 transition-colors">
                         <td className="py-2 px-2.5 font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
@@ -814,7 +719,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                   <div className="flex items-center gap-3">
                     <span className="text-4xl">{getCountryFlag(selectedCountry.name)}</span>
                     <div>
-                      <h4 className="text-xl font-bold text-foreground">{selectedCountry.name}</h4>
+                      <h4 className="text-xl font-bold text-foreground">{translateCountry(selectedCountry.name, lang)}</h4>
                       <span className="text-xs text-muted-foreground font-mono">
                         Currency: {selectedCountry.currency || "USD"}
                       </span>
@@ -898,7 +803,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                           >
                             <td className="py-2.5 px-3 flex items-center gap-2 font-semibold text-foreground">
                               <span className="text-base">{getCountryFlag(row.name)}</span>
-                              <span>{row.name}</span>
+                              <span>{translateCountry(row.name, lang)}</span>
                             </td>
                             <td className="py-2.5 px-2 text-center text-muted-foreground">{row.totalBranches}</td>
                             <td className="py-2.5 px-2 text-center text-muted-foreground">{row.totalUsers}</td>

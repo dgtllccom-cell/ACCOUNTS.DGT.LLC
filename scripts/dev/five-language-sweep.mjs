@@ -75,9 +75,9 @@ async function worker() {
       let resp;
       for (let attempt = 0; attempt < 4; attempt++) {
         try { resp = await page.goto(BASE + job.path, { waitUntil: "domcontentloaded", timeout: 120000 }); break; }
-        catch (e) { if (!/ERR_CONNECTION|ERR_EMPTY_RESPONSE|ECONNRESET/.test(String(e)) || attempt === 3) throw e; await page.waitForTimeout(15000); }
+        catch (e) { if (!/ERR_CONNECTION|ERR_EMPTY_RESPONSE|ERR_SOCKET_NOT_CONNECTED|ECONNRESET/.test(String(e)) || attempt === 3) throw e; await page.waitForTimeout(15000); }
       }
-      await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
+      await page.waitForLoadState("networkidle", { timeout: Number(arg("idle", "6000")) }).catch(() => {});
       await page.waitForTimeout(1500);
       const status = resp?.status() ?? 0;
       if (status >= 400) fails.push(`HTTP ${status}`);
@@ -89,6 +89,8 @@ async function worker() {
           const el = n.parentElement;
           if (!el || el.closest("script,style,noscript,[data-floating-hidden],[aria-hidden=true]")) continue;
           const t = n.textContent.replace(/\s+/g, " ").trim();
+          // the signed-in user's own name on the user-menu button is data (the DEV test user is literally named "Super Admin")
+          if (el.closest("button[aria-label]")?.getAttribute("aria-label") === t) continue;
           if (t) texts.push(t);
         }
         return {
@@ -106,6 +108,7 @@ async function worker() {
       if (info.pending) fails.push("translation pending");
       if (rtl) {
         const left = [...new Set(info.texts.filter((t) => english[job.lang].has(t)))];
+        job.english = left;
         if (left.length) fails.push(`English UI: ${left.slice(0, 4).map((t) => JSON.stringify(t)).join(", ")}${left.length > 4 ? ` (+${left.length - 4})` : ""}`);
       }
       if (errors.length) fails.push(`page error: ${errors[0]}`);

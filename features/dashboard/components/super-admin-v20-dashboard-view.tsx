@@ -35,6 +35,8 @@ export interface DashboardV20Data {
     debit: number;
     credit: number;
     balance: number;
+    /** the one currency of the ledgers, "MIXED" when they differ, null when there are none */
+    ledgerCurrency?: string | null;
   };
   activeUsers: number;
   countries: CountryFinancialSummary[];
@@ -107,7 +109,8 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
         purchases: matched.totalPurchases,
         debit: matched.totalDebit,
         credit: matched.totalCredit,
-        balance: matched.totalLedgerBalance
+        balance: matched.totalLedgerBalance,
+        ledgerCurrency: matched.ledgerCurrency ?? null
       }
     };
   }, [data, appliedCountry]);
@@ -158,43 +161,52 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
     }
   ];
 
+  // Sales / purchases are USD sums (page.tsx). Ledger figures are in their own currency: one total only within ONE currency.
+  const ledgerCurrency = filteredData.totals.ledgerCurrency ?? null;
+  const ledgerMoney = (value: number) => {
+    if (ledgerCurrency === "MIXED") return tt("dash.mixed_currencies", "Several currencies");
+    if (!ledgerCurrency || ledgerCurrency === "USD") return money(value);
+    const rounded = Math.round(value);
+    return `${rounded < 0 ? "-" : ""}${ledgerCurrency} ${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Math.abs(rounded))}`;
+  };
+
   // V20 Financial Overview (6 white cards)
   const finances = [
     {
       id: "sales",
       title: tt("dash.total_sales", "Total Sales"),
       value: money(filteredData.totals.sales),
-      subtext: "↑ live overview"
+      subtext: tt("dash.live_records", "Live data")
     },
     {
       id: "purchases",
       title: tt("dash.total_purchase", "Total Purchases"),
       value: money(filteredData.totals.purchases),
-      subtext: "↑ live overview"
+      subtext: tt("dash.live_records", "Live data")
     },
     {
       id: "receivables",
       title: tt("dash.total_receivables", "Receivables"),
-      value: money(filteredData.totals.debit),
-      subtext: "↑ live overview"
+      value: ledgerMoney(filteredData.totals.debit),
+      subtext: tt("dash.live_records", "Live data")
     },
     {
       id: "payables",
       title: tt("dash.total_payables", "Payables"),
-      value: money(filteredData.totals.credit),
-      subtext: "↑ live overview"
+      value: ledgerMoney(filteredData.totals.credit),
+      subtext: tt("dash.live_records", "Live data")
     },
     {
       id: "net_ledger",
       title: tt("dash.cash_balance", "Net Ledger"),
-      value: money(filteredData.totals.debit - filteredData.totals.credit),
-      subtext: "↑ live overview"
+      value: ledgerMoney(filteredData.totals.debit - filteredData.totals.credit),
+      subtext: tt("dash.live_records", "Live data")
     },
     {
       id: "ledger_balance",
       title: tt("dash.ledger_balance", "Ledger Balance"),
-      value: money(filteredData.totals.balance),
-      subtext: "↑ live overview"
+      value: ledgerMoney(filteredData.totals.balance),
+      subtext: tt("dash.live_records", "Live data")
     }
   ];
 
