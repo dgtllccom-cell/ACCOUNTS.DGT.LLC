@@ -16,7 +16,8 @@ adds **no database migration**. Runbook: `docs/release-2026-10-27-rc2-runbook.md
 | 5. DEV clean-up of test accounts | PASS — the 8 reported + 5 more from an interrupted run archived through the app (soft delete, history kept); 28 test accounts archived in total, 0 active ledgers; no real data touched |
 | 6. Shipping Line & BL Entry | PASS — 95 / 95 (menu link, Goods Master source, five languages, phone / desktop); both work cards closed. BL Entry no longer shows invented values |
 | 7. Regression / security / permissions | PASS — 20 scripts (financial, operational, user creation, account approval, branch-admin permissions, direct-URL / API matrix); unit tests 570 / 570; tsc, build and all guards green. Leak scan: 156 PASS + 4 items that are Shipping-domain DEV test records on Business branches (not leaks) after the Roznamcha fix below |
-| 8. Deployment gate | PREPARED — release branch pushed, draft pull request to `production`; waiting for the owner's written approval |
+| 7b. Five-language sweep — every Main Menu screen (185) × EN / UR / AR / FA / PS × 1440 / 820 / 390 px = 2,775 page-loads | 2,585 PASS (93.2 %); 2,624 / 2,751 (95.4 %) when saved names (a bank branch called "Main Branch", the brand name) and the postponed Tax module are not counted; 0 load failures. Checks: loads, no error page / page error, `dir` follows the language, no sideways scroll, no English UI sentence that has a translation. Remaining English labels (10, on 8 screens, after 7d3fbcf): All Countries (edit history / deleted records filters), Country Admin (dashboard settings, exchange-rate report), Super Admin Branch, Sales Booking / Unknown Country (final sales payment header), All Branches (outstanding ledger), Shipping Line Super Admin (handover), General Office, Shipping Line (users list) |
+| 8. Deployment gate | PREPARED — `release/rc2` pushed to GitHub; the pull request into `production` is one click (compare page); waiting for the owner's written approval |
 | 9. Figma | PREPARED — editable Figma plugin (3 concepts × 20 screens, EN + UR) in `design-review/04-figma-plugin`; the Figma connector still needs the owner's sign-in |
 
 **Found and fixed during the final verification (all live in Production before rc2):**
@@ -31,6 +32,14 @@ adds **no database migration**. Runbook: `docs/release-2026-10-27-rc2-runbook.md
   "Passed" quality report), City / Country Branch reports (sample accounts, company type), Account Setup ("Created by: Super Admin").
 * **Five languages:** menu labels and headings fall back to the central dictionary; ~80 leftover English labels on ~40 screens; two
   hydration errors (CHS Products, Outstanding Ledger).
+
+**Open owner decisions (found, deliberately not changed):**
+* **Tax Management (`/dashboard/tax`, VAT / GST) — postponed module:** its KPI cards show fixed figures that are not read from any
+  data ("Total Tax Collected (YTD) AED 2,48,320", "+12 % vs last year", 12 branches, 38 users, 5 countries, 12 profiles). Left exactly
+  as in Production because the owner postponed this module.
+* **Location Management on Production:** migration 20261242 (released through the gate on 2026-10-26 by root) inserted 104 rows into
+  `erp_locations` (copies of the ports master). Nothing was deleted; reversing it would itself modify location data.
+* **origin/main** carries the owner-only "ONE APP" status page (PR #33); it is also in Production (dffd724) and therefore in rc2.
 
 ## Production release ca7383d — LIVE 2026-10-25 23:54 Dubai; follow-up rc2 (2026-10-26)
 
