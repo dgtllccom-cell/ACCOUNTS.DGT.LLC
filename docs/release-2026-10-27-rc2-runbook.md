@@ -57,3 +57,20 @@ dgt-deploy --dry-run && dgt-deploy                     # backup + atomic build; 
 
 ## Rollback
 `dgt-deploy --rollback` (previous build restored, database untouched — this release changes no schema and no data).
+
+## Release of 2026-10-27 (afternoon) — owner's written instruction to merge and deploy through the gate
+* Production had moved to `2f44ace` (Clearing E1 / location pickers, deployed 11:11Z). It was merged into `release/rc2`
+  (`989b8bc`; one UiKey-union conflict, both key lists kept; i18n guard 22,339 keys × 5) and the merged build was re-tested.
+* Added since rc2 final: New Account Setup keeps unsaved edits on a language switch (`fc0a384`); Cash Entry notices, Outstanding
+  Ledger, user profile labels (`30ad4ad`); Party Directory search by saved name + live language switch (`8c6924e`); Cash Entry role
+  label / Accounts report scope placeholder (`e250998`). No migration.
+* `origin/production` was fast-forwarded to the release commit (it contains `2f44ace`) and deployed through the gate: `989b8bc` (12:03:49Z) and `e249760` (12:47:25Z, no-invented-figures fix). Steps used on the VPS:
+  `dgt-approve-deploy <sha>` (no `--migrations`) → `dgt-deploy --dry-run` → `dgt-deploy`.
+* Live checks without signing in (a signed-in check needs the owner's login): VPS HEAD = release, pm2 online, deploy log
+  `DEPLOYED <sha>`, `/auth/login` follows `erp_lang` (lang / dir) in all five languages, signed-out pages and APIs refused,
+  the release's own dictionary keys present in the live build, Production row counts unchanged by the deploy.
+* Signed-in checks for the owner (2 minutes, read-only — nothing is saved):
+  1. Customers → Party Directory: switch UR → AR → the names follow the language; type a customer's saved name in UR → it is found.
+  2. Roznamcha → Cash Entry → New Entry → Save Entry on the empty form (UR): a red Urdu notice, nothing posted.
+  3. Accounts → open an account → type in "Reference" → switch the language → the typed text stays; the Account Name is the saved name.
+  4. Ledger → Outstanding: "All Branches" / "All Countries" appear in the selected language.
