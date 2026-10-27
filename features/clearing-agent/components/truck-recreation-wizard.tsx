@@ -4207,9 +4207,9 @@ export function TruckRecreationWizard({
               </section>
             </form>
 
-            {/* RIGHT STICKY LIVE TRUCK REPORT COLUMN */}
+            {/* RIGHT LIVE TRUCK REPORT COLUMN */}
             <div className="lg:col-span-7 xl:col-span-8">
-              <aside className="dgt-trk-report-card overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-4">
+              <aside className="dgt-trk-report-card overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 {/* Header (Matches Approved Reference in all 5 languages) */}
                 <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40 sm:px-5">
                   <div className="flex min-w-0 items-center gap-3">

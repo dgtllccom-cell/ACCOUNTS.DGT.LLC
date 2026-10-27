@@ -5315,7 +5315,7 @@ export function CustomerOrderManagementView() {
 
             {/* RIGHT COLUMN: The Live Customer Order Report Panel (Full Size & Prominent) */}
             {showLiveReport && (
-              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 lg:col-span-7 xl:col-span-7 2xl:col-span-7 min-w-0 xl:sticky xl:top-3 h-fit max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl bg-slate-50/70 p-2 pr-1 dark:bg-slate-950/30">
+              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 lg:col-span-7 xl:col-span-7 2xl:col-span-7 min-w-0 rounded-2xl bg-slate-50/70 p-2 pr-1 dark:bg-slate-950/30">
               {/* Live Report Card Container */}
               <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
                 {/* Header with Title, Subtitle, and Action Buttons (Back, Print, PDF, Live) */}
