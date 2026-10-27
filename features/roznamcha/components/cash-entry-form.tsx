@@ -813,10 +813,10 @@ export function CashEntryForm({
       return tr("cj.roleBranchAdmin", "Branch Admin");
     }
     if (primaryRole) {
-      return primaryRole.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      return translateHeader(lang, primaryRole.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()));
     }
-    return "Staff User";
-  }, [session, tr]);
+    return tr("role.staff_user", "Staff User");
+  }, [session, tr, lang]);
 
   const currentSerialDisplay = useMemo(() => {
     if (isSuperAdmin) {

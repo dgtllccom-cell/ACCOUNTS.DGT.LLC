@@ -28,7 +28,7 @@ const get = async (path, lang) => {
 };
 
 const records = [];
-for (const id of CUSTOMERS) {
+for (const id of CUSTOMERS.filter((x) => !process.env.ONLY_ID || x === process.env.ONLY_ID)) {
   const c = (await devQuery((sql) => sql`select customer_name from public.customers where id = ${id}::uuid`))[0];
   const t = (await devQuery((sql) => sql`select english_text, urdu_text, arabic_text, persian_text, pashto_text, source::text as source, translation_status, corrected_by from public.record_translations where record_table = 'customers' and record_id = ${id}::uuid and field_name = 'customer_name' and deleted_at is null limit 1`))[0];
   const acc = (await devQuery((sql) => sql`select a.id, a.name, (select l.id from public.ledgers l where l.enterprise_account_id = a.id and l.deleted_at is null limit 1) as ledger_id, exists (select 1 from public.ledgers l where l.enterprise_account_id = a.id and l.deleted_at is null and (l.debit_total <> 0 or l.credit_total <> 0)) as has_activity from public.enterprise_accounts a where a.customer_id = ${id}::uuid and a.deleted_at is null and a.status <> 'archived' order by a.created_at limit 1`))[0];
@@ -89,7 +89,8 @@ for (const rec of records) {
         }
         let text = "";
         const expectName0 = label === "Customer Register" ? rec.expected[lang] : rec.account.name;
-        for (let i = 0; i < 4; i++) { text = await p.evaluate(() => document.body.innerText); if (text.includes(expectName0) || text.includes(rec.saved)) break; await p.waitForTimeout(3000); }
+        // a report can take 20-30 s on a busy DEV box
+        for (let i = 0; i < 10; i++) { text = await p.evaluate(() => document.body.innerText); if (text.includes(expectName0) || text.includes(rec.saved)) break; await p.waitForTimeout(4000); }
         const shownMachine = rec.machine.filter((m) => text.includes(m));
         const expectName = label === "Customer Register" ? rec.expected[lang] : rec.account.name;
         check(`${tag} ${label} page ${lang}: no machine rendering of the name`, shownMachine.length === 0, shownMachine.join(" | "));

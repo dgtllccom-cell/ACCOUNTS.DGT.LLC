@@ -1905,7 +1905,7 @@ export function AccountGeneralReportView({
                 <div className="flex justify-between items-center">
                   <span>{tr("AUTHORIZED REGION:")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">
-                    {filteredRows[0]?.countryName || (session as any)?.countryName || "Authorized Scope"}
+                    {filteredRows[0]?.countryName || (session as any)?.countryName || t(lang, "cj.authorizedScope", "Authorized Scope")}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
