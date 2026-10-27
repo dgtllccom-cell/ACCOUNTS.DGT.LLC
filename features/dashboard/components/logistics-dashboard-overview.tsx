@@ -292,7 +292,7 @@ export function LogisticsDashboardOverview({
                 </h1>
 
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium">
-                  Operational dashboard tracking freight shipments, customs clearance, transit containers, and task handovers.
+                  {tt("log.dashboard_subtitle", "Operational dashboard tracking live shipments, customs clearing, BL tasks and container locations.")}
                 </p>
               </div>
 
@@ -312,7 +312,7 @@ export function LogisticsDashboardOverview({
 
             {/* Bottom slogan */}
             <div className="pt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
-              GLOBAL SHIPPING BRIGHTER TOMORROW
+              {tt("log.hero_slogan", "Global shipping, brighter tomorrow")}
             </div>
           </div>
         </div>

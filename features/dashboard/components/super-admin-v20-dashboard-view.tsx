@@ -252,7 +252,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                   <span className="truncate max-w-[130px] sm:max-w-none">
                     {appliedCountry !== "all"
                       ? data.countries.find((c) => c.id === appliedCountry)?.name || "Country Scoped"
-                      : "Business / Admin"}
+                      : tt("dash.scope_business_admin", "Business / Admin")}
                   </span>
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform ${flyoutOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -273,10 +273,10 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                         </span>
                         <div>
                           <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">
-                            DASHBOARD VIEW
+                            {tt("dash.dashboard_view", "Dashboard View")}
                           </span>
                           <strong className="text-sm font-black text-slate-800 dark:text-slate-100">
-                            Business / Admin / Country
+                            {tt("dash.scope_business_admin_country", "Business / Admin / Country")}
                           </strong>
                         </div>
                       </div>
@@ -386,7 +386,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
             <span className="text-white/40">•</span>
             <span className="text-[10px] text-emerald-300 font-semibold tracking-wide flex items-center gap-1">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Live Sync
+              {tt("dash.live_sync", "Live Sync")}
             </span>
           </div>
         </div>
@@ -397,7 +397,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
               {tt("nav.super_admin_menu", "Super Admin Dashboard")}
             </h1>
             <p className="mt-1 text-xs sm:text-sm font-medium text-slate-200/90 drop-shadow-xs">
-              Import • Export • Shipping • Finance
+              {tt("dash.hero_tagline", "Import • Export • Shipping • Finance")}
             </p>
           </div>
         </div>
@@ -408,7 +408,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
         <section className="space-y-2.5">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              KEY BUSINESS INDICATORS
+              {tt("dash.key_business_indicators", "Key Business Indicators")}
             </h2>
             <span className="text-[10px] font-bold text-slate-400 uppercase">
               {tt("dash.live_records", "Live records")}

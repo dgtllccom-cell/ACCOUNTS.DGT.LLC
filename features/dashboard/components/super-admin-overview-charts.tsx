@@ -479,7 +479,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
             <CardHeader className="pb-2 pt-4 px-4 sm:px-5 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
                 <Layers className="h-4 w-4 text-emerald-500" />
-                {translateHeader(lang, "TOP COUNTRIES BY SALES")}
+                {t(lang, "dash.top_countries_sales", "Top Countries by Sales")}
               </CardTitle>
               <Link
                 href="/dashboard/sales"
@@ -552,7 +552,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
             <CardHeader className="pb-2 pt-4 px-4 sm:px-5 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
                 <Ship className="h-4 w-4 text-cyan-600" />
-                {translateHeader(lang, "LATEST SHIPMENTS")}
+                {t(lang, "dash.latest_shipments", "Latest Shipments")}
               </CardTitle>
               <Link
                 href="/dashboard/tracking"

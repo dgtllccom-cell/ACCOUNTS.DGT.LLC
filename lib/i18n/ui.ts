@@ -12231,6 +12231,15 @@ export type UiKey =
   | "eaud.kpi_branch_user_report"
   | "eaud.kpi_branches_monitored"
   | "eaud.kpi_users_audited"
+  | "log.hero_slogan"
+  | "dash.latest_shipments"
+  | "dash.top_countries_sales"
+  | "dash.key_business_indicators"
+  | "dash.live_sync"
+  | "dash.hero_tagline"
+  | "dash.scope_business_admin"
+  | "dash.scope_business_admin_country"
+  | "dash.dashboard_view"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37434,6 +37443,15 @@ const en: Dict = {
   "eaud.kpi_branch_user_report": "Branch and User Audit Report",
   "eaud.kpi_branches_monitored": "Branches monitored",
   "eaud.kpi_users_audited": "Users audited",
+  "log.hero_slogan": "Global shipping, brighter tomorrow",
+  "dash.latest_shipments": "Latest Shipments",
+  "dash.top_countries_sales": "Top Countries by Sales",
+  "dash.key_business_indicators": "Key Business Indicators",
+  "dash.live_sync": "Live Sync",
+  "dash.hero_tagline": "Import • Export • Shipping • Finance",
+  "dash.scope_business_admin": "Business / Admin",
+  "dash.scope_business_admin_country": "Business / Admin / Country",
+  "dash.dashboard_view": "Dashboard View",
 };
 
 const ur: Dict = {
@@ -62605,6 +62623,15 @@ const ur: Dict = {
   "eaud.kpi_branch_user_report": "برانچ اور صارف آڈٹ رپورٹ",
   "eaud.kpi_branches_monitored": "زیر نگرانی برانچیں",
   "eaud.kpi_users_audited": "آڈٹ شدہ صارفین",
+  "log.hero_slogan": "عالمی شپنگ، روشن مستقبل",
+  "dash.latest_shipments": "تازہ ترین شپمنٹس",
+  "dash.top_countries_sales": "فروخت کے لحاظ سے سرفہرست ممالک",
+  "dash.key_business_indicators": "اہم کاروباری اشاریے",
+  "dash.live_sync": "لائیو ہم آہنگی",
+  "dash.hero_tagline": "درآمد • برآمد • شپنگ • مالیات",
+  "dash.scope_business_admin": "بزنس / ایڈمن",
+  "dash.scope_business_admin_country": "بزنس / ایڈمن / ملک",
+  "dash.dashboard_view": "ڈیش بورڈ منظر",
 };
 
 const ar: Dict = {
@@ -87777,6 +87804,15 @@ const ar: Dict = {
   "eaud.kpi_branch_user_report": "تقرير تدقيق الفروع والمستخدمين",
   "eaud.kpi_branches_monitored": "الفروع المراقبة",
   "eaud.kpi_users_audited": "المستخدمون الذين تم تدقيقهم",
+  "log.hero_slogan": "شحن عالمي، غد أكثر إشراقاً",
+  "dash.latest_shipments": "أحدث الشحنات",
+  "dash.top_countries_sales": "أعلى الدول مبيعاً",
+  "dash.key_business_indicators": "مؤشرات الأعمال الرئيسية",
+  "dash.live_sync": "مزامنة مباشرة",
+  "dash.hero_tagline": "استيراد • تصدير • شحن • مالية",
+  "dash.scope_business_admin": "الأعمال / الإدارة",
+  "dash.scope_business_admin_country": "الأعمال / الإدارة / الدولة",
+  "dash.dashboard_view": "عرض لوحة التحكم",
 };
 
 const fa: Dict = {
@@ -112948,6 +112984,15 @@ const fa: Dict = {
   "eaud.kpi_branch_user_report": "گزارش حسابرسی شعبه و کاربر",
   "eaud.kpi_branches_monitored": "شعبه‌های تحت نظارت",
   "eaud.kpi_users_audited": "کاربران حسابرسی‌شده",
+  "log.hero_slogan": "حمل‌ونقل جهانی، فردای روشن‌تر",
+  "dash.latest_shipments": "آخرین محموله‌ها",
+  "dash.top_countries_sales": "برترین کشورها بر اساس فروش",
+  "dash.key_business_indicators": "شاخص‌های کلیدی کسب‌وکار",
+  "dash.live_sync": "همگام‌سازی زنده",
+  "dash.hero_tagline": "واردات • صادرات • حمل‌ونقل • مالی",
+  "dash.scope_business_admin": "کسب‌وکار / مدیریت",
+  "dash.scope_business_admin_country": "کسب‌وکار / مدیریت / کشور",
+  "dash.dashboard_view": "نمای داشبورد",
 };
 
 const ps: Dict = {
@@ -138126,6 +138171,15 @@ const ps: Dict = {
   "eaud.kpi_branch_user_report": "د څانګې او کارن د پلټنې راپور",
   "eaud.kpi_branches_monitored": "څارل شوې څانګې",
   "eaud.kpi_users_audited": "پلټل شوي کارنان",
+  "log.hero_slogan": "نړیوال بار وړل، روښانه سبا",
+  "dash.latest_shipments": "وروستي بارونه",
+  "dash.top_countries_sales": "د پلور له مخې غوره هېوادونه",
+  "dash.key_business_indicators": "د سوداګرۍ مهم شاخصونه",
+  "dash.live_sync": "ژوندۍ همغږي",
+  "dash.hero_tagline": "واردات • صادرات • بار وړل • مالي",
+  "dash.scope_business_admin": "سوداګري / اداره",
+  "dash.scope_business_admin_country": "سوداګري / اداره / هېواد",
+  "dash.dashboard_view": "د ډشبورډ لید",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
