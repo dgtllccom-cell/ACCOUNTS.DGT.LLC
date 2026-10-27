@@ -1,4 +1,5 @@
 "use client";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -156,11 +157,13 @@ const DEFAULT_PURCHASE_STATUSES: Array<keyof typeof ERP_STATUS_COLORS> = [
  * ReportStatusLegend — footer section showing status color key + notes.
  */
 export function ReportStatusLegend({
-  lang = "en",
+  lang: langProp,
   statuses = DEFAULT_PURCHASE_STATUSES,
   notes,
   className
 }: ReportStatusLegendProps) {
+  const activeLang = useActiveLanguage();
+  const lang = langProp && langProp !== "en" ? langProp : activeLang;
   const tr = (label: string) => translateHeader(lang, label);
   return (
     <div className={cn(

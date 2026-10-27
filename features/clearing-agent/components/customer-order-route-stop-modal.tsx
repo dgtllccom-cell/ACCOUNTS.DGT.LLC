@@ -1,4 +1,5 @@
 "use client";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -79,7 +80,7 @@ interface CustomerOrderRouteStopModalProps {
 export function CustomerOrderRouteStopModal({
   open,
   onClose,
-  lang = "en",
+  lang: langProp,
   mode,
   stopIndex = 0,
   initialValues,
@@ -93,6 +94,8 @@ export function CustomerOrderRouteStopModal({
   destinationName = "Destination",
   onSave
 }: CustomerOrderRouteStopModalProps) {
+  const activeLang = useActiveLanguage();
+  const lang = langProp && langProp !== "en" ? langProp : activeLang;
   if (!open) return null;
 
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);

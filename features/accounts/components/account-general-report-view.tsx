@@ -1217,7 +1217,7 @@ export function AccountGeneralReportView({
       title: t(lang, "acct.agrv_account_register_report", "Account Register Report"),
       subtitle: `${t(lang, "acct.agrv_account_master_registry_search", "Account Master Registry & Search Report")} - Generated ${new Date().toLocaleString()}`,
       rows: [
-        { label: tr("REPORT SCOPE"), value: dashboardScope === "super_admin" ? "SUPER ADMIN" : dashboardScope === "country" ? tr("COUNTRY SCOPE") : tr("BRANCH SCOPE") },
+        { label: tr("REPORT SCOPE"), value: dashboardScope === "super_admin" ? tr("SUPER ADMIN") : dashboardScope === "country" ? tr("COUNTRY SCOPE") : tr("BRANCH SCOPE") },
         { label: `${tr("BRANCH NAME")} ${tr("DETAILS")}`, value: activeBranchName },
         { label: tr("TOTAL ACCOUNTS"), value: `${visibleSummary.totalAccounts.toLocaleString()} (${visibleSummary.activeAccounts} ${tr("ACTIVE")})` },
         { label: `${tr("TOTAL DEBIT")} (DR)`, value: fmtNumber(visibleSummary.debitTotal) },
@@ -1623,7 +1623,7 @@ export function AccountGeneralReportView({
           <span className="text-slate-300 dark:text-slate-700">•</span>
           <span>{tr("BRANCH SCOPE:")} <strong className="text-blue-600 dark:text-blue-400">{isSuperAdmin ? tr("GLOBAL ADMIN") : isCountryAdmin ? tr("COUNTRY") : isShippingUser ? tr("SHIPPING LINE") : tr("BRANCH")}</strong></span>
           <span className="text-slate-300 dark:text-slate-700">•</span>
-          <span>{tr("SESSION ROLE:")} <strong className="text-emerald-600 dark:text-emerald-400">{isSuperAdmin ? "SUPER ADMIN" : isShippingUser ? "SHIPPING LINE USER" : ((session as any)?.roles?.[0]?.replace(/_/g, " ").toUpperCase() || "ADMIN")}</strong></span>
+          <span>{tr("SESSION ROLE:")} <strong className="text-emerald-600 dark:text-emerald-400">{isSuperAdmin ? tr("SUPER ADMIN") : isShippingUser ? tr("SHIPPING LINE USER") : ((session as any)?.roles?.[0]?.replace(/_/g, " ").toUpperCase() || "ADMIN")}</strong></span>
           <span className="text-slate-300 dark:text-slate-700">•</span>
           <span>{tr("TOTAL LEDGERS:")} <strong className="text-slate-800 dark:text-slate-200">{filteredRows.length}</strong></span>
         </div>
@@ -1664,7 +1664,7 @@ export function AccountGeneralReportView({
               <span>{tr("COUNTRY:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
                 {isAllAccess
-                  ? (selectedCountryForSummary || "All Countries")
+                  ? (selectedCountryForSummary || tr("All Countries"))
                   : (filteredRows[0]?.countryName || (session as any)?.countryName || "Authorized Country")}
               </span>
             </div>
@@ -1944,7 +1944,7 @@ export function AccountGeneralReportView({
               <span className="font-bold text-slate-700 dark:text-slate-300">{tr("COVERAGE:")}</span>
               <span className="font-bold text-blue-600 dark:text-blue-400">
                 {isAllAccess
-                  ? "GLOBAL NETWORK"
+                  ? tr("GLOBAL NETWORK")
                   : `${filteredRows[0]?.countryName?.toUpperCase() || "REGIONAL"} NETWORK`}
               </span>
             </div>
