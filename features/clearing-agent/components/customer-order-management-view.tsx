@@ -24,6 +24,7 @@ import {
   Pencil,
   Plane,
   Plus,
+  Loader2,
   Printer,
   Receipt,
   RefreshCw,
@@ -823,6 +824,9 @@ const EMPTY_FORM = {
   loading_city_id: "",
   loading_city_name: "",
   loading_area_id: "",
+  loading_gate_id: "",
+  loading_gate_name: "",
+  loading_customs_office_id: "",
   receiving_country_id: "",
   receiving_country_name: "",
   receiving_state_province_id: "",
@@ -830,6 +834,9 @@ const EMPTY_FORM = {
   receiving_city_id: "",
   receiving_city_name: "",
   receiving_area_id: "",
+  receiving_gate_id: "",
+  receiving_gate_name: "",
+  receiving_customs_office_id: "",
   route_name: "",
   customs_point_text: "",
   customs_clearance_office: "",
@@ -1054,7 +1061,8 @@ function PartyRolePanel({
   companyOptions,
   orders,
   disabled = false,
-  lang
+  lang,
+  onCreateNew
 }: {
   roleKey: PartyRoleKey;
   label: string;
@@ -1068,6 +1076,7 @@ function PartyRolePanel({
   orders: ClearingCustomerOrderRow[];
   disabled?: boolean;
   lang: string;
+  onCreateNew?: () => void;
 }) {
   const tt = (k: string, f: string) => t(lang as never, ("com." + k) as never, f);
   const selectedCustomer = customers.find((item) => item.id === selection.customerId);
@@ -1097,6 +1106,9 @@ function PartyRolePanel({
           value={selection.customerId}
           placeholder={disabled ? t(lang as never, "common.loading" as never, "Loading...") : `${t(lang, "comv.select_customer_account", "Select Customer Account")} — ${label}`}
           options={customerOptions}
+          createButtonPlacement={onCreateNew ? "inside" : undefined}
+          createLabel={onCreateNew ? t(lang, "customers.add_new_customer", "+ Add New Customer") : undefined}
+          onCreateNew={onCreateNew}
           onValueChange={(customerId) => {
             const customer = customers.find((item) => item.id === customerId);
             const guessedCompany = companies.find((comp) => {
@@ -2504,24 +2516,24 @@ export function CustomerOrderManagementView() {
       <p><strong>${tt("print_movement", "Movement")}:</strong> ${order.movement_type ? movementTypeLabel(lang, order.movement_type) : "-"}</p>
       ${hasIntermediate ? `
         <div class="corridor-box">
-          <h3 style="margin:0 0 8px 0;font-size:13px;color:#1e40af;">Route & Multi-Stage Transit Details</h3>
+          <h3 style="margin:0 0 8px 0;font-size:13px;color:#1e40af;">${t(lang, "clearing.print_route_transit_details", "Route & Multi-Stage Transit Details")}</h3>
           <p style="margin:0 0 8px 0;font-size:12px;"><strong>Progression:</strong> ${fullRouteStr}</p>
           <table>
             <thead>
               <tr>
-                <th>Stage</th>
-                <th>Country</th>
-                <th>Branch / Location</th>
-                <th>Operation</th>
-                <th>Entry / Exit Details</th>
+                <th>${t(lang, "clearing.col_stage", "Stage")}</th>
+                <th>${t(lang, "clearing.col_country", "Country")}</th>
+                <th>${t(lang, "clearing.col_branch_location", "Branch / Location")}</th>
+                <th>${t(lang, "clearing.col_operation", "Operation")}</th>
+                <th>${t(lang, "clearing.col_entry_exit_details", "Entry / Exit Details")}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Origin</td>
+                <td>${t(lang, "clearing.print_origin", "Origin")}</td>
                 <td>${order.loading_country_name || "-"}</td>
                 <td>${order.loading_location_name || order.loading_place || "-"}</td>
-                <td>Export Clearance</td>
+                <td>${t(lang, "clearing.print_export_clearance", "Export Clearance")}</td>
                 <td>Exit: ${order.exit_border_port_name || "-"}</td>
               </tr>
               ${((order as any).intermediate_stages || []).map((stg: any, i: number) => `
@@ -2534,10 +2546,10 @@ export function CustomerOrderManagementView() {
                 </tr>
               `).join("")}
               <tr>
-                <td>Destination</td>
+                <td>${t(lang, "clearing.print_destination", "Destination")}</td>
                 <td>${order.receiving_country_name || "-"}</td>
                 <td>${order.receiving_location_name || order.receiving_place || order.destination_city || "-"}</td>
-                <td>Import Clearance</td>
+                <td>${t(lang, "clearing.print_import_clearance", "Import Clearance")}</td>
                 <td>Entry: ${order.entry_border_port_name || "-"}</td>
               </tr>
             </tbody>
@@ -5941,6 +5953,204 @@ function FieldCard({ children, tone = "slate" }: { children: React.ReactNode; to
   );
 }
 
+function QuickCustomerModal({
+  open,
+  onClose,
+  countryId,
+  countries,
+  onSaved
+}: {
+  open: boolean;
+  onClose: () => void;
+  countryId?: string | null;
+  countries: CountryRow[];
+  onSaved: (customer: { id: string; name: string; code?: string; company?: string; mobile?: string; email?: string; address?: string }) => void;
+}) {
+  const lang = useActiveLanguage();
+  const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [email, setEmail] = useState("");
+  const [selectedCountryId, setSelectedCountryId] = useState(countryId || "");
+  const [address, setAddress] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setName("");
+      setCompanyName("");
+      setMobile("");
+      setEmail("");
+      setSelectedCountryId(countryId || (countries[0]?.id ?? ""));
+      setAddress("");
+      setErrorMsg(null);
+    }
+  }, [open, countryId, countries]);
+
+  if (!open) return null;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) {
+      setErrorMsg(t(lang, "customers.name_required", "Customer name is required"));
+      return;
+    }
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/erp/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: name.trim(),
+          companyName: companyName.trim() || undefined,
+          mobile: mobile.trim() || undefined,
+          email: email.trim() || undefined,
+          countryId: selectedCountryId || undefined,
+          address: address.trim() || undefined
+        })
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.error?.message || json?.message || t(lang, "customers.save_failed", "Failed to save customer"));
+      }
+      const newId = json?.data?.customerId || json?.customerId;
+      if (newId) {
+        const newCode = json?.data?.customerCode || json?.customerCode || "";
+        onSaved({ id: newId, name: name.trim(), code: newCode, company: companyName.trim() || undefined, mobile: mobile.trim() || undefined, email: email.trim() || undefined, address: address.trim() || undefined });
+        onClose();
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || String(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <SimpleModal
+      isOpen={open}
+      onClose={onClose}
+      title={t(lang, "customers.new_customer_title", "Add New Customer — Shared Master")}
+    >
+      <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4 text-xs">
+        {errorMsg && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-900/50 dark:bg-red-950/40 text-xs font-semibold text-red-700 dark:text-red-300 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <div className="flex-1">{errorMsg}</div>
+          </div>
+        )}
+
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+            {t(lang, "customers.name_lbl", "Customer / Person Name")} *
+          </label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Haji Abdul Rahman"
+            className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              {t(lang, "customers.company_lbl", "Company / Business Name")}
+            </label>
+            <input
+              type="text"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="e.g. Al-Madina Trading LLC"
+              className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              {t(lang, "customers.country_lbl", "Country")}
+            </label>
+            <select
+              value={selectedCountryId}
+              onChange={(e) => setSelectedCountryId(e.target.value)}
+              className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            >
+              <option value="">{t(lang, "customers.select_country", "Select country...")}</option>
+              {countries.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              {t(lang, "customers.mobile_lbl", "Mobile / WhatsApp")}
+            </label>
+            <input
+              type="text"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+              placeholder="+971 50 1234567"
+              className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              {t(lang, "customers.email_lbl", "Email Address")}
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="customer@example.com"
+              className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+            {t(lang, "customers.address_lbl", "Address / Location")}
+          </label>
+          <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="e.g. Office 402, Al Ras, Deira, Dubai"
+            className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          />
+        </div>
+
+        <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          >
+            {t(lang, "common.cancel", "Cancel")}
+          </button>
+          <button
+            type="submit"
+            disabled={loading || !name.trim()}
+            className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5"
+          >
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+            <span>{t(lang, "customers.save_customer_btn", "Save Customer Profile")}</span>
+          </button>
+        </div>
+      </form>
+    </SimpleModal>
+  );
+}
+
 function Step1BookingCustomer({
   lang,
   tt,
@@ -6095,6 +6305,15 @@ function Step1BookingCustomer({
   const [viewCustomerModalOpen, setViewCustomerModalOpen] = useState(false);
   const [showAdvancedCorridor, setShowAdvancedCorridor] = useState(false);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState("");
+
+  // E1 Internal Sub-sections (Section 1: Basic info, Section 2: Route & Customer details)
+  const [e1SubSection, setE1SubSection] = useState<1 | 2>(1);
+  const [quickCustomerModalOpen, setQuickCustomerModalOpen] = useState(false);
+  const [extraCustomerOptions, setExtraCustomerOptions] = useState<SearchSelectOption[]>([]);
+  const mergedCustomerOptions = useMemo(() => {
+    return [...extraCustomerOptions, ...customerOptions];
+  }, [extraCustomerOptions, customerOptions]);
+
 
   // Loading Country & Receiving Country Overlay Panels
   const [isOriginOverlayOpen, setIsOriginOverlayOpen] = useState(false);
@@ -6413,6 +6632,68 @@ function Step1BookingCustomer({
     setIntermediateStages(updated);
     rebuildRouteFromCurrentState(routingMode, updated);
   };
+
+  const handleLoadingCountrySelect = (cId: string) => {
+    const cName = countries.find((c) => c.id === cId)?.name || "";
+    setFormData((c) => ({
+      ...c,
+      loading_country_id: cId,
+      loading_country_name: cName,
+      exit_border_port_id: "",
+      exit_border_port_name: "",
+      loading_port_id: "",
+      loading_port_name: "",
+      loading_gate_id: "",
+      loading_gate_name: "",
+      loading_customs_office_id: ""
+    }));
+    handleLoadingCountryChange(cId);
+    rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingCountryId: cId, loadingCountryName: cName, exitBorder: "" });
+  };
+
+  const handleReceivingCountrySelect = (cId: string) => {
+    const cName = countries.find((c) => c.id === cId)?.name || "";
+    setFormData((c) => ({
+      ...c,
+      receiving_country_id: cId,
+      receiving_country_name: cName,
+      entry_border_port_id: "",
+      entry_border_port_name: "",
+      destination_port_id: "",
+      destination_port_name: "",
+      receiving_gate_id: "",
+      receiving_gate_name: "",
+      receiving_customs_office_id: ""
+    }));
+    handleReceivingCountryChange(cId);
+    rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingCountryId: cId, receivingCountryName: cName, entryBorder: "" });
+  };
+
+  const handleTransportModeSelect = (mId: LegTransportMode) => {
+    const isSea = mId === "by_sea";
+    setFormData((c) => ({
+      ...c,
+      transport_mode: mId as any,
+      shipment_mode: mId as any,
+      exit_point_type: isSea ? "port" : "border",
+      entry_point_type: isSea ? "port" : "border",
+      exit_border_port_id: "",
+      exit_border_port_name: "",
+      loading_port_id: "",
+      loading_port_name: "",
+      entry_border_port_id: "",
+      entry_border_port_name: "",
+      destination_port_id: "",
+      destination_port_name: "",
+      loading_gate_id: "",
+      loading_gate_name: "",
+      receiving_gate_id: "",
+      receiving_gate_name: "",
+      loading_customs_office_id: "",
+      receiving_customs_office_id: ""
+    }));
+    rebuildRouteFromCurrentState(routingMode, intermediateStages, { transportMode: mId });
+  };
   const [internalDraftGoodsItem, setInternalDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
   const [internalEditingGoodsIdx, setInternalEditingGoodsIdx] = useState<number | null>(null);
 
@@ -6718,137 +6999,135 @@ function Step1BookingCustomer({
       {/* ========================================================================= */}
       {step1SubStep === "1A" && (
         <div className="space-y-4 animate-in fade-in duration-150">
-          {/* 1. CUSTOMER ID & ACCOUNT SELECTION */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Users className="h-4 w-4 text-blue-600" />
-                <span>{tt("select_customer_label", "Customer ID / Account")} *</span>
-              </label>
-              {selectedAccount && (
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-bold">
-                  {selectedAccount.code || "ACC"}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <SearchSelect
-                  label=""
-                  value={formData.customer_id}
-                  options={customerOptions}
-                  placeholder={tt("select_customer_account_ph", "Select Customer (e.g. Sample Customer)...")}
-                  onValueChange={handleCustomerSelection}
-                  disabled={loading}
-                  searchPlaceholder="Search customer by name, code or mobile..."
-                  emptyLabel="No matching customers found"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => setViewCustomerModalOpen(true)}
-                disabled={!formData.customer_id}
-                className="inline-flex items-center gap-1 h-9 px-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40 disabled:pointer-events-none dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300 text-xs font-bold transition shadow-2xs shrink-0"
-                title={tt("view_customer_details", "View Customer Details")}
-              >
-                <Eye className="h-3.5 w-3.5" />
-                <span>{tt("view_btn", "View")}</span>
-              </button>
-            </div>
-
-            {selectedCustomer || selectedAccount ? (
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {selectedCustomer?.customer_name || selectedAccount?.name}
-                </span>
-                <span>•</span>
-                <span className="font-mono">{selectedAccount?.code || selectedCustomer?.person_code || "CUS-001"}</span>
-                <span>•</span>
-                <span className="font-bold text-emerald-600">
-                  {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
-                </span>
-              </div>
-            ) : null}
-          </div>
-
-          {/* 2. TRANSPORT MODE: ROAD / SEA / AIR / TRAIN (Compact Dropdown) */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                {(() => {
-                  const m = formData.transport_mode || "by_road";
-                  if (m === "by_sea") return <Ship className="h-4 w-4 text-blue-600" />;
-                  if (m === "by_air") return <Plane className="h-4 w-4 text-blue-600" />;
-                  if (m === "by_rail") return <Train className="h-4 w-4 text-blue-600" />;
-                  return <Truck className="h-4 w-4 text-blue-600" />;
-                })()}
-                <span>{tt("transport_mode_star", "Transport Mode")} *</span>
-              </label>
-              <span className="text-[11px] text-slate-400">Road / Sea / Air / Train</span>
-            </div>
-
-            <select
-              value={formData.transport_mode || "by_road"}
-              onChange={(e) => {
-                const mId = e.target.value;
-                setFormData((c) => ({ ...c, transport_mode: mId as any }));
-                rebuildRouteFromCurrentState(routingMode, intermediateStages, { transportMode: mId });
-              }}
-              className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+          {/* Sub-section Navigation Bar inside E1 */}
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setE1SubSection(1)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                e1SubSection === 1
+                  ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs border border-blue-100 dark:border-blue-900/50"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+              }`}
             >
-              <option value="by_road">🚛 {tt("opt_road_full", "By Road")} — Overland trucking & border</option>
-              <option value="by_sea">🚢 {tt("opt_sea_full", "By Sea")} — Ocean freight & container</option>
-              <option value="by_air">✈️ {tt("opt_air_full", "By Air")} — Air cargo & express</option>
-              <option value="by_rail">🚆 {tt("opt_rail_full", "By Rail")} — Rail freight & wagons</option>
-            </select>
+              <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black ${
+                e1SubSection === 1 ? "bg-blue-600 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+              }`}>
+                1
+              </span>
+              <span>{tt("e1_sec1_title", "Section 1: Basic Information")}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setE1SubSection(2)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                e1SubSection === 2
+                  ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs border border-blue-100 dark:border-blue-900/50"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+              }`}
+            >
+              <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black ${
+                e1SubSection === 2 ? "bg-blue-600 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+              }`}>
+                2
+              </span>
+              <span>{tt("e1_sec2_title", "Section 2: Route & Customer Details")}</span>
+            </button>
           </div>
 
-          {/* 3. LOADING COUNTRY AND RECEIVING COUNTRY, SIDE BY SIDE (Dropdowns) */}
-          <div className="space-y-2">
-            {/* Routing Strategy Toggle (Direct vs Transit) */}
-            <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Route className="h-3.5 w-3.5 text-blue-600" />
-                <span>{tt("route_routing_strategy", "Routing Strategy:")}</span>
-              </span>
-              <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRoutingMode("direct");
-                    rebuildRouteFromCurrentState("direct", intermediateStages);
-                  }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    routingMode === "direct"
-                      ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-2xs"
-                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                  }`}
-                >
-                  ● {tt("routing_direct", "Direct Routing")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRoutingMode("transit");
-                    rebuildRouteFromCurrentState("transit", intermediateStages);
-                  }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    routingMode === "transit"
-                      ? "bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-400 shadow-2xs"
-                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                  }`}
-                >
-                  ● {tt("routing_transit", "Transit Routing (Multi-Country)")}
-                </button>
-              </div>
-            </div>
+          {/* ========================================================================= */}
+          {/* SUB-SECTION 1: BASIC INFORMATION                                         */}
+          {/* ========================================================================= */}
+          {e1SubSection === 1 && (
+            <div className="space-y-4 animate-in fade-in duration-150">
+              {/* 1. CUSTOMER ID & ACCOUNT SELECTION */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-blue-600" />
+                    <span>{tt("select_customer_label", "Customer ID / Account")} *</span>
+                  </label>
+                  {selectedAccount && (
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-bold">
+                      {selectedAccount.code || "ACC"}
+                    </span>
+                  )}
+                </div>
 
-            {/* Vertically Stacked Routing Cards: Loading on Top, Receiving Below */}
-            <div className="space-y-3.5">
-              {/* TOP CARD: LOADING COUNTRY & ORIGIN LOGISTICS */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <SearchSelect
+                      label=""
+                      value={formData.customer_id}
+                      options={mergedCustomerOptions}
+                      placeholder={tt("select_customer_account_ph", "Select Customer (e.g. Sample Customer)...")}
+                      onValueChange={handleCustomerSelection}
+                      disabled={loading}
+                      searchPlaceholder="Search customer by name, code or mobile..."
+                      emptyLabel="No matching customers found"
+                      createButtonPlacement="inside"
+                      createLabel={t(lang, "customers.add_new_customer", "+ Add New Customer")}
+                      onCreateNew={() => setQuickCustomerModalOpen(true)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setViewCustomerModalOpen(true)}
+                    disabled={!formData.customer_id}
+                    className="inline-flex items-center gap-1 h-9 px-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40 disabled:pointer-events-none dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300 text-xs font-bold transition shadow-2xs shrink-0 cursor-pointer"
+                    title={tt("view_customer_details", "View Customer Details")}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    <span>{tt("view_btn", "View")}</span>
+                  </button>
+                </div>
+
+                {selectedCustomer || selectedAccount ? (
+                  <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                      {selectedCustomer?.customer_name || selectedAccount?.name}
+                    </span>
+                    <span>•</span>
+                    <span className="font-mono">{selectedAccount?.code || selectedCustomer?.person_code || "CUS-001"}</span>
+                    <span>•</span>
+                    <span className="font-bold text-emerald-600">
+                      {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* 2. TRANSPORT MODE: ROAD / SEA / AIR / TRAIN */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    {(() => {
+                      const m = formData.transport_mode || "by_road";
+                      if (m === "by_sea") return <Ship className="h-4 w-4 text-blue-600" />;
+                      if (m === "by_air") return <Plane className="h-4 w-4 text-blue-600" />;
+                      if (m === "by_rail") return <Train className="h-4 w-4 text-blue-600" />;
+                      return <Truck className="h-4 w-4 text-blue-600" />;
+                    })()}
+                    <span>{tt("transport_mode_star", "Transport Mode")} *</span>
+                  </label>
+                  <span className="text-[11px] text-slate-400">Road / Sea / Air / Train</span>
+                </div>
+
+                <select
+                  value={formData.transport_mode || "by_road"}
+                  onChange={(e) => handleTransportModeSelect(e.target.value as LegTransportMode)}
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                >
+                  <option value="by_road">🚛 {tt("opt_road_full", "By Road")} — Overland trucking & border</option>
+                  <option value="by_sea">🚢 {tt("opt_sea_full", "By Sea")} — Ocean freight & container</option>
+                  <option value="by_air">✈️ {tt("opt_air_full", "By Air")} — Air cargo & express</option>
+                  <option value="by_rail">🚆 {tt("opt_rail_full", "By Rail")} — Rail freight & wagons</option>
+                </select>
+              </div>
+
+              {/* 3. LOADING COUNTRY & ORIGIN LOGISTICS CARD */}
               <div className="rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-white dark:bg-slate-900 p-4 shadow-2xs space-y-3.5">
-                {/* Header */}
                 <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-blue-100/80 dark:border-slate-800">
                   <div className="flex items-center gap-2.5">
                     <div className="h-7 w-7 rounded-xl bg-blue-100 dark:bg-blue-950/70 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold shrink-0">
@@ -6870,220 +7149,129 @@ function Step1BookingCustomer({
                       </p>
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsOriginOverlayOpen(true)}
-                    className="h-8 px-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-900 transition shrink-0 inline-flex items-center gap-1 cursor-pointer"
-                    title={tt("edit_origin_details", "Edit Details ➔")}
-                  >
-                    <span>{tt("edit_origin_details", "Edit Details ➔")}</span>
-                  </button>
                 </div>
 
-                {/* Main Form Fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {/* 1. Loading Country */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {/* Loading Country */}
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       {tt("loading_country_title", "Loading Country (Origin)")} *
                     </label>
                     <select
                       value={formData.loading_country_id || ""}
-                      onChange={(e) => {
-                        const cId = e.target.value;
-                        const cName = countries.find((c) => c.id === cId)?.name || "";
-                        setFormData((c) => ({ ...c, loading_country_id: cId, loading_country_name: cName }));
-                        handleLoadingCountryChange(cId);
-                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingCountryId: cId, loadingCountryName: cName });
-                      }}
+                      onChange={(e) => handleLoadingCountrySelect(e.target.value)}
                       className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                     >
-                      <option value="">{tt("select_loading_country", "Select Loading Country...")}</option>
+                      <option value="">{tt("select_loading_country", "Select Origin Country...")}</option>
                       {countries.map((c) => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
                     </select>
                   </div>
 
-                  {/* 2. Transport Mode */}
+                  {/* Loading City / Location */}
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tt("transport_mode_star", "Transport Mode")} *
-                    </label>
-                    <select
-                      value={formData.transport_mode || "by_road"}
-                      onChange={(e) => {
-                        const mId = e.target.value;
-                        const newExitType = mId === "by_sea" ? "port" : "border";
-                        const newEntryType = mId === "by_sea" ? "port" : "border";
-                        setFormData((c) => ({
-                          ...c,
-                          transport_mode: mId as any,
-                          exit_point_type: newExitType,
-                          entry_point_type: newEntryType
-                        }));
-                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { transportMode: mId });
-                      }}
-                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
-                    >
-                      <option value="by_road">🚛 {tt("opt_road_full", "By Road")}</option>
-                      <option value="by_sea">🚢 {tt("opt_sea_full", "By Sea")}</option>
-                      <option value="by_air">✈️ {tt("opt_air_full", "By Air")}</option>
-                      <option value="by_rail">🚆 {tt("opt_rail_full", "By Rail")}</option>
-                    </select>
-                  </div>
-
-                  {/* 3. Loading City / Warehouse / Place */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tt("loading_location_place", "Loading Location / Warehouse")} *
+                      {tt("loading_city_branch", "Loading City / Location")} *
                     </label>
                     <input
                       type="text"
-                      value={formData.loading_place || formData.loading_source_name || ""}
+                      value={formData.loading_place || formData.loading_city_name || ""}
                       onChange={(e) => {
                         const val = e.target.value;
-                        setFormData((c) => ({ ...c, loading_place: val, loading_source_name: val }));
+                        setFormData((c) => ({ ...c, loading_place: val, loading_city_name: val }));
                         rebuildRouteFromCurrentState(routingMode, intermediateStages, { loadingLoc: val });
                       }}
-                      placeholder={tt("loading_location_place", "Loading Location / Warehouse")}
+                      placeholder={tt("loading_city_branch", "Loading City / Location")}
                       className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
 
-                  {/* 4. Loading Date */}
+                  {/* Loading Date */}
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       {tt("loading_date", "Loading Date")} *
                     </label>
                     <input
                       type="date"
-                      value={formData.loading_date || formData.planned_dispatch_date || ""}
-                      onChange={(e) => setFormData((c) => ({ ...c, loading_date: e.target.value, planned_dispatch_date: e.target.value }))}
+                      value={formData.loading_date || ""}
+                      onChange={(e) => setFormData((c) => ({ ...c, loading_date: e.target.value }))}
                       className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
                 </div>
 
-                {/* Exit Point Section: Border or Port */}
-                <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3 dark:border-slate-800 dark:bg-slate-850/50 space-y-2">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                        {tt("exit_point_lbl", "Exit Point")} *
-                      </span>
-                      <span className="text-[10.5px] text-slate-400">
-                        ({formData.exit_point_type === "port" ? tt("exit_port", "Exit Port") : tt("exit_border", "Exit Border")})
-                      </span>
-                    </div>
-
-                    <div className="inline-flex rounded-lg bg-white dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
-                      <button
-                        type="button"
-                        onClick={() => setFormData((c) => ({ ...c, exit_point_type: "border" }))}
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
-                          (formData.exit_point_type || "border") === "border"
-                            ? "bg-blue-600 text-white shadow-2xs"
-                            : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                        }`}
-                      >
-                        <Truck className="h-3 w-3 inline mr-1" />
-                        {tt("exit_border", "Exit Border")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFormData((c) => ({ ...c, exit_point_type: "port" }))}
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
-                          formData.exit_point_type === "port"
-                            ? "bg-blue-600 text-white shadow-2xs"
-                            : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                        }`}
-                      >
-                        <Ship className="h-3 w-3 inline mr-1" />
-                        {tt("exit_port", "Exit Port")}
-                      </button>
-                    </div>
+                {/* Loading Location Master Pickers (Border/Port, Gate, Customs Office) */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 border-t border-blue-50 dark:border-slate-800/60">
+                  <div>
+                    <LocationPicker
+                      countryId={formData.loading_country_id}
+                      transportMode={formData.transport_mode || "by_road"}
+                      value={formData.transport_mode === "by_sea" ? formData.loading_port_id : formData.exit_border_port_id}
+                      label={formData.transport_mode === "by_sea" ? tt("loading_port_lbl", "Loading Port") : tt("exit_border_port_lbl", "Exit Border / Point")}
+                      onChange={(locId, locName) => {
+                        if (formData.transport_mode === "by_sea") {
+                          setFormData((c) => ({
+                            ...c,
+                            loading_port_id: locId,
+                            loading_port_name: locName,
+                            exit_border_port_id: locId,
+                            exit_border_port_name: locName,
+                            loading_gate_id: "",
+                            loading_gate_name: "",
+                            loading_customs_office_id: ""
+                          }));
+                        } else {
+                          setFormData((c) => ({
+                            ...c,
+                            exit_border_port_id: locId,
+                            exit_border_port_name: locName,
+                            loading_port_id: locId,
+                            loading_port_name: locName,
+                            loading_gate_id: "",
+                            loading_gate_name: "",
+                            loading_customs_office_id: ""
+                          }));
+                        }
+                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { exitBorder: locName });
+                      }}
+                    />
                   </div>
 
-                  {formData.exit_point_type === "port" ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <select
-                        value={formData.loading_port_id || ""}
-                        onChange={(e) => {
-                          const pId = e.target.value;
-                          const pName = ports.find((p) => p.id === pId)?.port_name || "";
-                          setFormData((c) => ({
-                            ...c,
-                            loading_port_id: pId,
-                            loading_port_name: pName,
-                            exit_border_port_name: pName,
-                            exit_border_port_id: pId
-                          }));
-                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { exitBorder: pName });
-                        }}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
-                      >
-                        <option value="">{tt("select_port", "Select port...")}</option>
-                        {getPortsForCountry(formData.loading_country_id).map((p) => (
-                          <option key={p.id} value={p.id}>{p.port_name}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        value={formData.exit_border_port_name || ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormData((c) => ({ ...c, exit_border_port_name: val, loading_port_name: val }));
-                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { exitBorder: val });
-                        }}
-                        placeholder={tt("corresponding_port", "Corresponding Exit Port")}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
-                      />
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <select
-                        value={formData.exit_border_port_id || ""}
-                        onChange={(e) => {
-                          const bId = e.target.value;
-                          const bList = getBordersForCountry(formData.loading_country_id, formData.loading_country_name);
-                          const bItem = bList.find((b) => b.id === bId || b.name === bId);
-                          const bName = bItem?.name || bId;
-                          setFormData((c) => ({
-                            ...c,
-                            exit_border_port_id: bItem?.id || "",
-                            exit_border_port_name: bName,
-                            loading_port_name: bName
-                          }));
-                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { exitBorder: bName });
-                        }}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
-                      >
-                        <option value="">{tt("select_border", "Select border...")}</option>
-                        {getBordersForCountry(formData.loading_country_id, formData.loading_country_name).map((b) => (
-                          <option key={b.id || b.name} value={b.id || b.name}>{b.name}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        value={formData.exit_border_port_name || ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormData((c) => ({ ...c, exit_border_port_name: val, loading_port_name: val }));
-                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { exitBorder: val });
-                        }}
-                        placeholder={tt("corresponding_border", "Corresponding Exit Border")}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
-                      />
-                    </div>
-                  )}
+                  <div>
+                    <GatePicker
+                      locationId={formData.transport_mode === "by_sea" ? formData.loading_port_id : formData.exit_border_port_id}
+                      locationName={formData.transport_mode === "by_sea" ? formData.loading_port_name : formData.exit_border_port_name}
+                      value={formData.loading_gate_id}
+                      label={t(lang, "locmaster.loading_gate", "Loading Gate / Terminal")}
+                      onChange={(gid, gnm) => {
+                        setFormData((c) => ({ ...c, loading_gate_id: gid, loading_gate_name: gnm }));
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <CustomsOfficePicker
+                      countryId={formData.loading_country_id}
+                      locationId={formData.transport_mode === "by_sea" ? formData.loading_port_id : formData.exit_border_port_id}
+                      locationName={formData.transport_mode === "by_sea" ? formData.loading_port_name : formData.exit_border_port_name}
+                      value={formData.loading_customs_office_id}
+                      label={t(lang, "com.linked_customs_office", "Linked Customs Office")}
+                      onChange={(cid, coffice) => {
+                        const offName = coffice?.office_name || coffice?.office_code || "";
+                        setFormData((c) => ({
+                          ...c,
+                          loading_customs_office_id: cid,
+                          loading_customs_name: offName || c.loading_customs_name
+                        }));
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* BOTTOM CARD: RECEIVING COUNTRY & DESTINATION LOGISTICS */}
+              {/* 4. RECEIVING COUNTRY & DESTINATION LOGISTICS CARD */}
               <div className="rounded-2xl border border-purple-200 dark:border-purple-900/60 bg-white dark:bg-slate-900 p-4 shadow-2xs space-y-3.5">
-                {/* Header */}
                 <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-purple-100/80 dark:border-slate-800">
                   <div className="flex items-center gap-2.5">
                     <div className="h-7 w-7 rounded-xl bg-purple-100 dark:bg-purple-950/70 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold shrink-0">
@@ -7101,275 +7289,219 @@ function Step1BookingCustomer({
                         )}
                       </div>
                       <p className="text-[10.5px] text-slate-400 dark:text-slate-500">
-                        {tt("dest_overlay_sub", "Configure destination country, receiving branch/location, arrival date and entry border or port.")}
+                        {tt("dest_overlay_sub", "Configure destination country, receiving branch/location, receiving date and entry border or port.")}
                       </p>
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsDestinationOverlayOpen(true)}
-                    className="h-8 px-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 text-xs font-bold border border-purple-200 dark:border-purple-900 transition shrink-0 inline-flex items-center gap-1 cursor-pointer"
-                    title={tt("edit_dest_details", "Edit Details ➔")}
-                  >
-                    <span>{tt("edit_dest_details", "Edit Details ➔")}</span>
-                  </button>
                 </div>
 
-                {/* Main Form Fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {/* 1. Receiving Country */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {/* Receiving Country */}
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       {tt("receiving_country_title", "Receiving Country (Destination)")} *
                     </label>
                     <select
                       value={formData.receiving_country_id || ""}
-                      onChange={(e) => {
-                        const cId = e.target.value;
-                        const cName = countries.find((c) => c.id === cId)?.name || "";
-                        setFormData((c) => ({ ...c, receiving_country_id: cId, receiving_country_name: cName }));
-                        handleReceivingCountryChange(cId);
-                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingCountryId: cId, receivingCountryName: cName });
-                      }}
-                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+                      onChange={(e) => handleReceivingCountrySelect(e.target.value)}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                     >
-                      <option value="">{tt("select_receiving_country", "Select Destination Country...")}</option>
+                      <option value="">{tt("select_dest_country", "Select Destination Country...")}</option>
                       {countries.map((c) => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
                     </select>
                   </div>
 
-                  {/* 2. Receiving Transport Mode */}
+                  {/* Receiving City / Location */}
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tt("transport_mode_star", "Transport Mode")}
-                    </label>
-                    <select
-                      value={formData.transport_mode || "by_road"}
-                      onChange={(e) => {
-                        const mId = e.target.value;
-                        setFormData((c) => ({ ...c, transport_mode: mId as any }));
-                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { transportMode: mId });
-                      }}
-                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
-                    >
-                      <option value="by_road">🚛 {tt("opt_road_full", "By Road")}</option>
-                      <option value="by_sea">🚢 {tt("opt_sea_full", "By Sea")}</option>
-                      <option value="by_air">✈️ {tt("opt_air_full", "By Air")}</option>
-                      <option value="by_rail">🚆 {tt("opt_rail_full", "By Rail")}</option>
-                    </select>
-                  </div>
-
-                  {/* 3. Receiving City / Delivery Warehouse */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tt("receiving_location_place", "Receiving Location / Warehouse")} *
+                      {tt("receiving_city_branch", "Receiving City / Location")} *
                     </label>
                     <input
                       type="text"
-                      value={formData.receiving_place || formData.destination_city || ""}
+                      value={formData.receiving_place || formData.receiving_city_name || ""}
                       onChange={(e) => {
                         const val = e.target.value;
-                        setFormData((c) => ({ ...c, receiving_place: val, destination_city: val }));
+                        setFormData((c) => ({ ...c, receiving_place: val, receiving_city_name: val }));
                         rebuildRouteFromCurrentState(routingMode, intermediateStages, { receivingLoc: val });
                       }}
-                      placeholder={tt("receiving_location_place", "Receiving Location / Warehouse")}
-                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                      placeholder={tt("receiving_city_branch", "Receiving City / Location")}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
 
-                  {/* 4. Receiving Date */}
+                  {/* Receiving Date */}
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       {tt("receiving_date", "Receiving Date")} *
                     </label>
                     <input
                       type="date"
-                      value={formData.receiving_date || formData.planned_arrival_date || ""}
-                      onChange={(e) => setFormData((c) => ({ ...c, receiving_date: e.target.value, planned_arrival_date: e.target.value }))}
-                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                      value={formData.receiving_date || ""}
+                      onChange={(e) => setFormData((c) => ({ ...c, receiving_date: e.target.value }))}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
                 </div>
 
-                {/* Entry Point Section: Border or Port */}
-                <div className="rounded-xl border border-purple-100 bg-purple-50/40 p-3 dark:border-slate-800 dark:bg-slate-850/50 space-y-2">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                        {tt("entry_point_lbl", "Entry Point")} *
-                      </span>
-                      <span className="text-[10.5px] text-slate-400">
-                        ({formData.entry_point_type === "port" ? tt("entry_port", "Entry Port") : tt("entry_border", "Entry Border")})
-                      </span>
-                    </div>
-
-                    <div className="inline-flex rounded-lg bg-white dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
-                      <button
-                        type="button"
-                        onClick={() => setFormData((c) => ({ ...c, entry_point_type: "border" }))}
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
-                          (formData.entry_point_type || "border") === "border"
-                            ? "bg-purple-600 text-white shadow-2xs"
-                            : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                        }`}
-                      >
-                        <Truck className="h-3 w-3 inline mr-1" />
-                        {tt("entry_border", "Entry Border")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFormData((c) => ({ ...c, entry_point_type: "port" }))}
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
-                          formData.entry_point_type === "port"
-                            ? "bg-purple-600 text-white shadow-2xs"
-                            : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                        }`}
-                      >
-                        <Ship className="h-3 w-3 inline mr-1" />
-                        {tt("entry_port", "Entry Port")}
-                      </button>
-                    </div>
+                {/* Receiving Location Master Pickers (Border/Port, Gate, Customs Office) */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 border-t border-purple-50 dark:border-slate-800/60">
+                  <div>
+                    <LocationPicker
+                      countryId={formData.receiving_country_id}
+                      transportMode={formData.transport_mode || "by_road"}
+                      value={formData.transport_mode === "by_sea" ? formData.destination_port_id : formData.entry_border_port_id}
+                      label={formData.transport_mode === "by_sea" ? tt("dest_port_lbl", "Destination Port") : tt("entry_border_port_lbl", "Entry Border / Point")}
+                      onChange={(locId, locName) => {
+                        if (formData.transport_mode === "by_sea") {
+                          setFormData((c) => ({
+                            ...c,
+                            destination_port_id: locId,
+                            destination_port_name: locName,
+                            entry_border_port_id: locId,
+                            entry_border_port_name: locName,
+                            receiving_gate_id: "",
+                            receiving_gate_name: "",
+                            receiving_customs_office_id: ""
+                          }));
+                        } else {
+                          setFormData((c) => ({
+                            ...c,
+                            entry_border_port_id: locId,
+                            entry_border_port_name: locName,
+                            destination_port_id: locId,
+                            destination_port_name: locName,
+                            receiving_gate_id: "",
+                            receiving_gate_name: "",
+                            receiving_customs_office_id: ""
+                          }));
+                        }
+                        rebuildRouteFromCurrentState(routingMode, intermediateStages, { entryBorder: locName });
+                      }}
+                    />
                   </div>
 
-                  {formData.entry_point_type === "port" ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <select
-                        value={formData.destination_port_id || ""}
-                        onChange={(e) => {
-                          const pId = e.target.value;
-                          const pName = ports.find((p) => p.id === pId)?.port_name || "";
-                          setFormData((c) => ({
-                            ...c,
-                            destination_port_id: pId,
-                            destination_port_name: pName,
-                            entry_border_port_name: pName,
-                            entry_border_port_id: pId
-                          }));
-                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { entryBorder: pName });
-                        }}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
-                      >
-                        <option value="">{tt("select_port", "Select port...")}</option>
-                        {getPortsForCountry(formData.receiving_country_id).map((p) => (
-                          <option key={p.id} value={p.id}>{p.port_name}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        value={formData.entry_border_port_name || ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormData((c) => ({ ...c, entry_border_port_name: val, destination_port_name: val }));
-                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { entryBorder: val });
-                        }}
-                        placeholder={tt("corresponding_entry_port", "Corresponding Entry Port")}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
-                      />
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <select
-                        value={formData.entry_border_port_id || ""}
-                        onChange={(e) => {
-                          const bId = e.target.value;
-                          const bList = getBordersForCountry(formData.receiving_country_id, formData.receiving_country_name);
-                          const bItem = bList.find((b) => b.id === bId || b.name === bId);
-                          const bName = bItem?.name || bId;
-                          setFormData((c) => ({
-                            ...c,
-                            entry_border_port_id: bItem?.id || "",
-                            entry_border_port_name: bName,
-                            destination_port_name: bName
-                          }));
-                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { entryBorder: bName });
-                        }}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
-                      >
-                        <option value="">{tt("select_border", "Select border...")}</option>
-                        {getBordersForCountry(formData.receiving_country_id, formData.receiving_country_name).map((b) => (
-                          <option key={b.id || b.name} value={b.id || b.name}>{b.name}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        value={formData.entry_border_port_name || ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormData((c) => ({ ...c, entry_border_port_name: val, destination_port_name: val }));
-                          rebuildRouteFromCurrentState(routingMode, intermediateStages, { entryBorder: val });
-                        }}
-                        placeholder={tt("corresponding_entry_border", "Corresponding Entry Border")}
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
-                      />
-                    </div>
-                  )}
+                  <div>
+                    <GatePicker
+                      locationId={formData.transport_mode === "by_sea" ? formData.destination_port_id : formData.entry_border_port_id}
+                      locationName={formData.transport_mode === "by_sea" ? formData.destination_port_name : formData.entry_border_port_name}
+                      value={formData.receiving_gate_id}
+                      label={t(lang, "com.entry_gate", "Entry Gate / Terminal")}
+                      onChange={(gid, gnm) => {
+                        setFormData((c) => ({ ...c, receiving_gate_id: gid, receiving_gate_name: gnm }));
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <CustomsOfficePicker
+                      countryId={formData.receiving_country_id}
+                      locationId={formData.transport_mode === "by_sea" ? formData.destination_port_id : formData.entry_border_port_id}
+                      locationName={formData.transport_mode === "by_sea" ? formData.destination_port_name : formData.entry_border_port_name}
+                      value={formData.receiving_customs_office_id}
+                      label={t(lang, "com.linked_customs_office", "Linked Customs Office")}
+                      onChange={(cid, coffice) => {
+                        const offName = coffice?.office_name || coffice?.office_code || "";
+                        setFormData((c) => ({
+                          ...c,
+                          receiving_customs_office_id: cid,
+                          receiving_customs_name: offName || c.receiving_customs_name
+                        }));
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* 4. OPERATION TYPE AND MOVEMENT SCENARIO */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {/* Operation Type */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Boxes className="h-3.5 w-3.5 text-blue-600" />
-                <span>{tt("operation_type_star", "Operation Type")} *</span>
-              </label>
-              <select
-                value={(formData as any).operation_type || (formData.movement_type === "transit" || formData.movement_type === "up_transit" ? "transit" : formData.movement_type === "re_export" ? "re_export" : "import")}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setFormData((c) => ({
-                    ...c,
-                    operation_type: val,
-                    movement_type: val === "transit" ? "up_transit" : val === "re_export" ? "re_export" : (val as any)
-                  }));
-                }}
-                className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
-              >
-                <option value="import">{tt("opt_import", "Import")}</option>
-                <option value="export">{tt("opt_export", "Export")}</option>
-                <option value="transit">{tt("opt_transit", "Transit")}</option>
-                <option value="in_transit">{tt("opt_in_transit", "In-Transit")}</option>
-                <option value="re_export">{tt("opt_re_export", "Re-Export")}</option>
-                <option value="domestic">{tt("opt_domestic", "Domestic")}</option>
-              </select>
-              <p className="text-[10.5px] text-slate-400">
-                {tt("op_type_sub", "Primary customs regime and declaration flow")}
-              </p>
-            </div>
+              {/* 5. OPERATION TYPE AND MOVEMENT SCENARIO */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {/* Operation Type */}
+                <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Boxes className="h-3.5 w-3.5 text-blue-600" />
+                    <span>{tt("operation_type_star", "Operation Type")} *</span>
+                  </label>
+                  <select
+                    value={(formData as any).operation_type || (formData.movement_type === "transit" || formData.movement_type === "up_transit" ? "transit" : formData.movement_type === "re_export" ? "re_export" : "import")}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData((c) => ({
+                        ...c,
+                        operation_type: val,
+                        movement_type: val === "transit" ? "up_transit" : val === "re_export" ? "re_export" : (val as any)
+                      }));
+                    }}
+                    className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                  >
+                    <option value="import">{tt("opt_import", "Import")}</option>
+                    <option value="export">{tt("opt_export", "Export")}</option>
+                    <option value="transit">{tt("opt_transit", "Transit")}</option>
+                    <option value="in_transit">{tt("opt_in_transit", "In-Transit")}</option>
+                    <option value="re_export">{tt("opt_re_export", "Re-Export")}</option>
+                    <option value="domestic">{tt("opt_domestic", "Domestic")}</option>
+                  </select>
+                  <p className="text-[10.5px] text-slate-400">
+                    {tt("op_type_sub", "Primary customs regime and declaration flow")}
+                  </p>
+                </div>
 
-            {/* Movement Scenario */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
-                <span>{tt("movement_scenario_star", "Movement Scenario")} *</span>
-              </label>
-              <select
-                value={(formData as any).movement_scenario || "Import → Re-export"}
-                onChange={(e) => {
-                  const sc = e.target.value;
-                  setFormData((c) => ({ ...c, movement_scenario: sc }));
-                }}
-                className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
-              >
-                <option value="Import → Re-export">{tt("scenario_import_reexport", "Import → Re-export")}</option>
-                <option value="Direct Import">{tt("scenario_direct_import", "Direct Import")}</option>
-                <option value="Transit Corridor">{tt("scenario_transit_corridor", "Transit Corridor")}</option>
-                <option value="Cross Stuffing">{tt("scenario_cross_stuffing", "Cross Stuffing")}</option>
-                <option value="Port to Warehouse">{tt("scenario_port_to_warehouse", "Port to Warehouse")}</option>
-                <option value="Border Clearance">{tt("scenario_border_clearance", "Border Clearance")}</option>
-              </select>
-              <p className="text-[10.5px] text-slate-400">
-                {tt("movement_scenario_sub", "Routing policy and intermediate handling points")}
-              </p>
-            </div>
-          </div>
+                {/* Movement Scenario */}
+                <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                    <span>{tt("movement_scenario_star", "Movement Scenario")} *</span>
+                  </label>
+                  <select
+                    value={(formData as any).movement_scenario || "Import → Re-export"}
+                    onChange={(e) => {
+                      const sc = e.target.value;
+                      setFormData((c) => ({ ...c, movement_scenario: sc }));
+                    }}
+                    className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                  >
+                    <option value="Import → Re-export">{tt("scenario_import_reexport", "Import → Re-export")}</option>
+                    <option value="Direct Import">{tt("scenario_direct_import", "Direct Import")}</option>
+                    <option value="Transit Corridor">{tt("scenario_transit_corridor", "Transit Corridor")}</option>
+                    <option value="Cross Stuffing">{tt("scenario_cross_stuffing", "Cross Stuffing")}</option>
+                    <option value="Port to Warehouse">{tt("scenario_port_to_warehouse", "Port to Warehouse")}</option>
+                    <option value="Border Clearance">{tt("scenario_border_clearance", "Border Clearance")}</option>
+                  </select>
+                  <p className="text-[10.5px] text-slate-400">
+                    {tt("movement_scenario_sub", "Routing policy and intermediate handling points")}
+                  </p>
+                </div>
+              </div>
 
+              {/* Section 1 Navigation: Next to Section 2 */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={onSaveDraft}
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition cursor-pointer"
+                >
+                  <Save className="h-4 w-4 text-emerald-600" />
+                  <span>{tt("save_draft_btn", "Save Draft")}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setE1SubSection(2)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black text-white hover:bg-blue-700 shadow-md shadow-blue-600/25 transition cursor-pointer"
+                >
+                  <span>{tt("next_route_customer_details", "Next: Route & Customer Details ➔")}</span>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* SUB-SECTION 2: ROUTE AND CUSTOMER DETAILS                                 */}
+          {/* ========================================================================= */}
+          {e1SubSection === 2 && (
+            <div className="space-y-4 animate-in fade-in duration-150">
           {/* 5. EXISTING ROUTE VIA CORRIDOR BUILDER & INTERMEDIATE COUNTRIES */}
           <div className="rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-white dark:bg-slate-900 p-4 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
@@ -7934,6 +8066,109 @@ function Step1BookingCustomer({
             </div>
           </div>
 
+          {/* 2. COMMERCIAL PARTIES (Loading Customer / Supplier, Receiving Customer / Buyer, Exporter, Importer, Consignee, Notify Party) */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-xs space-y-4">
+            <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+              <Users className="h-4 w-4 text-blue-600" />
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                {tt("commercial_parties_title", "Commercial Parties & Customers")}
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              <PartyRolePanel
+                roleKey="supplier"
+                label={tt("role_supplier", "Loading Customer (Supplier / Consignor)")}
+                selection={partySelections.supplier}
+                customers={customers}
+                companies={companies}
+                customerOptions={mergedCustomerOptions}
+                companyOptions={companyOptions}
+                orders={orders}
+                disabled={loading}
+                lang={lang}
+                onCreateNew={() => setQuickCustomerModalOpen(true)}
+                onChange={(next) => handlePartyChange("supplier", next)}
+              />
+
+              <PartyRolePanel
+                roleKey="buyer"
+                label={tt("role_buyer", "Receiving Customer (Buyer / Consignee)")}
+                selection={partySelections.buyer}
+                customers={customers}
+                companies={companies}
+                customerOptions={mergedCustomerOptions}
+                companyOptions={companyOptions}
+                orders={orders}
+                disabled={loading}
+                lang={lang}
+                onCreateNew={() => setQuickCustomerModalOpen(true)}
+                onChange={(next) => handlePartyChange("buyer", next)}
+              />
+
+              <PartyRolePanel
+                roleKey="exporter"
+                label={tt("role_exporter", "Exporter")}
+                selection={partySelections.exporter}
+                customers={customers}
+                companies={companies}
+                customerOptions={mergedCustomerOptions}
+                companyOptions={companyOptions}
+                orders={orders}
+                disabled={loading}
+                lang={lang}
+                onCreateNew={() => setQuickCustomerModalOpen(true)}
+                onChange={(next) => handlePartyChange("exporter", next)}
+              />
+
+              <PartyRolePanel
+                roleKey="importer"
+                label={tt("role_importer", "Importer")}
+                selection={partySelections.importer}
+                customers={customers}
+                companies={companies}
+                customerOptions={mergedCustomerOptions}
+                companyOptions={companyOptions}
+                orders={orders}
+                disabled={loading}
+                lang={lang}
+                onCreateNew={() => setQuickCustomerModalOpen(true)}
+                onChange={(next) => handlePartyChange("importer", next)}
+              />
+            </div>
+
+            <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-800/40 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{tt("notify_party_required", "Notify Party Required?")}</label>
+                <select
+                  value={formData.notify_party_required ? "yes" : "no"}
+                  onChange={(e) => setFormData((current) => ({ ...current, notify_party_required: e.target.value === "yes" }))}
+                  className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-900 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 cursor-pointer"
+                >
+                  <option value="no">{tt("no_opt", "No")}</option>
+                  <option value="yes">{tt("yes", "Yes")}</option>
+                </select>
+              </div>
+
+              {formData.notify_party_required ? (
+                <PartyRolePanel
+                  roleKey="notify_party"
+                  label={tt("role_notify_party", "Notify Party")}
+                  selection={partySelections.notify_party}
+                  customers={customers}
+                  companies={companies}
+                  customerOptions={mergedCustomerOptions}
+                  companyOptions={companyOptions}
+                  orders={orders}
+                  disabled={loading}
+                  lang={lang}
+                  onCreateNew={() => setQuickCustomerModalOpen(true)}
+                  onChange={(next) => handlePartyChange("notify_party", next)}
+                />
+              ) : null}
+            </div>
+          </div>
+
           {/* Final Destination */}
           <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-3">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
@@ -7973,15 +8208,26 @@ function Step1BookingCustomer({
           {/* 7. ACTION BUTTONS & ASSIGNMENT PANEL */}
           <div className="space-y-3 pt-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={onSaveDraft}
-                disabled={saving}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition"
-              >
-                <Save className="h-4 w-4 text-emerald-600" />
-                <span>{tt("save_draft_btn", "Save Draft")}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setE1SubSection(1)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition cursor-pointer"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span>{tt("prev_basic_info", "⬅ Previous: Basic Information")}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onSaveDraft}
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition cursor-pointer"
+                >
+                  <Save className="h-4 w-4 text-emerald-600" />
+                  <span>{tt("save_draft_btn", "Save Draft")}</span>
+                </button>
+              </div>
 
               <button
                 type="button"
@@ -8039,6 +8285,8 @@ function Step1BookingCustomer({
               </div>
             </div>
           </div>
+        </div>
+      )}
 
           {/* OVERLAY PANEL 1: LOADING COUNTRY & ORIGIN LOGISTICS */}
           <SimpleModal
@@ -8490,7 +8738,33 @@ function Step1BookingCustomer({
             </div>
           </SimpleModal>
 
-          {/* VIEW CUSTOMER DETAILS MODAL */}
+                    {/* QUICK CUSTOMER MODAL */}
+          <QuickCustomerModal
+            open={quickCustomerModalOpen}
+            onClose={() => setQuickCustomerModalOpen(false)}
+            countries={countries}
+            countryId={formData.loading_country_id || countries[0]?.id}
+            onSaved={(newCust) => {
+              setExtraCustomerOptions((prev) => [
+                {
+                  value: newCust.id,
+                  label: `${newCust.name} (${newCust.code || "NEW"})`,
+                  keywords: `${newCust.name} ${newCust.code || ""} ${newCust.mobile || ""}`
+                },
+                ...prev
+              ]);
+              setFormData((c) => ({
+                ...c,
+                customer_id: newCust.id,
+                customer_name: newCust.name,
+                customer_mobile: newCust.mobile || "",
+                customer_email: newCust.email || "",
+                customer_address: newCust.address || ""
+              }));
+            }}
+          />
+
+{/* VIEW CUSTOMER DETAILS MODAL */}
           <SimpleModal
             isOpen={viewCustomerModalOpen}
             onClose={() => setViewCustomerModalOpen(false)}
