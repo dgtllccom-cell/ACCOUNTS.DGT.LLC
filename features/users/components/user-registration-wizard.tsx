@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
@@ -62,7 +63,13 @@ import {
   buildAllModulesCapabilities, 
   convertMatrixToPermissions,
   ModulePermissionCapability,
-  ERP_MODULE_DEFINITIONS 
+  ERP_MODULE_DEFINITIONS,
+  ERP_PERMISSION_HIERARCHY,
+  ERP_ACTION_KEYS,
+  ERP_ACTION_LABELS,
+  buildHierarchicalMatrixState,
+  type ErpActionKey,
+  type HierarchicalMatrixState
 } from "@/lib/permissions/rbac-matrix-builder";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t as centralT } from "@/lib/i18n/ui";
@@ -362,15 +369,119 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   // Active Category Filter for Permissions Table
   const [selectedPermissionCategory, setSelectedPermissionCategory] = useState<string>("All Categories");
 
-  // Interactive Form/Module Capabilities State (Manually assignable checkboxes)
+  // 4-Tier Interactive Matrix State (Module -> Section -> Form -> 8 Actions)
+  const [hierarchicalState, setHierarchicalState] = useState<HierarchicalMatrixState>(() => {
+    return buildHierarchicalMatrixState("staff_user", enterpriseRolePermissions["staff_user"] || []);
+  });
+  const [permSearchTerm, setPermSearchTerm] = useState<string>("");
+  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({
+    customer_orders_shipping: true,
+    expenses_registers_module: true,
+    finance_accounting_module: false,
+    trading_inventory_module: false,
+    admin_hr_system_module: false
+  });
+
+  // Interactive Form/Module Capabilities State (Backward compatibility)
   const [moduleCapabilities, setModuleCapabilities] = useState<ModulePermissionCapability[]>(() => {
     return buildAllModulesCapabilities("staff_user", enterpriseRolePermissions["staff_user"]);
   });
 
-  // When role changes, pre-populate default module capabilities for that role
+  // When role changes, pre-populate default module capabilities and 4-tier matrix
   useEffect(() => {
+    setHierarchicalState(buildHierarchicalMatrixState(templateRole, enterpriseRolePermissions[templateRole] || []));
     setModuleCapabilities(buildAllModulesCapabilities(templateRole, enterpriseRolePermissions[templateRole] || []));
   }, [templateRole]);
+
+  const handleToggleHierarchyAction = (formKey: string, actionKey: ErpActionKey) => {
+    setHierarchicalState(prev => {
+      const currentForm = prev[formKey] || {
+        view: false, create: false, edit: false, delete: false,
+        submit_transfer: false, approve: false, print: false, export: false
+      };
+      const nextVal = !currentForm[actionKey];
+      const nextForm = { ...currentForm, [actionKey]: nextVal };
+
+      if (actionKey !== "view" && nextVal && !nextForm.view) {
+        nextForm.view = true;
+      }
+      if (actionKey === "view" && !nextVal) {
+        nextForm.create = false;
+        nextForm.edit = false;
+        nextForm.delete = false;
+        nextForm.submit_transfer = false;
+        nextForm.approve = false;
+        nextForm.print = false;
+        nextForm.export = false;
+      }
+
+      return { ...prev, [formKey]: nextForm };
+    });
+  };
+
+  const handleToggleHierarchyFormAll = (formKey: string) => {
+    setHierarchicalState(prev => {
+      const currentForm = prev[formKey] || {
+        view: false, create: false, edit: false, delete: false,
+        submit_transfer: false, approve: false, print: false, export: false
+      };
+      const allChecked = ERP_ACTION_KEYS.every(k => currentForm[k]);
+      const target = !allChecked;
+      const nextForm: Record<ErpActionKey, boolean> = {
+        view: target,
+        create: target,
+        edit: target,
+        delete: target,
+        submit_transfer: target,
+        approve: target,
+        print: target,
+        export: target
+      };
+      return { ...prev, [formKey]: nextForm };
+    });
+  };
+
+  const handleToggleHierarchySection = (forms: { key: string }[], grant: boolean) => {
+    setHierarchicalState(prev => {
+      const next = { ...prev };
+      for (const f of forms) {
+        next[f.key] = {
+          view: grant,
+          create: grant,
+          edit: grant,
+          delete: grant,
+          submit_transfer: grant,
+          approve: grant,
+          print: grant,
+          export: grant
+        };
+      }
+      return next;
+    });
+  };
+
+  const handleToggleHierarchyModule = (moduleKey: string, grant: boolean) => {
+    const mod = ERP_PERMISSION_HIERARCHY.find(m => m.key === moduleKey);
+    if (!mod) return;
+    setHierarchicalState(prev => {
+      const next = { ...prev };
+      for (const sec of mod.sections) {
+        for (const form of sec.forms) {
+          next[form.key] = {
+            view: grant,
+            create: grant,
+            edit: grant,
+            delete: grant,
+            submit_transfer: grant,
+            approve: grant,
+            print: grant,
+            export: grant
+          };
+        }
+      }
+      return next;
+    });
+  };
 
   // Editing User
   const [editUserId, setEditUserId] = useState<string | null>(null);
@@ -709,6 +820,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
         if (Array.isArray(data.permissions) && data.permissions.length > 0) {
           setModuleCapabilities(buildAllModulesCapabilities(data.role || "staff_user", data.permissions));
+          setHierarchicalState(buildHierarchicalMatrixState(data.role || "staff_user", data.permissions));
         }
 
         setStep(1);
@@ -949,10 +1061,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     return "PKR"; // Default to PKR instead of USD
   }, [branchType, selectedMainBranch, selectedCityBranch, selectedCountry, branchCode]);
 
-  // Derive effective calculated permissions from current interactive checkbox state
+  // Derive effective calculated permissions from current 4-tier interactive matrix
   const effectivePermissions = useMemo(() => {
-    return convertMatrixToPermissions(role, moduleCapabilities);
-  }, [role, moduleCapabilities]);
+    return convertMatrixToPermissions(role, hierarchicalState);
+  }, [role, hierarchicalState]);
 
   const rbacSummary = useMemo(() => {
     return buildRbacRoleSummary(role, effectivePermissions);
@@ -1247,19 +1359,48 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     });
   };
 
-  const allowedModulesCount = moduleCapabilities.filter(m => m.canView || m.canCreate || m.canEdit).length;
-  const restrictedModulesCount = moduleCapabilities.filter(m => !m.canView && !m.canCreate && !m.canEdit).length;
+  const allowedFormsCount = useMemo(() => {
+    let count = 0;
+    for (const formKey in hierarchicalState) {
+      if (Object.values(hierarchicalState[formKey] || {}).some(Boolean)) {
+        count++;
+      }
+    }
+    return count;
+  }, [hierarchicalState]);
+
+  const totalActionsCount = useMemo(() => {
+    let count = 0;
+    for (const formKey in hierarchicalState) {
+      for (const actionKey in hierarchicalState[formKey] || {}) {
+        if (hierarchicalState[formKey][actionKey as ErpActionKey]) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }, [hierarchicalState]);
 
   const categoriesList = useMemo(() => {
     const cats = new Set<string>();
-    ERP_MODULE_DEFINITIONS.forEach(m => cats.add(m.category));
+    ERP_PERMISSION_HIERARCHY.forEach(m => cats.add(m.category));
     return ["All Categories", ...Array.from(cats)];
   }, []);
 
-  const filteredModuleCapabilities = useMemo(() => {
-    if (selectedPermissionCategory === "All Categories") return moduleCapabilities;
-    return moduleCapabilities.filter(m => m.category === selectedPermissionCategory);
-  }, [moduleCapabilities, selectedPermissionCategory]);
+  const filteredHierarchy = useMemo(() => {
+    const search = permSearchTerm.toLowerCase().trim();
+    return ERP_PERMISSION_HIERARCHY.filter(mod => {
+      if (selectedPermissionCategory !== "All Categories" && mod.category !== selectedPermissionCategory) {
+        return false;
+      }
+      if (!search) return true;
+      if (mod.name.toLowerCase().includes(search)) return true;
+      return mod.sections.some(sec =>
+        sec.name.toLowerCase().includes(search) ||
+        sec.forms.some(f => f.name.toLowerCase().includes(search) || (f.description && f.description.toLowerCase().includes(search)))
+      );
+    });
+  }, [selectedPermissionCategory, permSearchTerm]);
 
   return (
     <div className="space-y-6">
@@ -2823,34 +2964,34 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
                   </div>
 
-                  {/* MANUALLY ASSIGNABLE FORM/MODULE PERMISSIONS MATRIX */}
-                  <div className="space-y-2.5">
+                  {/* 4-TIER INTERACTIVE GRANULAR PERMISSION MATRIX (Module -> Section -> Form -> 8 Actions) */}
+                  <div className="space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                         <ShieldCheck className="h-4 w-4 text-blue-600" />
-                        <span>{centralT(activeLang, "urw2.perm_matrix_title" as never, "Interactive Form / Module Permission Matrix")}</span>
+                        <span>{centralT(activeLang, "urw2.perm_matrix_title" as never, "4-Tier Granular Permission Control (Module ➔ Section ➔ Form ➔ Actions)")}</span>
                       </Label>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800">
-                          {allowedModulesCount} Allowed
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800">
+                          {allowedFormsCount} Forms Active
                         </span>
-                        <span className="text-[10px] font-mono text-red-600 bg-red-50 dark:bg-red-950/60 px-2 py-0.5 rounded font-bold border border-red-200 dark:border-red-800">
-                          {restrictedModulesCount} Restricted
+                        <span className="text-[10px] font-mono text-blue-700 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded font-bold border border-blue-200 dark:border-blue-800">
+                          {totalActionsCount} Actions Granted
                         </span>
                       </div>
                     </div>
 
-                    {/* Category Filter & Global Controls */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800/80 p-2 rounded-lg text-xs">
-                      <div className="flex items-center gap-1.5 overflow-x-auto">
+                    {/* Category Filter & Search Bar */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800/80 p-2.5 rounded-xl text-xs">
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
                         {categoriesList.map((cat) => (
                           <button
                             key={cat}
                             type="button"
                             onClick={() => setSelectedPermissionCategory(cat)}
-                            className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all whitespace-nowrap ${
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all whitespace-nowrap ${
                               selectedPermissionCategory === cat
-                                ? "bg-white dark:bg-slate-900 text-blue-600 shadow-sm border border-slate-200 dark:border-slate-700"
+                                ? "bg-white dark:bg-slate-900 text-blue-600 shadow-xs border border-slate-200 dark:border-slate-700"
                                 : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
                             }`}
                           >
@@ -2859,99 +3000,282 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         ))}
                       </div>
 
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:w-48">
+                          <Search className="h-3.5 w-3.5 absolute left-2.5 top-2 text-slate-400" />
+                          <input
+                            type="text"
+                            value={permSearchTerm}
+                            onChange={(e) => setPermSearchTerm(e.target.value)}
+                            placeholder={centralT(activeLang, "urw2.filter_forms" as never, "Filter forms...")}
+                            className="w-full pl-8 pr-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
                         <button
                           type="button"
-                          onClick={() => handleToggleCategory(selectedPermissionCategory, true)}
-                          className="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white hover:bg-emerald-500 shadow-xs"
+                          onClick={() => {
+                            const allOpen = Object.values(expandedModules).every(Boolean);
+                            const next: Record<string, boolean> = {};
+                            ERP_PERMISSION_HIERARCHY.forEach(m => { next[m.key] = !allOpen; });
+                            setExpandedModules(next);
+                          }}
+                          className="px-2 py-1 text-[10px] font-bold rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300"
                         >
-                          {centralT(activeLang, "urw2.select_all" as never, "Select All")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleCategory(selectedPermissionCategory, false)}
-                          className="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-300"
-                        >
-                          {centralT(activeLang, "urw2.deselect_all" as never, "Deselect All")}
+                          {Object.values(expandedModules).every(Boolean) ? centralT(activeLang, "urw2.collapse_all" as never, "Collapse All") : centralT(activeLang, "urw2.expand_all" as never, "Expand All")}
                         </button>
                       </div>
                     </div>
 
-                    {/* Matrix Table */}
-                    <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden text-[11px]">
-                      <div className="max-h-[280px] overflow-y-auto">
-                        <table className="w-full text-left border-collapse">
-                          <thead className="bg-slate-100 dark:bg-slate-800 sticky top-0 z-10 text-[10px] uppercase font-bold text-slate-600 dark:text-slate-300">
-                            <tr>
-                              <Th className="p-2 pl-3">Module / Form</Th>
-                              <Th className="p-2 text-center">View</Th>
-                              <Th className="p-2 text-center">Create</Th>
-                              <Th className="p-2 text-center">Edit</Th>
-                              <Th className="p-2 text-center">Delete</Th>
-                              <Th className="p-2 text-center">Post</Th>
-                              <Th className="p-2 text-center pr-3">Print</Th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                            {filteredModuleCapabilities.map((mod) => (
-                              <tr key={mod.moduleKey} className="hover:bg-slate-50 dark:hover:bg-slate-900/40">
-                                <td className="p-2 pl-3 font-semibold text-slate-800 dark:text-slate-200">
-                                  {mod.moduleName}
-                                  <span className="block text-[9px] font-normal text-slate-400">{mod.category}</span>
-                                </td>
-                                <td className="p-2 text-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={mod.canView}
-                                    onChange={() => handleToggleCapability(mod.moduleKey, "canView")}
-                                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                                  />
-                                </td>
-                                <td className="p-2 text-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={mod.canCreate}
-                                    onChange={() => handleToggleCapability(mod.moduleKey, "canCreate")}
-                                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                                  />
-                                </td>
-                                <td className="p-2 text-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={mod.canEdit}
-                                    onChange={() => handleToggleCapability(mod.moduleKey, "canEdit")}
-                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                  />
-                                </td>
-                                <td className="p-2 text-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={mod.canDelete}
-                                    onChange={() => handleToggleCapability(mod.moduleKey, "canDelete")}
-                                    className="rounded border-slate-300 text-red-600 focus:ring-red-500"
-                                  />
-                                </td>
-                                <td className="p-2 text-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={mod.canPostApprove}
-                                    onChange={() => handleToggleCapability(mod.moduleKey, "canPostApprove")}
-                                    className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
-                                  />
-                                </td>
-                                <td className="p-2 text-center pr-3">
-                                  <input
-                                    type="checkbox"
-                                    checked={mod.canPrintExport}
-                                    onChange={() => handleToggleCapability(mod.moduleKey, "canPrintExport")}
-                                    className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                                  />
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                    {/* Hierarchical Accordions */}
+                    <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+                      {filteredHierarchy.map((mod) => {
+                        const isExpanded = expandedModules[mod.key] ?? true;
+                        const modForms = mod.sections.flatMap(s => s.forms);
+                        const modGrantedCount = modForms.reduce((acc, f) => {
+                          const state = hierarchicalState[f.key] || {};
+                          return acc + Object.values(state).filter(Boolean).length;
+                        }, 0);
+
+                        return (
+                          <div
+                            key={mod.key}
+                            className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-2xs overflow-hidden"
+                          >
+                            {/* Module Header Bar */}
+                            <div className="flex items-center justify-between p-3 bg-slate-50/90 dark:bg-slate-850 border-b border-slate-100 dark:border-slate-800">
+                              <button
+                                type="button"
+                                onClick={() => setExpandedModules(p => ({ ...p, [mod.key]: !isExpanded }))}
+                                className="flex items-center gap-2 text-left font-bold text-xs text-slate-900 dark:text-slate-100 hover:text-blue-600 transition"
+                              >
+                                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isExpanded ? "" : "-rotate-90"}`} />
+                                <span>{mod.name}</span>
+                                <span className="text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                                  {mod.category}
+                                </span>
+                              </button>
+
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-slate-500">
+                                  {modGrantedCount} granted
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleHierarchyModule(mod.key, true)}
+                                  className="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
+                                >
+                                  Select All
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleHierarchyModule(mod.key, false)}
+                                  className="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                                >
+                                  Clear
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Module Body: Sections & Forms */}
+                            {isExpanded && (
+                              <div className="p-3 space-y-4">
+                                {mod.sections.map((sec) => (
+                                  <div key={sec.key} className="space-y-2">
+                                    {/* Section Sub-header */}
+                                    <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800">
+                                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                        <Layers className="h-3 w-3 text-blue-600" />
+                                        <span>{sec.name}</span>
+                                      </span>
+                                      <div className="flex items-center gap-1.5 text-[10px]">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleToggleHierarchySection(sec.forms, true)}
+                                          className="text-blue-600 hover:underline font-bold"
+                                        >
+                                          All in Section
+                                        </button>
+                                        <span className="text-slate-300">•</span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleToggleHierarchySection(sec.forms, false)}
+                                          className="text-slate-500 hover:underline font-bold"
+                                        >
+                                          None
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {/* Forms Table with 8-Action Toggles */}
+                                    <div className="rounded-lg border border-slate-200/80 dark:border-slate-800 overflow-x-auto text-[11px]">
+                                      <table className="w-full text-left border-collapse min-w-[680px]">
+                                        <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-[10px] uppercase font-bold text-slate-600 dark:text-slate-300">
+                                          <tr>
+                                            <th className="p-2 pl-3 min-w-[200px]">Form / Bill Type</th>
+                                            <th className="p-2 text-center w-14">View</th>
+                                            <th className="p-2 text-center w-14">Create</th>
+                                            <th className="p-2 text-center w-14">Edit</th>
+                                            <th className="p-2 text-center w-14">Delete</th>
+                                            <th className="p-2 text-center w-16">Submit/Xfer</th>
+                                            <th className="p-2 text-center w-16">Approve</th>
+                                            <th className="p-2 text-center w-14">Print</th>
+                                            <th className="p-2 text-center w-14 pr-3">Export</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                                          {sec.forms.map((form) => {
+                                            const fState = hierarchicalState[form.key] || {
+                                              view: false, create: false, edit: false, delete: false,
+                                              submit_transfer: false, approve: false, print: false, export: false
+                                            };
+                                            const hasActions = (key: ErpActionKey) => (form.actions[key] || []).length > 0;
+
+                                            return (
+                                              <tr key={form.key} className="hover:bg-slate-50 dark:hover:bg-slate-850/50 transition-colors">
+                                                <td className="p-2 pl-3">
+                                                  <div className="flex items-center justify-between gap-1">
+                                                    <span className="font-semibold text-slate-900 dark:text-slate-100">
+                                                      {form.name}
+                                                    </span>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => handleToggleHierarchyFormAll(form.key)}
+                                                      className="text-[9px] text-blue-600 hover:underline shrink-0"
+                                                    >
+                                                      All
+                                                    </button>
+                                                  </div>
+                                                  {form.description && (
+                                                    <span className="block text-[9.5px] text-slate-400 dark:text-slate-500">
+                                                      {form.description}
+                                                    </span>
+                                                  )}
+                                                </td>
+
+                                                {/* View */}
+                                                <td className="p-2 text-center">
+                                                  {hasActions("view") ? (
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={fState.view}
+                                                      onChange={() => handleToggleHierarchyAction(form.key, "view")}
+                                                      className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                                                    />
+                                                  ) : (
+                                                    <span className="text-slate-300 dark:text-slate-700 text-xs">-</span>
+                                                  )}
+                                                </td>
+
+                                                {/* Create */}
+                                                <td className="p-2 text-center">
+                                                  {hasActions("create") ? (
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={fState.create}
+                                                      onChange={() => handleToggleHierarchyAction(form.key, "create")}
+                                                      className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                                                    />
+                                                  ) : (
+                                                    <span className="text-slate-300 dark:text-slate-700 text-xs">-</span>
+                                                  )}
+                                                </td>
+
+                                                {/* Edit */}
+                                                <td className="p-2 text-center">
+                                                  {hasActions("edit") ? (
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={fState.edit}
+                                                      onChange={() => handleToggleHierarchyAction(form.key, "edit")}
+                                                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    />
+                                                  ) : (
+                                                    <span className="text-slate-300 dark:text-slate-700 text-xs">-</span>
+                                                  )}
+                                                </td>
+
+                                                {/* Delete */}
+                                                <td className="p-2 text-center">
+                                                  {hasActions("delete") ? (
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={fState.delete}
+                                                      onChange={() => handleToggleHierarchyAction(form.key, "delete")}
+                                                      className="rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                                                    />
+                                                  ) : (
+                                                    <span className="text-slate-300 dark:text-slate-700 text-xs">-</span>
+                                                  )}
+                                                </td>
+
+                                                {/* Submit / Transfer */}
+                                                <td className="p-2 text-center">
+                                                  {hasActions("submit_transfer") ? (
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={fState.submit_transfer}
+                                                      onChange={() => handleToggleHierarchyAction(form.key, "submit_transfer")}
+                                                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                    />
+                                                  ) : (
+                                                    <span className="text-slate-300 dark:text-slate-700 text-xs">-</span>
+                                                  )}
+                                                </td>
+
+                                                {/* Approve */}
+                                                <td className="p-2 text-center">
+                                                  {hasActions("approve") ? (
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={fState.approve}
+                                                      onChange={() => handleToggleHierarchyAction(form.key, "approve")}
+                                                      className="rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                                                    />
+                                                  ) : (
+                                                    <span className="text-slate-300 dark:text-slate-700 text-xs">-</span>
+                                                  )}
+                                                </td>
+
+                                                {/* Print */}
+                                                <td className="p-2 text-center">
+                                                  {hasActions("print") ? (
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={fState.print}
+                                                      onChange={() => handleToggleHierarchyAction(form.key, "print")}
+                                                      className="rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                                                    />
+                                                  ) : (
+                                                    <span className="text-slate-300 dark:text-slate-700 text-xs">-</span>
+                                                  )}
+                                                </td>
+
+                                                {/* Export */}
+                                                <td className="p-2 text-center pr-3">
+                                                  {hasActions("export") ? (
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={fState.export}
+                                                      onChange={() => handleToggleHierarchyAction(form.key, "export")}
+                                                      className="rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                                                    />
+                                                  ) : (
+                                                    <span className="text-slate-300 dark:text-slate-700 text-xs">-</span>
+                                                  )}
+                                                </td>
+                                              </tr>
+                                            );
+                                          })}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

@@ -71,6 +71,10 @@ export async function POST(req: NextRequest) {
     const parsed = expensesBillPayloadSchema.parse(body);
     const { header, entries } = parsed;
 
+    if (expensesDenied(session, "create", header.billTitle)) {
+      return NextResponse.json({ error: "Forbidden: No permission to create this expense bill type" }, { status: 403 });
+    }
+
     // Business and Shipping Line expenses stay separated: a login only saves bills of its own operational section.
     if (!expenseBillTitleAllowed(session, header.billTitle)) {
       return NextResponse.json({ error: "This bill type belongs to a different operational section than your login (Business vs Shipping Line).", code: "DOMAIN_FORBIDDEN" }, { status: 403 });
@@ -236,6 +240,9 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const limit = Number(searchParams.get("limit") || 50);
     const category = searchParams.get("category");
+    if (category && expensesDenied(session, "read", category)) {
+      return NextResponse.json({ error: "Forbidden: No permission for this expense category" }, { status: 403 });
+    }
     if (category && SHIPPING_ACCOUNTING_BILL_TITLES.has(category)) {
       const denied = shippingAccountingDenied(session);
       if (denied) return denied;

@@ -101,6 +101,10 @@ import {
 import { CustomerOrderActivityTimelineModal } from "@/features/clearing-agent/components/customer-order-activity-timeline-modal";
 import { CustomerOrderReturnCorrectionModal } from "@/features/clearing-agent/components/customer-order-return-correction-modal";
 import { CustomerOrderStageAssignmentModal } from "@/features/clearing-agent/components/customer-order-stage-assignment-modal";
+import {
+  CustomerOrderBranchAssignmentModal,
+  type BranchAssignmentUser
+} from "./customer-order-branch-assignment-modal";
 import { CustomerOrderRouteBuilder } from "@/features/clearing-agent/components/customer-order-route-builder";
 import { CustomerOrderTempTruckModal } from "@/features/clearing-agent/components/customer-order-temp-truck-modal";
 import { CustomerOrderAssignmentCard } from "@/features/clearing-agent/components/customer-order-assignment-card";
@@ -332,6 +336,8 @@ type CustomerRow = {
   person_code?: string | null;
   country_name?: string | null;
   city_name?: string | null;
+  tax_number?: string | null;
+  trn?: string | null;
 };
 
 type CityRow = { id: string; name: string };
@@ -709,6 +715,10 @@ const EMPTY_FORM = {
   loading_customs_branch_name: "",
   loading_customs_user_id: "",
   loading_customs_user_name: "",
+  loading_customs_agent_account_id: "",
+  loading_customs_agent_account_name: "",
+  loading_customs_instructions: "",
+  loading_customs_assigned_at: "",
 
   // 1A Receiving & Entry (Destination)
   receiving_date: new Date(Date.now() + 86400000).toISOString().split("T")[0],
@@ -716,17 +726,22 @@ const EMPTY_FORM = {
   receiving_customs_required: true,
   receiving_customs_name: "Chaman Customs",
   receiving_customs_port_border: "Chaman",
-  receiving_customs_handled_by: "external_agent" as "our_branch" | "external_agent",
+  receiving_customs_handled_by: "our_branch" as "our_branch" | "external_agent",
   receiving_customs_agent_account_id: "",
   receiving_customs_agent_account_name: "",
   receiving_customs_branch_id: "",
   receiving_customs_branch_name: "",
   receiving_customs_user_id: "",
   receiving_customs_user_name: "",
+  receiving_customs_instructions: "",
+  receiving_customs_assigned_at: "",
 
   // 1A Final Destination
+  final_destination_country_id: "",
+  final_destination_country_name: "",
   final_destination_state: "Balochistan",
   final_destination_city: "Quetta",
+  final_destination_address: "",
 
   // 1B Truck & Pre-Carriage
   truck_assignment_mode: "permanent" as "permanent" | "hired" | "later",
@@ -1249,6 +1264,58 @@ export function formatOrderCompleteRoute(order: any): string {
   return `${origin} ➔ ${dest}`;
 }
 
+export function checkStepAccess(
+  userCtx: { context: BranchUserContext | null } | null | undefined,
+  stepKey: "1a" | "1b" | "1c"
+): { canView: boolean; canEdit: boolean } {
+  if (!userCtx?.context) return { canView: true, canEdit: true };
+  if (userCtx.context.isSuperAdmin) return { canView: true, canEdit: true };
+
+  const perms = userCtx.context.permissions || [];
+  if (perms.includes("*")) return { canView: true, canEdit: true };
+
+  const stepPermKey = `customer_orders:step_${stepKey}`;
+  const hasStepWildcard =
+    perms.includes(`${stepPermKey}:*`) ||
+    perms.includes("customer_orders:*") ||
+    perms.includes("clearing_agent:*");
+
+  if (hasStepWildcard) return { canView: true, canEdit: true };
+
+  const canView =
+    perms.includes(`${stepPermKey}:read`) ||
+    perms.includes(`${stepPermKey}:view`) ||
+    perms.includes(`${stepPermKey}:create`) ||
+    perms.includes(`${stepPermKey}:update`) ||
+    perms.includes(`${stepPermKey}:edit`);
+
+  const canEdit =
+    perms.includes(`${stepPermKey}:create`) ||
+    perms.includes(`${stepPermKey}:update`) ||
+    perms.includes(`${stepPermKey}:edit`);
+
+  const hasAnyStepSpecificPerm = perms.some((p) => p.startsWith("customer_orders:step_"));
+  if (!hasAnyStepSpecificPerm) {
+    const hasGeneralOrderView =
+      perms.includes("customer_orders:view") ||
+      perms.includes("customer_orders:read") ||
+      perms.includes("clearing_agent:view") ||
+      perms.includes("clearing_agent:read");
+    const hasGeneralOrderEdit =
+      perms.includes("customer_orders:create") ||
+      perms.includes("customer_orders:edit") ||
+      perms.includes("customer_orders:update") ||
+      perms.includes("clearing_agent:create") ||
+      perms.includes("clearing_agent:edit");
+    return {
+      canView: hasGeneralOrderView || perms.length === 0,
+      canEdit: hasGeneralOrderEdit || perms.length === 0
+    };
+  }
+
+  return { canView, canEdit };
+}
+
 export function CustomerOrderManagementView() {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
@@ -1268,7 +1335,95 @@ export function CustomerOrderManagementView() {
   const [shippingLines, setShippingLines] = useState<ShippingLineRow[]>([]);
   const [countryBranches, setCountryBranches] = useState<{ id: string; name: string; countryId: string; code?: string | null }[]>([]);
   const [cityBranches, setCityBranches] = useState<{ id: string; name: string; countryBranchId: string; code?: string | null }[]>([]);
-  const [assignableUsers, setAssignableUsers] = useState<{ id: string; name: string }[]>([]);
+  const [assignableUsers, setAssignableUsers] = useState<BranchAssignmentUser[]>([]);
+  const [branchAssignmentModal, setBranchAssignmentModal] = useState<{
+    isOpen: boolean;
+    type: "loading" | "receiving";
+    branchId: string;
+    branchName: string;
+    initialUserId?: string;
+    initialInstructions?: string;
+  }>({
+    isOpen: false,
+    type: "loading",
+    branchId: "",
+    branchName: "",
+    initialUserId: "",
+    initialInstructions: ""
+  });
+
+  const handleOpenBranchAssignmentModal = (
+    type: "loading" | "receiving",
+    branchId: string,
+    branchName: string
+  ) => {
+    const initialUserId =
+      type === "loading" ? formData.loading_customs_user_id : formData.receiving_customs_user_id;
+    const initialInstructions =
+      (type === "loading"
+        ? formData.loading_customs_instructions
+        : formData.receiving_customs_instructions) ||
+      (type === "loading"
+        ? `Please handle origin export customs formalities, seal inspection, and dispatch clearance for Order ${formData.order_no || "Draft"}.`
+        : `Please coordinate import clearance, customs release, and destination delivery formalities for Order ${formData.order_no || "Draft"}.`);
+
+    setBranchAssignmentModal({
+      isOpen: true,
+      type,
+      branchId,
+      branchName,
+      initialUserId: initialUserId || "",
+      initialInstructions
+    });
+  };
+
+  const handleConfirmBranchAssignment = async (
+    userId: string,
+    userName: string,
+    instructions: string
+  ) => {
+    const isLoad = branchAssignmentModal.type === "loading";
+    setFormData((prev) => ({
+      ...prev,
+      ...(isLoad
+        ? {
+            loading_customs_branch_id: branchAssignmentModal.branchId,
+            loading_customs_branch_name: branchAssignmentModal.branchName,
+            loading_customs_user_id: userId,
+            loading_customs_user_name: userName,
+            loading_customs_instructions: instructions,
+            loading_customs_assigned_at: new Date().toISOString()
+          }
+        : {
+            receiving_customs_branch_id: branchAssignmentModal.branchId,
+            receiving_customs_branch_name: branchAssignmentModal.branchName,
+            receiving_customs_user_id: userId,
+            receiving_customs_user_name: userName,
+            receiving_customs_instructions: instructions,
+            receiving_customs_assigned_at: new Date().toISOString()
+          })
+    }));
+
+    if (userId) {
+      void fetch("/api/erp/user-tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${isLoad ? "Export" : "Import"} Customs Task - ${formData.order_no || "Order"}`,
+          instructions,
+          assignedTo: userId,
+          countryBranchId: branchAssignmentModal.branchId,
+          relatedModule: "clearing_agent",
+          relatedRecordTable: "clearing_customer_orders",
+          relatedRecordId: editingOrderId || undefined,
+          relatedRecordLabel: formData.order_no || "Customer Order",
+          priority: "normal"
+        })
+      }).catch((err) => console.error("Error creating user assignment task:", err));
+    }
+
+    setBranchAssignmentModal((prev) => ({ ...prev, isOpen: false }));
+  };
   const [loadingCities, setLoadingCities] = useState<CityRow[]>([]);
   const [receivingCities, setReceivingCities] = useState<CityRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -1588,7 +1743,14 @@ export function CustomerOrderManagementView() {
         }))
       );
       setAssignableUsers(
-        extractArray(assigneeJson, ["users", "data"]).map((u: any) => ({ id: u.id, name: u.fullName || u.full_name || u.name || u.email || u.id }))
+        extractArray(assigneeJson, ["users", "data"]).map((u: any) => ({
+          id: u.userId || u.id,
+          name: u.fullName || u.full_name || u.name || u.email || u.id,
+          countryBranchId: u.countryBranchId || u.country_branch_id || null,
+          cityBranchId: u.cityBranchId || u.city_branch_id || null,
+          countryId: u.countryId || u.country_id || null,
+          role: u.role || null
+        }))
       );
     } catch (error) {
       console.error("Error loading customer-order data:", error);
@@ -2302,6 +2464,35 @@ export function CustomerOrderManagementView() {
       goods_items: loadedGoodsItems,
       loading_place: o.loading_place || o.loading_source_name || "",
       receiving_place: o.receiving_place || o.destination_city || "",
+      loading_customs_required: o.loading_customs_required !== false,
+      loading_customs_name: o.loading_customs_name || "",
+      loading_customs_port_border: o.loading_customs_port_border || "",
+      loading_customs_handled_by: (o.loading_customs_handled_by as "our_branch" | "external_agent") || "our_branch",
+      loading_customs_branch_id: o.loading_customs_branch_id || "",
+      loading_customs_branch_name: o.loading_customs_branch_name || "",
+      loading_customs_user_id: o.loading_customs_user_id || "",
+      loading_customs_user_name: o.loading_customs_user_name || "",
+      loading_customs_agent_account_id: o.loading_customs_agent_account_id || "",
+      loading_customs_agent_account_name: o.loading_customs_agent_account_name || "",
+      loading_customs_instructions: o.loading_customs_instructions || "",
+      loading_customs_assigned_at: o.loading_customs_assigned_at || "",
+      receiving_customs_required: o.receiving_customs_required !== false,
+      receiving_customs_name: o.receiving_customs_name || "",
+      receiving_customs_port_border: o.receiving_customs_port_border || "",
+      receiving_customs_handled_by: (o.receiving_customs_handled_by as "our_branch" | "external_agent") || "our_branch",
+      receiving_customs_branch_id: o.receiving_customs_branch_id || "",
+      receiving_customs_branch_name: o.receiving_customs_branch_name || "",
+      receiving_customs_user_id: o.receiving_customs_user_id || "",
+      receiving_customs_user_name: o.receiving_customs_user_name || "",
+      receiving_customs_agent_account_id: o.receiving_customs_agent_account_id || "",
+      receiving_customs_agent_account_name: o.receiving_customs_agent_account_name || "",
+      receiving_customs_instructions: o.receiving_customs_instructions || "",
+      receiving_customs_assigned_at: o.receiving_customs_assigned_at || "",
+      final_destination_country_id: o.final_destination_country_id || "",
+      final_destination_country_name: o.final_destination_country_name || "",
+      final_destination_state: o.final_destination_state || "",
+      final_destination_city: o.final_destination_city || o.destination_city || "",
+      final_destination_address: o.final_destination_address || "",
       exit_point_type: (o.exit_point_type as "border" | "port") || (o.loading_port_id && !o.exit_border_port_id ? "port" : "border"),
       entry_point_type: (o.entry_point_type as "border" | "port") || (o.destination_port_id && !o.entry_border_port_id ? "port" : "border"),
       exit_border_port_id: o.exit_border_port_id || "",
@@ -3421,6 +3612,25 @@ export function CustomerOrderManagementView() {
           setIsFormOpen(false);
           void fetchInitialData();
         }}
+        lang={lang}
+      />
+
+      {/* Dedicated Branch Assignment Popup for Loading / Receiving Customs */}
+      <CustomerOrderBranchAssignmentModal
+        isOpen={branchAssignmentModal.isOpen}
+        type={branchAssignmentModal.type}
+        branchId={branchAssignmentModal.branchId}
+        branchName={branchAssignmentModal.branchName}
+        orderNo={formData.order_no || formData.entry_serial || "Draft"}
+        customerName={formData.customer_name || partySelections.supplier.customerName || ""}
+        originText={`${formData.loading_country_name || "Origin"} • ${formData.loading_customs_port_border || formData.loading_place || ""}`}
+        destinationText={`${formData.receiving_country_name || "Destination"} • ${formData.receiving_customs_port_border || formData.receiving_place || ""}`}
+        transportMode={formData.transport_mode === "by_road" ? "By Road" : formData.transport_mode === "by_sea" ? "By Sea" : "By Air"}
+        assignableUsers={assignableUsers}
+        initialUserId={branchAssignmentModal.initialUserId}
+        initialInstructions={branchAssignmentModal.initialInstructions}
+        onClose={() => setBranchAssignmentModal((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={handleConfirmBranchAssignment}
         lang={lang}
       />
 
@@ -4775,40 +4985,50 @@ export function CustomerOrderManagementView() {
                 </div>
               </div>
 
-              {/* Center: Compact Stepper Pills (1, 2, 3, 4) "chota chota" */}
+              {/* Center: Compact Stepper Pills (1, 2, 3, 4) with Granular Step Access Enforced */}
               <div className="flex items-center justify-center gap-1 overflow-x-auto py-1 px-1.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/70 dark:border-slate-800">
                 {stepsList.map((st, idx) => {
                   const isActive = currentStep === st.num;
                   const isPast = currentStep > st.num;
+                  const stepKey = st.num === 1 ? "1a" : st.num === 2 ? "1b" : st.num === 3 ? "1c" : null;
+                  const access = stepKey ? checkStepAccess(userContext, stepKey) : { canView: true, canEdit: true };
+                  const isLocked = !access.canView;
+
                   return (
                     <div key={st.num} className="flex items-center gap-1">
                       <button
                         type="button"
+                        disabled={isLocked}
                         onClick={() => {
+                          if (isLocked) return;
                           setCurrentStep(st.num as any);
                           if (st.num === 1) setStep1SubStep("1A");
                           else if (st.num === 2) setStep1SubStep("1B");
                           else if (st.num === 3) setStep1SubStep("1C");
                         }}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                          isActive
+                          isLocked
+                            ? "opacity-50 cursor-not-allowed text-slate-400 bg-slate-100 dark:bg-slate-800"
+                            : isActive
                             ? "bg-blue-600 text-white shadow-xs"
                             : isPast
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800"
                             : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:text-slate-200"
                         }`}
-                        title={st.desc}
+                        title={isLocked ? tt("step_access_restricted", "Section access restricted by permission policy") : st.desc}
                       >
                         <span
                           className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black ${
-                            isActive
+                            isLocked
+                              ? "bg-slate-300 text-slate-600 dark:bg-slate-700"
+                              : isActive
                               ? "bg-white text-blue-600"
                               : isPast
                               ? "bg-emerald-600 text-white"
                               : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
                           }`}
                         >
-                          {isPast ? "✓" : st.num}
+                          {isLocked ? "🔒" : isPast ? "✓" : st.num}
                         </span>
                         <span className="whitespace-nowrap">{st.shortTitle || st.title}</span>
                       </button>
@@ -5021,6 +5241,7 @@ export function CustomerOrderManagementView() {
                       countryBranches={countryBranches}
                       cityBranches={cityBranches}
                       assignableUsers={assignableUsers}
+                      onOpenBranchAssignment={handleOpenBranchAssignmentModal}
                       onSelectSubStep={(sub) => {
                         setStep1SubStep(sub);
                         if (sub === "1A") setCurrentStep(1);
@@ -5479,114 +5700,191 @@ export function CustomerOrderManagementView() {
                   </div>
                 </div>
 
-                {/* ROW 3: CUSTOMS • LOADING & RECEIVING */}
-                <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs">
-                        <Building2 className="h-3.5 w-3.5" />
-                      </span>
-                      <span className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 text-xs">
-                        {tt("customs_loading_receiving_title", "CUSTOMS • LOADING & RECEIVING")}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 shadow-2xs transition"
-                    >
-                      <span>{tt("view_more", "View More")}</span>
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                    {/* Left: Loading Customs (Origin) */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-850">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs">
-                          <Building2 className="h-4 w-4 text-emerald-600" />
-                          <span>{tt("loading_customs_origin", "Loading Customs (Origin)")}</span>
+                {/* ROW 3: DEDICATED LIVE REPORT CARDS (Loading Customs, Receiving Customs, Final Destination) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+                  {/* CARD 1: LOADING CUSTOMS (ORIGIN) */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-xs">
+                          <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
+                          <span className="truncate">{tt("loading_customs_origin", "Loading Customs (Origin)")}</span>
                         </div>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                          ● {tt("required_yes", "Required: Yes")}
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider ${
+                          formData.loading_customs_required !== false
+                            ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800"
+                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                        }`}>
+                          {formData.loading_customs_required !== false ? tt("required_yes", "● Required") : tt("not_required", "○ Optional")}
                         </span>
                       </div>
 
-                      <div className="space-y-1.5 text-[11px] pt-1">
+                      <div className="space-y-1.5 text-[11px]">
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("customs_name", "Customs Name")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
                             {formData.loading_customs_name || "Spin Boldak Customs"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500">{tt("customs_port_border", "Customs Port / Border")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          <span className="text-slate-500">{tt("customs_port_border", "Port / Border")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
                             {formData.loading_customs_port_border || "Spin Boldak"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("handled_by", "Handled By")}</span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                            {formData.loading_customs_handled_by === "external_agent" ? "External Agent" : "Our Branch"}
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            formData.loading_customs_handled_by === "external_agent"
+                              ? "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                              : "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                          }`}>
+                            {formData.loading_customs_handled_by === "external_agent" ? tt("external_agent", "External Agent") : tt("our_branch", "Our Branch")}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500">{tt("branch", "Branch")}</span>
-                          <span className="font-medium text-amber-600 dark:text-amber-400">
-                            {formData.loading_customs_branch_name || "Pending selection"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500">{tt("responsible_user", "Responsible User")}</span>
-                          <span className="font-medium text-amber-600 dark:text-amber-400">
-                            {formData.loading_customs_user_name || "Pending selection"}
-                          </span>
-                        </div>
+                        {formData.loading_customs_handled_by !== "external_agent" ? (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-500">{tt("branch", "Branch")}</span>
+                              <span className="font-semibold text-blue-600 dark:text-blue-400 truncate max-w-[170px]">
+                                {formData.loading_customs_branch_name || "Pending Branch"}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-500">{tt("assigned_officer", "Assigned Officer")}</span>
+                              <span className="font-bold text-slate-900 dark:text-white truncate max-w-[170px]">
+                                {formData.loading_customs_user_name || "Pending Assignment"}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500">{tt("agent_account", "Agent Account")}</span>
+                            <span className="font-semibold text-purple-600 dark:text-purple-400 truncate max-w-[170px]">
+                              {formData.loading_customs_agent_account_name || "Pending Account"}
+                            </span>
+                          </div>
+                        )}
+                        {formData.loading_customs_instructions && (
+                          <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 truncate" title={formData.loading_customs_instructions}>
+                            <span className="font-bold text-slate-600 dark:text-slate-400">{tt("notes", "Notes:")} </span>
+                            {formData.loading_customs_instructions}
+                          </div>
+                        )}
                       </div>
                     </div>
+                  </div>
 
-                    {/* Right: Receiving Customs (Destination) */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-850">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs">
-                          <Building2 className="h-4 w-4 text-purple-600" />
-                          <span>{tt("receiving_customs_dest", "Receiving Customs (Destination)")}</span>
+                  {/* CARD 2: RECEIVING CUSTOMS (DESTINATION) */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-xs">
+                          <Building2 className="h-4 w-4 text-purple-600 shrink-0" />
+                          <span className="truncate">{tt("receiving_customs_dest", "Receiving Customs (Dest)")}</span>
                         </div>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                          ● {tt("required_yes", "Required: Yes")}
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider ${
+                          formData.receiving_customs_required !== false
+                            ? "bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800"
+                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                        }`}>
+                          {formData.receiving_customs_required !== false ? tt("required_yes", "● Required") : tt("not_required", "○ Optional")}
                         </span>
                       </div>
 
-                      <div className="space-y-1.5 text-[11px] pt-1">
+                      <div className="space-y-1.5 text-[11px]">
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("customs_name", "Customs Name")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
                             {formData.receiving_customs_name || "Chaman Customs"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500">{tt("customs_port_border", "Customs Port / Border")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          <span className="text-slate-500">{tt("customs_port_border", "Port / Border")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
                             {formData.receiving_customs_port_border || "Chaman"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("handled_by", "Handled By")}</span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
-                            {formData.receiving_customs_handled_by === "our_branch" ? "Our Branch" : "External Agent"}
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            formData.receiving_customs_handled_by === "our_branch"
+                              ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                              : "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                          }`}>
+                            {formData.receiving_customs_handled_by === "our_branch" ? tt("our_branch", "Our Branch") : tt("external_agent", "External Agent")}
+                          </span>
+                        </div>
+                        {formData.receiving_customs_handled_by === "our_branch" ? (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-500">{tt("branch", "Branch")}</span>
+                              <span className="font-semibold text-blue-600 dark:text-blue-400 truncate max-w-[170px]">
+                                {formData.receiving_customs_branch_name || "Pending Branch"}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-500">{tt("assigned_officer", "Assigned Officer")}</span>
+                              <span className="font-bold text-slate-900 dark:text-white truncate max-w-[170px]">
+                                {formData.receiving_customs_user_name || "Pending Assignment"}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500">{tt("agent_account", "Agent Account")}</span>
+                            <span className="font-semibold text-purple-600 dark:text-purple-400 truncate max-w-[170px]">
+                              {formData.receiving_customs_agent_account_name || "Pending Account"}
+                            </span>
+                          </div>
+                        )}
+                        {formData.receiving_customs_instructions && (
+                          <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 truncate" title={formData.receiving_customs_instructions}>
+                            <span className="font-bold text-slate-600 dark:text-slate-400">{tt("notes", "Notes:")} </span>
+                            {formData.receiving_customs_instructions}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CARD 3: FINAL DESTINATION & DELIVERY LOCATION */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-xs">
+                          <Flag className="h-4 w-4 text-emerald-600 shrink-0" />
+                          <span className="truncate">{tt("final_destination_title", "Final Destination")}</span>
+                        </div>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                          {tt("delivery_location", "Delivery Spot")}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5 text-[11px]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("country", "Country")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                            {formData.final_destination_country_name || formData.receiving_country_name || "Pakistan"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500">{tt("agent_account", "Agent Account")}</span>
-                          <span className="font-medium text-amber-600 dark:text-amber-400">
-                            {formData.receiving_customs_agent_account_name || "Pending selection"}
+                          <span className="text-slate-500">{tt("state_province", "State / Province")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                            {formData.final_destination_state || "Balochistan"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500">{tt("bill_status", "Bill Status")}</span>
-                          <span className="font-medium text-slate-600 dark:text-slate-300">
-                            Draft after save
+                          <span className="text-slate-500">{tt("city_star", "City")}</span>
+                          <span className="font-bold text-slate-900 dark:text-white truncate max-w-[170px]">
+                            {formData.final_destination_city || formData.destination_city || "Quetta"}
                           </span>
+                        </div>
+                        <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-[10.5px]">
+                          <span className="text-slate-500 block text-[10px]">{tt("full_delivery_address", "Delivery Address")}</span>
+                          <p className="font-medium text-slate-800 dark:text-slate-200 line-clamp-2">
+                            {formData.final_destination_address || formData.final_delivery_location || "Quetta Central Warehouse"}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -6200,8 +6498,10 @@ function Step1BookingCustomer({
   setDraftGoodsItem: propsSetDraftGoodsItem,
   editingGoodsIdx: propsEditingGoodsIdx,
   setEditingGoodsIdx: propsSetEditingGoodsIdx,
-  saving
+  saving,
+  onOpenBranchAssignment
 }: {
+  onOpenBranchAssignment?: (type: "loading" | "receiving", branchId: string, branchName: string) => void;
   lang: ReturnType<typeof useActiveLanguage>;
   tt: (k: string, f: string) => string;
   userContext: { context: BranchUserContext | null; loading: boolean; error: string | null };
@@ -7751,322 +8051,7 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* 6. REMAINING CUSTOMS AND DESTINATION DETAILS */}
-          {/* Loading Customs (Origin) */}
-          <div className="rounded-2xl border border-sky-200 dark:border-sky-900/60 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
-            <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-sky-50/70 dark:bg-sky-950/30 border-b border-sky-100 dark:border-sky-900/50">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
-                <Building2 className="h-4 w-4" />
-              </span>
-              <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-xs">
-                  {tt("loading_customs_required_q", "Loading Customs Required?")}
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  {tt("loading_customs_sub", `For export clearance at origin (${formData.loading_country_name || "Origin"})`)}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3.5 sm:p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {tt("require_loading_customs", "Require origin export customs clearance:")}
-                </span>
-                <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
-                  <button
-                    type="button"
-                    onClick={() => setFormData((c) => ({ ...c, loading_customs_required: true }))}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                      formData.loading_customs_required !== false
-                        ? "bg-blue-600 text-white shadow-xs"
-                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                    }`}
-                  >
-                    ● {tt("yes", "Yes")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData((c) => ({ ...c, loading_customs_required: false }))}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                      formData.loading_customs_required === false
-                        ? "bg-slate-700 text-white shadow-xs"
-                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                    }`}
-                  >
-                    ○ {tt("no", "No")}
-                  </button>
-                </div>
-              </div>
-
-              {formData.loading_customs_required !== false && (
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {tt("customs_name", "Customs Name")} *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.loading_customs_name || ""}
-                        onChange={(e) => setFormData((c) => ({ ...c, loading_customs_name: e.target.value }))}
-                        placeholder="e.g. Spin Boldak Customs"
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {tt("customs_port_border", "Customs Port / Border")} *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.loading_customs_port_border || ""}
-                        onChange={(e) => setFormData((c) => ({ ...c, loading_customs_port_border: e.target.value }))}
-                        placeholder="e.g. Spin Boldak"
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {tt("handled_by", "Handled By")} *
-                      </label>
-                      <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
-                        <button
-                          type="button"
-                          onClick={() => setFormData((c) => ({ ...c, loading_customs_handled_by: "our_branch" }))}
-                          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            (formData.loading_customs_handled_by || "our_branch") === "our_branch"
-                              ? "bg-blue-600 text-white shadow-xs"
-                              : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
-                          }`}
-                        >
-                          <Building2 className="h-3.5 w-3.5" />
-                          <span>{tt("our_branch", "Our Branch")}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFormData((c) => ({ ...c, loading_customs_handled_by: "external_agent" }))}
-                          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            formData.loading_customs_handled_by === "external_agent"
-                              ? "bg-purple-600 text-white shadow-xs"
-                              : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
-                          }`}
-                        >
-                          <Users className="h-3.5 w-3.5" />
-                          <span>{tt("external_agent", "External Agent")}</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {formData.loading_customs_handled_by !== "external_agent" ? (
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          {tt("select_our_branch", "Select Our Branch")} *
-                        </label>
-                        <select
-                          value={formData.loading_customs_branch_id || ""}
-                          onChange={(e) => {
-                            const bId = e.target.value;
-                            const bName = countryBranches?.find((b) => b.id === bId)?.name || cityBranches?.find((b) => b.id === bId)?.name || "";
-                            setFormData((c) => ({ ...c, loading_customs_branch_id: bId, loading_customs_branch_name: bName }));
-                          }}
-                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          <option value="">{tt("choose_branch", "Choose branch")}</option>
-                          {getBranchesForCountry(formData.loading_country_id).map((b) => (
-                            <option key={b.id} value={b.id}>{b.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    ) : (
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          {tt("external_agent_account", "External Agent Account")} *
-                        </label>
-                        <select
-                          value={formData.loading_customs_user_id || ""}
-                          onChange={(e) => {
-                            const aId = e.target.value;
-                            const aName = accounts.find((a) => a.id === aId)?.name || "";
-                            setFormData((c) => ({ ...c, loading_customs_user_id: aId, loading_customs_user_name: aName }));
-                          }}
-                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          <option value="">{tt("select_agent_account", "Select agent account...")}</option>
-                          {accounts.map((a) => (
-                            <option key={a.id} value={a.id}>{a.name} ({a.code || "ACC"})</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Receiving Customs (Destination) */}
-          <div className="rounded-2xl border border-purple-200 dark:border-purple-900/60 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
-            <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-purple-50/70 dark:bg-purple-950/30 border-b border-purple-100 dark:border-purple-900/50">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 text-white shadow-xs">
-                <Building2 className="h-4 w-4" />
-              </span>
-              <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-xs">
-                  {tt("receiving_customs_required_q", "Receiving Customs Required?")}
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  {tt("receiving_customs_sub", `For import clearance at destination (${formData.receiving_country_name || "Destination"})`)}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3.5 sm:p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {tt("require_receiving_customs", "Require destination import customs clearance:")}
-                </span>
-                <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
-                  <button
-                    type="button"
-                    onClick={() => setFormData((c) => ({ ...c, receiving_customs_required: true }))}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                      formData.receiving_customs_required !== false
-                        ? "bg-purple-600 text-white shadow-xs"
-                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                    }`}
-                  >
-                    ● {tt("yes", "Yes")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData((c) => ({ ...c, receiving_customs_required: false }))}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                      formData.receiving_customs_required === false
-                        ? "bg-slate-700 text-white shadow-xs"
-                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                    }`}
-                  >
-                    ○ {tt("no", "No")}
-                  </button>
-                </div>
-              </div>
-
-              {formData.receiving_customs_required !== false && (
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {tt("customs_name", "Customs Name")} *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.receiving_customs_name || ""}
-                        onChange={(e) => setFormData((c) => ({ ...c, receiving_customs_name: e.target.value }))}
-                        placeholder="e.g. Chaman Customs"
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {tt("customs_port_border", "Customs Port / Border")} *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.receiving_customs_port_border || ""}
-                        onChange={(e) => setFormData((c) => ({ ...c, receiving_customs_port_border: e.target.value }))}
-                        placeholder="e.g. Chaman"
-                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {tt("handled_by", "Handled By")} *
-                      </label>
-                      <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
-                        <button
-                          type="button"
-                          onClick={() => setFormData((c) => ({ ...c, receiving_customs_handled_by: "our_branch" }))}
-                          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            formData.receiving_customs_handled_by === "our_branch"
-                              ? "bg-purple-600 text-white shadow-xs"
-                              : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
-                          }`}
-                        >
-                          <Building2 className="h-3.5 w-3.5" />
-                          <span>{tt("our_branch", "Our Branch")}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFormData((c) => ({ ...c, receiving_customs_handled_by: "external_agent" }))}
-                          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            (formData.receiving_customs_handled_by || "external_agent") === "external_agent"
-                              ? "bg-purple-600 text-white shadow-xs"
-                              : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
-                          }`}
-                        >
-                          <Users className="h-3.5 w-3.5" />
-                          <span>{tt("external_agent", "External Agent")}</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {formData.receiving_customs_handled_by === "our_branch" ? (
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          {tt("select_our_branch", "Select Our Branch")} *
-                        </label>
-                        <select
-                          value={formData.receiving_customs_branch_id || ""}
-                          onChange={(e) => {
-                            const bId = e.target.value;
-                            const bName = countryBranches?.find((b) => b.id === bId)?.name || cityBranches?.find((b) => b.id === bId)?.name || "";
-                            setFormData((c) => ({ ...c, receiving_customs_branch_id: bId, receiving_customs_branch_name: bName }));
-                          }}
-                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          <option value="">{tt("choose_branch", "Choose branch")}</option>
-                          {getBranchesForCountry(formData.receiving_country_id).map((b) => (
-                            <option key={b.id} value={b.id}>{b.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    ) : (
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          {tt("existing_agent_account", "Existing Agent Account")} *
-                        </label>
-                        <select
-                          value={formData.receiving_customs_agent_account_id || ""}
-                          onChange={(e) => {
-                            const aId = e.target.value;
-                            const aName = accounts.find((a) => a.id === aId)?.name || "";
-                            setFormData((c) => ({ ...c, receiving_customs_agent_account_id: aId, receiving_customs_agent_account_name: aName }));
-                          }}
-                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          <option value="">{tt("select_existing_account", "Select existing account")}</option>
-                          {accounts.map((a) => (
-                            <option key={a.id} value={a.id}>{a.name} ({a.code || "ACC"})</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 2. COMMERCIAL PARTIES (Loading Customer / Supplier, Receiving Customer / Buyer, Exporter, Importer, Consignee, Notify Party) */}
+          {/* 2. COMMERCIAL PARTIES & CUSTOMERS (Moved above Customs as required) */}
           <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-xs space-y-4">
             <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <Users className="h-4 w-4 text-blue-600" />
@@ -8169,14 +8154,518 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* Final Destination */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-              <Flag className="h-4 w-4 text-blue-600" />
-              <span>{tt("final_destination_title", "Final Destination")}</span>
+          {/* 3. LOADING CUSTOMS (ORIGIN) */}
+          <div className="rounded-2xl border border-sky-200 dark:border-sky-900/60 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+            <div className="flex items-center justify-between gap-3 p-3.5 sm:p-4 bg-sky-50/70 dark:bg-sky-950/30 border-b border-sky-100 dark:border-sky-900/50">
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
+                  <Building2 className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-white text-xs">
+                    {tt("loading_customs_required_q", "Loading Customs (Origin) — Export Clearance")}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {tt("loading_customs_sub", `For export clearance at origin (${formData.loading_country_name || "Origin"})`)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setFormData((c) => ({ ...c, loading_customs_required: true }))}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    formData.loading_customs_required !== false
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                  }`}
+                >
+                  ● {tt("yes", "Yes")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData((c) => ({ ...c, loading_customs_required: false }))}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    formData.loading_customs_required === false
+                      ? "bg-slate-700 text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                  }`}
+                >
+                  ○ {tt("no", "No")}
+                </button>
+              </div>
+            </div>
+
+            {formData.loading_customs_required !== false && (
+              <div className="p-3.5 sm:p-4 space-y-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("customs_name", "Customs Name")} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.loading_customs_name || ""}
+                      onChange={(e) => setFormData((c) => ({ ...c, loading_customs_name: e.target.value }))}
+                      placeholder="e.g. Spin Boldak Customs"
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("customs_port_border", "Customs Port / Border")} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.loading_customs_port_border || ""}
+                      onChange={(e) => setFormData((c) => ({ ...c, loading_customs_port_border: e.target.value }))}
+                      placeholder="e.g. Spin Boldak"
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("handled_by", "Handled By")} *
+                    </label>
+                    <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => setFormData((c) => ({ ...c, loading_customs_handled_by: "our_branch" }))}
+                        className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          (formData.loading_customs_handled_by || "our_branch") === "our_branch"
+                            ? "bg-blue-600 text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                        }`}
+                      >
+                        <Building2 className="h-3.5 w-3.5" />
+                        <span>{tt("our_branch", "Our Branch")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((c) => ({ ...c, loading_customs_handled_by: "external_agent" }))}
+                        className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          formData.loading_customs_handled_by === "external_agent"
+                            ? "bg-purple-600 text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                        }`}
+                      >
+                        <Users className="h-3.5 w-3.5" />
+                        <span>{tt("external_agent", "External Agent")}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {formData.loading_customs_handled_by !== "external_agent" ? (
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {tt("select_our_branch", "Select Our Branch")} *
+                      </label>
+                      <select
+                        value={formData.loading_customs_branch_id || ""}
+                        onChange={(e) => {
+                          const bId = e.target.value;
+                          const bName = countryBranches?.find((b) => b.id === bId)?.name || cityBranches?.find((b) => b.id === bId)?.name || "";
+                          setFormData((c) => ({ ...c, loading_customs_branch_id: bId, loading_customs_branch_name: bName }));
+                          if (bId && onOpenBranchAssignment) {
+                            onOpenBranchAssignment("loading", bId, bName);
+                          }
+                        }}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="">{tt("choose_branch", "Choose branch...")}</option>
+                        {getBranchesForCountry(formData.loading_country_id).map((b) => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {tt("external_agent_account", "External Agent Account")} *
+                      </label>
+                      <select
+                        value={formData.loading_customs_agent_account_id || formData.loading_customs_user_id || ""}
+                        onChange={(e) => {
+                          const aId = e.target.value;
+                          const aName = accounts.find((a) => a.id === aId)?.name || "";
+                          setFormData((c) => ({
+                            ...c,
+                            loading_customs_agent_account_id: aId,
+                            loading_customs_agent_account_name: aName,
+                            loading_customs_user_id: aId,
+                            loading_customs_user_name: aName
+                          }));
+                        }}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="">{tt("select_agent_account", "Select agent account...")}</option>
+                        {accounts.map((a) => (
+                          <option key={a.id} value={a.id}>{a.name} ({a.code || "ACC"})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {/* Branch Officer Assignment Card (When Our Branch is selected) */}
+                {formData.loading_customs_handled_by !== "external_agent" && formData.loading_customs_branch_id && (
+                  <div className="p-3 rounded-xl border border-blue-200/80 bg-blue-50/60 dark:border-blue-900/60 dark:bg-blue-950/30 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-bold shrink-0">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="font-bold text-slate-900 dark:text-white">
+                          {formData.loading_customs_user_name
+                            ? `${tt("assigned_officer", "Assigned Officer:")} ${formData.loading_customs_user_name}`
+                            : tt("officer_assignment_pending", "Branch selected — Officer assignment pending")}
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          {formData.loading_customs_branch_name} {formData.loading_customs_instructions ? `• "${formData.loading_customs_instructions}"` : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenBranchAssignment && formData.loading_customs_branch_id) {
+                          onOpenBranchAssignment("loading", formData.loading_customs_branch_id, formData.loading_customs_branch_name || "Our Branch");
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-2xs transition"
+                    >
+                      {formData.loading_customs_user_name ? tt("reassign_officer", "Reassign / Edit Instructions") : tt("assign_officer_btn", "Assign Officer ➔")}
+                    </button>
+                  </div>
+                )}
+
+                {/* External Agent Profile Preview Card (When External Agent is selected) */}
+                {formData.loading_customs_handled_by === "external_agent" && (formData.loading_customs_agent_account_id || formData.loading_customs_user_id) && (() => {
+                  const agId = formData.loading_customs_agent_account_id || formData.loading_customs_user_id;
+                  const agentAcc = accounts.find((a) => a.id === agId);
+                  const linkedCust = agentAcc?.customer_id ? customers.find((c) => c.id === agentAcc.customer_id) : null;
+                  if (!agentAcc) return null;
+                  return (
+                    <div className="rounded-xl border border-purple-200/90 bg-purple-50/40 p-3.5 dark:border-purple-900/60 dark:bg-purple-950/20 space-y-2">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-purple-200/50 dark:border-purple-900/40">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-purple-600" />
+                          <span className="text-xs font-bold text-purple-950 dark:text-purple-200">{agentAcc.name}</span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
+                          {agentAcc.code || "ACC"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                        <div>
+                          <span className="text-slate-500 block text-[10px]">{tt("account_type_label", "Account Type")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">{agentAcc.kind || "Clearing Agent / External Vendor"}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[10px]">{tt("current_balance_label", "Currency & Balance")}</span>
+                          <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                            {agentAcc.currency || "USD"} {Number(agentAcc.current_balance || 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[10px]">{tt("phone", "Phone")}</span>
+                          <span className="font-mono text-slate-800 dark:text-slate-200">{linkedCust?.mobile || linkedCust?.phone || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[10px]">{tt("trn_tax_no", "TRN / Tax")}</span>
+                          <span className="font-mono text-slate-800 dark:text-slate-200">{(linkedCust as any)?.tax_number || (linkedCust as any)?.trn || "—"}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-500 block text-[10px]">{tt("email", "Email")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate block">{linkedCust?.email || "—"}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-500 block text-[10px]">{tt("address", "Address")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate block">{linkedCust?.address || "—"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
+          {/* 4. RECEIVING CUSTOMS (DESTINATION) */}
+          <div className="rounded-2xl border border-purple-200 dark:border-purple-900/60 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+            <div className="flex items-center justify-between gap-3 p-3.5 sm:p-4 bg-purple-50/70 dark:bg-purple-950/30 border-b border-purple-100 dark:border-purple-900/50">
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 text-white shadow-xs">
+                  <Building2 className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-white text-xs">
+                    {tt("receiving_customs_required_q", "Receiving Customs (Destination) — Import Clearance")}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {tt("receiving_customs_sub", `For import clearance at destination (${formData.receiving_country_name || "Destination"})`)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setFormData((c) => ({ ...c, receiving_customs_required: true }))}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    formData.receiving_customs_required !== false
+                      ? "bg-purple-600 text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                  }`}
+                >
+                  ● {tt("yes", "Yes")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData((c) => ({ ...c, receiving_customs_required: false }))}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    formData.receiving_customs_required === false
+                      ? "bg-slate-700 text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                  }`}
+                >
+                  ○ {tt("no", "No")}
+                </button>
+              </div>
+            </div>
+
+            {formData.receiving_customs_required !== false && (
+              <div className="p-3.5 sm:p-4 space-y-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("customs_name", "Customs Name")} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.receiving_customs_name || ""}
+                      onChange={(e) => setFormData((c) => ({ ...c, receiving_customs_name: e.target.value }))}
+                      placeholder="e.g. Chaman Customs"
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("customs_port_border", "Customs Port / Border")} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.receiving_customs_port_border || ""}
+                      onChange={(e) => setFormData((c) => ({ ...c, receiving_customs_port_border: e.target.value }))}
+                      placeholder="e.g. Chaman"
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {tt("handled_by", "Handled By")} *
+                    </label>
+                    <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => setFormData((c) => ({ ...c, receiving_customs_handled_by: "our_branch" }))}
+                        className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          formData.receiving_customs_handled_by === "our_branch"
+                            ? "bg-purple-600 text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                        }`}
+                      >
+                        <Building2 className="h-3.5 w-3.5" />
+                        <span>{tt("our_branch", "Our Branch")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((c) => ({ ...c, receiving_customs_handled_by: "external_agent" }))}
+                        className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          (formData.receiving_customs_handled_by || "external_agent") === "external_agent"
+                            ? "bg-purple-600 text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                        }`}
+                      >
+                        <Users className="h-3.5 w-3.5" />
+                        <span>{tt("external_agent", "External Agent")}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {formData.receiving_customs_handled_by === "our_branch" ? (
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {tt("select_our_branch", "Select Our Branch")} *
+                      </label>
+                      <select
+                        value={formData.receiving_customs_branch_id || ""}
+                        onChange={(e) => {
+                          const bId = e.target.value;
+                          const bName = countryBranches?.find((b) => b.id === bId)?.name || cityBranches?.find((b) => b.id === bId)?.name || "";
+                          setFormData((c) => ({ ...c, receiving_customs_branch_id: bId, receiving_customs_branch_name: bName }));
+                          if (bId && onOpenBranchAssignment) {
+                            onOpenBranchAssignment("receiving", bId, bName);
+                          }
+                        }}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="">{tt("choose_branch", "Choose branch...")}</option>
+                        {getBranchesForCountry(formData.receiving_country_id).map((b) => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {tt("existing_agent_account", "Existing Agent Account")} *
+                      </label>
+                      <select
+                        value={formData.receiving_customs_agent_account_id || ""}
+                        onChange={(e) => {
+                          const aId = e.target.value;
+                          const aName = accounts.find((a) => a.id === aId)?.name || "";
+                          setFormData((c) => ({ ...c, receiving_customs_agent_account_id: aId, receiving_customs_agent_account_name: aName }));
+                        }}
+                        className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        <option value="">{tt("select_existing_account", "Select existing account...")}</option>
+                        {accounts.map((a) => (
+                          <option key={a.id} value={a.id}>{a.name} ({a.code || "ACC"})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {/* Branch Officer Assignment Card (When Our Branch is selected) */}
+                {formData.receiving_customs_handled_by === "our_branch" && formData.receiving_customs_branch_id && (
+                  <div className="p-3 rounded-xl border border-purple-200/80 bg-purple-50/60 dark:border-purple-900/60 dark:bg-purple-950/30 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600 text-white font-bold shrink-0">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="font-bold text-slate-900 dark:text-white">
+                          {formData.receiving_customs_user_name
+                            ? `${tt("assigned_officer", "Assigned Officer:")} ${formData.receiving_customs_user_name}`
+                            : tt("officer_assignment_pending", "Branch selected — Officer assignment pending")}
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          {formData.receiving_customs_branch_name} {formData.receiving_customs_instructions ? `• "${formData.receiving_customs_instructions}"` : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenBranchAssignment && formData.receiving_customs_branch_id) {
+                          onOpenBranchAssignment("receiving", formData.receiving_customs_branch_id, formData.receiving_customs_branch_name || "Our Branch");
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-2xs transition"
+                    >
+                      {formData.receiving_customs_user_name ? tt("reassign_officer", "Reassign / Edit Instructions") : tt("assign_officer_btn", "Assign Officer ➔")}
+                    </button>
+                  </div>
+                )}
+
+                {/* External Agent Profile Preview Card (When External Agent is selected) */}
+                {formData.receiving_customs_handled_by !== "our_branch" && formData.receiving_customs_agent_account_id && (() => {
+                  const agId = formData.receiving_customs_agent_account_id;
+                  const agentAcc = accounts.find((a) => a.id === agId);
+                  const linkedCust = agentAcc?.customer_id ? customers.find((c) => c.id === agentAcc.customer_id) : null;
+                  if (!agentAcc) return null;
+                  return (
+                    <div className="rounded-xl border border-purple-200/90 bg-purple-50/40 p-3.5 dark:border-purple-900/60 dark:bg-purple-950/20 space-y-2">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-purple-200/50 dark:border-purple-900/40">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-purple-600" />
+                          <span className="text-xs font-bold text-purple-950 dark:text-purple-200">{agentAcc.name}</span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
+                          {agentAcc.code || "ACC"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                        <div>
+                          <span className="text-slate-500 block text-[10px]">{tt("account_type_label", "Account Type")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">{agentAcc.kind || "Clearing Agent / External Vendor"}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[10px]">{tt("current_balance_label", "Currency & Balance")}</span>
+                          <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                            {agentAcc.currency || "USD"} {Number(agentAcc.current_balance || 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[10px]">{tt("phone", "Phone")}</span>
+                          <span className="font-mono text-slate-800 dark:text-slate-200">{linkedCust?.mobile || linkedCust?.phone || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[10px]">{tt("trn_tax_no", "TRN / Tax")}</span>
+                          <span className="font-mono text-slate-800 dark:text-slate-200">{(linkedCust as any)?.tax_number || (linkedCust as any)?.trn || "—"}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-500 block text-[10px]">{tt("email", "Email")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate block">{linkedCust?.email || "—"}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-500 block text-[10px]">{tt("address", "Address")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate block">{linkedCust?.address || "—"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
+          {/* 5. FINAL DESTINATION (4 Fields: Country, State/Province, City, Full Address) */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-3.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider pb-2 border-b border-slate-100 dark:border-slate-800">
+              <Flag className="h-4 w-4 text-emerald-600" />
+              <span>{tt("final_destination_title", "Final Destination & Delivery Location")}</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* Field 1: Final Destination Country Picker */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {tt("country", "Country")} *
+                </label>
+                <select
+                  value={formData.final_destination_country_id || ""}
+                  onChange={(e) => {
+                    const cId = e.target.value;
+                    const cName = countries.find((c) => c.id === cId)?.name || "";
+                    setFormData((c) => ({
+                      ...c,
+                      final_destination_country_id: cId,
+                      final_destination_country_name: cName
+                    }));
+                  }}
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="">{tt("choose_country", "Choose destination country...")}</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>{getRouteCountryFlag(c.name)} {c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Field 2: State / Province */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {tt("state_province", "State / Province")} *
@@ -8190,6 +8679,7 @@ function Step1BookingCustomer({
                 />
               </div>
 
+              {/* Field 3: City */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {tt("city_star", "City")} *
@@ -8199,6 +8689,20 @@ function Step1BookingCustomer({
                   value={formData.final_destination_city || formData.destination_city || ""}
                   onChange={(e) => setFormData((c) => ({ ...c, final_destination_city: e.target.value, destination_city: e.target.value }))}
                   placeholder="e.g. Quetta"
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              {/* Field 4: Full Delivery Address */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {tt("full_delivery_address", "Full Delivery Address")}
+                </label>
+                <input
+                  type="text"
+                  value={formData.final_destination_address || formData.final_delivery_location || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, final_destination_address: e.target.value, final_delivery_location: e.target.value }))}
+                  placeholder="e.g. Warehouse 4B, Industrial Area, Quetta"
                   className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>

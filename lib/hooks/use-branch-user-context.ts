@@ -25,6 +25,7 @@ export type BranchUserContext = {
   /** Raw primary role key, e.g. "super_admin", "country_admin", "clearing_agent". */
   role: string | null;
   roles: string[];
+  permissions: string[];
   status: string;
 };
 
@@ -81,6 +82,7 @@ export function useBranchUserContext(): { context: BranchUserContext | null; loa
           userName: payload?.user?.fullName ?? payload?.user?.email ?? null,
           role: payload?.roles?.[0] ?? null,
           roles: Array.isArray(payload?.roles) ? payload.roles : [],
+          permissions: Array.isArray(payload?.permissions) ? payload.permissions : [],
           status: "Active"
         });
         setError(null);
