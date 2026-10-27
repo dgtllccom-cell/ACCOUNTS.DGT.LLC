@@ -1529,7 +1529,7 @@ export function DocumentManager() {
                 <optgroup label={th("ERP Modules")}>
                   {DEFAULT_MODULE_FOLDERS.map((m) => (
                     <option key={m} value={m}>
-                      {m}
+                      {th(m)}
                     </option>
                   ))}
                 </optgroup>
@@ -2668,7 +2668,7 @@ export function DocumentManager() {
                   >
                     {allFolderList.map((m) => (
                       <option key={m} value={m}>
-                        {m}
+                        {th(m)}
                       </option>
                     ))}
                   </select>

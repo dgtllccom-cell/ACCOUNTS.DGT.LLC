@@ -455,7 +455,7 @@ export function WarehouseManagement() {
               className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value="all">{tt("wh.all_types", "All Types")}</option>
-              {typeOptions.map((tp) => <option key={tp} value={tp}>{tp}</option>)}
+              {typeOptions.map((tp) => <option key={tp} value={tp}>{translateHeader(lang, tp)}</option>)}
             </select>
 
             {/* Owner Dropdown */}
