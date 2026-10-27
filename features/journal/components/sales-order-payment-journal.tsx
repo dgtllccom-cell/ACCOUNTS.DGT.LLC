@@ -960,9 +960,29 @@ function toLedgerOption(row: any): SearchSelectOption {
   const account = ledgerName(row);
   const accountNo = ledgerCode(row);
   const branch = row?.cityBranchName ?? row?.city_branch_name ?? row?.countryBranchName ?? row?.country_branch_name ?? "";
-  const label = branch ? `[${branch}] ${accountNo} - ${account}` : `${accountNo} - ${account}`;
-  const keywords = [accountNo, account, branch].filter(Boolean).join(" ");
-  return { value: ledgerId(row) || "", label, keywords };
+  const rawBalance = row?.currentBalance ?? row?.current_balance ?? row?.balance ?? 0;
+  const balanceNum = Number(rawBalance) || 0;
+  const curr = ledgerCurrency(row) || "AED";
+  const formattedBalance = `${balanceNum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${curr}`;
+  const label = `${account} — ${accountNo}${branch ? ` — [${branch}]` : ""} — ${formattedBalance}`;
+  const keywords = [account, accountNo, branch, String(balanceNum), curr, row?.companyName, row?.company_name, row?.mobile, row?.phone, row?.address].filter(Boolean).join(" ");
+  return {
+    value: ledgerId(row) || "",
+    label,
+    keywords,
+    primaryText: account,
+    code: accountNo,
+    companyName: row?.companyName ?? row?.company_name ?? undefined,
+    category: row?.category ?? row?.operational_domain ?? "General Ledger",
+    branch: branch || undefined,
+    city: row?.city_name ?? row?.cityName ?? undefined,
+    country: row?.country_name ?? row?.countryName ?? undefined,
+    phone: row?.mobile ?? row?.phone ?? undefined,
+    email: row?.email ?? undefined,
+    address: row?.address ?? undefined,
+    status: row?.status === "inactive" ? "Inactive" : "Active",
+    isAccountCard: true,
+  };
 }
 
 function getInitialPurchaseOrderNo(): string {

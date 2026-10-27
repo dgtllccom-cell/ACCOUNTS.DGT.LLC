@@ -99,6 +99,10 @@ function toOption(row: PersonRow, lang: string = "en", bilingual: boolean = fals
     row.employee_code ? "Employee Staff Worker" : "Person Customer"
   ].filter(Boolean).join(" ");
 
+  const statusText = (row as any).is_active === false ? "Inactive" : "Active";
+  const categoryText = empDesig || (row.employee_code ? "Employee" : ((row as any).is_clearing_agent ? "Clearing Agent" : ((row as any).is_truck_owner ? "Truck Owner" : ((row as any).is_truck_driver ? "Truck Driver" : "Customer"))));
+  const fullAddress = row.address || [row.city_name, row.country_name].filter(Boolean).join(", ") || undefined;
+
   return {
     value: row.id,
     label,
@@ -106,8 +110,16 @@ function toOption(row: PersonRow, lang: string = "en", bilingual: boolean = fals
     primaryText: name,
     secondaryText,
     code: displayCode,
+    companyName: company || undefined,
+    category: categoryText,
+    phone: row.mobile || row.whatsapp || undefined,
+    email: row.email || undefined,
+    address: fullAddress,
     branch: row.city_name || undefined,
-    country: row.country_name || undefined
+    city: row.city_name || undefined,
+    country: row.country_name || undefined,
+    status: statusText,
+    isAccountCard: true
   };
 }
 

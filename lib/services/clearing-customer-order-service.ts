@@ -109,6 +109,35 @@ export type ClearingCustomerOrderInput = {
   rejectedReason?: string | null;
   legs?: OrderLegInput[];
   loadingAllocations?: LoadingAllocationInput[];
+  loadingCustomsRequired?: boolean | null;
+  loadingCustomsName?: string | null;
+  loadingCustomsPortBorder?: string | null;
+  loadingCustomsHandledBy?: string | null;
+  loadingCustomsBranchId?: string | null;
+  loadingCustomsBranchName?: string | null;
+  loadingCustomsUserId?: string | null;
+  loadingCustomsUserName?: string | null;
+  loadingCustomsAgentAccountId?: string | null;
+  loadingCustomsAgentAccountName?: string | null;
+  loadingCustomsInstructions?: string | null;
+  loadingCustomsAssignedAt?: string | null;
+  receivingCustomsRequired?: boolean | null;
+  receivingCustomsName?: string | null;
+  receivingCustomsPortBorder?: string | null;
+  receivingCustomsHandledBy?: string | null;
+  receivingCustomsBranchId?: string | null;
+  receivingCustomsBranchName?: string | null;
+  receivingCustomsUserId?: string | null;
+  receivingCustomsUserName?: string | null;
+  receivingCustomsAgentAccountId?: string | null;
+  receivingCustomsAgentAccountName?: string | null;
+  receivingCustomsInstructions?: string | null;
+  receivingCustomsAssignedAt?: string | null;
+  finalDestinationCountryId?: string | null;
+  finalDestinationCountryName?: string | null;
+  finalDestinationState?: string | null;
+  finalDestinationCity?: string | null;
+  finalDestinationAddress?: string | null;
 };
 
 export type LoadingAllocationInput = {
@@ -742,6 +771,35 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         entry_point_type: trimOrNull(input.entryPointType) ?? "border",
         loading_place: trimOrNull(input.loadingPlace),
         receiving_place: trimOrNull(input.receivingPlace),
+        loading_customs_required: input.loadingCustomsRequired !== false,
+        loading_customs_name: trimOrNull(input.loadingCustomsName),
+        loading_customs_port_border: trimOrNull(input.loadingCustomsPortBorder),
+        loading_customs_handled_by: trimOrNull(input.loadingCustomsHandledBy) ?? "our_branch",
+        loading_customs_branch_id: trimOrNull(input.loadingCustomsBranchId),
+        loading_customs_branch_name: trimOrNull(input.loadingCustomsBranchName),
+        loading_customs_user_id: trimOrNull(input.loadingCustomsUserId),
+        loading_customs_user_name: trimOrNull(input.loadingCustomsUserName),
+        loading_customs_agent_account_id: trimOrNull(input.loadingCustomsAgentAccountId),
+        loading_customs_agent_account_name: trimOrNull(input.loadingCustomsAgentAccountName),
+        loading_customs_instructions: trimOrNull(input.loadingCustomsInstructions),
+        loading_customs_assigned_at: trimOrNull(input.loadingCustomsAssignedAt),
+        receiving_customs_required: input.receivingCustomsRequired !== false,
+        receiving_customs_name: trimOrNull(input.receivingCustomsName),
+        receiving_customs_port_border: trimOrNull(input.receivingCustomsPortBorder),
+        receiving_customs_handled_by: trimOrNull(input.receivingCustomsHandledBy) ?? "our_branch",
+        receiving_customs_branch_id: trimOrNull(input.receivingCustomsBranchId),
+        receiving_customs_branch_name: trimOrNull(input.receivingCustomsBranchName),
+        receiving_customs_user_id: trimOrNull(input.receivingCustomsUserId),
+        receiving_customs_user_name: trimOrNull(input.receivingCustomsUserName),
+        receiving_customs_agent_account_id: trimOrNull(input.receivingCustomsAgentAccountId),
+        receiving_customs_agent_account_name: trimOrNull(input.receivingCustomsAgentAccountName),
+        receiving_customs_instructions: trimOrNull(input.receivingCustomsInstructions),
+        receiving_customs_assigned_at: trimOrNull(input.receivingCustomsAssignedAt),
+        final_destination_country_id: trimOrNull(input.finalDestinationCountryId),
+        final_destination_country_name: trimOrNull(input.finalDestinationCountryName),
+        final_destination_state: trimOrNull(input.finalDestinationState),
+        final_destination_city: trimOrNull(input.finalDestinationCity),
+        final_destination_address: trimOrNull(input.finalDestinationAddress),
         cargo_details: trimOrNull(input.cargoDetails),
         expected_loading_date: input.expectedLoadingDate || new Date().toISOString(),
         remarks: trimOrNull(input.remarks),

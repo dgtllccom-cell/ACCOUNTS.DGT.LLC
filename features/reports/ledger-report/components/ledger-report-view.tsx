@@ -107,13 +107,33 @@ function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
   const account = row.accountName || row.ledgerName || "";
   const accountNo = row.accountCode || row.ledgerCode || "";
   const company = row.companyName || "";
+  const phone = row.contacts?.mobile || row.contacts?.phone || "";
+  const email = row.contacts?.email || "";
+  const address = row.address || [city, branch, country].filter(Boolean).join(", ");
+  const category = row.accountKind || "Ledger Account";
 
-  const label = `${accountNo} - ${account}${branch ? ` (${branch})` : ""}`;
-  const keywords = [accountNo, account, company, branch, city, country, row.ledgerCode, row.ledgerName]
+  const label = `${accountNo ? accountNo + " — " : ""}${account}${branch ? ` (${branch})` : ""}`;
+  const keywords = [accountNo, account, company, phone, email, address, branch, city, country, row.ledgerCode, row.ledgerName]
     .filter(Boolean)
     .join(" ");
 
-  return { value: row.ledgerId, label, keywords };
+  return {
+    value: row.ledgerId,
+    label,
+    keywords,
+    primaryText: account,
+    code: accountNo,
+    companyName: company || undefined,
+    category,
+    phone: phone || undefined,
+    email: email || undefined,
+    address: address || undefined,
+    branch: branch || undefined,
+    city: city || undefined,
+    country: country || undefined,
+    status: "Active",
+    isAccountCard: true
+  };
 }
 
 

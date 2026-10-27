@@ -1022,7 +1022,16 @@ function toLedgerOption(row: any): SearchSelectOption {
     primaryText: account, // Name first
     code: accountNo,      // Account Number
     branch: branch || undefined,
-    secondaryText: `Balance: ${formattedBalance}`
+    secondaryText: `Balance: ${formattedBalance}`,
+    companyName: row?.companyName ?? row?.company_name ?? undefined,
+    category: row?.category ?? row?.operational_domain ?? "General Ledger",
+    city: row?.city_name ?? row?.cityName ?? undefined,
+    country: row?.country_name ?? row?.countryName ?? undefined,
+    phone: row?.mobile ?? row?.phone ?? undefined,
+    email: row?.email ?? undefined,
+    address: row?.address ?? undefined,
+    status: row?.status === "inactive" ? "Inactive" : "Active",
+    isAccountCard: true,
   };
 }
 
