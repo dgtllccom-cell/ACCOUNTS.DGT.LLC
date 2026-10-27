@@ -48,10 +48,19 @@ const r = await fetch(BASE + "/api/erp/auth/dev-session", { method: "POST", head
 const token = r.headers.getSetCookie().map((c) => c.split(";")[0]).find((c) => c.startsWith("erp_session="))?.slice(12);
 if (!token) { console.error("no dev session (is the DEV server on", BASE, "with ALLOW_DEV_SESSION?)"); process.exit(2); }
 
+// Data, not UI chrome: the DEV test user is literally named "Super Admin", and country names are place data.
+// They are counted separately (dataHits) and never make a page fail.
+const DATA_VALUES = new Set(["Super Admin", "United Arab Emirates", "Pakistan", "Afghanistan", "China", "India", "Iran"]);
+
+// Results are appended to <out>.jsonl as they come, so a crash (the DEV server or the browser) loses nothing; re-running the same
+// command resumes with the page-loads that are not done yet.
+const JSONL = OUT.replace(/\.json$/, "") + ".jsonl";
+const results = fs.existsSync(JSONL) ? fs.readFileSync(JSONL, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)) : [];
+const doneKeys = new Set(results.map((x) => `${x.lang}|${x.width}|${x.path}`));
 const browser = await chromium.launch();
 const jobs = [];
-for (const lang of LANGS) for (const width of WIDTHS) for (const path of SCREENS) jobs.push({ lang, width, path });
-const results = [];
+for (const lang of LANGS) for (const width of WIDTHS) for (const path of SCREENS) if (!doneKeys.has(`${lang}|${width}|${path}`)) jobs.push({ lang, width, path });
+if (results.length) console.log(`resuming: ${results.length} page-loads already recorded, ${jobs.length} to go`);
 let done = 0;
 
 async function worker() {
@@ -107,8 +116,10 @@ async function worker() {
       if (info.errorPage) fails.push("error page");
       if (info.pending) fails.push("translation pending");
       if (rtl) {
-        const left = [...new Set(info.texts.filter((t) => english[job.lang].has(t)))];
+        const found = [...new Set(info.texts.filter((t) => english[job.lang].has(t)))];
+        const left = found.filter((t) => !DATA_VALUES.has(t));
         job.english = left;
+        job.dataHits = found.filter((t) => DATA_VALUES.has(t));
         if (left.length) fails.push(`English UI: ${left.slice(0, 4).map((t) => JSON.stringify(t)).join(", ")}${left.length > 4 ? ` (+${left.length - 4})` : ""}`);
       }
       if (errors.length) fails.push(`page error: ${errors[0]}`);
@@ -116,7 +127,9 @@ async function worker() {
       fails.push(`load failed: ${String(e.message).split("\n")[0].slice(0, 120)}`);
     }
     await page.close().catch(() => {});
-    results.push({ ...job, ok: fails.length === 0, fails });
+    const row = { ...job, ok: fails.length === 0, fails };
+    results.push(row);
+    fs.appendFileSync(JSONL, JSON.stringify(row) + "\n");
     done++;
     if (fails.length) console.log(`FAIL ${job.lang} ${job.width} ${job.path} — ${fails.join(" | ")}`);
     if (done % 50 === 0) console.log(`… ${done} page-loads, ${results.filter((x) => !x.ok).length} failing`);
