@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronDown, Eye, Loader2, MoreVertical, Pencil, Printer, Search, X } from "lucide-react";
+import { Building2, Check, ChevronDown, Eye, FileText, Loader2, Mail, MapPin, MoreVertical, Pencil, Phone, Printer, Search, Tag, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -14,16 +14,43 @@ export type SearchSelectOption = {
   label: string;
   keywords?: string;
   disabled?: boolean;
-  // ── Rich-row display fields (all optional; only used when `richList` is on).
-  // A picker that doesn't supply these just falls back to the plain `label`
-  // row it always had — this is additive, not a breaking change.
+  // ── Rich-row / Account card display fields (all optional).
   primaryText?: string;
   secondaryText?: string;
   code?: string;
   country?: string;
+  city?: string;
   branch?: string;
   avatarColor?: string;
+  companyName?: string;
+  category?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  status?: string;
+  initials?: string;
+  avatarBgColor?: string;
+  avatarTextColor?: string;
+  isAccountCard?: boolean;
+  onEdit?: () => void;
 };
+
+export const ACCOUNT_AVATAR_PALETTE = [
+  { bg: "bg-blue-100 dark:bg-blue-950/80", text: "text-blue-700 dark:text-blue-300" },
+  { bg: "bg-teal-100 dark:bg-teal-950/80", text: "text-teal-700 dark:text-teal-300" },
+  { bg: "bg-pink-100 dark:bg-pink-950/80", text: "text-purple-700 dark:text-purple-300" },
+  { bg: "bg-amber-100 dark:bg-amber-950/80", text: "text-amber-800 dark:text-amber-300" },
+  { bg: "bg-indigo-100 dark:bg-indigo-950/80", text: "text-indigo-700 dark:text-indigo-300" },
+  { bg: "bg-emerald-100 dark:bg-emerald-950/80", text: "text-emerald-700 dark:text-emerald-300" },
+  { bg: "bg-rose-100 dark:bg-rose-950/80", text: "text-rose-700 dark:text-rose-300" },
+  { bg: "bg-sky-100 dark:bg-sky-950/80", text: "text-sky-700 dark:text-sky-300" },
+];
+
+export function accountAvatarStyleFor(seed: string) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  return ACCOUNT_AVATAR_PALETTE[hash % ACCOUNT_AVATAR_PALETTE.length];
+}
 
 const AVATAR_PALETTE = [
   "bg-blue-500", "bg-rose-500", "bg-emerald-500", "bg-violet-500",
@@ -73,6 +100,7 @@ export function SearchSelect({
   // branch + country, matching the standardized ERP master-selector design.
   // Off by default so every existing plain combobox usage is unaffected.
   richList = false,
+  accountCards = false,
   pageSize = 50
 }: {
   label?: string;
@@ -99,13 +127,26 @@ export function SearchSelect({
   onEditOption?: (value: string) => void;
   onPrintOption?: (value: string) => void;
   richList?: boolean;
+  accountCards?: boolean;
   pageSize?: number;
 }) {
   const language = useActiveLanguage();
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const isAccountCardMode = accountCards || (options || []).some((opt) => opt && (opt.isAccountCard || (opt.code && (opt.companyName || opt.phone || opt.address || opt.email))));
   const resolvedPlaceholder = placeholder ?? uiText(language, "common.select");
-  const resolvedSearchPlaceholder = searchPlaceholder ?? uiText(language, "common.search");
+  const defaultSearchPlaceholder = isAccountCardMode
+    ? (language === "ur"
+        ? "گاہک کا نام، اکاؤنٹ نمبر، کمپنی، فون یا پتہ تلاش کریں..."
+        : language === "ar"
+        ? "أدخل اسم العميل، رقم الحساب، الشركة، الهاتف أو العنوان..."
+        : language === "fa"
+        ? "نام مشتری، شماره حساب، شرکت، شماره تماس یا آدرس..."
+        : language === "ps"
+        ? "د پیرودونکي نوم، حساب شمیره، شرکت، تلیفون یا ادرس دننه کړئ..."
+        : "Enter customer name, account number, company, phone or address...")
+    : uiText(language, "common.search");
+  const resolvedSearchPlaceholder = searchPlaceholder ?? defaultSearchPlaceholder;
   const resolvedEmptyLabel = emptyLabel ?? uiText(language, "common.no_matches_found");
   const resolvedViewTitle = viewTitle ?? uiText(language, "common.view");
   const resolvedEditTitle = editTitle ?? uiText(language, "common.edit");
@@ -132,22 +173,36 @@ export function SearchSelect({
   // computed here so we can slice for pagination while still searching the FULL
   // list (not just whatever's currently visible).
   const matchingOptions = React.useMemo(() => {
-    if (!richList) return uniqueOptions;
+    if (!richList && !isAccountCardMode) return uniqueOptions;
     const q = searchQuery.trim().toLowerCase();
     if (!q) return uniqueOptions;
     return uniqueOptions.filter((opt) => {
-      const haystack = [opt.label, opt.keywords, opt.code, opt.branch, opt.country, opt.secondaryText]
+      const haystack = [
+        opt.label,
+        opt.keywords,
+        opt.primaryText,
+        opt.code,
+        opt.companyName,
+        opt.category,
+        opt.phone,
+        opt.email,
+        opt.address,
+        opt.city,
+        opt.branch,
+        opt.country,
+        opt.secondaryText
+      ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [richList, uniqueOptions, searchQuery]);
+  }, [richList, isAccountCardMode, uniqueOptions, searchQuery]);
 
   const displayOptions = React.useMemo(() => {
-    if (!richList) return uniqueOptions;
+    if (!richList && !isAccountCardMode) return uniqueOptions;
     return matchingOptions.slice(0, visibleCount);
-  }, [richList, matchingOptions, visibleCount]);
+  }, [richList, isAccountCardMode, matchingOptions, visibleCount]);
 
   const selectedLabel = React.useMemo(() => {
     const match = uniqueOptions.find((opt) => opt.value === value);
@@ -218,14 +273,18 @@ export function SearchSelect({
         <PopoverContent
           className={cn(
             "w-[var(--radix-popover-trigger-width)] p-0 rounded-xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 isolate z-[999999]",
-            richList ? "min-w-[360px] sm:min-w-[520px]" : "min-w-[320px]"
+            isAccountCardMode
+              ? "min-w-[360px] sm:min-w-[580px] max-w-[660px]"
+              : richList
+              ? "min-w-[360px] sm:min-w-[520px]"
+              : "min-w-[320px]"
           )}
           align="start"
           style={{ backgroundColor: "var(--card, #ffffff)", opacity: 1 }}
         >
           <Command
             className="bg-white dark:bg-slate-950 opacity-100"
-            shouldFilter={!richList}
+            shouldFilter={!richList && !isAccountCardMode}
             filter={(value, search, keywords) => {
               const extendValue = value + " " + (keywords?.join(" ") ?? "");
               if (extendValue.toLowerCase().includes(search.toLowerCase())) return 1;
@@ -279,126 +338,233 @@ export function SearchSelect({
                   )}
                 </div>
               </CommandEmpty>
-              <CommandGroup className="bg-white dark:bg-slate-950 opacity-100">
-                {(richList ? displayOptions : uniqueOptions).map((opt) => (
-                  <CommandItem
-                    key={opt.value}
-                    value={opt.label ?? String(opt.value ?? "")}
-                    keywords={[opt.keywords ?? "", String(opt.value ?? "")]}
-                    disabled={opt.disabled}
-                    onSelect={() => {
-                      onValueChange(opt.value);
-                      setOpenSafe(false);
-                    }}
-                    className={cn("flex justify-between items-center text-xs cursor-pointer", richList && "py-2.5 px-3")}
-                    title={opt.label}
-                  >
-                    {richList ? (
-                      <>
-                        <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                          <span
+              <CommandGroup className="bg-white dark:bg-slate-950 opacity-100 p-1.5 space-y-1.5">
+                {(isAccountCardMode || richList ? displayOptions : uniqueOptions).map((opt) => {
+                  const isSelected = value === opt.value;
+                  const isCard = isAccountCardMode || opt.isAccountCard || Boolean(opt.code && (opt.companyName || opt.phone || opt.address || opt.email));
+                  const avatarStyle = accountAvatarStyleFor(opt.primaryText || opt.label);
+                  const initials = opt.initials || initialsFor(opt.primaryText || opt.label);
+                  const statusRaw = opt.status || "Active";
+                  const isActive = statusRaw.toLowerCase() === "active";
+
+                  return (
+                    <CommandItem
+                      key={opt.value}
+                      value={opt.label ?? String(opt.value ?? "")}
+                      keywords={[
+                        opt.keywords ?? "",
+                        opt.primaryText ?? "",
+                        opt.code ?? "",
+                        opt.companyName ?? "",
+                        opt.phone ?? "",
+                        opt.email ?? "",
+                        opt.address ?? "",
+                        String(opt.value ?? "")
+                      ]}
+                      disabled={opt.disabled}
+                      onSelect={() => {
+                        onValueChange(opt.value);
+                        setOpenSafe(false);
+                      }}
+                      className={cn(
+                        "cursor-pointer transition-all",
+                        isCard
+                          ? cn(
+                              "flex flex-col items-stretch p-3 rounded-xl border mb-2",
+                              isSelected
+                                ? "bg-blue-50/80 dark:bg-blue-950/50 border-blue-400 dark:border-blue-600 shadow-xs"
+                                : "bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 shadow-2xs"
+                            )
+                          : cn("flex justify-between items-center text-xs", richList && "py-2.5 px-3")
+                      )}
+                      title={opt.label}
+                    >
+                      {isCard ? (
+                        <div className="flex items-start gap-3 w-full text-left">
+                          {/* Left Avatar Badge */}
+                          <div
                             className={cn(
-                              "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white",
-                              opt.avatarColor || avatarColorFor(opt.primaryText || opt.label)
+                              "h-12 w-12 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm tracking-wide shadow-2xs border border-black/5 dark:border-white/10",
+                              opt.avatarBgColor || avatarStyle.bg,
+                              opt.avatarTextColor || avatarStyle.text
                             )}
                           >
-                            {initialsFor(opt.primaryText || opt.label)}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-[11.5px] font-bold text-blue-700 dark:text-blue-400" title={opt.primaryText || opt.label}>
-                              {opt.primaryText || opt.label}
+                            {initials}
+                          </div>
+
+                          {/* Center/Right Content */}
+                          <div className="flex-1 min-w-0">
+                            {/* Row 1: Name + Status Badge + Edit Button */}
+                            <div className="flex items-center justify-between gap-2">
+                              <span
+                                className="text-[13.5px] font-bold text-slate-900 dark:text-slate-100 truncate"
+                                title={opt.primaryText || opt.label}
+                              >
+                                {opt.primaryText || opt.label}
+                              </span>
+                              <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <span
+                                  className={cn(
+                                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide",
+                                    isActive
+                                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60"
+                                      : "bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60"
+                                  )}
+                                >
+                                  {statusRaw}
+                                </span>
+                                {(opt.onEdit || onEditOption) && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (opt.onEdit) opt.onEdit();
+                                      else if (onEditOption) onEditOption(opt.value);
+                                    }}
+                                    className="p-1 rounded-lg border border-blue-200 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition cursor-pointer"
+                                    title={resolvedEditTitle}
+                                  >
+                                    <Pencil className="h-3 w-3" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                            {opt.secondaryText && (
-                              <div className="truncate text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400">{opt.secondaryText}</div>
+
+                            {/* Row 2: Document / Account No | Company Name / Category */}
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs mt-1">
+                              {opt.code && (
+                                <span className="inline-flex items-center gap-1 font-mono font-medium text-blue-600 dark:text-blue-400">
+                                  <FileText className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                                  <span>{opt.code}</span>
+                                </span>
+                              )}
+                              {opt.code && (opt.companyName || opt.category || opt.secondaryText) && (
+                                <span className="text-slate-300 dark:text-slate-600 select-none">|</span>
+                              )}
+                              {(opt.companyName || opt.secondaryText) && (
+                                <span className="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300 font-normal truncate">
+                                  <Building2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                  <span className="truncate">{opt.companyName || opt.secondaryText}</span>
+                                </span>
+                              )}
+                              {opt.category && !opt.companyName && !opt.secondaryText && (
+                                <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400 font-normal truncate">
+                                  <Tag className="h-3 w-3 text-slate-400 shrink-0" />
+                                  <span>{opt.category}</span>
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Row 3: Mobile / Phone | Email */}
+                            {(opt.phone || opt.email) && (
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-600 dark:text-slate-400 mt-1">
+                                {opt.phone && (
+                                  <span className="inline-flex items-center gap-1 font-normal">
+                                    <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                    <span dir="ltr">{opt.phone}</span>
+                                  </span>
+                                )}
+                                {opt.phone && opt.email && (
+                                  <span className="text-slate-300 dark:text-slate-600 select-none">|</span>
+                                )}
+                                {opt.email && (
+                                  <span className="inline-flex items-center gap-1 font-normal truncate">
+                                    <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                    <span className="truncate">{opt.email}</span>
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Row 4: Address / Location */}
+                            {(opt.address || opt.country || opt.city || opt.branch) && (
+                              <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate">
+                                  {opt.address || [opt.branch, opt.city, opt.country].filter(Boolean).join(", ")}
+                                </span>
+                              </div>
                             )}
                           </div>
-                          {opt.code && (
-                            <span className="hidden shrink-0 font-mono text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 sm:inline">
-                              {opt.code}
-                            </span>
-                          )}
-                          {opt.branch && (
-                            <span className="hidden shrink-0 text-[10.5px] font-medium text-slate-500 dark:text-slate-400 md:inline">
-                              {opt.branch}
-                            </span>
-                          )}
-                          {opt.country && (
-                            <span className="hidden shrink-0 text-[10.5px] font-medium text-slate-500 dark:text-slate-400 lg:inline">
-                              {opt.country}
-                            </span>
-                          )}
                         </div>
-                        <span className="flex shrink-0 items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
-                          {value === opt.value && <Check className="h-3.5 w-3.5 text-primary" />}
-                          {(onViewOption || onEditOption || onPrintOption) && (
-                            <SearchSelectRowActions
-                              optionValue={opt.value}
-                              open={openActionsFor === opt.value}
-                              onOpenChange={(next) => setOpenActionsFor(next ? opt.value : null)}
-                              onView={onViewOption ? () => { setOpenSafe(false); onViewOption(opt.value); } : undefined}
-                              onEdit={onEditOption ? () => { setOpenSafe(false); onEditOption(opt.value); } : undefined}
-                              onPrint={onPrintOption ? () => { setOpenSafe(false); onPrintOption(opt.value); } : undefined}
-                              viewLabel={resolvedViewTitle}
-                              editLabel={resolvedEditTitle}
-                              printLabel={resolvedPrintTitle}
-                            />
-                          )}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="truncate" title={opt.label}>{opt.label}</span>
-                        <span className="flex items-center gap-1 shrink-0 ml-2">
-                          {value === opt.value && <Check className="h-3.5 w-3.5 text-primary" />}
-                          {onViewOption && (
+                      ) : richList ? (
+                        <>
+                          <div className="flex min-w-0 flex-1 items-center gap-2.5">
                             <span
-                              role="button"
-                              tabIndex={0}
-                              title={resolvedViewTitle}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenSafe(false);
-                                onViewOption(opt.value);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
+                              className={cn(
+                                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white",
+                                opt.avatarColor || avatarColorFor(opt.primaryText || opt.label)
+                              )}
+                            >
+                              {initialsFor(opt.primaryText || opt.label)}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-[11.5px] font-bold text-blue-700 dark:text-blue-400" title={opt.primaryText || opt.label}>
+                                {opt.primaryText || opt.label}
+                              </div>
+                              {opt.secondaryText && (
+                                <div className="truncate text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400">{opt.secondaryText}</div>
+                              )}
+                            </div>
+                            {opt.code && (
+                              <span className="hidden shrink-0 font-mono text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 sm:inline">
+                                {opt.code}
+                              </span>
+                            )}
+                            {opt.branch && (
+                              <span className="hidden shrink-0 text-[10.5px] font-medium text-slate-500 dark:text-slate-400 md:inline">
+                                {opt.branch}
+                              </span>
+                            )}
+                            {opt.country && (
+                              <span className="hidden shrink-0 text-[10.5px] font-medium text-slate-500 dark:text-slate-400 lg:inline">
+                                {opt.country}
+                              </span>
+                            )}
+                          </div>
+                          <span className="flex shrink-0 items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
+                            {value === opt.value && <Check className="h-3.5 w-3.5 text-primary" />}
+                            {(onViewOption || onEditOption || onPrintOption) && (
+                              <SearchSelectRowActions
+                                optionValue={opt.value}
+                                open={openActionsFor === opt.value}
+                                onOpenChange={(next) => setOpenActionsFor(next ? opt.value : null)}
+                                onView={onViewOption ? () => { setOpenSafe(false); onViewOption(opt.value); } : undefined}
+                                onEdit={onEditOption ? () => { setOpenSafe(false); onEditOption(opt.value); } : undefined}
+                                onPrint={onPrintOption ? () => { setOpenSafe(false); onPrintOption(opt.value); } : undefined}
+                                viewLabel={resolvedViewTitle}
+                                editLabel={resolvedEditTitle}
+                                printLabel={resolvedPrintTitle}
+                              />
+                            )}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="truncate" title={opt.label}>{opt.label}</span>
+                          <span className="flex items-center gap-1 shrink-0 ml-2">
+                            {value === opt.value && <Check className="h-3.5 w-3.5 text-primary" />}
+                            {onViewOption && (
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                title={resolvedViewTitle}
+                                onClick={(e) => {
                                   e.stopPropagation();
                                   setOpenSafe(false);
                                   onViewOption(opt.value);
-                                }
-                              }}
-                              className="p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition"
-                            >
-                              <Eye className="h-3 w-3" />
-                            </span>
-                          )}
-                          {onEditOption && (
-                            <span
-                              role="button"
-                              tabIndex={0}
-                              title={resolvedEditTitle}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenSafe(false);
-                                onEditOption(opt.value);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.stopPropagation();
-                                  setOpenSafe(false);
-                                  onEditOption(opt.value);
-                                }
-                              }}
-                              className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-muted-foreground hover:text-primary cursor-pointer transition"
-                            >
-                              <Pencil className="h-3 w-3" />
-                            </span>
-                          )}
-                        </span>
-                      </>
-                    )}
-                  </CommandItem>
-                ))}
+                                }}
+                                className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-muted-foreground hover:text-foreground cursor-pointer transition"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                              </span>
+                            )}
+                          </span>
+                        </>
+                      )}
+                    </CommandItem>
+                  );
+                })}
               </CommandGroup>
               {richList && matchingOptions.length > displayOptions.length && (
                 <div className="border-t border-slate-100 dark:border-slate-800 px-3 py-2 text-center">

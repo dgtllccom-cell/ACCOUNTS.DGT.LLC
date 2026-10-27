@@ -52,6 +52,8 @@ export function ReportFilterBar({
         placeholder={accountNoLabel}
         options={accountNoOptions}
         disabled={disabled}
+        accountCards
+        richList
         onValueChange={onAccountNoChange}
       />
 
@@ -61,6 +63,8 @@ export function ReportFilterBar({
         placeholder={ledgerLabel}
         options={ledgerOptions}
         disabled={disabled}
+        accountCards
+        richList
         onValueChange={onLedgerChange}
       />
 

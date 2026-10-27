@@ -38,6 +38,7 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { cn } from "@/lib/utils";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { PersonPicker } from "@/components/erp/person-picker";
+import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById } from "@/features/banks/bank-api";
 import { VoiceDictateButton } from "@/components/voice-dictate-button";
@@ -98,7 +99,7 @@ function fmtNum(v: number) {
   return (Number(v) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/** Real Account Master search box — filters the already-loaded enterprise_accounts list client-side. */
+/** Real Account Master search box with unified rich account cards. */
 function AccountSelect({
   label,
   accounts,
@@ -112,56 +113,33 @@ function AccountSelect({
   onSelect: (acc: AccountOpt | null) => void;
   placeholder: string;
 }) {
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const boxRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onClick(e: MouseEvent) {
-      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, []);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const pool = q ? accounts.filter(a => a.code.toLowerCase().includes(q) || a.name.toLowerCase().includes(q)) : accounts;
-    return pool.slice(0, 30);
-  }, [accounts, query]);
+  const options: SearchSelectOption[] = useMemo(() => {
+    return (accounts || []).map((a) => ({
+      value: a.id,
+      label: `${a.code} - ${a.name} (${a.currency || ""})`,
+      primaryText: a.name,
+      code: a.code,
+      category: "Money Exchange / Currency Dealing",
+      currency: a.currency,
+      status: "Active",
+      isAccountCard: true,
+      keywords: `${a.code} ${a.name} ${a.currency || ""}`
+    }));
+  }, [accounts]);
 
   return (
-    <div className="space-y-1 relative" ref={boxRef}>
+    <div className="space-y-1">
       <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</Label>
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-        <input
-          value={value ? `${value.code} - ${value.name}` : query}
-          onChange={(e) => { setQuery(e.target.value); onSelect(null); setOpen(true); }}
-          onFocus={() => setOpen(true)}
-          placeholder={placeholder}
-          className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-2 text-xs font-bold outline-none"
-        />
-      </div>
-      {open && (
-        <div className="absolute z-30 mt-1 max-h-56 w-full min-w-[260px] overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
-          {filtered.length === 0 ? (
-            <div className="p-2.5 text-[11px] text-slate-400">{query ? "No matching account." : "Start typing to search…"}</div>
-          ) : (
-            filtered.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => { onSelect(a); setQuery(""); setOpen(false); }}
-                className="flex w-full items-center justify-between px-2.5 py-1.5 text-left text-xs hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
-                <span className="font-bold text-slate-800 dark:text-slate-200">{a.code} - {a.name}</span>
-                {a.currency ? <span className="text-[10px] text-slate-400">{a.currency}</span> : null}
-              </button>
-            ))
-          )}
-        </div>
-      )}
+      <SearchSelect
+        value={value?.id || ""}
+        onValueChange={(val) => {
+          const found = accounts.find((a) => a.id === val) || null;
+          onSelect(found);
+        }}
+        options={options}
+        placeholder={placeholder}
+        accountCards
+      />
     </div>
   );
 }

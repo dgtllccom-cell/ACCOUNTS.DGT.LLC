@@ -135,7 +135,7 @@ export function UnifiedDetailedLedgerView() {
           language: lang
         });
         if (active && res?.ledgers) {
-          const grouped = new Map<string, { label: string; keywords: string; ids: string[] }>();
+          const grouped = new Map<string, { label: string; keywords: string; ids: string[]; name: string; code: string; comp: string; cName: string; bName: string; phone: string; email: string; address: string; kind: string }>();
           for (const row of res.ledgers) {
             const key = row.accountId || row.accountCode || row.ledgerCode || row.ledgerId;
             if (!grouped.has(key)) {
@@ -148,14 +148,27 @@ export function UnifiedDetailedLedgerView() {
               const refNo = row.manualReferenceNumber || "";
               const cName = row.countryName || "";
               const bName = row.cityBranchName || row.countryBranchName || "";
+              const phone = row.contacts?.mobile || row.contacts?.phone || "";
+              const email = row.contacts?.email || "";
+              const address = row.address || [row.cityName, bName, cName].filter(Boolean).join(", ");
+              const kind = row.accountKind || "Ledger Account";
 
               const label = `${code ? code + " — " : ""}${name}${curr ? ` (${curr})` : ""}${comp ? ` • ${comp}` : ""}`;
-              const keywords = `${code} ${rawCode} ${refNo} ${custNo} ${name} ${comp} ${curr} ${cName} ${bName} ${row.accountKind || ""}`;
+              const keywords = `${code} ${rawCode} ${refNo} ${custNo} ${name} ${comp} ${curr} ${cName} ${bName} ${kind} ${phone} ${email} ${address}`;
 
               grouped.set(key, {
                 label,
                 keywords,
-                ids: []
+                ids: [],
+                name,
+                code,
+                comp,
+                cName,
+                bName,
+                phone,
+                email,
+                address,
+                kind
               });
             }
             grouped.get(key)!.ids.push(row.ledgerId);
@@ -163,7 +176,18 @@ export function UnifiedDetailedLedgerView() {
           const options = Array.from(grouped.values()).map((g) => ({
             value: g.ids.join(","),
             label: g.label,
-            keywords: g.keywords
+            keywords: g.keywords,
+            primaryText: g.name,
+            code: g.code,
+            companyName: g.comp || undefined,
+            category: g.kind,
+            phone: g.phone || undefined,
+            email: g.email || undefined,
+            address: g.address || undefined,
+            branch: g.bName || undefined,
+            country: g.cName || undefined,
+            status: "Active",
+            isAccountCard: true
           }));
           setLedgerOptions(options);
 
@@ -435,6 +459,8 @@ export function UnifiedDetailedLedgerView() {
               label=""
               options={ledgerOptions}
               value={selectedLedgerId ?? ""}
+              accountCards
+              richList
               onValueChange={(v: string) => {
                 setSelectedLedgerId(v);
                 if (v) {

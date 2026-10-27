@@ -30,6 +30,8 @@ import { BranchScopeDropdown } from "@/features/purchases/components/branch-scop
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { PersonPicker } from "@/components/erp/person-picker";
+import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { CustomerAccountCard } from "@/components/erp/customer-account-card";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { cn } from "@/lib/utils";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
@@ -1054,6 +1056,25 @@ export function LocalPurchaseView({
       void loadAccounts();
     }
   }, [selectedBranchId, selectedCityBranchId]);
+
+  const accountOptions: SearchSelectOption[] = useMemo(() => {
+    return (accountsList || []).map((acc: any) => ({
+      value: acc.code,
+      label: `${acc.code} - ${acc.name} (${acc.currency || ""})`,
+      primaryText: acc.name,
+      code: acc.code,
+      companyName: acc.company_name || acc.companyName || undefined,
+      category: acc.category || acc.operational_domain || "General Ledger Account",
+      phone: acc.customers?.mobile || acc.phone || undefined,
+      email: acc.customers?.email || acc.email || undefined,
+      address: acc.address || undefined,
+      city: acc.city_name || acc.cityName || undefined,
+      country: acc.country_name || acc.countryName || undefined,
+      status: acc.status === "inactive" ? "Inactive" : "Active",
+      isAccountCard: true,
+      keywords: [acc.name, acc.code, acc.currency, acc.category, acc.city_name, acc.country_name].filter(Boolean).join(" ")
+    }));
+  }, [accountsList]);
 
   const selectedPurchaseAccount = useMemo(() => {
     return accountsList.find(acc => acc.code === purchaseAccountNo);
@@ -2681,37 +2702,57 @@ export function LocalPurchaseView({
                     {/* 1. Sales Account (CR) */}
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.sales_account_cr", "Sales Account (CR) *")}</label>
-                      <select
+                      <SearchSelect
                         value={salesAccountNo}
-                        onChange={e => setSalesAccountNo(e.target.value)}
-                        className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none"
-                        required
-                      >
-                        <option value="">{t(lang, "lp.select_cr_account", "Select Credit Account...")}</option>
-                        {accountsList.map(acc => (
-                          <option key={acc.id} value={acc.code}>
-                            {acc.code} - {acc.name} ({acc.currency})
-                          </option>
-                        ))}
-                      </select>
+                        onValueChange={(val) => setSalesAccountNo(val)}
+                        options={accountOptions}
+                        placeholder={t(lang, "lp.select_cr_account", "Select Credit Account...")}
+                        accountCards
+                      />
+                      {selectedSalesAccount && (
+                        <div className="mt-2">
+                          <CustomerAccountCard
+                            account={{
+                              id: selectedSalesAccount.id,
+                              name: selectedSalesAccount.name,
+                              code: selectedSalesAccount.code,
+                              category: selectedSalesAccount.category || selectedSalesAccount.operational_domain,
+                              currency: selectedSalesAccount.currency,
+                              city: selectedSalesAccount.city_name,
+                              status: selectedSalesAccount.status === "inactive" ? "Inactive" : "Active"
+                            }}
+                            selected
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* 2. Purchase Account (DR) */}
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.purchase_account_dr", "Purchase Account (DR) *")}</label>
-                      <select
+                      <SearchSelect
                         value={purchaseAccountNo}
-                        onChange={e => setPurchaseAccountNo(e.target.value)}
-                        className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none"
-                        required
-                      >
-                        <option value="">{t(lang, "lp.select_dr_account", "Select Debit Account...")}</option>
-                        {accountsList.map(acc => (
-                          <option key={acc.id} value={acc.code}>
-                            {acc.code} - {acc.name} ({acc.currency})
-                          </option>
-                        ))}
-                      </select>
+                        onValueChange={(val) => setPurchaseAccountNo(val)}
+                        options={accountOptions}
+                        placeholder={t(lang, "lp.select_dr_account", "Select Debit Account...")}
+                        accountCards
+                      />
+                      {selectedPurchaseAccount && (
+                        <div className="mt-2">
+                          <CustomerAccountCard
+                            account={{
+                              id: selectedPurchaseAccount.id,
+                              name: selectedPurchaseAccount.name,
+                              code: selectedPurchaseAccount.code,
+                              category: selectedPurchaseAccount.category || selectedPurchaseAccount.operational_domain,
+                              currency: selectedPurchaseAccount.currency,
+                              city: selectedPurchaseAccount.city_name,
+                              status: selectedPurchaseAccount.status === "inactive" ? "Inactive" : "Active"
+                            }}
+                            selected
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* 3. Broker / Agent Selection (Yes / No) */}
@@ -2769,19 +2810,28 @@ export function LocalPurchaseView({
                           </div>
 
                           {brokerType === "permanent" ? (
-                            <div>
-                              <select
+                            <div className="space-y-2">
+                              <SearchSelect
                                 value={brokerAccountNo}
-                                onChange={e => setBrokerAccountNo(e.target.value)}
-                                className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-semibold text-slate-800"
-                              >
-                                <option value="">{t(lang, "lp.select_broker", "Select Broker Account...")}</option>
-                                {accountsList.map(acc => (
-                                  <option key={acc.id} value={acc.code}>
-                                    {acc.code} - {acc.name} ({acc.currency})
-                                  </option>
-                                ))}
-                              </select>
+                                onValueChange={(val) => setBrokerAccountNo(val)}
+                                options={accountOptions}
+                                placeholder={t(lang, "lp.select_broker", "Select Broker Account...")}
+                                accountCards
+                              />
+                              {selectedBrokerAccount && (
+                                <CustomerAccountCard
+                                  account={{
+                                    id: selectedBrokerAccount.id,
+                                    name: selectedBrokerAccount.name,
+                                    code: selectedBrokerAccount.code,
+                                    category: selectedBrokerAccount.category || selectedBrokerAccount.operational_domain,
+                                    currency: selectedBrokerAccount.currency,
+                                    city: selectedBrokerAccount.city_name,
+                                    status: selectedBrokerAccount.status === "inactive" ? "Inactive" : "Active"
+                                  }}
+                                  selected
+                                />
+                              )}
                             </div>
                           ) : (
                             <div className="grid grid-cols-2 gap-2 bg-white p-2 rounded-lg border border-purple-100">

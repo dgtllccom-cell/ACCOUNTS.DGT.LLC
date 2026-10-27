@@ -72,6 +72,7 @@ import {
 } from "lucide-react";
 
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { CustomerAccountCard } from "@/components/erp/customer-account-card";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { Th } from "@/components/ui/translated-th";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
@@ -1861,6 +1862,17 @@ export function CustomerOrderManagementView() {
       items.push({
         value: row.id,
         label: parts.join(" "),
+        primaryText: row.customer_name,
+        code: acc?.code || row.person_code || undefined,
+        companyName: row.company_name || undefined,
+        category: (acc as any)?.category || "Customer Account",
+        phone: row.mobile || row.whatsapp || undefined,
+        email: row.email || undefined,
+        address: row.address || undefined,
+        city: (row as any).city_name || undefined,
+        country: (row as any).country_name || undefined,
+        status: (row as any).is_active === false ? "Inactive" : "Active",
+        isAccountCard: true,
         keywords: [
           row.customer_name,
           row.company_name,
@@ -1884,6 +1896,11 @@ export function CustomerOrderManagementView() {
       items.push({
         value: acc.id,
         label: `${acc.name} • [${acc.code}]${acc.current_balance != null ? ` • ${comT(lang, "bal_short", "Bal:")} ${acc.currency || ""} ${Number(acc.current_balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`,
+        primaryText: acc.name,
+        code: acc.code,
+        category: (acc as any)?.category || "General Ledger Account",
+        status: acc.status === "inactive" ? "Inactive" : "Active",
+        isAccountCard: true,
         keywords: [acc.name, acc.code, acc.currency, acc.account_number, acc.manual_reference_number]
           .filter(Boolean)
           .join(" ")
@@ -7384,16 +7401,26 @@ function Step1BookingCustomer({
                 </div>
 
                 {selectedCustomer || selectedAccount ? (
-                  <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {selectedCustomer?.customer_name || selectedAccount?.name}
-                    </span>
-                    <span>•</span>
-                    <span className="font-mono">{selectedAccount?.code || selectedCustomer?.person_code || "CUS-001"}</span>
-                    <span>•</span>
-                    <span className="font-bold text-emerald-600">
-                      {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
-                    </span>
+                  <div className="mt-2.5">
+                    <CustomerAccountCard
+                      account={{
+                        id: selectedCustomer?.id || selectedAccount?.id,
+                        name: selectedCustomer?.customer_name || selectedAccount?.name || "",
+                        code: selectedAccount?.code || selectedCustomer?.person_code,
+                        companyName: selectedCustomer?.company_name,
+                        category: (selectedAccount as any)?.category || "Customer Account",
+                        phone: selectedCustomer?.mobile || selectedCustomer?.whatsapp,
+                        email: selectedCustomer?.email,
+                        address: selectedCustomer?.address,
+                        city: (selectedCustomer as any)?.city_name,
+                        country: (selectedCustomer as any)?.country_name,
+                        status: (selectedCustomer as any)?.is_active === false ? "Inactive" : "Active",
+                        balance: selectedAccount?.current_balance,
+                        currency: selectedAccount?.currency
+                      }}
+                      onEdit={() => setViewCustomerModalOpen(true)}
+                      selected
+                    />
                   </div>
                 ) : null}
               </div>

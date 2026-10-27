@@ -63,6 +63,7 @@ import {
 } from "@/features/locations/location-api";
 import { apiPost, apiPatch } from "@/lib/api/client";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
+import { CustomerAccountCard } from "@/components/erp/customer-account-card";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { WarehousePicker } from "@/features/warehouses/components/warehouse-picker";
@@ -926,6 +927,7 @@ export function NewAccountSetup({
 
   // Master record links — IDs come from Master Form pickers
   const [linkedCustomerId, setLinkedCustomerId] = useState<string | null>(null);
+  const [linkedCustomerObj, setLinkedCustomerObj] = useState<any>(null);
   const [linkedCustomerName, setLinkedCustomerName] = useState("");
   const [linkedCompanyId, setLinkedCompanyId] = useState<string | null>(null);
   const [linkedCompanyName, setLinkedCompanyName] = useState("");
@@ -3139,6 +3141,7 @@ export function NewAccountSetup({
                     .then((r) => r.json())
                     .then((json) => {
                       const found = json?.data?.customer ?? json?.customer ?? json?.data;
+                      setLinkedCustomerObj(found || null);
                       const name = found?.customer_name ?? "";
                       setLinkedCustomerName(name);
                       // The account is named after the SAVED legal name, never a language view of it
@@ -3151,16 +3154,24 @@ export function NewAccountSetup({
               />
 
               {linkedCustomerId && (
-                <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/40 px-3 py-2 text-xs">
-                  <span className="text-emerald-700 font-semibold">{getLabel("linked", lang)}:</span>
-                  <span className="text-emerald-800">{linkedCustomerName || linkedCustomerId}</span>
-                  <button
-                    type="button"
-                    className="ml-auto text-rose-600 hover:underline"
-                    onClick={() => { setLinkedCustomerId(null); setLinkedCustomerName(""); }}
-                  >
-                    {getLabel("disconnect", lang)}
-                  </button>
+                <div className="mt-3">
+                  <CustomerAccountCard
+                    account={{
+                      id: linkedCustomerId,
+                      name: linkedCustomerObj?.customer_name || linkedCustomerName || linkedCustomerId,
+                      code: linkedCustomerObj?.person_code,
+                      companyName: linkedCustomerObj?.company_name,
+                      phone: linkedCustomerObj?.mobile || linkedCustomerObj?.whatsapp,
+                      email: linkedCustomerObj?.email,
+                      address: linkedCustomerObj?.address || [linkedCustomerObj?.city_name, linkedCustomerObj?.country_name].filter(Boolean).join(", "),
+                      country: linkedCustomerObj?.country_name,
+                      city: linkedCustomerObj?.city_name,
+                      status: linkedCustomerObj?.is_active === false ? "Inactive" : "Active"
+                    }}
+                    onClear={() => { setLinkedCustomerId(null); setLinkedCustomerName(""); setLinkedCustomerObj(null); }}
+                    clearLabel={getLabel("disconnect", lang)}
+                    selected
+                  />
                 </div>
               )}
 
