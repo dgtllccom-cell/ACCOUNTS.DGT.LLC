@@ -781,7 +781,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
                       {index + 1}
                     </td>
                     <td className="px-3.5 py-3 font-bold text-foreground">
-                      <div>{item.name}</div>
+                      <div>{translateHeader(lang, item.name)}</div>
                       {item.nameUrdu && (
                         <div className="text-[10px] text-muted-foreground font-normal mt-0.5">{item.nameUrdu}</div>
                       )}

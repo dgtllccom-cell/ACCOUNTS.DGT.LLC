@@ -245,8 +245,9 @@ export function DocumentManager() {
     (key: string, fallback?: string): string => {
       const entry = TRANSLATIONS[key];
       if (entry && entry[lang]) return entry[lang];
-      if (entry && entry.en) return entry.en;
-      return fallback || key;
+      // not in this screen's table: the central dictionary, never English left on a UR / AR / FA / PS screen
+      const english = (entry && entry.en) || fallback || key;
+      return lang === "en" ? english : translateHeader(lang, english);
     },
     [lang]
   );

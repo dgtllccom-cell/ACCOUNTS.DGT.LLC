@@ -1,4 +1,5 @@
 "use client";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -285,7 +286,7 @@ export function UnifiedErpRegisterBar({
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>{recordTypeName || t(activeLang, "pb_register.total_bills", "Total Bills")}</span>
+              <span>{recordTypeName ? translateHeader(activeLang, recordTypeName) : t(activeLang, "pb_register.total_bills", "Total Bills")}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{kpiSummary.totalRecords}</span>
             </div>
             <div className="flex justify-between text-slate-500">
