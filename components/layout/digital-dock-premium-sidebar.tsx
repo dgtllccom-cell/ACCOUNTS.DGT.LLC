@@ -905,6 +905,8 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     // 8. Settings
     // (Branch Admin also receives: New User, New Account, User Permission Management, Branch Reports)
     // Expenses submenu is REMOVED from Shipping Line user menu as explicitly instructed.
+    // Shipping Track access is mandatory for the Shipping Line roles (the permission screen says so); every other login needs the token
+    const SHIPPING_LINE_ROLES = ["shipping_line_user", "shipping_line_admin", "agent_user", "city_operations_admin", "country_operations_admin", "global_operations_admin", "shipping_super_admin"];
     const ALLOWED_SHIPPING_KEYS = new Set([
       "dashboard",
       "shipping-tracking",
@@ -922,7 +924,7 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     ]);
 
     return items
-      .filter((it: any) => ALLOWED_SHIPPING_KEYS.has(it.key) && (it.key === "dashboard" || it.key === "shipping-tracking" || isPermitted(it)))
+      .filter((it: any) => ALLOWED_SHIPPING_KEYS.has(it.key) && (it.key === "dashboard" || (it.key === "shipping-tracking" && SHIPPING_LINE_ROLES.some((r) => userRoles.has(r))) || isPermitted(it)))
       .map((it: any) => {
         if (it.key === "dashboard") {
           const isSuperShipping = userRoles.has("shipping_super_admin") || userRoles.has("global_operations_admin") || userRoles.has("super_admin");
@@ -932,7 +934,8 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
             : isCountryShipping
             ? "/dashboard/country/shipping-line"
             : "/dashboard/city/shipping-line";
-          return { ...it, href: targetHref };
+          const tierEntry = { ...it, href: targetHref };
+          return isPermitted(tierEntry) ? tierEntry : it;
         }
         if (it.key === "shipping-tracking") {
           return it;
@@ -948,7 +951,7 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
               { label: nt("Branch User Registration"), href: "/dashboard/new-entry/users/registration?scope=branch", icon: UserPlus },
               { label: nt("Branch Account Setup"), href: "/dashboard/accounts/setup?domain=shipping&scope=branch", icon: BookOpen },
               { label: nt("User Permission Management"), href: "/dashboard/branch-management/permissions", icon: ShieldCheck },
-            ];
+            ].filter((k) => isPermitted(k as any)); // offered only when the route gate lets this login in (no dead links)
             return {
               ...it,
               defaultOpen: false,
@@ -1003,10 +1006,11 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
         if (it.key === "reports-all") {
           const branchReportItem = { label: nt("Branch Reports"), href: "/dashboard/reports/branch-reports", icon: BarChart3 };
           const kids = filterTree(it.children || []);
+          // offered only to logins the route gate lets in (reports:read or a branch / shipping-line role)
           return {
             ...it,
             defaultOpen: false,
-            children: [branchReportItem, ...kids]
+            children: isPermitted(branchReportItem as any) ? [branchReportItem, ...kids] : kids
           };
         }
         if (it.key === "settings-menu") {

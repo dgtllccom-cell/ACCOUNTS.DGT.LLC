@@ -25,7 +25,7 @@ import {
   BookOpen
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
-import { localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeName } from "@/lib/i18n/transliteration";
 import { translateValue } from "@/lib/i18n/table-values";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { PartyAffiliationSummary } from "@/lib/services/party-360-service";
@@ -475,7 +475,7 @@ export function Party360Modal({
                             </span>
                             <div className="truncate">
                               <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
-                                {localizeTerm(co.name, lang)}
+                                {localizeName(co.name, lang)}
                               </p>
                               <p className="text-[10px] text-slate-500 truncate">
                                 {[co.businessType, co.cityName, co.countryName].filter(Boolean).join(" • ")}
@@ -591,7 +591,7 @@ export function Party360Modal({
                             </div>
                             <div className="truncate">
                               <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
-                                {localizeTerm(bnk.bankName, lang)}
+                                {localizeName(bnk.bankName, lang)}
                               </p>
                               <p className="font-mono text-[11px] text-slate-600 dark:text-slate-400 truncate">
                                 {bnk.accountNumber || "-"}
@@ -635,7 +635,7 @@ export function Party360Modal({
                             </div>
                             <div className="truncate">
                               <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
-                                {localizeTerm(w.warehouseName, lang)}
+                                {localizeName(w.warehouseName, lang)}
                               </p>
                               <p className="text-[10px] text-slate-500 truncate">
                                 {[w.warehouseCode, w.warehouseType].filter(Boolean).join(" • ")}
@@ -723,7 +723,7 @@ export function Party360Modal({
                             </div>
                             <div className="truncate">
                               <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
-                                {localizeTerm(ca.name, lang)}
+                                {localizeName(ca.name, lang)}
                               </p>
                               {ca.clearingAgentCode && (
                                 <p className="text-[10px] text-slate-500 truncate font-mono">{ca.clearingAgentCode}</p>

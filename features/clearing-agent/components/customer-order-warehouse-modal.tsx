@@ -1,4 +1,5 @@
 "use client";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 import React, { useState, useMemo, useEffect } from "react";
 import {
@@ -58,7 +59,7 @@ interface CustomerOrderWarehouseModalProps {
 export function CustomerOrderWarehouseModal({
   open,
   onClose,
-  lang = "en",
+  lang: langProp,
   initialValues,
   onApply,
   warehousesList = [],
@@ -67,6 +68,8 @@ export function CustomerOrderWarehouseModal({
   selectedCustomer,
   selectedAccount,
 }: CustomerOrderWarehouseModalProps) {
+  const activeLang = useActiveLanguage();
+  const lang = langProp && langProp !== "en" ? langProp : activeLang;
   const isRtl = lang === "ar" || lang === "ur" || lang === "fa" || lang === "ps";
   const tt = (key: string, fallback: string) => t(lang as any, key as any, fallback);
 

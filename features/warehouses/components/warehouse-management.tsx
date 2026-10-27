@@ -1,4 +1,5 @@
 "use client";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -454,7 +455,7 @@ export function WarehouseManagement() {
               className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value="all">{tt("wh.all_types", "All Types")}</option>
-              {typeOptions.map((tp) => <option key={tp} value={tp}>{tp}</option>)}
+              {typeOptions.map((tp) => <option key={tp} value={tp}>{translateHeader(lang, tp)}</option>)}
             </select>
 
             {/* Owner Dropdown */}
@@ -640,7 +641,7 @@ export function WarehouseManagement() {
                           {w.city_name}
                         </td>
                         <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300 font-medium">
-                          {w.warehouse_type}
+                          {w.warehouse_type ? translateHeader(lang, w.warehouse_type) : "—"}
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
                           {w.capacity_mt ? w.capacity_mt.toLocaleString() : "—"}
@@ -782,7 +783,7 @@ export function WarehouseManagement() {
             </div>
             <div className="rounded-xl border bg-slate-50 p-3">
               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tt("wh.col_type", "Warehouse Type")}</div>
-              <div className="mt-1 text-xs font-semibold text-slate-800">{viewWarehouse.warehouse_type}</div>
+              <div className="mt-1 text-xs font-semibold text-slate-800">{viewWarehouse.warehouse_type ? translateHeader(lang, viewWarehouse.warehouse_type) : "—"}</div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3">
               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tt("common.status", "Status")}</div>

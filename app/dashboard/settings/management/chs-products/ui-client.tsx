@@ -112,7 +112,11 @@ export default function ProductMasterClient({ session }: { session: SessionLike 
   const [countryBranches, setCountryBranches] = useState<BranchRow[]>([]);
   const [cityBranches, setCityBranches] = useState<BranchRow[]>([]);
   const [products, setProducts] = useState<ProductRow[]>([]);
-  const [form, setForm] = useState({ ...emptyForm, productCode: nextProductCode(), originalLanguage: session.preferredLanguage ?? "en" });
+  const [form, setForm] = useState({ ...emptyForm, productCode: "", originalLanguage: session.preferredLanguage ?? "en" });
+  // The suggested code is time-based: create it in the browser only, so the server-rendered page and the browser agree (no hydration error).
+  useEffect(() => {
+    setForm((f) => (f.productCode ? f : { ...f, productCode: nextProductCode() }));
+  }, []);
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);

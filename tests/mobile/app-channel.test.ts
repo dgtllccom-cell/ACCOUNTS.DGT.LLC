@@ -25,7 +25,8 @@ describe("app channel (DGT.llc B / BS)", () => {
     expect(channelAllowsSession("bs", { ...base, isSuperAdmin: true })).toBe(true);
   });
   it("lands the Shipping app on a shipping-side dashboard, the Business app on the normal one", () => {
-    expect(landingForChannel("bs", { ...base, isSuperAdmin: true, roles: ["super_admin"] as never[] })).toBe("/dashboard/shipping-line");
+    // the Shipping app opens the Super Management shipping dashboard (production 658c4be: Business and Shipping Line dashboards are separate at all three levels)
+    expect(landingForChannel("bs", { ...base, isSuperAdmin: true, roles: ["super_admin"] as never[] })).toBe("/dashboard/super-admin/shipping-line");
     expect(landingForChannel("bs", { ...base, operationalDomains: ["shipping"], isShippingScoped: true, roles: ["agent_user"] as never[] })).toMatch(/shipping-line|clearing-agent|logistics|agent/);
     expect(landingForChannel("b", { ...base, isSuperAdmin: true, roles: ["super_admin"] as never[] })).toBe("/dashboard/super-admin");
     expect(landingForChannel(null, base)).not.toBe("/dashboard/shipping-line");

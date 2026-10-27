@@ -1018,7 +1018,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                           <td className="p-2.5 font-bold text-slate-400">01</td>
                           <td className="p-2.5 font-bold text-blue-600 dark:text-blue-400">{form.goods_name || "PISTACHIOS KERNEL"}</td>
                           <td className="p-2.5 text-slate-600 dark:text-slate-300">{form.goodsSize || "Large"}</td>
-                          <td className="p-2.5 text-slate-600 dark:text-slate-300">{form.goodsBrand || "Premium"}</td>
+                          <td className="p-2.5 text-slate-600 dark:text-slate-300">{form.goodsBrand || "—"}</td>
                           <td className="p-2.5 text-slate-600 dark:text-slate-300">{form.goodsOrigin || "IRAN"}</td>
                           <td className="p-2.5 font-mono text-slate-500">{form.hsCode || "0802.51"}</td>
                           <td className="p-2.5 text-slate-600 dark:text-slate-300">{form.warehouse || "MAIN WH-A"}</td>

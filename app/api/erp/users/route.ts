@@ -303,7 +303,8 @@ export async function POST(request: NextRequest) {
     issuedPermissions = applyFinancialAccess(issuedPermissions, body.financialAccess, session.canViewFinancials);
 
     if (!issuedPermissions.length) {
-      throw new Error("No assignable permissions remain after applying parent scope limits.");
+      // a refusal the caller can act on (not a 500): the ceiling configured for the branch / the creator leaves nothing to issue
+      throw new ApiClientError("No assignable permissions remain after applying parent scope limits. Ask the owner to review the permission grants of this branch.", { status: 422, code: "NO_ASSIGNABLE_PERMISSIONS" });
     }
 
     if (body.mode === "assign_scope") {

@@ -1,5 +1,68 @@
 # DGT ERP — Main Master Progress Report
-Owner-facing. Updated 2026-10-25 23:30 Dubai (UTC+4). (No earlier file with this name was found in the repository or on the Desktop — if one exists elsewhere, tell me where and I will merge this into it.)
+Owner-facing. Updated 2026-10-27 (Dubai, UTC+4). (No earlier file with this name was found in the repository or on the Desktop — if one exists elsewhere, tell me where and I will merge this into it.)
+
+## rc2 final (2026-10-27) — ready for the owner's gate, NOT deployed
+
+Production runs `dffd724` (deployed through the gate 2026-10-26 20:35Z). Branch `release/rc2` contains it (strict superset) and
+adds **no database migration**. Runbook: `docs/release-2026-10-27-rc2-runbook.md`. Evidence below is DEV only
+(`csesvyxxjivnkkozgopt`); Production was only read.
+
+| Card | Result |
+|---|---|
+| 1. Names in five languages (account, customer, company, bank, branch) | PASS — approved variant, else the exact saved name; no phonetic re-spelling, no word-by-word substitution; places (country / city) still translated. Company API 10 / 10, approved-variant 5 / 5, place fields correct |
+| 2. Save → Reopen → language switch → refresh → logout / login, 5 languages | PASS — 192 / 192 |
+| 3. Merge Production into rc2 | PASS — 5d2a4b9 + a6c7c93 + dffd724 merged; one conflict resolved; all rc2 fixes kept |
+| 4. Users page Grid / List toggle (phone / tablet / desktop) | PASS — 120 / 120 (10 pages × 3 widths, counted from first paint) |
+| 5. DEV clean-up of test accounts | PASS — the 8 reported + 5 more from an interrupted run archived through the app (soft delete, history kept); 28 test accounts archived in total, 0 active ledgers; no real data touched |
+| 6. Shipping Line & BL Entry | PASS — 95 / 95 (menu link, Goods Master source, five languages, phone / desktop); both work cards closed. BL Entry no longer shows invented values |
+| 7. Regression / security / permissions | PASS — 20 scripts (financial, operational, user creation, account approval, branch-admin permissions, direct-URL / API matrix); unit tests 570 / 570; tsc, build and all guards green. Leak scan: 156 PASS + 4 items that are Shipping-domain DEV test records on Business branches (not leaks) after the Roznamcha fix below |
+| 7b. Five-language sweep — every Main Menu screen (185) × EN / UR / AR / FA / PS × 1440 / 820 / 390 px = 2,775 page-loads | 2,585 PASS (93.2 %); 2,624 / 2,751 (95.4 %) when saved names (a bank branch called "Main Branch", the brand name) and the postponed Tax module are not counted; 0 load failures. Checks: loads, no error page / page error, `dir` follows the language, no sideways scroll, no English UI sentence that has a translation. Remaining English labels (10, on 8 screens, after 7d3fbcf): All Countries (edit history / deleted records filters), Country Admin (dashboard settings, exchange-rate report), Super Admin Branch, Sales Booking / Unknown Country (final sales payment header), All Branches (outstanding ledger), Shipping Line Super Admin (handover), General Office, Shipping Line (users list) |
+| 8. Deployment gate | PREPARED — `release/rc2` pushed to GitHub; the pull request into `production` is one click (compare page); waiting for the owner's written approval |
+| 9. Figma | PREPARED — editable Figma plugin (3 concepts × 20 screens, EN + UR) in `design-review/04-figma-plugin`; the Figma connector still needs the owner's sign-in |
+
+**Found and fixed during the final verification (all live in Production before rc2):**
+* **Security — Business ↔ Shipping:** purchase / sales payments, booking transfers and local-purchase payments saved their Roznamcha
+  entry without an operational domain; the Roznamcha list shows such entries to every domain, so a Shipping-only login saw Business
+  payments (DEV: several hundred rows; Production: 0 transactions, nothing leaked). Read rule + write stamping fixed; the Supabase
+  fallback path had no domain filter at all.
+* **Invented figures:** Super Admin dashboard (sample shipments / activities, a sample profit curve, sample sales split, "$" sums of
+  mixed currencies), Shipping Line dashboard (24 / 56 / 342 / 286 … whenever the real count was 0, fake trend %, sample rows), KYC
+  Reports, Audit Monitoring (1,842 added to the real count; branches floored at 9, countries at 5), purchase reports (sample HS code,
+  brand, origin, weights, price, supplier; serials built from the booking number), BL Entry (sample BL / truck / seal numbers, a fixed
+  "Passed" quality report), City / Country Branch reports (sample accounts, company type), Account Setup ("Created by: Super Admin").
+* **Five languages:** menu labels and headings fall back to the central dictionary; ~80 leftover English labels on ~40 screens; two
+  hydration errors (CHS Products, Outstanding Ledger).
+
+**Open owner decisions (found, deliberately not changed):**
+* **Tax Management (`/dashboard/tax`, VAT / GST) — postponed module:** its KPI cards show fixed figures that are not read from any
+  data ("Total Tax Collected (YTD) AED 2,48,320", "+12 % vs last year", 12 branches, 38 users, 5 countries, 12 profiles). Left exactly
+  as in Production because the owner postponed this module.
+* **Location Management on Production:** migration 20261242 (released through the gate on 2026-10-26 by root) inserted 104 rows into
+  `erp_locations` (copies of the ports master). Nothing was deleted; reversing it would itself modify location data.
+* **origin/main** carries the owner-only "ONE APP" status page (PR #33); it is also in Production (dffd724) and therefore in rc2.
+
+## Production release ca7383d — LIVE 2026-10-25 23:54 Dubai; follow-up rc2 (2026-10-26)
+
+**ca7383d is deployed.** Sequence (all through the owner's gate): verified full backup (72.8 MB, gzip integrity OK, 1,773 tables) → migration pre-checks (new objects absent, target tables empty) → migrations 20261240 + 20261241 applied (7 columns, 5 unique indexes, 2 CHECKs — verified) → `dgt-approve-deploy ca7383d… --migrations` → `dgt-deploy` (own backup `prod-before-deploy-20261025-194435.dump`, atomic build, rollback kept). Live checks: VPS HEAD = ca7383d, pm2 online, /login 307, expense APIs 401 unauthenticated, no new error-log lines. **Production data identical before and after** (customers 6, companies 3, ledgers 21 with zero totals, profiles 9, assignments 9, branches 3, 0 transactions).
+
+### rc2 (branch `release/rc2`) — found while verifying Chaman Branch Admin and the UAE Country Admin
+SECURITY (present in production since 658c4be / a86355d):
+* Branch Reports and User Permission Management accepted `?branchId=` from a Country Admin of ANY country and, for a login without a branch, fell back to the first active branch of the whole database (roznamcha, expenses, ledger balances, users with phones / permission sets). Now: only a branch inside the login's scope and operational domain; no fallback except the Global Super Admin.
+* Country shipping dashboard: `?countryId=` reached any country and dashboard:read alone opened it for a branch login. Now role-gated and pinned to the session's country.
+* City Branch Admin as user manager: requires users:update / users:create in its permission set (template has them, a per-user set can withhold them), manages the branch's STAFF only, an explicit main-branch id must match.
+* Shipping Line user stays default-deny; menu entries offered only when the route gate lets the login in (no dead links, one token never unlocks a menu entry).
+* The permission screen showed invented values (a fixed phone, e-mail, dates, "Today, active now", a real person's name) — removed.
+
+Unit tests: the 19 failures on production a86355d are resolved (562 pass, 0 fail). They encoded the earlier delegation rule; the approved policy (city admin manages local users, Shipping Line user holds the approved accounting bundle, tier dashboards) is now pinned by tests instead, plus invariants: scope fencing, no wildcard / no commercial trade for the shipping template, user-manager only with the token.
+
+Customer names: one rule on every screen — an authorized translation (human-entered / corrected, verified, curated dictionary), else the saved legal name. Generic record tier, duplicate warning, account live report, Party Directory, Truck registry/report now agree with the Register.
+
+### Open items needing the owner
+* **Chaman City Branch permission grants** (Production): stored as a JSON *string* (ignored by the code) and equal to Quetta's BUSINESS list (purchase / sales groups). Fixing the type alone would cap Shipping staff creation to Business groups. Owner decides the Shipping grant list; nothing was changed.
+* **Production has no Country Admin assignment** (UAE or Pakistan): the top UAE login is a Main Branch Admin with users:read only. If a UAE Country Admin is expected, it must be created.
+* **SMTP:** MX / SPF / DKIM are Titan; DMARC missing; provider `smtp.titan.email:465` correct and reachable from the VPS; four mailboxes have no stored passwords, never tested; stray "DGT Staging" provider. Needs mailbox passwords (entered by the owner in Mail Management) and a DMARC TXT record.
+* **Transport payments / Transport ledger:** no ledger posting — needs the accrual mapping (which account is debited and which credited when a transport charge is booked) before the payment leg can be posted without a one-sided entry.
+* **VAT Management:** postponed by the owner (not cancelled); no tax rule or mapping was changed.
 
 ## Release candidate 2026-10-25 — expense framework + four languages + customer names (branch `release/rc-expense-framework`)
 

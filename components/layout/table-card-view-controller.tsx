@@ -71,13 +71,18 @@ export function TableCardViewController() {
   useEffect(() => {
     let raf = 0;
     let timer: number | undefined;
+    let floatTimer: number | undefined;
     const run = () => {
       raf = 0;
       const main = document.querySelector<HTMLElement>("main[data-erp-content]");
       if (!main) return;
       const tables = eligibleTables(main);
       viewModeStore.set({ eligible: tables.length > 0 });
-      setNeedFloating(tables.length > 0 && !document.querySelector("[data-testid='view-mode-toggle']:not([data-floating] *)"));
+      // Decide about the floating toggle only after the page bar had a chance to render ITS toggle for the new eligibility:
+      // checking in the same tick showed a second (floating) toggle for a moment on every page that has its own.
+      if (floatTimer) window.clearTimeout(floatTimer);
+      if (tables.length === 0) setNeedFloating(false);
+      else floatTimer = window.setTimeout(() => setNeedFloating(!document.querySelector("[data-testid='view-mode-toggle']:not([data-floating] *)")), 400);
       const mode = viewModeStore.get().mode;
       main.setAttribute("data-view-mode", mode);
       if (mode === "grid") tables.forEach(annotate);
@@ -97,7 +102,7 @@ export function TableCardViewController() {
     // re-apply when the mode changes (the toggle writes to the store)
     let last = viewModeStore.get().mode;
     const unsub = viewModeStore.subscribe(() => { const m = viewModeStore.get().mode; if (m !== last) { last = m; schedule(); } });
-    return () => { mo.disconnect(); unsub(); if (timer) window.clearTimeout(timer); if (raf) cancelAnimationFrame(raf); };
+    return () => { mo.disconnect(); unsub(); if (timer) window.clearTimeout(timer); if (floatTimer) window.clearTimeout(floatTimer); if (raf) cancelAnimationFrame(raf); };
   }, [pathname, reportKey]);
 
   if (!eligible || !needFloating) return null;

@@ -704,9 +704,9 @@ export function GoodsMasterRegistry() {
                   aria-label="Filter goods by status"
                   className="h-10 px-3.5 pr-8 border rounded-lg bg-white dark:bg-slate-950 border-slate-250 dark:border-slate-800 text-sm font-medium text-slate-700 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                 >
-                  <option value="all">All Status</option>
-                  <option value="active">Active Only</option>
-                  <option value="inactive">Inactive Only</option>
+                  <option value="all">{translateHeader(lang, "All Status")}</option>
+                  <option value="active">{translateHeader(lang, "Active Only")}</option>
+                  <option value="inactive">{translateHeader(lang, "Inactive Only")}</option>
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>

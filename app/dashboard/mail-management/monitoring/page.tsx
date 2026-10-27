@@ -1,4 +1,6 @@
 "use client";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 import { useEffect, useState } from "react";
 import {
@@ -33,6 +35,7 @@ interface DnsRecordItem {
 }
 
 export default function DgtMailMonitoringPage() {
+  const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
   const [lastCheck, setLastCheck] = useState<string>("Just now");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -407,7 +410,7 @@ export default function DgtMailMonitoringPage() {
                   <td className="px-5 py-3.5 max-w-xs sm:max-w-sm">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-[11px] text-slate-600 dark:text-slate-300 truncate block">
-                        {item.currentValue}
+                        {item.currentValue === "Action Required" ? translateHeader(lang, "Action Required") : item.currentValue}
                       </span>
                       {item.currentValue.startsWith("v=") && (
                         <button

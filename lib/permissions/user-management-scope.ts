@@ -34,8 +34,11 @@ type ManagerSession = {
  * global permission-set edits, or administration of existing multi-scope users.
  */
 export function isUserCreator(session: ManagerSession): boolean {
-  return isUserManager(session) || (session.roles.includes("city_branch_admin") &&
-    Boolean(session.permissions?.some((p) => p === "users:create" || p === "users:*")));
+  return isUserManager(session) || (session.roles.includes("city_branch_admin") && hasToken(session, "users:create", "users:*"));
+}
+
+function hasToken(session: ManagerSession, ...tokens: string[]): boolean {
+  return Boolean(session.permissions?.some((p) => tokens.includes(p)));
 }
 
 const BRANCH_STAFF_ROLES = new Set(["staff_user", "accountant", "cashier", "agent_user", "shipping_line_user", "auditor_viewer"]);
@@ -71,7 +74,11 @@ export function userCreationTargetError(session: ManagerSession, target: {
     if (a.operationalDomain !== "both" && a.operationalDomain !== target.operationalDomain) return false;
     if (a.role === "country_admin") return true;
     if (a.role === "main_branch_admin") return Boolean(a.countryBranchId && a.countryBranchId === target.countryBranchId);
-    if (a.role === "city_branch_admin") return Boolean(a.cityBranchId && a.cityBranchId === target.cityBranchId);
+    if (a.role === "city_branch_admin") {
+      if (!a.cityBranchId || a.cityBranchId !== target.cityBranchId) return false;
+      // an explicit main-branch id must match the admin's own (the users API additionally verifies the city branch belongs to it)
+      return !target.countryBranchId || !a.countryBranchId || target.countryBranchId === a.countryBranchId;
+    }
     return false;
   });
   return matched ? null : "Country, branch or operational domain is outside your delegated scope.";
@@ -79,7 +86,10 @@ export function userCreationTargetError(session: ManagerSession, target: {
 
 export function isUserManager(session: ManagerSession): boolean {
   if (session.isSuperAdmin) return true;
-  return session.roles.some((r) => r === "country_admin" || r === "main_branch_admin" || r === "city_branch_admin") || domainSuperAdminDomain(session.roles) !== null;
+  if (session.roles.some((r) => r === "country_admin" || r === "main_branch_admin") || domainSuperAdminDomain(session.roles) !== null) return true;
+  // City Branch Admin: manages the users of its own branch when its permission set carries users:update (the role template does;
+  // a per-user permission set can withhold it).
+  return session.roles.includes("city_branch_admin") && hasToken(session, "users:update", "users:*");
 }
 
 /** Roles only the Global Super Admin may grant or edit. */
@@ -120,8 +130,10 @@ export function userInManagerScope(session: ManagerSession, assignment: Assignme
   if (own && (assignment.operational_domain ?? "business") !== own) return false;
   if (!assignment.country_id || !session.countryIds.includes(assignment.country_id)) return false;
   if (session.roles.includes("country_admin")) return true;
-  if (session.roles.includes("city_branch_admin")) {
-    return Boolean(assignment.city_branch_id && session.cityBranchIds.includes(assignment.city_branch_id));
+  if (session.roles.includes("city_branch_admin") && !session.roles.includes("main_branch_admin")) {
+    if (!assignment.city_branch_id || !session.cityBranchIds.includes(assignment.city_branch_id)) return false;
+    // a branch admin manages the branch's STAFF (the roles it may delegate) — never a peer admin or anyone above it
+    return BRANCH_STAFF_ROLES.has(assignment.role === "staff" ? "staff_user" : String(assignment.role ?? ""));
   }
   return Boolean(assignment.country_branch_id && session.countryBranchIds.includes(assignment.country_branch_id));
 }

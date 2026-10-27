@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { requireErpSession } from "@/lib/auth/session";
 import { resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -24,6 +27,7 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     const scope = resolveReportScope(session);
     const { searchParams } = new URL(request.url);
+    const lang = await getRequestLanguage(searchParams.get("lang"));
 
     const requestedCountryId = searchParams.get("countryId") || null;
     const requestedBranchId = searchParams.get("cityBranchId") || null;
@@ -44,7 +48,7 @@ export async function GET(request: NextRequest) {
     const result = await withLocalPg(async (sql) => {
       const countryRows = effectiveCountryId
         ? await sql`select id, name from public.countries where deleted_at is null and id = ${effectiveCountryId}::uuid limit 1`
-        : [{ id: "all", name: "All Countries" }];
+        : [{ id: "all", name: t(lang, "audit.filter_all_countries", "All Countries") }];
       if (!countryRows[0]) return null;
       const countryName = countryRows[0].name as string;
 
@@ -120,9 +124,9 @@ export async function GET(request: NextRequest) {
         user_name: profile?.full_name || profile?.user_code || actorId || "—",
         user_role: normalizeActorRole(actorId || null, assignmentsByUserId as any),
         country_id: row.country_id,
-        country_name: scopeInfo.countryName === "—" ? "Global" : scopeInfo.countryName,
+        country_name: scopeInfo.countryName === "—" ? translateHeader(lang, "Global") : scopeInfo.countryName,
         city_branch_id: row.city_branch_id,
-        branch_name: scopeInfo.cityBranchName !== "—" ? scopeInfo.cityBranchName : (scopeInfo.mainBranchName !== "—" ? scopeInfo.mainBranchName : "Main Branch"),
+        branch_name: scopeInfo.cityBranchName !== "—" ? scopeInfo.cityBranchName : (scopeInfo.mainBranchName !== "—" ? scopeInfo.mainBranchName : translateHeader(lang, "Main Branch")),
         reason: null,
         risk_level: deriveRiskLevel(0, true),
         review_status: "Reviewed" as const,

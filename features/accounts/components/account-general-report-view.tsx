@@ -42,7 +42,7 @@ import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
-import { localizeTerm, transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { localizeTerm, localizeName } from "@/lib/i18n/transliteration";
 
 type AccountGeneralReportRow = {
   accountId: string;
@@ -1217,7 +1217,7 @@ export function AccountGeneralReportView({
       title: t(lang, "acct.agrv_account_register_report", "Account Register Report"),
       subtitle: `${t(lang, "acct.agrv_account_master_registry_search", "Account Master Registry & Search Report")} - Generated ${new Date().toLocaleString()}`,
       rows: [
-        { label: tr("REPORT SCOPE"), value: dashboardScope === "super_admin" ? "SUPER ADMIN" : dashboardScope === "country" ? tr("COUNTRY SCOPE") : tr("BRANCH SCOPE") },
+        { label: tr("REPORT SCOPE"), value: dashboardScope === "super_admin" ? tr("SUPER ADMIN") : dashboardScope === "country" ? tr("COUNTRY SCOPE") : tr("BRANCH SCOPE") },
         { label: `${tr("BRANCH NAME")} ${tr("DETAILS")}`, value: activeBranchName },
         { label: tr("TOTAL ACCOUNTS"), value: `${visibleSummary.totalAccounts.toLocaleString()} (${visibleSummary.activeAccounts} ${tr("ACTIVE")})` },
         { label: `${tr("TOTAL DEBIT")} (DR)`, value: fmtNumber(visibleSummary.debitTotal) },
@@ -1623,7 +1623,7 @@ export function AccountGeneralReportView({
           <span className="text-slate-300 dark:text-slate-700">•</span>
           <span>{tr("BRANCH SCOPE:")} <strong className="text-blue-600 dark:text-blue-400">{isSuperAdmin ? tr("GLOBAL ADMIN") : isCountryAdmin ? tr("COUNTRY") : isShippingUser ? tr("SHIPPING LINE") : tr("BRANCH")}</strong></span>
           <span className="text-slate-300 dark:text-slate-700">•</span>
-          <span>{tr("SESSION ROLE:")} <strong className="text-emerald-600 dark:text-emerald-400">{isSuperAdmin ? "SUPER ADMIN" : isShippingUser ? "SHIPPING LINE USER" : ((session as any)?.roles?.[0]?.replace(/_/g, " ").toUpperCase() || "ADMIN")}</strong></span>
+          <span>{tr("SESSION ROLE:")} <strong className="text-emerald-600 dark:text-emerald-400">{isSuperAdmin ? tr("SUPER ADMIN") : isShippingUser ? tr("SHIPPING LINE USER") : ((session as any)?.roles?.[0]?.replace(/_/g, " ").toUpperCase() || "ADMIN")}</strong></span>
           <span className="text-slate-300 dark:text-slate-700">•</span>
           <span>{tr("TOTAL LEDGERS:")} <strong className="text-slate-800 dark:text-slate-200">{filteredRows.length}</strong></span>
         </div>
@@ -1664,7 +1664,7 @@ export function AccountGeneralReportView({
               <span>{tr("COUNTRY:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
                 {isAllAccess
-                  ? (selectedCountryForSummary || "All Countries")
+                  ? (selectedCountryForSummary || tr("All Countries"))
                   : (filteredRows[0]?.countryName || (session as any)?.countryName || "Authorized Country")}
               </span>
             </div>
@@ -1905,7 +1905,7 @@ export function AccountGeneralReportView({
                 <div className="flex justify-between items-center">
                   <span>{tr("AUTHORIZED REGION:")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">
-                    {filteredRows[0]?.countryName || (session as any)?.countryName || "Authorized Scope"}
+                    {filteredRows[0]?.countryName || (session as any)?.countryName || t(lang, "cj.authorizedScope", "Authorized Scope")}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -1944,7 +1944,7 @@ export function AccountGeneralReportView({
               <span className="font-bold text-slate-700 dark:text-slate-300">{tr("COVERAGE:")}</span>
               <span className="font-bold text-blue-600 dark:text-blue-400">
                 {isAllAccess
-                  ? "GLOBAL NETWORK"
+                  ? tr("GLOBAL NETWORK")
                   : `${filteredRows[0]?.countryName?.toUpperCase() || "REGIONAL"} NETWORK`}
               </span>
             </div>
@@ -2212,7 +2212,7 @@ export function AccountGeneralReportView({
                             <div className="flex flex-col">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-bold text-[11.5px] text-slate-900 dark:text-slate-100 leading-snug">
-                                  {localizeTerm(row.accountName, lang)}
+                                  {localizeName(row.accountName, lang)}
                                 </span>
                                 {isCountryAccountRow(row) && (
                                   <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 font-mono font-bold text-[9px] uppercase tracking-wider">
@@ -2249,7 +2249,7 @@ export function AccountGeneralReportView({
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-bold text-[11px] text-slate-900 dark:text-slate-100">
-                                  {localizeTerm(row.branchName || "—", lang)}
+                                  {localizeName(row.branchName || "—", lang)}
                                 </span>
                                 {row.branchCode && row.branchCode !== "—" && (
                                   <span className="inline-block px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 font-mono font-bold text-[9.5px] text-indigo-700 dark:text-indigo-300">
@@ -2283,7 +2283,7 @@ export function AccountGeneralReportView({
                           {/* 6. Linked Companies */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
                             <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] block truncate max-w-[160px]">
-                              {row.companyName ? localizeTerm(row.companyName, lang) : "—"}
+                              {row.companyName ? localizeName(row.companyName, lang) : "—"}
                             </span>
                           </td>
 
@@ -2297,7 +2297,7 @@ export function AccountGeneralReportView({
                                 className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 text-[10px] font-bold hover:border-emerald-400 dark:hover:border-emerald-600 hover:underline cursor-pointer transition-colors"
                               >
                                 <Landmark className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                <span className="truncate max-w-[120px]">{localizeTerm(row.bankName, lang)}</span>
+                                <span className="truncate max-w-[120px]">{localizeName(row.bankName, lang)}</span>
                               </button>
                             ) : (
                               <span className="text-slate-300 dark:text-slate-600 font-mono text-xs">—</span>

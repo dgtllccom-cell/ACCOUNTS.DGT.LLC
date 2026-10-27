@@ -1,5 +1,6 @@
 "use client";
 
+import { translateHeader } from "@/lib/i18n/table-headers";
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import {
   Printer, Download, FileSpreadsheet, Eye,
@@ -1325,7 +1326,7 @@ export default function PrintReportsHubPage() {
                                   <table className="w-full text-left text-xs border-collapse">
                                     <thead>
                                       <tr className="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-[9.5px] font-black uppercase">
-                                        <Th className="px-3 py-2">Branch Name</Th>
+                                        <Th className="px-3 py-2">{translateHeader(lang, "Branch Name")}</Th>
                                         <Th className="px-3 py-2">Branch Code</Th>
                                         <Th className="px-3 py-2 text-center">Status</Th>
                                         <Th className="px-3 py-2 text-center">Active Staff Users</Th>

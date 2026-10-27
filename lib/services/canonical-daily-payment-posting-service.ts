@@ -324,6 +324,19 @@ export async function postCanonicalDailyPayment(
         await sql`update roznamcha_entries set bank_id = ${effectiveBankId}::uuid where id = ${resultRoznamchaId}::uuid`;
       }
 
+      // Purchase / sales payments are Business postings; the database posting function leaves the entry unclassified, which every
+      // domain (Shipping included) could see: take the branch's Business / Shipping domain, else Business.
+      if (resultRoznamchaId) {
+        await sql`
+          update roznamcha_entries e
+          set operational_domain = coalesce(
+            (select cb.operational_domain from city_branches cb where cb.id = e.city_branch_id and cb.operational_domain in ('business', 'shipping')),
+            (select b.operational_domain from country_branches b where b.id = e.country_branch_id and b.operational_domain in ('business', 'shipping')),
+            'business')
+          where e.id = ${resultRoznamchaId}::uuid and e.operational_domain is null
+        `;
+      }
+
     } else if (targetType === "sales_booking" || targetType === "local_sales") {
       const rpcRows = await sql`
         select post_sales_booking_transfer(
@@ -364,6 +377,19 @@ export async function postCanonicalDailyPayment(
         await sql`update roznamcha_entries set bank_id = ${effectiveBankId}::uuid where id = ${resultRoznamchaId}::uuid`;
       }
 
+      // Purchase / sales payments are Business postings; the database posting function leaves the entry unclassified, which every
+      // domain (Shipping included) could see: take the branch's Business / Shipping domain, else Business.
+      if (resultRoznamchaId) {
+        await sql`
+          update roznamcha_entries e
+          set operational_domain = coalesce(
+            (select cb.operational_domain from city_branches cb where cb.id = e.city_branch_id and cb.operational_domain in ('business', 'shipping')),
+            (select b.operational_domain from country_branches b where b.id = e.country_branch_id and b.operational_domain in ('business', 'shipping')),
+            'business')
+          where e.id = ${resultRoznamchaId}::uuid and e.operational_domain is null
+        `;
+      }
+
     } else if (targetType === "local_purchase") {
       // Local purchase direct double-entry Roznamcha posting
       const rozType = orderBranchId ? "branch" : orderCountryId ? "country" : "super_admin";
@@ -399,6 +425,7 @@ export async function postCanonicalDailyPayment(
           original_currency_code,
           currency_name,
           base_currency_amount,
+          operational_domain,
           status
         ) values (
           gen_random_uuid(),
@@ -425,6 +452,8 @@ export async function postCanonicalDailyPayment(
           ${currencyCode},
           ${currencyCode},
           ${baseCurrencyAmount},
+          -- local purchase is Business; a branch's own Business / Shipping domain wins (never "unclassified")
+          coalesce((select operational_domain from city_branches where id = ${orderCityBranchId || null}::uuid and operational_domain in ('business', 'shipping')), 'business'),
           'posted'
         ) returning id
       `;

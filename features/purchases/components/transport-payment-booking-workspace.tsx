@@ -683,7 +683,7 @@ export function TransportPaymentBookingWorkspace() {
                           <div className="flex flex-col gap-0.5 items-start">
                             <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-slate-950 text-white border border-slate-900 shadow-sm dark:bg-white dark:text-slate-950">
                               <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-slate-950" />
-                              Fully Paid
+                              {translateHeader(activeLang, "Fully Paid")}
                             </span>
                             <span className="text-[9px] font-bold text-slate-500">Remaining: 0.00 {curr}</span>
                           </div>
@@ -1074,7 +1074,7 @@ export function TransportPaymentBookingWorkspace() {
                 <b className="text-sm font-mono">{selectedRecordForHistory.transportCharges.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selectedRecordForHistory.transportCurrency}</b>
               </div>
               <div>
-                <span className="block text-muted-foreground text-[10px] uppercase font-bold text-emerald-700">Total Paid</span>
+                <span className="block text-muted-foreground text-[10px] uppercase font-bold text-emerald-700">{translateHeader(activeLang, "Total Paid")}</span>
                 <b className="text-sm font-mono text-emerald-700">{selectedRecordForHistory.transportPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selectedRecordForHistory.transportCurrency}</b>
               </div>
               <div>

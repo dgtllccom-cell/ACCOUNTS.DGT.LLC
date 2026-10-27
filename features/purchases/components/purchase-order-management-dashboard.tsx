@@ -477,20 +477,20 @@ function remainingPayment(row: PurchaseReport) {
   return Math.max(0, Number(row.totalPurchaseAmount || 0) - advancePayment(row));
 }
 
-function makeContainers(row: PurchaseReport) {
-  const total = Math.max(1, Math.min(12, Number(row.containerCount || 0) || 1));
-  const loaded = shipmentStatus(row) === "Completed" ? total : shipmentStatus(row) === "Container Loading" || shipmentStatus(row) === "In Transit" ? Math.max(1, Math.floor(total / 2)) : 0;
-  return Array.from({ length: total }).map((_, idx) => ({
-    containerNumber: `CONT-${String(idx + 1).padStart(3, "0")}`,
-    containerNo: `CONT-${String(idx + 1).padStart(3, "0")}`,
-    sealNumber: idx < loaded ? `SEAL-${row.purchaseBookingOrderNumber.slice(-4)}-${idx + 1}` : "-",
-    size: idx % 2 ? "20 FT" : "40 FT",
-    loadingDate: idx < loaded ? row.purchaseDate : "-",
-    departureDate: idx < loaded ? row.purchaseDate : "-",
-    arrivalDate: shipmentStatus(row) === "Completed" ? row.purchaseDate : "-",
-    location: idx < loaded ? "Port / Transit" : row.branchName,
-    status: idx < loaded ? shipmentStatus(row) : "Pending"
-  }));
+// No per-container records reach this dashboard (Loading / Receiving keeps them); it used to invent container numbers, seals
+// and 20 / 40 FT sizes, which every search then matched. No invented rows.
+function makeContainers(_row: PurchaseReport): Array<{
+  containerNumber: string;
+  containerNo: string;
+  sealNumber: string;
+  size: string;
+  loadingDate: string;
+  departureDate: string;
+  arrivalDate: string;
+  location: string;
+  status: string;
+}> {
+  return [];
 }
 
 function StatusBadge({ label }: { label: string }) {
@@ -3144,9 +3144,9 @@ export function PurchaseOrderManagementDashboard() {
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Business Roznamcha S/N:")}</td><td className="px-2 py-1 text-blue-700 font-mono font-bold">{journalEntryNumberText}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Super Admin S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.superAdminSerialNo || selected.super_admin_serial_number || `GBL-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Country S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedCountrySerial || selected.country_transaction_serial_number || `CTY-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Branch S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedBranchSerial || selected.branch_transaction_serial_number || `BR-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Super Admin S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.superAdminSerialNo || selected.super_admin_serial_number || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Country S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedCountrySerial || selected.country_transaction_serial_number || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Branch S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedBranchSerial || selected.branch_transaction_serial_number || "—"}</td></tr>
 
                           <tr className="border-b border-slate-100 bg-blue-50/40">
                             <td className="px-2 py-1 text-slate-500 font-bold">{tr("Debit Account (DR):")}</td>

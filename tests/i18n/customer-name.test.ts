@@ -20,11 +20,16 @@ describe("authorized name translation", () => {
     expect(isAuthorizedNameTranslation({ source: "imported", translation_status: "pending", translated_by_engine: "trigger_enroll" })).toBe(false);
     expect(isAuthorizedNameTranslation(null)).toBe(false);
   });
-  it("human-corrected, manual, verified and curated-dictionary rows are authorized", () => {
+  it("an engine label is never an authorization: the local dictionary / translator / transliteration write 'complete' rows for names they only re-spelled", () => {
+    for (const translated_by_engine of ["local_dictionary", "local_translator", "local_multilingual", "local_transliteration", "dictionary", "glossary"]) {
+      expect(isAuthorizedNameTranslation({ source: "auto", translation_status: "complete", translated_by_engine })).toBe(false);
+    }
+  });
+  it("human-corrected, manual and explicitly verified rows are authorized", () => {
     expect(isAuthorizedNameTranslation({ source: "auto", translation_status: "needs_review", human_corrected: true })).toBe(true);
     expect(isAuthorizedNameTranslation({ source: "manual", translation_status: "complete", translated_by_engine: "local_dictionary" })).toBe(true);
     expect(isAuthorizedNameTranslation({ source: "auto", translation_status: "human_verified" })).toBe(true);
-    expect(isAuthorizedNameTranslation({ source: "auto", translation_status: "complete", translated_by_engine: "local_dictionary" })).toBe(true);
+    expect(isAuthorizedNameTranslation({ source: "imported", translation_status: "verified", translated_by_engine: "verified" })).toBe(true);
   });
 });
 

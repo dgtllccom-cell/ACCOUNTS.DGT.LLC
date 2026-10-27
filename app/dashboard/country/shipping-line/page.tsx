@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import type { Route } from "next";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { canAccessCountry } from "@/lib/permissions/middleware";
+import { COUNTRY_SHIPPING_DASHBOARD_ROLES } from "@/lib/permissions/branch-page-scope";
 import {
   CountryShippingDashboardView,
   type CountryShippingData,
@@ -24,9 +26,9 @@ type CountryOption = {
 async function loadCountryShippingData(countryId: string | null): Promise<CountryShippingData> {
   const supabase = createSupabaseAdminClient() as any;
 
-  let countryName = "Pakistan";
-  let countryCode = "PK";
-  let currency = "PKR";
+  let countryName = "";
+  let countryCode = "";
+  let currency = "";
 
   if (countryId) {
     const { data: country } = await supabase
@@ -203,6 +205,15 @@ export default async function CountryShippingLinePage({
 
   const params = searchParams ? await searchParams : undefined;
   const isSuperAdmin = session.isSuperAdmin;
+
+  // Country level only: a branch login, or any login holding just dashboard:read, never opens the whole country's shipments
+  if (!isSuperAdmin && !session.roles.some((r) => (COUNTRY_SHIPPING_DASHBOARD_ROLES as readonly string[]).includes(r))) {
+    redirect("/dashboard" as Route);
+  }
+  // …and only a country of its own scope (?countryId= can no longer reach another country)
+  if (params?.countryId && !canAccessCountry(session, params.countryId)) {
+    redirect("/dashboard" as Route);
+  }
 
   let countryId: string | null = params?.countryId || null;
 

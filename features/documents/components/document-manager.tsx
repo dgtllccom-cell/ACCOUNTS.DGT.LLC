@@ -245,8 +245,9 @@ export function DocumentManager() {
     (key: string, fallback?: string): string => {
       const entry = TRANSLATIONS[key];
       if (entry && entry[lang]) return entry[lang];
-      if (entry && entry.en) return entry.en;
-      return fallback || key;
+      // not in this screen's table: the central dictionary, never English left on a UR / AR / FA / PS screen
+      const english = (entry && entry.en) || fallback || key;
+      return lang === "en" ? english : translateHeader(lang, english);
     },
     [lang]
   );
@@ -1123,7 +1124,7 @@ export function DocumentManager() {
               <Calendar className="h-3.5 w-3.5 text-slate-500" />
               <span>
                 {dateFilter === "all"
-                  ? "All Dates"
+                  ? th("All Dates")
                   : dateFilter === "today"
                   ? "Today"
                   : dateFilter === "yesterday"
@@ -1528,7 +1529,7 @@ export function DocumentManager() {
                 <optgroup label={th("ERP Modules")}>
                   {DEFAULT_MODULE_FOLDERS.map((m) => (
                     <option key={m} value={m}>
-                      {m}
+                      {th(m)}
                     </option>
                   ))}
                 </optgroup>
@@ -1917,7 +1918,7 @@ export function DocumentManager() {
                                                           >
                                                             <span className="truncate flex items-center gap-1">
                                                               <Folder className="h-2 w-2 shrink-0" />
-                                                              {catName}
+                                                              {th(catName)}
                                                             </span>
                                                             <span className={cn("ms-1 text-[8px] font-mono", isCatSelected ? "text-emerald-100" : "text-slate-400")}>
                                                               {catCount}
@@ -1968,7 +1969,7 @@ export function DocumentManager() {
                   >
                     <span className="flex items-center gap-1.5 truncate">
                       <Folder className="h-3 w-3 text-amber-500 shrink-0" />
-                      {folderName}
+                      {th(folderName)}
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">{count}</span>
                   </div>
@@ -2667,7 +2668,7 @@ export function DocumentManager() {
                   >
                     {allFolderList.map((m) => (
                       <option key={m} value={m}>
-                        {m}
+                        {th(m)}
                       </option>
                     ))}
                   </select>

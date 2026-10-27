@@ -362,7 +362,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       country_branch_id: orderRow.country_branch_id || null,
       city_branch_id: orderRow.city_branch_id || null,
       type: rozType,
-      entry_category: "business"
+      entry_category: "business",
+      operational_domain: "business" // a Business entry must never stay unclassified (Shipping logins would see it)
     }).eq("id", paymentRecord.roznamcha_entry_id);
 
     const viaPgLines = await withLocalPg(async (sql) => {

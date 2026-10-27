@@ -219,7 +219,7 @@ const emptyDraftGoods = {
   op: "*",
   currency2: "PKR",
   rate2: "280.00",
-  qualityReportStatus: "Passed"
+  qualityReportStatus: "" // no inspection input on this form: a line is "not inspected" until a real result is recorded
 };
 
 export function calculateBlGoodsItem(draft: {
@@ -320,6 +320,11 @@ export function BlEntryView({
 }) {
   const lang = useActiveLanguage() || "en";
   const _ = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
+  // a form label without its required-field mark, for summaries and print
+  const plain = (key: Parameters<typeof t>[1], fallback: string) => _(key, fallback).replace(/\s*\*\s*$/, "");
+  // the stored BL mode is a fixed value; show its label in the viewer's language
+  const blTypeLabel = (v: string) =>
+    v === "New BL" ? _("ble.opt_new_bl", "New BL") : v === "Old BL" ? _("ble.opt_old_bl", "Old BL") : v === "Edit BL" ? _("ble.opt_edit_bl", "Edit BL") : v;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const moduleEyebrow = context === "shipping" ? _("ble.eyebrow_shipping", "Shipping Line / B/L Entry") : _("ble.eyebrow_purchase", "Purchase Workflow / B/L");
 
@@ -406,9 +411,9 @@ export function BlEntryView({
       bookingCompanyName: payload.booking?.bookingCompanyName || "",
       bookingDate: payload.booking?.bookingDate ? payload.booking.bookingDate.slice(0, 10) : todayIso(),
       issueDate: payload.booking?.issueDate ? payload.booking.issueDate.slice(0, 10) : todayIso(),
-      issueSerial: payload.booking?.issueSerial || `ISS-${r.bl_number || ""}`,
+      issueSerial: payload.booking?.issueSerial || "",
       blType: payload.booking?.blType || "Edit BL",
-      routeCountry: payload.booking?.routeCountry || "PK / UAE",
+      routeCountry: payload.booking?.routeCountry || "",
       loadingCountry: payload.booking?.loadingCountry || "",
       receivingCountry: payload.booking?.receivingCountry || "",
       loadDate: payload.booking?.loadDate ? payload.booking.loadDate.slice(0, 10) : todayIso(),
@@ -606,7 +611,7 @@ export function BlEntryView({
       rate2: Number(draftGoods.rate2) || 0,
       primaryAmount: calc.primaryAmount,
       finalAmount: calc.finalAmount,
-      qualityReportStatus: draftGoods.qualityReportStatus || "Passed"
+      qualityReportStatus: draftGoods.qualityReportStatus
     };
 
     if (editingIdx !== null) {
@@ -662,7 +667,7 @@ export function BlEntryView({
       op: item.op,
       currency2: item.currency2,
       rate2: String(item.rate2),
-      qualityReportStatus: item.qualityReportStatus || "Passed"
+      qualityReportStatus: item.qualityReportStatus || ""
     });
     setEditingIdx(idx);
     setActiveStep(3);
@@ -862,30 +867,30 @@ export function BlEntryView({
         <div class="cards">
           <div class="card">
             <div class="card-title">${_("ble.lbl_bl_details", "BL Details")}</div>
-            <div class="line"><span>MODE:</span> <span>${form.blType}</span></div>
-            <div class="line"><span>BL NO:</span> <span>${form.blNumber || "-"}</span></div>
-            <div class="line"><span>ISSUE DATE:</span> <span>${form.issueDate}</span></div>
-            <div class="line"><span>SERIAL:</span> <span>${form.issueSerial || "-"}</span></div>
+            <div class="line"><span>${_("ble.ml_mode", "Mode")}:</span> <span>${form.blType ? blTypeLabel(form.blType) : "-"}</span></div>
+            <div class="line"><span>${_("ble.ml_bl_no", "BL No")}:</span> <span>${form.blNumber || "-"}</span></div>
+            <div class="line"><span>${_("plrf.issue_date", "Issue Date")}:</span> <span>${form.issueDate || "-"}</span></div>
+            <div class="line"><span>${_("ble.ml_issue_serial", "Issue Serial")}:</span> <span>${form.issueSerial || "-"}</span></div>
           </div>
           <div class="card">
             <div class="card-title">${_("ble.section_route", "Transport / Route")}</div>
-            <div class="line"><span>VESSEL:</span> <span>${form.vesselName || "-"}</span></div>
-            <div class="line"><span>VOYAGE:</span> <span>${form.voyageNumber || "-"}</span></div>
-            <div class="line"><span>LOADING:</span> <span>${form.loadingPort || "-"}</span></div>
-            <div class="line"><span>DISCHARGE:</span> <span>${form.dischargePort || "-"}</span></div>
+            <div class="line"><span>${_("ble.ml_vessel", "Vessel")}:</span> <span>${form.vesselName || "-"}</span></div>
+            <div class="line"><span>${plain("ble.lbl_voyage_number", "Voyage Number")}:</span> <span>${form.voyageNumber || "-"}</span></div>
+            <div class="line"><span>${plain("ble.lbl_port_of_loading", "Port of Loading")}:</span> <span>${form.loadingPort || "-"}</span></div>
+            <div class="line"><span>${plain("ble.lbl_port_of_discharge", "Port of Discharge")}:</span> <span>${form.dischargePort || "-"}</span></div>
           </div>
           <div class="card">
             <div class="card-title">${_("ble.lbl_truck_details", "Truck Details")}</div>
-            <div class="line"><span>TRUCK/CONTAINER:</span> <span>${form.containerNumber || "-"}</span></div>
-            <div class="line"><span>SEAL NO:</span> <span>${form.sealNumber || "-"}</span></div>
-            <div class="line"><span>TYPE:</span> <span>${form.containerType}</span></div>
-            <div class="line"><span>LINE:</span> <span>${form.shippingLineName || "-"}</span></div>
+            <div class="line"><span>${_("ble.gt_container_no", "Container No")}:</span> <span>${form.containerNumber || "-"}</span></div>
+            <div class="line"><span>${_("ble.gt_seal_no", "Seal No")}:</span> <span>${form.sealNumber || "-"}</span></div>
+            <div class="line"><span>${_("ble.lbl_container_type", "Container Type")}:</span> <span>${form.containerType || "-"}</span></div>
+            <div class="line"><span>${_("ble.ml_shipping_line", "Shipping Line")}:</span> <span>${form.shippingLineName || "-"}</span></div>
           </div>
           <div class="card">
             <div class="card-title">${_("ble.lbl_parties", "Parties")}</div>
-            <div class="line"><span>IMPORTER:</span> <span>${form.importer || "-"}</span></div>
-            <div class="line"><span>EXPORTER:</span> <span>${form.exporter || "-"}</span></div>
-            <div class="line"><span>NOTIFY:</span> <span>${form.notifyParty || "Not Assigned"}</span></div>
+            <div class="line"><span>${plain("ble.lbl_importer", "Importer")}:</span> <span>${form.importer || "-"}</span></div>
+            <div class="line"><span>${plain("ble.lbl_exporter", "Exporter")}:</span> <span>${form.exporter || "-"}</span></div>
+            <div class="line"><span>${plain("ble.lbl_notify_party", "Notify Party")}:</span> <span>${form.notifyParty || "-"}</span></div>
           </div>
         </div>
 
@@ -1054,7 +1059,7 @@ export function BlEntryView({
             {_("ble.title", "Bill of Lading (B/L)")}
           </h1>
           <span className="rounded bg-cyan-950/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-400 border border-cyan-800/60">
-            {form.blType}
+            {blTypeLabel(form.blType)}
           </span>
           {form.id ? (
             <span className="rounded bg-amber-950/80 px-2 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-800/60">
@@ -1354,7 +1359,7 @@ export function BlEntryView({
           {activeStep === 3 ? (
             <div className="space-y-2 rounded-lg border border-slate-800 bg-[#0a1120] p-2.5">
               <div className="text-[10px] font-black uppercase tracking-wider text-amber-400">
-                {editingIdx !== null ? `${_("ble.act_edit", "Edit")} - ${_("ble.lbl_goods", "Goods")}` : "STEP 3 - Goods Entry"}
+                {editingIdx !== null ? `${_("ble.act_edit", "Edit")} - ${_("ble.lbl_goods", "Goods")}` : _("ble.step3_label", "3) Goods Entry")}
               </div>
 
               {/* Goods Picker */}
@@ -1663,7 +1668,7 @@ export function BlEntryView({
                       rate2: Number(draftGoods.rate2) || 0,
                       primaryAmount: liveDraftCalc.primaryAmount,
                       finalAmount: liveDraftCalc.finalAmount,
-                      qualityReportStatus: draftGoods.qualityReportStatus || "Passed"
+                      qualityReportStatus: draftGoods.qualityReportStatus
                     };
                     setQualityModalItem(tempItem);
                   }}
@@ -1712,16 +1717,16 @@ export function BlEntryView({
               {/* Card 1: MODE & DATES */}
               <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[10px]">
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">MODE</span>
-                  <span className="font-extrabold text-blue-400">{form.blType}</span>
+                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.ml_mode", "Mode")}</span>
+                  <span className="font-extrabold text-blue-400">{form.blType ? blTypeLabel(form.blType) : "—"}</span>
                 </div>
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">ISSUE DATE</span>
-                  <span className="font-bold text-slate-200">{form.issueDate || todayIso()}</span>
+                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("plrf.issue_date", "Issue Date")}</span>
+                  <span className="font-bold text-slate-200">{form.issueDate || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">ISSUE SERIAL</span>
-                  <span className="font-bold text-slate-300">{form.issueSerial || `ISS-${form.blNumber || "871867"}`}</span>
+                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.ml_issue_serial", "Issue Serial")}</span>
+                  <span className="font-bold text-slate-300">{form.issueSerial || "—"}</span>
                 </div>
               </div>
 
@@ -1731,16 +1736,16 @@ export function BlEntryView({
                   {_("ble.lbl_bl_details", "BL Details")}
                 </div>
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">BL No:</span>
-                  <span className="font-extrabold text-blue-400">{form.blNumber || "BL-871867"}</span>
+                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.ml_bl_no", "BL No")}</span>
+                  <span className="font-extrabold text-blue-400">{form.blNumber || "—"}</span>
                 </div>
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">Vessel:</span>
+                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.ml_vessel", "Vessel")}</span>
                   <span className="font-bold text-slate-300">{form.vesselName || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">L/R:</span>
-                  <span className="font-bold text-slate-300">{form.routeCountry || "PK / UAE"}</span>
+                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.ml_route", "Route")}</span>
+                  <span className="font-bold text-slate-300">{form.routeCountry || "—"}</span>
                 </div>
               </div>
 
@@ -1750,46 +1755,46 @@ export function BlEntryView({
                   {_("ble.lbl_truck_details", "Truck Details")}
                 </div>
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">Truck No:</span>
-                  <span className="font-bold text-slate-200">{form.containerNumber || "ABC-123"}</span>
+                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("purchase.lgr_truck_no", "Truck No")}</span>
+                  <span className="font-bold text-slate-200">{form.containerNumber || "—"}</span>
                 </div>
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">Seal No:</span>
-                  <span className="font-bold text-slate-300">{form.sealNumber || "S-5542"}</span>
+                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.gt_seal_no", "Seal No")}</span>
+                  <span className="font-bold text-slate-300">{form.sealNumber || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">Size:</span>
-                  <span className="font-bold text-slate-300">{form.containerType || "22 Wheeler"}</span>
+                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.lbl_size", "Size")}</span>
+                  <span className="font-bold text-slate-300">{form.containerType || "—"}</span>
                 </div>
               </div>
 
               {/* Card 4: NOTIFY PARTY */}
               <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[10px]">
                 <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-0.5">
-                  {_("ble.lbl_notify_party", "Notify Party")}
+                  {plain("ble.lbl_notify_party", "Notify Party")}
                 </div>
                 <div className="pt-0.5 text-slate-300 font-semibold truncate">
-                  {form.notifyParty || "Not Assigned"}
+                  {form.notifyParty || "—"}
                 </div>
               </div>
 
               {/* Card 5: IMPORTER */}
               <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[10px]">
                 <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-0.5">
-                  {_("ble.lbl_importer", "Importer")}
+                  {plain("ble.lbl_importer", "Importer")}
                 </div>
                 <div className="pt-0.5 text-slate-300 font-semibold truncate">
-                  {form.importer || "Pending Data"}
+                  {form.importer || "—"}
                 </div>
               </div>
 
               {/* Card 6: EXPORTER */}
               <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[10px]">
                 <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-0.5">
-                  {_("ble.lbl_exporter", "Exporter")}
+                  {plain("ble.lbl_exporter", "Exporter")}
                 </div>
                 <div className="pt-0.5 text-slate-300 font-semibold truncate">
-                  {form.exporter || "Pending Data"}
+                  {form.exporter || "—"}
                 </div>
               </div>
             </div>
@@ -1970,43 +1975,47 @@ export function BlEntryView({
             <div className="space-y-2.5 py-3 text-xs">
               <div className="rounded bg-slate-900/80 p-2.5 border border-slate-800 space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Good:</span>
+                  <span className="text-slate-400">{_("ble.gt_good_name", "Good Name")}</span>
                   <b className="text-cyan-400">{qualityModalItem.goodsName}</b>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Origin / Brand:</span>
+                  <span className="text-slate-400">{_("ble.lbl_origin", "Origin")} / {_("ble.lbl_brand", "Brand")}</span>
                   <span>{qualityModalItem.goodsOrigin || "—"} / {qualityModalItem.goodsBrand || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Allot Name:</span>
+                  <span className="text-slate-400">{_("ble.lbl_allot_name", "Allot Name")}</span>
                   <span className="font-mono">{qualityModalItem.allotName || "—"}</span>
                 </div>
               </div>
 
+              {/* No inspection readings are captured on this form yet: show that honestly instead of sample figures. */}
               <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div className="rounded border border-slate-800 bg-[#080e1a] p-2">
-                  <div className="text-[9px] uppercase text-slate-500">Moisture %</div>
-                  <div className="text-sm font-black text-slate-200">5.2 %</div>
-                </div>
-                <div className="rounded border border-slate-800 bg-[#080e1a] p-2">
-                  <div className="text-[9px] uppercase text-slate-500">Purity Grade</div>
-                  <div className="text-sm font-black text-emerald-400">Grade A (99.1%)</div>
-                </div>
-                <div className="rounded border border-slate-800 bg-[#080e1a] p-2">
-                  <div className="text-[9px] uppercase text-slate-500">Defect Tolerance</div>
-                  <div className="text-sm font-black text-slate-200">&lt; 0.5 %</div>
-                </div>
-                <div className="rounded border border-slate-800 bg-[#080e1a] p-2">
-                  <div className="text-[9px] uppercase text-slate-500">Inspection Status</div>
-                  <div className="text-sm font-black text-emerald-400 flex items-center gap-1">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Passed
+                {([
+                  ["ble.q_moisture", "Moisture %"],
+                  ["ble.q_purity", "Purity Grade"],
+                  ["ble.q_defect", "Defect Tolerance"]
+                ] as const).map(([key, fallback]) => (
+                  <div key={key} className="rounded border border-slate-800 bg-[#080e1a] p-2">
+                    <div className="text-[9px] uppercase text-slate-500">{_(key, fallback)}</div>
+                    <div className="text-sm font-black text-slate-400">{_("ble.q_not_recorded", "Not recorded")}</div>
                   </div>
+                ))}
+                <div className="rounded border border-slate-800 bg-[#080e1a] p-2">
+                  <div className="text-[9px] uppercase text-slate-500">{_("ble.q_inspection_status", "Inspection Status")}</div>
+                  {/* "Passed" on older lines was written automatically (the form never had an inspection input), so it is not a result */}
+                  {qualityModalItem.qualityReportStatus && qualityModalItem.qualityReportStatus !== "Passed" ? (
+                    <div className="text-sm font-black text-emerald-400 flex items-center gap-1">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> {qualityModalItem.qualityReportStatus}
+                    </div>
+                  ) : (
+                    <div className="text-sm font-black text-slate-400">{_("ble.q_not_inspected", "Not inspected")}</div>
+                  )}
                 </div>
               </div>
             </div>
             <div className="border-t border-slate-800 pt-2 flex justify-end">
               <Button type="button" size="sm" className="bg-blue-600 text-white" onClick={() => setQualityModalItem(null)}>
-                OK / Done
+                {_("common.close", "Close")}
               </Button>
             </div>
           </div>
@@ -2035,46 +2044,46 @@ export function BlEntryView({
             <div className="space-y-2 py-3 text-xs">
               <div className="grid grid-cols-2 gap-2">
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">GOOD NAME</span>
+                  <span className="text-slate-400 text-[9px] block">{_("ble.gt_good_name", "Good Name")}</span>
                   <b className="text-cyan-400">{viewDetailsItem.goodsName}</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">WAREHOUSE</span>
+                  <span className="text-slate-400 text-[9px] block">{_("ble.lbl_warehouse", "Warehouse")}</span>
                   <b className="text-blue-400">{viewDetailsItem.warehouse || "—"}</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">SIZE / BRAND</span>
+                  <span className="text-slate-400 text-[9px] block">{_("ble.lbl_size", "Size")} / {_("ble.lbl_brand", "Brand")}</span>
                   <b>{viewDetailsItem.goodsSize || "—"} / {viewDetailsItem.goodsBrand || "—"}</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">ORIGIN / HS CODE</span>
+                  <span className="text-slate-400 text-[9px] block">{_("ble.lbl_origin", "Origin")} / {_("ble.lbl_hs_code", "HS Code")}</span>
                   <b>{viewDetailsItem.goodsOrigin || "—"} / {viewDetailsItem.hsCode || "—"}</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">QUANTITY NO / KGS</span>
+                  <span className="text-slate-400 text-[9px] block">{_("ble.lbl_qty_no", "Quantity No")} / {_("ble.total_kgs", "Total KGS")}</span>
                   <b>{viewDetailsItem.qtyNo} {viewDetailsItem.qtyName} ({money(viewDetailsItem.totalGrossWeight)} KG)</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">EMPTY PACKING / NET WT</span>
+                  <span className="text-slate-400 text-[9px] block">{_("ble.gt_total_empty_kg", "Total Empty KG")} / {_("ble.net_weight", "Net Weight")}</span>
                   <b><span className="text-rose-400">{money(viewDetailsItem.totalEmptyWeight)}</span> / <span className="text-amber-400">{money(viewDetailsItem.netWeight)} KG</span></b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">PRICE & DIVIDE BASIS</span>
+                  <span className="text-slate-400 text-[9px] block">{_("ble.d_price_divide", "Price & Divide Basis")}</span>
                   <b>{viewDetailsItem.priceType} | {viewDetailsItem.divideType}</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">RATES & CONVERSION</span>
-                  <b>{viewDetailsItem.currency1} ${money(viewDetailsItem.rate1)} {viewDetailsItem.op} {viewDetailsItem.currency2} {money(viewDetailsItem.rate2)}</b>
+                  <span className="text-slate-400 text-[9px] block">{_("ble.d_rates_conversion", "Rates & Conversion")}</span>
+                  <b dir="ltr">{viewDetailsItem.currency1} {money(viewDetailsItem.rate1)} {viewDetailsItem.op} {viewDetailsItem.currency2} {money(viewDetailsItem.rate2)}</b>
                 </div>
               </div>
-              <div className="p-3 bg-cyan-950/40 border border-cyan-800 rounded text-right">
-                <span className="text-[10px] text-cyan-300 font-bold uppercase block">FINAL AMOUNT</span>
+              <div className="p-3 bg-cyan-950/40 border border-cyan-800 rounded text-end">
+                <span className="text-[10px] text-cyan-300 font-bold uppercase block">{_("form.final_amount", "Final Amount")}</span>
                 <span className="text-lg font-black text-cyan-400">{money(viewDetailsItem.finalAmount)} {viewDetailsItem.currency2}</span>
               </div>
             </div>
             <div className="border-t border-slate-800 pt-2 flex justify-end">
               <Button type="button" size="sm" className="bg-slate-800 text-white" onClick={() => setViewDetailsItem(null)}>
-                Close
+                {_("common.close", "Close")}
               </Button>
             </div>
           </div>

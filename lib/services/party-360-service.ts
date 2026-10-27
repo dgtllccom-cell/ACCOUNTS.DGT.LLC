@@ -11,6 +11,8 @@ export type PartyAffiliationSummary = {
   customerName: string;
   /** The name to show in the selected language: an authorized translation, otherwise the saved (legal) name. */
   customerDisplayName?: string;
+  /** The name exactly as it was saved — searchable in every language, never shown in place of the display name. */
+  savedCustomerName?: string;
   fatherName?: string | null;
   firstName?: string | null;
   lastName?: string | null;
@@ -429,10 +431,18 @@ export class Party360Service {
         WHERE b.deleted_at IS NULL
       `;
 
+      // The saved names, kept for the search: a person must find a party by the name as it was entered, whatever the
+      // selected language shows (an approved variant in that language, else the saved name).
+      const savedCustomerNames = new Map<string, string>((customers as any[]).map((c: any) => [c.id, c.customer_name || [c.first_name, c.last_name].filter(Boolean).join(" ")]));
+      const savedCompanyNames = new Map<string, string>((companies as any[]).map((c: any) => [c.id, [c.name, c.legal_name].filter(Boolean).join(" ")]));
+
       // Build unified parties list
       const localizedCustomers = await localizeRecordNames<any>(customers as any[], "customers", "customer_name", lang, { phraseFallback: true });
       const localizedCompanies = await localizeRecordNames<any>(companies as any[], "companies", "name", lang, { phraseFallback: true });
-      const localizedEmployees = await localizeRecordNames<any>(employees as any[], "employees", "customer_name", lang, { phraseFallback: true });
+      // an employee is a person: the name comes from the person record (its approved variants), as on the party row itself
+      const localizedEmployees = (
+        await localizeRecordNames<any>((employees as any[]).map((e: any) => ({ ...e, id: e.person_master_id, employee_id: e.id })), "customers", "customer_name", lang, { phraseFallback: true })
+      ).map((e: any) => ({ ...e, id: e.employee_id }));
       const localizedBanks = await localizeRecordNames<any>(banks as any[], "banks", "bank_name", lang, { phraseFallback: true });
 
       const parties: PartyAffiliationSummary[] = [];
@@ -484,6 +494,7 @@ export class Party360Service {
           customerId: cust.id,
           customerCode: cust.customer_code || `CUST-${cust.id.slice(0, 6).toUpperCase()}`,
           customerName: cName,
+          savedCustomerName: savedCustomerNames.get(cust.id) || cName,
           fatherName: cust.father_name || matchedEmployees[0]?.fatherName || null,
           firstName: cust.first_name || null,
           lastName: cust.last_name || null,
@@ -519,6 +530,8 @@ export class Party360Service {
         filtered = parties.filter((p) => {
           const haystack = [
             p.customerName,
+            p.savedCustomerName || "",
+            ...p.companies.map(c => (c.id && savedCompanyNames.get(c.id)) || ""),
             p.customerCode || "",
             p.fatherName || "",
             p.mobile || "",

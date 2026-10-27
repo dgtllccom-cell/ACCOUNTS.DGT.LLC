@@ -107,7 +107,8 @@ export async function GET(request: NextRequest) {
         const bal = Number(r.current_balance ?? 0);
         const debitTotal = Number(r.debit_total ?? 0);
         const creditTotal = Number(r.credit_total ?? 0);
-        const branchName = r.city_branch_name || r.country_branch_name || "All Branches";
+        // no branch on the ledger: null, so the screen shows its own "All Branches" label in the selected language
+        const branchName = r.city_branch_name || r.country_branch_name || null;
         const branchCode = r.city_branch_code || r.country_branch_code || null;
 
         // Parse contacts

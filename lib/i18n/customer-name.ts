@@ -35,9 +35,9 @@ export function isAuthorizedNameTranslation(meta: NameTranslationMeta | null | u
   if (String(meta.source || "").toLowerCase() === "manual") return true;
   const status = String(meta.translation_status || "").toLowerCase();
   if (UNRESOLVED_STATUSES.has(status)) return false;
-  if (VERIFIED_STATUSES.has(status)) return true;
-  const engine = String(meta.translated_by_engine || "").toLowerCase();
-  return status === "complete" && TRUSTED_TRANSLATION_ENGINES.has(engine);
+  // An engine label is NOT an authorization: the local dictionary / translator / transliteration engines write "complete" rows for
+  // names they merely re-spelled ("Hamid" -> "ہامید", "ګل" -> "Gl"). Only a person's entry or an explicit verification counts.
+  return VERIFIED_STATUSES.has(status);
 }
 
 export type CustomerNameInput = {

@@ -1,5 +1,6 @@
 "use client";
 
+import { translateHeader } from "@/lib/i18n/table-headers";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -673,8 +674,8 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
             <option value="overdue">Overdue</option>
             <option value="upcoming">Upcoming</option>
             <option value="not_set">Due Date Not Set</option>
-            <option value="partially_paid">Partially Paid</option>
-            <option value="fully_paid">Fully Paid</option>
+            <option value="partially_paid">{translateHeader(lang, "Partially Paid")}</option>
+            <option value="fully_paid">{translateHeader(lang, "Fully Paid")}</option>
           </select>
         </div>
       </div>

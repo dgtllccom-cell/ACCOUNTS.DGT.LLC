@@ -1,5 +1,5 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { translateHeader } from "@/lib/i18n/table-headers";
+import { translateHeader, registerUiDictionaryFallback } from "@/lib/i18n/table-headers";
 
 export type UiKey =
   | "invtpl.center_template_tab"
@@ -12207,6 +12207,67 @@ export type UiKey =
   | "bexp.no_tax_config"
   | "bexp.same_currency_note"
   | "cl.aria_select_row"
+  | "ble.q_moisture"
+  | "ble.q_purity"
+  | "ble.q_defect"
+  | "ble.q_inspection_status"
+  | "ble.q_not_inspected"
+  | "ble.q_not_recorded"
+  | "ble.d_price_divide"
+  | "ble.d_rates_conversion"
+  | "ble.opt_edit_bl"
+  | "dash.no_activity_yet"
+  | "dash.no_shipments_yet"
+  | "dash.no_sales_yet"
+  | "dash.mixed_currencies"
+  | "log.tab_recent_documents"
+  | "log.tab_truck_movements"
+  | "log.tab_agent_activities"
+  | "log.tab_system_alerts"
+  | "log.qa_new_shipment"
+  | "log.qa_vessel_tracking"
+  | "log.qa_trucking_transport"
+  | "log.qa_transfer_handover"
+  | "log.qa_open_documents"
+  | "log.col_related_to"
+  | "log.no_documents"
+  | "eaud.kpi_activity_summary"
+  | "eaud.kpi_edits_this_month"
+  | "eaud.kpi_deleted_edited"
+  | "eaud.kpi_branch_user_report"
+  | "eaud.kpi_branches_monitored"
+  | "eaud.kpi_users_audited"
+  | "log.hero_slogan"
+  | "dash.latest_shipments"
+  | "dash.top_countries_sales"
+  | "dash.key_business_indicators"
+  | "dash.live_sync"
+  | "dash.hero_tagline"
+  | "dash.scope_business_admin"
+  | "dash.scope_business_admin_country"
+  | "dash.dashboard_view"
+  | "apperr.not_found_title"
+  | "apperr.not_found_desc"
+  | "aump.class_country_admin_user"
+  | "aump.class_main_country_user"
+  | "aump.class_main_branch_user"
+  | "aump.class_city_branch_user"
+  | "cef.msg_editing_serials"
+  | "cef.msg_delete_failed"
+  | "cef.msg_deleted"
+  | "cef.msg_unknown_error"
+  | "cef.msg_need_country_branch"
+  | "cef.msg_need_account"
+  | "cef.msg_need_txn_type"
+  | "cef.msg_need_payment_mode"
+  | "cef.msg_need_amount"
+  | "cef.msg_need_currency"
+  | "cef.msg_need_all"
+  | "cef.msg_reverse_failed"
+  | "cef.msg_saved_serials"
+  | "cef.msg_save_failed"
+  | "cef.auto_approved"
+  | "cef.approved"
   | "customers.add_new_customer"
   | "customers.name_required"
   | "customers.save_failed"
@@ -37498,6 +37559,67 @@ const en: Dict = {
   "cl.apply_filters_btn": "Apply Filters",
   "cl.erp_usage_360": "360° ERP Usage",
   "cl.aria_select_row": "Select customer",
+  "ble.q_moisture": "Moisture %",
+  "ble.q_purity": "Purity Grade",
+  "ble.q_defect": "Defect Tolerance",
+  "ble.q_inspection_status": "Inspection Status",
+  "ble.q_not_inspected": "Not inspected",
+  "ble.q_not_recorded": "Not recorded",
+  "ble.d_price_divide": "Price & Divide Basis",
+  "ble.d_rates_conversion": "Rates & Conversion",
+  "ble.opt_edit_bl": "Edit BL",
+  "dash.no_activity_yet": "No activity recorded yet.",
+  "dash.no_shipments_yet": "No shipments recorded yet.",
+  "dash.no_sales_yet": "No sales recorded yet.",
+  "dash.mixed_currencies": "Several currencies",
+  "log.tab_recent_documents": "Recent Documents",
+  "log.tab_truck_movements": "Truck Movements",
+  "log.tab_agent_activities": "Agent Activities",
+  "log.tab_system_alerts": "System Alerts",
+  "log.qa_new_shipment": "New Shipment",
+  "log.qa_vessel_tracking": "Vessel Tracking",
+  "log.qa_trucking_transport": "Trucking & Transport",
+  "log.qa_transfer_handover": "Transfer & Handover",
+  "log.qa_open_documents": "Open Documents",
+  "log.col_related_to": "Related To",
+  "log.no_documents": "No documents recorded yet.",
+  "eaud.kpi_activity_summary": "Audit Activity Summary",
+  "eaud.kpi_edits_this_month": "Edits this month",
+  "eaud.kpi_deleted_edited": "Deleted / Edited Summary",
+  "eaud.kpi_branch_user_report": "Branch and User Audit Report",
+  "eaud.kpi_branches_monitored": "Branches monitored",
+  "eaud.kpi_users_audited": "Users audited",
+  "log.hero_slogan": "Global shipping, brighter tomorrow",
+  "dash.latest_shipments": "Latest Shipments",
+  "dash.top_countries_sales": "Top Countries by Sales",
+  "dash.key_business_indicators": "Key Business Indicators",
+  "dash.live_sync": "Live Sync",
+  "dash.hero_tagline": "Import • Export • Shipping • Finance",
+  "dash.scope_business_admin": "Business / Admin",
+  "dash.scope_business_admin_country": "Business / Admin / Country",
+  "dash.dashboard_view": "Dashboard View",
+  "apperr.not_found_title": "404 - Page Not Found",
+  "apperr.not_found_desc": "The page or resource you requested could not be found or has moved.",
+  "aump.class_country_admin_user": "Country Admin User",
+  "aump.class_main_country_user": "Main Country User",
+  "aump.class_main_branch_user": "Main Branch User",
+  "aump.class_city_branch_user": "City Branch User",
+  "cef.msg_editing_serials": "Editing entry — serials: {serials}",
+  "cef.msg_delete_failed": "Failed to delete entry: {error}",
+  "cef.msg_deleted": "Entry deleted successfully.",
+  "cef.msg_unknown_error": "Unknown error",
+  "cef.msg_need_country_branch": "Please select a Country and Branch before posting.",
+  "cef.msg_need_account": "Please select an Account (Step 2).",
+  "cef.msg_need_txn_type": "Please select a Transaction Type (Customer, Supplier, etc.).",
+  "cef.msg_need_payment_mode": "Please select Payment Mode (Debit or Credit).",
+  "cef.msg_need_amount": "Please enter a valid Amount greater than 0.",
+  "cef.msg_need_currency": "Please select a valid 3-letter currency.",
+  "cef.msg_need_all": "Please select account, Debit/Credit transaction type, currency, and amount.",
+  "cef.msg_reverse_failed": "Failed to reverse the old entry: {error}",
+  "cef.msg_saved_serials": "Saved successfully. Serials: {serials}",
+  "cef.msg_save_failed": "Save failed",
+  "cef.auto_approved": "System / Auto Approved",
+  "cef.approved": "Approved",
 };
 
 const ur: Dict = {
@@ -62701,6 +62823,67 @@ const ur: Dict = {
   "cl.apply_filters_btn": "فلٹرز لاگو کریں",
   "cl.erp_usage_360": "360° پارٹی کا استعمال",
   "cl.aria_select_row": "کسٹمر منتخب کریں",
+  "ble.q_moisture": "نمی %",
+  "ble.q_purity": "خالص پن کا درجہ",
+  "ble.q_defect": "نقص کی حد",
+  "ble.q_inspection_status": "معائنے کی حیثیت",
+  "ble.q_not_inspected": "معائنہ نہیں ہوا",
+  "ble.q_not_recorded": "درج نہیں",
+  "ble.d_price_divide": "قیمت اور تقسیم کی بنیاد",
+  "ble.d_rates_conversion": "نرخ اور تبدیلی",
+  "ble.opt_edit_bl": "بی ایل میں ترمیم",
+  "dash.no_activity_yet": "ابھی تک کوئی سرگرمی درج نہیں ہوئی۔",
+  "dash.no_shipments_yet": "ابھی تک کوئی شپمنٹ درج نہیں ہوئی۔",
+  "dash.no_sales_yet": "ابھی تک کوئی فروخت درج نہیں ہوئی۔",
+  "dash.mixed_currencies": "متعدد کرنسیاں",
+  "log.tab_recent_documents": "حالیہ دستاویزات",
+  "log.tab_truck_movements": "ٹرک کی نقل و حرکت",
+  "log.tab_agent_activities": "ایجنٹ کی سرگرمیاں",
+  "log.tab_system_alerts": "سسٹم الرٹس",
+  "log.qa_new_shipment": "نئی شپمنٹ",
+  "log.qa_vessel_tracking": "جہاز ٹریکنگ",
+  "log.qa_trucking_transport": "ٹرکنگ اور ٹرانسپورٹ",
+  "log.qa_transfer_handover": "منتقلی اور حوالگی",
+  "log.qa_open_documents": "کھلی دستاویزات",
+  "log.col_related_to": "متعلقہ",
+  "log.no_documents": "ابھی تک کوئی دستاویز درج نہیں ہوئی۔",
+  "eaud.kpi_activity_summary": "آڈٹ سرگرمی کا خلاصہ",
+  "eaud.kpi_edits_this_month": "اس ماہ کی ترامیم",
+  "eaud.kpi_deleted_edited": "حذف شدہ / ترمیم شدہ خلاصہ",
+  "eaud.kpi_branch_user_report": "برانچ اور صارف آڈٹ رپورٹ",
+  "eaud.kpi_branches_monitored": "زیر نگرانی برانچیں",
+  "eaud.kpi_users_audited": "آڈٹ شدہ صارفین",
+  "log.hero_slogan": "عالمی شپنگ، روشن مستقبل",
+  "dash.latest_shipments": "تازہ ترین شپمنٹس",
+  "dash.top_countries_sales": "فروخت کے لحاظ سے سرفہرست ممالک",
+  "dash.key_business_indicators": "اہم کاروباری اشاریے",
+  "dash.live_sync": "لائیو ہم آہنگی",
+  "dash.hero_tagline": "درآمد • برآمد • شپنگ • مالیات",
+  "dash.scope_business_admin": "بزنس / ایڈمن",
+  "dash.scope_business_admin_country": "بزنس / ایڈمن / ملک",
+  "dash.dashboard_view": "ڈیش بورڈ منظر",
+  "apperr.not_found_title": "404 - صفحہ نہیں ملا",
+  "apperr.not_found_desc": "آپ کا مطلوبہ صفحہ یا ریکارڈ نہیں ملا یا منتقل ہو چکا ہے۔",
+  "aump.class_country_admin_user": "ملک ایڈمن صارف",
+  "aump.class_main_country_user": "مرکزی ملک صارف",
+  "aump.class_main_branch_user": "مین برانچ صارف",
+  "aump.class_city_branch_user": "سٹی برانچ صارف",
+  "cef.msg_editing_serials": "اندراج میں ترمیم — سیریل: {serials}",
+  "cef.msg_delete_failed": "اندراج حذف نہیں ہو سکا: {error}",
+  "cef.msg_deleted": "اندراج کامیابی سے حذف ہو گیا۔",
+  "cef.msg_unknown_error": "نامعلوم خرابی",
+  "cef.msg_need_country_branch": "پوسٹ کرنے سے پہلے براہِ کرم ملک اور برانچ منتخب کریں۔",
+  "cef.msg_need_account": "براہِ کرم اکاؤنٹ منتخب کریں (مرحلہ 2)۔",
+  "cef.msg_need_txn_type": "براہِ کرم لین دین کی قسم منتخب کریں (کسٹمر، سپلائر وغیرہ)۔",
+  "cef.msg_need_payment_mode": "براہِ کرم ادائیگی کا طریقہ منتخب کریں (ڈیبٹ یا کریڈٹ)۔",
+  "cef.msg_need_amount": "براہِ کرم 0 سے زیادہ درست رقم درج کریں۔",
+  "cef.msg_need_currency": "براہِ کرم تین حرفی درست کرنسی منتخب کریں۔",
+  "cef.msg_need_all": "براہِ کرم اکاؤنٹ، ڈیبٹ/کریڈٹ لین دین کی قسم، کرنسی اور رقم منتخب کریں۔",
+  "cef.msg_reverse_failed": "پرانا اندراج واپس نہیں ہو سکا: {error}",
+  "cef.msg_saved_serials": "کامیابی سے محفوظ ہو گیا۔ سیریل: {serials}",
+  "cef.msg_save_failed": "محفوظ نہیں ہو سکا",
+  "cef.auto_approved": "سسٹم / خودکار منظور",
+  "cef.approved": "منظور شدہ",
 };
 
 const ar: Dict = {
@@ -87905,6 +88088,67 @@ const ar: Dict = {
   "cl.apply_filters_btn": "تطبيق عوامل التصفية",
   "cl.erp_usage_360": "استخدام الطرف 360°",
   "cl.aria_select_row": "تحديد العميل",
+  "ble.q_moisture": "الرطوبة %",
+  "ble.q_purity": "درجة النقاء",
+  "ble.q_defect": "حد العيوب المسموح",
+  "ble.q_inspection_status": "حالة الفحص",
+  "ble.q_not_inspected": "لم يتم الفحص",
+  "ble.q_not_recorded": "غير مسجل",
+  "ble.d_price_divide": "أساس السعر والتقسيم",
+  "ble.d_rates_conversion": "الأسعار والتحويل",
+  "ble.opt_edit_bl": "تعديل بوليصة الشحن",
+  "dash.no_activity_yet": "لم يتم تسجيل أي نشاط بعد.",
+  "dash.no_shipments_yet": "لم يتم تسجيل أي شحنات بعد.",
+  "dash.no_sales_yet": "لم يتم تسجيل أي مبيعات بعد.",
+  "dash.mixed_currencies": "عملات متعددة",
+  "log.tab_recent_documents": "المستندات الأخيرة",
+  "log.tab_truck_movements": "حركة الشاحنات",
+  "log.tab_agent_activities": "أنشطة الوكلاء",
+  "log.tab_system_alerts": "تنبيهات النظام",
+  "log.qa_new_shipment": "شحنة جديدة",
+  "log.qa_vessel_tracking": "تتبع السفن",
+  "log.qa_trucking_transport": "الشاحنات والنقل",
+  "log.qa_transfer_handover": "النقل والتسليم",
+  "log.qa_open_documents": "المستندات المفتوحة",
+  "log.col_related_to": "مرتبط بـ",
+  "log.no_documents": "لم يتم تسجيل أي مستندات بعد.",
+  "eaud.kpi_activity_summary": "ملخص نشاط التدقيق",
+  "eaud.kpi_edits_this_month": "تعديلات هذا الشهر",
+  "eaud.kpi_deleted_edited": "ملخص المحذوف / المعدل",
+  "eaud.kpi_branch_user_report": "تقرير تدقيق الفروع والمستخدمين",
+  "eaud.kpi_branches_monitored": "الفروع المراقبة",
+  "eaud.kpi_users_audited": "المستخدمون الذين تم تدقيقهم",
+  "log.hero_slogan": "شحن عالمي، غد أكثر إشراقاً",
+  "dash.latest_shipments": "أحدث الشحنات",
+  "dash.top_countries_sales": "أعلى الدول مبيعاً",
+  "dash.key_business_indicators": "مؤشرات الأعمال الرئيسية",
+  "dash.live_sync": "مزامنة مباشرة",
+  "dash.hero_tagline": "استيراد • تصدير • شحن • مالية",
+  "dash.scope_business_admin": "الأعمال / الإدارة",
+  "dash.scope_business_admin_country": "الأعمال / الإدارة / الدولة",
+  "dash.dashboard_view": "عرض لوحة التحكم",
+  "apperr.not_found_title": "404 - الصفحة غير موجودة",
+  "apperr.not_found_desc": "تعذر العثور على الصفحة أو المورد المطلوب أو تم نقله.",
+  "aump.class_country_admin_user": "مستخدم مسؤول الدولة",
+  "aump.class_main_country_user": "مستخدم الدولة الرئيسي",
+  "aump.class_main_branch_user": "مستخدم الفرع الرئيسي",
+  "aump.class_city_branch_user": "مستخدم فرع المدينة",
+  "cef.msg_editing_serials": "تعديل القيد — الأرقام التسلسلية: {serials}",
+  "cef.msg_delete_failed": "تعذّر حذف القيد: {error}",
+  "cef.msg_deleted": "تم حذف القيد بنجاح.",
+  "cef.msg_unknown_error": "خطأ غير معروف",
+  "cef.msg_need_country_branch": "يرجى اختيار الدولة والفرع قبل الترحيل.",
+  "cef.msg_need_account": "يرجى اختيار الحساب (الخطوة 2).",
+  "cef.msg_need_txn_type": "يرجى اختيار نوع المعاملة (عميل، مورّد، إلخ).",
+  "cef.msg_need_payment_mode": "يرجى اختيار طريقة الدفع (مدين أو دائن).",
+  "cef.msg_need_amount": "يرجى إدخال مبلغ صحيح أكبر من 0.",
+  "cef.msg_need_currency": "يرجى اختيار عملة صحيحة من 3 أحرف.",
+  "cef.msg_need_all": "يرجى اختيار الحساب ونوع المعاملة (مدين/دائن) والعملة والمبلغ.",
+  "cef.msg_reverse_failed": "تعذّر عكس القيد القديم: {error}",
+  "cef.msg_saved_serials": "تم الحفظ بنجاح. الأرقام التسلسلية: {serials}",
+  "cef.msg_save_failed": "فشل الحفظ",
+  "cef.auto_approved": "النظام / معتمد تلقائياً",
+  "cef.approved": "معتمد",
 };
 
 const fa: Dict = {
@@ -113108,6 +113352,67 @@ const fa: Dict = {
   "cl.apply_filters_btn": "اعمال فیلترها",
   "cl.erp_usage_360": "کاربرد طرف ۳۶۰°",
   "cl.aria_select_row": "انتخاب مشتری",
+  "ble.q_moisture": "رطوبت %",
+  "ble.q_purity": "درجه خلوص",
+  "ble.q_defect": "حد مجاز عیب",
+  "ble.q_inspection_status": "وضعیت بازرسی",
+  "ble.q_not_inspected": "بازرسی نشده",
+  "ble.q_not_recorded": "ثبت نشده",
+  "ble.d_price_divide": "مبنای قیمت و تقسیم",
+  "ble.d_rates_conversion": "نرخ‌ها و تبدیل",
+  "ble.opt_edit_bl": "ویرایش بارنامه",
+  "dash.no_activity_yet": "هنوز فعالیتی ثبت نشده است.",
+  "dash.no_shipments_yet": "هنوز محموله‌ای ثبت نشده است.",
+  "dash.no_sales_yet": "هنوز فروشی ثبت نشده است.",
+  "dash.mixed_currencies": "چند ارز",
+  "log.tab_recent_documents": "اسناد اخیر",
+  "log.tab_truck_movements": "جابجایی کامیون‌ها",
+  "log.tab_agent_activities": "فعالیت‌های نماینده",
+  "log.tab_system_alerts": "هشدارهای سیستم",
+  "log.qa_new_shipment": "محموله جدید",
+  "log.qa_vessel_tracking": "ردیابی کشتی",
+  "log.qa_trucking_transport": "کامیون و حمل‌ونقل",
+  "log.qa_transfer_handover": "انتقال و تحویل",
+  "log.qa_open_documents": "اسناد باز",
+  "log.col_related_to": "مرتبط با",
+  "log.no_documents": "هنوز سندی ثبت نشده است.",
+  "eaud.kpi_activity_summary": "خلاصه فعالیت حسابرسی",
+  "eaud.kpi_edits_this_month": "ویرایش‌های این ماه",
+  "eaud.kpi_deleted_edited": "خلاصه حذف‌شده / ویرایش‌شده",
+  "eaud.kpi_branch_user_report": "گزارش حسابرسی شعبه و کاربر",
+  "eaud.kpi_branches_monitored": "شعبه‌های تحت نظارت",
+  "eaud.kpi_users_audited": "کاربران حسابرسی‌شده",
+  "log.hero_slogan": "حمل‌ونقل جهانی، فردای روشن‌تر",
+  "dash.latest_shipments": "آخرین محموله‌ها",
+  "dash.top_countries_sales": "برترین کشورها بر اساس فروش",
+  "dash.key_business_indicators": "شاخص‌های کلیدی کسب‌وکار",
+  "dash.live_sync": "همگام‌سازی زنده",
+  "dash.hero_tagline": "واردات • صادرات • حمل‌ونقل • مالی",
+  "dash.scope_business_admin": "کسب‌وکار / مدیریت",
+  "dash.scope_business_admin_country": "کسب‌وکار / مدیریت / کشور",
+  "dash.dashboard_view": "نمای داشبورد",
+  "apperr.not_found_title": "404 - صفحه پیدا نشد",
+  "apperr.not_found_desc": "صفحه یا منبع درخواستی پیدا نشد یا منتقل شده است.",
+  "aump.class_country_admin_user": "کاربر مدیر کشور",
+  "aump.class_main_country_user": "کاربر اصلی کشور",
+  "aump.class_main_branch_user": "کاربر شعبه اصلی",
+  "aump.class_city_branch_user": "کاربر شعبه شهر",
+  "cef.msg_editing_serials": "ویرایش ثبت — شماره‌های سریال: {serials}",
+  "cef.msg_delete_failed": "حذف ثبت ناموفق بود: {error}",
+  "cef.msg_deleted": "ثبت با موفقیت حذف شد.",
+  "cef.msg_unknown_error": "خطای ناشناخته",
+  "cef.msg_need_country_branch": "لطفاً پیش از ثبت، کشور و شعبه را انتخاب کنید.",
+  "cef.msg_need_account": "لطفاً حساب را انتخاب کنید (مرحله 2).",
+  "cef.msg_need_txn_type": "لطفاً نوع تراکنش را انتخاب کنید (مشتری، تأمین‌کننده و غیره).",
+  "cef.msg_need_payment_mode": "لطفاً نوع پرداخت را انتخاب کنید (بدهکار یا بستانکار).",
+  "cef.msg_need_amount": "لطفاً مبلغ معتبر بیشتر از 0 وارد کنید.",
+  "cef.msg_need_currency": "لطفاً یک ارز معتبر سه‌حرفی انتخاب کنید.",
+  "cef.msg_need_all": "لطفاً حساب، نوع تراکنش بدهکار/بستانکار، ارز و مبلغ را انتخاب کنید.",
+  "cef.msg_reverse_failed": "برگشت ثبت قبلی ناموفق بود: {error}",
+  "cef.msg_saved_serials": "با موفقیت ذخیره شد. شماره‌های سریال: {serials}",
+  "cef.msg_save_failed": "ذخیره ناموفق بود",
+  "cef.auto_approved": "سیستم / تأیید خودکار",
+  "cef.approved": "تأییدشده",
 };
 
 const ps: Dict = {
@@ -138318,6 +138623,67 @@ const ps: Dict = {
   "cl.apply_filters_btn": "فلټرونه پلي کړئ",
   "cl.erp_usage_360": "د ډلې 360° کارونه",
   "cl.aria_select_row": "پیرودونکی وټاکئ",
+  "ble.q_moisture": "رطوبت %",
+  "ble.q_purity": "د خالصوالي درجه",
+  "ble.q_defect": "د نیمګړتیا حد",
+  "ble.q_inspection_status": "د معاینې حالت",
+  "ble.q_not_inspected": "معاینه شوې نه ده",
+  "ble.q_not_recorded": "نه دی ثبت شوی",
+  "ble.d_price_divide": "د بیې او وېش بنسټ",
+  "ble.d_rates_conversion": "نرخونه او تبادله",
+  "ble.opt_edit_bl": "د بارنامې سمون",
+  "dash.no_activity_yet": "تر اوسه هېڅ فعالیت نه دی ثبت شوی.",
+  "dash.no_shipments_yet": "تر اوسه هېڅ بار نه دی ثبت شوی.",
+  "dash.no_sales_yet": "تر اوسه هېڅ پلور نه دی ثبت شوی.",
+  "dash.mixed_currencies": "څو اسعار",
+  "log.tab_recent_documents": "وروستي اسناد",
+  "log.tab_truck_movements": "د لارۍ خوځښتونه",
+  "log.tab_agent_activities": "د استازي فعالیتونه",
+  "log.tab_system_alerts": "د سیسټم خبرتیاوې",
+  "log.qa_new_shipment": "نوی بار",
+  "log.qa_vessel_tracking": "د بېړۍ تعقیب",
+  "log.qa_trucking_transport": "لارۍ او ټرانسپورټ",
+  "log.qa_transfer_handover": "لېږد او سپارل",
+  "log.qa_open_documents": "پرانیستي اسناد",
+  "log.col_related_to": "اړوند",
+  "log.no_documents": "تر اوسه هېڅ سند نه دی ثبت شوی.",
+  "eaud.kpi_activity_summary": "د پلټنې د فعالیت لنډیز",
+  "eaud.kpi_edits_this_month": "د دې میاشتې سمونونه",
+  "eaud.kpi_deleted_edited": "د ړنګ شویو / سم شویو لنډیز",
+  "eaud.kpi_branch_user_report": "د څانګې او کارن د پلټنې راپور",
+  "eaud.kpi_branches_monitored": "څارل شوې څانګې",
+  "eaud.kpi_users_audited": "پلټل شوي کارنان",
+  "log.hero_slogan": "نړیوال بار وړل، روښانه سبا",
+  "dash.latest_shipments": "وروستي بارونه",
+  "dash.top_countries_sales": "د پلور له مخې غوره هېوادونه",
+  "dash.key_business_indicators": "د سوداګرۍ مهم شاخصونه",
+  "dash.live_sync": "ژوندۍ همغږي",
+  "dash.hero_tagline": "واردات • صادرات • بار وړل • مالي",
+  "dash.scope_business_admin": "سوداګري / اداره",
+  "dash.scope_business_admin_country": "سوداګري / اداره / هېواد",
+  "dash.dashboard_view": "د ډشبورډ لید",
+  "apperr.not_found_title": "404 - پاڼه ونه موندل شوه",
+  "apperr.not_found_desc": "غوښتل شوې پاڼه یا سرچینه ونه موندل شوه یا لېږدول شوې ده.",
+  "aump.class_country_admin_user": "د هېواد مدیر کارن",
+  "aump.class_main_country_user": "د هېواد اصلي کارن",
+  "aump.class_main_branch_user": "د اصلي څانګې کارن",
+  "aump.class_city_branch_user": "د ښار د څانګې کارن",
+  "cef.msg_editing_serials": "د ثبت سمون — سریال شمېرې: {serials}",
+  "cef.msg_delete_failed": "ثبت ړنګ نه شو: {error}",
+  "cef.msg_deleted": "ثبت په بریالیتوب سره ړنګ شو.",
+  "cef.msg_unknown_error": "نامعلومه تېروتنه",
+  "cef.msg_need_country_branch": "مخکې له ثبتولو، مهرباني وکړئ هېواد او څانګه وټاکئ.",
+  "cef.msg_need_account": "مهرباني وکړئ حساب وټاکئ (مرحله 2).",
+  "cef.msg_need_txn_type": "مهرباني وکړئ د راکړې ورکړې ډول وټاکئ (پېرودونکی، عرضه کوونکی او نور).",
+  "cef.msg_need_payment_mode": "مهرباني وکړئ د تادیې ډول وټاکئ (ډیبټ یا کرېډیټ).",
+  "cef.msg_need_amount": "مهرباني وکړئ له 0 څخه زیات سم مقدار ولیکئ.",
+  "cef.msg_need_currency": "مهرباني وکړئ د درېیو تورو سمه اسعار وټاکئ.",
+  "cef.msg_need_all": "مهرباني وکړئ حساب، د ډیبټ/کرېډیټ راکړې ورکړې ډول، اسعار او مقدار وټاکئ.",
+  "cef.msg_reverse_failed": "زوړ ثبت بېرته نه شو اړول: {error}",
+  "cef.msg_saved_serials": "په بریالیتوب سره خوندي شو. سریال شمېرې: {serials}",
+  "cef.msg_save_failed": "خوندي نه شو",
+  "cef.auto_approved": "سیستم / په اتوماتيک ډول تصویب شوی",
+  "cef.approved": "تصویب شوی",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
@@ -138333,6 +138699,8 @@ const dictionaries: Record<SupportedLanguage, Dict> = {
 export function getUiDictionaries(): Readonly<Record<SupportedLanguage, Dict>> {
   return dictionaries;
 }
+// translateHeader() falls back to this dictionary for labels its own table does not know (see table-headers.ts)
+registerUiDictionaryFallback(getUiDictionaries);
 
 export function t(lang: SupportedLanguage | string | null | undefined, key: string | null | undefined, defaultValue?: string): string {
   if (!key) return defaultValue ?? "";

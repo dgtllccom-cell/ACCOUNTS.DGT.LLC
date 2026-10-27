@@ -1,4 +1,6 @@
 "use client";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 import React, { useState, useMemo } from "react";
 import {
@@ -147,6 +149,7 @@ export function BranchFinalReview({
   onViewSummary,
   onPrint
 }: BranchFinalReviewProps) {
+  const lang = useActiveLanguage();
   const [approvalNote, setApprovalNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -610,7 +613,7 @@ export function BranchFinalReview({
 
             <div className="space-y-2 text-xs">
               <div className="flex justify-between items-start gap-2">
-                <span className="text-slate-400 text-[11px]">Branch Name</span>
+                <span className="text-slate-400 text-[11px]">{translateHeader(lang, "Branch Name")}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-100 text-right">{branchName || "—"}</span>
               </div>
               <div className="flex justify-between items-start gap-2">
@@ -754,7 +757,7 @@ export function BranchFinalReview({
 
             <div className="space-y-2 text-xs">
               <div className="flex justify-between items-start gap-2">
-                <span className="text-slate-400 text-[11px]">Total Documents</span>
+                <span className="text-slate-400 text-[11px]">{translateHeader(lang, "Total Documents")}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-100 text-right">{totalDocs}</span>
               </div>
               <div className="flex justify-between items-start gap-2">
@@ -898,8 +901,8 @@ export function BranchFinalReview({
                   <Th className="py-2.5 px-3">User Name</Th>
                   <Th className="py-2.5 px-3">Role</Th>
                   <Th className="py-2.5 px-3">Operational Domain</Th>
-                  <Th className="py-2.5 px-3">Country Scope</Th>
-                  <Th className="py-2.5 px-3">Branch Scope</Th>
+                  <Th className="py-2.5 px-3">{translateHeader(lang, "Country Scope")}</Th>
+                  <Th className="py-2.5 px-3">{translateHeader(lang, "Branch Scope")}</Th>
                   <Th className="py-2.5 px-3">Permission Group</Th>
                   <Th className="py-2.5 px-3">Ledger Visibility</Th>
                   <Th className="py-2.5 px-3 text-right">Status</Th>

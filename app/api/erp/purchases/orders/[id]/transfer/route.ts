@@ -390,7 +390,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       city_branch_id: effectiveCityBranchId,
       type: rozType,
       status: "posted",
-      entry_category: "business"
+      entry_category: "business",
+      operational_domain: "business" // a Business entry must never stay unclassified (Shipping logins would see it)
     }).eq("id", roznamchaEntryId);
     if (scopeUpdateError) throw scopeUpdateError;
 

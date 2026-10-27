@@ -1,5 +1,6 @@
 "use client";
 
+import { translateHeader } from "@/lib/i18n/table-headers";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
@@ -575,7 +576,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                         <Th className="p-3">Contract #</Th>
                         <Th className="p-3 text-right">Total</Th>
                         <Th className="p-3 text-right">Advance Paid</Th>
-                        <Th className="p-3 text-right">Remaining Due</Th>
+                        <Th className="p-3 text-right">{translateHeader(lang, "Remaining Due")}</Th>
                         <Th className="p-3">Status</Th>
                         <Th className="p-3 text-right">Action</Th>
                       </tr>

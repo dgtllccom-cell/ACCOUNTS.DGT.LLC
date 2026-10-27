@@ -11,7 +11,7 @@ import { CompanyPicker } from "@/features/companies/components/company-picker";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeName } from "@/lib/i18n/transliteration";
 
 export type ClearingAgentRow = {
   id: string;
@@ -27,7 +27,7 @@ export type ClearingAgentRow = {
 };
 
 function toOption(row: ClearingAgentRow, lang: string): SearchSelectOption {
-  const name = localizeTerm(row.name, lang);
+  const name = localizeName(row.name, lang);
   const codeDisplay = row.clearing_agent_code || row.code;
   const label = codeDisplay ? `${name} (${codeDisplay})` : name;
   const keywords = [name, row.name, row.clearing_agent_code, row.code, row.contact_person, row.email].filter(Boolean).join(" ");

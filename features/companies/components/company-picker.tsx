@@ -5,7 +5,7 @@ import { apiGet } from "@/lib/api/client";
 import { CompanyIncorporationForm } from "./company-incorporation-form";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeName } from "@/lib/i18n/transliteration";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 
@@ -40,9 +40,9 @@ export type CompanyRow = {
 };
 
 function toOption(row: CompanyRow, lang: SupportedLanguage = "en"): SearchSelectOption {
-  const name = localizeTerm(row.name, lang);
-  const legalName = row.legal_name ? localizeTerm(row.legal_name, lang) : null;
-  const ownerName = row.owner_name ? transliterateProperNoun(row.owner_name, lang) : null;
+  const name = localizeName(row.name, lang);
+  const legalName = row.legal_name ? localizeName(row.legal_name, lang) : null;
+  const ownerName = row.owner_name ? localizeName(row.owner_name, lang) : null;
   const label = legalName ? `${name} (${legalName})` : name;
   const keywords = [name, row.name, legalName, row.legal_name, ownerName, row.owner_name, row.country_name, row.city_name, row.base_currency].filter(Boolean).join(" ");
   return {
@@ -154,7 +154,7 @@ export function CompanyPicker({
       lang,
       title: t(lang, "creg.cp_print_title", "Company Master"),
       subtitle: t(lang, "creg.cp_print_subtitle", "Company Profile"),
-      name: localizeTerm(row.name, lang),
+      name: localizeName(row.name, lang),
       status: row.is_active ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive"),
       meta: [
         { label: t(lang, "common.code", "Code"), value: row.company_code || "-" },
@@ -166,7 +166,7 @@ export function CompanyPicker({
         {
           title: t(lang, "hr.pp_section_details", "Details"),
           rows: [
-            { label: t(lang, "creg.cp_legal_name_colon", "Legal Name:").replace(":", ""), value: row.legal_name ? localizeTerm(row.legal_name, lang) : "-" },
+            { label: t(lang, "creg.cp_legal_name_colon", "Legal Name:").replace(":", ""), value: row.legal_name ? localizeName(row.legal_name, lang) : "-" },
             { label: t(lang, "common.currency", "Currency"), value: row.base_currency || "-" },
             { label: t(lang, "company_form.section_location", "Address"), value: row.address || "-" },
           ],
@@ -204,7 +204,7 @@ export function CompanyPicker({
       {/* View Detail Modal */}
       {viewCompany ? (
         <SimpleModal
-          title={`${t(lang, "creg.cp_company_details_dash", "Company Details —")} ${localizeTerm(viewCompany.name, lang)}`}
+          title={`${t(lang, "creg.cp_company_details_dash", "Company Details —")} ${localizeName(viewCompany.name, lang)}`}
           onClose={() => setViewCompany(null)}
           className="w-[96vw] max-w-3xl max-h-[85vh] overflow-y-auto rounded-3xl font-sans shadow-2xl"
         >
@@ -212,8 +212,8 @@ export function CompanyPicker({
             {/* Header Badge */}
             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/80 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
               <div>
-                <h3 className="text-base font-black tracking-wide">{localizeTerm(viewCompany.name, lang)}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{t(lang, "creg.cp_legal_name_colon", "Legal Name:")} {viewCompany.legal_name ? localizeTerm(viewCompany.legal_name, lang) : "—"}</p>
+                <h3 className="text-base font-black tracking-wide">{localizeName(viewCompany.name, lang)}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{t(lang, "creg.cp_legal_name_colon", "Legal Name:")} {viewCompany.legal_name ? localizeName(viewCompany.legal_name, lang) : "—"}</p>
               </div>
               <div className="text-right">
                 <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900">

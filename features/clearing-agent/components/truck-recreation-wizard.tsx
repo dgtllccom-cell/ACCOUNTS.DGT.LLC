@@ -54,7 +54,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
-import { transliterateProperNoun, transliterateToLatin } from "@/lib/i18n/transliteration";
+import { localizeName } from "@/lib/i18n/transliteration";
 import "./truck-registration.css";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
@@ -608,15 +608,21 @@ export function TruckRecreationWizard({
     "asmatullah abdullah": { en: "Asmatullah Abdullah", ur: "عصمت اللہ عبداللہ", ar: "عصمت الله عبد الله", fa: "عصمت‌الله عبدالله", ps: "عصمت الله عبد الله" },
   };
 
-  const ARABIC_SCRIPT = /[\u0600-\u06FF]/;
   const nameText = (raw?: string | null): string => {
     const v = String(raw ?? "").trim();
     if (!v) return "";
     const lower = v.toLowerCase();
     if (VERIFIED_TRUCK_NAMES[v]?.[activeLang]) return VERIFIED_TRUCK_NAMES[v][activeLang];
     if (VERIFIED_TRUCK_NAMES[lower]?.[activeLang]) return VERIFIED_TRUCK_NAMES[lower][activeLang];
-    if (activeLang === "en") return ARABIC_SCRIPT.test(v) ? transliterateToLatin(v) : v;
-    return transliterateProperNoun(v, activeLang);
+    // truck / company / transporter names: an approved variant, else the saved name — never a phonetic re-spelling
+    return localizeName(v, activeLang);
+  };
+
+  // owner / driver are Person Master (customer) names: the verified dictionary, else the saved name — no re-spelled transliteration
+  const personText = (raw?: string | null): string => {
+    const v = String(raw ?? "").trim();
+    if (!v) return "";
+    return VERIFIED_TRUCK_NAMES[v]?.[activeLang] || VERIFIED_TRUCK_NAMES[v.toLowerCase()]?.[activeLang] || v;
   };
 
   const getLocalizedOwner = (row: TruckRow): string => {
@@ -625,7 +631,7 @@ export function TruckRecreationWizard({
     if (activeLang === "ar" && row.owner_name_ar) return row.owner_name_ar;
     if (activeLang === "fa" && row.owner_name_fa) return row.owner_name_fa;
     if (activeLang === "ps" && row.owner_name_ps) return row.owner_name_ps;
-    return nameText(row.owner_display_name || row.owner_name);
+    return personText(row.owner_display_name || row.owner_name);
   };
 
   const getLocalizedDriver = (row: TruckRow): string => {
@@ -634,7 +640,7 @@ export function TruckRecreationWizard({
     if (activeLang === "ar" && row.driver_name_ar) return row.driver_name_ar;
     if (activeLang === "fa" && row.driver_name_fa) return row.driver_name_fa;
     if (activeLang === "ps" && row.driver_name_ps) return row.driver_name_ps;
-    return nameText(row.driver_display_name || row.driver_name);
+    return personText(row.driver_display_name || row.driver_name);
   };
 
   const getLocalizedCompany = (row: TruckRow): string => {
@@ -1426,7 +1432,7 @@ export function TruckRecreationWizard({
           r.owner_name_en,
           r.owner_name_ur,
           r.owner_display_name,
-          nameText(r.owner_display_name),
+          personText(r.owner_display_name),
           getLocalizedOwner(r),
           r.company_display_name,
           r.transport_company,
@@ -1436,12 +1442,12 @@ export function TruckRecreationWizard({
           r.transporter_display_name,
           nameText(r.transporter_display_name),
           r.driver_display_name,
-          nameText(r.driver_display_name),
+          personText(r.driver_display_name),
           r.driver_name,
           r.driver_name_en,
           r.driver_name_ur,
           getLocalizedDriver(r),
-          nameText(r.driver_name),
+          personText(r.driver_name),
           r.driver_mobile,
           r.owner_mobile,
         ].some((v) => (v || "").toLowerCase().includes(q));
@@ -1467,8 +1473,8 @@ export function TruckRecreationWizard({
         valA = a.model || a.manufacturing_year || "";
         valB = b.model || b.manufacturing_year || "";
       } else if (sortKey === "owner_display_name") {
-        valA = nameText(a.owner_display_name) || "";
-        valB = nameText(b.owner_display_name) || "";
+        valA = personText(a.owner_display_name) || "";
+        valB = personText(b.owner_display_name) || "";
       } else if (sortKey === "company_display_name") {
         valA = nameText(a.company_display_name) || "";
         valB = nameText(b.company_display_name) || "";
@@ -1476,8 +1482,8 @@ export function TruckRecreationWizard({
         valA = nameText(a.transporter_display_name) || "";
         valB = nameText(b.transporter_display_name) || "";
       } else if (sortKey === "driver_display_name") {
-        valA = nameText(a.driver_display_name || a.driver_name) || "";
-        valB = nameText(b.driver_display_name || b.driver_name) || "";
+        valA = personText(a.driver_display_name || a.driver_name) || "";
+        valB = personText(b.driver_display_name || b.driver_name) || "";
       } else if (sortKey === "driver_mobile") {
         valA = a.driver_mobile || "";
         valB = b.driver_mobile || "";
@@ -1540,10 +1546,10 @@ export function TruckRecreationWizard({
         truck_no: r.truck_number,
         truck_name: nameText(r.truck_name) || "—",
         model: r.model || r.manufacturing_year || "—",
-        owner: nameText(r.owner_display_name) || "—",
+        owner: personText(r.owner_display_name) || "—",
         company: nameText(r.company_display_name) || "—",
         transporter: nameText(r.transporter_display_name) || "—",
-        driver: nameText(r.driver_display_name || (r.driver_name ? nameText(r.driver_name) : "")) || "—",
+        driver: personText(r.driver_display_name || r.driver_name) || "—",
         mobile: r.driver_mobile || r.owner_mobile || "—",
         status: statusLabel(r.status),
       })),
@@ -1574,10 +1580,10 @@ export function TruckRecreationWizard({
           r.truck_number,
           nameText(r.truck_name) || "—",
           r.model || r.manufacturing_year || "—",
-          nameText(r.owner_display_name) || "—",
+          personText(r.owner_display_name) || "—",
           nameText(r.company_display_name) || "—",
           nameText(r.transporter_display_name) || "—",
-          nameText(r.driver_display_name || (r.driver_name ? nameText(r.driver_name) : "")) || "—",
+          personText(r.driver_display_name || r.driver_name) || "—",
           r.driver_mobile || r.owner_mobile || "—",
           statusLabel(r.status),
         ]
@@ -1684,6 +1690,8 @@ export function TruckRecreationWizard({
   // value is "—" — nothing is invented. The stored record keeps the original text (see handleSubmit: raw copies).
   const DASH = "—";
   const nm = (v?: string | null) => nameText(v) || DASH;
+  // Person Master (customer) names: authorized / verified name, else the saved name — never a re-spelled transliteration
+  const pn = (v?: string | null) => personText(v) || DASH;
   const val = (v?: string | number | null) => (v !== undefined && v !== null && String(v).trim() !== "" ? String(v).trim() : DASH);
   /** Known English choice values (select options saved as such) shown in the language on screen. */
   const KNOWN_CHOICES: Record<string, [string, string]> = {
@@ -1729,10 +1737,10 @@ export function TruckRecreationWizard({
   // Owner
   const ownerRawName = ownerRaw?.customer_name || ownerDetails?.customer_name || "";
   const ownerRegNo = val(ownerDetails?.person_code || ownerDetails?.code);
-  const ownerFullName = nm(ownerDetails?.customer_name || ownerRawName);
-  const ownerFirstName = nm(ownerRaw?.first_name || ownerDetails?.first_name || ownerRawName.split(/\s+/)[0]);
-  const ownerLastName = nm(ownerRaw?.last_name || ownerDetails?.last_name || ownerRawName.split(/\s+/).slice(1).join(" "));
-  const ownerFatherName = nm(ownerRaw?.father_name || ownerDetails?.father_name);
+  const ownerFullName = pn(ownerDetails?.customer_name || ownerRawName);
+  const ownerFirstName = pn(ownerRaw?.first_name || ownerDetails?.first_name || ownerRawName.split(/\s+/)[0]);
+  const ownerLastName = pn(ownerRaw?.last_name || ownerDetails?.last_name || ownerRawName.split(/\s+/).slice(1).join(" "));
+  const ownerFatherName = pn(ownerRaw?.father_name || ownerDetails?.father_name);
   const ownerCnic = val(ownerDetails?.cnic || ownerDetails?.registrations?.find((r) => /cnic|id|national/i.test(r.registration_type || ""))?.registration_value);
   const ownerNationality = nm((ownerRaw as any)?.nationality || (ownerDetails as any)?.nationality);
   const ownerMobile = val(ownerDetails?.mobile);
@@ -1764,14 +1772,14 @@ export function TruckRecreationWizard({
   const effectiveDriverPhoto = isPermanentDriver ? (driverDetails?.photo_url || driverPhotoUrl) : driverPhotoUrl;
   const driverRawName = isPermanentDriver ? (driverRaw?.customer_name || driverDetails?.customer_name || "") : (form.temporaryDriverName || "");
   const driverRegNo = isPermanentDriver ? val(driverDetails?.person_code || driverDetails?.code) : DASH;
-  const driverFullName = nm(isPermanentDriver ? (driverDetails?.customer_name || driverRawName) : form.temporaryDriverName);
-  const driverFirstName = nm(isPermanentDriver
+  const driverFullName = pn(isPermanentDriver ? (driverDetails?.customer_name || driverRawName) : form.temporaryDriverName);
+  const driverFirstName = pn(isPermanentDriver
     ? (driverRaw?.first_name || driverDetails?.first_name || driverRawName.split(/\s+/)[0])
     : (form.temporaryDriverFirstName || driverRawName.split(/\s+/)[0]));
-  const driverLastName = nm(isPermanentDriver
+  const driverLastName = pn(isPermanentDriver
     ? (driverRaw?.last_name || driverDetails?.last_name || driverRawName.split(/\s+/).slice(1).join(" "))
     : (form.temporaryDriverLastName || driverRawName.split(/\s+/).slice(1).join(" ")));
-  const driverFatherName = nm(form.driverFatherName || driverRaw?.father_name || driverDetails?.father_name);
+  const driverFatherName = pn(form.driverFatherName || driverRaw?.father_name || driverDetails?.father_name);
   const driverDob = isPermanentDriver ? ((driverDetails as any)?.date_of_birth || form.driverDob || "") : (form.driverDob || "");
   const driverCnic = val(form.driverCnic || (isPermanentDriver ? (driverDetails?.cnic || driverDetails?.registrations?.find((r) => /cnic|id|national/i.test(r.registration_type || ""))?.registration_value) : ""));
   const driverNationality = nm(form.driverNationality || (isPermanentDriver ? (driverRaw as any)?.nationality : ""));
@@ -1840,7 +1848,7 @@ export function TruckRecreationWizard({
         insuranceExpiry: E(formatReportDate(f.insuranceExpiryDate)), fitnessExpiry: E(formatReportDate(f.fitnessCertificateExpiryDate)),
       },
       transporter: td
-        ? { name: E(nm(td.customer_name)), code: E(td.person_code || td.code), mobile: E(td.mobile), whatsapp: E(td.whatsapp), address: E(nm(td.address)) }
+        ? { name: E(pn(td.customer_name)), code: E(td.person_code || td.code), mobile: E(td.mobile), whatsapp: E(td.whatsapp), address: E(pn(td.address)) }
         : {},
       driver: {
         kind: perm ? tt("trk.w_permanent", "Permanent") : tt("trk.w_temporary", "Temporary"),
@@ -3010,7 +3018,7 @@ export function TruckRecreationWizard({
                           </div>
                           <div>
                             <div className="text-xs font-black text-slate-900 dark:text-white">
-                              {nm(ownerDetails.customer_name)}
+                              {pn(ownerDetails.customer_name)}
                             </div>
                             <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
                               {tt("trk.w_registered_owner", "REGISTERED OWNER")}
@@ -3019,7 +3027,7 @@ export function TruckRecreationWizard({
                         </div>
                         <button
                           type="button"
-                          onClick={() => setParty360({ customerId: form.ownerId, name: nm(ownerDetails.customer_name) === "—" ? "" : nm(ownerDetails.customer_name) })}
+                          onClick={() => setParty360({ customerId: form.ownerId, name: pn(ownerDetails.customer_name) === "—" ? "" : pn(ownerDetails.customer_name) })}
                           className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-[11px] font-bold text-blue-700 shadow-2xs hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300"
                         >
                           <Eye className="h-3 w-3" /> {tt("trk.view_owner_details", "View Owner Details")}
@@ -3376,7 +3384,7 @@ export function TruckRecreationWizard({
                             </div>
                             <div>
                               <div className="text-xs font-black text-slate-900 dark:text-white">
-                                {nm(transporterDetails.customer_name)}
+                                {pn(transporterDetails.customer_name)}
                               </div>
                               <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
                                 {tt("trk.w_registered_transporter", "REGISTERED TRANSPORTER")}
@@ -3625,7 +3633,7 @@ export function TruckRecreationWizard({
                                 </div>
                                 <div>
                                   <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                    <span>{nm(driverDetails.customer_name)}</span>
+                                    <span>{pn(driverDetails.customer_name)}</span>
                                     {driverDetails.person_code && (
                                       <span className="font-mono text-[10px] text-blue-700 dark:text-blue-300">
                                         ({driverDetails.person_code})

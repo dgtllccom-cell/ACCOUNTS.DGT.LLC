@@ -1,4 +1,5 @@
 "use client";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
@@ -780,7 +781,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
                       {index + 1}
                     </td>
                     <td className="px-3.5 py-3 font-bold text-foreground">
-                      <div>{item.name}</div>
+                      <div>{translateHeader(lang, item.name)}</div>
                       {item.nameUrdu && (
                         <div className="text-[10px] text-muted-foreground font-normal mt-0.5">{item.nameUrdu}</div>
                       )}
@@ -794,7 +795,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
                       {item.route}
                     </td>
                     <td className="px-3.5 py-3 text-[10px] text-muted-foreground font-medium">
-                      {item.roles.join(", ")}
+                      {item.roles.map((r) => translateHeader(lang, r)).join(", ")}
                     </td>
                     <td className="px-3.5 py-3 text-xs text-muted-foreground leading-relaxed max-w-xs">
                       {item.description}

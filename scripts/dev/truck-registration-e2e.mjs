@@ -40,8 +40,9 @@ await p.waitForTimeout(2500);
 // ── 1) English selected, Urdu-registered owner & driver
 let txt = await reportText();
 const fullName = await rowValue("Full Name");
-check("EN screen: owner Full Name is Latin (not the stored Urdu text)", fullName && !ARABIC.test(fullName), fullName);
-check("EN screen: report has no Arabic-script names at all", !ARABIC.test(txt.replace(/\s+/g, " ")), (txt.match(/[؀-ۿ][؀-ۿ ]+/) || [""])[0]);
+// customer-name rule (owner, 2026-10-24/25): no authorized English translation exists for this Urdu-registered owner, so every screen shows the saved legal name
+check("EN screen: owner Full Name is the saved legal name (never an invented Latin spelling)", fullName && ARABIC.test(fullName), fullName);
+check("EN screen: report labels stay English (only the saved name is in Urdu script)", /Full Name/.test(txt) && !ARABIC.test(txt.replace(/\s+/g, " ").replace(/[؀-ۿ][؀-ۿ ]+/g, "")), "");
 const formText = (await p.locator("form").first().innerText().catch(() => "")) || "";
 // Customer-name rule (owner, 2026-10-25): the shared picker shows the saved legal name when there is no authorized translation for the selected
 // language (never an invented spelling). This Urdu-registered owner has none for English, so the picker keeps the saved Urdu name. NOTE: the report
@@ -93,7 +94,8 @@ for (const lang of langs) {
   const t2 = await reportText();
   const first = (await p.locator("#trk-live-report .flex.items-center.justify-between").first().innerText().catch(() => "")) || "";
   const fnm = await p.evaluate(() => { const rows = [...document.querySelectorAll("#trk-live-report .flex.items-center.justify-between")]; const hit = rows.find((r) => /PER-/.test(r.textContent || "")); return hit ? hit.textContent : ""; });
-  if (lang === "en") check("EN: labels in English", /Registration No\./.test(t2) && !ARABIC.test(t2.replace(/\s+/g, " ")), "");
+  // labels stay English; the only Urdu-script text left is the saved legal name of the Urdu-registered owner / driver (customer-name rule)
+  if (lang === "en") check("EN: labels in English", /Registration No\./.test(t2) && !ARABIC.test(t2.replace(/\s+/g, " ").replace(/[؀-ۿ][؀-ۿ ]*/g, "")), "");
   else {
     check(`${lang.toUpperCase()}: report labels are translated (no English label rows)`, ARABIC.test(t2) && !/Registration No\.|Father's Name|Mobile Number|Final Address/.test(t2), "");
     check(`${lang.toUpperCase()}: owner name shown in Arabic script`, /احمد|ﺍﺣﻤﺪ/.test(t2) || ARABIC.test(t2));

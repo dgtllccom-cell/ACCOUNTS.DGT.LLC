@@ -39,5 +39,10 @@ export function landingForChannel(channel: AppChannel | null, session: Pick<ErpS
   if (channel !== "bs") return normal;
   // a shipping / clearing login already gets a shipping-side dashboard; a Super Admin or a "both" login gets the shipping home
   const shippingSide = /\/(logistics|shipping-line|clearing-agent|agent|city\/shipping-line|country\/shipping-line|super-admin\/shipping-line)/.test(normal);
-  return shippingSide ? normal : "/dashboard/city/shipping-line";
+  if (shippingSide) return normal;
+  // the shipping home of the login's own management level (a Super Admin on the city page only meets "branch permission required")
+  const roles = session.roles as readonly string[];
+  if (session.isSuperAdmin || roles.some((r) => ["super_admin", "shipping_super_admin", "global_operations_admin"].includes(r))) return "/dashboard/super-admin/shipping-line";
+  if (roles.some((r) => ["country_admin", "country_operations_admin"].includes(r))) return "/dashboard/country/shipping-line";
+  return "/dashboard/city/shipping-line";
 }

@@ -99,7 +99,7 @@ describe("route policy per profile", () => {
   });
   it("landing dashboards", () => {
     expect(dashboardForRoles(["business_super_admin"])).toBe("/dashboard/country");
-    expect(dashboardForRoles(["shipping_super_admin"])).toBe("/dashboard/logistics");
+    expect(dashboardForRoles(["shipping_super_admin"])).toBe("/dashboard/super-admin/shipping-line");
   });
 });
 

@@ -471,7 +471,7 @@ export function SalesModuleWorkspace({
       <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3 bg-slate-50/50 dark:bg-slate-950">
           <div>
-            <h2 className="text-base font-black text-slate-900 dark:text-slate-100">{title} — {t(lang, "sales.smw_spreadsheet_register", "Spreadsheet Register")}</h2>
+            <h2 className="text-base font-black text-slate-900 dark:text-slate-100">{displayTitle || title} — {t(lang, "sales.smw_spreadsheet_register", "Spreadsheet Register")}</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t(lang, "sales.smw_live_records_subtitle", "Live sales workflow records and transaction details")}</p>
           </div>
           <span className="px-3 py-1 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold font-mono">

@@ -585,6 +585,16 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           ) as id
         `;
         const roznamchaEntryId = createdRozRows[0]?.id;
+        // local purchase is a Business posting: post_roznamcha_entry leaves the entry unclassified (Shipping logins would see it)
+        if (roznamchaEntryId) {
+          await sql`
+            update roznamcha_entries
+            set operational_domain = coalesce(
+              (select cb.operational_domain from city_branches cb where cb.id = ${orderRow.city_branch_id || null}::uuid and cb.operational_domain in ('business', 'shipping')),
+              'business')
+            where id = ${roznamchaEntryId}::uuid and operational_domain is null
+          `;
+        }
 
         const idRows = await sql`
           insert into purchase_order_payments (
@@ -746,7 +756,9 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           country_branch_id = ${orderRow.country_branch_id || null}::uuid,
           city_branch_id = ${orderRow.city_branch_id || null}::uuid,
           type = ${rozType},
-          bank_id = coalesce(${(body.typeDetails as any)?.bankId || null}::uuid, bank_id)
+          bank_id = coalesce(${(body.typeDetails as any)?.bankId || null}::uuid, bank_id),
+          -- a purchase payment is a Business posting: never leave it unclassified (Shipping logins would see it)
+          operational_domain = coalesce(operational_domain, 'business')
         where id = ${paymentRecord.roznamcha_entry_id}::uuid
       `;
 

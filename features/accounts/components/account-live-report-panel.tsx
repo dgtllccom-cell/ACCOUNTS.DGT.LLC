@@ -14,7 +14,7 @@ import {
   FolderPlus,
   MapPin
 } from "lucide-react";
-import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeTerm, localizeName } from "@/lib/i18n/transliteration";
 import { getLabel } from "./translations";
 
 export type AccountLiveReportProps = {
@@ -112,12 +112,13 @@ export function AccountLiveReportPanel({
   selectedBranchName,
   selectedBranchCode,
   onEditStep,
-  auditCreatedBy = "Super Admin",
+  auditCreatedBy = "-", // never an invented creator: the form passes the real one when it has it
   auditCreatedOn,
   auditLastModifiedBy,
   auditLastModifiedOn
 }: AccountLiveReportProps) {
-  const trName = (val: string | null | undefined) => (val ? transliterateProperNoun(val, lang) : "-");
+  // Names (branch, company, bank, account title) are data: show the saved name or the approved variant the API sent, never a re-spelling.
+  const showName = (val: string | null | undefined) => (val ? localizeName(val, lang) : "-");
   const trTerm = (val: string | null | undefined) => (val ? localizeTerm(val, lang) : "-");
 
   const now = useMemo(() => new Date(), []);
@@ -227,7 +228,7 @@ export function AccountLiveReportPanel({
             )}
             <div className="flex items-center justify-between">
               <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("accountName", lang)}</span>
-              <span className="font-bold text-slate-900 dark:text-white max-w-[220px] truncate">{trName(accountName) || "-"}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[220px] truncate">{accountName || "-"}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("accountType", lang)}</span>
@@ -247,7 +248,7 @@ export function AccountLiveReportPanel({
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("cityBranch", lang)}</span>
-              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[220px] truncate">{trName(selectedBranchName) || "-"}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[220px] truncate">{showName(selectedBranchName) || "-"}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("referenceNo", lang)}</span>
@@ -321,7 +322,7 @@ export function AccountLiveReportPanel({
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("branchName", lang)}</span>
-              <span className="font-bold text-slate-900 dark:text-white max-w-[220px] truncate">{trName(selectedBranchName) || "-"}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[220px] truncate">{showName(selectedBranchName) || "-"}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-500 dark:text-slate-400 font-medium">{getLabel("branchCode", lang)}</span>
@@ -360,7 +361,7 @@ export function AccountLiveReportPanel({
           <div className="space-y-1.5 text-xs">
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("customerName", lang)}</span>
-              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">{trName(customerDetail?.customer_name) || "-"}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">{customerDetail?.customer_name || "-"}</span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("customerType", lang)}</span>
@@ -372,7 +373,7 @@ export function AccountLiveReportPanel({
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("contactPerson", lang)}</span>
-              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">{trName(customerDetail?.contact_person) || "-"}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">{customerDetail?.contact_person || "-"}</span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("phone", lang)}</span>
@@ -428,7 +429,7 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("companyName", lang)}</span>
               <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">
-                {trName(effectiveCompany?.name || effectiveCompany?.legal_name || effectiveCompany?.companyName) || "-"}
+                {showName(effectiveCompany?.name || effectiveCompany?.legal_name || effectiveCompany?.companyName) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
@@ -458,7 +459,7 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("branch", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {trName(effectiveCompany?.city_name || effectiveCompany?.country || selectedBranchName) || "-"}
+                {showName(effectiveCompany?.city_name || effectiveCompany?.country || selectedBranchName) || "-"}
               </span>
             </div>
           </div>
@@ -499,13 +500,13 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("bankName", lang)}</span>
               <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">
-                {trName(effectiveBank?.bank_name || effectiveBank?.bankName || effectiveBank?.name) || "-"}
+                {showName(effectiveBank?.bank_name || effectiveBank?.bankName || effectiveBank?.name) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("accountTitle", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {trName(effectiveBank?.account_title) || (effectiveBank ? trName(accountName) : "-")}
+                {showName(effectiveBank?.account_title) || (effectiveBank ? showName(accountName) : "-")}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
@@ -523,7 +524,7 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("bankBranch", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {trName(effectiveBank?.branch_name || effectiveBank?.branchName || selectedBranchName) || "-"}
+                {showName(effectiveBank?.branch_name || effectiveBank?.branchName || selectedBranchName) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">

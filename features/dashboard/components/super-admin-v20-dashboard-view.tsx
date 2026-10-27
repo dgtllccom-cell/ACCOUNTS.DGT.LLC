@@ -35,6 +35,8 @@ export interface DashboardV20Data {
     debit: number;
     credit: number;
     balance: number;
+    /** the one currency of the ledgers, "MIXED" when they differ, null when there are none */
+    ledgerCurrency?: string | null;
   };
   activeUsers: number;
   countries: CountryFinancialSummary[];
@@ -107,7 +109,8 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
         purchases: matched.totalPurchases,
         debit: matched.totalDebit,
         credit: matched.totalCredit,
-        balance: matched.totalLedgerBalance
+        balance: matched.totalLedgerBalance,
+        ledgerCurrency: matched.ledgerCurrency ?? null
       }
     };
   }, [data, appliedCountry]);
@@ -158,43 +161,52 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
     }
   ];
 
+  // Sales / purchases are USD sums (page.tsx). Ledger figures are in their own currency: one total only within ONE currency.
+  const ledgerCurrency = filteredData.totals.ledgerCurrency ?? null;
+  const ledgerMoney = (value: number) => {
+    if (ledgerCurrency === "MIXED") return tt("dash.mixed_currencies", "Several currencies");
+    if (!ledgerCurrency || ledgerCurrency === "USD") return money(value);
+    const rounded = Math.round(value);
+    return `${rounded < 0 ? "-" : ""}${ledgerCurrency} ${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Math.abs(rounded))}`;
+  };
+
   // V20 Financial Overview (6 white cards)
   const finances = [
     {
       id: "sales",
       title: tt("dash.total_sales", "Total Sales"),
       value: money(filteredData.totals.sales),
-      subtext: "↑ live overview"
+      subtext: tt("dash.live_records", "Live data")
     },
     {
       id: "purchases",
       title: tt("dash.total_purchase", "Total Purchases"),
       value: money(filteredData.totals.purchases),
-      subtext: "↑ live overview"
+      subtext: tt("dash.live_records", "Live data")
     },
     {
       id: "receivables",
       title: tt("dash.total_receivables", "Receivables"),
-      value: money(filteredData.totals.debit),
-      subtext: "↑ live overview"
+      value: ledgerMoney(filteredData.totals.debit),
+      subtext: tt("dash.live_records", "Live data")
     },
     {
       id: "payables",
       title: tt("dash.total_payables", "Payables"),
-      value: money(filteredData.totals.credit),
-      subtext: "↑ live overview"
+      value: ledgerMoney(filteredData.totals.credit),
+      subtext: tt("dash.live_records", "Live data")
     },
     {
       id: "net_ledger",
       title: tt("dash.cash_balance", "Net Ledger"),
-      value: money(filteredData.totals.debit - filteredData.totals.credit),
-      subtext: "↑ live overview"
+      value: ledgerMoney(filteredData.totals.debit - filteredData.totals.credit),
+      subtext: tt("dash.live_records", "Live data")
     },
     {
       id: "ledger_balance",
       title: tt("dash.ledger_balance", "Ledger Balance"),
-      value: money(filteredData.totals.balance),
-      subtext: "↑ live overview"
+      value: ledgerMoney(filteredData.totals.balance),
+      subtext: tt("dash.live_records", "Live data")
     }
   ];
 
@@ -240,7 +252,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                   <span className="truncate max-w-[130px] sm:max-w-none">
                     {appliedCountry !== "all"
                       ? data.countries.find((c) => c.id === appliedCountry)?.name || "Country Scoped"
-                      : "Business / Admin"}
+                      : tt("dash.scope_business_admin", "Business / Admin")}
                   </span>
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform ${flyoutOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -261,10 +273,10 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                         </span>
                         <div>
                           <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">
-                            DASHBOARD VIEW
+                            {tt("dash.dashboard_view", "Dashboard View")}
                           </span>
                           <strong className="text-sm font-black text-slate-800 dark:text-slate-100">
-                            Business / Admin / Country
+                            {tt("dash.scope_business_admin_country", "Business / Admin / Country")}
                           </strong>
                         </div>
                       </div>
@@ -374,7 +386,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
             <span className="text-white/40">•</span>
             <span className="text-[10px] text-emerald-300 font-semibold tracking-wide flex items-center gap-1">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Live Sync
+              {tt("dash.live_sync", "Live Sync")}
             </span>
           </div>
         </div>
@@ -385,7 +397,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
               {tt("nav.super_admin_menu", "Super Admin Dashboard")}
             </h1>
             <p className="mt-1 text-xs sm:text-sm font-medium text-slate-200/90 drop-shadow-xs">
-              Import • Export • Shipping • Finance
+              {tt("dash.hero_tagline", "Import • Export • Shipping • Finance")}
             </p>
           </div>
         </div>
@@ -396,7 +408,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
         <section className="space-y-2.5">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              KEY BUSINESS INDICATORS
+              {tt("dash.key_business_indicators", "Key Business Indicators")}
             </h2>
             <span className="text-[10px] font-bold text-slate-400 uppercase">
               {tt("dash.live_records", "Live records")}

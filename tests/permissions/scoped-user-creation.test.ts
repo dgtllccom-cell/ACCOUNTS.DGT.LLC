@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canDelegateUserRole, isUserCreator, isUserManager, userCreationTargetError } from "@/lib/permissions/user-management-scope";
+import { canDelegateUserRole, isUserCreator, isUserManager, userCreationTargetError, userInManagerScope } from "@/lib/permissions/user-management-scope";
 import { userCreateSchema } from "@/lib/api/erp-validation";
 import { nameMatches } from "@/lib/utils/person-duplicate-match";
 
@@ -22,8 +22,27 @@ describe("delegated city staff creation", () => {
     expect(isUserCreator({ ...city, permissions: ["users:read"] })).toBe(false);
     expect(userCreationTargetError({ ...city, permissions: [] }, target)).not.toBeNull();
   });
-  it.each(["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "country_user", "agent_user"])("rejects undelegated %s", (role) => {
+  it.each(["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "country_user"])("rejects undelegated %s", (role) => {
     expect(userCreationTargetError(city, { ...target, role })).not.toBeNull();
+  });
+  // production 658c4be: a branch admin may also create the external Clearing Agent login of its own branch (the API still requires the agent record)
+  it("delegates agent_user inside its own branch and domain only", () => {
+    expect(userCreationTargetError(city, { ...target, role: "agent_user" })).toBeNull();
+    expect(userCreationTargetError(city, { ...target, role: "agent_user", cityBranchId: "QUETTA" })).not.toBeNull();
+    expect(userCreationTargetError(city, { ...target, role: "agent_user", operationalDomain: "business" })).not.toBeNull();
+  });
+  it("manages only the staff of its own branch: never a peer branch admin, a main / country admin, or another branch's staff", () => {
+    const at = (role: string, cityBranchId: string | null) => ({ role, country_id: "PK", country_branch_id: "PK-MAIN", city_branch_id: cityBranchId, operational_domain: "shipping" });
+    const manager = { ...city, permissions: ["users:update"] };
+    expect(userInManagerScope(manager, at("staff_user", "CHAMAN"))).toBe(true);
+    expect(userInManagerScope(manager, at("staff", "CHAMAN"))).toBe(true);
+    expect(userInManagerScope(manager, at("city_branch_admin", "CHAMAN"))).toBe(false);
+    expect(userInManagerScope(manager, at("main_branch_admin", null))).toBe(false);
+    expect(userInManagerScope(manager, at("staff_user", "QUETTA"))).toBe(false);
+  });
+  it("is a user manager only while its permission set carries users:update (the role template does; a per-user set may withhold it)", () => {
+    expect(isUserManager({ ...city, permissions: ["users:update"] })).toBe(true);
+    expect(isUserManager({ ...city, permissions: ["users:read", "users:create"] })).toBe(false);
   });
   it.each([{ countryId: "UAE" }, { cityBranchId: "QUETTA" }, { countryBranchId: "OTHER" }, { cityBranchId: null }, { operationalDomain: "business" }, { operationalDomain: "both" }, { accessProfile: "operations" }, { mode: "assign_scope" }])("rejects out-of-scope or administrative target %o", (patch) => {
     expect(userCreationTargetError(city, { ...target, ...patch })).not.toBeNull();

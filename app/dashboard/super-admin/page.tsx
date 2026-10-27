@@ -27,6 +27,7 @@ type CountryUserRow = { country_id: string; users: number };
 type OrderTotalRow = { country_id: string | null; order_total: number | string | null };
 type LedgerTotalRow = {
   country_id: string | null;
+  currency: string | null;
   debit_total: number | string | null;
   credit_total: number | string | null;
   current_balance: number | string | null;
@@ -36,7 +37,7 @@ type CountRow = { value: number | string };
 
 const EMPTY_DATA: DashboardV20Data = {
   counts: { countries: 0, branches: 0, users: 0, customers: 0, suppliers: 0, purchasesCount: 0 },
-  totals: { sales: 0, purchases: 0, debit: 0, credit: 0, balance: 0 },
+  totals: { sales: 0, purchases: 0, debit: 0, credit: 0, balance: 0, ledgerCurrency: null },
   activeUsers: 0,
   countries: [],
   companies: [],
@@ -68,9 +69,11 @@ async function loadDashboard(): Promise<DashboardV20Data> {
       const customersCount = await count("customers");
       const companiesCount = await count("companies");
       const activeRows = await sql`select count(distinct user_id)::int as value from user_role_assignments where is_active=true and deleted_at is null`.catch(() => [{ value: 0 }]);
-      const purchaseRows = await sql`select country_id, order_total from purchase_orders where deleted_at is null`.catch(() => []);
-      const salesRows = await sql`select country_id, order_total from sales_orders where deleted_at is null`.catch(() => []);
-      const ledgerRows = await sql`select country_id, debit_total, credit_total, current_balance from ledgers where deleted_at is null`.catch(() => []);
+      // Orders are in many currencies: the dashboard adds the USD value every order stores (total_goods_usd), never order_total
+      // amounts of different currencies.
+      const purchaseRows = await sql`select country_id, coalesce(total_goods_usd, 0) as order_total from purchase_orders where deleted_at is null`.catch(() => []);
+      const salesRows = await sql`select country_id, coalesce(total_goods_usd, 0) as order_total from sales_orders where deleted_at is null`.catch(() => []);
+      const ledgerRows = await sql`select country_id, upper(nullif(trim(currency), '')) as currency, debit_total, credit_total, current_balance from ledgers where deleted_at is null`.catch(() => []);
       const countries = await sql`select id, name, currency_code, is_active from countries where deleted_at is null order by name`.catch(() => []);
       const mainBranches = await sql`select id, country_id from country_branches where deleted_at is null`.catch(() => []);
       const cityBranches = await sql`select id, country_id from city_branches where deleted_at is null`.catch(() => []);
@@ -81,8 +84,8 @@ async function loadDashboard(): Promise<DashboardV20Data> {
           select generate_series(date_trunc('month', current_date)-interval '5 months', date_trunc('month', current_date), interval '1 month') month_start
         )
         select to_char(month_start,'Mon YYYY') name,
-          coalesce((select sum(order_total) from sales_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 sales,
-          coalesce((select sum(order_total) from purchase_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 purchases
+          coalesce((select sum(total_goods_usd) from sales_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 sales,
+          coalesce((select sum(total_goods_usd) from purchase_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 purchases
         from months order by month_start
       `.catch(() => []);
       const countryRows = countries as unknown as CountryRow[];
@@ -123,6 +126,11 @@ async function loadDashboard(): Promise<DashboardV20Data> {
         const summary = summaries.get(row.country_id);
         if (summary) summary.totalSales += Number(row.order_total || 0);
       }
+      // Ledger figures stay in their own currency (no rate table to convert them): a sum is shown only within ONE currency.
+      const singleCurrency = (rows: LedgerTotalRow[]) => {
+        const set = new Set(rows.map((r) => r.currency || "").filter(Boolean));
+        return set.size === 1 ? [...set][0] : set.size === 0 ? null : "MIXED";
+      };
       for (const row of ledgers) {
         if (!row.country_id) continue;
         const summary = summaries.get(row.country_id);
@@ -131,6 +139,9 @@ async function loadDashboard(): Promise<DashboardV20Data> {
           summary.totalCredit += Number(row.credit_total || 0);
           summary.totalLedgerBalance += Number(row.current_balance || 0);
         }
+      }
+      for (const summary of summaries.values()) {
+        summary.ledgerCurrency = singleCurrency(ledgers.filter((r) => r.country_id === summary.id));
       }
 
       const salesTotal = sales.reduce((total, row) => total + Number(row.order_total || 0), 0);
@@ -152,7 +163,8 @@ async function loadDashboard(): Promise<DashboardV20Data> {
           purchases: purchaseTotal,
           debit: debitTotal,
           credit: creditTotal,
-          balance: ledgerBalance
+          balance: ledgerBalance,
+          ledgerCurrency: singleCurrency(ledgers)
         },
         activeUsers: Number(activeData[0]?.value || 0),
         countries: Array.from(summaries.values()),

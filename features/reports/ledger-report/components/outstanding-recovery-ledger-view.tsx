@@ -153,10 +153,16 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
   const [statementError, setStatementError] = useState<string | null>(null);
 
   const scopeSummary = sessionInfo?.scopes?.summary ?? null;
-  const scopeCountry = scopeSummary?.countryName || "All Countries";
-  const scopeBranch = scopeSummary?.branchDisplayName || scopeSummary?.branchName || "All Branches";
-  const scopeRole = sessionInfo?.roles?.[0]?.replace(/_/g, " ") || "ERP User";
-  const scopeUserName = sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP User";
+  const scopeCountry = scopeSummary?.countryName || translateHeader(lang, "All Countries");
+  const scopeBranch = scopeSummary?.branchDisplayName || scopeSummary?.branchName || translateHeader(lang, "All Branches");
+  const scopeRole = sessionInfo?.roles?.[0]?.replace(/_/g, " ") || "—";
+  const scopeUserName = sessionInfo?.user?.fullName || sessionInfo?.user?.email || "—";
+  // the report time is the viewer's local time: set it in the browser only (rendering it on the server too caused a hydration error)
+  const [generatedAt, setGeneratedAt] = useState("");
+  useEffect(() => {
+    const now = new Date();
+    setGeneratedAt(`${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, ${now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}`);
+  }, []);
   const scopeUserId = sessionInfo?.user?.id || "-";
   const scopeStatus = sessionInfo?.authenticated ? "ACTIVE" : "SESSION UNKNOWN";
 
@@ -270,8 +276,8 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     >();
 
     for (const row of filtered) {
-      const countryName = row.countryName || scopeSummary?.countryName || "All Countries";
-      const branchName = row.branchName || scopeSummary?.branchDisplayName || scopeSummary?.branchName || "All Branches";
+      const countryName = row.countryName || scopeCountry;
+      const branchName = row.branchName || scopeBranch;
       const currency = row.currency || "AED";
 
       if (!map.has(countryName)) {
@@ -312,7 +318,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     }
 
     return Array.from(map.values());
-  }, [filtered, scopeSummary?.branchDisplayName, scopeSummary?.branchName, scopeSummary?.countryName]);
+  }, [filtered, scopeCountry, scopeBranch]);
 
   const previewColumns: GenericReportColumn[] = [
     { key: "sr", label: "SR#", align: "center", format: "text" },
@@ -404,7 +410,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         clearedEntries: summary?.clearedEntries ?? 0,
         remainingEntries: summary?.remainingEntries ?? filtered.length,
         activeCountriesCount: scopeSummary?.countryName ? 1 : 0,
-        totalBranchesCount: scopeBranch && scopeBranch !== "All Branches" ? 1 : 0,
+        totalBranchesCount: scopeSummary?.branchDisplayName || scopeSummary?.branchName ? 1 : 0,
         statusText: sessionActiveText,
         coverageText: scopeSummary?.countryName || ""
       },
@@ -634,7 +640,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("DATE & TIME:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{generatedAt}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-1">
               <span>{tr("STATUS:")}</span>
@@ -1138,7 +1144,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                   </h3>
                 </div>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  {selectedLedgerAccount.branchName || scopeBranch} ({selectedLedgerAccount.countryName || scopeCountry}) &bull; Currency: {selectedLedgerAccount.currency || "AED"} &bull; Type: {selectedLedgerAccount.accountType}
+                  {selectedLedgerAccount.branchName || scopeBranch} ({selectedLedgerAccount.countryName || scopeCountry}) &bull; {tr("Currency")}: {selectedLedgerAccount.currency || "AED"} &bull; {tr("Type")}: {selectedLedgerAccount.accountType}
                 </p>
               </div>
               <div className="flex items-center gap-2">

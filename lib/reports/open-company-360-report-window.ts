@@ -1,7 +1,7 @@
 import { printStore } from "@/lib/store/print-store";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
-import { localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeName } from "@/lib/i18n/transliteration";
 
 /**
  * Company 360 print / PDF — built ONLY from real Company Master data. A missing value prints
@@ -109,7 +109,7 @@ export function openCompany360Report(data: Company360ReportData) {
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const c = data.company;
-  const name = localizeTerm(c.legalName || c.name || "", lang) || c.name;
+  const name = localizeName(c.legalName || c.name || "", lang) || c.name;
   const printedAt = new Date().toLocaleString(lang === "en" ? "en-GB" : `${lang}-u-nu-latn`, { dateStyle: "medium", timeStyle: "short" });
 
   const row = (label: string, value: string) => `<tr><th>${esc(label)}</th><td>${value}</td></tr>`;
@@ -140,7 +140,7 @@ export function openCompany360Report(data: Company360ReportData) {
   if (data.owner) {
     const o = data.owner;
     sections.push(`<section><h2>${esc(tt("c360.sec_owner", "Customer / Owner"))}</h2><table class="kv">
-      ${row(tt("c360.owner_name", "Owner"), v(localizeTerm(o.name, lang) || o.name))}
+      ${row(tt("c360.owner_name", "Owner"), v(localizeName(o.name, lang) || o.name))}
       ${row(tt("c360.owner_code", "Customer Code"), v(o.customerCode))}
       ${row(tt("c360.phone", "Phone"), v(o.phone))}
       ${row(tt("c360.email", "Email"), v(o.email))}
@@ -157,14 +157,14 @@ export function openCompany360Report(data: Company360ReportData) {
   if (data.linkedBranches) {
     sections.push(`<section><h2>${esc(tt("c360.sec_branches", "Branches Operating Under This Company"))}</h2>${table(
       [tt("c360.branch", "Branch"), tt("c360.level", "Level"), tt("c360.code", "Code")],
-      data.linkedBranches.map((b) => [esc(localizeTerm(b.name, lang) || b.name), v(b.levelLabel), v(b.code)]),
+      data.linkedBranches.map((b) => [esc(localizeName(b.name, lang) || b.name), v(b.levelLabel), v(b.code)]),
       none
     )}</section>`);
   }
 
   sections.push(`<section><h2>${esc(tt("c360.sec_sisters", "Sister Companies (same owner)"))}</h2>${table(
     [tt("c360.company", "Company"), tt("c360.registration_number", "Registration / License No."), tt("c360.country", "Country"), tt("c360.status", "Status")],
-    (data.sisterCompanies ?? []).map((s) => [esc(localizeTerm(s.name, lang) || s.name), v(s.licenseNumber), v(s.countryName), v(s.status)]),
+    (data.sisterCompanies ?? []).map((s) => [esc(localizeName(s.name, lang) || s.name), v(s.licenseNumber), v(s.countryName), v(s.status)]),
     none
   )}</section>`);
 

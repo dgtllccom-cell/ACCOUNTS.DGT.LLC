@@ -463,7 +463,20 @@ const LATIN_NAME_CORRECTIONS: Array<[RegExp, string]> = ([
   ["wly", "wali"], ["shahnwaz", "shahnawaz"], ["jhan", "jahan"],
 ] as Array<[string, string]>).map(([k, v]) => [new RegExp(`\\b${k}\\b`, "gi"), v]);
 
-/** Localize or transliterate any business/entity term dynamically into the target language. */
+/**
+ * Display a NAME (account, company, bank, branch, customer, person, shipping line, clearing agent) in `lang`.
+ * Owner rule: the original saved name stays unchanged — show an approved variant (a whole-name entry of the curated
+ * dictionary above) when one exists, otherwise exactly the saved name. Never a phonetic re-spelling; a person's own
+ * translation of a record comes from the API (record_translations), not from here.
+ */
+export function localizeName(val: string | null | undefined, lang: string = "en"): string {
+  if (!val) return "";
+  const v = String(val);
+  if (lang === "en") return v;
+  return AUTHENTIC_NAMES_DICT[v.trim().toLowerCase()]?.[lang] || v;
+}
+
+/** Localize or transliterate any business/entity term dynamically into the target language. Not for names — use localizeName. */
 export function localizeTerm(val: string | null | undefined, lang: string = "en"): string {
   if (!val) return "";
   if (lang === "en") return val;

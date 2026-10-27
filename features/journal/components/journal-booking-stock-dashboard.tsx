@@ -1,4 +1,5 @@
 "use client";
+import { t } from "@/lib/i18n/ui";
 
 /**
  * Stock Journal — Purchase Booking & Local Purchase → Loading → Receiving & Customs → Confirm Stock → Sale / Export.
@@ -1184,7 +1185,7 @@ export function JournalBookingStockDashboard({
                   })}
                 </div>
                 <span className="text-[10px] text-blue-600 font-semibold dark:text-blue-400">
-                  {metricFilter === "total" ? "✓ Active" : "Click to view"}
+                  {metricFilter === "total" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
                 </span>
               </button>
 
@@ -1215,7 +1216,7 @@ export function JournalBookingStockDashboard({
                   })}
                 </div>
                 <span className="text-[10px] text-amber-600 font-semibold dark:text-amber-400">
-                  {metricFilter === "remaining" ? "✓ Active" : "Click to view"}
+                  {metricFilter === "remaining" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
                 </span>
               </button>
 
@@ -1246,7 +1247,7 @@ export function JournalBookingStockDashboard({
                   })}
                 </div>
                 <span className="text-[10px] text-emerald-600 font-semibold dark:text-emerald-400">
-                  {metricFilter === "available" ? "✓ Active" : "Click to view"}
+                  {metricFilter === "available" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
                 </span>
               </button>
             </div>

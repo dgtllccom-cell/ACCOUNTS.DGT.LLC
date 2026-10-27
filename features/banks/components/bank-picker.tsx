@@ -5,12 +5,12 @@ import { listBanks, getBankById, type BankRecord } from "@/features/banks/bank-a
 import { BankForm } from "@/features/banks/components/bank-form";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
+import { localizeName } from "@/lib/i18n/transliteration";
 
 function toOption(row: BankRecord, lang: string = "en"): SearchSelectOption {
-  const bankName = localizeTerm(row.bank_name, lang);
-  const accountTitle = localizeTerm(row.account_title, lang);
-  const branchName = row.branch_name ? localizeTerm(row.branch_name, lang) : null;
+  const bankName = localizeName(row.bank_name, lang);
+  const accountTitle = localizeName(row.account_title, lang);
+  const branchName = row.branch_name ? localizeName(row.branch_name, lang) : null;
   // Label shows: Bank Name — Account Title
   const label = `${bankName} — ${accountTitle}`;
   const keywords = [
@@ -139,15 +139,15 @@ export function BankPicker({
       {/* View Bank Modal */}
       {viewBank ? (
         <SimpleModal
-          title={`${t(lang, "bankreg.bp_bank_details_dash", "Bank Details —")} ${localizeTerm(viewBank.bank_name, lang)}`}
+          title={`${t(lang, "bankreg.bp_bank_details_dash", "Bank Details —")} ${localizeName(viewBank.bank_name, lang)}`}
           onClose={() => setViewBank(null)}
           className="w-[96vw] max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl font-sans shadow-2xl"
         >
           <div className="p-5 space-y-4 text-xs text-slate-800 dark:text-slate-200">
             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
               <div>
-                <h3 className="text-base font-black tracking-wide text-slate-900 dark:text-white">{localizeTerm(viewBank.bank_name, lang)}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{t(lang, "bankreg.bp_account_title_colon", "Account Title:")} <span className="font-bold text-slate-700 dark:text-slate-300">{localizeTerm(viewBank.account_title, lang)}</span></p>
+                <h3 className="text-base font-black tracking-wide text-slate-900 dark:text-white">{localizeName(viewBank.bank_name, lang)}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{t(lang, "bankreg.bp_account_title_colon", "Account Title:")} <span className="font-bold text-slate-700 dark:text-slate-300">{localizeName(viewBank.account_title, lang)}</span></p>
               </div>
               <div className="text-right">
                 <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900">
@@ -164,7 +164,7 @@ export function BankPicker({
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_branch_name_code", "Branch Name / Code")}</span>
-                <span className="font-bold text-slate-800 dark:text-white text-sm">{viewBank.branch_name ? localizeTerm(viewBank.branch_name, lang) : "—"} ({viewBank.branch_code || "N/A"})</span>
+                <span className="font-bold text-slate-800 dark:text-white text-sm">{viewBank.branch_name ? localizeName(viewBank.branch_name, lang) : "—"} ({viewBank.branch_code || "N/A"})</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_short_name", "Short Name")}</span>

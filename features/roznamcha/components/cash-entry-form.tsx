@@ -84,6 +84,7 @@ import {
 import { Th } from "@/components/ui/translated-th";
 import { resolveVerifiedTranslation } from "@/lib/i18n/verified-record-translations";
 import { translateNarrationBlock, translateHeader } from "@/lib/i18n/table-headers";
+import { translateValue } from "@/lib/i18n/table-values";
 import { localizeCountryName } from "@/lib/i18n/country-names";
 import { localizeTerm } from "@/lib/i18n/transliteration";
 
@@ -522,7 +523,13 @@ export function CashEntryForm({
 
   const [saving, setSaving] = useState(false);
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessageText] = useState<string | null>(null);
+  // notices are shown in the selected language, so the tone is kept with them instead of being guessed from English words
+  const [messageIsError, setMessageIsError] = useState(false);
+  const setMessage = (text: string | null, isError = false) => {
+    setMessageIsError(isError);
+    setMessageText(text);
+  };
   const [lastEntryId, setLastEntryId] = useState<string | null>(null);
   const [savedSerials, setSavedSerials] = useState<{
     superAdmin?: string | null;
@@ -806,10 +813,10 @@ export function CashEntryForm({
       return tr("cj.roleBranchAdmin", "Branch Admin");
     }
     if (primaryRole) {
-      return primaryRole.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      return translateHeader(lang, primaryRole.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()));
     }
-    return "Staff User";
-  }, [session, tr]);
+    return tr("role.staff_user", "Staff User");
+  }, [session, tr, lang]);
 
   const currentSerialDisplay = useMemo(() => {
     if (isSuperAdmin) {
@@ -2383,10 +2390,10 @@ export function CashEntryForm({
     });
 
     setActiveCreator(h.profiles?.full_name || row.profiles?.full_name || "System User");
-    setActiveApprover(h.approver_profile?.full_name || row.approver_profile?.full_name || (h.status === "approved" ? "Approved" : "Pending"));
+    setActiveApprover(h.approver_profile?.full_name || row.approver_profile?.full_name || (h.status === "approved" ? tr("cef.approved", "Approved") : tr("cj.pending", "Pending")));
     setActiveStatus(h.status || row.status || "posted");
     
-    setMessage(`Editing entry serials: ${[h.super_admin_serial_number || row.super_admin_serial_number, h.country_transaction_serial_number || row.country_transaction_serial_number, h.branch_transaction_serial_number || row.branch_transaction_serial_number].filter(Boolean).join(" / ")}`);
+    setMessage(tr("cef.msg_editing_serials", "Editing entry — serials: {serials}").replace("{serials}", [h.super_admin_serial_number || row.super_admin_serial_number, h.country_transaction_serial_number || row.country_transaction_serial_number, h.branch_transaction_serial_number || row.branch_transaction_serial_number].filter(Boolean).join(" / ")));
     
     const formElement = document.querySelector("h3")?.closest(".Card") || document.querySelector(".Payment-Work-Entry-card");
     formElement?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2433,15 +2440,15 @@ export function CashEntryForm({
       const res = await fetch(`/api/erp/roznamcha/${entryId}`, { method: "DELETE" });
       if (!res.ok) {
         const errText = await res.text();
-        setMessage(`Failed to delete entry: ${errText}`);
+        setMessage(tr("cef.msg_delete_failed", "Failed to delete entry: {error}").replace("{error}", errText), true);
         return;
       }
-      setMessage("Entry deleted successfully.");
+      setMessage(tr("cef.msg_deleted", "Entry deleted successfully."));
       setActiveRowMenuId(null);
       fetchRecentEntries();
       fetchCashSummary();
     } catch (error: any) {
-      setMessage(`Failed to delete entry: ${error?.message || "Unknown error"}`);
+      setMessage(tr("cef.msg_delete_failed", "Failed to delete entry: {error}").replace("{error}", error?.message || tr("cef.msg_unknown_error", "Unknown error")), true);
     }
   };
   async function save() {
@@ -2452,21 +2459,21 @@ export function CashEntryForm({
 
     if (!canSave) {
       if (!countryId || (!countryBranchId && !cityBranchId)) {
-        setMessage("Please select a Country and Branch before posting.");
+        setMessage(tr("cef.msg_need_country_branch", "Please select a Country and Branch before posting."), true);
       } else if (!counterLedgerId && !selectedCrossBranchAccount) {
-        setMessage("Please select an Account (Step 2).");
+        setMessage(tr("cef.msg_need_account", "Please select an Account (Step 2)."), true);
       } else if (!paymentType) {
-        setMessage("Please select a Transaction Type (Customer, Supplier, etc.).");
+        setMessage(tr("cef.msg_need_txn_type", "Please select a Transaction Type (Customer, Supplier, etc.)."), true);
       } else if (!paymentMode) {
-        setMessage("Please select Payment Mode (Debit or Credit).");
+        setMessage(tr("cef.msg_need_payment_mode", "Please select Payment Mode (Debit or Credit)."), true);
       } else if (!amount || amount <= 0) {
-        setMessage("Please enter a valid Amount greater than 0.");
+        setMessage(tr("cef.msg_need_amount", "Please enter a valid Amount greater than 0."), true);
       } else if ((currency || "").trim().length !== 3) {
-        setMessage("Please select a valid 3-letter currency.");
+        setMessage(tr("cef.msg_need_currency", "Please select a valid 3-letter currency."), true);
       } else if (isRatePending) {
-        setMessage(`Cannot post: No approved exchange rate for ${currency || branchCurrency} on ${entryDate}. Country Admin must enter today's rate in Daily Exchange Rate module.`);
+        setMessage(tr("cj.mRatePendingBody", "No approved exchange rate for {cur} on {date}. Country Admin must enter today's rate in Daily Exchange Rate module before financial postings can be saved.").replace("{cur}", String(currency || branchCurrency)).replace("{date}", String(entryDate)), true);
       } else {
-        setMessage("Please select account, Debit/Credit transaction type, currency, and amount.");
+        setMessage(tr("cef.msg_need_all", "Please select account, Debit/Credit transaction type, currency, and amount."), true);
       }
       savingRef.current = false;
       return null;
@@ -2478,11 +2485,11 @@ export function CashEntryForm({
         const delRes = await fetch(`/api/erp/roznamcha/${editEntryId}`, { method: "DELETE" });
         if (!delRes.ok) {
           const errText = await delRes.text();
-          setMessage(`Failed to reverse old entry for edit: ${errText}`);
+          setMessage(tr("cef.msg_reverse_failed", "Failed to reverse the old entry: {error}").replace("{error}", errText), true);
           return null;
         }
       } catch (e: any) {
-        setMessage(`Failed to reverse old entry: ${e.message}`);
+        setMessage(tr("cef.msg_reverse_failed", "Failed to reverse the old entry: {error}").replace("{error}", String(e?.message || "")), true);
         return null;
       }
     }
@@ -2642,12 +2649,12 @@ export function CashEntryForm({
       });
       const roleName = session?.roles?.[0] ? session.roles[0].replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) : "User";
       setActiveCreator(`${session?.user?.fullName || "System User"} | ${roleName}`);
-      setActiveApprover(res.balanced ? "System / Auto Approved" : "Pending");
+      setActiveApprover(res.balanced ? tr("cef.auto_approved", "System / Auto Approved") : tr("cj.pending", "Pending"));
       setActiveStatus("posted");
       const serialText = [res.superAdminSerialNumber, res.countryTransactionSerialNumber, res.branchTransactionSerialNumber, (res as any).mainBranchTransactionSerialNumber, (res as any).cityBranchTransactionSerialNumber, (res as any).entrySerialNumber]
         .filter(Boolean)
         .join(" / ");
-      setMessage(`Saved successfully. Serials: ${serialText || res.entryId || "N/A"}`);
+      setMessage(tr("cef.msg_saved_serials", "Saved successfully. Serials: {serials}").replace("{serials}", serialText || res.entryId || "—"));
       window.dispatchEvent(
         new CustomEvent("erp:posting-saved", {
           detail: { source: "roznamcha", entryId: res.entryId ?? null }
@@ -2678,7 +2685,7 @@ export function CashEntryForm({
 
       return res.entryId ?? null;
     } catch (e: any) {
-      setMessage(e?.message || "Save failed");
+      setMessage(e?.message || tr("cef.msg_save_failed", "Save failed"), true);
       return null;
     } finally {
       savingRef.current = false;
@@ -3120,7 +3127,7 @@ export function CashEntryForm({
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-start">{tr("cj.status", "STATUS")}</span>
                 <div>
                   <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400">
-                    {activeStatus?.toUpperCase() || tr("cj.statusDraft", "DRAFT")}
+                    {activeStatus ? translateValue(lang, activeStatus.toUpperCase()) : tr("cj.statusDraft", "DRAFT")}
                   </span>
                 </div>
               </div>
@@ -3635,13 +3642,13 @@ export function CashEntryForm({
         {message ? (
           <div className={cn(
             "rounded-lg border px-4 py-2.5 text-xs font-semibold flex items-center gap-2",
-            message.toLowerCase().includes("fail") || message.toLowerCase().includes("error")
+            messageIsError
               ? "border-rose-200 bg-rose-50 text-rose-900 dark:bg-rose-950/20 dark:border-rose-800 dark:text-rose-400"
               : "border-emerald-200 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400"
           )}>
             <CheckCircle className={cn(
               "h-4 w-4",
-              message.toLowerCase().includes("fail") || message.toLowerCase().includes("error") ? "text-rose-600 hidden" : "text-emerald-600"
+              messageIsError ? "text-rose-600 hidden" : "text-emerald-600"
             )} />
             <span>{message}</span>
           </div>
@@ -3691,19 +3698,13 @@ export function CashEntryForm({
                   <div
                     className={cn(
                       "rounded-xl border p-3 text-xs font-semibold flex items-center justify-between gap-2 shadow-xs",
-                      message.toLowerCase().includes("fail") ||
-                      message.toLowerCase().includes("error") ||
-                      message.toLowerCase().includes("cannot") ||
-                      message.toLowerCase().includes("please")
+                      messageIsError
                         ? "border-rose-200 bg-rose-50 text-rose-900 dark:bg-rose-950/30 dark:border-rose-800 dark:text-rose-300"
                         : "border-emerald-200 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300"
                     )}
                   >
                     <div className="flex items-center gap-2">
-                      {message.toLowerCase().includes("fail") ||
-                      message.toLowerCase().includes("error") ||
-                      message.toLowerCase().includes("cannot") ||
-                      message.toLowerCase().includes("please") ? (
+                      {messageIsError ? (
                         <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
                       ) : (
                         <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />

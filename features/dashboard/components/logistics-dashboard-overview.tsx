@@ -115,16 +115,6 @@ const SHIPPING_WIDGETS: DashboardWidgetItem[] = [
   { id: "tabbed_documents", label: "Documents & Containers Bottom Section", category: "Tables" }
 ];
 
-/* ── 6-Month Trend Data matching Reference Image 2 ───────────────── */
-const SIX_MONTH_TREND = [
-  { month: "May", shipments: 120, clearance: 70, deliveries: 85, trend: 100 },
-  { month: "Jun", shipments: 145, clearance: 90, deliveries: 135, trend: 125 },
-  { month: "Jul", shipments: 165, clearance: 110, deliveries: 125, trend: 140 },
-  { month: "Aug", shipments: 115, clearance: 85, deliveries: 110, trend: 130 },
-  { month: "Sep", shipments: 135, clearance: 95, deliveries: 95, trend: 135 },
-  { month: "Oct", shipments: 155, clearance: 115, deliveries: 130, trend: 145 },
-];
-
 /* ── Helper Status Stylers matching Reference Image 2 ─────────────── */
 function getStatusBadge(status: string) {
   const norm = (status || "").toLowerCase().replace(/_/g, " ");
@@ -162,7 +152,6 @@ export function LogisticsDashboardOverview({
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
 
   const [activeTab, setActiveTab] = useState<"documents" | "containers" | "trucks" | "agents" | "alerts">("documents");
-  const [trendRange, setTrendRange] = useState("Last 6 Months");
   const [actionsOpen, setActionsOpen] = useState(false);
   const router = useRouter();
   // ONE ⋮ menu: the quick-create actions live in the global page-actions menu (no second "Actions" menu in the page).
@@ -197,141 +186,71 @@ export function LogisticsDashboardOverview({
     }
   }, [actionsOpen]);
 
-  // Fallback data strictly aligning with Reference Image 2 when DB rows are empty
+  // Only real records and counts. Missing values show "—"; nothing is filled in with sample data.
   const displayShipments = useMemo(() => {
-    if (data.shipments && data.shipments.length > 0) {
-      return data.shipments.map((s) => ({
-        id: s.id,
-        date: s.date || "15 Oct 2026",
-        shippingLine: s.shippingLineName || "Maersk Line",
-        container: s.containerNumber || "MSKU7845123",
-        vessel: s.vesselName || "Maersk Houston",
-        eta: s.eta || "20 Oct 2026",
-        status: s.status || "In Transit",
-      }));
-    }
-
-    return [
-      { id: "1", date: "15 Oct 2026", shippingLine: "Maersk Line", container: "MSKU7845123", vessel: "Maersk Houston", eta: "20 Oct 2026", status: "In Transit" },
-      { id: "2", date: "14 Oct 2026", shippingLine: "CMA CGM", container: "CMAU6398712", vessel: "CMA CGM Libra", eta: "18 Oct 2026", status: "Pending Clearance" },
-      { id: "3", date: "14 Oct 2026", shippingLine: "Hapag-Lloyd", container: "HLXU1234567", vessel: "Hapag Hong Kong", eta: "22 Oct 2026", status: "Delivered" },
-      { id: "4", date: "13 Oct 2026", shippingLine: "MSC", container: "MSCU988776", vessel: "MSC Aurora", eta: "19 Oct 2026", status: "In Transit" },
-      { id: "5", date: "12 Oct 2026", shippingLine: "Evergreen", container: "EISU4455667", vessel: "EVER ACE", eta: "21 Oct 2026", status: "Clearance" }
-    ];
+    return (data.shipments ?? []).map((s) => ({
+      id: s.id,
+      date: s.date || "—",
+      shippingLine: s.shippingLineName || "—",
+      container: s.containerNumber || "—",
+      vessel: s.vesselName || "—",
+      eta: s.eta || "—",
+      status: s.status || "—",
+    }));
   }, [data.shipments]);
 
   const displayTasks = useMemo(() => {
-    if (data.tasks && data.tasks.length > 0) {
-      return data.tasks.map((t, idx) => ({
-        id: t.id,
-        task: t.title || t.assignmentNo,
-        relatedTo: t.targetType || "SHP-2026-001",
-        dueDate: t.dueAt || "15 Oct 2026",
-        priority: t.priority || (idx === 0 || idx === 1 ? "High" : idx === 2 ? "Medium" : "Low"),
-        status: t.status === "completed" ? "Completed" : idx === 1 ? "In Progress" : "Pending",
-      }));
-    }
-
-    return [
-      { id: "1", task: "Submit BL Draft", relatedTo: "SHP-2026-001", dueDate: "15 Oct 2026", priority: "High", status: "Pending" },
-      { id: "2", task: "Customs Documentation", relatedTo: "CNT-7845123", dueDate: "16 Oct 2026", priority: "High", status: "In Progress" },
-      { id: "3", task: "Container Inspection", relatedTo: "SHP-2026-003", dueDate: "16 Oct 2026", priority: "Medium", status: "Pending" },
-      { id: "4", task: "Handover to Trucking", relatedTo: "SHP-2026-004", dueDate: "17 Oct 2026", priority: "Medium", status: "Pending" },
-      { id: "5", task: "Payment Verification", relatedTo: "INV-2026-778", dueDate: "18 Oct 2026", priority: "Low", status: "Pending" }
-    ];
+    return (data.tasks ?? []).map((t) => ({
+      id: t.id,
+      task: t.title || t.assignmentNo,
+      relatedTo: t.targetType || "—",
+      dueDate: t.dueAt || "—",
+      priority: t.priority || "",
+      status: t.status === "completed" ? "Completed" : "Pending",
+    }));
   }, [data.tasks]);
 
-  const recentDocuments = useMemo(() => {
-    return [
-      { id: "1", date: "15 Oct 2026", type: "Bill of Lading", ref: "BL-2026-00123", relatedTo: "SHP-2026-001", status: "Completed" },
-      { id: "2", date: "14 Oct 2026", type: "Commercial Invoice", ref: "INV-2026-778", relatedTo: "SHP-2026-002", status: "Pending" },
-      { id: "3", date: "14 Oct 2026", type: "Packing List", ref: "PL-2026-445", relatedTo: "CNT-7845123", status: "Completed" }
-    ];
-  }, []);
+  // No document feed reaches this widget yet: none are listed rather than sample documents.
+  const recentDocuments: Array<{ id: string; date: string; type: string; ref: string; relatedTo: string; status: string }> = [];
 
   const statusMix = useMemo(() => {
-    return [
-      { name: "In Transit", count: 123, pct: "36%", color: "#2563eb" },
-      { name: "Pending Clearance", count: 82, pct: "24%", color: "#f97316" },
-      { name: "Delivered", count: 75, pct: "22%", color: "#10b981" },
-      { name: "Others", count: 62, pct: "18%", color: "#a855f7" }
+    const rows = [
+      { name: tt("log.seg_in_transit", "In Transit"), count: data.inTransit ?? 0, color: "#2563eb" },
+      { name: tt("log.kpi_pending_clearance", "Pending Clearance"), count: data.pendingClearance ?? 0, color: "#f97316" },
+      { name: tt("log.seg_delivered", "Delivered"), count: data.delivered ?? 0, color: "#10b981" },
+      { name: tt("log.seg_completed", "Completed"), count: data.completedShipments ?? 0, color: "#a855f7" }
     ];
-  }, []);
+    const total = rows.reduce((sum, r) => sum + r.count, 0);
+    return rows.filter((r) => r.count > 0).map((r) => ({ ...r, pct: total ? `${Math.round((r.count / total) * 100)}%` : "0%" }));
+  }, [data.inTransit, data.pendingClearance, data.delivered, data.completedShipments, lang]);
+  const statusMixTotal = statusMix.reduce((sum, r) => sum + r.count, 0);
 
-  // 8 Status KPI Cards matching Reference Image 2
+  const stageTrend = [
+    { stage: tt("log.seg_assigned", "Assigned"), count: data.assignedShipments ?? 0 },
+    { stage: tt("log.seg_pending", "Pending"), count: data.pendingClearance ?? 0 },
+    { stage: tt("log.seg_in_transit", "In Transit"), count: data.inTransit ?? 0 },
+    { stage: tt("log.seg_delivered", "Delivered"), count: data.delivered ?? 0 },
+    { stage: tt("log.seg_completed", "Completed"), count: data.completedShipments ?? 0 }
+  ];
+
+  // 8 status cards — the real counts (0 when there are none), no invented trend percentages
   const kpiCards = [
-    {
-      label: "Assigned Shipments",
-      value: String(data.assignedShipments ?? 0),
-      change: "↑ 12%",
-      sub: "Active shipments in pipeline",
-      badgeColor: "bg-blue-100/80 text-blue-600 dark:bg-blue-950 dark:text-blue-400",
-      icon: <Package className="h-4.5 w-4.5" />,
-      link: "/dashboard/shipping-line/bl-entry"
-    },
-    {
-      label: "Pending Clearance",
-      value: String(data.pendingClearance || 24),
-      change: "↑ 8%",
-      sub: "Awaiting customs clearance",
-      badgeColor: "bg-amber-100/80 text-amber-600 dark:bg-amber-950 dark:text-amber-400",
-      icon: <Briefcase className="h-4.5 w-4.5" />,
-      link: "/dashboard/clearing-agent/clearing-workspace"
-    },
-    {
-      label: "In Transit",
-      value: String(data.inTransit || 56),
-      change: "↑ 18%",
-      sub: "Currently in transit",
-      badgeColor: "bg-emerald-100/80 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400",
-      icon: <Truck className="h-4.5 w-4.5" />,
-      link: "/dashboard/shipping-line/tracking"
-    },
-    {
-      label: "Containers Tracking",
-      value: String(data.trackedContainers || 342),
-      change: "↑ 6%",
-      sub: "Active containers",
-      badgeColor: "bg-purple-100/80 text-purple-600 dark:bg-purple-950 dark:text-purple-400",
-      icon: <Boxes className="h-4.5 w-4.5" />,
-      link: "/dashboard/shipping-line/tracking?tab=containers"
-    },
-    {
-      label: "Open Documents",
-      value: String(data.documents || 18),
-      change: "↑ 10%",
-      sub: "Pending documents",
-      badgeColor: "bg-rose-100/80 text-rose-600 dark:bg-rose-950 dark:text-rose-400",
-      icon: <FileText className="h-4.5 w-4.5" />,
-      link: "/dashboard/shipping-line/bl-entry"
-    },
-    {
-      label: "Delivery Completed",
-      value: String(data.delivered || 286),
-      change: "↑ 22%",
-      sub: "Completed shipments",
-      badgeColor: "bg-blue-100/80 text-blue-600 dark:bg-blue-950 dark:text-blue-400",
-      icon: <CheckCircle2 className="h-4.5 w-4.5" />,
-      link: "/dashboard/shipping-line/bl-entry?status=delivered"
-    },
-    {
-      label: "Pending Tasks",
-      value: String(data.pendingTasks || 16),
-      change: "↑ 5%",
-      sub: "Awaiting action",
-      badgeColor: "bg-orange-100/80 text-orange-600 dark:bg-orange-950 dark:text-orange-400",
-      icon: <Flame className="h-4.5 w-4.5" />,
-      link: "/dashboard/user-tasks"
-    },
-    {
-      label: "Notifications",
-      value: String(data.notifications || 7),
-      change: "↑ 0%",
-      sub: "Recent updates",
-      badgeColor: "bg-teal-100/80 text-teal-600 dark:bg-teal-950 dark:text-teal-400",
-      icon: <Bell className="h-4.5 w-4.5" />,
-      link: "/dashboard/user-tasks"
-    }
+    { label: tt("log.kpi_assigned", "Assigned Shipments"), value: String(data.assignedShipments ?? 0), change: "", sub: tt("log.cap_assigned", "Open logistics workload"),
+      badgeColor: "bg-blue-100/80 text-blue-600 dark:bg-blue-950 dark:text-blue-400", icon: <Package className="h-4.5 w-4.5" />, link: "/dashboard/shipping-line/bl-entry" },
+    { label: tt("log.kpi_pending_clearance", "Pending Clearance"), value: String(data.pendingClearance ?? 0), change: "", sub: tt("log.cap_pending_clearance", "Needs clearance action"),
+      badgeColor: "bg-amber-100/80 text-amber-600 dark:bg-amber-950 dark:text-amber-400", icon: <Briefcase className="h-4.5 w-4.5" />, link: "/dashboard/clearing-agent/clearing-workspace" },
+    { label: tt("log.seg_in_transit", "In Transit"), value: String(data.inTransit ?? 0), change: "", sub: tt("log.cap_shipping_status", "Currently in transit"),
+      badgeColor: "bg-emerald-100/80 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400", icon: <Truck className="h-4.5 w-4.5" />, link: "/dashboard/shipping-line/tracking" },
+    { label: tt("log.kpi_container_tracking", "Container Tracking"), value: String(data.trackedContainers ?? 0), change: "", sub: tt("log.cap_container_tracking", "Containers with tracking"),
+      badgeColor: "bg-purple-100/80 text-purple-600 dark:bg-purple-950 dark:text-purple-400", icon: <Boxes className="h-4.5 w-4.5" />, link: "/dashboard/shipping-line/tracking?tab=containers" },
+    { label: tt("log.kpi_documents", "Documents"), value: String(data.documents ?? 0), change: "", sub: tt("log.cap_documents", "BL and shipment records"),
+      badgeColor: "bg-rose-100/80 text-rose-600 dark:bg-rose-950 dark:text-rose-400", icon: <FileText className="h-4.5 w-4.5" />, link: "/dashboard/shipping-line/bl-entry" },
+    { label: tt("log.kpi_delivery_status", "Delivery Status"), value: String(data.delivered ?? 0), change: "", sub: tt("log.cap_delivery_status", "Delivered or released"),
+      badgeColor: "bg-blue-100/80 text-blue-600 dark:bg-blue-950 dark:text-blue-400", icon: <CheckCircle2 className="h-4.5 w-4.5" />, link: "/dashboard/shipping-line/bl-entry?status=delivered" },
+    { label: tt("log.pending_tasks", "Pending Tasks"), value: String(data.pendingTasks ?? 0), change: "", sub: tt("log.new_assignments_appear", "New assignments will appear here."),
+      badgeColor: "bg-orange-100/80 text-orange-600 dark:bg-orange-950 dark:text-orange-400", icon: <Flame className="h-4.5 w-4.5" />, link: "/dashboard/user-tasks" },
+    { label: tt("log.kpi_notifications", "Notifications"), value: String(data.notifications ?? 0), change: "", sub: tt("log.cap_notifications", "Open system alerts"),
+      badgeColor: "bg-teal-100/80 text-teal-600 dark:bg-teal-950 dark:text-teal-400", icon: <Bell className="h-4.5 w-4.5" />, link: "/dashboard/user-tasks" }
   ];
 
   return (
@@ -373,7 +292,7 @@ export function LogisticsDashboardOverview({
                 </h1>
 
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium">
-                  Operational dashboard tracking freight shipments, customs clearance, transit containers, and task handovers.
+                  {tt("log.dashboard_subtitle", "Operational dashboard tracking live shipments, customs clearing, BL tasks and container locations.")}
                 </p>
               </div>
 
@@ -393,7 +312,7 @@ export function LogisticsDashboardOverview({
 
             {/* Bottom slogan */}
             <div className="pt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
-              GLOBAL SHIPPING BRIGHTER TOMORROW
+              {tt("log.hero_slogan", "Global shipping, brighter tomorrow")}
             </div>
           </div>
         </div>
@@ -444,36 +363,21 @@ export function LogisticsDashboardOverview({
                   {translateHeader(lang, "Shipment & Clearance Trend")}
                 </h3>
               </div>
-              <button
-                type="button"
-                className="h-6 px-2 text-[10.5px] font-semibold border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 inline-flex items-center gap-1"
-              >
-                <span>{trendRange}</span>
-                <ChevronDown className="h-3 w-3 text-slate-400" />
-              </button>
             </div>
 
             {/* Custom Legend */}
             <div className="flex items-center gap-3.5 text-[10px] font-bold pt-2">
               <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                 <span className="h-2 w-2 rounded-full bg-blue-600" />
-                <span>Shipments</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
-                <span>Clearance</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span>Deliveries</span>
+                <span>{tt("log.trend_subtitle", "Operational movement by current stage")}</span>
               </div>
             </div>
 
             <div className="h-[200px] w-full pt-2">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={SIX_MONTH_TREND} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                <ComposedChart data={stageTrend} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="month" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} />
+                  <XAxis dataKey="stage" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} />
                   <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} />
                   <Tooltip
                     contentStyle={{
@@ -484,10 +388,7 @@ export function LogisticsDashboardOverview({
                       fontSize: 11
                     }}
                   />
-                  <Bar dataKey="shipments" fill="#2563eb" radius={[3, 3, 0, 0]} barSize={8} />
-                  <Bar dataKey="clearance" fill="#f59e0b" radius={[3, 3, 0, 0]} barSize={8} />
-                  <Bar dataKey="deliveries" fill="#10b981" radius={[3, 3, 0, 0]} barSize={8} />
-                  <Line type="monotone" dataKey="trend" stroke="#38bdf8" strokeWidth={2} dot={{ r: 3, fill: "#0284c7" }} />
+                  <Bar dataKey="count" name={tt("shtrk.view_shipments", "Shipments")} fill="#2563eb" radius={[3, 3, 0, 0]} barSize={18} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -523,8 +424,8 @@ export function LogisticsDashboardOverview({
               </ResponsiveContainer>
 
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-xl font-black text-slate-900 dark:text-white leading-tight">342</span>
-                <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Total</span>
+                <span className="text-xl font-black text-slate-900 dark:text-white leading-tight">{statusMixTotal}</span>
+                <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">{tt("common.total", "Total")}</span>
               </div>
             </div>
 
@@ -560,7 +461,7 @@ export function LogisticsDashboardOverview({
                 <div className="h-7 w-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                   <Ship className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[11px] truncate">New Shipment</span>
+                <span className="text-[11px] truncate">{tt("log.qa_new_shipment", "New Shipment")}</span>
               </Link>
 
               <Link
@@ -570,7 +471,7 @@ export function LogisticsDashboardOverview({
                 <div className="h-7 w-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                   <FileText className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[11px] truncate">BL Entry</span>
+                <span className="text-[11px] truncate">{tt("ble.card_entry_title", "BL Entry")}</span>
               </Link>
 
               <Link
@@ -580,7 +481,7 @@ export function LogisticsDashboardOverview({
                 <div className="h-7 w-7 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
                   <Boxes className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[11px] truncate">Container Tracking</span>
+                <span className="text-[11px] truncate">{tt("log.kpi_container_tracking", "Container Tracking")}</span>
               </Link>
 
               <Link
@@ -590,7 +491,7 @@ export function LogisticsDashboardOverview({
                 <div className="h-7 w-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                   <Ship className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[11px] truncate">Vessel Tracking</span>
+                <span className="text-[11px] truncate">{tt("log.qa_vessel_tracking", "Vessel Tracking")}</span>
               </Link>
 
               <Link
@@ -600,7 +501,7 @@ export function LogisticsDashboardOverview({
                 <div className="h-7 w-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                   <Truck className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[11px] truncate">Trucking & Transport</span>
+                <span className="text-[11px] truncate">{tt("log.qa_trucking_transport", "Trucking & Transport")}</span>
               </Link>
 
               <Link
@@ -610,7 +511,7 @@ export function LogisticsDashboardOverview({
                 <div className="h-7 w-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                   <ArrowLeftRight className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[11px] truncate">Transfer & Handover</span>
+                <span className="text-[11px] truncate">{tt("log.qa_transfer_handover", "Transfer & Handover")}</span>
               </Link>
 
               <Link
@@ -620,7 +521,7 @@ export function LogisticsDashboardOverview({
                 <div className="h-7 w-7 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
                   <FileText className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[11px] truncate">Open Documents</span>
+                <span className="text-[11px] truncate">{tt("log.qa_open_documents", "Open Documents")}</span>
               </Link>
 
               <Link
@@ -630,7 +531,7 @@ export function LogisticsDashboardOverview({
                 <div className="h-7 w-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
                   <Users className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[11px] truncate">Customer Order</span>
+                <span className="text-[11px] truncate">{tt("lgdash.customer_order", "Customer Order")}</span>
               </Link>
             </div>
           </div>
@@ -653,7 +554,7 @@ export function LogisticsDashboardOverview({
                 href="/dashboard/shipping-line/tracking"
                 className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
               >
-                View All <ArrowRight className="h-3 w-3" />
+                {tt("crm.view_all", "View All")} <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
 
@@ -672,6 +573,11 @@ export function LogisticsDashboardOverview({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
+                  {displayShipments.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-3.5 py-6 text-center text-xs text-slate-500">{tt("log.no_shipments", "No logistics shipments found yet.")}</td>
+                    </tr>
+                  ) : null}
                   {displayShipments.map((s, idx) => (
                     <tr key={s.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="px-3.5 py-2.5 text-slate-400 text-[11px]">{idx + 1}</td>
@@ -682,7 +588,7 @@ export function LogisticsDashboardOverview({
                       <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">{s.eta}</td>
                       <td className="px-3.5 py-2.5 text-center">
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9.5px] font-bold ${getStatusBadge(s.status)}`}>
-                          {s.status}
+                          {translateHeader(lang, s.status)}
                         </span>
                       </td>
                       <td className="px-3.5 py-2.5 text-right">
@@ -712,7 +618,7 @@ export function LogisticsDashboardOverview({
                 href="/dashboard/user-tasks"
                 className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
               >
-                View All <ArrowRight className="h-3 w-3" />
+                {tt("crm.view_all", "View All")} <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
 
@@ -730,6 +636,11 @@ export function LogisticsDashboardOverview({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
+                  {displayTasks.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-3 py-6 text-center text-xs text-slate-500">{tt("log.no_pending_tasks", "No pending tasks")}</td>
+                    </tr>
+                  ) : null}
                   {displayTasks.map((t, idx) => (
                     <tr key={t.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="px-3 py-2.5 text-slate-400 text-[11px]">{idx + 1}</td>
@@ -738,12 +649,12 @@ export function LogisticsDashboardOverview({
                       <td className="px-3 py-2.5 text-slate-500 whitespace-nowrap text-[10.5px]">{t.dueDate}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getPriorityBadge(t.priority || "Medium")}`}>
-                          {t.priority}
+                          {t.priority ? translateHeader(lang, t.priority) : "—"}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9.5px] font-bold ${getStatusBadge(t.status)}`}>
-                          {t.status}
+                          {translateHeader(lang, t.status)}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-right">
@@ -775,7 +686,7 @@ export function LogisticsDashboardOverview({
                 href="/dashboard/shipping-line/shipment-report"
                 className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
               >
-                View All <ArrowRight className="h-3 w-3" />
+                {tt("crm.view_all", "View All")} <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
 
@@ -791,7 +702,7 @@ export function LogisticsDashboardOverview({
                 }`}
               >
                 <FileText className="h-3.5 w-3.5" />
-                Recent Documents (12)
+                {tt("log.tab_recent_documents", "Recent Documents")} ({recentDocuments.length})
               </button>
               <button
                 type="button"
@@ -803,7 +714,7 @@ export function LogisticsDashboardOverview({
                 }`}
               >
                 <Boxes className="h-3.5 w-3.5" />
-                Containers (342)
+                {tt("log.seg_containers", "Containers")} ({data.trackedContainers ?? 0})
               </button>
               <button
                 type="button"
@@ -815,7 +726,7 @@ export function LogisticsDashboardOverview({
                 }`}
               >
                 <Truck className="h-3.5 w-3.5" />
-                Truck Movements (28)
+                {tt("log.tab_truck_movements", "Truck Movements")}
               </button>
               <button
                 type="button"
@@ -827,7 +738,7 @@ export function LogisticsDashboardOverview({
                 }`}
               >
                 <Users className="h-3.5 w-3.5" />
-                Agent Activities (14)
+                {tt("log.tab_agent_activities", "Agent Activities")}
               </button>
               <button
                 type="button"
@@ -839,7 +750,7 @@ export function LogisticsDashboardOverview({
                 }`}
               >
                 <Bell className="h-3.5 w-3.5" />
-                System Alerts (7)
+                {tt("log.tab_system_alerts", "System Alerts")} ({data.notifications ?? 0})
               </button>
             </div>
           </div>
@@ -858,6 +769,11 @@ export function LogisticsDashboardOverview({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
+                {recentDocuments.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-6 text-center text-xs text-slate-500">{tt("log.no_documents", "No documents recorded yet.")}</td>
+                  </tr>
+                ) : null}
                 {recentDocuments.map((doc, idx) => (
                   <tr key={doc.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                     <td className="px-4 py-2.5 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
@@ -867,7 +783,7 @@ export function LogisticsDashboardOverview({
                     <td className="px-4 py-2.5 text-slate-600 dark:text-slate-400 font-mono text-[11px]">{doc.relatedTo}</td>
                     <td className="px-4 py-2.5 text-center">
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9.5px] font-bold ${getStatusBadge(doc.status)}`}>
-                        {doc.status}
+                        {translateHeader(lang, doc.status)}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-right">

@@ -636,9 +636,9 @@ export default function InterCountryTransfersPage() {
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="h-9 px-2 rounded-md border border-input bg-background text-xs"
           >
-            <option value="all">All Categories</option>
+            <option value="all">{translateHeader(language, "All Categories")}</option>
             <option value="general_business">General Business / Trade</option>
-            <option value="shipping_line">Shipping Line</option>
+            <option value="shipping_line">{translateHeader(language, "Shipping Line")}</option>
           </select>
         </div>
       </div>
@@ -718,7 +718,7 @@ export default function InterCountryTransfersPage() {
                         <td className="py-3 px-3">
                           {isShipping ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-300">
-                              <Ship className="h-3 w-3" /> Shipping Line
+                              <Ship className="h-3 w-3" /> {translateHeader(language, "Shipping Line")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300">
