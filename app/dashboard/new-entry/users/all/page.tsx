@@ -2197,7 +2197,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       <td className="py-3.5 px-3">
                         <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-medium text-xs">
                           <BusinessTypeIcon type={u.businessType} />
-                          <span className="truncate">{u.businessType || "General Business"}</span>
+                          <span className="truncate">{th(u.businessType || "General Business")}</span>
                         </div>
                       </td>
 
