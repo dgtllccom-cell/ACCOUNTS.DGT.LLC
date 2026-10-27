@@ -354,7 +354,7 @@ export function AdminUserManagementPanel() {
   }, [allUsersFlattened, searchQuery, selectedCountryFilter, selectedBranchFilter]);
 
   const renderUserTableRow = (u: BranchUser, branchCodeStr: string, countryNameStr: string) => {
-    const userRoleLabel = u.classification || u.role;
+    const userRoleLabel = translateHeader(lang, u.classification || u.role);
 
     return (
       <tr key={u.id} className="border-b transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
@@ -411,7 +411,7 @@ export function AdminUserManagementPanel() {
         </td>
 
         <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400">
-          {u.cityName || "-"}
+          {u.cityName === "Head Office" ? translateHeader(lang, "Head Office") : u.cityName || "-"}
         </td>
 
         <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400">

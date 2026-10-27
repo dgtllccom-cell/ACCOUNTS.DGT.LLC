@@ -272,7 +272,7 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>, s
 
       if (clearingBranch || clearingAgent) {
         branchName = clearingBranch?.name || clearingAgent?.name || "Clearing Agent Head Office";
-        branchCode = clearingBranch?.code || clearingAgent?.code || "CLEARING-HO-01";
+        branchCode = clearingBranch?.code || clearingAgent?.code || "-";
         cityName = "Head Office";
       } else if (cityBranch) {
         branchName = cityBranch.name;

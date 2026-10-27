@@ -12242,6 +12242,10 @@ export type UiKey =
   | "dash.dashboard_view"
   | "apperr.not_found_title"
   | "apperr.not_found_desc"
+  | "aump.class_country_admin_user"
+  | "aump.class_main_country_user"
+  | "aump.class_main_branch_user"
+  | "aump.class_city_branch_user"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37456,6 +37460,10 @@ const en: Dict = {
   "dash.dashboard_view": "Dashboard View",
   "apperr.not_found_title": "404 - Page Not Found",
   "apperr.not_found_desc": "The page or resource you requested could not be found or has moved.",
+  "aump.class_country_admin_user": "Country Admin User",
+  "aump.class_main_country_user": "Main Country User",
+  "aump.class_main_branch_user": "Main Branch User",
+  "aump.class_city_branch_user": "City Branch User",
 };
 
 const ur: Dict = {
@@ -62638,6 +62646,10 @@ const ur: Dict = {
   "dash.dashboard_view": "ڈیش بورڈ منظر",
   "apperr.not_found_title": "404 - صفحہ نہیں ملا",
   "apperr.not_found_desc": "آپ کا مطلوبہ صفحہ یا ریکارڈ نہیں ملا یا منتقل ہو چکا ہے۔",
+  "aump.class_country_admin_user": "ملک ایڈمن صارف",
+  "aump.class_main_country_user": "مرکزی ملک صارف",
+  "aump.class_main_branch_user": "مین برانچ صارف",
+  "aump.class_city_branch_user": "سٹی برانچ صارف",
 };
 
 const ar: Dict = {
@@ -87821,6 +87833,10 @@ const ar: Dict = {
   "dash.dashboard_view": "عرض لوحة التحكم",
   "apperr.not_found_title": "404 - الصفحة غير موجودة",
   "apperr.not_found_desc": "تعذر العثور على الصفحة أو المورد المطلوب أو تم نقله.",
+  "aump.class_country_admin_user": "مستخدم مسؤول الدولة",
+  "aump.class_main_country_user": "مستخدم الدولة الرئيسي",
+  "aump.class_main_branch_user": "مستخدم الفرع الرئيسي",
+  "aump.class_city_branch_user": "مستخدم فرع المدينة",
 };
 
 const fa: Dict = {
@@ -113003,6 +113019,10 @@ const fa: Dict = {
   "dash.dashboard_view": "نمای داشبورد",
   "apperr.not_found_title": "404 - صفحه پیدا نشد",
   "apperr.not_found_desc": "صفحه یا منبع درخواستی پیدا نشد یا منتقل شده است.",
+  "aump.class_country_admin_user": "کاربر مدیر کشور",
+  "aump.class_main_country_user": "کاربر اصلی کشور",
+  "aump.class_main_branch_user": "کاربر شعبه اصلی",
+  "aump.class_city_branch_user": "کاربر شعبه شهر",
 };
 
 const ps: Dict = {
@@ -138192,6 +138212,10 @@ const ps: Dict = {
   "dash.dashboard_view": "د ډشبورډ لید",
   "apperr.not_found_title": "404 - پاڼه ونه موندل شوه",
   "apperr.not_found_desc": "غوښتل شوې پاڼه یا سرچینه ونه موندل شوه یا لېږدول شوې ده.",
+  "aump.class_country_admin_user": "د هېواد مدیر کارن",
+  "aump.class_main_country_user": "د هېواد اصلي کارن",
+  "aump.class_main_branch_user": "د اصلي څانګې کارن",
+  "aump.class_city_branch_user": "د ښار د څانګې کارن",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
