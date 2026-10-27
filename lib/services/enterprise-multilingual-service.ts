@@ -230,6 +230,8 @@ export async function saveEnterpriseRecordTranslations(
       source: input.source ?? "auto",
       // only a person's entry is "complete"; an automatic rendering (dictionary substitution / transliteration) is search material that
       // still needs a human check, so no screen may show it as the person's name (see lib/i18n/customer-name.ts)
+      // (owner rule, issue #36: account / ledger names too — an automatic rendering is never stamped "verified"; the approved English
+      //  name comes from a person through Translation Management → Review queue)
       status: input.source === "manual" ? "complete" : "needs_review",
       engine: input.source === "manual" ? "manual" : "auto_unverified",
       actorId: input.source === "manual" ? input.actorId ?? null : null

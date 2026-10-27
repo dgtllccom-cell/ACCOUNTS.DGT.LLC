@@ -1155,13 +1155,13 @@ export function AccountSetupReport({
 
         {/* Table Content */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full text-left border-collapse text-xs min-w-[1250px]">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                <Th className="p-3 w-8 text-center">
+                <Th className="p-3 w-10 text-center">
                   <input
                     type="checkbox"
-                    className="rounded border-slate-300"
+                    className="h-4 w-4 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-blue-600 focus:ring-2 focus:ring-blue-500/20 shadow-2xs hover:border-blue-400 transition cursor-pointer accent-blue-600 inline-block align-middle"
                     checked={filtered.length > 0 && Object.keys(selectedIds).length === filtered.length}
                     onChange={toggleSelectAll}
                   />
@@ -1177,7 +1177,7 @@ export function AccountSetupReport({
                 <Th className="p-3 text-right">{t(lang, "asr.col_current_balance", "Current Balance")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
                 <Th className="p-3">{t(lang, "asr.col_parent_account", "Parent Account")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
                 <Th className="p-3 text-center">{t(lang, "asr.status", "Status")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
-                <Th className="p-3 text-center">{t(lang, "asr.actions", "Actions")}</Th>
+                <Th className="p-3 text-center whitespace-nowrap min-w-[90px]">{t(lang, "asr.actions", "Actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1203,7 +1203,7 @@ export function AccountSetupReport({
                       <td className="p-3 text-center">
                         <input
                           type="checkbox"
-                          className="rounded border-slate-300"
+                          className="h-4 w-4 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-blue-600 focus:ring-2 focus:ring-blue-500/20 shadow-2xs hover:border-blue-400 transition cursor-pointer accent-blue-600 inline-block align-middle"
                           checked={isSelected}
                           onChange={() => toggleSelectRow(row.accountId)}
                         />
@@ -1255,15 +1255,15 @@ export function AccountSetupReport({
                           {isActive ? t(lang, "common.active", "Active") : t(lang, "common.inactive", "Inactive")}
                         </span>
                       </td>
-                      <td className="p-3 text-center">
-                        <div className="flex items-center justify-center gap-1">
+                      <td className="p-3 text-center whitespace-nowrap min-w-[90px]">
+                        <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => {
                               if (onEditAccount) onEditAccount(row.accountId);
                               else router.push(`/dashboard/accounts/setup?accountId=${row.accountId}&mode=edit`);
                             }}
-                            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500"
+                            className="inline-flex items-center justify-center h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 text-slate-600 dark:text-slate-300 shadow-2xs transition-all active:scale-95 cursor-pointer"
                             title={t(lang, "asr.edit", "Edit")}
                           >
                             <Edit3 className="h-3.5 w-3.5" />
@@ -1271,7 +1271,7 @@ export function AccountSetupReport({
                           <button
                             type="button"
                             onClick={() => router.push(`/dashboard/accounts/view?accountId=${row.accountId}`)}
-                            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500"
+                            className="inline-flex items-center justify-center h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 hover:text-slate-900 text-slate-600 dark:text-slate-300 shadow-2xs transition-all active:scale-95 cursor-pointer"
                             title={t(lang, "asr.view", "View")}
                           >
                             <Eye className="h-3.5 w-3.5" />

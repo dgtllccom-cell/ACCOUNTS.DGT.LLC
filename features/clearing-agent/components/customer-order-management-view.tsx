@@ -5315,7 +5315,7 @@ export function CustomerOrderManagementView() {
 
             {/* RIGHT COLUMN: The Live Customer Order Report Panel (Full Size & Prominent) */}
             {showLiveReport && (
-              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 lg:col-span-7 xl:col-span-7 2xl:col-span-7 min-w-0 xl:sticky xl:top-3 h-fit max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl bg-slate-50/70 p-2 pr-1 dark:bg-slate-950/30">
+              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 lg:col-span-7 xl:col-span-7 2xl:col-span-7 min-w-0 rounded-2xl bg-slate-50/70 p-2 pr-1 dark:bg-slate-950/30">
               {/* Live Report Card Container */}
               <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
                 {/* Header with Title, Subtitle, and Action Buttons (Back, Print, PDF, Live) */}
@@ -8075,109 +8075,6 @@ function Step1BookingCustomer({
                   )}
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* 2. COMMERCIAL PARTIES & CUSTOMERS (Moved above Customs as required) */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
-              <Users className="h-4 w-4 text-blue-600" />
-              <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                {tt("commercial_parties_title", "Commercial Parties & Customers")}
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              <PartyRolePanel
-                roleKey="supplier"
-                label={tt("role_supplier", "Loading Customer (Supplier / Consignor)")}
-                selection={partySelections.supplier}
-                customers={customers}
-                companies={companies}
-                customerOptions={mergedCustomerOptions}
-                companyOptions={companyOptions}
-                orders={orders}
-                disabled={loading}
-                lang={lang}
-                onCreateNew={() => setQuickCustomerModalOpen(true)}
-                onChange={(next) => handlePartyChange("supplier", next)}
-              />
-
-              <PartyRolePanel
-                roleKey="buyer"
-                label={tt("role_buyer", "Receiving Customer (Buyer / Consignee)")}
-                selection={partySelections.buyer}
-                customers={customers}
-                companies={companies}
-                customerOptions={mergedCustomerOptions}
-                companyOptions={companyOptions}
-                orders={orders}
-                disabled={loading}
-                lang={lang}
-                onCreateNew={() => setQuickCustomerModalOpen(true)}
-                onChange={(next) => handlePartyChange("buyer", next)}
-              />
-
-              <PartyRolePanel
-                roleKey="exporter"
-                label={tt("role_exporter", "Exporter")}
-                selection={partySelections.exporter}
-                customers={customers}
-                companies={companies}
-                customerOptions={mergedCustomerOptions}
-                companyOptions={companyOptions}
-                orders={orders}
-                disabled={loading}
-                lang={lang}
-                onCreateNew={() => setQuickCustomerModalOpen(true)}
-                onChange={(next) => handlePartyChange("exporter", next)}
-              />
-
-              <PartyRolePanel
-                roleKey="importer"
-                label={tt("role_importer", "Importer")}
-                selection={partySelections.importer}
-                customers={customers}
-                companies={companies}
-                customerOptions={mergedCustomerOptions}
-                companyOptions={companyOptions}
-                orders={orders}
-                disabled={loading}
-                lang={lang}
-                onCreateNew={() => setQuickCustomerModalOpen(true)}
-                onChange={(next) => handlePartyChange("importer", next)}
-              />
-            </div>
-
-            <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-800/40 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{tt("notify_party_required", "Notify Party Required?")}</label>
-                <select
-                  value={formData.notify_party_required ? "yes" : "no"}
-                  onChange={(e) => setFormData((current) => ({ ...current, notify_party_required: e.target.value === "yes" }))}
-                  className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-900 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 cursor-pointer"
-                >
-                  <option value="no">{tt("no_opt", "No")}</option>
-                  <option value="yes">{tt("yes", "Yes")}</option>
-                </select>
-              </div>
-
-              {formData.notify_party_required ? (
-                <PartyRolePanel
-                  roleKey="notify_party"
-                  label={tt("role_notify_party", "Notify Party")}
-                  selection={partySelections.notify_party}
-                  customers={customers}
-                  companies={companies}
-                  customerOptions={mergedCustomerOptions}
-                  companyOptions={companyOptions}
-                  orders={orders}
-                  disabled={loading}
-                  lang={lang}
-                  onCreateNew={() => setQuickCustomerModalOpen(true)}
-                  onChange={(next) => handlePartyChange("notify_party", next)}
-                />
-              ) : null}
             </div>
           </div>
 
