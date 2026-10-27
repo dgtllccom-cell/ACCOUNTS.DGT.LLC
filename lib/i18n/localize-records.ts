@@ -89,7 +89,9 @@ const LEGAL_NAME_FIELDS: Record<string, ReadonlySet<string> | null> = {
   companies: new Set(["name", "legal_name", "owner_name"]),
   banks: new Set(["bank_name", "branch_name", "short_name", "account_title"]),
   city_branches: new Set(["name", "owner_name"]),
-  country_branches: new Set(["name", "owner_name"])
+  country_branches: new Set(["name", "owner_name"]),
+  // employees are people: their names follow the same rule (designation / department stay translatable terms)
+  employees: new Set(["customer_name", "full_name", "first_name", "last_name", "father_name", "name"])
 };
 /** A legal name: authorized translation, else exactly the saved name — no word-by-word dictionary substitution, no script rendering. */
 function isLegalName(table: string, field: string): boolean {

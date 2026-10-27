@@ -12246,6 +12246,22 @@ export type UiKey =
   | "aump.class_main_country_user"
   | "aump.class_main_branch_user"
   | "aump.class_city_branch_user"
+  | "cef.msg_editing_serials"
+  | "cef.msg_delete_failed"
+  | "cef.msg_deleted"
+  | "cef.msg_unknown_error"
+  | "cef.msg_need_country_branch"
+  | "cef.msg_need_account"
+  | "cef.msg_need_txn_type"
+  | "cef.msg_need_payment_mode"
+  | "cef.msg_need_amount"
+  | "cef.msg_need_currency"
+  | "cef.msg_need_all"
+  | "cef.msg_reverse_failed"
+  | "cef.msg_saved_serials"
+  | "cef.msg_save_failed"
+  | "cef.auto_approved"
+  | "cef.approved"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37464,6 +37480,22 @@ const en: Dict = {
   "aump.class_main_country_user": "Main Country User",
   "aump.class_main_branch_user": "Main Branch User",
   "aump.class_city_branch_user": "City Branch User",
+  "cef.msg_editing_serials": "Editing entry — serials: {serials}",
+  "cef.msg_delete_failed": "Failed to delete entry: {error}",
+  "cef.msg_deleted": "Entry deleted successfully.",
+  "cef.msg_unknown_error": "Unknown error",
+  "cef.msg_need_country_branch": "Please select a Country and Branch before posting.",
+  "cef.msg_need_account": "Please select an Account (Step 2).",
+  "cef.msg_need_txn_type": "Please select a Transaction Type (Customer, Supplier, etc.).",
+  "cef.msg_need_payment_mode": "Please select Payment Mode (Debit or Credit).",
+  "cef.msg_need_amount": "Please enter a valid Amount greater than 0.",
+  "cef.msg_need_currency": "Please select a valid 3-letter currency.",
+  "cef.msg_need_all": "Please select account, Debit/Credit transaction type, currency, and amount.",
+  "cef.msg_reverse_failed": "Failed to reverse the old entry: {error}",
+  "cef.msg_saved_serials": "Saved successfully. Serials: {serials}",
+  "cef.msg_save_failed": "Save failed",
+  "cef.auto_approved": "System / Auto Approved",
+  "cef.approved": "Approved",
 };
 
 const ur: Dict = {
@@ -62650,6 +62682,22 @@ const ur: Dict = {
   "aump.class_main_country_user": "مرکزی ملک صارف",
   "aump.class_main_branch_user": "مین برانچ صارف",
   "aump.class_city_branch_user": "سٹی برانچ صارف",
+  "cef.msg_editing_serials": "اندراج میں ترمیم — سیریل: {serials}",
+  "cef.msg_delete_failed": "اندراج حذف نہیں ہو سکا: {error}",
+  "cef.msg_deleted": "اندراج کامیابی سے حذف ہو گیا۔",
+  "cef.msg_unknown_error": "نامعلوم خرابی",
+  "cef.msg_need_country_branch": "پوسٹ کرنے سے پہلے براہِ کرم ملک اور برانچ منتخب کریں۔",
+  "cef.msg_need_account": "براہِ کرم اکاؤنٹ منتخب کریں (مرحلہ 2)۔",
+  "cef.msg_need_txn_type": "براہِ کرم لین دین کی قسم منتخب کریں (کسٹمر، سپلائر وغیرہ)۔",
+  "cef.msg_need_payment_mode": "براہِ کرم ادائیگی کا طریقہ منتخب کریں (ڈیبٹ یا کریڈٹ)۔",
+  "cef.msg_need_amount": "براہِ کرم 0 سے زیادہ درست رقم درج کریں۔",
+  "cef.msg_need_currency": "براہِ کرم تین حرفی درست کرنسی منتخب کریں۔",
+  "cef.msg_need_all": "براہِ کرم اکاؤنٹ، ڈیبٹ/کریڈٹ لین دین کی قسم، کرنسی اور رقم منتخب کریں۔",
+  "cef.msg_reverse_failed": "پرانا اندراج واپس نہیں ہو سکا: {error}",
+  "cef.msg_saved_serials": "کامیابی سے محفوظ ہو گیا۔ سیریل: {serials}",
+  "cef.msg_save_failed": "محفوظ نہیں ہو سکا",
+  "cef.auto_approved": "سسٹم / خودکار منظور",
+  "cef.approved": "منظور شدہ",
 };
 
 const ar: Dict = {
@@ -87837,6 +87885,22 @@ const ar: Dict = {
   "aump.class_main_country_user": "مستخدم الدولة الرئيسي",
   "aump.class_main_branch_user": "مستخدم الفرع الرئيسي",
   "aump.class_city_branch_user": "مستخدم فرع المدينة",
+  "cef.msg_editing_serials": "تعديل القيد — الأرقام التسلسلية: {serials}",
+  "cef.msg_delete_failed": "تعذّر حذف القيد: {error}",
+  "cef.msg_deleted": "تم حذف القيد بنجاح.",
+  "cef.msg_unknown_error": "خطأ غير معروف",
+  "cef.msg_need_country_branch": "يرجى اختيار الدولة والفرع قبل الترحيل.",
+  "cef.msg_need_account": "يرجى اختيار الحساب (الخطوة 2).",
+  "cef.msg_need_txn_type": "يرجى اختيار نوع المعاملة (عميل، مورّد، إلخ).",
+  "cef.msg_need_payment_mode": "يرجى اختيار طريقة الدفع (مدين أو دائن).",
+  "cef.msg_need_amount": "يرجى إدخال مبلغ صحيح أكبر من 0.",
+  "cef.msg_need_currency": "يرجى اختيار عملة صحيحة من 3 أحرف.",
+  "cef.msg_need_all": "يرجى اختيار الحساب ونوع المعاملة (مدين/دائن) والعملة والمبلغ.",
+  "cef.msg_reverse_failed": "تعذّر عكس القيد القديم: {error}",
+  "cef.msg_saved_serials": "تم الحفظ بنجاح. الأرقام التسلسلية: {serials}",
+  "cef.msg_save_failed": "فشل الحفظ",
+  "cef.auto_approved": "النظام / معتمد تلقائياً",
+  "cef.approved": "معتمد",
 };
 
 const fa: Dict = {
@@ -113023,6 +113087,22 @@ const fa: Dict = {
   "aump.class_main_country_user": "کاربر اصلی کشور",
   "aump.class_main_branch_user": "کاربر شعبه اصلی",
   "aump.class_city_branch_user": "کاربر شعبه شهر",
+  "cef.msg_editing_serials": "ویرایش ثبت — شماره‌های سریال: {serials}",
+  "cef.msg_delete_failed": "حذف ثبت ناموفق بود: {error}",
+  "cef.msg_deleted": "ثبت با موفقیت حذف شد.",
+  "cef.msg_unknown_error": "خطای ناشناخته",
+  "cef.msg_need_country_branch": "لطفاً پیش از ثبت، کشور و شعبه را انتخاب کنید.",
+  "cef.msg_need_account": "لطفاً حساب را انتخاب کنید (مرحله 2).",
+  "cef.msg_need_txn_type": "لطفاً نوع تراکنش را انتخاب کنید (مشتری، تأمین‌کننده و غیره).",
+  "cef.msg_need_payment_mode": "لطفاً نوع پرداخت را انتخاب کنید (بدهکار یا بستانکار).",
+  "cef.msg_need_amount": "لطفاً مبلغ معتبر بیشتر از 0 وارد کنید.",
+  "cef.msg_need_currency": "لطفاً یک ارز معتبر سه‌حرفی انتخاب کنید.",
+  "cef.msg_need_all": "لطفاً حساب، نوع تراکنش بدهکار/بستانکار، ارز و مبلغ را انتخاب کنید.",
+  "cef.msg_reverse_failed": "برگشت ثبت قبلی ناموفق بود: {error}",
+  "cef.msg_saved_serials": "با موفقیت ذخیره شد. شماره‌های سریال: {serials}",
+  "cef.msg_save_failed": "ذخیره ناموفق بود",
+  "cef.auto_approved": "سیستم / تأیید خودکار",
+  "cef.approved": "تأییدشده",
 };
 
 const ps: Dict = {
@@ -138216,6 +138296,22 @@ const ps: Dict = {
   "aump.class_main_country_user": "د هېواد اصلي کارن",
   "aump.class_main_branch_user": "د اصلي څانګې کارن",
   "aump.class_city_branch_user": "د ښار د څانګې کارن",
+  "cef.msg_editing_serials": "د ثبت سمون — سریال شمېرې: {serials}",
+  "cef.msg_delete_failed": "ثبت ړنګ نه شو: {error}",
+  "cef.msg_deleted": "ثبت په بریالیتوب سره ړنګ شو.",
+  "cef.msg_unknown_error": "نامعلومه تېروتنه",
+  "cef.msg_need_country_branch": "مخکې له ثبتولو، مهرباني وکړئ هېواد او څانګه وټاکئ.",
+  "cef.msg_need_account": "مهرباني وکړئ حساب وټاکئ (مرحله 2).",
+  "cef.msg_need_txn_type": "مهرباني وکړئ د راکړې ورکړې ډول وټاکئ (پېرودونکی، عرضه کوونکی او نور).",
+  "cef.msg_need_payment_mode": "مهرباني وکړئ د تادیې ډول وټاکئ (ډیبټ یا کرېډیټ).",
+  "cef.msg_need_amount": "مهرباني وکړئ له 0 څخه زیات سم مقدار ولیکئ.",
+  "cef.msg_need_currency": "مهرباني وکړئ د درېیو تورو سمه اسعار وټاکئ.",
+  "cef.msg_need_all": "مهرباني وکړئ حساب، د ډیبټ/کرېډیټ راکړې ورکړې ډول، اسعار او مقدار وټاکئ.",
+  "cef.msg_reverse_failed": "زوړ ثبت بېرته نه شو اړول: {error}",
+  "cef.msg_saved_serials": "په بریالیتوب سره خوندي شو. سریال شمېرې: {serials}",
+  "cef.msg_save_failed": "خوندي نه شو",
+  "cef.auto_approved": "سیستم / په اتوماتيک ډول تصویب شوی",
+  "cef.approved": "تصویب شوی",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

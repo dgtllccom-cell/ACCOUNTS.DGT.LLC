@@ -171,11 +171,11 @@ export function UserProfileReportModal({
                 </span>
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />
-                  {user.status || "Active"}
+                  {th(user.status || "Active")}
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                {rbacSummary.roleTitle} • {user.department || "General Office"} • {user.countryName || "Global Scope"}
+                {th(rbacSummary.roleTitle)} • {th(user.department || "General Office")} • {user.countryName || th("Global Scope")}
               </p>
             </div>
           </div>

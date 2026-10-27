@@ -101,8 +101,9 @@ async function readState(p) {
   return { name, linked: await linkedLabel(p), dir: await p.evaluate(() => document.documentElement.dir) };
 }
 
+const ONLY = process.env.ONLY ? process.env.ONLY.split(",").map(Number) : null; // run selected cases (index)
 const created = [];
-for (const c of CASES) {
+for (const c of CASES.filter((_, i) => !ONLY || ONLY.includes(i))) {
   const exp = await expectedNames(c);
   const tag = `[${c.ui} form · customer "${exp.saved}"${c.approved ? " · approved variants" : ""}]`;
   if (!exp.saved) { check(`${tag} customer exists in DEV`, false); continue; }
@@ -212,10 +213,17 @@ for (const c of CASES) {
   const t2 = stepTabs(q); const n2 = await t2.count();
   if (n2) await t2.nth(n2 - 1).click({ timeout: 4000 }).catch(() => {});
   await q.waitForTimeout(1200);
-  const patchWait = q.waitForResponse((r) => r.url().includes(`/api/erp/accounting/accounts/${id}`) && ["PATCH", "PUT"].includes(r.request().method()), { timeout: 60000 }).catch(() => null);
-  await q.locator("div.sticky.bottom-4 button").first().click({ timeout: 8000 }).catch(() => {});
-  const patch = await patchWait;
-  check(`${tag} Update Account pressed (${refreshLang})`, !!patch && patch.status() < 400, patch ? `HTTP ${patch.status()}` : "no PATCH");
+  // press Update once the form has finished loading (the button is disabled while it loads); one retry on a slow DEV server
+  const saveBtn = q.locator("div.sticky.bottom-4 button").first();
+  await q.waitForFunction(() => { const b = document.querySelector("div.sticky.bottom-4 button"); return !!b && !b.disabled; }, null, { timeout: 60000 }).catch(() => {});
+  let patch = null;
+  for (let attempt = 0; attempt < 2 && !patch; attempt++) {
+    const patchWait = q.waitForResponse((r) => r.url().includes(`/api/erp/accounting/accounts/${id}`) && ["PATCH", "PUT"].includes(r.request().method()), { timeout: 30000 }).catch(() => null);
+    await saveBtn.click({ timeout: 8000 }).catch(() => {});
+    patch = await patchWait;
+  }
+  const hint = patch ? "" : JSON.stringify(await q.evaluate(() => ({ button: document.querySelector("div.sticky.bottom-4 button")?.outerHTML.slice(0, 160), msg: [...document.querySelectorAll("div.border-amber-200 span, [role=alert]")].map((e) => e.textContent.trim()).filter(Boolean).slice(0, 3) })));
+  check(`${tag} Update Account pressed (${refreshLang})`, !!patch && patch.status() < 400, patch ? `HTTP ${patch.status()}` : `no PATCH ${hint}`);
   await q.waitForTimeout(2500);
   const db2 = await dbAccount(id);
   check(`${tag} after Update: name, ledger and customer link unchanged`, db2.name === exp.saved && db2.ledger === exp.saved && db2.customerId === c.customerId, JSON.stringify(db2));

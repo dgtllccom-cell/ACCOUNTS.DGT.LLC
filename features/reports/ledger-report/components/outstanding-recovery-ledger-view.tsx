@@ -276,8 +276,8 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     >();
 
     for (const row of filtered) {
-      const countryName = row.countryName || scopeSummary?.countryName || "All Countries";
-      const branchName = row.branchName || scopeSummary?.branchDisplayName || scopeSummary?.branchName || "All Branches";
+      const countryName = row.countryName || scopeCountry;
+      const branchName = row.branchName || scopeBranch;
       const currency = row.currency || "AED";
 
       if (!map.has(countryName)) {
@@ -318,7 +318,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     }
 
     return Array.from(map.values());
-  }, [filtered, scopeSummary?.branchDisplayName, scopeSummary?.branchName, scopeSummary?.countryName]);
+  }, [filtered, scopeCountry, scopeBranch]);
 
   const previewColumns: GenericReportColumn[] = [
     { key: "sr", label: "SR#", align: "center", format: "text" },
@@ -410,7 +410,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         clearedEntries: summary?.clearedEntries ?? 0,
         remainingEntries: summary?.remainingEntries ?? filtered.length,
         activeCountriesCount: scopeSummary?.countryName ? 1 : 0,
-        totalBranchesCount: scopeBranch && scopeBranch !== "All Branches" ? 1 : 0,
+        totalBranchesCount: scopeSummary?.branchDisplayName || scopeSummary?.branchName ? 1 : 0,
         statusText: sessionActiveText,
         coverageText: scopeSummary?.countryName || ""
       },
@@ -1144,7 +1144,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                   </h3>
                 </div>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  {selectedLedgerAccount.branchName || scopeBranch} ({selectedLedgerAccount.countryName || scopeCountry}) &bull; Currency: {selectedLedgerAccount.currency || "AED"} &bull; Type: {selectedLedgerAccount.accountType}
+                  {selectedLedgerAccount.branchName || scopeBranch} ({selectedLedgerAccount.countryName || scopeCountry}) &bull; {tr("Currency")}: {selectedLedgerAccount.currency || "AED"} &bull; {tr("Type")}: {selectedLedgerAccount.accountType}
                 </p>
               </div>
               <div className="flex items-center gap-2">
