@@ -535,7 +535,7 @@ function getCurrencySymbol(c: string) {
             <div>
               <InfoRow label={t(lang, "purchase.receiving_country_label", "Receiving Country")} value={form.receivedCountry || "-"} />
               <InfoRow label={t(lang, "purchase.receiving_port_label", "Receiving Port")} value={form.receivedPort || form.exitPort || "-"} />
-              <InfoRow label={t(lang, "sales.ster_container_number", "Container Number")} value={form.containerNo || form.containerNumber || `CONT-${d.containerCount || 0} containers`} mono />
+              <InfoRow label={t(lang, "sales.ster_container_number", "Container Number")} value={form.containerNo || form.containerNumber || "—"} mono />
               <InfoRow label={t(lang, "plr.col_bl", "BL Number")} value={form.blNo || form.billOfLadingNo || "-"} mono />
             </div>
           </div>

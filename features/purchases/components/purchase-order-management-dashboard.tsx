@@ -477,20 +477,20 @@ function remainingPayment(row: PurchaseReport) {
   return Math.max(0, Number(row.totalPurchaseAmount || 0) - advancePayment(row));
 }
 
-function makeContainers(row: PurchaseReport) {
-  const total = Math.max(1, Math.min(12, Number(row.containerCount || 0) || 1));
-  const loaded = shipmentStatus(row) === "Completed" ? total : shipmentStatus(row) === "Container Loading" || shipmentStatus(row) === "In Transit" ? Math.max(1, Math.floor(total / 2)) : 0;
-  return Array.from({ length: total }).map((_, idx) => ({
-    containerNumber: `CONT-${String(idx + 1).padStart(3, "0")}`,
-    containerNo: `CONT-${String(idx + 1).padStart(3, "0")}`,
-    sealNumber: idx < loaded ? `SEAL-${row.purchaseBookingOrderNumber.slice(-4)}-${idx + 1}` : "-",
-    size: idx % 2 ? "20 FT" : "40 FT",
-    loadingDate: idx < loaded ? row.purchaseDate : "-",
-    departureDate: idx < loaded ? row.purchaseDate : "-",
-    arrivalDate: shipmentStatus(row) === "Completed" ? row.purchaseDate : "-",
-    location: idx < loaded ? "Port / Transit" : row.branchName,
-    status: idx < loaded ? shipmentStatus(row) : "Pending"
-  }));
+// No per-container records reach this dashboard (Loading / Receiving keeps them); it used to invent container numbers, seals
+// and 20 / 40 FT sizes, which every search then matched. No invented rows.
+function makeContainers(_row: PurchaseReport): Array<{
+  containerNumber: string;
+  containerNo: string;
+  sealNumber: string;
+  size: string;
+  loadingDate: string;
+  departureDate: string;
+  arrivalDate: string;
+  location: string;
+  status: string;
+}> {
+  return [];
 }
 
 function StatusBadge({ label }: { label: string }) {

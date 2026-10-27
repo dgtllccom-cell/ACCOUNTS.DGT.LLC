@@ -5632,7 +5632,7 @@ export function CustomerOrderManagementView() {
                           <span className="text-slate-500">{tt("truck_vehicle_no", "Truck / Vehicle No.")}</span>
                           <div className="flex items-center gap-2">
                             <span className="font-mono font-bold text-slate-900 dark:text-white">
-                              {formData.truck_number || "XYZ-786"}
+                              {formData.truck_number || "—"}
                             </span>
                             <button
                               type="button"
@@ -8762,8 +8762,8 @@ function Step1BookingCustomer({
                 customer_address: newCust.address || ""
               }));
             }}
-          />
-
+          />
+
 {/* VIEW CUSTOMER DETAILS MODAL */}
           <SimpleModal
             isOpen={viewCustomerModalOpen}

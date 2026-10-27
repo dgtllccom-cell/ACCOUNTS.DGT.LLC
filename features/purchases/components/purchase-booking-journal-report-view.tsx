@@ -411,27 +411,11 @@ function statusClass(status: string) {
   return "border-sky-300 bg-sky-50 text-sky-700";
 }
 
-function makeContainers(report: PurchaseReport | null): ContainerRow[] {
-  if (!report) return [];
-  const total = Math.max(1, Math.min(10, Number(report.containerCount || 0) || 5));
-  const confirmed = report.status.toLowerCase().includes("full") ? total : report.status.toLowerCase().includes("partial") ? Math.max(1, Math.floor(total * 0.25)) : 0;
-  return Array.from({ length: total }).map((_, index) => {
-    const isConfirmed = index < confirmed;
-    return {
-      id: `${report.id}-container-${index + 1}`,
-      bookingNo: report.purchaseBookingOrderNumber,
-      containerNo: `CONT-${String(index + 1).padStart(3, "0")}`,
-      blNo: isConfirmed ? `BL-${1001 + index}` : "-",
-      truckNo: isConfirmed ? (index % 2 ? "XYZ-888" : "ABC-123") : "-",
-      sealNo: isConfirmed ? `S-00123${index + 4}` : "-",
-      loadingCountry: report.countryName || "",
-      receivingCountry: report.branchName || "Dubai",
-      loadingDate: isConfirmed ? report.purchaseDate : "-",
-      receivingDate: isConfirmed ? report.purchaseDate : "-",
-      status: report.status.toLowerCase().includes("cancel") ? "Cancelled" : isConfirmed ? "Confirmed" : "Pending",
-      confirmedOn: isConfirmed ? report.purchaseDate : "-"
-    };
-  });
+// This report carries no per-container records (they are kept by Loading / Receiving). It used to invent them — container,
+// B/L, truck and seal numbers, a "Dubai" receiving country, 5 containers when the count was 0 — which then showed up in the
+// summaries and matched every search. No invented rows: the real container count stays report.containerCount.
+function makeContainers(_report: PurchaseReport | null): ContainerRow[] {
+  return [];
 }
 
 function exportCsv(rows: PurchaseReport[], fileName: string) {
