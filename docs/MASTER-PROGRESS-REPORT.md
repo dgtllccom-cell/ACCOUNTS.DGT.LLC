@@ -51,7 +51,16 @@ account search card, deployed by Asmatullah); it was merged into `release/rc2` b
 | Issue #36 end-to-end (new Urdu, Pashto and English customers + an Urdu account, through the real save APIs; before / review / approve / after; APIs in EN / UR / AR / FA / PS; Customer Register, Party Directory, account view, review screen; live switch + reload; search by saved and by approved name; Urdu term → approved term) | PASS — 99 / 99 |
 | Names across screens · Party Directory · Cash Entry notices | PASS — 210 / 210 · 33 / 33 · 24 / 24 |
 | Regression (20 financial / operational / security scripts) | PASS — 20 / 20 (two first crashed with a Windows process error under load and passed on re-run: purchase transfer 8 / 8, shipping bills 12 / 12); leak scan 156 PASS + the same 4 known DEV records |
-| Unit tests / tsc / build / guards | PASS — 603 + 35 new; tsc 0 errors; build green; i18n guard 22,371 keys × 5 |
+| New Account Setup — Create → Save → Reopen → live switch → Refresh → Reopen again → Update, 6 real DEV customers × 5 languages (on the merged build) | PASS — 255 / 255 (first runs failed only on the old "Linked:" selector replaced by b8535f7, on test accounts left by an interrupted run — HTTP 409 duplicate guard — and on reads before the card had loaded; all three fixed in the harness, not in the app) |
+| Five-language sweep of the touched screens (Translation Management, Customer Register, Accounts, New Account Setup, Truck Registration, Ledger and Accounts General reports) × EN / UR / AR / FA / PS × 1440 / 390 | PASS — 80 / 80 |
+| Unit tests / tsc / build / guards | PASS — 605 (+ 2 skipped), of which 36 new; tsc 0 errors; build green; i18n guard 22,371 keys × 5 |
+| Production deploy through the gate | DEPLOYED `70abf90` at 22:04:32Z (02:04 Dubai, 28 Oct): pre-deploy backup `prod-before-deploy-20261027-215427.dump`, approval (no migrations), dry-run "all checks passed", isolated build, atomic swap, pm2 reload. Live checks without signing in: VPS HEAD = release, pm2 online, deploy log DEPLOYED, `/auth/login` 200 with lang / dir in all five languages, every signed-out page and API (incl. the review queue) sent to login, this release's keys in the live build, no "CONT-" placeholder in the build, no new error-log line since the deploy, public https://ac.dgt.llc 200. Production rows identical before / after (8 customers, 60 accounts, 60 ledgers, 1,949 translations, 10 profiles, 0 Roznamcha, 0 journals, 0 loading records). Signed-in check: the owner's login (runbook) |
+
+**Merged from Production during this round:** `b8535f7` (customer card, before the work) and `9b6814c` + `cf954e5` (deployed by a
+parallel session at 21:34 Dubai). Two parts of `9b6814c` were not kept because they contradict the owner's written rules for this
+issue: it removed account / ledger names from the legal-name rule (so the machine spellings were being shown) and made automatic
+saves stamp a machine rendering of an account name "verified". This release restores the rule and additionally treats any
+machine-written row stamped "verified" as not approved.
 
 **Only the owner can finish**
 * Approve the English (or other-language) names in Translation Management → Review queue. Until a name is approved the English
