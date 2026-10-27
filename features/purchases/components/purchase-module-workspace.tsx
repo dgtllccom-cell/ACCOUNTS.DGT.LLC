@@ -1,5 +1,6 @@
 "use client";
 
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { openFinalizedPOPrintReport } from "@/lib/reports/open-finalized-po-print-report";
@@ -680,7 +681,7 @@ export function PurchaseModuleWorkspace({
                       <div className="grid grid-cols-2 gap-2 text-[10px]">
                         <div className="rounded-lg bg-slate-50 p-2"><span className="block text-muted-foreground">{t(lang, "purchase.pmw_total_purchase", "Bill Total")}</span><b className="text-slate-800">{money(curr.invoice, curr.currency)}</b></div>
                         <div className="rounded-lg bg-emerald-50 p-2"><span className="block text-emerald-700">{t(lang, "purchase.pmw_advance", "Advance Paid")}</span><b className="text-emerald-800">{money(curr.advance, curr.currency)}</b></div>
-                        <div className="rounded-lg bg-slate-100 p-2"><span className="block text-slate-600">Total Paid</span><b className="text-slate-900">{money(curr.totalPaid, curr.currency)}</b></div>
+                        <div className="rounded-lg bg-slate-100 p-2"><span className="block text-slate-600">{translateHeader(lang, "Total Paid")}</span><b className="text-slate-900">{money(curr.totalPaid, curr.currency)}</b></div>
                         <div className={cn("rounded-lg p-2 border", isPaid ? "bg-slate-900 text-white border-slate-950" : "bg-rose-50 text-rose-700 border-rose-200")}>
                           <span className="block text-[9px] uppercase font-black">{isPaid ? "Fully Paid" : "Remaining Due"}</span>
                           <b className="text-[11px]">{money(curr.remaining, curr.currency)}</b>

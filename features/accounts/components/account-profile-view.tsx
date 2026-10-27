@@ -1,5 +1,6 @@
 "use client";
 
+import { translateHeader } from "@/lib/i18n/table-headers";
 import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -1445,7 +1446,7 @@ export function AccountProfileView({
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
                     {selectedRow.shippingLine && (
                       <div className="p-3 rounded-xl bg-sky-50/50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900">
-                        <span className="text-[10px] text-sky-700 dark:text-sky-300 font-bold uppercase block">Shipping Line</span>
+                        <span className="text-[10px] text-sky-700 dark:text-sky-300 font-bold uppercase block">{translateHeader(lang, "Shipping Line")}</span>
                         <Link
                           href={`/dashboard/shipping-line?id=${selectedRow.shippingLine.id}`}
                           className="font-bold text-sky-900 dark:text-sky-100 hover:underline flex items-center gap-1 mt-1"

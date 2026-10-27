@@ -2231,7 +2231,7 @@ function CityBranchSetupContent() {
                           "px-1.5 py-0.5 rounded",
                           smtpStatus === "Ready" ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50"
                         )}>
-                          {smtpStatus === "Ready" ? t(lang, "cbs.status_ready") : smtpStatus === "Connection Failed" ? t(lang, "cbs.status_connection_failed") : smtpStatus}
+                          {smtpStatus === "Ready" ? t(lang, "cbs.status_ready") : smtpStatus === "Connection Failed" ? t(lang, "cbs.status_connection_failed") : t(lang, "cbs.not_configured", "Not Configured")}
                         </span>
                       </div>
                       <Button
@@ -2325,7 +2325,7 @@ function CityBranchSetupContent() {
                           whatsappStatus === "Verification Pending" ? "text-amber-700 bg-amber-50" :
                           "text-red-700 bg-red-50"
                         )}>
-                          {whatsappStatus === "Ready" ? t(lang, "cbs.status_ready") : whatsappStatus === "Verification Pending" ? t(lang, "cbs.status_verification_pending") : whatsappStatus}
+                          {whatsappStatus === "Ready" ? t(lang, "cbs.status_ready") : whatsappStatus === "Verification Pending" ? t(lang, "cbs.status_verification_pending") : t(lang, "cbs.not_configured", "Not Configured")}
                         </span>
                       </div>
                       <Button
@@ -2545,7 +2545,8 @@ function CityBranchSetupContent() {
                       <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-[8px] font-black text-emerald-600 dark:text-emerald-400">7</span>
                       <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">📒 {t(lang, "cbs.pb_accounting_setup")}</span>
                     </div>
-                    {[{ label: t(lang, "cbs.default_purchase_account"), value: "Purchases – Local" }, { label: t(lang, "cbs.default_sales_account"), value: "Sales – Local" }, { label: t(lang, "cbs.cash_account"), value: "Cash in Hand" }, { label: t(lang, "cbs.bank_account_word"), value: "HBL – Main Branch" }, { label: t(lang, "cbs.tax_account"), value: "Sales Tax Payable" }, { label: t(lang, "cbs.current_year_start"), value: "01 Jul 2025" }, { label: t(lang, "cbs.accounting_method"), value: "Accrual Basis" }].map(({ label, value }) => (
+                    {/* this form does not set the branch's accounts: show them as not set, never sample account names */}
+                    {[{ label: t(lang, "cbs.default_purchase_account"), value: "—" }, { label: t(lang, "cbs.default_sales_account"), value: "—" }, { label: t(lang, "cbs.cash_account"), value: "—" }, { label: t(lang, "cbs.bank_account_word"), value: "—" }, { label: t(lang, "cbs.tax_account"), value: "—" }, { label: t(lang, "cbs.current_year_start"), value: "—" }, { label: t(lang, "cbs.accounting_method"), value: "—" }].map(({ label, value }) => (
                       <div key={label} className="flex items-start justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 dark:border-slate-800">
                         <span className="text-[9px] text-slate-400 dark:text-slate-500 leading-4 w-28 shrink-0">{label}</span>
                         <span className="text-right text-[10px] font-semibold text-slate-800 dark:text-slate-100 leading-4">{value}</span>
@@ -2560,7 +2561,7 @@ function CityBranchSetupContent() {
                       <span className="flex h-5 w-5 items-center justify-center rounded-full border border-cyan-400 text-[8px] font-black text-cyan-600 dark:text-cyan-400">8</span>
                       <span className="text-[10px] font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">📡 {t(lang, "cbs.communication_setup_label")}</span>
                     </div>
-                    {[{ label: t(lang, "cbs.email_documents_row"), value: generatedEmail || "—" }, { label: t(lang, "cbs.email_notif_addr_row"), value: generatedEmail ? `notify@${generatedEmail.split("@")[1]}` : "—" }, { label: t(lang, "cbs.whatsapp_number_row"), value: whatsappNumber || "—" }, { label: t(lang, "cbs.sms_notifications_row"), value: whatsappNumber ? t(lang, "cbs.enabled_word") : t(lang, "cbs.disabled_word") }, { label: t(lang, "cbs.email_notifications_row"), value: generatedEmail ? t(lang, "cbs.enabled_word") : t(lang, "cbs.disabled_word") }, { label: t(lang, "cbs.smtp_server_row"), value: emailServerName || t(lang, "cbs.not_configured_word") }, { label: t(lang, "cbs.language_row"), value: t(lang, "cbs.lang_english_word") }, { label: t(lang, "cbs.timezone_row"), value: "(GMT+05:00) PKT" }].map(({ label, value }) => (
+                    {[{ label: t(lang, "cbs.email_documents_row"), value: generatedEmail || "—" }, { label: t(lang, "cbs.email_notif_addr_row"), value: generatedEmail ? `notify@${generatedEmail.split("@")[1]}` : "—" }, { label: t(lang, "cbs.whatsapp_number_row"), value: whatsappNumber || "—" }, { label: t(lang, "cbs.sms_notifications_row"), value: whatsappNumber ? t(lang, "cbs.enabled_word") : t(lang, "cbs.disabled_word") }, { label: t(lang, "cbs.email_notifications_row"), value: generatedEmail ? t(lang, "cbs.enabled_word") : t(lang, "cbs.disabled_word") }, { label: t(lang, "cbs.smtp_server_row"), value: emailServerName === "Local IP Server (UPS Linked)" ? t(lang, "cbs.email_server_local") : emailServerName === "Google Workspace Cloud Server" ? t(lang, "cbs.email_server_google") : emailServerName === "Microsoft Office 365 Cloud Server" ? t(lang, "cbs.email_server_o365") : emailServerName || t(lang, "cbs.not_configured_word") }, { label: t(lang, "cbs.language_row"), value: t(lang, "cbs.lang_english_word") }, { label: t(lang, "cbs.timezone_row"), value: "(GMT+05:00) PKT" }].map(({ label, value }) => (
                       <div key={label} className="flex items-start justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 dark:border-slate-800">
                         <span className="text-[9px] text-slate-400 dark:text-slate-500 leading-4 w-28 shrink-0">{label}</span>
                         <span className={`text-right text-[10px] font-semibold leading-4 ${ value === t(lang, "cbs.enabled_word") ? "text-emerald-600 dark:text-emerald-400" : value === t(lang, "cbs.disabled_word") ? "text-rose-500 dark:text-rose-400" : value === "—" ? "text-slate-300 dark:text-slate-600" : "text-slate-800 dark:text-slate-100"}`}>{value}</span>

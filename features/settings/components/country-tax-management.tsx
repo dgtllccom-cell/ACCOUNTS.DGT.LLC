@@ -527,7 +527,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
             </p>
             <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
               <div>
-                <span className="text-slate-400 block text-[9.5px]">Sales Tax</span>
+                <span className="text-slate-400 block text-[9.5px]">{translateHeader(lang, "Sales Tax")}</span>
                 <span className="font-bold text-slate-400">—</span>
               </div>
               <div>
@@ -560,7 +560,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
             </p>
             <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
               <div>
-                <span className="text-slate-400 block text-[9.5px]">Sales Tax</span>
+                <span className="text-slate-400 block text-[9.5px]">{translateHeader(lang, "Sales Tax")}</span>
                 <span className="font-bold text-slate-400">—</span>
               </div>
               <div>
@@ -615,7 +615,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Globe2 className="h-4 w-4 text-blue-500" />
-                <span className="text-xs font-black text-slate-900 dark:text-slate-100">Other Countries</span>
+                <span className="text-xs font-black text-slate-900 dark:text-slate-100">{translateHeader(lang, "Other Countries")}</span>
               </div>
               <span className="text-[10px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                 Planned

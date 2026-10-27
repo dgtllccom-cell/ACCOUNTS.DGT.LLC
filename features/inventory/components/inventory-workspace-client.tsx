@@ -620,7 +620,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
                   <Th className="py-3 px-4">Goods Name</Th>
                   <Th className="py-3 px-4">CHS Code</Th>
                   <Th className="py-3 px-4">Warehouse</Th>
-                  <Th className="py-3 px-4">Country Scope</Th>
+                  <Th className="py-3 px-4">{translateHeader(activeLang, "Country Scope")}</Th>
                   <Th className="py-3 px-4 text-right">On Hand Qty</Th>
                   <Th className="py-3 px-4 text-right">Available Qty</Th>
                   <Th className="py-3 px-4 text-right">Last Updated</Th>

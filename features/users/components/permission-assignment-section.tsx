@@ -13,6 +13,7 @@ import {
 import { buildAccessSummary } from "@/lib/permissions/access-architecture";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
 
 type PermissionAssignmentSectionProps = {
@@ -170,7 +171,7 @@ export function PermissionAssignmentSection({
           >
             <option value="">{t(lang, "urf.select_permissions", "Select Permissions")}…</option>
             {availableTemplates.map((item) => (
-              <option key={item.key} value={item.key}>{item.label}</option>
+              <option key={item.key} value={item.key}>{translateHeader(lang, item.label)}</option>
             ))}
           </select>
         </div>
@@ -204,7 +205,7 @@ export function PermissionAssignmentSection({
             <div key={summary.domain} className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-950/40">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  {summary.label}
+                  {translateHeader(lang, summary.label)}
                 </span>
                 <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                   {summary.count}
@@ -271,7 +272,7 @@ export function PermissionAssignmentSection({
                   <span className="text-base leading-none flex-shrink-0">{meta.icon}</span>
                   <div className="min-w-0">
                     <span className={cn("text-[11px] font-black uppercase tracking-wider", meta.color)}>
-                      {meta.label}
+                      {translateHeader(lang, meta.label)}
                     </span>
                     <span className="ml-2 text-[10px] text-slate-400 dark:text-slate-500">
                       {selCount}/{allowed.length}
@@ -353,7 +354,7 @@ export function PermissionAssignmentSection({
                             checked ? "text-indigo-900 dark:text-indigo-200" : "text-slate-800 dark:text-slate-200",
                             disabled && "text-slate-400"
                           )}>
-                            {perm.label}
+                            {translateHeader(lang, perm.label)}
                           </span>
                           <span className="mt-0.5 block text-[9px] leading-tight text-slate-400 dark:text-slate-500 line-clamp-2">
                             {perm.description}

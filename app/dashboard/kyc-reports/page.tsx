@@ -824,7 +824,7 @@ export default function KycReportsPage() {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    Branch & User Details
+                    {translateHeader(activeLang, "Branch & User Details")}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-medium">Selected Scope</p>
                 </div>
@@ -837,13 +837,13 @@ export default function KycReportsPage() {
                   <div className="text-2xl font-black text-slate-900 dark:text-slate-100">
                     {scopeTotals.countryBranches ? scopeTotals.countryBranches * 18 : 90}
                   </div>
-                  <div className="text-[10px] font-bold text-slate-400">Total Branches</div>
+                  <div className="text-[10px] font-bold text-slate-400">{translateHeader(activeLang, "Total Branches")}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-black text-emerald-600">
                     {scopeTotals.cityBranches ? scopeTotals.cityBranches * 12 : 62}
                   </div>
-                  <div className="text-[10px] font-bold text-slate-400">Active Branches</div>
+                  <div className="text-[10px] font-bold text-slate-400">{translateHeader(activeLang, "Active Branches")}</div>
                 </div>
               </div>
 
@@ -899,7 +899,7 @@ export default function KycReportsPage() {
               </div>
               <div>
                 <div className="text-2xl font-black text-rose-600">{metrics.incomplete ?? 0}</div>
-                <div className="text-[10px] font-bold text-rose-600/80">Action Required</div>
+                <div className="text-[10px] font-bold text-rose-600/80">{translateHeader(activeLang, "Action Required")}</div>
               </div>
             </div>
           </div>

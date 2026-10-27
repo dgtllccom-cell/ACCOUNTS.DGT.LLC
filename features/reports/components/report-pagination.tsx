@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type Props = {
   lang?: SupportedLanguage;
@@ -23,7 +24,7 @@ const DEFAULT_PAGE_SIZES = [10, 25, 50, 100];
  * Shows: "Showing X to Y of N entries" + Rows per page selector + page buttons.
  */
 export function ReportPagination({
-  lang = "en",
+  lang,
   totalCount,
   page,
   pageSize,
@@ -32,7 +33,10 @@ export function ReportPagination({
   pageSizeOptions = DEFAULT_PAGE_SIZES,
   className
 }: Props) {
-  const tr = (label: string) => translateHeader(lang, label);
+  // the caller's language when it passes one, else the active ERP language (a pager must never stay English)
+  const activeLang = useActiveLanguage();
+  const uiLang = lang && lang !== "en" ? lang : activeLang;
+  const tr = (label: string) => translateHeader(uiLang, label);
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const from = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, totalCount);

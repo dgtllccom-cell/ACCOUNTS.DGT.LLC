@@ -1986,7 +1986,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-slate-600 dark:text-slate-400">Contact Phone / Mobile</Label>
+                        <Label className="text-xs text-slate-600 dark:text-slate-400">{translateHeader(activeLang, "Contact Phone / Mobile")}</Label>
                         <Input
                           value={contactPhone}
                           onChange={(e) => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { translateHeader } from "@/lib/i18n/table-headers";
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -269,7 +270,7 @@ export function EnterpriseAuditMonitoringDashboard() {
               AUDIT, MONITORING & ACCOUNTABILITY
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              Enterprise Audit, Monitoring & Accountability Center
+              {translateHeader(lang, "Enterprise Audit, Monitoring & Accountability Center")}
             </h1>
             <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">
               Complete visibility. Stronger controls. A more accountable enterprise.
@@ -358,7 +359,7 @@ export function EnterpriseAuditMonitoringDashboard() {
             className="h-9 px-4 gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs"
           >
             <Printer className="h-3.5 w-3.5" />
-            <span>Print Report</span>
+            <span>{translateHeader(lang, "Print Report")}</span>
           </Button>
         </div>
       </div>

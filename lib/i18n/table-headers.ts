@@ -3139,7 +3139,7 @@ function normalize(label: string): string {
 // dictionary entry then shows that entry's translation instead of staying English ("Master Data", "All Branches" in the menu).
 type UiDicts = Readonly<Record<string, Readonly<Record<string, string>>>>;
 let uiDictionaries: (() => UiDicts) | null = null;
-let uiReverseIndex: Map<string, string> | null = null;
+let uiReverseIndex: Map<string, string[]> | null = null;
 export function registerUiDictionaryFallback(get: () => UiDicts): void {
   uiDictionaries = get;
   uiReverseIndex = null;
@@ -3151,13 +3151,18 @@ function fromUiDictionary(code: string, norm: string): string | null {
     uiReverseIndex = new Map();
     for (const [key, value] of Object.entries(dicts.en ?? {})) {
       const n = normalize(String(value));
-      if (n && !uiReverseIndex.has(n)) uiReverseIndex.set(n, key);
+      if (!n) continue;
+      const keys = uiReverseIndex.get(n);
+      if (keys) keys.push(key);
+      else uiReverseIndex.set(n, [key]);
     }
   }
-  const key = uiReverseIndex.get(norm);
-  if (!key) return null;
-  const value = dicts[code]?.[key];
-  return value && value !== dicts.en?.[key] ? value : null;
+  // the same English text can sit under several keys; use the first one that has a real translation in this language
+  for (const key of uiReverseIndex.get(norm) ?? []) {
+    const value = dicts[code]?.[key];
+    if (value && value !== dicts.en?.[key]) return value;
+  }
+  return null;
 }
 
 /**

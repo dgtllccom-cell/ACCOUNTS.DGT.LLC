@@ -1,5 +1,6 @@
 "use client";
 
+import { translateHeader } from "@/lib/i18n/table-headers";
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   Users,
@@ -334,7 +335,7 @@ export function VipRegisterEmployeeView() {
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div className="text-left">
-              <span className="block text-xs font-black text-slate-900 dark:text-white leading-tight">Employee Management</span>
+              <span className="block text-xs font-black text-slate-900 dark:text-white leading-tight">{translateHeader(lang, "Employee Management")}</span>
               <span className="block text-[10px] text-slate-400 font-medium">Manage all company employees across branches and departments</span>
             </div>
         </div>
@@ -342,7 +343,7 @@ export function VipRegisterEmployeeView() {
         <nav className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
           <span className="hover:text-slate-800 transition cursor-pointer">{T("common.dashboard", "Dashboard")}</span>
           <ChevronRight className="h-3 w-3 text-slate-400" />
-          <span className="hover:text-slate-800 transition cursor-pointer">General Office</span>
+          <span className="hover:text-slate-800 transition cursor-pointer">{translateHeader(lang, "General Office")}</span>
           <ChevronRight className="h-3 w-3 text-slate-400" />
           <span className="hover:text-slate-800 transition cursor-pointer">Employees</span>
           <ChevronRight className="h-3 w-3 text-slate-400" />

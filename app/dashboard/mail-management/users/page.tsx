@@ -1,4 +1,6 @@
 "use client";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -44,6 +46,7 @@ interface MailUser {
 }
 
 export default function DgtMailUsersDirectoryPage() {
+  const lang = useActiveLanguage();
   const [users, setUsers] = useState<MailUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -224,8 +227,8 @@ export default function DgtMailUsersDirectoryPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-none cursor-pointer"
           >
-            <option value="all">All Statuses</option>
-            <option value="active">Active Only</option>
+            <option value="all">{translateHeader(lang, "All Statuses")}</option>
+            <option value="active">{translateHeader(lang, "Active Only")}</option>
             <option value="suspended">Suspended Only</option>
           </select>
         </div>
