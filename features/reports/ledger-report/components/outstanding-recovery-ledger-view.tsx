@@ -153,10 +153,16 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
   const [statementError, setStatementError] = useState<string | null>(null);
 
   const scopeSummary = sessionInfo?.scopes?.summary ?? null;
-  const scopeCountry = scopeSummary?.countryName || "All Countries";
-  const scopeBranch = scopeSummary?.branchDisplayName || scopeSummary?.branchName || "All Branches";
-  const scopeRole = sessionInfo?.roles?.[0]?.replace(/_/g, " ") || "ERP User";
-  const scopeUserName = sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP User";
+  const scopeCountry = scopeSummary?.countryName || translateHeader(lang, "All Countries");
+  const scopeBranch = scopeSummary?.branchDisplayName || scopeSummary?.branchName || translateHeader(lang, "All Branches");
+  const scopeRole = sessionInfo?.roles?.[0]?.replace(/_/g, " ") || "—";
+  const scopeUserName = sessionInfo?.user?.fullName || sessionInfo?.user?.email || "—";
+  // the report time is the viewer's local time: set it in the browser only (rendering it on the server too caused a hydration error)
+  const [generatedAt, setGeneratedAt] = useState("");
+  useEffect(() => {
+    const now = new Date();
+    setGeneratedAt(`${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, ${now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}`);
+  }, []);
   const scopeUserId = sessionInfo?.user?.id || "-";
   const scopeStatus = sessionInfo?.authenticated ? "ACTIVE" : "SESSION UNKNOWN";
 
@@ -634,7 +640,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("DATE & TIME:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{generatedAt}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-1">
               <span>{tr("STATUS:")}</span>

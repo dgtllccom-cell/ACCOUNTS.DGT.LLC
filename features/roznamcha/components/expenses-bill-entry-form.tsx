@@ -926,7 +926,7 @@ export function ExpensesBillEntryForm({
       reference_no: referenceNo,
       bill_title: billTitle,
       transferred_to_roznamcha: false,
-      profiles: { full_name: sessionInfo?.user?.fullName || "System Admin", id: sessionInfo?.user?.id || "SYS" },
+      profiles: { full_name: sessionInfo?.user?.fullName || "—", id: sessionInfo?.user?.id || "SYS" },
       city_branches: { 
         name: cityBranches.find(b => b.id === branch)?.name || branch,
         countries: { 
@@ -1843,7 +1843,7 @@ export function ExpensesBillEntryForm({
                     </p>
                     <p className="flex justify-between items-center mt-1.5">
                       <span className="font-semibold text-slate-700">{tt("exp.action_by_user", "Action By User:")}</span>
-                      <span className="font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">{sessionInfo?.user?.fullName || "System Admin"}</span>
+                      <span className="font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">{sessionInfo?.user?.fullName || "—"}</span>
                     </p>
                   </div>
                 </div>

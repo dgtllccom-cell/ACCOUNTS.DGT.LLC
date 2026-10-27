@@ -1,4 +1,5 @@
 "use client";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 import React, { useEffect, useState } from "react";
 import { 
@@ -289,11 +290,11 @@ export default function DashboardSettingsPage() {
                   <Icon className="h-5 w-5" />
                 </div>
                 <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full border border-border/60 bg-muted/40 text-muted-foreground">
-                  {scope.badge}
+                  {translateHeader(lang, scope.badge)}
                 </span>
               </div>
-              <h3 className="text-sm font-bold text-foreground">{scope.title}</h3>
-              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{scope.subtitle}</p>
+              <h3 className="text-sm font-bold text-foreground">{translateHeader(lang, scope.title)}</h3>
+              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{translateHeader(lang, scope.subtitle)}</p>
             </button>
           );
         })}

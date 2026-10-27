@@ -1,4 +1,5 @@
 "use client";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
@@ -794,7 +795,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
                       {item.route}
                     </td>
                     <td className="px-3.5 py-3 text-[10px] text-muted-foreground font-medium">
-                      {item.roles.join(", ")}
+                      {item.roles.map((r) => translateHeader(lang, r)).join(", ")}
                     </td>
                     <td className="px-3.5 py-3 text-xs text-muted-foreground leading-relaxed max-w-xs">
                       {item.description}

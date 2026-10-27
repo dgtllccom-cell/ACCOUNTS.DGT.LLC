@@ -1,4 +1,5 @@
 "use client";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
@@ -503,7 +504,7 @@ function CountryBranchSetupContent() {
       fatherHusbandName: "-",
       cnicId: "-",
       nationality: "Pakistani",
-      designation: "Country Admin",
+      designation: translateHeader(lang, "Country Admin"),
       ownershipType: "Individual",
       ownershipPercent: "100%",
       ownerPhone: phoneVal || ownerPreview?.mobile || "-",
@@ -515,21 +516,22 @@ function CountryBranchSetupContent() {
 
       companyName: previewCompany || "-",
       companyCode: companyCode || "-",
-      companyType: "Private Limited",
+      companyType: "-",
       companyRegNo: "-",
       companyIncDate: "-",
       companyTaxRegNo: "-",
       companyNtnGstNo: "-",
-      companyStatus: "Active",
+      companyStatus: "-",
       companyPhone: phoneVal || "-",
       companyEmail: emailVal || "-",
       companyWebsite: "-",
       companyOfficeAddress: active?.address || fullAddress || "-",
 
       allowedPermissions: active?.permission_grants || permissionGrants,
-      remarks: "This is a detailed country main branch report representing live settings."
+      remarks: "-"
     };
   }, [
+    lang,
     existingMainBranch,
     contacts,
     branchCode,
@@ -703,7 +705,7 @@ function CountryBranchSetupContent() {
       fatherHusbandName: "-",
       cnicId: "-",
       nationality: "Pakistani",
-      designation: "Country Admin",
+      designation: translateHeader(lang, "Country Admin"),
       ownershipType: "Individual",
       ownershipPercent: "100%",
       ownerPhone: phoneVal || "-",
@@ -715,12 +717,12 @@ function CountryBranchSetupContent() {
 
       companyName: previewCompany || "-",
       companyCode: companyCode || "-",
-      companyType: "Private Limited",
+      companyType: "-",
       companyRegNo: "-",
       companyIncDate: "-",
       companyTaxRegNo: "-",
       companyNtnGstNo: "-",
-      companyStatus: "Active",
+      companyStatus: "-",
       companyPhone: phoneVal || "-",
       companyEmail: emailVal || "-",
       companyWebsite: "-",

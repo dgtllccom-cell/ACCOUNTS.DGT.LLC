@@ -1,4 +1,5 @@
 "use client";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -673,7 +674,7 @@ export function AllDeletedRecordsView() {
 
                       {/* Reason */}
                       <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400 max-w-[160px] truncate" title={row.reason}>
-                        {row.reason || "Soft Deleted"}
+                        {row.reason || translateHeader(lang, "Soft Deleted")}
                       </td>
 
                       {/* Risk Level Badge */}

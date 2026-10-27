@@ -1123,7 +1123,7 @@ export function DocumentManager() {
               <Calendar className="h-3.5 w-3.5 text-slate-500" />
               <span>
                 {dateFilter === "all"
-                  ? "All Dates"
+                  ? th("All Dates")
                   : dateFilter === "today"
                   ? "Today"
                   : dateFilter === "yesterday"
