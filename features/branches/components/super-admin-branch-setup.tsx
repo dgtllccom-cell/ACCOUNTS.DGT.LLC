@@ -359,7 +359,7 @@ function SuperAdminBranchSetupContent() {
   const reportRows = useMemo(
     () => [
       { label: tt("sabs.branch_code", "Branch Code"), value: branchCode || "-" },
-      { label: tt("sabs.branch_type", "Branch Type"), value: "Super Admin Branch" },
+      { label: tt("sabs.branch_type", "Branch Type"), value: translateHeader(lang, "Super Admin Branch") },
       { label: tt("sabs.country", "Country"), value: countryName || "-" },
       { label: tt("sabs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
       { label: tt("sabs.state_province", "State / Province"), value: stateName || "-" },
@@ -371,7 +371,7 @@ function SuperAdminBranchSetupContent() {
       { label: tt("sabs.company_code", "Company Code"), value: companyCode || "-" },
       { label: tt("sabs.company_owner", "Company Owner"), value: ownerPreview?.name || owner || "-" },
       { label: tt("sabs.owner_details", "Owner Details"), value: ownerPreview ? `${ownerPreview.source.toUpperCase()} · ${ownerPreview.code}` : owner || "-" },
-      { label: tt("sabs.branch_name", "Branch Name"), value: "Super Admin Branch" },
+      { label: tt("sabs.branch_name", "Branch Name"), value: translateHeader(lang, "Super Admin Branch") },
       { label: tt("sabs.currency", "Currency"), value: currency || "USD" },
       { label: tt("sabs.address", "Address"), value: address || "-" },
       { label: tt("sabs.contacts", "Contacts"), value: contactsText }
@@ -381,7 +381,7 @@ function SuperAdminBranchSetupContent() {
   const editIdentityRows = useMemo(
     () => [
       { label: tt("sabs.country", "Country"), value: countryName || "-" },
-      { label: tt("sabs.branch_type", "Branch Type"), value: "Super Admin Branch" },
+      { label: tt("sabs.branch_type", "Branch Type"), value: translateHeader(lang, "Super Admin Branch") },
       { label: tt("sabs.branch_code", "Branch Code"), value: branchCode },
       { label: tt("sabs.record_id", "Record ID"), value: editingBranchId },
       { label: tt("sabs.status", "Status"), value: "active" },
@@ -395,7 +395,7 @@ function SuperAdminBranchSetupContent() {
       {
         title: tt("sabs.sec_branch_info", "Branch Information"),
         items: [
-          { label: tt("sabs.branch_type", "Branch Type"), value: "Super Admin Branch" },
+          { label: tt("sabs.branch_type", "Branch Type"), value: translateHeader(lang, "Super Admin Branch") },
           { label: tt("sabs.branch_code", "Branch Code"), value: branchCode },
           { label: tt("sabs.currency", "Currency"), value: currency },
           { label: tt("sabs.status", "Status"), value: "active" }

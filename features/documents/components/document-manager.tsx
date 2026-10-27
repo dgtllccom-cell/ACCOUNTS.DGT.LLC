@@ -1918,7 +1918,7 @@ export function DocumentManager() {
                                                           >
                                                             <span className="truncate flex items-center gap-1">
                                                               <Folder className="h-2 w-2 shrink-0" />
-                                                              {catName}
+                                                              {th(catName)}
                                                             </span>
                                                             <span className={cn("ms-1 text-[8px] font-mono", isCatSelected ? "text-emerald-100" : "text-slate-400")}>
                                                               {catCount}
@@ -1969,7 +1969,7 @@ export function DocumentManager() {
                   >
                     <span className="flex items-center gap-1.5 truncate">
                       <Folder className="h-3 w-3 text-amber-500 shrink-0" />
-                      {folderName}
+                      {th(folderName)}
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">{count}</span>
                   </div>
