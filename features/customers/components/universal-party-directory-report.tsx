@@ -46,7 +46,7 @@ export function UniversalPartyDirectoryReport({
     setLoading(true);
     try {
       const res = await apiGet<{ parties: PartyAffiliationSummary[]; total: number }>(
-        `/api/erp/parties/directory?limit=200`
+        `/api/erp/parties/directory?limit=200&lang=${encodeURIComponent(lang)}`
       );
       if (res?.parties) {
         setParties(res.parties);
@@ -58,9 +58,10 @@ export function UniversalPartyDirectoryReport({
     }
   };
 
+  // names are resolved for the selected language on the server, so a language switch reloads the list
   useEffect(() => {
     fetchDirectory();
-  }, []);
+  }, [lang]);
 
   const filteredParties = useMemo(() => {
     let list = parties;
@@ -79,6 +80,7 @@ export function UniversalPartyDirectoryReport({
         const fatherUrdu = p.fatherName ? transliterateProperNoun(p.fatherName, "ur").toLowerCase() : "";
         const text = [
           p.customerName,
+          p.savedCustomerName || "",
           fullUrdu,
           p.customerCode || "",
           p.fatherName || "",

@@ -5,7 +5,7 @@
  *   BASE=http://localhost:3521 node scripts/dev/names-across-screens-e2e.mjs
  * Screens / data paths per language (EN / UR / AR / FA / PS):
  *   Customer master API, Customer Register list API + page, Party Directory API, account detail API, Accounts General Report page,
- *   Ledger General Report page. Truck owner / driver names are covered by truck-registration-e2e.mjs.
+ *   Ledger General Report page (ledgers with postings — idle ledgers are not listed there by design). Truck owner / driver names are covered by truck-registration-e2e.mjs.
  */
 import { chromium } from "playwright";
 import { devQuery } from "./_rbac-users.mjs";
@@ -15,7 +15,8 @@ if (!/localhost|127\.0\.0\.1/.test(BASE)) throw new Error("DEV only");
 const LANGS = ["en", "ur", "ar", "fa", "ps"];
 const COL = { ur: "urdu_text", ar: "arabic_text", fa: "persian_text", ps: "pashto_text", en: "english_text" };
 // real DEV customers linked to accounts: machine-only renderings, an imported/pending one, and one with approved variants
-const CUSTOMERS = ["e967e161-6930-4d66-a4c5-8624bbded024", "161e13b1-89a8-42e1-8c5a-0f260c39b382", "cffa5a71-a614-4bf5-a12d-5869056afb42", "092d8917-3b96-48d2-bdcf-e316ebcb2ab7"];
+const CUSTOMERS = ["e967e161-6930-4d66-a4c5-8624bbded024", "161e13b1-89a8-42e1-8c5a-0f260c39b382", "cffa5a71-a614-4bf5-a12d-5869056afb42", "092d8917-3b96-48d2-bdcf-e316ebcb2ab7",
+  "50b7c0c8-e063-4b4c-95b9-7e82d6c8e2b0" /* machine rendering + a ledger with postings */];
 
 const results = [];
 const check = (name, ok, detail = "") => { results.push(!!ok); console.log(ok ? "PASS" : "FAIL", name, detail ? "· " + String(detail).slice(0, 220) : ""); };
@@ -30,7 +31,7 @@ const records = [];
 for (const id of CUSTOMERS) {
   const c = (await devQuery((sql) => sql`select customer_name from public.customers where id = ${id}::uuid`))[0];
   const t = (await devQuery((sql) => sql`select english_text, urdu_text, arabic_text, persian_text, pashto_text, source::text as source, translation_status, corrected_by from public.record_translations where record_table = 'customers' and record_id = ${id}::uuid and field_name = 'customer_name' and deleted_at is null limit 1`))[0];
-  const acc = (await devQuery((sql) => sql`select a.id, a.name, (select l.id from public.ledgers l where l.enterprise_account_id = a.id and l.deleted_at is null limit 1) as ledger_id from public.enterprise_accounts a where a.customer_id = ${id}::uuid and a.deleted_at is null and a.status <> 'archived' order by a.created_at limit 1`))[0];
+  const acc = (await devQuery((sql) => sql`select a.id, a.name, (select l.id from public.ledgers l where l.enterprise_account_id = a.id and l.deleted_at is null limit 1) as ledger_id, exists (select 1 from public.ledgers l where l.enterprise_account_id = a.id and l.deleted_at is null and (l.debit_total <> 0 or l.credit_total <> 0)) as has_activity from public.enterprise_accounts a where a.customer_id = ${id}::uuid and a.deleted_at is null and a.status <> 'archived' order by a.created_at limit 1`))[0];
   const approved = !!t && (t.source === "manual" || !!t.corrected_by || ["human_verified", "verified", "approved"].includes(String(t.translation_status)));
   const expected = {}; const machine = new Set();
   for (const l of LANGS) {
@@ -71,7 +72,8 @@ for (const rec of records) {
     for (const [label, path, search] of [
       ["Customer Register", "/dashboard/customers", rec.saved],
       ["Accounts General Report", rec.account ? `/dashboard/new-entry/accounts/general-report?accountId=${rec.account.id}` : null, null],
-      ["Ledger General Report", rec.account?.ledger_id ? `/dashboard/ledger/general-report?ledgerId=${rec.account.ledger_id}` : null, null]
+      // the Ledger General Report lists only ledgers with entries or a balance (by design) — an idle ledger is not on it
+      ["Ledger General Report", rec.account?.ledger_id && rec.account.has_activity ? `/dashboard/ledger/general-report?ledgerId=${rec.account.ledger_id}` : null, null]
     ]) {
       if (!path) continue;
       try {
