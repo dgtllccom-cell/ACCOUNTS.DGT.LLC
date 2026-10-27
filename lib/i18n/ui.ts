@@ -12240,6 +12240,8 @@ export type UiKey =
   | "dash.scope_business_admin"
   | "dash.scope_business_admin_country"
   | "dash.dashboard_view"
+  | "apperr.not_found_title"
+  | "apperr.not_found_desc"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37452,6 +37454,8 @@ const en: Dict = {
   "dash.scope_business_admin": "Business / Admin",
   "dash.scope_business_admin_country": "Business / Admin / Country",
   "dash.dashboard_view": "Dashboard View",
+  "apperr.not_found_title": "404 - Page Not Found",
+  "apperr.not_found_desc": "The page or resource you requested could not be found or has moved.",
 };
 
 const ur: Dict = {
@@ -62632,6 +62636,8 @@ const ur: Dict = {
   "dash.scope_business_admin": "بزنس / ایڈمن",
   "dash.scope_business_admin_country": "بزنس / ایڈمن / ملک",
   "dash.dashboard_view": "ڈیش بورڈ منظر",
+  "apperr.not_found_title": "404 - صفحہ نہیں ملا",
+  "apperr.not_found_desc": "آپ کا مطلوبہ صفحہ یا ریکارڈ نہیں ملا یا منتقل ہو چکا ہے۔",
 };
 
 const ar: Dict = {
@@ -87813,6 +87819,8 @@ const ar: Dict = {
   "dash.scope_business_admin": "الأعمال / الإدارة",
   "dash.scope_business_admin_country": "الأعمال / الإدارة / الدولة",
   "dash.dashboard_view": "عرض لوحة التحكم",
+  "apperr.not_found_title": "404 - الصفحة غير موجودة",
+  "apperr.not_found_desc": "تعذر العثور على الصفحة أو المورد المطلوب أو تم نقله.",
 };
 
 const fa: Dict = {
@@ -112993,6 +113001,8 @@ const fa: Dict = {
   "dash.scope_business_admin": "کسب‌وکار / مدیریت",
   "dash.scope_business_admin_country": "کسب‌وکار / مدیریت / کشور",
   "dash.dashboard_view": "نمای داشبورد",
+  "apperr.not_found_title": "404 - صفحه پیدا نشد",
+  "apperr.not_found_desc": "صفحه یا منبع درخواستی پیدا نشد یا منتقل شده است.",
 };
 
 const ps: Dict = {
@@ -138180,6 +138190,8 @@ const ps: Dict = {
   "dash.scope_business_admin": "سوداګري / اداره",
   "dash.scope_business_admin_country": "سوداګري / اداره / هېواد",
   "dash.dashboard_view": "د ډشبورډ لید",
+  "apperr.not_found_title": "404 - پاڼه ونه موندل شوه",
+  "apperr.not_found_desc": "غوښتل شوې پاڼه یا سرچینه ونه موندل شوه یا لېږدول شوې ده.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
