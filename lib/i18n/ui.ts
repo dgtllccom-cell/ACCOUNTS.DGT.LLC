@@ -12214,6 +12214,23 @@ export type UiKey =
   | "dash.no_shipments_yet"
   | "dash.no_sales_yet"
   | "dash.mixed_currencies"
+  | "log.tab_recent_documents"
+  | "log.tab_truck_movements"
+  | "log.tab_agent_activities"
+  | "log.tab_system_alerts"
+  | "log.qa_new_shipment"
+  | "log.qa_vessel_tracking"
+  | "log.qa_trucking_transport"
+  | "log.qa_transfer_handover"
+  | "log.qa_open_documents"
+  | "log.col_related_to"
+  | "log.no_documents"
+  | "eaud.kpi_activity_summary"
+  | "eaud.kpi_edits_this_month"
+  | "eaud.kpi_deleted_edited"
+  | "eaud.kpi_branch_user_report"
+  | "eaud.kpi_branches_monitored"
+  | "eaud.kpi_users_audited"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37400,6 +37417,23 @@ const en: Dict = {
   "dash.no_shipments_yet": "No shipments recorded yet.",
   "dash.no_sales_yet": "No sales recorded yet.",
   "dash.mixed_currencies": "Several currencies",
+  "log.tab_recent_documents": "Recent Documents",
+  "log.tab_truck_movements": "Truck Movements",
+  "log.tab_agent_activities": "Agent Activities",
+  "log.tab_system_alerts": "System Alerts",
+  "log.qa_new_shipment": "New Shipment",
+  "log.qa_vessel_tracking": "Vessel Tracking",
+  "log.qa_trucking_transport": "Trucking & Transport",
+  "log.qa_transfer_handover": "Transfer & Handover",
+  "log.qa_open_documents": "Open Documents",
+  "log.col_related_to": "Related To",
+  "log.no_documents": "No documents recorded yet.",
+  "eaud.kpi_activity_summary": "Audit Activity Summary",
+  "eaud.kpi_edits_this_month": "Edits this month",
+  "eaud.kpi_deleted_edited": "Deleted / Edited Summary",
+  "eaud.kpi_branch_user_report": "Branch and User Audit Report",
+  "eaud.kpi_branches_monitored": "Branches monitored",
+  "eaud.kpi_users_audited": "Users audited",
 };
 
 const ur: Dict = {
@@ -62554,6 +62588,23 @@ const ur: Dict = {
   "dash.no_shipments_yet": "ابھی تک کوئی شپمنٹ درج نہیں ہوئی۔",
   "dash.no_sales_yet": "ابھی تک کوئی فروخت درج نہیں ہوئی۔",
   "dash.mixed_currencies": "متعدد کرنسیاں",
+  "log.tab_recent_documents": "حالیہ دستاویزات",
+  "log.tab_truck_movements": "ٹرک کی نقل و حرکت",
+  "log.tab_agent_activities": "ایجنٹ کی سرگرمیاں",
+  "log.tab_system_alerts": "سسٹم الرٹس",
+  "log.qa_new_shipment": "نئی شپمنٹ",
+  "log.qa_vessel_tracking": "جہاز ٹریکنگ",
+  "log.qa_trucking_transport": "ٹرکنگ اور ٹرانسپورٹ",
+  "log.qa_transfer_handover": "منتقلی اور حوالگی",
+  "log.qa_open_documents": "کھلی دستاویزات",
+  "log.col_related_to": "متعلقہ",
+  "log.no_documents": "ابھی تک کوئی دستاویز درج نہیں ہوئی۔",
+  "eaud.kpi_activity_summary": "آڈٹ سرگرمی کا خلاصہ",
+  "eaud.kpi_edits_this_month": "اس ماہ کی ترامیم",
+  "eaud.kpi_deleted_edited": "حذف شدہ / ترمیم شدہ خلاصہ",
+  "eaud.kpi_branch_user_report": "برانچ اور صارف آڈٹ رپورٹ",
+  "eaud.kpi_branches_monitored": "زیر نگرانی برانچیں",
+  "eaud.kpi_users_audited": "آڈٹ شدہ صارفین",
 };
 
 const ar: Dict = {
@@ -87709,6 +87760,23 @@ const ar: Dict = {
   "dash.no_shipments_yet": "لم يتم تسجيل أي شحنات بعد.",
   "dash.no_sales_yet": "لم يتم تسجيل أي مبيعات بعد.",
   "dash.mixed_currencies": "عملات متعددة",
+  "log.tab_recent_documents": "المستندات الأخيرة",
+  "log.tab_truck_movements": "حركة الشاحنات",
+  "log.tab_agent_activities": "أنشطة الوكلاء",
+  "log.tab_system_alerts": "تنبيهات النظام",
+  "log.qa_new_shipment": "شحنة جديدة",
+  "log.qa_vessel_tracking": "تتبع السفن",
+  "log.qa_trucking_transport": "الشاحنات والنقل",
+  "log.qa_transfer_handover": "النقل والتسليم",
+  "log.qa_open_documents": "المستندات المفتوحة",
+  "log.col_related_to": "مرتبط بـ",
+  "log.no_documents": "لم يتم تسجيل أي مستندات بعد.",
+  "eaud.kpi_activity_summary": "ملخص نشاط التدقيق",
+  "eaud.kpi_edits_this_month": "تعديلات هذا الشهر",
+  "eaud.kpi_deleted_edited": "ملخص المحذوف / المعدل",
+  "eaud.kpi_branch_user_report": "تقرير تدقيق الفروع والمستخدمين",
+  "eaud.kpi_branches_monitored": "الفروع المراقبة",
+  "eaud.kpi_users_audited": "المستخدمون الذين تم تدقيقهم",
 };
 
 const fa: Dict = {
@@ -112863,6 +112931,23 @@ const fa: Dict = {
   "dash.no_shipments_yet": "هنوز محموله‌ای ثبت نشده است.",
   "dash.no_sales_yet": "هنوز فروشی ثبت نشده است.",
   "dash.mixed_currencies": "چند ارز",
+  "log.tab_recent_documents": "اسناد اخیر",
+  "log.tab_truck_movements": "جابجایی کامیون‌ها",
+  "log.tab_agent_activities": "فعالیت‌های نماینده",
+  "log.tab_system_alerts": "هشدارهای سیستم",
+  "log.qa_new_shipment": "محموله جدید",
+  "log.qa_vessel_tracking": "ردیابی کشتی",
+  "log.qa_trucking_transport": "کامیون و حمل‌ونقل",
+  "log.qa_transfer_handover": "انتقال و تحویل",
+  "log.qa_open_documents": "اسناد باز",
+  "log.col_related_to": "مرتبط با",
+  "log.no_documents": "هنوز سندی ثبت نشده است.",
+  "eaud.kpi_activity_summary": "خلاصه فعالیت حسابرسی",
+  "eaud.kpi_edits_this_month": "ویرایش‌های این ماه",
+  "eaud.kpi_deleted_edited": "خلاصه حذف‌شده / ویرایش‌شده",
+  "eaud.kpi_branch_user_report": "گزارش حسابرسی شعبه و کاربر",
+  "eaud.kpi_branches_monitored": "شعبه‌های تحت نظارت",
+  "eaud.kpi_users_audited": "کاربران حسابرسی‌شده",
 };
 
 const ps: Dict = {
@@ -138024,6 +138109,23 @@ const ps: Dict = {
   "dash.no_shipments_yet": "تر اوسه هېڅ بار نه دی ثبت شوی.",
   "dash.no_sales_yet": "تر اوسه هېڅ پلور نه دی ثبت شوی.",
   "dash.mixed_currencies": "څو اسعار",
+  "log.tab_recent_documents": "وروستي اسناد",
+  "log.tab_truck_movements": "د لارۍ خوځښتونه",
+  "log.tab_agent_activities": "د استازي فعالیتونه",
+  "log.tab_system_alerts": "د سیسټم خبرتیاوې",
+  "log.qa_new_shipment": "نوی بار",
+  "log.qa_vessel_tracking": "د بېړۍ تعقیب",
+  "log.qa_trucking_transport": "لارۍ او ټرانسپورټ",
+  "log.qa_transfer_handover": "لېږد او سپارل",
+  "log.qa_open_documents": "پرانیستي اسناد",
+  "log.col_related_to": "اړوند",
+  "log.no_documents": "تر اوسه هېڅ سند نه دی ثبت شوی.",
+  "eaud.kpi_activity_summary": "د پلټنې د فعالیت لنډیز",
+  "eaud.kpi_edits_this_month": "د دې میاشتې سمونونه",
+  "eaud.kpi_deleted_edited": "د ړنګ شویو / سم شویو لنډیز",
+  "eaud.kpi_branch_user_report": "د څانګې او کارن د پلټنې راپور",
+  "eaud.kpi_branches_monitored": "څارل شوې څانګې",
+  "eaud.kpi_users_audited": "پلټل شوي کارنان",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

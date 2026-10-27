@@ -165,9 +165,10 @@ export function openPurchaseA4ReportWindow(input: {
 
     items = [{
       srNo: 1,
-      goodsName: b.productName || "WALNUTS IN SHELL",
-      grade: "Organic",
-      origin: b.countryName || "USA",
+      // only what the booking holds — never a sample product, grade or origin
+      goodsName: b.productName || "—",
+      grade: "—",
+      origin: b.countryName || "—",
       quantity: b.quantity || 0,
       qtyName: b.unit || "BAGS",
       packing: `${b.totalWeight / (b.quantity || 1)} KG`,

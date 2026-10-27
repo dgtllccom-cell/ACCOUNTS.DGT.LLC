@@ -677,7 +677,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
               <div className="bg-card border border-border/80 rounded-xl p-2.5 flex items-center justify-between">
                 <span className="text-muted-foreground font-medium">{translateHeader(lang, "USERS")}</span>
                 <span className="font-bold text-foreground">
-                  {countrySummaries.reduce((sum, c) => sum + c.totalUsers, 0) || 10}
+                  {countrySummaries.reduce((sum, c) => sum + c.totalUsers, 0)}
                 </span>
               </div>
               <div className="bg-card border border-border/80 rounded-xl p-2.5 flex items-center justify-between">

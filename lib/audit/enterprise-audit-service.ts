@@ -380,8 +380,8 @@ export async function getEditHistoryRecords(params: {
         pendingApprovals: Number(kpiResult[0]?.pending_approvals || 0),
         highRiskChanges: Number(kpiResult[0]?.high_risk_changes || 0),
         expiredAccess: Number(kpiResult[0]?.expired_access || 0),
-        totalCountries: Math.max(Number(kpiResult[0]?.total_countries || 0), 5),
-        totalBranches: Math.max(Number(kpiResult[0]?.total_branches || 0), 9)
+        totalCountries: Number(kpiResult[0]?.total_countries || 0),
+        totalBranches: Number(kpiResult[0]?.total_branches || 0)
       },
       records,
       total: Number(totalCountResult[0]?.total || 0),
@@ -506,8 +506,8 @@ export async function getDeletedRecords(params: {
         pendingReview: Number(kpiResult[0]?.pending_review || 0),
         highRiskDeletions: Number(kpiResult[0]?.high_risk_deletions || 0),
         restoredRecords: Number(kpiResult[0]?.restored_records || 0),
-        totalCountries: Math.max(Number(kpiResult[0]?.total_countries || 0), 5),
-        totalBranches: Math.max(Number(kpiResult[0]?.total_branches || 0), 9)
+        totalCountries: Number(kpiResult[0]?.total_countries || 0),
+        totalBranches: Number(kpiResult[0]?.total_branches || 0)
       },
       records: rows,
       total: Number(countResult[0]?.total || 0),

@@ -61,6 +61,14 @@ export function EnterpriseAuditMonitoringDashboard() {
 
   // User activity stats
   const [userActivityData, setUserActivityData] = useState<any>(null);
+  // Real figures for the KPI cards (monthly-edits returns one row per day: { edit_date, total_edits, ... }).
+  const monthlyEditTotal = Object.values((monthlyEdits ?? {}) as Record<string, any>).reduce(
+    (sum: number, row: any) => sum + (row && typeof row === "object" && "total_edits" in row ? Number(row.total_edits) || 0 : 0),
+    0
+  );
+  const dayEdits = Number(dailyBranchData?.totals?.totalEdits ?? 0);
+  const dayDeletes = Number(dailyBranchData?.totals?.totalDeletes ?? 0);
+  const auditedUsers = Array.isArray(userActivityData?.users) ? userActivityData.users.length : 0;
   const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Active timeline dialog
@@ -355,7 +363,8 @@ export function EnterpriseAuditMonitoringDashboard() {
         </div>
       </div>
 
-      {/* ================= 3. 4 KPI SUMMARY CARDS ================= */}
+      {/* ================= 3. 4 KPI SUMMARY CARDS =================
+          Real figures only: branches and edits/deletes of the selected day, users with activity, edits of this month. */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Branch & User Details (Blue) */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-blue-200/80 dark:border-blue-900/40 p-4 shadow-xs">
@@ -365,7 +374,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                 <Building2 className="h-4 w-4" />
               </div>
               <span className="text-xs font-bold text-blue-900 dark:text-blue-300">
-                Branch & User Details
+                {tt("audit.branch_user_details", "Branch & User Details")}
               </span>
             </div>
             <div className="h-5 w-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
@@ -374,10 +383,10 @@ export function EnterpriseAuditMonitoringDashboard() {
           </div>
           <div className="mt-3">
             <div className="text-3xl font-black text-slate-900 dark:text-slate-100">
-              {dailyBranchData?.totals?.totalBranches || 23}
+              {dailyBranchData?.totals?.totalBranches ?? 0}
             </div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-              Active Branches | 156 Active Users
+              {tt("pb_register.active_branches", "Active Branches")} | {auditedUsers} {tt("dash.active_users", "Active Users")}
             </p>
           </div>
         </div>
@@ -390,7 +399,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                 <Activity className="h-4 w-4" />
               </div>
               <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300">
-                Audit Activity Summary
+                {tt("eaud.kpi_activity_summary", "Audit Activity Summary")}
               </span>
             </div>
             <div className="h-5 w-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
@@ -399,10 +408,10 @@ export function EnterpriseAuditMonitoringDashboard() {
           </div>
           <div className="mt-3">
             <div className="text-3xl font-black text-slate-900 dark:text-slate-100">
-              {monthlyEdits?.stats?.total_created ? (Number(monthlyEdits.stats.total_created) + 1842).toLocaleString() : "1,842"}
+              {monthlyEditTotal.toLocaleString()}
             </div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-              Total Audit Events
+              {tt("eaud.kpi_edits_this_month", "Edits this month")}
             </p>
           </div>
         </div>
@@ -415,7 +424,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                 <FileText className="h-4 w-4" />
               </div>
               <span className="text-xs font-bold text-purple-900 dark:text-purple-300">
-                Deleted / Edited / Version Summary
+                {tt("eaud.kpi_deleted_edited", "Deleted / Edited Summary")}
               </span>
             </div>
             <div className="h-5 w-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
@@ -424,10 +433,10 @@ export function EnterpriseAuditMonitoringDashboard() {
           </div>
           <div className="mt-3">
             <div className="text-3xl font-black text-slate-900 dark:text-slate-100">
-              278
+              {(dayEdits + dayDeletes).toLocaleString()}
             </div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-              {monthlyEdits?.stats?.total_edits || 181} Edited | {monthlyEdits?.stats?.total_deleted || 74} Deleted | 23 Versioned
+              {dayEdits} {tt("aud.action_edited", "Edited")} | {dayDeletes} {tt("eaud.deleted_label", "Deleted")}
             </p>
           </div>
         </div>
@@ -440,7 +449,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                 <FileSpreadsheet className="h-4 w-4" />
               </div>
               <span className="text-xs font-bold text-amber-900 dark:text-amber-300">
-                Branch and User Audit Report
+                {tt("eaud.kpi_branch_user_report", "Branch and User Audit Report")}
               </span>
             </div>
             <div className="h-5 w-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
@@ -449,10 +458,10 @@ export function EnterpriseAuditMonitoringDashboard() {
           </div>
           <div className="mt-3">
             <div className="text-3xl font-black text-slate-900 dark:text-slate-100">
-              {dailyBranchData?.totals?.totalBranches || 23}
+              {dailyBranchData?.totals?.totalBranches ?? 0}
             </div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-              Branches Monitored | 156 Users Audited
+              {tt("eaud.kpi_branches_monitored", "Branches monitored")} | {auditedUsers} {tt("eaud.kpi_users_audited", "Users audited")}
             </p>
           </div>
         </div>

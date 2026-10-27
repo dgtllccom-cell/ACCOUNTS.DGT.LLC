@@ -110,7 +110,7 @@ function PurchaseTransferErpReportViewContent({
   const form = d?.form_data?.form || {};
   const totals = d?.form_data?.totals || {};
 
-  const bookingRef = d?.purchaseBookingOrderNumber || form.bookingNo || `AE-${d?.id ? d.id.slice(0, 4) : "001"}-0001`;
+  const bookingRef = d?.purchaseBookingOrderNumber || form.bookingNo || "—";
   const reportNo = `PTVR-${new Date().getFullYear()}-${d?.id ? d.id.slice(0, 6).toUpperCase() : "000000"}`;
   
   const isPosted = d?.status === "Posted"
@@ -123,10 +123,10 @@ function PurchaseTransferErpReportViewContent({
     || (d as any)?.is_transferred === true;
   
   // Serials (Super Admin, Country, Branch, and Business Roznamcha Voucher Serial)
-  const superAdminSerial = (d as any)?.superAdminSerialNo || (d as any)?.super_admin_serial_number || form.superAdminSerialNo || `GBL-PB-${bookingRef}`;
-  const countrySerial = (d as any)?.computedCountrySerial || (d as any)?.country_transaction_serial_number || form.countrySerialNo || `CTY-${(form.countryName || "UAE").slice(0,3).toUpperCase()}-${bookingRef}`;
-  const branchSerial = (d as any)?.computedBranchSerial || (d as any)?.branch_transaction_serial_number || form.branchSerialNo || `BR-${(form.branchName || "MAIN").slice(0,3).toUpperCase()}-${bookingRef}`;
-  const roznamchaSerial = (d as any)?.roznamcha_serial_number || form.roznamchaSerialNo || `ROZ-PB-${bookingRef}`;
+  const superAdminSerial = (d as any)?.superAdminSerialNo || (d as any)?.super_admin_serial_number || form.superAdminSerialNo || "—";
+  const countrySerial = (d as any)?.computedCountrySerial || (d as any)?.country_transaction_serial_number || form.countrySerialNo || "—";
+  const branchSerial = (d as any)?.computedBranchSerial || (d as any)?.branch_transaction_serial_number || form.branchSerialNo || "—";
+  const roznamchaSerial = (d as any)?.roznamcha_serial_number || form.roznamchaSerialNo || "—";
   
   // Account codes & names
   const purchaseAccCode = form.purchaseAccountNo || d?.purchaseAccountNumber || "—";
@@ -135,8 +135,8 @@ function PurchaseTransferErpReportViewContent({
   const salesAccCode = form.salesAccountNo || d?.salesAccountNumber || "—";
   const salesAccName = form.salesAccountName || d?.salesAccountName || "—";
 
-  const debitSerial = (d as any)?.debit_serial_number || `ROZ-DR-${purchaseAccCode}`;
-  const creditSerial = (d as any)?.credit_serial_number || `ROZ-CR-${salesAccCode}`;
+  const debitSerial = (d as any)?.debit_serial_number || "—";
+  const creditSerial = (d as any)?.credit_serial_number || "—";
 
   const countryName = d?.countryName || form.countryName || "—";
   const branchName = d?.branchName || form.branchName || "—";
@@ -185,7 +185,7 @@ function PurchaseTransferErpReportViewContent({
   const totalNetWt = goodsEntries.reduce((sum, g) => sum + (Number(g.netWeight) || 0), 0);
   const totalCartons = goodsEntries.reduce((sum, g) => sum + (Number(g.qtyNo) || 0), 0);
 
-  const paymentCondition = String(form.paymentType || form.paymentCondition || "Advance Payment");
+  const paymentCondition = String(form.paymentType || form.paymentCondition || "—");
   const destination = resolvePurchaseBookingTransferDestination(paymentCondition);
   const endorsementPercent = Number(form.endorsementPercent ?? form.endorsement_percent ?? form.advancePercent ?? form.advance_percent ?? 0);
   const isEndorsement = paymentCondition.toLowerCase().includes("endorsement");
@@ -691,7 +691,7 @@ function PurchaseTransferErpReportViewContent({
                   <span>🏬 {tt("pterv2.entity_vendor","VENDOR / CREDIT ENTITY")}</span>
                   <span className="font-mono text-emerald-700">{salesAccCode}</span>
                 </div>
-                <div>{tt("pterv2.supplier_name","Supplier Name")}: <b className="text-slate-900">{d.supplierName || "Global Commodities Supplier"}</b></div>
+                <div>{tt("pterv2.supplier_name","Supplier Name")}: <b className="text-slate-900">{d.supplierName || "—"}</b></div>
                 <div>{tt("pterv2.cr_acc_name","CR Account Name")}: <b className="text-emerald-800 uppercase">{salesAccName}</b></div>
                 <div>{tt("pterv2.cr_serial_lbl","CR Serial Number")}: <b className="font-mono text-emerald-700">{creditSerial}</b></div>
                 <div>{tt("pterv2.country_loc","Country / Location")}: <b>{countryName}</b></div>
@@ -806,14 +806,14 @@ function PurchaseTransferErpReportViewContent({
                     <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
                       <td className="p-1 border border-slate-300 text-center font-mono font-bold text-slate-500">{idx + 1}</td>
                       <td className="p-1 border border-slate-300 font-bold text-slate-900 uppercase">{g.goodsName || g.productName}</td>
-                      <td className="p-1 border border-slate-300 text-center font-mono text-slate-600">{g.hsCode || "0802.1200"}</td>
-                      <td className="p-1 border border-slate-300 text-center">{g.brand || "Premium"}</td>
-                      <td className="p-1 border border-slate-300 text-center font-semibold">{g.origin || "USA"}</td>
-                      <td className="p-1 border border-slate-300 text-right font-mono font-bold">{Number(g.qtyNo || 10000).toLocaleString()} {g.qtyName || "BAGS"}</td>
-                      <td className="p-1 border border-slate-300 text-right font-mono">{money(g.grossWeight || 260000)} kg</td>
-                      <td className="p-1 border border-slate-300 text-right font-mono font-bold">{money(g.netWeight || 250000)} kg</td>
-                      <td className="p-1 border border-slate-300 text-right font-mono">${Number(g.coursePrice || 5.20).toFixed(2)}</td>
-                      <td className="p-1 border border-slate-300 text-right font-mono font-bold text-blue-800">${money(g.totalAmount || 0)}</td>
+                      <td className="p-1 border border-slate-300 text-center font-mono text-slate-600">{g.hsCode || "—"}</td>
+                      <td className="p-1 border border-slate-300 text-center">{g.brand || "—"}</td>
+                      <td className="p-1 border border-slate-300 text-center font-semibold">{g.origin || "—"}</td>
+                      <td className="p-1 border border-slate-300 text-right font-mono font-bold">{Number(g.qtyNo || 0).toLocaleString()} {g.qtyName || ""}</td>
+                      <td className="p-1 border border-slate-300 text-right font-mono">{money(g.grossWeight || 0)} kg</td>
+                      <td className="p-1 border border-slate-300 text-right font-mono font-bold">{money(g.netWeight || 0)} kg</td>
+                      <td className="p-1 border border-slate-300 text-right font-mono">{currencyFc} {Number(g.coursePrice || 0).toFixed(2)}</td>
+                      <td className="p-1 border border-slate-300 text-right font-mono font-bold text-blue-800">{currencyFc} {money(g.totalAmount || 0)}</td>
                       <td className="p-1 border border-slate-300 text-center font-mono">{exchangeRate}</td>
                       <td className="p-1 border border-slate-300 text-right font-mono font-black text-emerald-800">{money(g.finalAmount || 0)} {currencyLc}</td>
                     </tr>

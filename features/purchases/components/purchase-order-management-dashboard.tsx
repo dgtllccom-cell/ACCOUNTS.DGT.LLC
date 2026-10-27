@@ -3144,9 +3144,9 @@ export function PurchaseOrderManagementDashboard() {
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Business Roznamcha S/N:")}</td><td className="px-2 py-1 text-blue-700 font-mono font-bold">{journalEntryNumberText}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Super Admin S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.superAdminSerialNo || selected.super_admin_serial_number || `GBL-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Country S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedCountrySerial || selected.country_transaction_serial_number || `CTY-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Branch S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedBranchSerial || selected.branch_transaction_serial_number || `BR-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Super Admin S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.superAdminSerialNo || selected.super_admin_serial_number || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Country S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedCountrySerial || selected.country_transaction_serial_number || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Branch S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedBranchSerial || selected.branch_transaction_serial_number || "—"}</td></tr>
 
                           <tr className="border-b border-slate-100 bg-blue-50/40">
                             <td className="px-2 py-1 text-slate-500 font-bold">{tr("Debit Account (DR):")}</td>

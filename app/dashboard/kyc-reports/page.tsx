@@ -890,15 +890,15 @@ export default function KycReportsPage() {
 
             <div className="mt-3 flex items-baseline justify-between">
               <div>
-                <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{metrics.total || 90}</div>
+                <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{metrics.total ?? 0}</div>
                 <div className="text-[10px] font-bold text-slate-400">Total Audited</div>
               </div>
               <div>
-                <div className="text-2xl font-black text-emerald-600">{metrics.compliant || 82}</div>
+                <div className="text-2xl font-black text-emerald-600">{metrics.compliant ?? 0}</div>
                 <div className="text-[10px] font-bold text-emerald-600/80">Compliant & Verified</div>
               </div>
               <div>
-                <div className="text-2xl font-black text-rose-600">{metrics.incomplete || 8}</div>
+                <div className="text-2xl font-black text-rose-600">{metrics.incomplete ?? 0}</div>
                 <div className="text-[10px] font-bold text-rose-600/80">Action Required</div>
               </div>
             </div>
@@ -935,7 +935,7 @@ export default function KycReportsPage() {
 
             <div className="mt-3 flex items-baseline justify-between">
               <div>
-                <div className="text-2xl font-black text-amber-600">{metrics.nearExpiry || 28}</div>
+                <div className="text-2xl font-black text-amber-600">{metrics.nearExpiry ?? 0}</div>
                 <div className="text-[10px] font-bold text-amber-600/80">Near Expiry</div>
               </div>
               <div>
@@ -980,18 +980,18 @@ export default function KycReportsPage() {
 
             <div className="mt-3 flex items-baseline justify-between">
               <div>
-                <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{items.length || 90}</div>
+                <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{items.length}</div>
                 <div className="text-[10px] font-bold text-slate-400">Total Entities</div>
               </div>
               <div>
                 <div className="text-2xl font-black text-blue-600">
-                  {items.filter(i => i.type === "country_branch").length || 5}
+                  {items.filter(i => i.type === "country_branch").length}
                 </div>
                 <div className="text-[10px] font-bold text-blue-600/80">Country Branches</div>
               </div>
               <div>
                 <div className="text-2xl font-black text-emerald-600">
-                  {items.filter(i => i.type !== "country_branch").length || 73}
+                  {items.filter(i => i.type !== "country_branch").length}
                 </div>
                 <div className="text-[10px] font-bold text-emerald-600/80">City Branches & Users</div>
               </div>
