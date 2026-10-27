@@ -483,3 +483,79 @@ export function localizeTerm(val: string | null | undefined, lang: string = "en"
   return transliterateProperNoun(val, lang as SupportedLanguage);
 }
 
+
+// ── Review-queue SUGGESTION for an English spelling of a name typed in Urdu / Pashto / Persian / Arabic script ──────────────
+// Never displayed as the name: it only pre-fills a suggestion in Translation Management, where a person accepts or corrects it
+// (that person's entry is the approved English variant). The char-by-char rendering above drops short vowels ("Namt Allah");
+// common name parts, honorifics and trade words are looked up whole, "-ullah" / "-uddin" / "-zai" forms are joined.
+const NAME_LEXICON: Record<string, string> = {
+  // honorifics / titles
+  "حاجی": "Haji", "ملا": "Mulla", "سردار": "Sardar", "ڈاکٹر": "Dr.", "استاد": "Ustad", "استاز": "Ustad", "ماما": "Mama",
+  "خان": "Khan", "شاہ": "Shah", "سید": "Syed", "مولوی": "Maulvi", "مولانا": "Maulana", "میاں": "Mian", "صاحب": "Sahib",
+  "آغا": "Agha", "بابا": "Baba", "ملک": "Malik", "چوہدری": "Chaudhry", "حضرت": "Hazrat", "شیخ": "Sheikh", "قاری": "Qari",
+  // given names and name parts
+  "محمد": "Muhammad", "احمد": "Ahmad", "محمود": "Mahmood", "المحمود": "Al Mahmood", "علی": "Ali", "حسن": "Hassan", "حسین": "Hussain",
+  "کریم": "Karim", "پہلوان": "Pehlwan", "گل": "Gul", "جمع": "Juma", "جمعہ": "Juma", "سلیم": "Saleem", "ستار": "Sattar",
+  "رحمن": "Rehman", "رحمان": "Rahman", "نعمت": "Naimat", "سفر": "Safar", "خیر": "Khair", "فتح": "Fateh", "یوسف": "Yousuf",
+  "غلام": "Ghulam", "امین": "Amin", "نجیب": "Najib", "سخی": "Sakhi", "پیر": "Pir", "فدا": "Fida", "داد": "Dad", "ظریف": "Zarif",
+  "عارف": "Arif", "نافع": "Nafi", "شفیع": "Shafi", "روزی": "Rozi", "مہربان": "Mehrban", "سعید": "Saeed", "سیعد": "Saeed",
+  "فضل": "Fazal", "ولی": "Wali", "جان": "Jan", "عزیز": "Aziz", "نور": "Noor", "گلاب": "Gulab", "شیر": "Sher", "زمان": "Zaman",
+  "ظاہر": "Zahir", "نذیر": "Nazir", "بشیر": "Bashir", "رشید": "Rashid", "حمید": "Hamid", "مجید": "Majid", "وحید": "Waheed",
+  "امان": "Aman", "عصمت": "Asmat", "عزت": "Izzat", "نصیب": "Naseeb", "کلیم": "Kaleem", "حبیب": "Habib", "محیب": "Muhib",
+  "نقیب": "Naqib", "روح": "Ruh", "نصر": "Nasr", "رحمت": "Rahmat", "سمیع": "Sami", "عطا": "Ata", "ذبیح": "Zabih", "احسان": "Ehsan",
+  "سیف": "Saif", "کرم": "Karam", "برکت": "Barkat", "حمد": "Hamd", "سابد": "Sabid", "اصغر": "Asghar", "اکبر": "Akbar",
+  "شاجھان": "Shahjahan", "شاہجہان": "Shahjahan", "متین": "Mateen", "ماتین": "Mateen", "عبدال": "Abdul", "عبد": "Abdul",
+  "عبدالسلام": "Abdul Salam", "عبدالقیوم": "Abdul Qayyum", "عبدالباقی": "Abdul Baqi", "عبدالحی": "Abdul Hai",
+  "عبدالرحمن": "Abdul Rahman", "عبدالرحمان": "Abdul Rahman", "عبدالمتین": "Abdul Mateen", "عبداللہ": "Abdullah",
+  "ضیاالحق": "Ziaul Haq", "ضیاءالحق": "Ziaul Haq", "بسم": "Bismillah", "یار": "Yar", "دوست": "Dost", "طاہر": "Tahir",
+  "مغٹ": "Mughat", "قیوم": "Qayyum", "باقی": "Baqi", "سلام": "Salam", "اللہ": "Allah", "الله": "Allah",
+  // trade words, places and business terms that appear inside account names
+  "بادام": "Badam", "زیرہ": "Zeera", "مغز": "Maghz", "مرچ": "Mirch", "منڈی": "Mandi", "والا": "Wala", "والے": "Wale",
+  "باڈر": "Border", "بارڈر": "Border", "کمیشن": "Commission", "کار": "Kar", "ایجنٹ": "Agent", "ڈرایی": "Dry", "ڈرائی": "Dry",
+  "فروٹ": "Fruit", "کمپنی": "Company", "اینڈ": "&", "اور": "&", "ویش": "Wesh", "کریانہ": "Kiryana", "مرچنٹ": "Merchant",
+  "بروکر": "Broker", "پنیر": "Paneer", "اناردانہ": "Anardana", "مارکہ": "Marka", "ٹرانسپورٹ": "Transport", "کسٹم": "Customs",
+  "کلیرنگ": "Clearing", "اکاونٹ": "Account", "اکاؤنٹ": "Account", "کھاتہ": "Khata", "آفس": "Office", "ٹوٹل": "Total",
+  "سرمایہ": "Sarmaya", "کاری": "Kari", "دبی": "Dubai", "دبئی": "Dubai", "چمن": "Chaman", "کوئٹہ": "Quetta", "کندھار": "Kandahar",
+  "قندھار": "Kandahar", "واھگہ": "Wahga", "واہگہ": "Wahga", "پاک": "Pak", "افغان": "Afghan", "شخص": "Shakhs", "درمان": "Darman",
+  "وفا": "Wafa", "تیری": "Teri", "پٹہ": "Patta", "ڈوڈی": "Dodi", "ٹریڈرز": "Traders", "ٹریڈنگ": "Trading", "جنرل": "General"
+};
+const ULLAH_RE = /^(.+?)(اللہ|الله|آللہ)$/;
+const UDDIN_RE = /^(.+?)(الدین|الدّین)$/;
+const ZAI_RE = /^(.+?)(زئی|زیی|زی)$/;
+
+function lexiconWord(word: string): string | null {
+  const clean = word.replace(/[ؐ-ًؚ-ٰٟ]/g, "");
+  return NAME_LEXICON[clean] ?? null;
+}
+
+/** A suggested English spelling of a name typed in Perso-Arabic script (review queue only — never shown as the name). */
+export function suggestLatinName(text: string): string {
+  const words = String(text ?? "").replace(/[ؐ-ًؚ-ٰٟ]/g, "").trim().split(/\s+/).filter(Boolean);
+  const out: string[] = [];
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    // "X اللہ" written as two words is one name: Naimatullah, Asmatullah
+    if ((word === "اللہ" || word === "الله" || word === "آللہ") && out.length && i > 0 && words[i - 1] !== "بسم") {
+      out[out.length - 1] = `${out[out.length - 1]}ullah`;
+      continue;
+    }
+    if (word === "اللہ" && words[i - 1] === "بسم") continue; // "بسم اللہ" → Bismillah
+    if ((word === "الدین" || word === "الدّین") && out.length) {
+      out[out.length - 1] = `${out[out.length - 1]}uddin`; // "امان الدین" → Amanuddin
+      continue;
+    }
+    const known = lexiconWord(word);
+    if (known) { out.push(known); continue; }
+    const ullah = word.match(ULLAH_RE);
+    if (ullah) { out.push(`${lexiconWord(ullah[1]) ?? transliterateToLatin(ullah[1])}ullah`); continue; }
+    const uddin = word.match(UDDIN_RE);
+    if (uddin) { out.push(`${lexiconWord(uddin[1]) ?? transliterateToLatin(uddin[1])}uddin`); continue; }
+    const zai = word.match(ZAI_RE);
+    if (zai && zai[1].length >= 2) { out.push(`${lexiconWord(zai[1]) ?? transliterateToLatin(zai[1])}zai`); continue; }
+    // "داداللہ" style already handled; "فدامحمد" / "دادخان" / "خیرمحمد": a known part glued to a known part
+    const glued = Object.keys(NAME_LEXICON).find((part) => part.length >= 2 && word.endsWith(part) && lexiconWord(word.slice(0, word.length - part.length)));
+    if (glued) { out.push(`${lexiconWord(word.slice(0, word.length - glued.length))} ${NAME_LEXICON[glued]}`); continue; }
+    out.push(/[؀-ۿ]/.test(word) ? transliterateToLatin(word) : word);
+  }
+  return out.join(" ").replace(/\s+/g, " ").trim();
+}

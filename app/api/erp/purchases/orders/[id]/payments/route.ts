@@ -929,7 +929,9 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           `;
 
           if (existingLoading.length === 0) {
-            const containerNumber = String(form.containerNo || form.containerNumber || `CONT-${updated.purchase_order_no}`).trim();
+            // the container number the user entered — never an invented "CONT-<order no>" (the column is NOT NULL, so an empty value
+            // means "not entered yet"; the Loading screen asks for it)
+            const containerNumber = String(form.containerNo || form.containerNumber || "").trim();
             const containerType = form.containerType || null;
             const plrNo = `PLR-${Date.now().toString(36).toUpperCase()}`;
 

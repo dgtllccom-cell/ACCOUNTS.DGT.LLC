@@ -22,6 +22,7 @@ const BASE = process.env.BASE || "http://localhost:3521";
 if (!/localhost|127\.0\.0\.1/.test(BASE)) throw new Error("DEV only");
 const OUT = process.env.OUT || ".tmp/new-account-ui"; fs.mkdirSync(OUT, { recursive: true });
 const PK = "fb021716-a2e7-4141-9c1a-bd1ddd92eb14", QUETTA = "7d7d42fe-ddd1-4bec-8703-3911ad14fa8b";
+const ui = fs.readFileSync("lib/i18n/ui.ts", "utf8");
 const LANGS = ["en", "ur", "ar", "fa", "ps"];
 // real DEV customers (not test records), one per interface language, and one with approved variants in all languages
 const CASES = [
@@ -83,7 +84,18 @@ async function gotoStepWith(p, selector) {
   }
   return p.locator(selector).first().isVisible().catch(() => false);
 }
-const linkedLabel = (p) => p.locator("div.border-emerald-200 span.text-emerald-800").first().textContent({ timeout: 4000 }).then((t) => (t || "").trim()).catch(() => null);
+// the linked customer is shown on the shared customer card (b8535f7 replaced the old "Linked:" box)
+// the card shows "Loading…" until the customer record arrives (a few seconds on a busy DEV box) — read the name once it is there
+const LOADING = new Set(["en", "ur", "ar", "fa", "ps"].map((l) => { const s = ui.indexOf(`const ${l}: Dict = {`); const m = ui.slice(s, ui.indexOf("\n};", s)).match(/"nas\.loading": "([^"]*)"/); return m ? m[1] : ""; }));
+const linkedLabel = async (p) => {
+  let text = null;
+  for (let i = 0; i < 15; i++) {
+    text = await p.locator('[data-testid="customer-account-card-name"]').first().textContent({ timeout: 4000 }).then((t) => (t || "").trim()).catch(() => null);
+    if (text && !LOADING.has(text) && !/^[0-9a-f]{8}-[0-9a-f]{4}-/.test(text)) return text;
+    await p.waitForTimeout(2000);
+  }
+  return text;
+};
 async function switchLanguage(p, lang) {
   await p.evaluate((l) => { localStorage.setItem("erp_lang", l); document.cookie = `erp_lang=${l}; path=/`; window.dispatchEvent(new Event("erp_language_changed")); }, lang);
   await p.waitForTimeout(3500);
@@ -96,7 +108,7 @@ async function readState(p) {
     if (!okName) await p.waitForTimeout(5000);
   }
   const name = okName ? await p.locator("#accountName").first().inputValue().catch(() => null) : null;
-  await gotoStepWith(p, "div.border-emerald-200 span.text-emerald-800");
+  await gotoStepWith(p, '[data-testid="customer-account-card-name"]');
   await p.waitForTimeout(1500);
   return { name, linked: await linkedLabel(p), dir: await p.evaluate(() => document.documentElement.dir) };
 }
@@ -139,7 +151,7 @@ for (const c of CASES.filter((_, i) => !ONLY || ONLY.includes(i))) {
     // before saving: a live language switch must move the "Linked" name to that language's approved variant
     for (const l of ["ar", c.ui]) {
       await switchLanguage(p, l);
-      await gotoStepWith(p, "div.border-emerald-200 span.text-emerald-800");
+      await gotoStepWith(p, '[data-testid="customer-account-card-name"]');
       check(`${tag} create mode, live switch to ${l}: linked customer = "${exp.per[l]}"`, (await linkedLabel(p)) === exp.per[l], `got "${await linkedLabel(p)}"`);
     }
   }

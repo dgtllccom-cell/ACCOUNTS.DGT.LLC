@@ -12,7 +12,7 @@ import { allocateFormSerials } from "@/lib/services/form-serials";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import postgres from "postgres";
 import { normalizeLanguage, saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, trustedTranslationMap } from "@/lib/i18n/localize-records";
 import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations";
 
 
@@ -24,7 +24,7 @@ async function attachSalesOrderTranslations(rows: any[]) {
   // the Supabase admin client silently returns zero rows here (same root cause fixed in
   // lib/services/ledger-report-service.ts). Try direct Postgres first.
   const viaPg = await withLocalPg(async (sql) => sql`
-    select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+    select record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source::text as source, corrected_by
     from public.record_translations
     where record_table = 'sales_orders' and record_id = any(${ids}::uuid[]) and deleted_at is null
   `);
@@ -32,7 +32,7 @@ async function attachSalesOrderTranslations(rows: any[]) {
   if (!translationRows) {
     const admin = createSupabaseAdminClient() as any;
     const { data, error } = await admin.from("record_translations")
-      .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
+      .select("record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source, corrected_by")
       .eq("record_table", "sales_orders")
       .in("record_id", ids)
       .is("deleted_at", null);
@@ -43,7 +43,7 @@ async function attachSalesOrderTranslations(rows: any[]) {
     const order = rows.find((item) => item.id === row.record_id);
     if (order) {
       order.translations ||= {};
-      order.translations[row.field_name] = { en: row.english_text, ur: row.urdu_text, ar: row.arabic_text, fa: row.persian_text, ps: row.pashto_text };
+      order.translations[row.field_name] = trustedTranslationMap("sales_orders", row.field_name, row.original_text, row);
     }
   }
   return rows;

@@ -1,6 +1,64 @@
 # DGT ERP — Main Master Progress Report
 Owner-facing. Updated 2026-10-27 (Dubai, UTC+4). (No earlier file with this name was found in the repository or on the Desktop — if one exists elsewhere, tell me where and I will merge this into it.)
 
+## Issue #36 round (2026-10-27 evening → 28) — saved data in the viewer's language (owner letter "URGENT — FIX MULTILINGUAL DATA DISPLAY")
+
+Evidence is DEV only (`csesvyxxjivnkkozgopt`); Production was only read. Production had moved to `b8535f7` (unified customer &
+account search card, deployed by Asmatullah); it was merged into `release/rc2` before this work (no conflict).
+
+**What the owner saw, and why (Production, read-only, 2026-10-27)**
+* **Names typed in Urdu** — 53 Chaman account / ledger names, 6 customers, truck owners and drivers. Their stored "English" was a
+  letter-for-letter machine rendering ("نعمت اللہ بروکر" → "Namt Allah Brwkr") and nobody had approved an English version. Under the
+  owner's name rule (approved variant, else the saved name) an English viewer correctly saw the saved Urdu — but with no way to tell
+  why and no screen to approve the English name. The **Ledger report did worse**: it read the stored rows with no approval check and
+  showed "Namt Allah Brwkr" as the account name. Roznamcha, purchase / sales order APIs and the purchase booking report shipped the
+  same unchecked machine rows to the screen.
+* **Machine rows marked "complete"** — the local translator writes half-translated text ("گودام کیٹگری" → "Warehouse کیٹگری",
+  "ٹرانسپورٹ" → "ٹرانسPort", Arabic "تشمن" for چمن) as `complete / local_dictionary`, and the display trusted that engine label.
+* **Terms typed in Urdu never matched the dictionary** — the approved dictionaries are keyed by English, so "گودام", "ملازم",
+  "پارٹی" stayed Urdu for an English viewer although approved translations of those exact words exist.
+* **Contact types saved as Urdu labels** — the external customer form sent the translated label ("موبائل فون", "واٹس ایپ نمبر")
+  as the stored contact type; English viewers saw Urdu and the server's Mobile / WhatsApp lookup missed it.
+* **No machine-translation engine on the VPS** — no `GOOGLE_TRANSLATE_API_KEY` / `AI_TRANSLATE_*`, so a free Urdu sentence (an
+  address, a remark) cannot be machine-translated at all; only a person can supply its English version.
+
+**Fixed (one central path; no new table, module or translation store)**
+* One trust rule for every reader (`trustedStoredTranslation`, `lib/i18n/localize-records.ts`): an approved row (a person's entry
+  / correction, a verified row, an admin import) is shown; a machine rendering only when it was made from English and is clean in the
+  viewer's script. Used by the central resolver and by the ledger report, Roznamcha, purchase / sales order APIs and the booking report.
+* Person names in every module (truck owner / driver, receiver / sender, consignee, contact person, supplier, buyer …) follow the
+  legal-name rule — never a machine re-spelling.
+* A term saved in Urdu / Pashto / Persian / Arabic resolves through the SAME approved dictionaries in every language
+  (exact, unambiguous whole-value match): "گودام" → Warehouse, "موبائل فون" → Mobile Phone, "ملازم" → Employee.
+* **Review queue** — Translation Management opens on it: every live saved name / text without an approved version in a chosen
+  language, with a suggestion ("Naimatullah Abdul Baqi Zeera Wala", not "Namt Allah …"); Accept or type, Approve. Only the languages
+  the reviewer confirms are stored; an account's approved name is applied to its ledger too; the saved text never changes. The
+  per-record correction dialog (purchase / sales) no longer pre-fills machine values (saving used to approve them).
+* Marker: a saved value not in the viewer's language carries a small "UR" / "PS" / "EN" chip with an explanation (Customer Register,
+  Party Directory name / father / address, Account Master report, Truck Registration, the shared customer card).
+* Customer addresses are enrolled for translation (approve once, shown in that language); Party Directory resolves name, father and
+  address.
+* External form saves the canonical contact type; old Urdu labels display in the viewer's language.
+* Purchase payment → automatic Loading record: no invented `CONT-<order no>` container number (empty until entered); the
+  pending-loading row no longer invents "20ft Standard".
+* New Account Setup: nine labels showed as raw keys ("accountNameRequired", "countryRequired", "selectCity", …) in every language —
+  now real messages in five languages. The new customer card (b8535f7) kept the name of the language it was picked in after a live
+  switch (undoing fc0a384) and showed the raw record id while loading — fixed; its status / balance / button titles follow the language.
+
+**Results (DEV)**
+| Check | Result |
+|---|---|
+| Issue #36 end-to-end (new Urdu, Pashto and English customers + an Urdu account, through the real save APIs; before / review / approve / after; APIs in EN / UR / AR / FA / PS; Customer Register, Party Directory, account view, review screen; live switch + reload; search by saved and by approved name; Urdu term → approved term) | PASS — 99 / 99 |
+| Names across screens · Party Directory · Cash Entry notices | PASS — 210 / 210 · 33 / 33 · 24 / 24 |
+| Regression (20 financial / operational / security scripts) | PASS — 20 / 20 (two first crashed with a Windows process error under load and passed on re-run: purchase transfer 8 / 8, shipping bills 12 / 12); leak scan 156 PASS + the same 4 known DEV records |
+| Unit tests / tsc / build / guards | PASS — 603 + 35 new; tsc 0 errors; build green; i18n guard 22,371 keys × 5 |
+
+**Only the owner can finish**
+* Approve the English (or other-language) names in Translation Management → Review queue. Until a name is approved the English
+  viewer sees the saved Urdu name with a "UR" marker — by the owner's own rule names are never machine-rewritten.
+* Automatic translation of free text (addresses, remarks, narration) needs a translation-engine key on the VPS
+  (`AI_TRANSLATE_PROVIDER` + `AI_TRANSLATE_API_KEY`, or Google). Without it those texts are approved through the review queue.
+
 ## rc2 completion round (2026-10-27, afternoon) — owner's written instruction: "merge the verified code and deploy through the approved Production process"
 
 Evidence is DEV only (`csesvyxxjivnkkozgopt`, real DEV records); Production was only read (and, after the deploy, checked without signing in).

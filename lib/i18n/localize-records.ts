@@ -3,7 +3,9 @@ import { getSharedPg } from "@/lib/db/local-postgres";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { transliterateToLatin, transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { TRANSLATABLE_FIELDS } from "@/lib/i18n/translatable-fields";
-import { VALUE_TRANSLATIONS, translateCountry } from "@/lib/i18n/table-values";
+import { VALUE_TRANSLATIONS, translateCountry, vocabularyFor, registerApprovedVocabulary } from "@/lib/i18n/table-values";
+// the central UI dictionary registers itself into the shared vocabulary when it loads
+import "@/lib/i18n/ui";
 import { TRUSTED_TRANSLATION_ENGINES, isAuthorizedNameTranslation } from "@/lib/i18n/customer-name";
 
 /**
@@ -43,29 +45,89 @@ type DictRow = {
   translation_status?: string | null; translated_by_engine?: string | null;
   /** record_translations.source (enum, cast to text) and corrected_by — needed for the customer-name authorization rule */
   source?: string | null; corrected_by?: string | null;
+  original_text?: string | null;
 };
 
-// Engines whose stored output is a curated/human source we trust as-is. Anything
-// else (local_multilingual / local_transliteration / auto_unverified / machine_*)
-// is a raw machine guess — for PROPER NAMES we prefer a fresh on-the-fly script
-// render over a stale unverified guess (e.g. old "Hamd Shryf" for "حامد شریف").
-// (list lives in lib/i18n/customer-name.ts so the customer name display rule and this resolver share one definition)
-function trustedStoredFor(table: string, field: string, properNoun: boolean, trans: DictRow | undefined): boolean {
-  if (isLegalName(table, field)) {
-    // a customer's name: an authorized translation only (human-entered / corrected, verified, or a curated dictionary row)
-    return Boolean(trans) && isAuthorizedNameTranslation({
-      source: trans?.source, translation_status: trans?.translation_status, translated_by_engine: trans?.translated_by_engine, human_corrected: Boolean(trans?.corrected_by)
-    });
-  }
-  return !properNoun || isTrustedStoredTranslation(trans);
+// ── Stored-translation trust: ONE rule for every reader ────────────────────────────────────────────────────────────
+// Owner rule (2026-10-27, issue #36): a viewer sees an APPROVED translation of saved data — a person's entry or correction,
+// an explicitly verified row, or an admin import — never an unverified machine rendering presented as if it were approved.
+//  - Legal names (customer / account / company / bank / employee / person names): approved variant, else exactly the saved name.
+//  - Free text and terms: approved translation; a machine rendering only when it was made FROM ENGLISH and is clean in the
+//    viewer's script (the local dictionary renders English terms reliably). A machine rendering of text typed in Urdu / Pashto /
+//    Persian / Arabic is never shown — those engines re-spell words ("Namt Allah", "Warehouse کیٹگری", "ٹرانسPort").
+//    Known terms in any language still resolve through the approved dictionaries (vocabulary tier below).
+//  - Place names keep the curated dictionary / script rendering they had (Location Management is curated data).
+// (the name-authorization list lives in lib/i18n/customer-name.ts so the Customer Register and this resolver share one definition)
+
+/** A stored record_translations row that a person entered, corrected, verified or imported — shown as-is. */
+export function isApprovedStoredTranslation(row: Pick<DictRow, "source" | "translation_status" | "translated_by_engine" | "corrected_by"> | null | undefined): boolean {
+  if (!row) return false;
+  if (isAuthorizedNameTranslation({
+    source: row.source, translation_status: row.translation_status, translated_by_engine: row.translated_by_engine, human_corrected: Boolean(row.corrected_by)
+  })) return true;
+  // a Super Admin bulk import through Translation Management (source 'imported', status 'complete'); the DB enrolment trigger
+  // writes 'imported' + 'pending' copies of the original, which are NOT translations
+  return String(row.source || "").toLowerCase() === "imported" && String(row.translation_status || "").toLowerCase() === "complete";
 }
 
-function isTrustedStoredTranslation(row: { translation_status?: string | null; translated_by_engine?: string | null } | undefined): boolean {
-  if (!row) return true; // no metadata (dictionary rows) → trust
+const UNRESOLVED_MACHINE_STATUSES = new Set(["needs_review", "pending", "rejected", "failed"]);
+const LEFTOVER_ENGLISH_RE = /\p{Lu}?[a-z]{2,}/u;
+
+/** A machine rendering stored for free text: usable only when made from English and clean in the target script. */
+function usableMachineTranslation(row: DictRow, raw: string, lang: SupportedLanguage): boolean {
+  if (UNRESOLVED_MACHINE_STATUSES.has(String(row.translation_status || "").toLowerCase())) return false;
+  if (ARABIC_SCRIPT_RE.test(raw)) return false; // typed in UR / PS / FA / AR — no machine re-spelling is shown
+  const target = String(row[LANG_COL[lang] as keyof DictRow] || "");
+  if (lang === "en") return !ARABIC_SCRIPT_RE.test(target);
+  return !LEFTOVER_ENGLISH_RE.test(target); // no half-English rendering
+}
+
+/** Place names keep the curated dictionary rows they always used (dictionary rows without metadata included). */
+function isTrustedPlaceTranslation(row: { translation_status?: string | null; translated_by_engine?: string | null } | undefined): boolean {
+  if (!row) return true;
   const status = (row.translation_status || "").toLowerCase();
   if (status === "human_verified" || status === "verified") return true;
+  if (UNRESOLVED_MACHINE_STATUSES.has(status)) return false;
   const eng = (row.translated_by_engine || "").toLowerCase();
   return eng === "" || TRUSTED_TRANSLATION_ENGINES.has(eng);
+}
+
+/**
+ * The value a stored record_translations row gives for `lang`, or null when the row is not one a viewer may see as the
+ * translation (see the trust rule above). Shared by the resolver below and every API that reads record_translations directly
+ * (ledger reports, Roznamcha, purchase / sales orders), so all screens agree.
+ */
+export function trustedStoredTranslation(
+  table: string,
+  field: string,
+  rawValue: string | null | undefined,
+  row: DictRow | null | undefined,
+  lang: SupportedLanguage
+): string | null {
+  const raw = String(rawValue ?? row?.original_text ?? "").trim();
+  if (!row || !raw) return null;
+  const legal = isLegalName(table, field);
+  const proper = isProperNounField(table, field);
+  let usable = isApprovedStoredTranslation(row);
+  if (!usable && !legal) usable = proper ? isTrustedPlaceTranslation(row) : usableMachineTranslation(row, raw, lang);
+  if (!usable) return null;
+  const target = row[LANG_COL[lang] as keyof DictRow] as string | null | undefined;
+  return genuine(target, raw, String(row.english_text || "").trim(), lang === "en");
+}
+
+/** The languages of a stored row a client may show (for APIs that ship a `translations` map to the screen). */
+export function trustedTranslationMap(
+  table: string,
+  field: string,
+  rawValue: string | null | undefined,
+  row: DictRow | null | undefined
+): Partial<Record<SupportedLanguage, string>> {
+  const out: Partial<Record<SupportedLanguage, string>> = {};
+  for (const lang of ["en", "ur", "ar", "fa", "ps"] as SupportedLanguage[]) {
+    const value = trustedStoredTranslation(table, field, rawValue, row, lang);
+    if (value) out[lang] = value;
+  }
+  return out;
 }
 
 // ── Display-only proper-name script rendering ─────────────────────────────────
@@ -85,7 +147,9 @@ const LATIN_LETTER_RE = /[A-Za-z]/;
 // (lib/i18n/customer-name.ts) and the pickers (localizeName). Ports, cities and other places keep the display rendering.
 // null = every field of the table is a legal name; otherwise only the listed name fields (a company's city / country stay places).
 const LEGAL_NAME_FIELDS: Record<string, ReadonlySet<string> | null> = {
-  customers: null, accounts: null, enterprise_accounts: null, ledgers: null,
+  // a customer's address / notes are not names (they follow the free-text rule)
+  customers: new Set(["customer_name", "first_name", "last_name", "father_name", "company_name", "contact_person", "native_customer_name", "name", "legal_name"]),
+  accounts: null, enterprise_accounts: null, ledgers: null,
   companies: new Set(["name", "legal_name", "owner_name"]),
   banks: new Set(["bank_name", "branch_name", "short_name", "account_title"]),
   city_branches: new Set(["name", "owner_name"]),
@@ -93,11 +157,19 @@ const LEGAL_NAME_FIELDS: Record<string, ReadonlySet<string> | null> = {
   // employees are people: their names follow the same rule (designation / department stay translatable terms)
   employees: new Set(["customer_name", "full_name", "first_name", "last_name", "father_name", "name"])
 };
+// A PERSON / party name in any module (truck owner and driver, receiver / sender, consignee, contact person, supplier, buyer, …) is
+// a name too: the same approved-variant-else-saved-name rule, so "نصراللہ استاد" never shows as the machine guess "NsrAllah Astad".
+// Matched on the field (its last segment for JSON paths such as "payment.receiver_sender_name"); place fields never match.
+const PERSON_NAME_FIELD_RE = /(^|_)(full|first|last|father|owner|driver|customer|party|supplier|importer|exporter|buyer|consignee|consignor|notify_party|agent|super_agent|actor|user|signature|receipt|lead|company|legal|registered|carrier|hr_manager|person_account|account|truck_owner|truck_driver|approved_by|uploaded_by|consumed_by|responsible_user|party_customer|party_company|receiver_sender|sender|receiver|beneficiary|payee|holder)_name$|(^|_)contact_person$|(^|_)transport_company$|^owner_name_(en|ur|ar|fa|ps)$/;
+
 /** A legal name: authorized translation, else exactly the saved name — no word-by-word dictionary substitution, no script rendering. */
-function isLegalName(table: string, field: string): boolean {
-  if (!(table in LEGAL_NAME_FIELDS)) return false;
-  const fields = LEGAL_NAME_FIELDS[table];
-  return !fields || fields.has(field);
+export function isLegalName(table: string, field: string): boolean {
+  if (table in LEGAL_NAME_FIELDS) {
+    const fields = LEGAL_NAME_FIELDS[table];
+    if (!fields || fields.has(field)) return true;
+  }
+  const leaf = field.includes(".") ? field.slice(field.lastIndexOf(".") + 1) : field;
+  return PERSON_NAME_FIELD_RE.test(leaf);
 }
 
 // (table, field) -> mode. "transliterate" = proper noun (script-render on display).
@@ -266,6 +338,11 @@ async function loadDictionary(sql: ReturnType<typeof postgres>): Promise<Map<str
     const key = String(r.english_text || r.original_text || "").trim().toLowerCase();
     if (key) map.set(key, r);
   }
+  // the same approved rows answer a term SAVED in another language (vocabulary index in table-values.ts)
+  registerApprovedVocabulary((rows as any[]).map((r) => ({
+    en: String(r.english_text || r.original_text || "").trim(), ur: r.urdu_text ?? undefined, ar: r.arabic_text ?? undefined,
+    fa: r.persian_text ?? undefined, ps: r.pashto_text ?? undefined
+  })));
   dictCache = map;
   dictLoadedAt = now;
   return map;
@@ -388,6 +465,110 @@ export function wantsRawRecord(request: { nextUrl: { searchParams: URLSearchPara
   return raw === "1" || raw === "true" || raw === "yes" || loc === "0" || loc === "false" || loc === "no";
 }
 
+type ResolveContext = {
+  table: string;
+  lang: SupportedLanguage;
+  dict: Map<string, DictRow> | null;
+  phraseFallback?: boolean;
+  noPhrase?: boolean;
+};
+
+/**
+ * Resolve ONE saved value of (table, field) into the viewer's language — the single resolution path behind
+ * localizeRecordNames / localizeRecordFields / localizeRecordGroups (they used to carry three drifting copies of it).
+ * Returns the display value, or null to keep the saved value.
+ *
+ *  1. this record's own stored translation, when the trust rule allows it (trustedStoredTranslation)
+ *  2. approved central dictionary, exact term ("Cash"); legal names stop here — approved variant or the saved name
+ *  3. the same approved term SAVED in another language (vocabulary), then whole approved English terms inside the value
+ *     (phrase tier, English source only)
+ *  4. place names only: display-only script rendering
+ */
+function resolveSavedValue(ctx: ResolveContext, field: string, rawValue: string, trans: DictRow | undefined): string | null {
+  const { table, lang, dict } = ctx;
+  const isEn = lang === "en";
+  const targetCol = LANG_COL[lang] || "english_text";
+  const legal = isLegalName(table, field);
+  const proper = isProperNounField(table, field);
+
+  const stored = trustedStoredTranslation(table, field, rawValue, trans, lang);
+  if (stored) return stored;
+
+  if (table === "countries" && field === "name" && !isEn) {
+    const cName = translateCountry(rawValue, lang);
+    if (cName && cName !== rawValue) return cName;
+  }
+
+  if (dict) {
+    const d = dict.get(rawValue.toLowerCase());
+    if (d) {
+      const dictVal = genuine(d[targetCol as keyof DictRow] as string, rawValue, (d.english_text || "").trim(), isEn);
+      if (dictVal) return dictVal;
+    }
+  }
+  if (legal) return null;
+
+  // a term SAVED in Urdu / Pashto / Persian / Arabic ("گودام", "پارٹی", "موبائل فون"): the same approved term in the viewer's language
+  if (dict && ARABIC_SCRIPT_RE.test(rawValue)) {
+    const term = vocabularyFor(lang, rawValue);
+    if (term) return term;
+  }
+
+  if (dict && !ctx.noPhrase && (ctx.phraseFallback || !isEn)) {
+    const phrase = phraseTranslate(dict, rawValue, lang);
+    if (phrase) return phrase;
+  }
+
+  // DISPLAY-ONLY proper-name script rendering for places (never names of people / parties, never written back)
+  if (proper && !ctx.noPhrase) {
+    const disp = properNameForDisplay(rawValue, lang);
+    if (disp) return disp;
+  }
+  return null;
+}
+
+async function loadStoredTranslations(
+  sql: ReturnType<typeof postgres>,
+  table: string,
+  fields: string[],
+  ids: string[]
+): Promise<Map<string, DictRow>> {
+  const rows = await sql.unsafe(
+    `select record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text,
+            translation_status, translated_by_engine, source::text as source, corrected_by
+     from record_translations
+     where record_table = $1 and field_name = any($2::text[]) and deleted_at is null
+       and record_id = any($3::uuid[])`,
+    [table, fields, ids]
+  ).catch(() => [] as any[]);
+  const byIdField = new Map<string, DictRow>();
+  for (const r of rows as any[]) byIdField.set(`${r.record_id}::${r.field_name}`, r);
+  return byIdField;
+}
+
+function localizeRows<T extends { id: string }>(
+  records: T[],
+  fields: string[],
+  ctx: ResolveContext,
+  stored: Map<string, DictRow>
+): T[] {
+  return records.map((record) => {
+    let next: T | null = null;
+    for (const field of fields) {
+      const rawValue = String((record as any)[field] ?? "").trim();
+      if (!rawValue) continue;
+      const resolved = resolveSavedValue(ctx, field, rawValue, stored.get(`${record.id}::${field}`));
+      if (resolved && resolved !== rawValue) next = { ...(next ?? record), [field]: resolved };
+    }
+    return next ?? record;
+  });
+}
+
+/** The dictionary a table may use: exact-term lookups are off for proper-name tables unless the caller opts into phrases. */
+function dictionaryAllowed(table: string, phraseFallback?: boolean): boolean {
+  return !PROPER_NAME_TABLES.has(table) || Boolean(phraseFallback);
+}
+
 export async function localizeRecordNames<T extends { id: string }>(
   records: T[],
   table: string,
@@ -402,88 +583,7 @@ export async function localizeRecordNames<T extends { id: string }>(
     phraseFallback?: boolean;
   }
 ): Promise<T[]> {
-  if (!records || records.length === 0) return records;
-  const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl) return records;
-  const ids = records.map((r) => r.id).filter(Boolean);
-  if (ids.length === 0) return records;
-
-  const isEn = lang === "en";
-  const targetCol = LANG_COL[lang] || "english_text";
-  // Exact-match dictionary is disabled for proper-name tables, but phrase-level substitution
-  // (whole approved terms only) is safe there too — it only ever replaces known business terms.
-  const useDictionary = !PROPER_NAME_TABLES.has(table) || Boolean(options?.phraseFallback);
-
-  const sql = getSharedPg()!;
-  try {
-    // Tier 1: this record's own translations.
-    const rows = await sql.unsafe(
-      `select record_id, english_text, urdu_text, arabic_text, persian_text, pashto_text,
-              translation_status, translated_by_engine, source::text as source, corrected_by
-       from record_translations
-       where record_table = $1 and field_name = $2 and deleted_at is null
-         and record_id = any($3::uuid[])`,
-      [table, field, ids]
-    ).catch(() => [] as any[]);
-    const recMap = new Map((rows as any[]).map((r) => [r.record_id, r]));
-
-    // Tier 2: central approved dictionary (cached), only when needed & allowed.
-    const dict = useDictionary ? await loadDictionary(sql) : null;
-    const properNoun = isProperNounField(table, field);
-
-    return records.map((record) => {
-      const rawValue = String(record[field] ?? "").trim();
-      if (!rawValue) return record;
-      const trans = recMap.get(record.id) as DictRow | undefined;
-      const englishVal = (trans?.english_text || "").trim();
-
-      // Tier 1 — record-specific approved translation. For a proper name, an
-      // unverified machine transliteration is NOT trusted — fall through to the
-      // fresh Tier-4 render instead of shipping the stale guess.
-      const legal = isLegalName(table, field);
-      const trustStored = trustedStoredFor(table, field, properNoun, trans);
-      const targetText = trans && trustStored ? (trans[targetCol as keyof DictRow] as string) : null;
-      const recVal = genuine(targetText, rawValue, englishVal, isEn);
-      if (recVal) return { ...record, [field]: recVal };
-
-      // Country name: authentic 5-language translation from curated dictionary
-      if (table === "countries" && field === "name" && !isEn) {
-        const cName = translateCountry(rawValue, lang);
-        if (cName && cName !== rawValue) return { ...record, [field]: cName };
-      }
-
-      // Tier 2 — central dictionary (exact term match, approved only).
-      if (dict) {
-        const d = dict.get(rawValue.toLowerCase());
-        if (d) {
-          const dictVal = genuine(d[targetCol as keyof DictRow] as string, rawValue, (d.english_text || "").trim(), isEn);
-          if (dictVal) return { ...record, [field]: dictVal };
-        }
-
-        // Tier 2b — phrase-level substitution of approved business terms inside the value,
-        // so no approved English term remains visible in a non-English selection; genuine
-        // proper-name words are left untouched (honest, never guessed).
-        if (!legal && (options?.phraseFallback || !isEn)) {
-          const phrase = phraseTranslate(dict, rawValue, lang);
-          if (phrase) return { ...record, [field]: phrase };
-        }
-      }
-
-      // Tier 3 — English source text when viewing in English (no guessed spelling).
-      if (isEn && trustStored && englishVal && englishVal !== rawValue) return { ...record, [field]: englishVal };
-
-      // Tier 4 — DISPLAY-ONLY: render a proper name in the viewer's script when
-      // there is no approved translation, so an EN viewer never sees Perso-Arabic
-      // script (and vice-versa). Never written back; free text is untouched.
-      if (properNoun && !legal) {
-        const disp = properNameForDisplay(rawValue, lang);
-        if (disp) return { ...record, [field]: disp };
-      }
-      return record;
-    });
-  } finally {
-    /* shared process-lifetime pool — deliberately not closed */ void 0;
-  }
+  return localizeRecordFields(records, table, [field], lang, options);
 }
 
 /**
@@ -491,7 +591,7 @@ export async function localizeRecordNames<T extends { id: string }>(
  * the same record set in ONE database connection + ONE `record_translations` query,
  * instead of calling `localizeRecordNames` once per field (which opened, authenticated
  * and closed a fresh pooled connection every time — ~2 s each against the remote pooler,
- * so a 6-field route spent ~12 s just on connection churn). Same 3-tier resolution.
+ * so a 6-field route spent ~12 s just on connection churn). Same resolution (resolveSavedValue).
  */
 export async function localizeRecordFields<T extends { id: string }>(
   records: T[],
@@ -510,72 +610,15 @@ export async function localizeRecordFields<T extends { id: string }>(
   }
 ): Promise<T[]> {
   if (!records?.length || !fields.length) return records;
-  const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl) return records;
+  if (!process.env.DATABASE_URL) return records;
   const ids = records.map((r) => r.id).filter(Boolean);
   if (ids.length === 0) return records;
 
-  const isEn = lang === "en";
-  const targetCol = LANG_COL[lang] || "english_text";
-  const useDictionary = !PROPER_NAME_TABLES.has(table) || Boolean(options?.phraseFallback);
-
   const sql = getSharedPg()!;
   try {
-    const rows = await sql.unsafe(
-      `select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text,
-              translation_status, translated_by_engine, source::text as source, corrected_by
-       from record_translations
-       where record_table = $1 and field_name = any($2::text[]) and deleted_at is null
-         and record_id = any($3::uuid[])`,
-      [table, fields, ids]
-    ).catch(() => [] as any[]);
-    const byIdField = new Map<string, DictRow>();
-    for (const r of rows as any[]) byIdField.set(`${r.record_id}::${r.field_name}`, r);
-
-    const dict = useDictionary ? await loadDictionary(sql) : null;
-
-    return records.map((record) => {
-      let next: T | null = null;
-      for (const field of fields) {
-        const rawValue = String(record[field] ?? "").trim();
-        if (!rawValue) continue;
-        const trans = byIdField.get(`${record.id}::${field}`);
-        const englishVal = (trans?.english_text || "").trim();
-        const proper = isProperNounField(table, field);
-        const legal = isLegalName(table, field);
-        const trustStored = trustedStoredFor(table, field, proper, trans);
-        let resolved: string | null = null;
-
-        const targetText = trans && trustStored ? (trans[targetCol as keyof DictRow] as string) : null;
-        resolved = genuine(targetText, rawValue, englishVal, isEn);
-
-        if (!resolved && table === "countries" && field === "name" && !isEn) {
-          const cName = translateCountry(rawValue, lang);
-          if (cName && cName !== rawValue) resolved = cName;
-        }
-
-        if (!resolved && dict) {
-          const d = dict.get(rawValue.toLowerCase());
-          if (d) resolved = genuine(d[targetCol as keyof DictRow] as string, rawValue, (d.english_text || "").trim(), isEn);
-          if (!resolved && !legal && !options?.noPhrase && (options?.phraseFallback || !isEn)) {
-            const phrase = phraseTranslate(dict, rawValue, lang);
-            if (phrase) resolved = phrase;
-          }
-        }
-        if (!resolved && isEn && trustStored && englishVal && englishVal !== rawValue) resolved = englishVal;
-
-        // Tier 4 — DISPLAY-ONLY proper-name script rendering (see localizeRecordNames).
-        if (!resolved && !options?.noPhrase && proper && !legal) {
-          const disp = properNameForDisplay(rawValue, lang);
-          if (disp) resolved = disp;
-        }
-
-        if (resolved && resolved !== rawValue) {
-          next = { ...(next ?? record), [field]: resolved };
-        }
-      }
-      return next ?? record;
-    });
+    const stored = await loadStoredTranslations(sql, table, fields, ids);
+    const dict = dictionaryAllowed(table, options?.phraseFallback) ? await loadDictionary(sql) : null;
+    return localizeRows(records, fields, { table, lang, dict, phraseFallback: options?.phraseFallback, noPhrase: options?.noPhrase }, stored);
   } finally {
     /* shared process-lifetime pool — deliberately not closed */ void 0;
   }
@@ -601,80 +644,23 @@ export async function localizeRecordGroups(
   groups: LocalizeGroup<any>[],
   lang: SupportedLanguage
 ): Promise<any[][]> {
-  const active = groups.map((g) => ({
-    ...g,
-    ids: (g.records || []).map((r) => r.id).filter(Boolean)
-  }));
-  const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl || active.every((g) => !g.records?.length || !g.fields?.length || !g.ids.length)) {
+  const active = groups.map((g) => ({ ...g, ids: (g.records || []).map((r) => r.id).filter(Boolean) }));
+  if (!process.env.DATABASE_URL || active.every((g) => !g.records?.length || !g.fields?.length || !g.ids.length)) {
     return groups.map((g) => g.records);
   }
-
-  const isEn = lang === "en";
-  const targetCol = LANG_COL[lang] || "english_text";
   const sql = getSharedPg()!;
   try {
-    const needDict = active.some(
-      (g) => g.records?.length && g.fields?.length && g.ids.length && (!PROPER_NAME_TABLES.has(g.table) || g.phraseFallback)
-    );
+    const needDict = active.some((g) => g.records?.length && g.fields?.length && g.ids.length && dictionaryAllowed(g.table, g.phraseFallback));
     const dict = needDict ? await loadDictionary(sql) : null;
-
     const out: any[][] = [];
     for (const g of active) {
       if (!g.records?.length || !g.fields?.length || !g.ids.length) {
         out.push(g.records);
         continue;
       }
-      const useDictionary = !PROPER_NAME_TABLES.has(g.table) || Boolean(g.phraseFallback);
-      const rows = await sql
-        .unsafe(
-          `select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text,
-                  translation_status, translated_by_engine, source::text as source, corrected_by
-           from record_translations
-           where record_table = $1 and field_name = any($2::text[]) and deleted_at is null
-             and record_id = any($3::uuid[])`,
-          [g.table, g.fields, g.ids]
-        )
-        .catch(() => [] as any[]);
-      const byIdField = new Map<string, DictRow>();
-      for (const r of rows as any[]) byIdField.set(`${r.record_id}::${r.field_name}`, r);
-
-      out.push(
-        g.records.map((record: any) => {
-          let next: any = null;
-          for (const field of g.fields) {
-            const rawValue = String(record[field] ?? "").trim();
-            if (!rawValue) continue;
-            const trans = byIdField.get(`${record.id}::${field}`);
-            const englishVal = (trans?.english_text || "").trim();
-            const proper = isProperNounField(g.table, field);
-            const legal = isLegalName(g.table, field);
-            const trustStored = trustedStoredFor(g.table, field, proper, trans);
-            let resolved: string | null = genuine(
-              trans && trustStored ? (trans[targetCol as keyof DictRow] as string) : null,
-              rawValue,
-              englishVal,
-              isEn
-            );
-            if (!resolved && useDictionary && dict) {
-              const d = dict.get(rawValue.toLowerCase());
-              if (d) resolved = genuine(d[targetCol as keyof DictRow] as string, rawValue, (d.english_text || "").trim(), isEn);
-              if (!resolved && !legal && (g.phraseFallback || !isEn)) {
-                const phrase = phraseTranslate(dict, rawValue, lang);
-                if (phrase) resolved = phrase;
-              }
-            }
-            if (!resolved && isEn && trustStored && englishVal && englishVal !== rawValue) resolved = englishVal;
-            // Tier 4 — DISPLAY-ONLY proper-name script rendering (see localizeRecordNames).
-            if (!resolved && proper && !legal) {
-              const disp = properNameForDisplay(rawValue, lang);
-              if (disp) resolved = disp;
-            }
-            if (resolved && resolved !== rawValue) next = { ...(next ?? record), [field]: resolved };
-          }
-          return next ?? record;
-        })
-      );
+      const stored = await loadStoredTranslations(sql, g.table, g.fields, g.ids);
+      const groupDict = dictionaryAllowed(g.table, g.phraseFallback) ? dict : null;
+      out.push(localizeRows(g.records, g.fields, { table: g.table, lang, dict: groupDict, phraseFallback: g.phraseFallback }, stored));
     }
     return out;
   } finally {

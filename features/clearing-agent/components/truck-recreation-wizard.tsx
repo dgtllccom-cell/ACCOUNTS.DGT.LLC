@@ -54,6 +54,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { SavedText } from "@/components/i18n/saved-text";
 import { localizeName } from "@/lib/i18n/transliteration";
 import "./truck-registration.css";
 import { PersonPicker } from "@/components/erp/person-picker";
@@ -2713,7 +2714,7 @@ export function TruckRecreationWizard({
                         {/* Truck Name */}
                         {visibleCols.truckName && (
                           <td className="py-3.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                            {nameText(row.truck_name) || "—"}
+                            <SavedText value={nameText(row.truck_name)} lang={activeLang} kind="name" />
                           </td>
                         )}
 
@@ -2726,26 +2727,26 @@ export function TruckRecreationWizard({
 
                         {/* Owner Name */}
                         <td className="py-3.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                          {getLocalizedOwner(row) || "—"}
+                          <SavedText value={getLocalizedOwner(row)} lang={activeLang} kind="name" />
                         </td>
 
                         {/* Company */}
                         {visibleCols.company && (
                           <td className="py-3.5 px-3 font-medium text-slate-600 dark:text-slate-300">
-                            {getLocalizedCompany(row) || "—"}
+                            <SavedText value={getLocalizedCompany(row)} lang={activeLang} kind="name" />
                           </td>
                         )}
 
                         {/* Transporter */}
                         {visibleCols.transporter && (
                           <td className="py-3.5 px-3 font-medium text-slate-600 dark:text-slate-300">
-                            {nameText(row.transporter_display_name) || "—"}
+                            <SavedText value={nameText(row.transporter_display_name)} lang={activeLang} kind="name" />
                           </td>
                         )}
 
                         {/* Driver */}
                         <td className="py-3.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                          {getLocalizedDriver(row) || "—"}
+                          <SavedText value={getLocalizedDriver(row)} lang={activeLang} kind="name" />
                         </td>
 
                         {/* Mobile */}

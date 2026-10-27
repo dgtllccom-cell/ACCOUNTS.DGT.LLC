@@ -1079,7 +1079,9 @@ export function ExtFormClient({ token }: { token: string }) {
       mobiles: mobContacts.map((c) => c.value.trim()),
       whatsapps: waContacts.map((c) => c.value.trim()),
       contacts: contactsList.filter((c) => c.value.trim()).map((c) => ({
-        type: c.type === "Custom" && c.customLabel ? c.customLabel : (ctLabel(c.type, lang)),
+        // the stored contact type is the canonical value ("Mobile", "WhatsApp"), never the label in the form's language —
+        // an Urdu label saved as data stayed Urdu for every viewer and the server's Mobile / WhatsApp lookup missed it
+        type: c.type === "Custom" && c.customLabel ? c.customLabel : c.type,
         value: c.value.trim()
       })),
       email,

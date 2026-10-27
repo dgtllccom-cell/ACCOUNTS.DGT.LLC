@@ -1,7 +1,7 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { transliterateProperNoun } from "@/lib/i18n/transliteration";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, localizeRecordFields } from "@/lib/i18n/localize-records";
 import { nameMatches } from "@/lib/utils/person-duplicate-match";
 import { isAuthorizedNameTranslation, resolveCustomerName } from "@/lib/i18n/customer-name";
 
@@ -437,7 +437,8 @@ export class Party360Service {
       const savedCompanyNames = new Map<string, string>((companies as any[]).map((c: any) => [c.id, [c.name, c.legal_name].filter(Boolean).join(" ")]));
 
       // Build unified parties list
-      const localizedCustomers = await localizeRecordNames<any>(customers as any[], "customers", "customer_name", lang, { phraseFallback: true });
+      // the name (approved variant, else saved), the father's name and the address (an approved version when one exists)
+      const localizedCustomers = await localizeRecordFields<any>(customers as any[], "customers", ["customer_name", "father_name", "address"], lang, { phraseFallback: true });
       const localizedCompanies = await localizeRecordNames<any>(companies as any[], "companies", "name", lang, { phraseFallback: true });
       // an employee is a person: the name comes from the person record (its approved variants), as on the party row itself
       const localizedEmployees = (

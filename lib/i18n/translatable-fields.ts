@@ -83,6 +83,7 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "district_name", mode: "transliterate" },
     { field: "area_name", mode: "transliterate" },
     { field: "country_name", mode: "transliterate" },
+    { field: "address", mode: "translate" },
   ],
   country_company_profiles: [
     { field: "company_name", mode: "transliterate" },
@@ -101,6 +102,8 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "last_name", mode: "transliterate" },
     { field: "father_name", mode: "transliterate" },
     { field: "notes", mode: "translate" },
+    // the address a customer gave (free text: "مال روڈ چمن") — enrolled so an approved version can be shown to other languages
+    { field: "address", mode: "translate" },
   ],
   account_categories: [
     { field: "description", mode: "translate" },

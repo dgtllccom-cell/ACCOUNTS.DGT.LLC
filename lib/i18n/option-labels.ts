@@ -1,5 +1,6 @@
 import { t } from "@/lib/i18n/ui";
 import { localizeUom } from "@/lib/i18n/uom";
+import { translateValue } from "@/lib/i18n/table-values";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 /**
@@ -36,6 +37,11 @@ export const OPTION_LABEL_KEYS: Record<string, string> = {
   "Open Top": "purchase.opt_container_open_top",
   "Flat Rack": "purchase.opt_container_flat_rack",
   "LCL / Bulk": "purchase.opt_container_lcl_bulk",
+  // contact types (customer / party contacts store the canonical value)
+  Mobile: "cbs.mobile_word",
+  WhatsApp: "purchase.dd_whatsapp",
+  Email: "purchase.dd_email",
+  Landline: "whf.landline",
 };
 
 /** Translate a known enum value's label; unknown values (custom/user data) pass through. */
@@ -44,6 +50,11 @@ export function translateOptionLabel(lang: SupportedLanguage | string, value: st
   if (!raw) return raw;
   const key = OPTION_LABEL_KEYS[raw];
   if (key) return t(lang as SupportedLanguage, key as never, raw);
+  // a value saved as a label in Urdu / Pashto / Persian / Arabic ("موبائل فون"): the same approved term in the viewer's language
+  if (/[؀-ۿ]/.test(raw)) {
+    const term = translateValue(lang, raw);
+    if (term !== raw) return term;
+  }
   // fall back to the UOM localiser (Bags / Cartons / KG / Ton / …)
   return localizeUom(lang, raw);
 }

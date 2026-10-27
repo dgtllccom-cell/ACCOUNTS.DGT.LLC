@@ -18,6 +18,7 @@ import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-transl
 import { revalidatePath } from "next/cache";
 import { canEditTransferredPurchaseBooking } from "@/lib/services/purchase-booking-transfer-routing";
 import { getDbUrl, withLocalPg, withReadPg } from "@/lib/db/local-postgres";
+import { trustedTranslationMap } from "@/lib/i18n/localize-records";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const translationRows = getDbUrl()
       ? await withLocalPg(async (sql) => {
           return await sql`
-            select field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, original_language_code
+            select field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source::text as source, corrected_by, original_language_code
             from record_translations
             where record_table = 'purchase_orders'
               and record_id = ${params.id}::uuid
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           const adminSupabase = createSupabaseAdminClient() as any;
           const { data } = await adminSupabase
             .from("record_translations")
-            .select("field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, original_language_code")
+            .select("field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source, corrected_by, original_language_code")
             .eq("record_table", "purchase_orders")
             .eq("record_id", params.id)
             .is("deleted_at", null);
@@ -116,13 +117,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         })();
     const translations = Object.fromEntries((translationRows || []).map((translation: any) => [
       translation.field_name,
-      {
-        en: translation.english_text,
-        ur: translation.urdu_text,
-        ar: translation.arabic_text,
-        fa: translation.persian_text,
-        ps: translation.pashto_text
-      }
+      // approved languages only (central trust rule) — a missing language shows the saved text
+      trustedTranslationMap("purchase_orders", translation.field_name, translation.original_text, translation)
     ]));
 
     const normalizedFormData = row && typeof row === "object"

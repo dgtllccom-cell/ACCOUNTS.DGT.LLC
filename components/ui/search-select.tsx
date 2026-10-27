@@ -346,6 +346,8 @@ export function SearchSelect({
                   const initials = opt.initials || initialsFor(opt.primaryText || opt.label);
                   const statusRaw = opt.status || "Active";
                   const isActive = statusRaw.toLowerCase() === "active";
+                  // the status is a value: shown in the selected language
+                  const statusLabel = isActive ? uiText(language, "common.active", "Active") : statusRaw.toLowerCase() === "inactive" ? uiText(language, "common.inactive", "Inactive") : statusRaw;
 
                   return (
                     <CommandItem
@@ -411,7 +413,7 @@ export function SearchSelect({
                                       : "bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60"
                                   )}
                                 >
-                                  {statusRaw}
+                                  {statusLabel}
                                 </span>
                                 {(opt.onEdit || onEditOption) && (
                                   <button

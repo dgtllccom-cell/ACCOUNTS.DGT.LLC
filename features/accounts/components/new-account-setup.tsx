@@ -986,6 +986,8 @@ export function NewAccountSetup({
         if (!cancelled && json?.ok && (json?.data || json?.customer)) {
           const cust = json.data?.customer ?? json.data ?? json.customer;
           setCustomerDetail(cust);
+          // the linked-customer card reads the same record — keep it in the selected language as well
+          setLinkedCustomerObj(cust);
           // the "Linked" label follows the language too (approved variant for this language, else the saved name) —
           // it was set once when the customer was picked and kept the previous language after a switch
           if (cust?.customer_name) setLinkedCustomerName(cust.customer_name);
@@ -3158,7 +3160,9 @@ export function NewAccountSetup({
                   <CustomerAccountCard
                     account={{
                       id: linkedCustomerId,
-                      name: linkedCustomerObj?.customer_name || linkedCustomerName || linkedCustomerId,
+                      // the language-refreshed name first (approved variant for this language, else the saved name)
+                      // (while the record loads: "Loading…", never the raw record id)
+                      name: linkedCustomerName || linkedCustomerObj?.customer_name || getLabel("loading", lang),
                       code: linkedCustomerObj?.person_code,
                       companyName: linkedCustomerObj?.company_name,
                       phone: linkedCustomerObj?.mobile || linkedCustomerObj?.whatsapp,

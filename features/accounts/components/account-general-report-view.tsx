@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
 import { localizeTerm, localizeName } from "@/lib/i18n/transliteration";
+import { SavedText } from "@/components/i18n/saved-text";
 
 type AccountGeneralReportRow = {
   accountId: string;
@@ -2212,7 +2213,7 @@ export function AccountGeneralReportView({
                             <div className="flex flex-col">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-bold text-[11.5px] text-slate-900 dark:text-slate-100 leading-snug">
-                                  {localizeName(row.accountName, lang)}
+                                  <SavedText value={localizeName(row.accountName, lang)} lang={lang} kind="name" />
                                 </span>
                                 {isCountryAccountRow(row) && (
                                   <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 font-mono font-bold text-[9px] uppercase tracking-wider">

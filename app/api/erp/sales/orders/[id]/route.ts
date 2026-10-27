@@ -11,6 +11,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { supportedLanguageSchema } from "@/lib/api/erp-validation";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations";
+import { trustedTranslationMap } from "@/lib/i18n/localize-records";
 import { getDbUrl, withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 
 const paramsSchema = z.object({
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     // the Supabase admin client silently returns zero rows here (same root cause fixed in
     // lib/services/ledger-report-service.ts). Try direct Postgres first.
     const viaPg = await withLocalPg(async (sql) => sql`
-      select field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+      select field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source::text as source, corrected_by
       from public.record_translations
       where record_table = 'sales_orders' and record_id = ${params.id}::uuid and deleted_at is null
     `);
@@ -103,11 +104,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     if (!translationRows) {
       const admin = createSupabaseAdminClient() as any;
       const { data } = await admin.from("record_translations")
-        .select("field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
+        .select("field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source, corrected_by")
         .eq("record_table", "sales_orders").eq("record_id", params.id).is("deleted_at", null);
       translationRows = data;
     }
-    return apiOk({ order: { ...(row as any), translations: Object.fromEntries((translationRows || []).map((item: any) => [item.field_name, { en: item.english_text, ur: item.urdu_text, ar: item.arabic_text, fa: item.persian_text, ps: item.pashto_text }])) } });
+    return apiOk({ order: { ...(row as any), translations: Object.fromEntries((translationRows || []).map((item: any) => [item.field_name, trustedTranslationMap("sales_orders", item.field_name, item.original_text, item)])) } });
   } catch (error) {
     return handleApiError(error);
   }

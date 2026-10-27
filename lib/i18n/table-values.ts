@@ -1,6 +1,7 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { translateHeader, hasHeaderTranslation } from "@/lib/i18n/table-headers";
+import { translateHeader, hasHeaderTranslation, HEADER_TRANSLATIONS, registeredUiDictionaries } from "@/lib/i18n/table-headers";
 import { localizeTerm } from "@/lib/i18n/transliteration";
+import { ERP_GLOSSARY } from "@/lib/i18n/erp-glossary";
 
 /**
  * Cell VALUE translations for the finite, enumerable vocabulary that appears inside
@@ -192,7 +193,10 @@ export function translateValue(
   const original = value ?? "";
   if (!original.trim()) return original;
   const code = (lang || "en") as string;
-  if (code === "en") return original;
+  // A value saved in Urdu / Pashto / Persian / Arabic (a status, type or term typed or picked in that language) is looked up in the
+  // approved dictionaries in every language, so an English viewer reads the English term instead of the entry language.
+  const savedInOtherScript = PERSO_ARABIC_RE.test(original);
+  if (code === "en") return savedInOtherScript ? vocabularyFor("en", original) ?? original : original;
 
   const row = VALUE_TRANSLATIONS[normalize(original)];
   if (row) return row[code as keyof Row] || original;
@@ -200,7 +204,154 @@ export function translateValue(
   // Fall back to the shared header dictionary (covers WAREHOUSE, RECEIVED, COMPLETED, …).
   if (hasHeaderTranslation(original)) return translateHeader(code, original);
 
+  if (savedInOtherScript) return vocabularyFor(code as SupportedLanguage, original) ?? original;
   return original;
+}
+
+// ── Saved-value vocabulary: a known term saved in ANY of the five languages ──────────────────────────────────────────────
+// The value dictionaries above are keyed by English, so a term saved in another language ("گودام", "موبائل فون", "پارٹی") never
+// matched and stayed in the entry language for every viewer. This index reads the SAME approved dictionaries (value + header
+// dictionaries, the curated ERP glossary and the central UI dictionary) in all five languages, so an exact, unambiguous match of a
+// saved value resolves to that term in the viewer's language. Exact whole-value matches only — no word-by-word substitution — and
+// never for names (callers skip legal names). Approved terms only: nothing here is machine output.
+
+export type VocabularyEntry = Record<SupportedLanguage, string>;
+const VOCAB_LANGS: SupportedLanguage[] = ["en", "ur", "ar", "fa", "ps"];
+const PERSO_ARABIC_RE = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
+
+/** Normalize a saved value for matching across spelling variants of the same letters (Arabic vs Urdu/Persian yeh / kaf / heh,
+ *  harakat, tatweel, zero-width marks, Eastern digits, case, surrounding punctuation). Matching only — never written back. */
+export function normalizeVocabularyText(value: string): string {
+  const input = String(value ?? "");
+  let out = "";
+  let pendingSpace = false;
+  for (let i = 0; i < input.length; i++) {
+    const code = input.charCodeAt(i);
+    // harakat, superscript alef, tatweel and the zero-width / direction marks carry no letter
+    if ((code >= 0x064b && code <= 0x065f) || code === 0x0670 || code === 0x0640 || (code >= 0x200c && code <= 0x200f) || code === 0xfeff) continue;
+    if (code === 32 || code === 9 || code === 10 || code === 13 || code === 0xa0) {
+      pendingSpace = out.length > 0;
+      continue;
+    }
+    let ch = input[i];
+    if (code === 0x064a || code === 0x0649) ch = "ی";
+    else if (code === 0x0643) ch = "ک";
+    else if (code === 0x06c1 || code === 0x06c3 || code === 0x0629 || code === 0x06c0) ch = "ه";
+    else if (code === 0x0623 || code === 0x0625 || code === 0x0671 || code === 0x0622) ch = "ا";
+    else if (code >= 0x06f0 && code <= 0x06f9) ch = String(code - 0x06f0);
+    else if (code >= 0x0660 && code <= 0x0669) ch = String(code - 0x0660);
+    if (pendingSpace) out += " ";
+    pendingSpace = false;
+    out += ch;
+  }
+  return out.replace(EDGE_PUNCTUATION_RE, "").trim().toLowerCase();
+}
+const EDGE_PUNCTUATION_RE = /^[.:;،؛,!?؟\-–—]+|[.:;،؛,!?؟\-–—]+$/g;
+const LETTER_RE = /\p{L}/u;
+
+/** Enough letters to be a term (initials such as "پ ش", one-letter or two-letter abbreviations never match a dictionary word). */
+function isMatchableTerm(norm: string): boolean {
+  let letters = 0;
+  let run = 0;
+  let longest = 0;
+  for (const ch of norm) {
+    if (ch === " ") { run = 0; continue; }
+    if (LETTER_RE.test(ch)) {
+      letters++;
+      run++;
+      if (run > longest) longest = run;
+    }
+  }
+  return letters >= 3 && longest >= 2;
+}
+
+type VocabCandidate = { entry: Partial<VocabularyEntry>; weight: number };
+let vocabularyIndex: Map<string, Map<string, VocabCandidate[]>> | null = null;
+let vocabularyBuiltWithUi = false;
+const registeredVocabulary: Array<{ entry: Partial<VocabularyEntry>; weight: number }> = [];
+
+const ACRONYMS = new Set(["VAT", "BL", "B/L", "CNIC", "NTN", "USD", "AED", "PKR", "AFN", "IRR", "SAR", "ID", "PO", "SO", "GD", "LC", "TT", "HR", "IT", "UAE", "KSA", "UK", "USA", "PDF", "SMS", "CEO", "ERP", "QR", "OTP", "KG", "MT", "CBM", "FOB", "CIF", "CFR"]);
+function displayEnglish(key: string): string {
+  if (/[a-z]/.test(key)) return key;
+  return key.split(" ").map((word) => (ACRONYMS.has(word) || /\d/.test(word) ? word : word.charAt(0) + word.slice(1).toLowerCase())).join(" ");
+}
+
+function addVocabulary(index: Map<string, Map<string, VocabCandidate[]>>, entry: Partial<VocabularyEntry>, weight: number) {
+  const english = (entry.en ?? "").trim();
+  if (!english) return;
+  const englishKey = english.toLowerCase();
+  for (const lang of VOCAB_LANGS) {
+    if (lang === "en") continue; // only values saved in another language are looked up here; English values use the forward dictionaries
+    const text = (entry[lang] ?? "").trim();
+    if (!text || text === english) continue;
+    const norm = normalizeVocabularyText(text);
+    if (!isMatchableTerm(norm)) continue;
+    let byEnglish = index.get(norm);
+    if (!byEnglish) index.set(norm, (byEnglish = new Map()));
+    const list = byEnglish.get(englishKey);
+    if (list) list.push({ entry, weight });
+    else byEnglish.set(englishKey, [{ entry, weight }]);
+  }
+}
+
+function getVocabularyIndex(): Map<string, Map<string, VocabCandidate[]>> {
+  const ui = registeredUiDictionaries();
+  if (vocabularyIndex && (vocabularyBuiltWithUi || !ui)) return vocabularyIndex;
+  const index = new Map<string, Map<string, VocabCandidate[]>>();
+  for (const item of registeredVocabulary) addVocabulary(index, item.entry, item.weight);
+  for (const [key, row] of Object.entries(VALUE_TRANSLATIONS)) addVocabulary(index, { en: displayEnglish(key), ...row }, 50);
+  for (const [key, row] of Object.entries(HEADER_TRANSLATIONS)) addVocabulary(index, { en: displayEnglish(key), ...row }, 40);
+  for (const entry of ERP_GLOSSARY) addVocabulary(index, entry, 40);
+  if (ui?.en) {
+    for (const [key, english] of Object.entries(ui.en)) {
+      if (!english || /[{}<>]/.test(english) || english.length > 80) continue;
+      addVocabulary(index, { en: english, ur: ui.ur?.[key], ar: ui.ar?.[key], fa: ui.fa?.[key], ps: ui.ps?.[key] }, 1);
+    }
+  }
+  vocabularyIndex = index;
+  vocabularyBuiltWithUi = Boolean(ui);
+  return index;
+}
+
+/** Server side: add approved central-dictionary rows (record_translations 'system_dictionary') to the vocabulary, above the static
+ *  dictionaries. Replaces the previously registered set. */
+export function registerApprovedVocabulary(entries: Array<Partial<VocabularyEntry>>): void {
+  registeredVocabulary.length = 0;
+  for (const entry of entries) registeredVocabulary.push({ entry, weight: 100 });
+  vocabularyIndex = null;
+}
+
+/** The approved term a saved value is (any language, exact and unambiguous), or null. */
+export function lookupVocabulary(value: string | null | undefined): Partial<VocabularyEntry> | null {
+  const norm = normalizeVocabularyText(value ?? "");
+  if (!isMatchableTerm(norm)) return null;
+  const byEnglish = getVocabularyIndex().get(norm);
+  if (!byEnglish) return null;
+  let best: { english: string; weight: number; candidates: VocabCandidate[] } | null = null;
+  let total = 0;
+  for (const [english, candidates] of byEnglish) {
+    const weight = candidates.reduce((sum, c) => sum + c.weight, 0);
+    total += weight;
+    if (!best || weight > best.weight) best = { english, weight, candidates };
+  }
+  // the same spelling can mean different terms; only a clear majority of the dictionaries counts as "this term"
+  if (!best || best.weight * 3 < total * 2) return null;
+  const ordered = [...best.candidates].sort((a, b) => b.weight - a.weight);
+  const merged: Partial<VocabularyEntry> = {};
+  for (const lang of VOCAB_LANGS) merged[lang] = ordered.map((c) => (c.entry[lang] ?? "").trim()).find(Boolean) || undefined;
+  return merged;
+}
+
+/** A saved value in `lang` when it is a known approved term in any language; null when it is not a term or already reads that way. */
+export function vocabularyFor(lang: SupportedLanguage, value: string | null | undefined): string | null {
+  const original = (value ?? "").trim();
+  if (!original) return null;
+  const entry = lookupVocabulary(original);
+  // a dictionary label can carry a colon ("Driver:") that the saved value does not have
+  const target = (entry?.[lang] ?? "").trim().replace(/\s*[:：]$/, /[:：]$/.test(original) ? ":" : "");
+  if (!target) return null;
+  if (lang !== "en" && target === (entry?.en ?? "").trim()) return null;
+  return normalizeVocabularyText(target) === normalizeVocabularyText(original) ? null : target;
 }
 
 /** True when a controlled value has a translation registered (value or header dict). */

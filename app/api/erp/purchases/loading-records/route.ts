@@ -432,7 +432,7 @@ export async function GET(request: NextRequest) {
               purchase_order_id: po.id,
               purchase_order_no: po.purchase_order_no,
               container_number: "-",
-              container_type: form.containerType || "20ft Standard",
+              container_type: form.containerType || null,
               loading_status: "pending",
               loaded_at: po.created_at,
               loading_location: form.loadingPort || form.originCountry || "-",

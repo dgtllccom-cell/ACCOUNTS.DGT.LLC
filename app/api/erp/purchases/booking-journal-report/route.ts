@@ -8,6 +8,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ensurePurchaseSchemaAndEnums } from "@/lib/services/purchase-table-manager";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { trustedTranslationMap } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   purchaseOrderNo: z.string().trim().max(140).optional(),
@@ -550,7 +551,7 @@ function normalizeOrder(row: any) {
           // (unrelated to RLS), so a "supabase ? supabase-path : pg-path" ordering never
           // actually reaches the working bypass.
           const viaPg = await withLocalPg(async (sql) => sql`
-                select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts, translation_status, original_language_code
+                select record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source::text as source, corrected_by, original_language_code
                 from public.record_translations
                 where record_table = 'purchase_orders'
                   and deleted_at is null
@@ -559,7 +560,7 @@ function normalizeOrder(row: any) {
           const recTrans = viaPg ?? (supabase
             ? (await supabase
                 .from("record_translations")
-                .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts, translation_status, original_language_code")
+                .select("record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source, corrected_by, original_language_code")
                 .in("record_id", orderIds)
                 .eq("record_table", "purchase_orders")
                 .is("deleted_at", null)).data
@@ -580,13 +581,8 @@ function normalizeOrder(row: any) {
                 : row.field_name === "country_name" ? "countryName"
                 : row.field_name;
 
-              const tObj = row.language_texts || {
-                en: row.english_text,
-                ur: row.urdu_text,
-                ar: row.arabic_text,
-                fa: row.persian_text,
-                ps: row.pashto_text
-              };
+              // approved languages only (central trust rule) — a missing language shows the saved text
+              const tObj = trustedTranslationMap("purchase_orders", row.field_name, row.original_text, row);
               transMapByOrder[row.record_id][fName] = tObj;
             }
 

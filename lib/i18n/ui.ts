@@ -12324,6 +12324,38 @@ export type UiKey =
   | "clearing.print_export_clearance"
   | "clearing.print_destination"
   | "clearing.print_import_clearance"
+  | "trm.tab_review"
+  | "trm.tab_all"
+  | "trm.rv_intro"
+  | "trm.rv_need_lang"
+  | "trm.rv_col_record"
+  | "trm.rv_col_saved"
+  | "trm.rv_col_suggestion"
+  | "trm.rv_col_actions"
+  | "trm.rv_kind_name"
+  | "trm.rv_kind_text"
+  | "trm.rv_accept"
+  | "trm.rv_review"
+  | "trm.rv_empty"
+  | "trm.rv_total"
+  | "trm.rv_dialog_title"
+  | "trm.rv_dialog_desc"
+  | "trm.rv_saved_in"
+  | "trm.rv_use_suggestion"
+  | "trm.rv_approve"
+  | "trm.rv_approved_ok"
+  | "trm.rv_paired"
+  | "tr.pending_title"
+  | "tr.pending_name_title"
+  | "nas.loading"
+  | "nas.selectStateProvince"
+  | "nas.selectCity"
+  | "nas.remove"
+  | "nas.bank"
+  | "nas.countryRequired"
+  | "nas.branchRequired"
+  | "nas.categoryRequired"
+  | "nas.accountNameRequired"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37620,6 +37652,38 @@ const en: Dict = {
   "cef.msg_save_failed": "Save failed",
   "cef.auto_approved": "System / Auto Approved",
   "cef.approved": "Approved",
+  "trm.tab_review": "Review queue",
+  "trm.tab_all": "All translations",
+  "trm.rv_intro": "Saved names and text that do not have an approved translation yet. The saved text never changes; what you approve here is shown to viewers of that language.",
+  "trm.rv_need_lang": "Needs an approved version in",
+  "trm.rv_col_record": "Record / field",
+  "trm.rv_col_saved": "Saved text",
+  "trm.rv_col_suggestion": "Suggestion (not approved)",
+  "trm.rv_col_actions": "Actions",
+  "trm.rv_kind_name": "Name",
+  "trm.rv_kind_text": "Text",
+  "trm.rv_accept": "Accept",
+  "trm.rv_review": "Review",
+  "trm.rv_empty": "Nothing waiting — every saved value has an approved version in this language.",
+  "trm.rv_total": "{count} waiting",
+  "trm.rv_dialog_title": "Approve translation",
+  "trm.rv_dialog_desc": "Type or accept the version for each language you can confirm. Languages left empty keep showing the saved text.",
+  "trm.rv_saved_in": "Saved in {lang}",
+  "trm.rv_use_suggestion": "Use suggestion",
+  "trm.rv_approve": "Approve",
+  "trm.rv_approved_ok": "Approved — viewers in that language now see it.",
+  "trm.rv_paired": "Also applied to the linked account / ledger.",
+  "tr.pending_title": "Saved in {lang}. No approved translation in this language yet.",
+  "tr.pending_name_title": "Saved name ({lang}). No approved name in this language yet.",
+  "nas.loading": "Loading…",
+  "nas.selectStateProvince": "Select state / province",
+  "nas.selectCity": "Select city",
+  "nas.remove": "Remove",
+  "nas.bank": "Bank",
+  "nas.countryRequired": "Country is required.",
+  "nas.branchRequired": "Branch is required.",
+  "nas.categoryRequired": "Category is required.",
+  "nas.accountNameRequired": "Account name is required.",
 };
 
 const ur: Dict = {
@@ -62884,6 +62948,38 @@ const ur: Dict = {
   "cef.msg_save_failed": "محفوظ نہیں ہو سکا",
   "cef.auto_approved": "سسٹم / خودکار منظور",
   "cef.approved": "منظور شدہ",
+  "trm.tab_review": "جائزہ قطار",
+  "trm.tab_all": "تمام تراجم",
+  "trm.rv_intro": "محفوظ شدہ نام اور متن جن کا ابھی کوئی منظور شدہ ترجمہ موجود نہیں۔ محفوظ شدہ متن کبھی تبدیل نہیں ہوتا؛ جو آپ یہاں منظور کریں گے وہی اس زبان کے صارفین کو دکھایا جائے گا۔",
+  "trm.rv_need_lang": "اس زبان میں منظور شدہ ورژن درکار",
+  "trm.rv_col_record": "ریکارڈ / فیلڈ",
+  "trm.rv_col_saved": "محفوظ شدہ متن",
+  "trm.rv_col_suggestion": "تجویز (غیر منظور شدہ)",
+  "trm.rv_col_actions": "اقدامات",
+  "trm.rv_kind_name": "نام",
+  "trm.rv_kind_text": "متن",
+  "trm.rv_accept": "قبول کریں",
+  "trm.rv_review": "جائزہ لیں",
+  "trm.rv_empty": "کچھ زیرِ التوا نہیں — ہر محفوظ شدہ قدر کا اس زبان میں منظور شدہ ورژن موجود ہے۔",
+  "trm.rv_total": "{count} زیرِ التوا",
+  "trm.rv_dialog_title": "ترجمہ منظور کریں",
+  "trm.rv_dialog_desc": "ہر اس زبان کا ورژن لکھیں یا قبول کریں جس کی آپ تصدیق کر سکتے ہیں۔ خالی چھوڑی گئی زبانوں میں محفوظ شدہ متن ہی دکھایا جاتا رہے گا۔",
+  "trm.rv_saved_in": "{lang} میں محفوظ",
+  "trm.rv_use_suggestion": "تجویز استعمال کریں",
+  "trm.rv_approve": "منظور کریں",
+  "trm.rv_approved_ok": "منظور ہو گیا — اب اس زبان کے صارفین یہی دیکھیں گے۔",
+  "trm.rv_paired": "منسلک اکاؤنٹ / لیجر پر بھی لاگو کر دیا گیا۔",
+  "tr.pending_title": "{lang} میں محفوظ۔ اس زبان میں ابھی کوئی منظور شدہ ترجمہ نہیں۔",
+  "tr.pending_name_title": "محفوظ شدہ نام ({lang})۔ اس زبان میں ابھی کوئی منظور شدہ نام نہیں۔",
+  "nas.loading": "لوڈ ہو رہا ہے…",
+  "nas.selectStateProvince": "صوبہ / ریاست منتخب کریں",
+  "nas.selectCity": "شہر منتخب کریں",
+  "nas.remove": "ہٹائیں",
+  "nas.bank": "بینک",
+  "nas.countryRequired": "ملک لازمی ہے۔",
+  "nas.branchRequired": "برانچ لازمی ہے۔",
+  "nas.categoryRequired": "زمرہ لازمی ہے۔",
+  "nas.accountNameRequired": "اکاؤنٹ کا نام لازمی ہے۔",
 };
 
 const ar: Dict = {
@@ -88149,6 +88245,38 @@ const ar: Dict = {
   "cef.msg_save_failed": "فشل الحفظ",
   "cef.auto_approved": "النظام / معتمد تلقائياً",
   "cef.approved": "معتمد",
+  "trm.tab_review": "قائمة المراجعة",
+  "trm.tab_all": "جميع الترجمات",
+  "trm.rv_intro": "الأسماء والنصوص المحفوظة التي لا توجد لها ترجمة معتمدة بعد. النص المحفوظ لا يتغيّر أبداً؛ وما تعتمده هنا يُعرض لمستخدمي تلك اللغة.",
+  "trm.rv_need_lang": "يحتاج إلى نسخة معتمدة باللغة",
+  "trm.rv_col_record": "السجل / الحقل",
+  "trm.rv_col_saved": "النص المحفوظ",
+  "trm.rv_col_suggestion": "اقتراح (غير معتمد)",
+  "trm.rv_col_actions": "الإجراءات",
+  "trm.rv_kind_name": "اسم",
+  "trm.rv_kind_text": "نص",
+  "trm.rv_accept": "قبول",
+  "trm.rv_review": "مراجعة",
+  "trm.rv_empty": "لا يوجد شيء بانتظار المراجعة — لكل قيمة محفوظة نسخة معتمدة بهذه اللغة.",
+  "trm.rv_total": "{count} بانتظار المراجعة",
+  "trm.rv_dialog_title": "اعتماد الترجمة",
+  "trm.rv_dialog_desc": "اكتب أو اقبل النسخة لكل لغة يمكنك تأكيدها. اللغات المتروكة فارغة تستمر في عرض النص المحفوظ.",
+  "trm.rv_saved_in": "محفوظ بلغة: {lang}",
+  "trm.rv_use_suggestion": "استخدام الاقتراح",
+  "trm.rv_approve": "اعتماد",
+  "trm.rv_approved_ok": "تم الاعتماد — يراه الآن مستخدمو تلك اللغة.",
+  "trm.rv_paired": "وطُبّق أيضاً على الحساب / دفتر الأستاذ المرتبط.",
+  "tr.pending_title": "محفوظ بلغة: {lang}. لا توجد ترجمة معتمدة بهذه اللغة بعد.",
+  "tr.pending_name_title": "الاسم المحفوظ ({lang}). لا يوجد اسم معتمد بهذه اللغة بعد.",
+  "nas.loading": "جارٍ التحميل…",
+  "nas.selectStateProvince": "اختر الولاية / المقاطعة",
+  "nas.selectCity": "اختر المدينة",
+  "nas.remove": "إزالة",
+  "nas.bank": "البنك",
+  "nas.countryRequired": "الدولة مطلوبة.",
+  "nas.branchRequired": "الفرع مطلوب.",
+  "nas.categoryRequired": "الفئة مطلوبة.",
+  "nas.accountNameRequired": "اسم الحساب مطلوب.",
 };
 
 const fa: Dict = {
@@ -113413,6 +113541,38 @@ const fa: Dict = {
   "cef.msg_save_failed": "ذخیره ناموفق بود",
   "cef.auto_approved": "سیستم / تأیید خودکار",
   "cef.approved": "تأییدشده",
+  "trm.tab_review": "صف بازبینی",
+  "trm.tab_all": "همه ترجمه‌ها",
+  "trm.rv_intro": "نام‌ها و متن‌های ذخیره‌شده‌ای که هنوز ترجمهٔ تأییدشده ندارند. متن ذخیره‌شده هرگز تغییر نمی‌کند؛ آنچه اینجا تأیید کنید به کاربران آن زبان نمایش داده می‌شود.",
+  "trm.rv_need_lang": "نیازمند نسخهٔ تأییدشده به زبان",
+  "trm.rv_col_record": "رکورد / فیلد",
+  "trm.rv_col_saved": "متن ذخیره‌شده",
+  "trm.rv_col_suggestion": "پیشنهاد (تأییدنشده)",
+  "trm.rv_col_actions": "اقدامات",
+  "trm.rv_kind_name": "نام",
+  "trm.rv_kind_text": "متن",
+  "trm.rv_accept": "پذیرفتن",
+  "trm.rv_review": "بازبینی",
+  "trm.rv_empty": "موردی در انتظار نیست — هر مقدار ذخیره‌شده نسخهٔ تأییدشده به این زبان دارد.",
+  "trm.rv_total": "{count} در انتظار",
+  "trm.rv_dialog_title": "تأیید ترجمه",
+  "trm.rv_dialog_desc": "نسخهٔ هر زبانی را که می‌توانید تأیید کنید بنویسید یا بپذیرید. زبان‌هایی که خالی بمانند همچنان متن ذخیره‌شده را نشان می‌دهند.",
+  "trm.rv_saved_in": "ذخیره‌شده به {lang}",
+  "trm.rv_use_suggestion": "استفاده از پیشنهاد",
+  "trm.rv_approve": "تأیید",
+  "trm.rv_approved_ok": "تأیید شد — اکنون کاربران آن زبان همین را می‌بینند.",
+  "trm.rv_paired": "روی حساب / دفتر کل مرتبط نیز اعمال شد.",
+  "tr.pending_title": "ذخیره‌شده به {lang}. هنوز ترجمهٔ تأییدشده‌ای به این زبان وجود ندارد.",
+  "tr.pending_name_title": "نام ذخیره‌شده ({lang}). هنوز نام تأییدشده‌ای به این زبان وجود ندارد.",
+  "nas.loading": "در حال بارگذاری…",
+  "nas.selectStateProvince": "استان / ایالت را انتخاب کنید",
+  "nas.selectCity": "شهر را انتخاب کنید",
+  "nas.remove": "حذف",
+  "nas.bank": "بانک",
+  "nas.countryRequired": "کشور الزامی است.",
+  "nas.branchRequired": "شعبه الزامی است.",
+  "nas.categoryRequired": "دسته الزامی است.",
+  "nas.accountNameRequired": "نام حساب الزامی است.",
 };
 
 const ps: Dict = {
@@ -138684,6 +138844,38 @@ const ps: Dict = {
   "cef.msg_save_failed": "خوندي نه شو",
   "cef.auto_approved": "سیستم / په اتوماتيک ډول تصویب شوی",
   "cef.approved": "تصویب شوی",
+  "trm.tab_review": "د بیاکتنې لړ",
+  "trm.tab_all": "ټولې ژباړې",
+  "trm.rv_intro": "خوندي شوي نومونه او متنونه چې تر اوسه یې تایید شوې ژباړه نه لري. خوندي شوی متن هېڅکله نه بدلېږي؛ هغه څه چې تاسو دلته تایید کړئ د هغې ژبې کاروونکو ته ښودل کېږي.",
+  "trm.rv_need_lang": "په دې ژبه تایید شوې بڼې ته اړتیا",
+  "trm.rv_col_record": "ریکارډ / ساحه",
+  "trm.rv_col_saved": "خوندي شوی متن",
+  "trm.rv_col_suggestion": "وړاندیز (نه دی تایید شوی)",
+  "trm.rv_col_actions": "کړنې",
+  "trm.rv_kind_name": "نوم",
+  "trm.rv_kind_text": "متن",
+  "trm.rv_accept": "منل",
+  "trm.rv_review": "بیاکتنه",
+  "trm.rv_empty": "هېڅ شی په تمه نه دی — هر خوندي شوي ارزښت په دې ژبه تایید شوې بڼه لري.",
+  "trm.rv_total": "{count} په تمه",
+  "trm.rv_dialog_title": "ژباړه تایید کړئ",
+  "trm.rv_dialog_desc": "د هرې هغې ژبې بڼه ولیکئ یا یې ومنئ چې تاسو یې تایید کولی شئ. هغه ژبې چې خالي پاتې شي خوندي شوی متن به ښيي.",
+  "trm.rv_saved_in": "په {lang} کې خوندي شوی",
+  "trm.rv_use_suggestion": "وړاندیز وکاروئ",
+  "trm.rv_approve": "تایید",
+  "trm.rv_approved_ok": "تایید شو — اوس د هغې ژبې کاروونکي همدا ویني.",
+  "trm.rv_paired": "په تړلي حساب / لیجر هم پلي شو.",
+  "tr.pending_title": "په {lang} کې خوندي شوی. تر اوسه په دې ژبه تایید شوې ژباړه نشته.",
+  "tr.pending_name_title": "خوندي شوی نوم ({lang}). تر اوسه په دې ژبه تایید شوی نوم نشته.",
+  "nas.loading": "پورته کېږي…",
+  "nas.selectStateProvince": "ایالت / ولایت وټاکئ",
+  "nas.selectCity": "ښار وټاکئ",
+  "nas.remove": "لرې کول",
+  "nas.bank": "بانک",
+  "nas.countryRequired": "هېواد اړین دی.",
+  "nas.branchRequired": "څانګه اړینه ده.",
+  "nas.categoryRequired": "کټګوري اړینه ده.",
+  "nas.accountNameRequired": "د حساب نوم اړین دی.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

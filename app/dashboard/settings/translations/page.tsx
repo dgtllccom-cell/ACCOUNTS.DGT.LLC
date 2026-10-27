@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { TranslationReviewQueue } from "@/features/translations/components/translation-review-queue";
 import {
   Dialog,
   DialogContent,
@@ -62,6 +63,8 @@ export default function TranslationsManagementPage() {
   const [missingOnly, setMissingOnly] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  // the review queue (saved names / text waiting for an approved translation) opens first; the full list stays one tab away
+  const [tab, setTab] = useState<"review" | "all">("review");
 
   // Edit / Add Modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -292,6 +295,23 @@ export default function TranslationsManagementPage() {
         </div>
       )}
 
+      <div className="flex gap-2 border-b" role="tablist">
+        {([["review", tt("trm.tab_review", "Review queue")], ["all", tt("trm.tab_all", "All translations")]] as const).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            data-testid={`trm-tab-${key}`}
+            className={`-mb-px border-b-2 px-4 py-2 text-sm font-semibold ${tab === key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "review" ? <TranslationReviewQueue /> : <>
       {/* Filter and Search Bar */}
       <div className="rounded-xl border bg-card p-4 shadow-sm space-y-4">
         <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
@@ -409,6 +429,7 @@ export default function TranslationsManagementPage() {
           </table>
         </div>
       </div>
+      </>}
 
       {/* Add / Edit Translation Modal */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>

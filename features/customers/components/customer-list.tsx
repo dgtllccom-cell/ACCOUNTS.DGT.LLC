@@ -47,6 +47,7 @@ import { getLabel } from "./translations";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { resolveCustomerName, readBilingualNamesPreference, writeBilingualNamesPreference, BILINGUAL_NAMES_STORAGE_KEY } from "@/lib/i18n/customer-name";
+import { SavedText } from "@/components/i18n/saved-text";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
@@ -1517,7 +1518,8 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                               <div className="truncate">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate max-w-[180px]">
-                                    {primaryName}
+                                    {/* the saved legal name unless an approved variant exists; marked when it is not in the viewer's language */}
+                                    <SavedText value={primaryName} lang={lang} kind="name" />
                                   </span>
                                   {c.is_truck_driver && (
                                     <span className="shrink-0 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">

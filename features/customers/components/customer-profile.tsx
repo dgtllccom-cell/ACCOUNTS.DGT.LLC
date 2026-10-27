@@ -13,6 +13,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { getLabel } from "./translations";
 import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
+import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { openMasterProfile } from "@/lib/reports/master-profiles";
 import { Party360Modal } from "./party-360-modal";
 import { SendToCustomerModal } from "./send-to-customer-modal";
@@ -497,7 +498,7 @@ export function CustomerProfile({
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {parsedMeta.contacts.map((contact, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
-                        <td className="px-3 py-1.5 font-bold text-slate-700 dark:text-slate-300">{contact.type}</td>
+                        <td className="px-3 py-1.5 font-bold text-slate-700 dark:text-slate-300">{translateOptionLabel(lang, contact.type)}</td>
                         <td className="px-3 py-1.5 font-mono text-slate-900 dark:text-slate-100">{contact.value || "-"}</td>
                       </tr>
                     ))}
@@ -837,7 +838,7 @@ export function CustomerProfile({
                     {parsedMeta.contacts.map((contact, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50">
                         <td className="px-4 py-2 text-slate-400 font-medium">{idx + 1}</td>
-                        <td className="px-4 py-2 font-bold text-slate-700">{contact.type}</td>
+                        <td className="px-4 py-2 font-bold text-slate-700">{translateOptionLabel(lang, contact.type)}</td>
                         <td className="px-4 py-2 font-mono text-slate-900">{contact.value || "-"}</td>
                       </tr>
                     ))}

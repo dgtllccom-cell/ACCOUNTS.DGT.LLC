@@ -80,7 +80,8 @@ export class CustomersService {
       {
         customer_name: input.customerName,
         company_name: input.companyName ?? null,
-        contact_person: input.contactPerson ?? null
+        contact_person: input.contactPerson ?? null,
+        address: input.address ?? null
       },
       input.originalLanguage,
       actorId ?? null
@@ -170,7 +171,8 @@ export class CustomersService {
           {
             customer_name: input.customerName ?? customer.customer_name,
             company_name: input.companyName ?? customer.company_name,
-            contact_person: input.contactPerson ?? customer.contact_person
+            contact_person: input.contactPerson ?? customer.contact_person,
+            address: input.address ?? customer.address
           },
           resolvedLang,
           actorId ?? null

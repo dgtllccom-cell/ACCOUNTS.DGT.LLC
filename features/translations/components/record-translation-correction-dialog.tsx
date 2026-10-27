@@ -18,9 +18,10 @@ type TranslationRow = {
   persian_text: string | null;
   pashto_text: string | null;
   translation_status: "complete" | "pending" | string;
+  translated_by_engine?: string | null;
 };
 
-type EditableRow = TranslationRow & { values: Record<SupportedLanguage, string> };
+type EditableRow = TranslationRow & { values: Record<SupportedLanguage, string>; suggestions: Record<SupportedLanguage, string> };
 const languages: Array<{ code: SupportedLanguage; label: string; dir: "ltr" | "rtl" }> = [
   { code: "en", label: "English", dir: "ltr" },
   { code: "ur", label: "اردو", dir: "rtl" },
@@ -29,17 +30,28 @@ const languages: Array<{ code: SupportedLanguage; label: string; dir: "ltr" | "r
   { code: "ps", label: "پښتو", dir: "rtl" }
 ];
 
+// a person's entry / an explicit verification — only those values are pre-filled; a machine rendering is offered as a hint, so
+// pressing Save never turns an unverified guess into an approved translation
+function isApprovedRow(row: TranslationRow): boolean {
+  const engine = String(row.translated_by_engine || "").toLowerCase();
+  const status = String(row.translation_status || "").toLowerCase();
+  return ["manual", "human", "verified"].includes(engine) || ["verified", "human_verified", "approved"].includes(status);
+}
+
 function editable(row: TranslationRow): EditableRow {
-  return {
-    ...row,
-    values: {
-      en: row.english_text || (row.original_language_code === "en" ? row.original_text : ""),
-      ur: row.urdu_text || (row.original_language_code === "ur" ? row.original_text : ""),
-      ar: row.arabic_text || (row.original_language_code === "ar" ? row.original_text : ""),
-      fa: row.persian_text || (row.original_language_code === "fa" ? row.original_text : ""),
-      ps: row.pashto_text || (row.original_language_code === "ps" ? row.original_text : "")
-    }
+  const stored: Record<SupportedLanguage, string> = {
+    en: row.english_text || "", ur: row.urdu_text || "", ar: row.arabic_text || "", fa: row.persian_text || "", ps: row.pashto_text || ""
   };
+  const approved = isApprovedRow(row);
+  const values = {} as Record<SupportedLanguage, string>;
+  const suggestions = {} as Record<SupportedLanguage, string>;
+  for (const code of ["en", "ur", "ar", "fa", "ps"] as SupportedLanguage[]) {
+    const isOriginal = row.original_language_code === code;
+    const value = stored[code].trim() === row.original_text.trim() ? "" : stored[code];
+    values[code] = isOriginal ? row.original_text : approved ? value : "";
+    suggestions[code] = !isOriginal && !approved ? value : "";
+  }
+  return { ...row, values, suggestions };
 }
 
 export function RecordTranslationCorrectionDialog({
@@ -135,7 +147,7 @@ export function RecordTranslationCorrectionDialog({
                 const isOriginal = language.code === row.original_language_code;
                 const copied = !isOriginal && row.values[language.code].trim() && row.values[language.code].trim().localeCompare(row.original_text.trim(), undefined, { sensitivity: "base" }) === 0;
                 return <label key={language.code} className="text-xs font-bold">{language.label}{isOriginal ? t(lang, "correction.source_suffix", " · source") : ""}
-                  <textarea dir={language.dir} value={row.values[language.code]} disabled={isOriginal} onChange={(event) => setRows((current) => current.map((item, index) => index === rowIndex ? { ...item, values: { ...item.values, [language.code]: event.target.value } } : item))} className={`mt-1 min-h-24 w-full rounded-md border bg-white p-2 text-sm font-normal dark:bg-slate-900 ${copied ? "border-red-500" : "border-slate-300 dark:border-slate-700"}`} />
+                  <textarea dir={language.dir} value={row.values[language.code]} placeholder={row.suggestions[language.code] || ""} disabled={isOriginal} onChange={(event) => setRows((current) => current.map((item, index) => index === rowIndex ? { ...item, values: { ...item.values, [language.code]: event.target.value } } : item))} className={`mt-1 min-h-24 w-full rounded-md border bg-white p-2 text-sm font-normal dark:bg-slate-900 ${copied ? "border-red-500" : "border-slate-300 dark:border-slate-700"}`} />
                   {copied && <span className="text-[10px] text-red-600">{t(lang, "correction.copied_not_verified", "Copied source is not verified.")}</span>}
                 </label>;
               })}</div>

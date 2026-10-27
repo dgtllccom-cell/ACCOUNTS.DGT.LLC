@@ -4,7 +4,7 @@ import { allowedRowDomains, sessionDomainFilter } from "@/lib/permissions/domain
 import { withReadPg } from "@/lib/db/local-postgres";
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { lookupApprovedDictionary } from "@/lib/i18n/localize-records";
+import { lookupApprovedDictionary, trustedStoredTranslation } from "@/lib/i18n/localize-records";
 import { isUuid } from "@/lib/utils";
 
 export type LedgerReportScope = "super_admin" | "country" | "branch";
@@ -126,7 +126,8 @@ async function loadTranslations(input: {
       const chunkFields = Array.from(new Set(chunk.map((t) => t.field)));
       const chunkRows = await sql`
         select record_table, record_id, field_name, original_text, english_text,
-               urdu_text, arabic_text, persian_text, pashto_text
+               urdu_text, arabic_text, persian_text, pashto_text,
+               translation_status, translated_by_engine, source::text as source, corrected_by
         from public.record_translations
         where record_table = any(${chunkTables}::text[])
           and record_id = any(${chunkIds}::uuid[])
@@ -150,7 +151,7 @@ async function loadTranslations(input: {
       const { data, error } = await input.supabase
         .from("record_translations")
         .select(
-          "record_table, record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text"
+          "record_table, record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source, corrected_by"
         )
         .in("record_table", chunkTables)
         .in("record_id", chunkIds)
@@ -162,27 +163,20 @@ async function loadTranslations(input: {
     }
   }
 
-  const langCol: Record<SupportedLanguage, keyof TranslationRow> = {
-    en: "english_text", ur: "urdu_text", ar: "arabic_text", fa: "persian_text", ps: "pashto_text"
-  };
-  const col = langCol[input.language] ?? "english_text";
-
   const map = new Map<string, string>();
   for (const row of (allData ?? []) as TranslationRow[]) {
     const raw = (row.original_text ?? "").trim();
-    const recVal = ((row[col] as string | null) ?? "").trim();
-    // Honest resolution only (record value → approved central dictionary → original). No machine
-    // transliteration / auto-translation of names — per the ERP master-data policy (never guess or
-    // invent a proper-name spelling). This also removed a broken auto-translate call that used
-    // undefined imports (detectScriptType / autoTranslate5Languages).
-    let resolved = recVal;
+    // the central trust rule (lib/i18n/localize-records.ts): an approved translation, or a clean rendering of English text — never
+    // an unverified machine re-spelling of a name or of text typed in Urdu / Pashto ("Namt Allah Brwkr" for "نعمت اللہ بروکر")
+    let resolved = trustedStoredTranslation(row.record_table, row.field_name, raw, row as any, input.language) ?? "";
 
     if (!resolved) {
       const dictVal = await lookupApprovedDictionary(row.record_table, raw, input.language);
       if (dictVal) resolved = dictVal;
     }
 
-    if (!resolved && input.language === "en") resolved = (row.english_text ?? "").trim() || raw;
+    // no approved translation: the saved text itself
+    if (!resolved && input.language === "en") resolved = raw;
     if (resolved) map.set(translationKey(row.record_table, row.record_id, row.field_name), resolved);
   }
 
