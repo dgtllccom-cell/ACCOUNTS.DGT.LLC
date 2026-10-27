@@ -12151,6 +12151,12 @@ export type UiKey =
   | "com.corresponding_border"
   | "com.select_port"
   | "com.select_border"
+  | "com.e1_sec1_title"
+  | "com.e1_sec2_title"
+  | "com.next_route_customer_details"
+  | "com.prev_basic_info"
+  | "com.linked_customs_office"
+  | "com.entry_gate"
   | "com.cancel_btn"
   | "com.apply_close_btn"
   | "com.dest_overlay_title"
@@ -12262,11 +12268,123 @@ export type UiKey =
   | "cef.msg_save_failed"
   | "cef.auto_approved"
   | "cef.approved"
+  | "customers.add_new_customer"
+  | "customers.name_required"
+  | "customers.save_failed"
+  | "customers.new_customer_title"
+  | "customers.name_lbl"
+  | "customers.company_lbl"
+  | "customers.country_lbl"
+  | "customers.select_country"
+  | "customers.mobile_lbl"
+  | "customers.email_lbl"
+  | "customers.address_lbl"
+  | "customers.save_customer_btn"
+  | "locmaster.loading_gate"
+  | "locmaster.add_new_port"
+  | "locmaster.add_new_border"
+  | "locmaster.add_new_gate"
+  | "locmaster.add_new_customs_office"
+  | "locmaster.name_required"
+  | "locmaster.country_required"
+  | "locmaster.save_failed"
+  | "locmaster.new_port_title"
+  | "locmaster.new_border_title"
+  | "locmaster.type_lbl"
+  | "locmaster.name_lbl"
+  | "locmaster.name_sub"
+  | "locmaster.code_lbl"
+  | "locmaster.save_profile"
+  | "locmaster.gate_name_required"
+  | "locmaster.select_location_first"
+  | "locmaster.save_gate_failed"
+  | "locmaster.new_gate_title"
+  | "locmaster.linked_to"
+  | "locmaster.terminal_type_lbl"
+  | "locmaster.type_gate"
+  | "locmaster.type_terminal"
+  | "locmaster.type_berth"
+  | "locmaster.type_warehouse_bay"
+  | "locmaster.gate_name_lbl"
+  | "locmaster.save_gate"
+  | "locmaster.office_name_required"
+  | "locmaster.select_country_first"
+  | "locmaster.save_office_failed"
+  | "locmaster.new_customs_title"
+  | "locmaster.office_name_lbl"
+  | "locmaster.office_code_lbl"
+  | "locmaster.save_office"
+  | "clearing.print_route_transit_details"
+  | "clearing.col_stage"
+  | "clearing.col_country"
+  | "clearing.col_branch_location"
+  | "clearing.col_operation"
+  | "clearing.col_entry_exit_details"
+  | "clearing.print_origin"
+  | "clearing.print_export_clearance"
+  | "clearing.print_destination"
+  | "clearing.print_import_clearance"
   | (string & {});
 
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "locmaster.name_required": "Location name is required",
+  "locmaster.country_required": "Please select a country first",
+  "locmaster.save_failed": "Failed to save location",
+  "locmaster.new_port_title": "Add New Sea Port — Shared Master",
+  "locmaster.new_border_title": "Add New Border / Location — Shared Master",
+  "locmaster.type_lbl": "Location Type",
+  "locmaster.name_lbl": "Complete Location Name",
+  "locmaster.name_sub": "Saved name will appear in Settings and all ERP order forms.",
+  "locmaster.code_lbl": "Code / Identifier",
+  "locmaster.save_profile": "Save Profile",
+  "locmaster.gate_name_required": "Gate / Terminal name is required",
+  "locmaster.select_location_first": "Please select a location first",
+  "locmaster.save_gate_failed": "Failed to save gate",
+  "locmaster.new_gate_title": "Add New Gate / Terminal — Shared Master",
+  "locmaster.linked_to": "Linked Location:",
+  "locmaster.terminal_type_lbl": "Type",
+  "locmaster.type_gate": "Customs Gate / Entry Gate",
+  "locmaster.type_terminal": "Cargo Terminal",
+  "locmaster.type_berth": "Port Berth",
+  "locmaster.type_warehouse_bay": "Warehouse Bay",
+  "locmaster.gate_name_lbl": "Gate / Terminal Name",
+  "locmaster.save_gate": "Save Gate",
+  "locmaster.office_name_required": "Customs office name is required",
+  "locmaster.select_country_first": "Please select a country first",
+  "locmaster.save_office_failed": "Failed to save customs office",
+  "locmaster.new_customs_title": "Add New Customs Office — Shared Master",
+  "locmaster.office_name_lbl": "Customs Office Name",
+  "locmaster.office_code_lbl": "Office Code / Station Code",
+  "locmaster.save_office": "Save Office",
+  "clearing.print_route_transit_details": "Route & Multi-Stage Transit Details",
+  "clearing.col_stage": "Stage",
+  "clearing.col_country": "Country",
+  "clearing.col_branch_location": "Branch / Location",
+  "clearing.col_operation": "Operation",
+  "clearing.col_entry_exit_details": "Entry / Exit Details",
+  "clearing.print_origin": "Origin",
+  "clearing.print_export_clearance": "Export Clearance",
+  "clearing.print_destination": "Destination",
+  "clearing.print_import_clearance": "Import Clearance",
+  "customers.add_new_customer": "+ Add New Customer",
+  "customers.name_required": "Customer name is required.",
+  "customers.save_failed": "Failed to save customer",
+  "customers.new_customer_title": "Add New Customer Profile",
+  "customers.name_lbl": "Full Name / Contact Person",
+  "customers.company_lbl": "Company / Business Name",
+  "customers.country_lbl": "Country",
+  "customers.select_country": "Select country...",
+  "customers.mobile_lbl": "Mobile / WhatsApp",
+  "customers.email_lbl": "Email Address",
+  "customers.address_lbl": "Address / Location",
+  "customers.save_customer_btn": "Save Customer Profile",
+  "locmaster.loading_gate": "Loading Gate / Terminal",
+  "locmaster.add_new_port": "+ Add New Port",
+  "locmaster.add_new_border": "+ Add New Border / Location",
+  "locmaster.add_new_gate": "+ Add New Gate / Terminal",
+  "locmaster.add_new_customs_office": "+ Add New Customs Office",
   "setmenu.t_route_location": "Route & Location Master Management",
   "setmenu.d_route_location": "Central master hierarchy: Countries, Ports/Borders/Depots, Gates/Terminals, Customs Offices, and Multi-Leg Route Rules.",
   "setmenu.badge_5tier": "5-Tier Master",
@@ -37336,6 +37454,12 @@ const en: Dict = {
   "com.corresponding_border": "Corresponding Exit Border",
   "com.select_port": "Select port...",
   "com.select_border": "Select border...",
+  "com.e1_sec1_title": "Section 1 — Basic Information",
+  "com.e1_sec2_title": "Section 2 — Route & Customer Details",
+  "com.next_route_customer_details": "Next: Route & Customer Details ➔",
+  "com.prev_basic_info": "⬅ Previous: Basic Information",
+  "com.linked_customs_office": "Linked Customs Office",
+  "com.entry_gate": "Entry Gate / Terminal",
   "com.cancel_btn": "Cancel",
   "com.apply_close_btn": "Apply & Close",
   "com.dest_overlay_title": "Receiving Country & Destination Logistics Details",
@@ -37500,6 +37624,62 @@ const en: Dict = {
 
 const ur: Dict = {
 ...en,
+  "locmaster.name_required": "مقام کا نام درکار ہے",
+  "locmaster.country_required": "براہ کرم پہلے ملک منتخب کریں",
+  "locmaster.save_failed": "مقام محفوظ کرنے میں ناکامی",
+  "locmaster.new_port_title": "نیا سمندری پورٹ شامل کریں — مشترکہ ماسٹر",
+  "locmaster.new_border_title": "نئی سرحد / مقام شامل کریں — مشترکہ ماسٹر",
+  "locmaster.type_lbl": "مقام کی قسم",
+  "locmaster.name_lbl": "مکمل مقام کا نام",
+  "locmaster.name_sub": "محفوظ کردہ نام ترتیبات اور تمام ERP آرڈر فارمز میں ظاہر ہوگا۔",
+  "locmaster.code_lbl": "کوڈ / شناخت کار",
+  "locmaster.save_profile": "پروفائل محفوظ کریں",
+  "locmaster.gate_name_required": "گیٹ / ٹرمینل کا نام درکار ہے",
+  "locmaster.select_location_first": "براہ کرم پہلے مقام منتخب کریں",
+  "locmaster.save_gate_failed": "گیٹ محفوظ کرنے میں ناکامی",
+  "locmaster.new_gate_title": "نیا گیٹ / ٹرمینل شامل کریں — مشترکہ ماسٹر",
+  "locmaster.linked_to": "منسلک مقام:",
+  "locmaster.terminal_type_lbl": "قسم",
+  "locmaster.type_gate": "کسٹمز گیٹ / انٹری گیٹ",
+  "locmaster.type_terminal": "کارگو ٹرمینل",
+  "locmaster.type_berth": "پورٹ برتھ",
+  "locmaster.type_warehouse_bay": "گودام بے",
+  "locmaster.gate_name_lbl": "گیٹ / ٹرمینل کا نام",
+  "locmaster.save_gate": "گیٹ محفوظ کریں",
+  "locmaster.office_name_required": "کسٹمز آفس کا نام درکار ہے",
+  "locmaster.select_country_first": "براہ کرم پہلے ملک منتخب کریں",
+  "locmaster.save_office_failed": "کسٹمز آفس محفوظ کرنے میں ناکامی",
+  "locmaster.new_customs_title": "نیا کسٹمز آفس شامل کریں — مشترکہ ماسٹر",
+  "locmaster.office_name_lbl": "کسٹمز آفس کا نام",
+  "locmaster.office_code_lbl": "آفس کوڈ / اسٹیشن کوڈ",
+  "locmaster.save_office": "آفس محفوظ کریں",
+  "clearing.print_route_transit_details": "روٹ اور ملٹی اسٹیج ٹرانزٹ کی تفصیلات",
+  "clearing.col_stage": "مرحلہ",
+  "clearing.col_country": "ملک",
+  "clearing.col_branch_location": "برانچ / مقام",
+  "clearing.col_operation": "آپریشن",
+  "clearing.col_entry_exit_details": "داخلے / اخراج کی تفصیلات",
+  "clearing.print_origin": "مقام آغاز",
+  "clearing.print_export_clearance": "برآمدی کلیئرنس",
+  "clearing.print_destination": "منزل مقصود",
+  "clearing.print_import_clearance": "درآمدی کلیئرنس",
+  "customers.add_new_customer": "+ نیا کسٹمر شامل کریں",
+  "customers.name_required": "کسٹمر کا نام درکار ہے۔",
+  "customers.save_failed": "کسٹمر محفوظ کرنے میں ناکامی",
+  "customers.new_customer_title": "نیا کسٹمر پروفائل شامل کریں",
+  "customers.name_lbl": "مکمل نام / رابطہ شخص",
+  "customers.company_lbl": "کمپنی / کاروباری نام",
+  "customers.country_lbl": "ملک",
+  "customers.select_country": "ملک منتخب کریں...",
+  "customers.mobile_lbl": "موبائل / واٹس ایپ",
+  "customers.email_lbl": "ای میل ایڈریس",
+  "customers.address_lbl": "پتہ / مقام",
+  "customers.save_customer_btn": "کسٹمر پروفائل محفوظ کریں",
+  "locmaster.loading_gate": "لوڈنگ گیٹ / ٹرمینل",
+  "locmaster.add_new_port": "+ نیا پورٹ شامل کریں",
+  "locmaster.add_new_border": "+ نئی سرحد / مقام شامل کریں",
+  "locmaster.add_new_gate": "+ نیا گیٹ / ٹرمینل شامل کریں",
+  "locmaster.add_new_customs_office": "+ نیا کسٹم آفس شامل کریں",
   "setmenu.t_route_location": "روٹ اور لوکیشن ماسٹر مینجمنٹ",
   "setmenu.d_route_location": "مرکزی ماسٹر درجہ بندی: ممالک، بندرگاہیں/سرحدیں، گیٹس/ٹرمینلز، کسٹمز دفاتر اور کثیر مرحلہ روٹ کے قواعد۔",
   "setmenu.badge_5tier": "5-سطحی ماسٹر",
@@ -62538,6 +62718,12 @@ const ur: Dict = {
   "com.corresponding_border": "متعلقہ خروجی سرحد",
   "com.select_port": "بندرگاہ منتخب کریں...",
   "com.select_border": "سرحد منتخب کریں...",
+  "com.e1_sec1_title": "حصہ 1 — بنیادی معلومات",
+  "com.e1_sec2_title": "حصہ 2 — روٹ اور کسٹمر کی تفصیلات",
+  "com.next_route_customer_details": "اگلا: روٹ اور کسٹمر تفصیلات ➔",
+  "com.prev_basic_info": "⬅ پچھلا: بنیادی معلومات",
+  "com.linked_customs_office": "منسلک کسٹم دفتر",
+  "com.entry_gate": "داخلی گیٹ / ٹرمینل",
   "com.cancel_btn": "منسوخ کریں",
   "com.apply_close_btn": "لاگو کریں اور بند کریں",
   "com.dest_overlay_title": "وصولی ملک اور منزل لاجسٹکس کی تفصیلات",
@@ -62702,6 +62888,62 @@ const ur: Dict = {
 
 const ar: Dict = {
 ...en,
+  "locmaster.name_required": "اسم الموقع مطلوب",
+  "locmaster.country_required": "يرجى تحديد الدولة أولاً",
+  "locmaster.save_failed": "فشل حفظ الموقع",
+  "locmaster.new_port_title": "إضافة ميناء بحري جديد — الماستر المشترك",
+  "locmaster.new_border_title": "إضافة منفذ حدودي / موقع جديد — الماستر المشترك",
+  "locmaster.type_lbl": "نوع الموقع",
+  "locmaster.name_lbl": "الاسم الكامل للموقع",
+  "locmaster.name_sub": "سيظهر الاسم المحفوظ في الإعدادات وجميع نماذج طلبات ERP.",
+  "locmaster.code_lbl": "الرمز / المعرّف",
+  "locmaster.save_profile": "حفظ الملف",
+  "locmaster.gate_name_required": "اسم البوابة / المحطة مطلوب",
+  "locmaster.select_location_first": "يرجى تحديد الموقع أولاً",
+  "locmaster.save_gate_failed": "فشل حفظ البوابة",
+  "locmaster.new_gate_title": "إضافة بوابة / محطة جديدة — الماستر المشترك",
+  "locmaster.linked_to": "الموقع المرتبط:",
+  "locmaster.terminal_type_lbl": "النوع",
+  "locmaster.type_gate": "بوابة جمركية / بوابة دخول",
+  "locmaster.type_terminal": "محطة شحن",
+  "locmaster.type_berth": "رصيف الميناء",
+  "locmaster.type_warehouse_bay": "خليج المستودع",
+  "locmaster.gate_name_lbl": "اسم البوابة / المحطة",
+  "locmaster.save_gate": "حفظ البوابة",
+  "locmaster.office_name_required": "اسم المكتب الجمركي مطلوب",
+  "locmaster.select_country_first": "يرجى تحديد الدولة أولاً",
+  "locmaster.save_office_failed": "فشل حفظ المكتب الجمركي",
+  "locmaster.new_customs_title": "إضافة مكتب جمركي جديد — الماستر المشترك",
+  "locmaster.office_name_lbl": "اسم المكتب الجمركي",
+  "locmaster.office_code_lbl": "رمز المكتب / رمز المحطة",
+  "locmaster.save_office": "حفظ المكتب",
+  "clearing.print_route_transit_details": "تفاصيل المسار والترانزيت متعدد المراحل",
+  "clearing.col_stage": "المرحلة",
+  "clearing.col_country": "الدولة",
+  "clearing.col_branch_location": "الفرع / الموقع",
+  "clearing.col_operation": "العملية",
+  "clearing.col_entry_exit_details": "تفاصيل الدخول / الخروج",
+  "clearing.print_origin": "نقطة البداية",
+  "clearing.print_export_clearance": "تخليص تصدير",
+  "clearing.print_destination": "الوجهة",
+  "clearing.print_import_clearance": "تخليص استيراد",
+  "customers.add_new_customer": "+ إضافة عميل جديد",
+  "customers.name_required": "اسم العميل مطلوب.",
+  "customers.save_failed": "فشل حفظ العميل",
+  "customers.new_customer_title": "إضافة ملف عميل جديد",
+  "customers.name_lbl": "الاسم الكامل / مسؤول الاتصال",
+  "customers.company_lbl": "الشركة / الاسم التجاري",
+  "customers.country_lbl": "الدولة",
+  "customers.select_country": "اختر الدولة...",
+  "customers.mobile_lbl": "الجوال / واتساب",
+  "customers.email_lbl": "البريد الإلكتروني",
+  "customers.address_lbl": "العنوان / الموقع",
+  "customers.save_customer_btn": "حفظ ملف العميل",
+  "locmaster.loading_gate": "بوابة / محطة التحميل",
+  "locmaster.add_new_port": "+ إضافة ميناء جديد",
+  "locmaster.add_new_border": "+ إضافة منفذ حدودي / موقع جديد",
+  "locmaster.add_new_gate": "+ إضافة بوابة / محطة جديدة",
+  "locmaster.add_new_customs_office": "+ إضافة مكتب جمركي جديد",
   "setmenu.t_route_location": "إدارة المسارات والمواقع الرئيسية",
   "setmenu.d_route_location": "التسلسل الهرمي الرئيسي المركزي: الدول والموانئ/الحدود والبوابات/المحطات ومكاتب الجمارك وقواعد المسارات متعددة المراحل.",
   "setmenu.badge_5tier": "رئيسي خماسي المستويات",
@@ -87741,6 +87983,12 @@ const ar: Dict = {
   "com.corresponding_border": "حدود الخروج المقابلة",
   "com.select_port": "اختر الميناء...",
   "com.select_border": "اختر المنفذ الحدودي...",
+  "com.e1_sec1_title": "القسم 1 — المعلومات الأساسية",
+  "com.e1_sec2_title": "القسم 2 — تفاصيل المسار والعميل",
+  "com.next_route_customer_details": "التالي: تفاصيل المسار والعميل ➔",
+  "com.prev_basic_info": "⬅ السابق: المعلومات الأساسية",
+  "com.linked_customs_office": "مكتب الجمارك المرتبط",
+  "com.entry_gate": "بوابة / محطة الدخول",
   "com.cancel_btn": "إلغاء",
   "com.apply_close_btn": "تطبيق وإغلاق",
   "com.dest_overlay_title": "تفاصيل دولة الاستلام ولوجستيات الوجهة",
@@ -87905,6 +88153,62 @@ const ar: Dict = {
 
 const fa: Dict = {
 ...en,
+  "locmaster.name_required": "نام موقعیت الزامی است",
+  "locmaster.country_required": "لطفاً ابتدا کشور را انتخاب کنید",
+  "locmaster.save_failed": "ذخیره موقعیت ناموفق بود",
+  "locmaster.new_port_title": "افزودن بندرگاه دریایی جدید — مستر مشترک",
+  "locmaster.new_border_title": "افزودن مرز / موقعیت جدید — مستر مشترک",
+  "locmaster.type_lbl": "نوع موقعیت",
+  "locmaster.name_lbl": "نام کامل موقعیت",
+  "locmaster.name_sub": "نام ذخیره‌شده در تنظیمات و تمام فرم‌های سفارش ERP نمایش داده می‌شود.",
+  "locmaster.code_lbl": "کد / شناسه",
+  "locmaster.save_profile": "ذخیره نمایه",
+  "locmaster.gate_name_required": "نام گیت / پایانه الزامی است",
+  "locmaster.select_location_first": "لطفاً ابتدا موقعیت را انتخاب کنید",
+  "locmaster.save_gate_failed": "ذخیره گیت ناموفق بود",
+  "locmaster.new_gate_title": "افزودن گیت / پایانه جدید — مستر مشترک",
+  "locmaster.linked_to": "موقعیت مرتبط:",
+  "locmaster.terminal_type_lbl": "نوع",
+  "locmaster.type_gate": "گیت گمرک / گیت ورود",
+  "locmaster.type_terminal": "پایانه باربری",
+  "locmaster.type_berth": "اسکله بندر",
+  "locmaster.type_warehouse_bay": "بخش انبار",
+  "locmaster.gate_name_lbl": "نام گیت / پایانه",
+  "locmaster.save_gate": "ذخیره گیت",
+  "locmaster.office_name_required": "نام اداره گمرک الزامی است",
+  "locmaster.select_country_first": "لطفاً ابتدا کشور را انتخاب کنید",
+  "locmaster.save_office_failed": "ذخیره اداره گمرک ناموفق بود",
+  "locmaster.new_customs_title": "افزودن اداره گمرک جدید — مستر مشترک",
+  "locmaster.office_name_lbl": "نام اداره گمرک",
+  "locmaster.office_code_lbl": "کد اداره / کد ایستگاه",
+  "locmaster.save_office": "ذخیره اداره",
+  "clearing.print_route_transit_details": "جزئیات مسیر و ترانزیت چند مرحله‌ای",
+  "clearing.col_stage": "مرحله",
+  "clearing.col_country": "کشور",
+  "clearing.col_branch_location": "شعبه / موقعیت",
+  "clearing.col_operation": "عملیات",
+  "clearing.col_entry_exit_details": "جزئیات ورود / خروج",
+  "clearing.print_origin": "مبداء",
+  "clearing.print_export_clearance": "ترخیص صادرات",
+  "clearing.print_destination": "مقصد",
+  "clearing.print_import_clearance": "ترخیص واردات",
+  "customers.add_new_customer": "+ افزودن مشتری جدید",
+  "customers.name_required": "نام مشتری الزامی است.",
+  "customers.save_failed": "ذخیره مشتری انجام نشد",
+  "customers.new_customer_title": "افزودن نمایه مشتری جدید",
+  "customers.name_lbl": "نام کامل / شخص رابط",
+  "customers.company_lbl": "شرکت / نام تجاری",
+  "customers.country_lbl": "کشور",
+  "customers.select_country": "انتخاب کشور...",
+  "customers.mobile_lbl": "شماره همراه / واتس‌اپ",
+  "customers.email_lbl": "آدرس ایمیل",
+  "customers.address_lbl": "آدرس / موقعیت",
+  "customers.save_customer_btn": "ذخیره نمایه مشتری",
+  "locmaster.loading_gate": "گیت / پایانه بارگیری",
+  "locmaster.add_new_port": "+ افزودن بندرگاه جدید",
+  "locmaster.add_new_border": "+ افزودن مرز / موقعیت جدید",
+  "locmaster.add_new_gate": "+ افزودن گیت / پایانه جدید",
+  "locmaster.add_new_customs_office": "+ افزودن اداره گمرک جدید",
   "setmenu.t_route_location": "مدیریت مسیر و مکان اصلی",
   "setmenu.d_route_location": "سلسله‌مراتب ارشد مرکزی: کشورها، بنادر/مرزها، گیت‌ها/ترمینال‌ها، دفاتر گمرکی و قوانین مسیرهای چندمرحله‌ای.",
   "setmenu.badge_5tier": "ماسټر ۵ سطحی",
@@ -112943,6 +113247,12 @@ const fa: Dict = {
   "com.corresponding_border": "مرز خروج مربوط",
   "com.select_port": "بندر را انتخاب کنید...",
   "com.select_border": "گذرگاه مرزی را انتخاب کنید...",
+  "com.e1_sec1_title": "بخش ۱ — اطلاعات پایه",
+  "com.e1_sec2_title": "بخش ۲ — جزئیات مسیر و مشتری",
+  "com.next_route_customer_details": "بعدی: جزئیات مسیر و مشتری ➔",
+  "com.prev_basic_info": "⬅ قبلی: اطلاعات پایه",
+  "com.linked_customs_office": "اداره گمرک متصل",
+  "com.entry_gate": "گیت / پایانه ورودی",
   "com.cancel_btn": "انصراف",
   "com.apply_close_btn": "اعمال و بستن",
   "com.dest_overlay_title": "جزئیات کشور دریافت و لجستیک مقصد",
@@ -113107,6 +113417,62 @@ const fa: Dict = {
 
 const ps: Dict = {
 ...en,
+  "locmaster.name_required": "د موقعیت نوم اړین دی",
+  "locmaster.country_required": "مهرباني وکړئ لومړی هیواد وټاکئ",
+  "locmaster.save_failed": "د موقعیت خوندي کول ناکام شول",
+  "locmaster.new_port_title": "نوی سمندري بندر اضافه کړئ — ګډ ماسټر",
+  "locmaster.new_border_title": "نوې سرحد / ځای اضافه کړئ — ګډ ماسټر",
+  "locmaster.type_lbl": "د موقعیت ډول",
+  "locmaster.name_lbl": "د موقعیت بشپړ نوم",
+  "locmaster.name_sub": "خوندي شوی نوم به په ترتیباتو او د ټولو ERP امر فورمو کې ښکاره شي.",
+  "locmaster.code_lbl": "کوډ / پیژندونکی",
+  "locmaster.save_profile": "پروفایل خوندي کړئ",
+  "locmaster.gate_name_required": "د دروازې / ترمینل نوم اړین دی",
+  "locmaster.select_location_first": "مهرباني وکړئ لومړی یو ځای وټاکئ",
+  "locmaster.save_gate_failed": "د دروازې خوندي کول ناکام شول",
+  "locmaster.new_gate_title": "نوې دروازه / ترمینل اضافه کړئ — ګډ ماسټر",
+  "locmaster.linked_to": "تړلی ځای:",
+  "locmaster.terminal_type_lbl": "ډول",
+  "locmaster.type_gate": "د ګمرک دروازه / د ننوتلو دروازه",
+  "locmaster.type_terminal": "د کارګو ترمینل",
+  "locmaster.type_berth": "د بندر بستر",
+  "locmaster.type_warehouse_bay": "د ګودام څانګه",
+  "locmaster.gate_name_lbl": "د دروازې / ترمینل نوم",
+  "locmaster.save_gate": "دروازه خوندي کړئ",
+  "locmaster.office_name_required": "د ګمرک دفتر نوم اړین دی",
+  "locmaster.select_country_first": "مهرباني وکړئ لومړی هیواد وټاکئ",
+  "locmaster.save_office_failed": "د ګمرک دفتر خوندي کول ناکام شول",
+  "locmaster.new_customs_title": "د ګمرک نوی دفتر اضافه کړئ — ګډ ماسټر",
+  "locmaster.office_name_lbl": "د ګمرک دفتر نوم",
+  "locmaster.office_code_lbl": "د دفتر کوډ / د سټیشن کوډ",
+  "locmaster.save_office": "دفتر خوندي کړئ",
+  "clearing.print_route_transit_details": "د لارې او څو مرحلې ټرانزیټ توضیحات",
+  "clearing.col_stage": "مرحله",
+  "clearing.col_country": "هیواد",
+  "clearing.col_branch_location": "څانګه / ځای",
+  "clearing.col_operation": "عملیات",
+  "clearing.col_entry_exit_details": "د ننوتلو / وتلو توضیحات",
+  "clearing.print_origin": "پیل ځای",
+  "clearing.print_export_clearance": "د صادراتو پاکول",
+  "clearing.print_destination": "منزل",
+  "clearing.print_import_clearance": "د وارداتو پاکول",
+  "customers.add_new_customer": "+ نوی پیرودونکی اضافه کړئ",
+  "customers.name_required": "د پیرودونکي نوم اړین دی.",
+  "customers.save_failed": "د پیرودونکي خوندي کول ناکام شول",
+  "customers.new_customer_title": "د نوي پیرودونکي پروفایل اضافه کړئ",
+  "customers.name_lbl": "بشپړ نوم / د اړیکې کس",
+  "customers.company_lbl": "شرکت / سوداګریز نوم",
+  "customers.country_lbl": "هیواد",
+  "customers.select_country": "هیواد وټاکئ...",
+  "customers.mobile_lbl": "ګرځنده / واټس‌اپ",
+  "customers.email_lbl": "د بریښنالیک پته",
+  "customers.address_lbl": "پته / موقعیت",
+  "customers.save_customer_btn": "د پیرودونکي پروفایل خوندي کړئ",
+  "locmaster.loading_gate": "د بارولو دروازه / ترمینل",
+  "locmaster.add_new_port": "+ نوی بندر اضافه کړئ",
+  "locmaster.add_new_border": "+ نوی سرحد / ځای اضافه کړئ",
+  "locmaster.add_new_gate": "+ نوې دروازه / ترمینل اضافه کړئ",
+  "locmaster.add_new_customs_office": "+ د ګمرک نوی دفتر اضافه کړئ",
   "setmenu.t_route_location": "د لارې او موقعیت ماسټر مدیریت",
   "setmenu.d_route_location": "مرکزي ماسټر درجه بندي: هیوادونه، بندرونه/سرحدونه، ګیټونه/ترمینلونه، ګمرکي دفترونه او د څو مرحلو لارې قواعد.",
   "setmenu.badge_5tier": "۵ کچې ماسټر",
@@ -138152,6 +138518,12 @@ const ps: Dict = {
   "com.corresponding_border": "اړونده د وتلو پولې",
   "com.select_port": "بندر وټاکئ...",
   "com.select_border": "سرحد وټاکئ...",
+  "com.e1_sec1_title": "برخه ۱ — اساسي معلومات",
+  "com.e1_sec2_title": "برخه ۲ — د لارې او پیرودونکي تفصیلات",
+  "com.next_route_customer_details": "بل: د لارې او پیرودونکي تفصیلات ➔",
+  "com.prev_basic_info": "⬅ مخکینی: اساسي معلومات",
+  "com.linked_customs_office": "تړلی ګمرکي دفتر",
+  "com.entry_gate": "د ننوتلو دروازه / ترمینل",
   "com.cancel_btn": "لغوه کړئ",
   "com.apply_close_btn": "پلي کړئ او وتړئ",
   "com.dest_overlay_title": "د ترلاسه هیواد او د منزل لوژستیکي تفصیلات",

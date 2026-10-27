@@ -16,6 +16,11 @@ import { SearchSelect } from "@/components/ui/search-select";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { listCities, type LocationCity } from "@/features/locations/location-api";
+import {
+  QuickLocationModal,
+  QuickGateModal,
+  QuickCustomsOfficeModal
+} from "./quick-location-modals";
 
 export type LegTransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
 
@@ -40,13 +45,32 @@ export type LocationPickerProps = {
   onChange: (locationId: string, name: string) => void;
   label?: string;
   disabled?: boolean;
+  includeCities?: boolean;
+  onAddNew?: () => void;
+  addNewLabel?: string;
+  enableQuickCreate?: boolean;
+  refreshKey?: number | string;
 };
 
-export function LocationPicker({ countryId, transportMode, value, onChange, label, disabled }: LocationPickerProps) {
+export function LocationPicker({
+  countryId,
+  transportMode,
+  value,
+  onChange,
+  label,
+  disabled,
+  includeCities = false,
+  onAddNew,
+  addNewLabel,
+  enableQuickCreate = true,
+  refreshKey
+}: LocationPickerProps) {
   const lang = useActiveLanguage();
   const [options, setOptions] = useState<LocationOption[]>([]);
   const [cities, setCities] = useState<LocationCity[]>([]);
   const [loading, setLoading] = useState(false);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [localRefresh, setLocalRefresh] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,7 +93,7 @@ export function LocationPicker({ countryId, transportMode, value, onChange, labe
         if (cancelled) return;
         setOptions(results.flat());
 
-        if (transportMode === "by_road") {
+        if (includeCities && transportMode === "by_road") {
           const cityRows = await listCities({ countryId });
           if (!cancelled) setCities(cityRows);
         } else {
@@ -88,7 +112,7 @@ export function LocationPicker({ countryId, transportMode, value, onChange, labe
     return () => {
       cancelled = true;
     };
-  }, [countryId, transportMode]);
+  }, [countryId, transportMode, includeCities, refreshKey, localRefresh]);
 
   const searchOptions = [
     ...options.map((o) => ({
@@ -103,46 +127,94 @@ export function LocationPicker({ countryId, transportMode, value, onChange, labe
     }))
   ];
 
+  const handleCreateNew = onAddNew
+    ? onAddNew
+    : enableQuickCreate
+      ? () => setQuickCreateOpen(true)
+      : undefined;
+
+  const defaultCreateLabel =
+    addNewLabel ??
+    (transportMode === "by_sea"
+      ? t(lang, "locmaster.add_new_port", "+ Add New Port")
+      : t(lang, "locmaster.add_new_border", "+ Add New Border / Location"));
+
   return (
-    <SearchSelect
-      label={label ?? t(lang, "locmaster.picker_label", "Location")}
-      value={value ?? ""}
-      options={searchOptions}
-      loading={loading}
-      disabled={disabled || !countryId || !transportMode}
-      placeholder={
-        !countryId
-          ? t(lang, "locmaster.picker_select_country_first", "Select a country first")
-          : !transportMode
-            ? t(lang, "locmaster.picker_select_mode_first", "Select a transport mode first")
-            : t(lang, "locmaster.picker_placeholder", "Select a location")
-      }
-      onValueChange={(val) => {
-        const cityMatch = cities.find((c) => `city:${c.id}` === val);
-        if (cityMatch) {
-          onChange(val, cityMatch.name);
-          return;
+    <>
+      <SearchSelect
+        label={label ?? t(lang, "locmaster.picker_label", "Location")}
+        value={value ?? ""}
+        options={searchOptions}
+        loading={loading}
+        disabled={disabled || !countryId || !transportMode}
+        createButtonPlacement="inside"
+        createLabel={defaultCreateLabel}
+        onCreateNew={handleCreateNew}
+        placeholder={
+          !countryId
+            ? t(lang, "locmaster.picker_select_country_first", "Select a country first")
+            : !transportMode
+              ? t(lang, "locmaster.picker_select_mode_first", "Select a transport mode first")
+              : t(lang, "locmaster.picker_placeholder", "Select a location")
         }
-        const match = options.find((o) => o.id === val);
-        onChange(val, match?.name ?? "");
-      }}
-    />
+        onValueChange={(val) => {
+          const cityMatch = cities.find((c) => `city:${c.id}` === val);
+          if (cityMatch) {
+            onChange(val, cityMatch.name);
+            return;
+          }
+          const match = options.find((o) => o.id === val);
+          onChange(val, match?.name ?? "");
+        }}
+      />
+
+      {quickCreateOpen && (
+        <QuickLocationModal
+          open={quickCreateOpen}
+          onClose={() => setQuickCreateOpen(false)}
+          countryId={countryId}
+          transportMode={transportMode}
+          onSaved={(newLoc) => {
+            setLocalRefresh((k) => k + 1);
+            onChange(newLoc.id, newLoc.name);
+          }}
+        />
+      )}
+    </>
   );
 }
 
 // ── Companion: Gate / Terminal Picker ─────────────────────────────────────────
 export type GatePickerProps = {
   locationId: string | null | undefined;
+  locationName?: string | null;
   value?: string;
   onChange: (gateId: string, name: string) => void;
   label?: string;
   disabled?: boolean;
+  onAddNew?: () => void;
+  addNewLabel?: string;
+  enableQuickCreate?: boolean;
+  refreshKey?: number | string;
 };
 
-export function GatePicker({ locationId, value, onChange, label, disabled }: GatePickerProps) {
+export function GatePicker({
+  locationId,
+  locationName,
+  value,
+  onChange,
+  label,
+  disabled,
+  onAddNew,
+  addNewLabel,
+  enableQuickCreate = true,
+  refreshKey
+}: GatePickerProps) {
   const lang = useActiveLanguage();
   const [gates, setGates] = useState<Array<{ id: string; name: string; code: string | null; terminal_type: string }>>([]);
   const [loading, setLoading] = useState(false);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [localRefresh, setLocalRefresh] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -166,7 +238,7 @@ export function GatePicker({ locationId, value, onChange, label, disabled }: Gat
     return () => {
       cancelled = true;
     };
-  }, [locationId]);
+  }, [locationId, refreshKey, localRefresh]);
 
   const searchOptions = gates.map((g) => ({
     value: g.id,
@@ -174,25 +246,51 @@ export function GatePicker({ locationId, value, onChange, label, disabled }: Gat
     description: `${g.terminal_type}${g.code ? ` • ${g.code}` : ""}`
   }));
 
+  const handleCreateNew = onAddNew
+    ? onAddNew
+    : enableQuickCreate
+      ? () => setQuickCreateOpen(true)
+      : undefined;
+
+  const defaultCreateLabel = addNewLabel ?? t(lang, "locmaster.add_new_gate", "+ Add New Gate / Terminal");
+
   return (
-    <SearchSelect
-      label={label ?? t(lang, "com.customs_gate", "Customs Gate")}
-      value={value ?? ""}
-      options={searchOptions}
-      loading={loading}
-      disabled={disabled || !locationId || locationId.startsWith("city:") || searchOptions.length === 0}
-      placeholder={
-        !locationId
-          ? t(lang, "locmaster.picker_placeholder", "Select a location")
-          : searchOptions.length === 0
-            ? t(lang, "locmaster.empty", "No locations found.")
-            : t(lang, "com.customs_gate", "Customs Gate")
-      }
-      onValueChange={(val) => {
-        const match = gates.find((g) => g.id === val);
-        onChange(val, match?.name ?? "");
-      }}
-    />
+    <>
+      <SearchSelect
+        label={label ?? t(lang, "com.customs_gate", "Customs Gate")}
+        value={value ?? ""}
+        options={searchOptions}
+        loading={loading}
+        disabled={disabled || !locationId || locationId.startsWith("city:") || (searchOptions.length === 0 && !handleCreateNew)}
+        createButtonPlacement="inside"
+        createLabel={defaultCreateLabel}
+        onCreateNew={handleCreateNew}
+        placeholder={
+          !locationId
+            ? t(lang, "locmaster.picker_placeholder", "Select a location")
+            : searchOptions.length === 0 && !handleCreateNew
+              ? t(lang, "locmaster.empty", "No locations found.")
+              : t(lang, "com.customs_gate", "Customs Gate / Terminal")
+        }
+        onValueChange={(val) => {
+          const match = gates.find((g) => g.id === val);
+          onChange(val, match?.name ?? "");
+        }}
+      />
+
+      {quickCreateOpen && (
+        <QuickGateModal
+          open={quickCreateOpen}
+          onClose={() => setQuickCreateOpen(false)}
+          locationId={locationId}
+          locationName={locationName}
+          onSaved={(newGate) => {
+            setLocalRefresh((k) => k + 1);
+            onChange(newGate.id, newGate.name);
+          }}
+        />
+      )}
+    </>
   );
 }
 
@@ -208,16 +306,35 @@ export type CustomsOfficeRecord = {
 export type CustomsOfficePickerProps = {
   countryId: string | null | undefined;
   locationId?: string | null | undefined;
+  locationName?: string | null;
   value?: string;
   onChange: (officeId: string, office: CustomsOfficeRecord | null) => void;
   label?: string;
   disabled?: boolean;
+  onAddNew?: () => void;
+  addNewLabel?: string;
+  enableQuickCreate?: boolean;
+  refreshKey?: number | string;
 };
 
-export function CustomsOfficePicker({ countryId, locationId, value, onChange, label, disabled }: CustomsOfficePickerProps) {
+export function CustomsOfficePicker({
+  countryId,
+  locationId,
+  locationName,
+  value,
+  onChange,
+  label,
+  disabled,
+  onAddNew,
+  addNewLabel,
+  enableQuickCreate = true,
+  refreshKey
+}: CustomsOfficePickerProps) {
   const lang = useActiveLanguage();
   const [offices, setOffices] = useState<CustomsOfficeRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [localRefresh, setLocalRefresh] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -252,7 +369,7 @@ export function CustomsOfficePicker({ countryId, locationId, value, onChange, la
     return () => {
       cancelled = true;
     };
-  }, [countryId, locationId]);
+  }, [countryId, locationId, refreshKey, localRefresh]);
 
   const searchOptions = offices.map((o) => ({
     value: o.id,
@@ -260,24 +377,58 @@ export function CustomsOfficePicker({ countryId, locationId, value, onChange, la
     description: o.office_code || t(lang, "com.customs_clearance_point", "Customs Clearance Point / Port")
   }));
 
+  const handleCreateNew = onAddNew
+    ? onAddNew
+    : enableQuickCreate
+      ? () => setQuickCreateOpen(true)
+      : undefined;
+
+  const defaultCreateLabel = addNewLabel ?? t(lang, "locmaster.add_new_customs_office", "+ Add New Customs Office");
+
   return (
-    <SearchSelect
-      label={label ?? t(lang, "com.customs_clearance_point", "Customs Clearance Point / Port")}
-      value={value ?? ""}
-      options={searchOptions}
-      loading={loading}
-      disabled={disabled || !countryId || searchOptions.length === 0}
-      placeholder={
-        !countryId
-          ? t(lang, "locmaster.picker_select_country_first", "Select a country first")
-          : searchOptions.length === 0
-            ? t(lang, "locmaster.empty", "No locations found.")
-            : t(lang, "com.customs_clearance_point", "Customs Clearance Point / Port")
-      }
-      onValueChange={(val) => {
-        const match = offices.find((o) => o.id === val);
-        onChange(val, match ?? null);
-      }}
-    />
+    <>
+      <SearchSelect
+        label={label ?? t(lang, "com.customs_clearance_point", "Customs Clearance Point / Port")}
+        value={value ?? ""}
+        options={searchOptions}
+        loading={loading}
+        disabled={disabled || !countryId || (searchOptions.length === 0 && !handleCreateNew)}
+        createButtonPlacement="inside"
+        createLabel={defaultCreateLabel}
+        onCreateNew={handleCreateNew}
+        placeholder={
+          !countryId
+            ? t(lang, "locmaster.picker_select_country_first", "Select a country first")
+            : searchOptions.length === 0 && !handleCreateNew
+              ? t(lang, "locmaster.empty", "No locations found.")
+              : t(lang, "com.customs_clearance_point", "Customs Clearance Point / Port")
+        }
+        onValueChange={(val) => {
+          const match = offices.find((o) => o.id === val);
+          onChange(val, match ?? null);
+        }}
+      />
+
+      {quickCreateOpen && (
+        <QuickCustomsOfficeModal
+          open={quickCreateOpen}
+          onClose={() => setQuickCreateOpen(false)}
+          countryId={countryId}
+          locationId={locationId}
+          locationName={locationName}
+          onSaved={(newOffice) => {
+            setLocalRefresh((k) => k + 1);
+            onChange(newOffice.id, {
+              id: newOffice.id,
+              office_name: newOffice.office_name,
+              office_code: newOffice.office_code,
+              allowed_movements: ["import", "export", "transit", "re_export"],
+              allowed_treatments: []
+            });
+          }}
+        />
+      )}
+    </>
   );
 }
+
