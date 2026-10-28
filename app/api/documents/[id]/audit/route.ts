@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, invalidIdErrorOf } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -50,6 +50,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ document: rows.doc, events: rows.events });
   } catch (error: unknown) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     const message = error instanceof Error ? error.message : "Failed to load audit history";
     return NextResponse.json({ error: message }, { status: 500 });
   }

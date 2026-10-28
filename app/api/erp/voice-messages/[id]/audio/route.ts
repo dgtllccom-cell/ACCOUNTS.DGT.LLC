@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { guardIntake } from "@/lib/services/document-intake-api";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { readVoiceAudio } from "@/lib/services/voice-audio-storage";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, invalidIdErrorOf } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -48,6 +48,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     });
   } catch (error: unknown) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     const message = error instanceof Error ? error.message : "Failed to load audio";
     return NextResponse.json({ error: message }, { status: 500 });
   }

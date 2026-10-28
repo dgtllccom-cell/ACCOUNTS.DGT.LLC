@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, invalidIdErrorOf } from "@/lib/api/response";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import {
   deleteCustomerOrder,
@@ -48,6 +48,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ success: true, data: order });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ success: false, error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     return NextResponse.json({ success: false, error: error.message, ...(typeof error.code === "string" && /^[A-Z_]+$/.test(error.code) ? { code: error.code, fields: error.fields } : {}) }, { status: httpStatusOfError(error) });
   }
 }
@@ -187,6 +189,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs, loading_allocations: result.loadingAllocations });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ success: false, error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     if (error instanceof RouteContinuityError) {
       return NextResponse.json({ success: false, error: error.message, code: "ROUTE_NOT_CONTINUOUS" }, { status: 400 });
     }
@@ -216,6 +220,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ success: true, data: deleted });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ success: false, error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     return NextResponse.json({ success: false, error: error.message, ...(typeof error.code === "string" && /^[A-Z_]+$/.test(error.code) ? { code: error.code, fields: error.fields } : {}) }, { status: httpStatusOfError(error) });
   }
 }

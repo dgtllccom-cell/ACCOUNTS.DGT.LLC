@@ -2,7 +2,7 @@ import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-ga
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, invalidIdErrorOf } from "@/lib/api/response";
 import {
   getCustomerBillById,
   saveCustomerBill
@@ -43,6 +43,8 @@ export async function GET(
     return NextResponse.json({ success: true, data: bill });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ success: false, error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     return NextResponse.json(
       { success: false, error: error.message || "Failed to fetch customer bill." },
       { status: 500 }
@@ -86,6 +88,8 @@ export async function PATCH(
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ success: false, error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     console.error("PATCH /api/erp/clearing-agent/customer-bill/[id] error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to save customer bill." },
