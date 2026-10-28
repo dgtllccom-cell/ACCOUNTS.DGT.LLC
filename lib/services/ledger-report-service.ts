@@ -6,6 +6,7 @@ import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { lookupApprovedDictionary, trustedStoredTranslation } from "@/lib/i18n/localize-records";
 import { isUuid } from "@/lib/utils";
+import { resolveLedgerIds } from "@/lib/db/account-refs";
 
 export type LedgerReportScope = "super_admin" | "country" | "branch";
 
@@ -267,6 +268,17 @@ export class LedgerReportService {
   // via withLocalPg — same proven bypass as goods-repository.ts/banks-repository.ts)
   // when available, falling back to the Supabase client otherwise.
   async listLedgers(input: ListLedgersInput): Promise<LedgerLookupRow[]> {
+    // `ledgerId` may carry what the screen shows (the account number "ACC-000080", an
+    // account / ledger code) — the uuid casts below turned that into a 500. Map such
+    // references to ledger ids first; the session scope below still decides what is visible.
+    if (input.ledgerId) {
+      const refs = Array.isArray(input.ledgerId) ? input.ledgerId : [input.ledgerId];
+      if (refs.some((ref) => !isUuid(ref))) {
+        const ledgerIds = await resolveLedgerIds(refs);
+        if (!ledgerIds.length) return [];
+        input = { ...input, ledgerId: ledgerIds };
+      }
+    }
     // Pure read (query builder only, no writes/transactions) — use the shared
     // pooled connection instead of paying withLocalPg's fresh-connection setup
     // cost on every account search/lookup call (measured 7-12s per call before
@@ -960,7 +972,8 @@ export class LedgerReportService {
     }
 
     const targetLedgerIds = unique([
-      ...initialLedgerIds,
+      // a human reference was already resolved into header.ledgerId by listLedgers above
+      ...initialLedgerIds.filter((id) => isUuid(id)),
       header.ledgerId,
       header.accountId,
       ...siblingLedgerIds

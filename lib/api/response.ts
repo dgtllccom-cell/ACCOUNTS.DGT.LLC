@@ -94,6 +94,13 @@ export function translateToUrdu(message: string): string {
   return message;
 }
 
+/** The caller-language message for a value that is not a valid record id (e.g. an account number). */
+export async function invalidRecordIdMessage(value: string) {
+  const [{ t }, { getRequestLanguage }] = await Promise.all([import("@/lib/i18n/ui"), import("@/lib/i18n/server")]);
+  const lang = await getRequestLanguage().catch(() => "en" as const);
+  return t(lang, "api.invalid_record_id", 'The record reference "{value}" is not a valid ID. Select the record from the list instead of typing its number or code, then try again.').replace("{value}", value);
+}
+
 export function apiOk<T>(data: T, init?: ResponseInit) {
   return NextResponse.json({ ok: true, data }, init);
 }
@@ -271,6 +278,19 @@ export async function handleApiError(error: unknown) {
     else if (pgCode === "23514") { code = "CHECK_VIOLATION"; message = "One or more values are not allowed."; status = 422; }
     else if (pgCode === "23502") { code = "NOT_NULL_VIOLATION"; message = "A required field is missing."; status = 422; }
     else { code = "CONSTRAINT_VIOLATION"; status = 422; }
+  }
+
+  // A human reference (account number such as "ACC-000080", a code or a name) that reaches
+  // a uuid column makes Postgres raise 22P02 "invalid input syntax for type uuid". That is
+  // the request's fault, not a server fault — answer 400 INVALID_ID in the caller's language
+  // instead of a 500 SERVER_ERROR. Matched on the message too: the Supabase-client paths
+  // rethrow `new Error(error.message)` and drop the SQLSTATE.
+  if (status === 500 && typeof message === "string" && /invalid input syntax for type uuid/i.test(message)) {
+    const value = /type uuid: "([^"]*)"/i.exec(message)?.[1] ?? "";
+    code = "INVALID_ID";
+    status = 400;
+    details = { value };
+    message = await invalidRecordIdMessage(value);
   }
 
   // A few routes/repositories still `throw new Error("...")` for what is really

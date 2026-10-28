@@ -9,7 +9,9 @@ import {
   buildDocumentFolderPath,
   normalizeDocumentSearch
 } from "@/lib/documents/document-filing";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { invalidRecordIdMessage, rethrowIfNextControlFlow } from "@/lib/api/response";
+import { resolveEnterpriseAccountId } from "@/lib/db/account-refs";
+import { isUuid } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -93,6 +95,12 @@ function normalizeNullable(value: any) {
   return value;
 }
 
+// The Account / Party picker keys people as "cust_<id>" / "emp_<id>"; person_account_id holds the bare id.
+function partyIdOf(value: any) {
+  const v = normalizeNullable(value);
+  return typeof v === "string" ? v.trim().replace(/^(cust|emp)_/, "") : v;
+}
+
 async function withDocumentSession<T>(session: Awaited<ReturnType<typeof requireErpSession>>, fn: (sql: any) => Promise<T>) {
   return await withLocalPg(async (sql) => {
     return await sql.begin(async (tx) => {
@@ -127,14 +135,14 @@ export async function GET(request: NextRequest) {
     const countryId = searchParams.get("countryId");
     const mainBranchId = searchParams.get("mainBranchId");
     const cityBranchId = searchParams.get("cityBranchId");
-    const personAccountId = searchParams.get("personAccountId");
+    const personAccountId = partyIdOf(searchParams.get("personAccountId"));
     const personAccountCode = searchParams.get("personAccountCode");
     const personAccountName = searchParams.get("personAccountName");
     const personAccountType = searchParams.get("personAccountType");
     const companyId = searchParams.get("companyId");
     const companyCode = searchParams.get("companyCode");
     const companyName = searchParams.get("companyName");
-    const accountId = searchParams.get("accountId");
+    let accountId = searchParams.get("accountId");
     const accountCode = searchParams.get("accountCode");
     const accountName = searchParams.get("accountName");
     const moduleType = searchParams.get("moduleType");
@@ -143,6 +151,19 @@ export async function GET(request: NextRequest) {
     const sourceRecordNo = searchParams.get("sourceRecordNo");
     const sourceRecordId = searchParams.get("sourceRecordId");
     const searchQuery = searchParams.get("search");
+
+    // These filters compare with uuid columns. The account filter may carry what the screen
+    // shows (account number ACC-000080, account code) — resolve it; an account that does not
+    // exist simply has no documents. Any other non-id value gets a clear 400, never a 500.
+    if (accountId && !isUuid(accountId)) {
+      const resolvedAccountId = await resolveEnterpriseAccountId(accountId);
+      if (!resolvedAccountId) return NextResponse.json({ documents: [] });
+      accountId = resolvedAccountId;
+    }
+    const invalidId = [countryId, mainBranchId, cityBranchId, personAccountId, companyId, sourceRecordId].find((v) => v && !isUuid(v));
+    if (invalidId) {
+      return NextResponse.json({ error: await invalidRecordIdMessage(String(invalidId)), code: "INVALID_ID" }, { status: 400 });
+    }
 
     // Root-cause bypass (see lib/db/local-postgres.ts): office_documents_scope_read
     // gates on is_super_admin()/can_access_country(), both keyed off auth.uid(), which
@@ -334,7 +355,7 @@ export async function POST(request: NextRequest) {
     const normalizedAccountId = normalizeNullable(account_id);
     const normalizedAccountCode = normalizeNullable(account_code);
     const normalizedAccountName = normalizeNullable(account_name);
-    const normalizedPersonAccountId = normalizeNullable(person_account_id);
+    const normalizedPersonAccountId = partyIdOf(person_account_id);
     const normalizedPersonAccountCode = normalizeNullable(person_account_code);
     const normalizedPersonAccountName = normalizeNullable(person_account_name);
     const normalizedPersonAccountType = normalizeNullable(person_account_type);

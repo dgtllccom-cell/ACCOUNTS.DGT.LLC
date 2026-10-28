@@ -6,6 +6,7 @@
 // roznamcha_entries/roznamcha_lines and the canonical posting engine (posting.ts) — no
 // duplicate Account Master, no duplicate ledger/transaction tables.
 import { withReadPg, withLocalPg } from "@/lib/db/local-postgres";
+import { resolveEnterpriseAccountId } from "@/lib/db/account-refs";
 import type { ErpSession } from "@/lib/auth/session";
 import { hasRolePermission, ErpPermissionError } from "@/lib/permissions/middleware";
 
@@ -126,6 +127,9 @@ export async function getAccountForCrossBranchAccess(session: ErpSession, accoun
   if (!hasRolePermission(session, "accounts", "read")) {
     throw new ErpPermissionError("Missing permission: accounts:read");
   }
+  // the account may be addressed by its number (ACC-000080) or code instead of its id
+  const enterpriseAccountId = await resolveEnterpriseAccountId(accountId);
+  if (!enterpriseAccountId) return null;
 
   const rows = await withReadPg(async (sql) => {
     return sql`
@@ -134,7 +138,7 @@ export async function getAccountForCrossBranchAccess(session: ErpSession, accoun
              ea.operational_domain, ea.current_balance, l.id as ledger_id
       from public.enterprise_accounts ea
       left join public.ledgers l on l.enterprise_account_id = ea.id and l.deleted_at is null
-      where ea.deleted_at is null and ea.id = ${accountId}
+      where ea.deleted_at is null and ea.id = ${enterpriseAccountId}
       limit 1
     `;
   });
@@ -226,6 +230,10 @@ export async function getAccountStatement(
   session: ErpSession,
   params: { enterpriseAccountId: string; from?: string | null; to?: string | null }
 ): Promise<AccountStatement | null> {
+  // the account may be addressed by its number (ACC-000080) or code instead of its id
+  const enterpriseAccountId = await resolveEnterpriseAccountId(params.enterpriseAccountId);
+  if (!enterpriseAccountId) return null;
+  params = { ...params, enterpriseAccountId };
   const accountRows = await withReadPg(async (sql) => sql`
     select ea.id, ea.code, ea.name, ea.currency, ea.account_number, ea.manual_reference_number,
            ea.customer_number, ea.country_id, ea.country_branch_id, ea.city_branch_id,

@@ -8,6 +8,7 @@ import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
+import { isUuid } from "@/lib/utils";
 
 type BankRow = {
   id: string;
@@ -123,6 +124,14 @@ function mapBank(row: BankRow): LegacyBankRecord {
   };
 }
 
+// A bank account may be addressed by its Bank Account Master code (ACC-000001 style) instead of its id.
+async function getBankIdByAccountCode(code: string): Promise<string | null> {
+  const rows = await withLocalPg((sql) => sql`
+    SELECT id FROM public.banks WHERE upper(account_code) = ${code.trim().toUpperCase()} AND deleted_at IS NULL LIMIT 1
+  `);
+  return (rows?.[0]?.id as string | undefined) ?? null;
+}
+
 async function getBankById(id: string): Promise<LegacyBankRecord | null> {
   const viaPg = await withLocalPg(async (sql) => {
     const rows = await sql<BankRow[]>`
@@ -171,11 +180,12 @@ async function getBankById(id: string): Promise<LegacyBankRecord | null> {
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    const { id } = await params;
+    const { id: ref } = await params;
     authorizeApiScope(session, { resource: "banks", action: "read" });
 
-    let bank = await getBankById(id);
-    if (!bank) throw new Error("Bank not found");
+    const id = isUuid(ref) ? ref : await getBankIdByAccountCode(ref);
+    let bank = id ? await getBankById(id) : null;
+    if (!bank) return apiOk({ bank: null }, { status: 404 });
     if (!session.isSuperAdmin && bank.country_id && !session.countryIds.includes(bank.country_id)) {
       throw new Error("Not authorized");
     }
