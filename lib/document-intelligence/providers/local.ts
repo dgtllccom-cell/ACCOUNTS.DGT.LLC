@@ -3,7 +3,8 @@
  *
  *   * Digital PDFs  → pdf-parse (text layer, no OCR)
  *   * Scanned PDFs / images / photos → tesseract.js WASM OCR (+ sharp pre-process:
- *     auto-rotate, grayscale, normalise, upscale small scans)
+ *     auto-rotate, grayscale, normalise, upscale small scans), English + Arabic script + Simplified Chinese,
+ *     every page of the document, page layout read as one block (a contract's goods table is kept)
  *   * classification + extraction → local heuristic rules (extractors.ts)
  *
  * No network calls for processing. The tesseract WASM core + language data are
@@ -23,18 +24,30 @@ const hasVendor = (f: string) => {
   try { return fs.existsSync(path.join(VENDOR_DIR, f)); } catch { return false; }
 };
 
-const OCR_LANGS = process.env.DOC_INTAKE_OCR_LANGS || "eng+ara";
+// eng + Arabic script (ar / ur / fa / ps) + Simplified Chinese — supplier contracts from China are bilingual English / Chinese
+const OCR_LANGS = process.env.DOC_INTAKE_OCR_LANGS || "eng+ara+chi_sim";
+const vendored = (lang: string) => hasVendor(`${lang}.traineddata`) || hasVendor(`${lang}.traineddata.gz`);
 
+/** The OCR languages to load: the configured ones (a language that is not vendored is fetched once by tesseract.js into its cache). */
+export function ocrLanguages(): string[] {
+  const langs = OCR_LANGS.split("+").map((l) => l.trim()).filter(Boolean);
+  return langs.length ? langs : ["eng"];
+}
+
+/** The dominant script of the text (a bilingual English / Chinese contract is "en"; OCR noise of another script does not count). */
 function detectLanguage(text: string): string | null {
-  const t = text.slice(0, 4000);
-  if (/[؀-ۿ]/.test(t)) {
+  const t = text.slice(0, 6000);
+  const letters = (t.match(/\p{L}/gu) ?? []).length || 1;
+  const share = (re: RegExp) => (t.match(re) ?? []).length / letters;
+  if (share(/[㐀-鿿]/g) >= 0.3) return "zh";
+  if (share(/[؀-ۿ]/g) >= 0.3) {
     // Arabic-script block covers ar / ur / fa / ps — pick by distinctive letters
     if (/[پچژگںھی]/.test(t)) return "ur"; // pe/che/zhe/gaf/nun-ghunna/heh-doachashmee/farsi-yeh
     if (/[ګہ]/.test(t)) return "ps";
     if (/[یک]/.test(t)) return "fa";
     return "ar";
   }
-  if (/[ऀ-ॿ]/.test(t)) return "hi";
+  if (share(/[ऀ-ॿ]/g) >= 0.3) return "hi";
   return "en";
 }
 
@@ -92,8 +105,11 @@ async function ingestPdf(buffer: Buffer, onProgress?: (page: number, total: numb
     //    re-rasterised page screenshot. Pick the largest image per page and
     //    ignore small decorations (app watermark logos are ~240×90).
     const embeddedByPage: Map<number, { buf: Buffer; width: number }> = new Map();
+    // pdf-parse's getImage() kills the whole Node process (native, uncatchable) on Windows / Node 24 — the local DEV server died on
+    // every scanned PDF. There the page screenshot below is OCR'd instead; Linux (VPS, Node 22) keeps the embedded original.
+    const embeddedImages = process.platform !== "win32" || process.env.DOC_INTAKE_EMBEDDED_IMAGES === "1";
     try {
-      const im: any = await (parser as any).getImage?.();
+      const im: any = embeddedImages ? await (parser as any).getImage?.() : null;
       for (const pg of im?.pages ?? []) {
         const imgs = (pg.images ?? [])
           .map((x: any) => ({ buf: toBuffer(x), width: x.width ?? 0, area: (x.width ?? 0) * (x.height ?? 0) }))
@@ -114,8 +130,9 @@ async function ingestPdf(buffer: Buffer, onProgress?: (page: number, total: numb
       const preferRaw = Boolean(embedded && embedded.width >= 1500 && embedded.width <= 2200);
       if (!imgBuf) {
         try {
-          const shot: any = await (parser as any).getScreenshot({ pages: [pageNo], scale: 3.0 });
-          const entry = Buffer.isBuffer(shot) ? shot : (shot?.pages?.[0] ?? shot);
+          // the page selector is `partial`: an unknown `pages` option rendered EVERY page and page 1 was OCR'd for each page
+          const shot: any = await (parser as any).getScreenshot({ partial: [pageNo], scale: 3.0 });
+          const entry = Buffer.isBuffer(shot) ? shot : (shot?.pages?.find((x: any) => Number(x.pageNumber) === pageNo) ?? shot?.pages?.[0] ?? shot);
           imgBuf = toBuffer(entry);
         } catch { return false; }
       }
@@ -172,26 +189,48 @@ async function preprocessImage(buffer: Buffer, mime: string): Promise<Buffer> {
   }
 }
 
-async function newOcrWorker(): Promise<OcrWorkerLike> {
-  const { createWorker, PSM } = await import("tesseract.js");
+async function createOcrWorker(langs: string[]): Promise<OcrWorkerLike> {
+  const { createWorker } = await import("tesseract.js");
   const opts: Record<string, unknown> = { cachePath: VENDOR_DIR };
   if (hasVendor("tesseract-core.wasm")) opts.corePath = VENDOR_DIR;
-  // A vendored, UNcompressed <lang>.traineddata -> point langPath there with gzip:false.
-  // A vendored <lang>.traineddata.gz -> langPath + gzip stays true (default).
-  const firstLang = OCR_LANGS.split("+")[0];
-  if (fs.existsSync(path.join(VENDOR_DIR, `${firstLang}.traineddata.gz`))) {
+  if (langs.every(vendored)) {
+    // every language vendored: read them straight from vendor/ocr (uncompressed .traineddata -> gzip:false)
     opts.langPath = VENDOR_DIR;
-  } else if (fs.existsSync(path.join(VENDOR_DIR, `${firstLang}.traineddata`))) {
-    opts.langPath = VENDOR_DIR;
-    opts.gzip = false;
+    if (langs.every((l) => hasVendor(`${l}.traineddata`))) opts.gzip = false;
   }
-  const worker = await createWorker(OCR_LANGS, 1, opts as never);
-  await worker.setParameters({ tessedit_pageseg_mode: PSM.AUTO });
-  return worker as unknown as OcrWorkerLike;
+  // otherwise tesseract.js reads the vendored languages from its cache (cachePath = vendor/ocr) and downloads only the missing one,
+  // once, from its packaged default location into the same folder
+  return (await createWorker(langs.join("+"), 1, opts as never)) as unknown as OcrWorkerLike;
 }
 
+async function newOcrWorker(): Promise<OcrWorkerLike> {
+  const langs = ocrLanguages();
+  let worker: OcrWorkerLike;
+  try {
+    worker = await createOcrWorker(langs);
+  } catch (e) {
+    // a language that cannot be loaded (no vendored file, no internet) must not stop OCR: continue with the vendored ones
+    const local = langs.filter(vendored);
+    if (!local.length || local.length === langs.length) throw e;
+    console.warn(`document intake OCR: language data ${langs.filter((l) => !vendored(l)).join(", ")} not available (${e instanceof Error ? e.message : String(e)}) — using ${local.join("+")}`);
+    worker = await createOcrWorker(local);
+  }
+  // one block per page: the automatic layout analysis dropped whole regions of a scanned contract (the goods table, the buyer)
+  await worker.setParameters({ tessedit_pageseg_mode: "6", preserve_interword_spaces: "1" });
+  return worker;
+}
+
+const nonWsCount = (s: string) => s.replace(/\s/g, "").length;
+
 async function ocrWith(worker: OcrWorkerLike, buffer: Buffer): Promise<{ text: string; meanConfidence: number; words: OcrPage["wordBoxes"] }> {
-  const { data } = await worker.recognize(buffer);
+  let { data } = await worker.recognize(buffer);
+  if (nonWsCount(data.text || "") < 40) {
+    // almost nothing read as one block (a photo with a lot of background, a rotated card …): the automatic layout analysis
+    await worker.setParameters({ tessedit_pageseg_mode: "3" });
+    const alt = (await worker.recognize(buffer)).data;
+    await worker.setParameters({ tessedit_pageseg_mode: "6" });
+    if (nonWsCount(alt.text || "") > nonWsCount(data.text || "")) data = alt;
+  }
   const words = (data.words ?? []).map((w: any) => ({
     text: w.text, x: w.bbox?.x0 ?? 0, y: w.bbox?.y0 ?? 0,
     w: (w.bbox?.x1 ?? 0) - (w.bbox?.x0 ?? 0), h: (w.bbox?.y1 ?? 0) - (w.bbox?.y0 ?? 0),
@@ -221,7 +260,7 @@ export class LocalDocumentAiProvider implements DocumentAiProvider {
     if (isPdf) {
       const { pages, fullText, isDigital, ocrUsed, meanConfidence } = await ingestPdf(input.buffer, input.onProgress);
       return {
-        engine: isDigital ? "pdf-parse" : ocrUsed ? `pdf-parse+tesseract.js@${OCR_LANGS}` : "pdf-parse(no-text-layer)",
+        engine: isDigital ? "pdf-parse" : ocrUsed ? `pdf-parse+tesseract.js@${ocrLanguages().join("+")}` : "pdf-parse(no-text-layer)",
         isDigital,
         pageCount: pages.length,
         fullText,
@@ -237,7 +276,7 @@ export class LocalDocumentAiProvider implements DocumentAiProvider {
     const { text, meanConfidence, words } = await ocrImage(pre);
     const pages: OcrPage[] = [{ pageNumber: 1, text, wordBoxes: words }];
     return {
-      engine: `tesseract.js@${OCR_LANGS}`, isDigital: false, pageCount: 1, fullText: text, pages,
+      engine: `tesseract.js@${ocrLanguages().join("+")}`, isDigital: false, pageCount: 1, fullText: text, pages,
       languageDetected: detectLanguage(text), ocrMs: Date.now() - started, meanConfidence,
     };
   }

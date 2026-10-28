@@ -55,6 +55,31 @@ async function loadRegistry(countryId?: string | null): Promise<RegistryDocType[
   return (rows ?? []) as RegistryDocType[];
 }
 
+/**
+ * The document type used when the registry has no row for it. The registry is configuration (migration 20261245 restores it); a
+ * missing row must never stop a document again — on Production an empty registry crashed every upload right after OCR
+ * ("Cannot read properties of undefined (reading 'code')") and the OCR text was lost.
+ */
+export function fallbackDocType(code: string | null | undefined, targetModule: string | null | undefined, domain: string | null | undefined): RegistryDocType {
+  const target = targetModule ?? null;
+  const resolved = code && code !== "other_document" ? code
+    : target === "purchase_orders" ? "purchase_contract"
+    : target === "sales_orders" ? "sales_contract"
+    : target === "local_purchases" ? "local_purchase_bill"
+    : "other_document";
+  return {
+    code: resolved,
+    name: resolved.replace(/_/g, " ").replace(/\b([a-z])/g, (c) => c.toUpperCase()),
+    operational_domain: domain === "business" || domain === "shipping" ? domain : "both",
+    category: /purchase/.test(resolved) ? "purchase" : /sales/.test(resolved) ? "sales" : "other",
+    target_module: target,
+    classifier_keywords: [],
+    min_confidence: 0.6,
+    requires_qvc: true,
+    expected_fields: [],
+  };
+}
+
 async function event(sql: any, jobId: string, action: string, detail: unknown, actorId: string | null, actorName: string | null) {
   await sql`INSERT INTO public.document_intake_events (job_id, action, detail, actor_id, actor_name)
     VALUES (${jobId}, ${action}, ${sql.json(detail ?? {})}, ${actorId}, ${actorName})`;
@@ -64,6 +89,7 @@ async function event(sql: any, jobId: string, action: string, detail: unknown, a
 const FORM_TO_FIELD: Array<[keyof ReviewState["form"], string]> = [
   ["contractNo", "contract_number"], ["documentDate", "document_date"], ["currency", "currency"], ["totalAmount", "grand_total"],
   ["paymentTerms", "payment_terms"], ["deliveryTerms", "delivery_terms"], ["incoterm", "incoterm"], ["quality", "quality"],
+  ["loadingPort", "port_of_loading"], ["destinationPort", "port_of_discharge"], ["shipmentTime", "shipment_time"], ["countryOfOrigin", "country_of_origin"],
   ["packing", "packing"], ["hsCode", "hs_codes"], ["lotNo", "lot_number"], ["variety", "variety"], ["goodsDescription", "goods_description"],
   ["grossWeight", "gross_weight"], ["tareWeight", "tare_weight"], ["netWeight", "net_weight"], ["truckNo", "truck_number"],
   ["blNo", "bl_number"], ["containerNos", "container_numbers"], ["awbNo", "awb_number"], ["railRef", "rail_reference"], ["deliveryPlace", "delivery_place"],
@@ -322,8 +348,15 @@ export class DocumentIntakeService {
     }
 
     const unreadable = !ingest.fullText || ingest.fullText.replace(/\s/g, "").length < 20;
-    await withLocalPg(async (sql) => { await sql`UPDATE public.document_intake_jobs SET status = 'classifying', updated_at = now() WHERE id = ${jobId}`; });
+    // keep the OCR result the moment it exists: a later failure must not lose it ("Review OCR text" / diagnosis / retry)
+    await withLocalPg(async (sql) => {
+      await sql`UPDATE public.document_intake_jobs SET status = 'classifying', provider = ${provider.name}, ocr_engine = ${ingest.engine},
+          ocr_ms = ${ingest.ocrMs}, language_detected = ${ingest.languageDetected}, page_count = ${ingest.pageCount},
+          transcript = ${(ingest.fullText ?? "").slice(0, 200000)}, updated_at = now() WHERE id = ${jobId}`;
+      await event(sql, jobId, "ocr_completed", { engine: ingest.engine, pages: ingest.pageCount, chars: (ingest.fullText ?? "").replace(/\s/g, "").length, confidence: ingest.meanConfidence, ms: ingest.ocrMs }, actorId, actorName);
+    });
     const registry = await loadRegistry(job.country_id);
+    if (!registry.length) console.warn("document intake: document_type_registry is empty — using built-in document types (apply migration 20261245)");
     const cls = unreadable
       ? { code: "other_document", name: "Other / Unclassified", confidence: 0, domain: "both" as const, category: "other", targetModule: null, requiresQvc: true, scores: [] }
       : await provider.classify(ingest.fullText, registry, job.operational_domain);
@@ -342,7 +375,14 @@ export class DocumentIntakeService {
       }
     }
     if (!docTypeDef) {
-      docTypeDef = registry.find((d) => d.code === "other_document")!;
+      const hintTarget = job.source_module_hint ? getIntakeModule(job.source_module_hint)?.target ?? job.source_module_hint : null;
+      docTypeDef = registry.find((d) => d.code === "other_document") ?? fallbackDocType(cls.code, hintTarget ?? cls.targetModule, job.operational_domain);
+      if (!registry.some((d) => d.code === docTypeDef!.code)) {
+        cls.code = docTypeDef.code;
+        cls.name = docTypeDef.name;
+        cls.targetModule = docTypeDef.target_module;
+        cls.category = docTypeDef.category;
+      }
     }
     await withLocalPg(async (sql) => { await sql`UPDATE public.document_intake_jobs SET status = 'extracting', updated_at = now() WHERE id = ${jobId}`; });
     const extraction = unreadable ? { fields: [], lineItems: [], summary: {} } : await provider.extract({ text: ingest.fullText, pages: ingest.pages, docType: docTypeDef });
@@ -426,6 +466,12 @@ export class DocumentIntakeService {
           fields: extraction.fields.length, lineItems: extraction.lineItems.length,
           matchStatus: matchResult.status, status, qvcReason,
         }, actorId, actorName);
+        // A re-extraction replaces the extracted fields: an open (not yet used) draft must not keep re-opening the earlier review
+        // state — e.g. the empty form saved while extraction was failing. A consumed draft is never touched.
+        const reset = (await sql`UPDATE public.document_intake_drafts SET draft_payload = draft_payload - '_review', updated_at = now()
+          WHERE job_id = ${jobId} AND deleted_at IS NULL AND status = 'prepared' AND draft_payload ? '_review'
+          RETURNING draft_no`) as any[];
+        if (reset.length) await event(sql, jobId, "draft_review_reset", { drafts: reset.map((d) => d.draft_no), reason: "re-extracted" }, actorId, actorName);
         await sql`COMMIT`;
       } catch (e) {
         await sql`ROLLBACK`;

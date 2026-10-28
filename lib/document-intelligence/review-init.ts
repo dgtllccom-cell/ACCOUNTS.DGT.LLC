@@ -55,6 +55,10 @@ export function formFromFields(m: Record<string, string>, job: Record<string, an
     deliveryTerms: m.delivery_terms || "",
     incoterm: m.incoterm || "",
     deliveryPlace: m.delivery_place || "",
+    loadingPort: m.port_of_loading || "",
+    destinationPort: m.port_of_discharge || "",
+    shipmentTime: m.shipment_time || "",
+    countryOfOrigin: m.country_of_origin || "",
     quality: m.quality || "",
     packing: m.packing || "",
     hsCode: m.hs_codes || "",
@@ -76,7 +80,7 @@ export function formFromFields(m: Record<string, string>, job: Record<string, an
 
 export function itemsFromBundle(b: JobBundle, m: Record<string, string>, form: ReviewForm): ReviewItem[] {
   if (b.lineItems.length) {
-    return b.lineItems.map((li) => ({
+    return b.lineItems.map((li, i) => ({
       description: String(li.description ?? ""),
       hsCode: String(li.hs_code ?? ""),
       quantity: n(li.quantity),
@@ -88,7 +92,8 @@ export function itemsFromBundle(b: JobBundle, m: Record<string, string>, form: R
       netWeight: n(li.net_weight),
       lotNo: form.lotNo,
       variety: form.variety,
-      quality: form.quality,
+      // the specification printed under the goods name (grade / crop / moisture) when the document has no separate quality clause
+      quality: form.quality || (i === 0 ? m.goods_specification || "" : ""),
       sourcePage: n(li.page_number),
     }));
   }

@@ -10,6 +10,7 @@
 
 import { type AccountSelection, EMPTY_ACCOUNT_SELECTION, type IntakeModule, isUuid } from "./intake-modules";
 import { convertAmount, type RateDirection } from "./party-match";
+import { knownCountry, normaliseCountry } from "./contract-parser";
 
 export type ReviewItem = {
   description: string;
@@ -59,6 +60,12 @@ export type ReviewForm = {
   deliveryTerms: string;
   incoterm: string;
   deliveryPlace: string;
+  /** as printed: "DALIAN, CHINA" */
+  loadingPort: string;
+  destinationPort: string;
+  /** the shipment period as printed: "Before December 15, 2023" */
+  shipmentTime: string;
+  countryOfOrigin: string;
   quality: string;
   packing: string;
   hsCode: string;
@@ -92,7 +99,8 @@ export type ReviewState = {
 
 export const EMPTY_FORM: ReviewForm = {
   contractNo: "", documentDate: "", reference: "", currency: "", totalAmount: "", paymentTerms: "", deliveryTerms: "",
-  incoterm: "", deliveryPlace: "", quality: "", packing: "", hsCode: "", lotNo: "", variety: "", goodsDescription: "",
+  incoterm: "", deliveryPlace: "", loadingPort: "", destinationPort: "", shipmentTime: "", countryOfOrigin: "",
+  quality: "", packing: "", hsCode: "", lotNo: "", variety: "", goodsDescription: "",
   grossWeight: "", tareWeight: "", netWeight: "", truckNo: "", blNo: "", containerNos: "", awbNo: "", railRef: "", shipmentMode: "", notes: "",
 };
 
@@ -118,6 +126,22 @@ const num = (v: string | number | null | undefined): number | null => {
   const n = Number(String(v).replace(/[^0-9.\-]/g, ""));
   return Number.isFinite(n) ? n : null;
 };
+
+/**
+ * "DALIAN, CHINA" → { port: "Dalian", country: "China" } — the Purchase Booking form picks ports and countries from the location
+ * masters by name, so the printed value is split and written the way the masters spell it.
+ */
+export function splitPortCountry(raw: string | null | undefined): { port: string; country: string } {
+  const v = String(raw ?? "").replace(/\s+/g, " ").trim();
+  if (!v) return { port: "", country: "" };
+  const parts = v.split(/\s*,\s*/).filter(Boolean);
+  const title = (s: string) => s.toLowerCase().replace(/\b([a-z])/g, (c) => c.toUpperCase());
+  if (parts.length > 1) return { port: title(parts[0]), country: normaliseCountry(parts[parts.length - 1]) ?? "" };
+  // OCR often drops the comma ("JEBELALL UA.E."): a known country as the last word still splits off
+  const words = v.split(" ");
+  const tail = words.length > 1 ? knownCountry(words[words.length - 1]) : null;
+  return tail ? { port: title(words.slice(0, -1).join(" ")), country: tail } : { port: title(v), country: "" };
+}
 
 /** Recompute the converted amount from the original amount + rate (the ONLY place conversion happens). */
 export function recomputeExchange(ex: ReviewExchange): ReviewExchange {
@@ -216,8 +240,16 @@ export function buildTargetPayload(mod: IntakeModule, s: ReviewState, scope: { c
       put("supplierAccountId", s.accounts.supplierAccountId);
     }
     if (isUuid(s.accounts.purchaseAccountId)) put("purchaseExpenseAccountId", s.accounts.purchaseAccountId);
-    put("paymentDaysAndMethodDetails", [f.paymentTerms, f.deliveryTerms].filter(Boolean).join(" — "));
+    put("paymentDaysAndMethodDetails", [f.paymentTerms, f.deliveryTerms, f.shipmentTime ? `Shipment: ${f.shipmentTime}` : ""].filter(Boolean).join(" — "));
     put("paymentTerms", f.paymentTerms);
+    // loading / destination as the masters spell them (the reviewer confirms them in the form's own pickers)
+    const load = splitPortCountry(f.loadingPort);
+    const dest = splitPortCountry(f.destinationPort || f.deliveryPlace);
+    put("loadingPort", load.port);
+    put("loadingCountry", load.country);
+    put("receivedPort", dest.port);
+    put("receivedCountry", dest.country);
+    put("origin", f.countryOfOrigin);
     put("manualBillNo", f.reference || f.contractNo);
     const it = s.items[0];
     if (it) {

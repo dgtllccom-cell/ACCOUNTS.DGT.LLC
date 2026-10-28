@@ -22,9 +22,16 @@ import { withReadPg } from "@/lib/db/local-postgres";
 import { rowInScope, type IntakeScope } from "@/lib/document-intelligence/scope";
 import { recordInSessionScope } from "@/lib/api/scope-middleware";
 import { roznamchaIntakePreviewService } from "@/lib/services/roznamcha-intake-preview-service";
+import { buildReviewContext } from "@/lib/services/document-intake-review-service";
+import { getIntakeModule } from "@/lib/document-intelligence/intake-modules";
 
-export type CheckStatus = "pass" | "warning" | "fail" | "not_applicable";
-export type VerificationCheck = { code: string; status: CheckStatus; expected?: string | null; found?: string | null; detail?: string | null };
+/** pass = Matched · warning = Manual review required · fail = Mismatch · missing = Missing · not_applicable */
+export type CheckStatus = "pass" | "warning" | "fail" | "missing" | "not_applicable";
+/** content = what the document itself says (and whether it adds up); records = against other documents / ERP records */
+export type VerificationCheck = { code: string; status: CheckStatus; group?: "content" | "records"; expected?: string | null; found?: string | null; detail?: string | null };
+
+/** the values a trade document (purchase / sales booking) must give — each is checked as read / uncertain / missing */
+const TRADE_REQUIRED = ["contract_number", "document_date", "supplier_name", "currency", "grand_total", "goods_description", "quantity", "unit_price"];
 
 const num = (v: unknown): number | null => {
   if (v === null || v === undefined || v === "") return null;
@@ -47,12 +54,74 @@ export async function verifyIntakeJob(jobId: string, scope: IntakeScope, session
   return withReadPg(async (sql) => {
     const job = ((await sql`SELECT * FROM public.document_intake_jobs WHERE id = ${jobId}::uuid AND deleted_at IS NULL`) as any[])[0];
     if (!job || !rowInScope(scope, job)) return null;
-    const fieldRows = (await sql`SELECT field_key, corrected_value, normalized_value, raw_value FROM public.document_intake_fields WHERE job_id = ${jobId}::uuid`) as any[];
+    const fieldRows = (await sql`SELECT field_key, corrected_value, normalized_value, raw_value, validation_status, validation_message, verified FROM public.document_intake_fields WHERE job_id = ${jobId}::uuid`) as any[];
     const f: Record<string, string | null> = {};
     for (const r of fieldRows) f[r.field_key] = (r.corrected_value ?? r.normalized_value ?? r.raw_value ?? null) || null;
-    const lines = (await sql`SELECT line_no, description, quantity, unit_price, amount FROM public.document_intake_line_items WHERE job_id = ${jobId}::uuid ORDER BY line_no`) as any[];
+    const lines = (await sql`SELECT line_no, description, quantity, unit_price, amount, currency FROM public.document_intake_line_items WHERE job_id = ${jobId}::uuid ORDER BY line_no`) as any[];
     const checks: VerificationCheck[] = [];
-    const add = (c: VerificationCheck) => checks.push(c);
+    const add = (c: VerificationCheck) => checks.push({ group: "records", ...c });
+    const content = (c: VerificationCheck) => checks.push({ ...c, group: "content" });
+
+    // ── the document itself: was it read, are the business values there, do they add up ─────────────
+    // (a document is never "verified" only because it was uploaded or is not a duplicate)
+    const intakeModule = getIntakeModule(job.source_module_hint) ?? null;
+    const trade = intakeModule ? ["purchase", "sales"].includes(intakeModule.side) && intakeModule.financial
+      : ["purchase_orders", "sales_orders", "local_purchases"].includes(job.target_module ?? "");
+    const textChars = String(job.transcript ?? "").replace(/\s/g, "").length;
+    content(job.error
+      ? { code: "extraction_completed", status: "fail", detail: String(job.error).slice(0, 200) }
+      : textChars < 20 ? { code: "extraction_completed", status: "missing", detail: "no_ocr_text" }
+      : !fieldRows.length ? { code: "extraction_completed", status: "missing", detail: "no_fields" }
+      : { code: "extraction_completed", status: "pass", found: `${fieldRows.length} · ${job.page_count ?? "?"} p.` });
+    if (trade) {
+      const byKey = new Map(fieldRows.map((r) => [r.field_key, r]));
+      const sideParty = intakeModule?.side === "sales" ? "customer_name" : "supplier_name";
+      for (const key of TRADE_REQUIRED.map((k) => (k === "supplier_name" ? sideParty : k))) {
+        const r = byKey.get(key);
+        const v = r ? String(r.corrected_value ?? r.normalized_value ?? r.raw_value ?? "").trim() : "";
+        if (!v) { content({ code: `field_${key}`, status: "missing" }); continue; }
+        // confirmed by the reviewer, or read clearly → Matched; uncertain / calculated → Manual review required
+        const sure = r.verified || (r.validation_status === "green" && !r.validation_message);
+        content({ code: `field_${key}`, status: sure ? "pass" : "warning", found: v.slice(0, 80), detail: r.validation_message ?? null });
+      }
+      // quantity × unit price = amount, line by line
+      const math = lines.filter((l) => num(l.quantity) !== null && num(l.unit_price) !== null && num(l.amount) !== null);
+      const qtyCalculated = Boolean(byKey.get("quantity")?.validation_message) && !byKey.get("quantity")?.verified;
+      if (!lines.length) content({ code: "line_math", status: "missing" });
+      else if (!math.length) content({ code: "line_math", status: "warning", detail: "incomplete_lines" });
+      else {
+        const bad = math.filter((l) => Math.abs((num(l.quantity) as number) * (num(l.unit_price) as number) - (num(l.amount) as number)) > Math.max(0.5, Math.abs(num(l.amount) as number) * 0.005));
+        content({ code: "line_math", status: bad.length ? "fail" : qtyCalculated ? "warning" : "pass", found: bad.length ? bad.map((l) => `#${l.line_no}`).join(", ") : null, detail: qtyCalculated ? "quantity_calculated" : null });
+      }
+      // the goods lines add up to the printed total
+      const total = num(f.grand_total);
+      const sum = lines.reduce((a, l) => a + (num(l.amount) ?? 0), 0);
+      content(total === null || !lines.some((l) => num(l.amount) !== null) ? { code: "total_lines", status: "missing" }
+        : { code: "total_lines", status: Math.abs(sum - total) <= Math.max(0.01, total * 0.005) ? "pass" : "fail", expected: fmt(total), found: fmt(sum) });
+      // one currency across the document and its lines
+      const curs = [...new Set([String(f.currency ?? "").toUpperCase(), ...lines.map((l) => String(l.currency ?? "").toUpperCase())].filter(Boolean))];
+      content(!curs.length ? { code: "currency_single", status: "missing" }
+        : { code: "currency_single", status: curs.length === 1 && !byKey.get("currency")?.validation_message ? "pass" : "warning", found: curs.join(", ") });
+      // gross ≥ net
+      const gw = num(f.gross_weight), nw = num(f.net_weight);
+      content(gw === null || nw === null ? { code: "weights", status: "not_applicable" }
+        : { code: "weights", status: gw >= nw ? "pass" : "fail", expected: `≥ ${fmt(nw)}`, found: fmt(gw) });
+      // destination port vs the delivery place of the price term (CFR JEBEL ALI)
+      const dest = f.port_of_discharge, place = f.delivery_place;
+      const ds = similar(dest, place);
+      const squash = (s?: string | null) => String(s ?? "").toUpperCase().replace(/[^A-Z]/g, "");
+      const near = Boolean(dest && place && (squash(dest).startsWith(squash(place).slice(0, 6)) || squash(place).startsWith(squash(dest).slice(0, 6))));
+      content(!dest || !place ? { code: "destination_consistent", status: "not_applicable" }
+        : { code: "destination_consistent", status: (ds ?? 0) >= 0.5 ? "pass" : near ? "warning" : "fail", expected: place, found: dest });
+      // the counter-party exists in the Account Master (inside this login's scope)
+      const ctx = await buildReviewContext(jobId, scope, { moduleId: job.source_module_hint }).catch(() => null);
+      if (ctx && ctx.partyRole) {
+        const top = ctx.candidates[0];
+        content(ctx.partyStatus === "matched" ? { code: "party_in_erp", status: "pass", found: ctx.candidates.find((c) => c.id === ctx.selectedPartyId)?.name ?? top?.name ?? null }
+          : ctx.partyStatus === "ambiguous" ? { code: "party_in_erp", status: "warning", found: ctx.candidates.slice(0, 3).map((c) => c.name).join(" / "), detail: "choose" }
+          : { code: "party_in_erp", status: "missing", found: ctx.documentPartyName ?? null });
+      }
+    }
 
     // ── against other documents ────────────────────────────────────────────
     const twins = (await sql`

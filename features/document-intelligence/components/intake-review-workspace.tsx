@@ -294,6 +294,9 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
   const processing = PROCESSING.includes(jobStatus) && !bundle?.job?.stalled;
   const stalled = Boolean(bundle?.job?.stalled);
   const noFields = !processing && (bundle?.fields?.length ?? 0) === 0;
+  // a run that failed keeps its error even after the job was reported to the review queue (status "qvc") — say what happened
+  const jobError = !processing ? String(bundle?.job?.error ?? "").trim() : "";
+  const noOcrText = !processing && !String(bundle?.job?.ocr_text ?? "").trim();
   const extractionProblem = stalled || jobStatus === "error" || noFields;
   const progress = (bundle?.job?.progress ?? null) as { stage?: string; page?: number; pages?: number } | null;
 
@@ -464,8 +467,12 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
       {extractionProblem && !readOnly && (
         <div className="space-y-2 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2.5 dark:border-rose-900 dark:bg-rose-950/30" data-testid="extraction-problem">
           <p className="flex items-start gap-2 text-xs font-bold text-rose-800 dark:text-rose-200"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{stalled ? T("ep_stalled", "OCR stopped before it finished (the server was restarted or the request timed out). Nothing was extracted.") : jobStatus === "error" ? `${T("ep_error", "OCR failed")}: ${bundle?.job?.error ?? ""}` : T("ep_none", "OCR finished but no fields could be extracted. The form below is EMPTY — it is not an extracted result.")}</span>
+            <span>{stalled ? T("ep_stalled", "OCR stopped before it finished (the server was restarted or the request timed out). Nothing was extracted.")
+              : jobStatus === "error" || jobError ? T("ep_failed", "Processing did not finish — nothing was extracted. Press Retry OCR to read the document again.")
+              : noOcrText ? T("ep_no_text", "OCR returned no readable text for this document. Retry OCR, or enter the values manually from the original.")
+              : T("ep_none", "OCR finished but no fields could be extracted. The form below is EMPTY — it is not an extracted result.")}</span>
           </p>
+          {jobError && <p className="ms-6 break-all font-mono text-[10px] text-rose-700/80 dark:text-rose-300/80" dir="ltr" data-testid="extraction-error-detail">{jobError}</p>}
           <div className="flex flex-wrap gap-2">
             <button type="button" disabled={busy} onClick={() => void retryOcr()} data-testid="retry-ocr" className="rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700 disabled:opacity-50">{T("retry_ocr", "Retry OCR")}</button>
             <button type="button" onClick={() => setOcrOpen(true)} data-testid="review-ocr" className="rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-[11px] font-bold text-rose-700 hover:bg-rose-50">{T("review_ocr", "Review OCR text")}</button>
@@ -661,6 +668,10 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                   {textField("deliveryTerms", T("f_delivery", "Delivery terms"))}
                   {textField("incoterm", T("f_incoterm", "Incoterm"), { dir: "ltr" })}
                   {textField("deliveryPlace", T("f_place", "Delivery place"))}
+                  {textField("loadingPort", T("f_loading_port", "Port / place of loading"))}
+                  {textField("destinationPort", T("f_destination_port", "Port / place of destination"))}
+                  {textField("shipmentTime", T("f_shipment_time", "Time of shipment"))}
+                  {textField("countryOfOrigin", T("f_origin", "Country of origin"))}
                   {textField("packing", T("f_packing", "Packing"))}
                 </div>
 

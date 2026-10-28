@@ -5,24 +5,26 @@
  * Run once at deploy time (or commit the vendor/ocr/ folder):
  *   node scripts/vendor-ocr-assets.mjs
  *
- * Languages: eng + ara (Arabic script covers ar/ur/fa/ps) + osd (orientation).
- * Override with:  OCR_VENDOR_LANGS="eng ara fas"  node scripts/vendor-ocr-assets.mjs
+ * Languages: eng + ara (Arabic script covers ar/ur/fa/ps) + chi_sim (bilingual Chinese supplier contracts) — the same
+ * 4.0.0_best_int models tesseract.js itself downloads (so a vendored install reads exactly like a runtime download).
+ * Override with:  OCR_VENDOR_LANGS="eng ara chi_sim fas"  node scripts/vendor-ocr-assets.mjs
  */
 import fs from "node:fs";
 import path from "node:path";
 import https from "node:https";
+import zlib from "node:zlib";
 
 const OUT = path.join(process.cwd(), "vendor", "ocr");
 fs.mkdirSync(OUT, { recursive: true });
 
 const CORE_VER = "5.1.1";      // tesseract.js-core
-const DATA_REPO = "tessdata_best"; // or tessdata_fast
-const LANGS = (process.env.OCR_VENDOR_LANGS || "eng ara osd").split(/\s+/).filter(Boolean);
+const LANGS = (process.env.OCR_VENDOR_LANGS || "eng ara chi_sim").split(/\s+/).filter(Boolean);
 
 const files = [
   { url: `https://cdn.jsdelivr.net/npm/tesseract.js-core@${CORE_VER}/tesseract-core-simd.wasm`, out: "tesseract-core.wasm" },
   { url: `https://cdn.jsdelivr.net/npm/tesseract.js-core@${CORE_VER}/tesseract-core-simd.wasm.js`, out: "tesseract-core.wasm.js" },
-  ...LANGS.map((l) => ({ url: `https://github.com/tesseract-ocr/${DATA_REPO}/raw/main/${l}.traineddata`, out: `${l}.traineddata` })),
+  // the models tesseract.js uses by default (LSTM best_int), stored uncompressed as <lang>.traineddata
+  ...LANGS.map((l) => ({ url: `https://cdn.jsdelivr.net/npm/@tesseract.js-data/${l}/4.0.0_best_int/${l}.traineddata.gz`, out: `${l}.traineddata`, gunzip: true })),
 ];
 
 function download(url, out, redirects = 0) {
@@ -45,10 +47,11 @@ const results = [];
 for (const f of files) {
   try {
     const dest = await download(f.url, f.out);
+    if (f.gunzip) fs.writeFileSync(dest, zlib.gunzipSync(fs.readFileSync(dest)));
     results.push(`  ✓ ${f.out}  (${(fs.statSync(dest).size / 1024 / 1024).toFixed(1)} MB)`);
   } catch (e) {
     results.push(`  ✗ ${f.out}  — ${e.message}`);
   }
 }
 console.log(`vendor/ocr/ populated:\n${results.join("\n")}`);
-console.log("\nSet DOC_INTAKE_OCR_LANGS in .env if you added more languages (default: eng+ara).");
+console.log("\nSet DOC_INTAKE_OCR_LANGS in .env if you added more languages (default: eng+ara+chi_sim).");

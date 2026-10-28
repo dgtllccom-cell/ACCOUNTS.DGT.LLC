@@ -11,7 +11,11 @@
 
 export type ParsedGoodsLine = {
   description: string;
+  /** specification lines printed under the goods name (grade, crop, moisture, origin …) */
+  specification: string | null;
   quantity: number | null;
+  /** "amount_div_price" = the quantity cell was not readable; it is the printed amount ÷ the printed unit price */
+  quantitySource: "printed" | "amount_div_price" | null;
   unit: string | null;
   unitPrice: number | null;
   amount: number | null;
@@ -34,6 +38,8 @@ export type ParsedBank = {
 export type ContractParse = {
   isTradeContract: boolean;
   sellerName: string | null;
+  /** the seller's name in Chinese as printed on the letterhead next to the English name, e.g. 大连赛恩进出口有限公司 */
+  sellerNameLocal: string | null;
   sellerCountry: string | null;
   buyerName: string | null;
   buyerCountry: string | null;
@@ -47,6 +53,11 @@ export type ContractParse = {
   deliveryTerms: string | null;
   incoterm: string | null;
   deliveryPlace: string | null;
+  portOfLoading: string | null;
+  portOfDestination: string | null;
+  /** the shipment period exactly as printed, e.g. "Before December 15, 2023" */
+  shipmentTime: string | null;
+  countryOfOrigin: string | null;
   quality: string | null;
   packing: string | null;
   hsCode: string | null;
@@ -103,18 +114,43 @@ export function normaliseDate(raw: string | null | undefined): string | null {
   return null;
 }
 
+// a Chinese label printed next to the English one: "Seller 卖方:", "Port of Loading 装运港:", "Buyer (买方):"
+const CJK_LABEL = "(?:\\s*[(（]?\\s*[\\u3400-\\u9fff]{1,10}\\s*[)）]?)?";
+// another "Label:" further along the same line ends the value ("0806.20 Country of Origin 原产国: CHINA")
+const NEXT_LABEL = new RegExp(`\\s+(?:(?:[A-Z][A-Za-z'’]*|of|the|and|for|to|&)\\s+){0,5}[A-Z][A-Za-z'’]+${CJK_LABEL}\\s*[:：]`);
+
 /** value after `Label:` on the same line (or the next line when the label ends the line). */
 function labelled(text: string, labels: string, stopAt?: RegExp): string | null {
-  const re = new RegExp(`(?:^|[\\n\\r]|\\s{2,}|\\b)(?:${labels})\\s*[:：]\\s*([^\\n\\r]*)(?:\\r?\\n\\s*([^\\n\\r:：]{3,90}))?`, "i");
+  const re = new RegExp(`(?:^|[\\n\\r]|\\s{2,}|\\b)(?:${labels})${CJK_LABEL}\\s*[:：]\\s*([^\\n\\r]*)(?:\\r?\\n\\s*([^\\n\\r:：]{3,90}))?`, "i");
   const m = text.match(re);
   if (!m) return null;
-  let v = clean(m[1]);
-  if (!v && m[2]) v = clean(m[2]);
+  // three or more spaces separate a second label / column on the same visual row — split BEFORE the spaces are collapsed
+  let v = clean((m[1] ?? "").split(/\s{3,}/)[0]);
+  if (!v && m[2]) v = clean(m[2].split(/\s{3,}/)[0]);
   if (!v) return null;
   if (stopAt) v = clean(v.split(stopAt)[0]);
-  // two or more spaces usually separate a second label/column on the same visual row
-  v = clean(v.split(/\s{3,}/)[0]);
+  v = clean(v.split(NEXT_LABEL)[0]);
   return v || null;
+}
+
+const KNOWN_COUNTRIES: Record<string, string> = {
+    UAE: "United Arab Emirates", UNITEDARABEMIRATES: "United Arab Emirates", PRC: "China", PRCHINA: "China", CHINA: "China",
+    PEOPLESREPUBLICOFCHINA: "China", PAKISTAN: "Pakistan", AFGHANISTAN: "Afghanistan", INDIA: "India", IRAN: "Iran",
+    SAUDIARABIA: "Saudi Arabia", KSA: "Saudi Arabia", OMAN: "Oman", QATAR: "Qatar", KUWAIT: "Kuwait", BAHRAIN: "Bahrain",
+    TURKEY: "Turkey", TURKIYE: "Turkey", USA: "United States", UK: "United Kingdom", UZBEKISTAN: "Uzbekistan",
+    TAJIKISTAN: "Tajikistan", KAZAKHSTAN: "Kazakhstan",
+};
+
+/** The master spelling of a country name / abbreviation the parser knows ("U.A.E." → "United Arab Emirates"), else null. */
+export function knownCountry(raw: string | null | undefined): string | null {
+  return KNOWN_COUNTRIES[clean(raw).toUpperCase().replace(/[^A-Z]/g, "")] ?? null;
+}
+
+/** A country written the way the location masters spell it ("CHINA" → "China", "U.A.E." → "United Arab Emirates"). */
+export function normaliseCountry(raw: string | null | undefined): string | null {
+  const v = clean(raw).replace(/[.,;]+$/, "");
+  if (!v) return null;
+  return knownCountry(v) ?? v.toLowerCase().replace(/\b([a-z])/g, (c) => c.toUpperCase());
 }
 
 function splitCountry(name: string | null): { name: string | null; country: string | null } {
@@ -126,15 +162,83 @@ function splitCountry(name: string | null): { name: string | null; country: stri
 
 const NUM = "[0-9][0-9,]*(?:\\.\\d+)?";
 
+/**
+ * One goods row read by meaning, not by column position: the unit price is the money "per unit" ("USD 5,267.00 /MT"), the
+ * amount the last money on the row, the quantity a number + unit that is not packing ("10 KG net carton"). When the quantity
+ * cell is unreadable it is the printed amount ÷ the printed unit price, and marked as such (never invented).
+ */
+function semanticGoodsRow(line: string, following: string[], headerUnit: string | null): ParsedGoodsLine | null {
+  const priceM = line.match(new RegExp(`(?:(${CUR})\\s*)?(${NUM})\\s*(?:(${CUR})\\s*)?(?:/|per)\\s*(${UNIT})\\b`, "i"));
+  const moneys = [...line.matchAll(new RegExp(`\\b(${CUR})\\s*(${NUM})`, "gi"))].map((m) => ({ cur: m[1].toUpperCase(), value: parseNumber(m[2]), index: m.index ?? 0 }));
+  if (!priceM && moneys.length < 1) return null;
+  const unitPrice = priceM ? parseNumber(priceM[2]) : null;
+  const priceIndex = priceM ? (priceM.index ?? -1) : -1;
+  const amountM = [...moneys].reverse().find((m) => m.index > priceIndex && m.value !== unitPrice) ?? null;
+  if (unitPrice == null || amountM == null) return null;
+  const currency = (priceM?.[1] || priceM?.[3] || amountM.cur || "").toUpperCase().replace("RMB", "CNY") || null;
+  const priceUnit = priceM ? priceM[4].toUpperCase().replace(/\./g, "") : null;
+
+  // description: the text before the first number / currency on the row
+  const firstNum = line.search(new RegExp(`\\s(?:(?:${CUR})\\s*)?\\d`, "i"));
+  const description = clean(firstNum > 0 ? line.slice(0, firstNum) : line).replace(/[,;:]+$/, "");
+  if (!/[A-Za-z㐀-鿿]{3,}/.test(description)) return null;
+
+  let quantity: number | null = null;
+  let unit: string | null = priceUnit || headerUnit;
+  let quantitySource: ParsedGoodsLine["quantitySource"] = null;
+  for (const qm of line.matchAll(new RegExp(`(?<![\\d.,/])(${NUM})\\s*(${UNIT})\\b(?!\\s*(?:/|net|gross|per|each|carton|bag|pack))`, "gi"))) {
+    if ((qm.index ?? 0) >= priceIndex) break;
+    const u = qm[2].toUpperCase().replace(/\./g, "");
+    if (priceUnit && u !== priceUnit && !(u.startsWith("TON") && priceUnit === "MT")) continue;
+    quantity = parseNumber(qm[1]);
+    unit = priceUnit || u;
+    quantitySource = "printed";
+    break;
+  }
+  const amount = amountM.value;
+  if (quantity == null && unitPrice && amount) {
+    const q = amount / unitPrice;
+    if (Math.abs(q - Math.round(q * 1000) / 1000) < 1e-6) { quantity = Math.round(q * 1000) / 1000; quantitySource = "amount_div_price"; }
+  }
+  // specification lines printed under the goods name ("GRADE A, CROP 2023", "Moisture: 18% max", "Origin: China")
+  const spec: string[] = [];
+  for (const f of following) {
+    const part = clean((f ?? "").split(/\s{3,}/)[0]);
+    if (!part) continue;
+    if (/^total\b/i.test(part) || new RegExp(`\\b(?:${CUR})\\s*${NUM}`, "i").test(part)) break;
+    if (/^[㐀-鿿\s]+$/.test(part)) continue;
+    if (/^(?:\d+\.|payment|delivery|terms|packing|the\s+seller|bank|remarks|say\b)/i.test(part)) break;
+    if (!/[A-Za-z]{2,}/.test(part)) continue;
+    spec.push(part);
+    if (spec.length >= 4) break;
+  }
+  return {
+    description,
+    specification: spec.length ? spec.join("; ") : null,
+    quantity,
+    quantitySource,
+    unit,
+    unitPrice,
+    amount,
+    currency,
+    hsCode: null,
+    consistent: quantity != null && amount != null && quantitySource === "printed"
+      ? Math.abs(quantity * unitPrice - amount) <= Math.max(0.5, Math.abs(amount) * 0.005) : null,
+  };
+}
+
 function parseGoods(text: string): { goods: ParsedGoodsLine[]; totalRow: { quantity: number | null; amount: number | null } | null; currency: string | null; unit: string | null } {
   const lines = text.split(/\r?\n/).map((l) => l.replace(/ /g, " ").trim());
+  // "|" / "¦" are OCR'd table rulings, not text
+  for (let k = 0; k < lines.length; k++) lines[k] = lines[k].replace(/\s*[|¦]\s*/g, "   ").trim();
   let currency: string | null = null;
   let unit: string | null = null;
   const goods: ParsedGoodsLine[] = [];
   let totalRow: { quantity: number | null; amount: number | null } | null = null;
 
   // 1. Table form: header row naming DESCRIPTION / QUANTITY / UNIT PRICE / AMOUNT.
-  const hi = lines.findIndex((l) => /descri|goods|commodity|item/i.test(l) && /quantity|qty/i.test(l) && /(unit\s*price|price|rate)/i.test(l));
+  const hi = lines.findIndex((l) => (/descri|goods|commodity|item/i.test(l) && /quantity|qty/i.test(l) && /(unit\s*price|price|rate)/i.test(l))
+    || (/品名|货物/.test(l) && /数量/.test(l) && /单价/.test(l)));
   if (hi >= 0) {
     const header = lines.slice(hi, hi + 2).join(" ");
     const cm = header.match(new RegExp(`\\b(${CUR})\\b`, "i"));
@@ -145,6 +249,14 @@ function parseGoods(text: string): { goods: ParsedGoodsLine[]; totalRow: { quant
       const l = lines[i];
       if (!l) continue;
       const row = l.match(new RegExp(`^(.*?\\S)\\s+(${NUM})\\s*(${UNIT})?\\s+(?:${CUR}\\s*)?(${NUM})\\s*(?:/\\s*(?:${UNIT}))?\\s+(?:${CUR}\\s*)?(${NUM})\\s*$`, "i"));
+      // a scanned table loses cells (often the quantity): read the row by meaning
+      const semantic = row ? null : semanticGoodsRow(l, lines.slice(i + 1, i + 6), unit);
+      if (semantic) {
+        if (/^total\b/i.test(semantic.description)) { totalRow = { quantity: semantic.quantity, amount: semantic.amount }; break; }
+        if (semantic.currency && !currency) currency = semantic.currency;
+        goods.push({ ...semantic, currency: semantic.currency ?? currency });
+        continue;
+      }
       if (!row) {
         // header continuation lines such as "(MT) (USD/MT) (USD)"
         if (/^[()A-Za-z/ ]{0,40}$/.test(l) && /\(\s*[A-Za-z/]+\s*\)/.test(l)) {
@@ -168,7 +280,9 @@ function parseGoods(text: string): { goods: ParsedGoodsLine[]; totalRow: { quant
       const rowUnit = row[3] ? row[3].toUpperCase().replace(/\./g, "") : unit;
       goods.push({
         description: desc,
+        specification: null,
         quantity: qty,
+        quantitySource: qty == null ? null : "printed",
         unit: rowUnit,
         unitPrice: price,
         amount: amt,
@@ -196,7 +310,9 @@ function parseGoods(text: string): { goods: ParsedGoodsLine[]; totalRow: { quant
       const u = (q?.[2] || p?.[3] || inline?.[2] || null)?.toUpperCase().replace(/\./g, "") ?? null;
       goods.push({
         description: desc,
+        specification: null,
         quantity: qty,
+        quantitySource: qty == null ? null : "printed",
         unit: u,
         unitPrice: price,
         amount: amt,
@@ -215,12 +331,13 @@ export function parseTradeContract(text: string): ContractParse {
   const warnings: string[] = [];
   const currencies = [...new Set([...t.matchAll(new RegExp(`\\b(${CUR})\\b`, "g"))].map((m) => (m[1] === "RMB" ? "CNY" : m[1])))];
 
-  const sellerRaw = labelled(t, "(?:the\\s+)?seller|supplier|exporter|party\\s*a", /\s+(?:the\\s+)?buyer\s*[:：]/i);
-  const buyerRaw = labelled(t, "(?:the\\s+)?buyer|purchaser|importer|party\\s*b", /\s+(?:the\\s+)?seller\s*[:：]/i);
+  const sellerRaw = labelled(t, "(?:the\\s+)?seller|supplier|exporter|party\\s*a|卖方|供方|出口商", /\s+(?:the\s+)?buyer\s*[:：]/i);
+  const buyerRaw = labelled(t, "(?:the\\s+)?buyer|purchaser|importer|party\\s*b|买方|需方|进口商", /\s+(?:the\s+)?seller\s*[:：]/i);
   const seller = splitCountry(sellerRaw);
   const buyer = splitCountry(buyerRaw);
 
-  const contractNoM = t.match(/contract\s*(?:no\.?|number|#)\s*[:：.]?\s*([A-Za-z0-9][A-Za-z0-9/\-_.]{1,30})/i);
+  const contractNoM = t.match(/contract\s*(?:no\.?|number|#)\s*[:：.]?\s*([A-Za-z0-9][A-Za-z0-9/\-_.]{1,30})/i)
+    ?? t.match(/(?:合同编号|合同号)\s*[:：]?\s*([A-Za-z0-9][A-Za-z0-9/\-_.]{1,30})/);
   const contractNo = contractNoM ? contractNoM[1].replace(/[.,;]+$/, "") : null;
   let contractDate: string | null = null;
   for (const dm of t.matchAll(/(?:^|\s)(?:contract\s*)?date\s*[:：]?\s*([0-9]{1,4}[-/.][0-9]{1,2}[-/.][0-9]{1,4}|[0-3]?\d(?:st|nd|rd|th)?[ -][A-Za-z]{3,9}\.?[ ,-]*\d{4}|[A-Za-z]{3,9}\.?\s+[0-3]?\d(?:st|nd|rd|th)?[.,]?\s+\d{4})/gim)) {
@@ -253,7 +370,17 @@ export function parseTradeContract(text: string): ContractParse {
   // total: stated > lines > calculated
   let total: ContractParse["total"] = null;
   const statedM = t.match(new RegExp(`(?:grand\\s*total|total\\s*(?:amount|value|price|contract\\s*value)|contract\\s*(?:value|amount))\\s*[:：]?\\s*(?:(?:${CUR})\\s*|[$€£¥]\\s*)?(${NUM})`, "i"));
-  const stated = totalRow?.amount ?? (statedM ? parseNumber(statedM[1]) : null);
+  // "TOTAL VALUE: SAY U.S. DOLLARS ONE MILLION … ONLY. (USD 1,158,740.00)" — the money in the sentence after the label
+  let statedInWords: number | null = null;
+  if (!statedM) {
+    const lab = t.match(/(?:grand\s*total|total\s*(?:amount|value|price|contract\s*value)|contract\s*(?:value|amount)|总值|总金额|合计金额)\s*[:：]?/i);
+    if (lab) {
+      const from = (lab.index ?? 0) + lab[0].length;
+      const mm = t.slice(from, from + 320).match(new RegExp(`(?:\\b(?:${CUR})|US\\$|[$€£¥])\\s*(${NUM})`, "i"));
+      if (mm) statedInWords = parseNumber(mm[1]);
+    }
+  }
+  const stated = totalRow?.amount ?? (statedM ? parseNumber(statedM[1]) : statedInWords);
   if (stated != null && stated > 0) total = { amount: stated, source: "stated" };
   else if (goods.length && goods.every((g) => g.amount != null)) {
     total = { amount: goods.reduce((s, g) => s + (g.amount as number), 0), source: "lines" };
@@ -272,7 +399,7 @@ export function parseTradeContract(text: string): ContractParse {
   }
 
   // terms
-  const paymentTerms = labelled(t, "payment\\s*terms?|terms\\s*of\\s*payment|payment");
+  const paymentTerms = labelled(t, "payment\\s*terms?|terms\\s*of\\s*payment|payment|付款条件|付款方式|支付方式");
   let deliveryRaw = labelled(t, "delivery\\s*terms?|terms\\s*of\\s*delivery|trade\\s*terms?|incoterms?|price\\s*terms?");
   if (!deliveryRaw) {
     const im = t.match(/\b(FOB|CIF|CFR|CPT|CIP|DAP|DDP|EXW|FCA|FAS)\b[ ,-]*([A-Za-z][A-Za-z .]{0,30})?/);
@@ -280,8 +407,15 @@ export function parseTradeContract(text: string): ContractParse {
   }
   const incM = deliveryRaw?.match(/\b(FOB|CIF|CFR|CPT|CIP|DAP|DDP|EXW|FCA|FAS)\b\s*[,:-]?\s*(.*)$/i);
 
-  const quality = labelled(t, "quality(?:\\s*(?:standard|spec(?:ification)?))?|specification");
-  const packing = labelled(t, "packing|packaging");
+  const quality = labelled(t, "quality(?:\\s*(?:standard|spec(?:ification)?))?|specification|品质|质量");
+  const packing = labelled(t, "packing|packaging|包装");
+  const portOfLoading = labelled(t, "port\\s*of\\s*(?:loading|shipment)|loading\\s*port|place\\s*of\\s*loading|装运港|起运港|装货港");
+  const portOfDestination = labelled(t, "port\\s*of\\s*(?:destination|discharge)|destination\\s*port|discharge\\s*port|place\\s*of\\s*delivery|目的港|卸货港");
+  // the shipment period is the first sentence ("Before December 15, 2023. Partial shipment allowed." → "Before December 15, 2023")
+  const shipmentTime = labelled(t, "time\\s*of\\s*shipment|shipment\\s*(?:date|time|period)|latest\\s*(?:date\\s*of\\s*)?shipment|date\\s*of\\s*shipment|装运期|装运时间|交货期")
+    ?.split(/\.\s+(?=[A-Z])/)[0].replace(/\.$/, "") ?? null;
+  const originRaw = labelled(t, "country\\s*of\\s*origin|origin|原产国|原产地|产地");
+  const countryOfOrigin = normaliseCountry(originRaw ? originRaw.replace(/^made\s+in\s+/i, "") : null);
   const lotNo = labelled(t, "lot\\s*(?:no\\.?|number)?|batch\\s*(?:no\\.?|number)?");
   const variety = labelled(t, "variety|grade|brand");
 
@@ -323,11 +457,26 @@ export function parseTradeContract(text: string): ContractParse {
   // "Bank: X" can capture the beneficiary line label; ignore a bank name that equals the seller.
   if (bank.bankName && seller.name && bank.bankName.toLowerCase() === seller.name.toLowerCase()) bank.bankName = null;
 
-  const isTradeContract = Boolean(seller.name && buyer.name) && /contract|agreement|order|proforma|invoice/i.test(t);
+  const isTradeContract = Boolean(seller.name && buyer.name) && /contract|agreement|order|proforma|invoice|合同|订单|发票/i.test(t);
+
+  // the seller's name in Chinese: the company line printed with the seller's English name on the letterhead
+  let sellerNameLocal: string | null = null;
+  if (seller.name) {
+    const head = t.split(/\n/).slice(0, 40);
+    const key = seller.name.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 12);
+    for (let i = 0; i < head.length && !sellerNameLocal && key; i++) {
+      if (!head[i].toUpperCase().replace(/[^A-Z]/g, "").includes(key)) continue;
+      for (const near of head.slice(Math.max(0, i - 1), i + 3)) {
+        const cm = near.match(/([㐀-鿿]{2,30}(?:有限公司|股份公司|公司|集团|厂|商行))/);
+        if (cm) { sellerNameLocal = cm[1]; break; }
+      }
+    }
+  }
 
   return {
     isTradeContract,
     sellerName: seller.name,
+    sellerNameLocal,
     sellerCountry: seller.country,
     buyerName: buyer.name,
     buyerCountry: buyer.country,
@@ -340,6 +489,10 @@ export function parseTradeContract(text: string): ContractParse {
     deliveryTerms: deliveryRaw,
     incoterm: incM ? incM[1].toUpperCase() : null,
     deliveryPlace: incM && incM[2] ? clean(incM[2]) || null : null,
+    portOfLoading,
+    portOfDestination,
+    shipmentTime,
+    countryOfOrigin,
     quality,
     packing,
     hsCode,

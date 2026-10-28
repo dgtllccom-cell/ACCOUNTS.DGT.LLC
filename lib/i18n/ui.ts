@@ -12357,6 +12357,37 @@ export type UiKey =
   | "nas.categoryRequired"
   | "nas.accountNameRequired"
   | "ss.account_card_search_ph"
+  | "dintake.x_ep_failed"
+  | "dintake.x_ep_no_text"
+  | "dintake.x_f_loading_port"
+  | "dintake.x_f_destination_port"
+  | "dintake.x_f_shipment_time"
+  | "dintake.x_f_origin"
+  | "dverify.c_extraction"
+  | "dverify.c_line_math"
+  | "dverify.c_total_lines"
+  | "dverify.c_currency_single"
+  | "dverify.c_weights"
+  | "dverify.c_destination"
+  | "dverify.c_party_erp"
+  | "dverify.fld_contract_number"
+  | "dverify.fld_document_date"
+  | "dverify.fld_supplier_name"
+  | "dverify.fld_customer_name"
+  | "dverify.fld_currency"
+  | "dverify.fld_grand_total"
+  | "dverify.fld_goods_description"
+  | "dverify.fld_quantity"
+  | "dverify.fld_unit_price"
+  | "dverify.st_matched"
+  | "dverify.st_review"
+  | "dverify.st_mismatch"
+  | "dverify.st_missing"
+  | "dverify.not_verified"
+  | "dverify.g_content"
+  | "dverify.g_records"
+  | "dverify.d_qty_calculated"
+  | "dverify.d_choose_party"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37686,6 +37717,37 @@ const en: Dict = {
   "nas.categoryRequired": "Category is required.",
   "nas.accountNameRequired": "Account name is required.",
   "ss.account_card_search_ph": "Enter customer name, account number, company, phone or address...",
+  "dintake.x_ep_failed": "Processing did not finish — nothing was extracted. Press Retry OCR to read the document again.",
+  "dintake.x_ep_no_text": "OCR returned no readable text for this document. Retry OCR, or enter the values manually from the original.",
+  "dintake.x_f_loading_port": "Port / place of loading",
+  "dintake.x_f_destination_port": "Port / place of destination",
+  "dintake.x_f_shipment_time": "Time of shipment",
+  "dintake.x_f_origin": "Country of origin",
+  "dverify.c_extraction": "Document read (OCR + extraction finished)",
+  "dverify.c_line_math": "Quantity × unit price = amount",
+  "dverify.c_total_lines": "Goods lines add up to the total",
+  "dverify.c_currency_single": "One currency on the document",
+  "dverify.c_weights": "Gross weight is not below net weight",
+  "dverify.c_destination": "Destination port matches the delivery place",
+  "dverify.c_party_erp": "Party found in the Account Master",
+  "dverify.fld_contract_number": "Contract number",
+  "dverify.fld_document_date": "Contract / document date",
+  "dverify.fld_supplier_name": "Supplier / seller",
+  "dverify.fld_customer_name": "Customer / buyer",
+  "dverify.fld_currency": "Currency",
+  "dverify.fld_grand_total": "Total amount",
+  "dverify.fld_goods_description": "Goods description",
+  "dverify.fld_quantity": "Quantity",
+  "dverify.fld_unit_price": "Unit price",
+  "dverify.st_matched": "Matched",
+  "dverify.st_review": "Manual review required",
+  "dverify.st_mismatch": "Mismatch",
+  "dverify.st_missing": "Missing",
+  "dverify.not_verified": "Not verified yet",
+  "dverify.g_content": "Document content",
+  "dverify.g_records": "Against existing documents and records",
+  "dverify.d_qty_calculated": "quantity calculated from amount ÷ unit price",
+  "dverify.d_choose_party": "several matches — choose the right account",
 };
 
 const ur: Dict = {
@@ -62983,6 +63045,37 @@ const ur: Dict = {
   "nas.categoryRequired": "زمرہ لازمی ہے۔",
   "nas.accountNameRequired": "اکاؤنٹ کا نام لازمی ہے۔",
   "ss.account_card_search_ph": "گاہک کا نام، اکاؤنٹ نمبر، کمپنی، فون یا پتہ تلاش کریں...",
+  "dintake.x_ep_failed": "پروسیسنگ مکمل نہیں ہوئی — کچھ بھی نکالا نہیں گیا۔ دستاویز دوبارہ پڑھنے کے لیے Retry OCR دبائیں۔",
+  "dintake.x_ep_no_text": "OCR کو اس دستاویز میں پڑھنے کے قابل متن نہیں ملا۔ دوبارہ OCR کریں یا اصل دستاویز سے قدریں خود درج کریں۔",
+  "dintake.x_f_loading_port": "لوڈنگ کی بندرگاہ / مقام",
+  "dintake.x_f_destination_port": "منزل کی بندرگاہ / مقام",
+  "dintake.x_f_shipment_time": "شپمنٹ کا وقت",
+  "dintake.x_f_origin": "اصل ملک",
+  "dverify.c_extraction": "دستاویز پڑھی گئی (OCR اور ڈیٹا نکالنا مکمل)",
+  "dverify.c_line_math": "مقدار × فی یونٹ قیمت = رقم",
+  "dverify.c_total_lines": "سامان کی لائنوں کا مجموعہ کل رقم کے برابر ہے",
+  "dverify.c_currency_single": "دستاویز پر ایک ہی کرنسی",
+  "dverify.c_weights": "مجموعی وزن خالص وزن سے کم نہیں",
+  "dverify.c_destination": "منزل کی بندرگاہ ڈیلیوری کی جگہ سے میل کھاتی ہے",
+  "dverify.c_party_erp": "فریق اکاؤنٹ ماسٹر میں موجود ہے",
+  "dverify.fld_contract_number": "معاہدہ نمبر",
+  "dverify.fld_document_date": "معاہدہ / دستاویز کی تاریخ",
+  "dverify.fld_supplier_name": "سپلائر / فروخت کنندہ",
+  "dverify.fld_customer_name": "گاہک / خریدار",
+  "dverify.fld_currency": "کرنسی",
+  "dverify.fld_grand_total": "کل رقم",
+  "dverify.fld_goods_description": "سامان کی تفصیل",
+  "dverify.fld_quantity": "مقدار",
+  "dverify.fld_unit_price": "فی یونٹ قیمت",
+  "dverify.st_matched": "مطابق",
+  "dverify.st_review": "دستی جائزہ ضروری",
+  "dverify.st_mismatch": "عدم مطابقت",
+  "dverify.st_missing": "موجود نہیں",
+  "dverify.not_verified": "ابھی تصدیق نہیں ہوئی",
+  "dverify.g_content": "دستاویز کا مواد",
+  "dverify.g_records": "موجودہ دستاویزات اور ریکارڈ سے موازنہ",
+  "dverify.d_qty_calculated": "مقدار رقم ÷ فی یونٹ قیمت سے نکالی گئی",
+  "dverify.d_choose_party": "کئی مطابقتیں — درست اکاؤنٹ منتخب کریں",
 };
 
 const ar: Dict = {
@@ -88281,6 +88374,37 @@ const ar: Dict = {
   "nas.categoryRequired": "الفئة مطلوبة.",
   "nas.accountNameRequired": "اسم الحساب مطلوب.",
   "ss.account_card_search_ph": "أدخل اسم العميل، رقم الحساب، الشركة، الهاتف أو العنوان...",
+  "dintake.x_ep_failed": "لم تكتمل المعالجة — لم يُستخرج أي شيء. اضغط «إعادة OCR» لقراءة المستند مرة أخرى.",
+  "dintake.x_ep_no_text": "لم يُرجع OCR نصًا مقروءًا لهذا المستند. أعد OCR أو أدخل القيم يدويًا من الأصل.",
+  "dintake.x_f_loading_port": "ميناء / مكان التحميل",
+  "dintake.x_f_destination_port": "ميناء / مكان الوصول",
+  "dintake.x_f_shipment_time": "موعد الشحن",
+  "dintake.x_f_origin": "بلد المنشأ",
+  "dverify.c_extraction": "تمت قراءة المستند (اكتمل OCR والاستخراج)",
+  "dverify.c_line_math": "الكمية × سعر الوحدة = المبلغ",
+  "dverify.c_total_lines": "مجموع بنود البضاعة يساوي الإجمالي",
+  "dverify.c_currency_single": "عملة واحدة في المستند",
+  "dverify.c_weights": "الوزن الإجمالي ليس أقل من الوزن الصافي",
+  "dverify.c_destination": "ميناء الوصول يطابق مكان التسليم",
+  "dverify.c_party_erp": "الطرف موجود في سجل الحسابات",
+  "dverify.fld_contract_number": "رقم العقد",
+  "dverify.fld_document_date": "تاريخ العقد / المستند",
+  "dverify.fld_supplier_name": "المورّد / البائع",
+  "dverify.fld_customer_name": "العميل / المشتري",
+  "dverify.fld_currency": "العملة",
+  "dverify.fld_grand_total": "المبلغ الإجمالي",
+  "dverify.fld_goods_description": "وصف البضاعة",
+  "dverify.fld_quantity": "الكمية",
+  "dverify.fld_unit_price": "سعر الوحدة",
+  "dverify.st_matched": "مطابق",
+  "dverify.st_review": "تلزم مراجعة يدوية",
+  "dverify.st_mismatch": "غير مطابق",
+  "dverify.st_missing": "مفقود",
+  "dverify.not_verified": "لم يتم التحقق بعد",
+  "dverify.g_content": "محتوى المستند",
+  "dverify.g_records": "مقارنة بالمستندات والسجلات الموجودة",
+  "dverify.d_qty_calculated": "الكمية محسوبة من المبلغ ÷ سعر الوحدة",
+  "dverify.d_choose_party": "عدة تطابقات — اختر الحساب الصحيح",
 };
 
 const fa: Dict = {
@@ -113578,6 +113702,37 @@ const fa: Dict = {
   "nas.categoryRequired": "دسته الزامی است.",
   "nas.accountNameRequired": "نام حساب الزامی است.",
   "ss.account_card_search_ph": "نام مشتری، شماره حساب، شرکت، شماره تماس یا آدرس...",
+  "dintake.x_ep_failed": "پردازش کامل نشد — چیزی استخراج نشد. برای خواندن دوبارهٔ سند، «تکرار OCR» را بزنید.",
+  "dintake.x_ep_no_text": "OCR برای این سند متن خوانایی برنگرداند. OCR را تکرار کنید یا مقادیر را از نسخهٔ اصلی دستی وارد کنید.",
+  "dintake.x_f_loading_port": "بندر / محل بارگیری",
+  "dintake.x_f_destination_port": "بندر / محل مقصد",
+  "dintake.x_f_shipment_time": "زمان حمل",
+  "dintake.x_f_origin": "کشور مبدأ",
+  "dverify.c_extraction": "سند خوانده شد (OCR و استخراج کامل شد)",
+  "dverify.c_line_math": "مقدار × قیمت واحد = مبلغ",
+  "dverify.c_total_lines": "جمع ردیف‌های کالا با مبلغ کل برابر است",
+  "dverify.c_currency_single": "یک ارز در سند",
+  "dverify.c_weights": "وزن ناخالص کمتر از وزن خالص نیست",
+  "dverify.c_destination": "بندر مقصد با محل تحویل مطابقت دارد",
+  "dverify.c_party_erp": "طرف حساب در فهرست حساب‌ها پیدا شد",
+  "dverify.fld_contract_number": "شمارهٔ قرارداد",
+  "dverify.fld_document_date": "تاریخ قرارداد / سند",
+  "dverify.fld_supplier_name": "تأمین‌کننده / فروشنده",
+  "dverify.fld_customer_name": "مشتری / خریدار",
+  "dverify.fld_currency": "ارز",
+  "dverify.fld_grand_total": "مبلغ کل",
+  "dverify.fld_goods_description": "شرح کالا",
+  "dverify.fld_quantity": "مقدار",
+  "dverify.fld_unit_price": "قیمت واحد",
+  "dverify.st_matched": "مطابق",
+  "dverify.st_review": "بازبینی دستی لازم است",
+  "dverify.st_mismatch": "عدم تطابق",
+  "dverify.st_missing": "موجود نیست",
+  "dverify.not_verified": "هنوز تأیید نشده",
+  "dverify.g_content": "محتوای سند",
+  "dverify.g_records": "در برابر اسناد و سوابق موجود",
+  "dverify.d_qty_calculated": "مقدار از مبلغ ÷ قیمت واحد محاسبه شد",
+  "dverify.d_choose_party": "چند مورد منطبق — حساب درست را انتخاب کنید",
 };
 
 const ps: Dict = {
@@ -138882,6 +139037,37 @@ const ps: Dict = {
   "nas.categoryRequired": "کټګوري اړینه ده.",
   "nas.accountNameRequired": "د حساب نوم اړین دی.",
   "ss.account_card_search_ph": "د پیرودونکي نوم، حساب شمیره، شرکت، تلیفون یا ادرس دننه کړئ...",
+  "dintake.x_ep_failed": "پروسس بشپړ نه شو — هیڅ شی ونه ایستل شو. د سند د بیا لوستلو لپاره «OCR بیا» کېکاږئ.",
+  "dintake.x_ep_no_text": "OCR د دې سند لپاره د لوستلو وړ متن ونه موند. OCR بیا وکړئ یا ارزښتونه له اصلي سند څخه پخپله ولیکئ.",
+  "dintake.x_f_loading_port": "د بار کولو بندر / ځای",
+  "dintake.x_f_destination_port": "د منزل بندر / ځای",
+  "dintake.x_f_shipment_time": "د لېږد وخت",
+  "dintake.x_f_origin": "د اصل هېواد",
+  "dverify.c_extraction": "سند ولوستل شو (OCR او ایستل بشپړ شول)",
+  "dverify.c_line_math": "مقدار × د واحد بیه = مبلغ",
+  "dverify.c_total_lines": "د توکو د کرښو ټولګه له ټول مبلغ سره برابره ده",
+  "dverify.c_currency_single": "په سند کې یوه اسعار",
+  "dverify.c_weights": "ټول وزن له خالص وزن څخه کم نه دی",
+  "dverify.c_destination": "د منزل بندر د تسلیم له ځای سره سمون لري",
+  "dverify.c_party_erp": "اړخ د حسابونو په ماسټر کې وموندل شو",
+  "dverify.fld_contract_number": "د تړون شمېره",
+  "dverify.fld_document_date": "د تړون / سند نېټه",
+  "dverify.fld_supplier_name": "عرضه کوونکی / پلورونکی",
+  "dverify.fld_customer_name": "پېرودونکی / اخیستونکی",
+  "dverify.fld_currency": "اسعار",
+  "dverify.fld_grand_total": "ټول مبلغ",
+  "dverify.fld_goods_description": "د توکو تشریح",
+  "dverify.fld_quantity": "مقدار",
+  "dverify.fld_unit_price": "د واحد بیه",
+  "dverify.st_matched": "سمون لري",
+  "dverify.st_review": "لاسي بیاکتنه اړینه ده",
+  "dverify.st_mismatch": "سمون نه لري",
+  "dverify.st_missing": "نشته",
+  "dverify.not_verified": "لا تایید شوی نه دی",
+  "dverify.g_content": "د سند محتوا",
+  "dverify.g_records": "د موجودو سندونو او ریکارډونو سره پرتله",
+  "dverify.d_qty_calculated": "مقدار له مبلغ ÷ د واحد بیې څخه محاسبه شو",
+  "dverify.d_choose_party": "څو سمونونه — سم حساب وټاکئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
