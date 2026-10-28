@@ -12356,6 +12356,7 @@ export type UiKey =
   | "nas.branchRequired"
   | "nas.categoryRequired"
   | "nas.accountNameRequired"
+  | "ss.account_card_search_ph"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -37684,6 +37685,7 @@ const en: Dict = {
   "nas.branchRequired": "Branch is required.",
   "nas.categoryRequired": "Category is required.",
   "nas.accountNameRequired": "Account name is required.",
+  "ss.account_card_search_ph": "Enter customer name, account number, company, phone or address...",
 };
 
 const ur: Dict = {
@@ -62980,6 +62982,7 @@ const ur: Dict = {
   "nas.branchRequired": "برانچ لازمی ہے۔",
   "nas.categoryRequired": "زمرہ لازمی ہے۔",
   "nas.accountNameRequired": "اکاؤنٹ کا نام لازمی ہے۔",
+  "ss.account_card_search_ph": "گاہک کا نام، اکاؤنٹ نمبر، کمپنی، فون یا پتہ تلاش کریں...",
 };
 
 const ar: Dict = {
@@ -88277,6 +88280,7 @@ const ar: Dict = {
   "nas.branchRequired": "الفرع مطلوب.",
   "nas.categoryRequired": "الفئة مطلوبة.",
   "nas.accountNameRequired": "اسم الحساب مطلوب.",
+  "ss.account_card_search_ph": "أدخل اسم العميل، رقم الحساب، الشركة، الهاتف أو العنوان...",
 };
 
 const fa: Dict = {
@@ -113573,6 +113577,7 @@ const fa: Dict = {
   "nas.branchRequired": "شعبه الزامی است.",
   "nas.categoryRequired": "دسته الزامی است.",
   "nas.accountNameRequired": "نام حساب الزامی است.",
+  "ss.account_card_search_ph": "نام مشتری، شماره حساب، شرکت، شماره تماس یا آدرس...",
 };
 
 const ps: Dict = {
@@ -138876,6 +138881,7 @@ const ps: Dict = {
   "nas.branchRequired": "څانګه اړینه ده.",
   "nas.categoryRequired": "کټګوري اړینه ده.",
   "nas.accountNameRequired": "د حساب نوم اړین دی.",
+  "ss.account_card_search_ph": "د پیرودونکي نوم، حساب شمیره، شرکت، تلیفون یا ادرس دننه کړئ...",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

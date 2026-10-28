@@ -35,6 +35,12 @@ export type LedgerLookupRow = {
   cityName: string | null;
   address: string | null;
   contacts?: any;
+  isActive?: boolean;
+  /** Shared account card: the account's own saved phone / e-mail / address, else its linked customer's; the account status. */
+  accountPhone?: string | null;
+  accountEmail?: string | null;
+  accountAddress?: string | null;
+  accountStatus?: string | null;
   createdAt?: string | null;
 };
 

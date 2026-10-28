@@ -45,6 +45,13 @@ export type LedgerLookupRow = {
   cityId?: string | null;
   cityName: string | null;
   address: string | null;
+  contacts?: any;
+  /** Shared account card (Cash Entry picker and other account pickers): the account's own saved contact / address, else its
+   *  linked customer's; the account status. Saved values only. */
+  accountPhone?: string | null;
+  accountEmail?: string | null;
+  accountAddress?: string | null;
+  accountStatus?: string | null;
   createdAt?: string | null;
 };
 
@@ -90,6 +97,39 @@ type TranslationRow = {
   persian_text: string | null;
   pashto_text: string | null;
 };
+
+type CardCustomer = { id: string; mobile: string | null; whatsapp: string | null; email: string | null; address: string | null };
+
+/** The account's saved contacts ([{ type, value }] — jsonb, or the same as a JSON string). */
+function savedContacts(contacts: unknown): Array<{ type?: string; value?: string }> {
+  if (Array.isArray(contacts)) return contacts as Array<{ type?: string; value?: string }>;
+  if (typeof contacts === "string") {
+    try {
+      const parsed = JSON.parse(contacts);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/**
+ * Phone, e-mail, address and status for the shared account card: what the account itself saved (its contacts, its full
+ * address), otherwise what its linked customer saved. Nothing is derived or invented — an empty field stays empty.
+ */
+function accountCardDetails(enterpriseAccount: any, customer: CardCustomer | null | undefined) {
+  const contacts = savedContacts(enterpriseAccount?.contacts);
+  const pick = (types: string[]) =>
+    contacts.find((c) => types.includes(String(c?.type || "").toLowerCase()) && String(c?.value || "").trim())?.value?.trim() || null;
+  const clean = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+  return {
+    accountPhone: pick(["mobile", "phone", "whatsapp", "landline", "office"]) || clean(customer?.mobile) || clean(customer?.whatsapp),
+    accountEmail: pick(["email"]) || clean(customer?.email),
+    accountAddress: clean(enterpriseAccount?.full_address) || clean(customer?.address),
+    accountStatus: clean(enterpriseAccount?.status)
+  };
+}
 
 function translationKey(table: string, id: string, field: string) {
   return `${table}|${id}|${field}`;
@@ -328,7 +368,7 @@ export class LedgerReportService {
         ? sql`SELECT id, code, name, kind, currency, company_id, created_at FROM public.accounts WHERE id = ANY(${accountIds}::uuid[]) AND deleted_at IS NULL`
         : Promise.resolve([]),
       enterpriseAccountIds.length
-        ? sql`SELECT id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts, company_id, created_at FROM public.enterprise_accounts WHERE id = ANY(${enterpriseAccountIds}::uuid[]) AND deleted_at IS NULL`
+        ? sql`SELECT id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts, company_id, created_at, full_address, status::text AS status, customer_id FROM public.enterprise_accounts WHERE id = ANY(${enterpriseAccountIds}::uuid[]) AND deleted_at IS NULL`
         : Promise.resolve([]),
       countryIds.length
         ? sql`SELECT id, name FROM public.countries WHERE id = ANY(${countryIds}::uuid[]) AND deleted_at IS NULL`
@@ -348,10 +388,14 @@ export class LedgerReportService {
     const stateIds = unique([...(countryBranches as any[]).map((b) => b.state_province_id), ...(cityBranches as any[]).map((b) => b.state_province_id)]);
     const cityIds = unique([...(countryBranches as any[]).map((b) => b.city_id), ...(cityBranches as any[]).map((b) => b.city_id)]);
 
-    const [companies, states, cities] = await Promise.all([
+    const cardCustomerIds = unique((enterpriseAccounts as any[]).map((a) => a.customer_id));
+    const [companies, states, cities, cardCustomers] = await Promise.all([
       companyIds.length ? sql`SELECT id, name FROM public.companies WHERE id = ANY(${companyIds}::uuid[]) AND deleted_at IS NULL` : Promise.resolve([]),
       stateIds.length ? sql`SELECT id, name FROM public.states_provinces WHERE id = ANY(${stateIds}::uuid[]) AND deleted_at IS NULL` : Promise.resolve([]),
-      cityIds.length ? sql`SELECT id, name FROM public.cities WHERE id = ANY(${cityIds}::uuid[]) AND deleted_at IS NULL` : Promise.resolve([])
+      cityIds.length ? sql`SELECT id, name FROM public.cities WHERE id = ANY(${cityIds}::uuid[]) AND deleted_at IS NULL` : Promise.resolve([]),
+      cardCustomerIds.length
+        ? sql`SELECT id, mobile, whatsapp, email, address FROM public.customers WHERE id = ANY(${cardCustomerIds}::uuid[]) AND deleted_at IS NULL`
+        : Promise.resolve([])
     ]);
 
     const result = this.assembleLedgerRows(rows, {
@@ -362,7 +406,8 @@ export class LedgerReportService {
       cityBranches: cityBranches as any[],
       companies: companies as any[],
       states: states as any[],
-      cities: cities as any[]
+      cities: cities as any[],
+      customers: cardCustomers as any[]
     });
 
     const language = input.language ?? null;
@@ -402,8 +447,10 @@ export class LedgerReportService {
       companies: Array<{ id: string; name: string }>;
       states: Array<{ id: string; name: string }>;
       cities: Array<{ id: string; name: string }>;
+      customers?: CardCustomer[];
     }
   ): LedgerLookupRow[] {
+    const cardCustomerById = new Map((lookups.customers ?? []).map((c) => [c.id, c]));
     const accountById = new Map(lookups.accounts.map((a) => [a.id, a]));
     const enterpriseAccountById = new Map(lookups.enterpriseAccounts.map((a) => [a.id, a]));
     const countryById = new Map(lookups.countries.map((c) => [c.id, c]));
@@ -466,6 +513,7 @@ export class LedgerReportService {
         cityName,
         address,
         contacts: enterpriseAccount?.contacts ?? null,
+        ...accountCardDetails(enterpriseAccount, (enterpriseAccount as any)?.customer_id ? cardCustomerById.get((enterpriseAccount as any).customer_id) : null),
         createdAt: (enterpriseAccount as any)?.created_at ?? (legacyAccount as any)?.created_at ?? row.created_at ?? null
       } as LedgerLookupRow;
     });
@@ -625,7 +673,7 @@ export class LedgerReportService {
         ? fetchInChunks("accounts", "id, code, name, kind, currency, company_id, created_at", accountIds)
         : Promise.resolve({ data: [], error: null }),
       enterpriseAccountIds.length
-        ? fetchInChunks("enterprise_accounts", "id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts, company_id, created_at", enterpriseAccountIds)
+        ? fetchInChunks("enterprise_accounts", "id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts, company_id, created_at, full_address, status, customer_id", enterpriseAccountIds)
         : Promise.resolve({ data: [], error: null }),
       countryIds.length
         ? fetchInChunks("countries", "id, name", countryIds)
@@ -693,11 +741,14 @@ export class LedgerReportService {
     const stateIds = unique([...countryBranches.map((b) => b.state_province_id), ...cityBranches.map((b) => b.state_province_id)]);
     const cityIds = unique([...countryBranches.map((b) => b.city_id), ...cityBranches.map((b) => b.city_id)]);
 
-    const [companiesRes, statesRes, citiesRes] = await Promise.all([
+    const fallbackCustomerIds = unique(enterpriseAccounts.map((a: any) => a.customer_id));
+    const [companiesRes, statesRes, citiesRes, customersRes] = await Promise.all([
       companyIds.length ? fetchInChunks("companies", "id, name", companyIds) : Promise.resolve({ data: [], error: null }),
       stateIds.length ? fetchInChunks("states_provinces", "id, name", stateIds) : Promise.resolve({ data: [], error: null }),
-      cityIds.length ? fetchInChunks("cities", "id, name", cityIds) : Promise.resolve({ data: [], error: null })
+      cityIds.length ? fetchInChunks("cities", "id, name", cityIds) : Promise.resolve({ data: [], error: null }),
+      fallbackCustomerIds.length ? fetchInChunks("customers", "id, mobile, whatsapp, email, address", fallbackCustomerIds) : Promise.resolve({ data: [], error: null })
     ]);
+    const fallbackCustomerById = new Map(((customersRes.data ?? []) as CardCustomer[]).map((c) => [c.id, c]));
 
     if (companiesRes.error) throw new Error((companiesRes.error as any).message);
     if (statesRes.error) throw new Error((statesRes.error as any).message);
@@ -767,6 +818,7 @@ export class LedgerReportService {
         cityName,
         address,
         contacts: enterpriseAccount?.contacts ?? null,
+        ...accountCardDetails(enterpriseAccount, (enterpriseAccount as any)?.customer_id ? fallbackCustomerById.get((enterpriseAccount as any).customer_id) : null),
         createdAt: row.created_at ?? null
       };
     });

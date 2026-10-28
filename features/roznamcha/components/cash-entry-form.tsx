@@ -220,6 +220,15 @@ function generateCode(prefix: string) {
   return `${prefix}-${ymd}-${rand}`;
 }
 
+/** An account's status as both the account cards and the Selected Account panel show it — one rule for both: still waiting for
+ *  approval → pending approval; an inactive ledger or a closed / archived account → inactive; otherwise active. */
+function accountStatusKind(row: Pick<LedgerLookupRow, "isActive" | "accountStatus"> | null | undefined): "active" | "inactive" | "pending_approval" {
+  const status = String(row?.accountStatus || "").toLowerCase();
+  if (status === "pending_approval") return "pending_approval";
+  if (row?.isActive === false || ["inactive", "suspended", "archived", "closed"].includes(status)) return "inactive";
+  return "active";
+}
+
 function toLedgerOption(row: LedgerLookupRow): SearchSelectOption {
   const account = row.accountName || row.ledgerName || "";
   const accountNo = row.accountCode || row.ledgerCode || "";
@@ -2918,20 +2927,32 @@ export function CashEntryForm({
         upperCode.startsWith("CT-INTER-") || (row as any).isCountryAccount ? "Country Account Inter Country Inter-Country" : ""
       ].filter(Boolean).join(" ");
 
-      const keywords = `${code} ${rawCode} ${row.manualReferenceNumber || ""} ${row.customerNumber || ""} ${name} ${row.companyName || ""} ${branchName} ${country} ${countrySynonyms} ${row.ledgerCurrency || ""} ${row.accountKind || ""}`;
+      const keywords = `${code} ${rawCode} ${row.manualReferenceNumber || ""} ${row.customerNumber || ""} ${name} ${row.companyName || ""} ${row.accountPhone || ""} ${row.accountEmail || ""} ${row.accountAddress || ""} ${branchName} ${country} ${countrySynonyms} ${row.ledgerCurrency || ""} ${row.accountKind || ""}`;
+
+      // shared account card status (the card shows Active / Inactive in the selected language; any other status as given)
+      const statusKind = accountStatusKind(row);
+      const status = statusKind === "inactive" ? "Inactive" : statusKind === "pending_approval" ? t(lang, "com.status_pending_approval", "Pending approval") : "Active";
 
       return {
         value: row.ledgerId,
         label,
         keywords,
         primaryText: name,
-        secondaryText: `${locPart ? `${locPart} • ` : ""}${manualRef ? `${manualRef} • ` : ""}${curr || ""}`.trim(),
+        secondaryText: [locPart.trim(), manualRef.trim(), row.ledgerCurrency || ""].filter(Boolean).join(" • "),
         code: code,
         country: country || (isPak ? "Pakistan" : isUae ? "United Arab Emirates" : isAfg ? "Afghanistan" : isInd ? "India" : undefined),
-        branch: branchName
+        branch: branchName,
+        // the shared customer & account card (components/ui/search-select.tsx): saved details only, empty stays empty
+        isAccountCard: true,
+        companyName: row.companyName || undefined,
+        phone: row.accountPhone || undefined,
+        email: row.accountEmail || undefined,
+        address: row.accountAddress || undefined,
+        city: row.cityName || undefined,
+        status
       };
     });
-  }, [ledgers]);
+  }, [ledgers, lang]);
 
   return (
     <div className="dgt-cj mx-auto w-full bg-[#f8fbff] dark:bg-slate-950/40 text-slate-950 dark:text-slate-50 min-h-screen">
@@ -4731,14 +4752,25 @@ export function CashEntryForm({
                                   {localizeTerm(selectedCounterLedger.accountKind, lang)}
                                 </span>
                               ) : null}
-                              <span className={cn(
-                                "px-2 py-0.5 rounded-full text-[9px] font-bold border",
-                                (selectedCrossBranchAccount || selectedCounterLedger)
-                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200"
-                                  : "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200"
-                              )}>
-                                {(selectedCrossBranchAccount || selectedCounterLedger) ? tr("cj.mActive", "Active") : t(lang, "common.pending", "Pending")}
-                              </span>
+                              {(() => {
+                                // the same status rule as the account cards in the picker (accountStatusKind)
+                                const kind = selectedCrossBranchAccount ? "active" : selectedCounterLedger ? accountStatusKind(selectedCounterLedger) : null;
+                                return (
+                                  <span className={cn(
+                                    "px-2 py-0.5 rounded-full text-[9px] font-bold border",
+                                    kind === "active"
+                                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200"
+                                      : kind === "inactive"
+                                        ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border-slate-200"
+                                        : "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200"
+                                  )}>
+                                    {kind === "active" ? tr("cj.mActive", "Active")
+                                      : kind === "inactive" ? t(lang, "common.inactive", "Inactive")
+                                      : kind === "pending_approval" ? t(lang, "com.status_pending_approval", "Pending approval")
+                                      : t(lang, "common.pending", "Pending")}
+                                  </span>
+                                );
+                              })()}
                             </div>
                             <p className="text-[11px] font-mono text-slate-500 font-bold mt-0.5">
                               {tr("cj.mAccountNoDot", "Account No.")}{" "}
