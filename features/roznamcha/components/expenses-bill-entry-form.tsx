@@ -210,11 +210,16 @@ const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger:
   );
 };
 
+/** A customer order the bill is made for (Order Transfer / General Received Bills); with billId, that order's bill to open. */
+export type CustomerOrderBillContext = { orderId: string; orderNo: string; billId?: string | null; date?: string | null };
+
 export function ExpensesBillEntryForm({
   lang: langProp,
-  initialBillCategory = "office_home"
+  initialBillCategory = "office_home",
+  customerOrderContext = null
 }: {
   lang: SupportedLanguage;
+  customerOrderContext?: CustomerOrderBillContext | null;
   initialBillCategory?:
     | "office_home"
     | "daily_expenses"
@@ -519,9 +524,11 @@ export function ExpensesBillEntryForm({
   const fetchRecentBills = async () => {
     try {
       setLoadingBills(true);
-      const url = initialBillCategory
-        ? `/api/erp/expenses?category=${encodeURIComponent(initialBillCategory)}`
-        : "/api/erp/expenses";
+      // opened on a customer order: the list shows that order's bills of this category
+      const qs = new URLSearchParams();
+      if (initialBillCategory) qs.set("category", initialBillCategory);
+      if (customerOrderContext?.orderNo) qs.set("referenceNos", customerOrderContext.orderNo);
+      const url = `/api/erp/expenses${qs.toString() ? `?${qs.toString()}` : ""}`;
       const res = await apiGet<any>(url);
       if (res && res.bills) {
         setRecentBills(res.bills);
@@ -645,6 +652,41 @@ export function ExpensesBillEntryForm({
       setEditingBillId(null);
     }
   }, [viewMode]);
+
+  // Opened from a customer order: a new bill is ATTACHED to it (reference = the order number) and keeps this page's own bill
+  // category; with billId the order's existing bill opens — for editing, or read-only once it is posted to Roznamcha.
+  const orderContextApplied = useRef<string | null>(null);
+  useEffect(() => {
+    const ctx = customerOrderContext;
+    if (!ctx?.orderNo) return;
+    const key = `${ctx.orderId}:${ctx.billId ?? ""}`;
+    if (orderContextApplied.current === key) return;
+    orderContextApplied.current = key;
+    if (ctx.billId) {
+      void (async () => {
+        const qs = new URLSearchParams({ referenceNos: ctx.orderNo, limit: "200" });
+        if (initialBillCategory) qs.set("category", initialBillCategory);
+        const res = await apiGet<any>(`/api/erp/expenses?${qs.toString()}`).catch(() => null);
+        const bill = ((res?.bills ?? []) as any[]).find((b) => String(b.id) === String(ctx.billId));
+        if (!bill) {
+          alert(tt("obill.bill_not_found", "This bill was not found for the order (it may be outside your branch scope)."));
+          return;
+        }
+        if (bill.transferred_to_roznamcha) {
+          setViewMode("list");
+          setViewBill(bill);
+          return;
+        }
+        handleEditBill(bill);
+      })();
+      return;
+    }
+    setViewMode("form");
+    setBillMode("attached");
+    setReferenceNo(ctx.orderNo);
+    if (ctx.date && /^\d{4}-\d{2}-\d{2}$/.test(ctx.date)) setBillDate(ctx.date);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerOrderContext?.orderId, customerOrderContext?.orderNo, customerOrderContext?.billId]);
 
   // Fetch initial countries (operational entry: branches only)
   useEffect(() => {
@@ -905,8 +947,9 @@ export function ExpensesBillEntryForm({
       if (res?.billId && intake.draft) await intake.consume(String(res.billId));
       alert(editingBillId ? "Expenses Bill updated successfully!" : "Expenses Bill saved successfully!");
       setRows([]);
-      setBillTitle("");
-      setReferenceNo("");
+      // the next bill keeps this page's category (an empty title saved bills outside every register) and, on an order, its reference
+      setBillTitle(initialBillCategory || "");
+      setReferenceNo(customerOrderContext?.orderNo ?? "");
       setEditingBillId(null);
       fetchRecentBills();
       setViewMode("list");
@@ -1173,6 +1216,10 @@ export function ExpensesBillEntryForm({
                     <option value="attached-purchase">{tt("exp.attached_purchase", "Attached (Purchase)")}</option>
                     <option value="attached-sale">{tt("exp.attached_sale", "Attached (Sale)")}</option>
                     <option value="attached-customer_order">{tt("exp.attached_customer_order", "Attached (Customer Order)")}</option>
+                    {/* a bill attached to a customer order keeps its own category (customs / truck / customer / other) */}
+                    {billMode === "attached" && !["purchase", "sale", "customer_order"].includes(billTitle) && (
+                      <option value={`attached-${billTitle}`}>{tt("obill.attached_to_order", "Attached to customer order")}</option>
+                    )}
                   </select>
                   <Input placeholder={tt("exp.search_bill_no", "Search Bill No...")} className="h-6 text-xs w-[130px] border-slate-200" disabled={headerLocked || billMode === 'new'} />
                 </div>

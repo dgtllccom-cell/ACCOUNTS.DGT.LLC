@@ -626,8 +626,10 @@ export async function listCustomerOrders(status?: string | null, scope?: Custome
 export async function getCustomerOrderById(id: string) {
   // Read-only: borrow the process-lifetime pool instead of paying a fresh TLS connect (~3 s
   // against the remote pooler) on every GET / PATCH precheck.
-  const pooled = await withReadPg(async (sql) => await fetchCustomerOrderById(sql, id));
-  if (pooled !== null) return pooled;
+  // wrapped: withReadPg's own null means "no pooled connection", which an order that does not exist (a null row) must not be
+  // mistaken for — it fell through to the direct path and answered 500 instead of "not found"
+  const pooled = await withReadPg(async (sql) => ({ row: await fetchCustomerOrderById(sql, id) }));
+  if (pooled !== null) return pooled.row;
   return await withOrderDb(async (sql) => await fetchCustomerOrderById(sql, id));
 }
 

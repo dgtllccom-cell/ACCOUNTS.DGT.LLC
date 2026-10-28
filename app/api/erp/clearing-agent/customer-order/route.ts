@@ -19,6 +19,7 @@ import {
   RouteContinuityError,
   type CustomerOrderScopeFilter
 } from "@/lib/services/clearing-customer-order-service";
+import { transferSummaries } from "@/lib/services/clearing-order-expense-transfer";
 
 // Shipping Customer Orders carry real commercial/customs data scoped to a country,
 // branch and (for shipping-scoped logins) a clearing agent — this must never be
@@ -75,7 +76,13 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await listCustomerOrders(status, scope);
-    return NextResponse.json({ success: true, data });
+    // each order's latest expense-bill transfer + whether it was received at the Clearing Agent desk (already scope-filtered orders)
+    const transfers = await transferSummaries((data as any[]).map((o) => o.id)).catch(() => new Map());
+    const withTransfers = (data as any[]).map((o) => {
+      const s = transfers.get(String(o.id));
+      return { ...o, expense_transfer: s?.latest ?? null, general_received: Boolean(s?.generalReceived) };
+    });
+    return NextResponse.json({ success: true, data: withTransfers });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message, ...(typeof error.code === "string" && /^[A-Z_]+$/.test(error.code) ? { code: error.code, fields: error.fields } : {}) }, { status: httpStatusOfError(error) });

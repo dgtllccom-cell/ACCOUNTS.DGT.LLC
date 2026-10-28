@@ -240,6 +240,8 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const limit = Number(searchParams.get("limit") || 50);
     const category = searchParams.get("category");
+    // bills linked to given references (a customer order's bills: reference_no = the order number) — same scope rules below
+    const referenceNos = [...new Set((searchParams.get("referenceNos") || "").split(",").map((r) => r.trim()).filter(Boolean))].slice(0, 200);
     if (category && expensesDenied(session, "read", category)) {
       return NextResponse.json({ error: "Forbidden: No permission for this expense category" }, { status: 403 });
     }
@@ -280,6 +282,7 @@ export async function GET(req: Request) {
         left join public.countries c on c.id = cb.country_id
         where b.deleted_at is null
           and (${category}::text is null or b.bill_title = ${category})
+          ${referenceNos.length ? sql`and b.reference_no = any(${referenceNos}::text[])` : sql``}
           ${section === "shipping" ? sql`and b.bill_title = any(${shippingTitles})` : section === "business" ? sql`and not (b.bill_title = any(${shippingTitles}))` : sql``}
           and ${allowedBranchIds ? sql`b.branch_id = ANY(${allowedBranchIds}::uuid[])` : sql`true`}
         order by b.created_at desc
@@ -303,6 +306,9 @@ export async function GET(req: Request) {
 
     if (category) {
       query = query.eq("bill_title", category);
+    }
+    if (referenceNos.length) {
+      query = query.in("reference_no", referenceNos);
     }
     if (allowedBranchIds) {
       query = query.in("branch_id", allowedBranchIds);

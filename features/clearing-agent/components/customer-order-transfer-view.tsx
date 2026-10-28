@@ -48,6 +48,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useBranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import { Th } from "@/components/ui/translated-th";
+import { GENERAL_RECEIVED_BILLS_HREF, OrderBillStatusCell, orderBillHref, useOrderBillStatus, type OrderBillType } from "./order-bill-status";
 
 interface OrderLeg {
   id?: string;
@@ -104,6 +105,9 @@ interface CustomerOrder {
     receiver_user_id?: string;
     sender_user_id?: string;
   };
+  /** the saved latest expense-bill transfer of the order + whether the Clearing Agent desk received it (server, persisted) */
+  expense_transfer?: { destination: string; destinationLabel: string; date: string; user: string; userId: string | null; branchName: string | null; memo: string | null } | null;
+  general_received?: boolean;
 }
 
 interface TransferRecord {
@@ -184,6 +188,17 @@ export function CustomerOrderTransferView() {
       const jsonOrder = await resOrder.json();
       if (jsonOrder.success && Array.isArray(jsonOrder.data)) {
         setOrders(jsonOrder.data);
+        // the saved transfers are the truth (they survive a reload); the on-screen history is rebuilt from them
+        const saved: Record<string, TransferRecord> = {};
+        const received: string[] = [];
+        for (const o of jsonOrder.data as CustomerOrder[]) {
+          if (o.expense_transfer) {
+            saved[o.id] = { date: o.expense_transfer.date, user: o.expense_transfer.user, userId: o.expense_transfer.userId ?? undefined, branchName: o.expense_transfer.branchName ?? undefined, destination: o.expense_transfer.destinationLabel, memo: o.expense_transfer.memo ?? undefined };
+          }
+          if (o.general_received) received.push(o.id);
+        }
+        setTransferHistory(saved);
+        setGeneralReceivedOrderIds(received);
       }
 
       if (resUsers) {
@@ -322,6 +337,24 @@ export function CustomerOrderTransferView() {
     return orders.find((o) => o.id === selectedOrderId) || null;
   }, [orders, selectedOrderId]);
 
+  // the selected order's expense bills per bill type (the real bills: attached, reference = the order number)
+  const selectedOrderBills = useOrderBillStatus(useMemo(() => (selectedOrder?.order_no ? [selectedOrder.order_no] : []), [selectedOrder?.order_no]));
+  const billStatusFor = (type: OrderBillType) =>
+    selectedOrder ? (
+      <div className="mt-1" data-testid={`transfer-bill-status-${type}`}>
+        <OrderBillStatusCell
+          lang={lang}
+          type={type}
+          orderBills={selectedOrderBills.bills[selectedOrder.order_no]?.[type]}
+          denied={selectedOrderBills.denied.includes(type)}
+          loading={selectedOrderBills.loading}
+          link={{ orderId: selectedOrder.id, orderNo: selectedOrder.order_no, customerId: selectedOrder.customer_id, truckNo: selectedOrder.truck_number, driver: selectedOrder.truck_driver_name }}
+          compact
+          onCreate={() => { setTransferTarget(type); setTransferModalOpen(true); }}
+        />
+      </div>
+    ) : null;
+
   // Filter orders by search, status, mode, and queue tab
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -383,8 +416,22 @@ export function CustomerOrderTransferView() {
     };
   }, [orders, generalReceivedOrderIds, transferHistory]);
 
+  // Save a transfer on the server (the order's activity log) — the screen only shows it after it is saved
+  const persistTransfer = async (orderId: string, body: Record<string, unknown>) => {
+    const res = await fetch(`/api/erp/clearing-agent/customer-order/${encodeURIComponent(orderId)}/expense-transfer`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.success) throw new Error(json?.error || `HTTP ${res.status}`);
+    return json.data as { destinationLabel: string };
+  };
+  const isUuid = (v: unknown) => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+
   // 1-Click Fast Transfer to Clearing Agent ("Tuck! Transfer bhej diya")
-  const handleQuickTransferToClearingAgent = (order: CustomerOrder) => {
+  const handleQuickTransferToClearingAgent = async (order: CustomerOrder) => {
     const defaultOfficer =
       filteredUsers.find((u) => u.id === transferUserId) ||
       filteredUsers[0] ||
@@ -393,6 +440,20 @@ export function CustomerOrderTransferView() {
 
     const officerName = defaultOfficer ? defaultOfficer.name : userContext?.userName || "Clearing Officer";
     const officerBranch = defaultOfficer?.branchName || defaultOfficer?.cityBranchName || userContext?.branchName || "Main Branch";
+
+    try {
+      await persistTransfer(order.id, {
+        destination: "clearing_agent",
+        assignedUserId: isUuid(defaultOfficer?.id) ? defaultOfficer?.id : null,
+        assignedUser: officerName,
+        assignedBranch: officerBranch,
+        date: transferDate || new Date().toISOString().split("T")[0],
+        memo: tt("general_received_memo", "Received in Clearing Agent General Bills desk for onward routing."),
+      });
+    } catch {
+      setToastMessage(tt("obill.transfer_failed", "The transfer could not be saved. Nothing was changed — please try again."));
+      return;
+    }
 
     // Add to General Received Bills set
     setGeneralReceivedOrderIds((prev) => Array.from(new Set([...prev, order.id])));
@@ -1110,6 +1171,13 @@ export function CustomerOrderTransferView() {
                       )}
                     </div>
 
+                    <Link
+                      href={`${GENERAL_RECEIVED_BILLS_HREF}?orderId=${encodeURIComponent(selectedOrder.id)}` as never}
+                      className="flex w-full items-center justify-center gap-1 text-[10px] font-bold text-cyan-700 hover:underline dark:text-cyan-300"
+                      data-testid="open-general-received-bills"
+                    >
+                      <Inbox className="h-3 w-3" />{tt("obill.open_general_received", "Open General Received Bills desk")}
+                    </Link>
                     {!isGenReceived && (
                       <button
                         type="button"
@@ -1139,6 +1207,7 @@ export function CustomerOrderTransferView() {
                     <p className="text-[10px] text-slate-400 truncate">
                       {tt("customs_bill_desc", "Tariff clearance & border duty")}
                     </p>
+                    {billStatusFor("customs")}
                   </div>
                 </div>
                 <button
@@ -1167,6 +1236,7 @@ export function CustomerOrderTransferView() {
                     <p className="text-[10px] text-slate-400 truncate">
                       {tt("truck_bill_desc", "Freight, tolls & driver advance")}
                     </p>
+                    {billStatusFor("truck")}
                   </div>
                 </div>
                 <button
@@ -1195,6 +1265,7 @@ export function CustomerOrderTransferView() {
                     <p className="text-[10px] text-slate-400 truncate">
                       {tt("customer_bill_desc", "Direct client disbursements")}
                     </p>
+                    {billStatusFor("customer")}
                   </div>
                 </div>
                 <button
@@ -1223,6 +1294,7 @@ export function CustomerOrderTransferView() {
                     <p className="text-[10px] text-slate-400 truncate">
                       {tt("other_bill_desc", "Inspection, lab, seals & fees")}
                     </p>
+                    {billStatusFor("other")}
                   </div>
                 </div>
                 <button
@@ -1808,7 +1880,7 @@ export function CustomerOrderTransferView() {
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   const targetUser =
                     filteredUsers.find((u) => u.id === transferUserId) ||
                     assignableUsers.find((u) => u.id === transferUserId);
@@ -1820,6 +1892,22 @@ export function CustomerOrderTransferView() {
                     targetUser?.cityBranchName ||
                     userContext?.branchName ||
                     "Main Branch";
+
+                  // Save the transfer first: a failed save changes nothing and keeps the dialog open
+                  try {
+                    await persistTransfer(selectedOrder.id, {
+                      destination: transferTarget,
+                      assignedUserId: isUuid(transferUserId) ? transferUserId : null,
+                      assignedUser: userName,
+                      assignedBranch: branchName,
+                      date: transferDate,
+                      memo: transferMemo,
+                      routingStage: transferTarget === "clearing_agent" ? clearingRoutingStage : null,
+                    });
+                  } catch {
+                    setToastMessage(tt("obill.transfer_failed", "The transfer could not be saved. Nothing was changed — please try again."));
+                    return;
+                  }
 
                   // Mark in General Received Bills if clearing agent
                   if (transferTarget === "clearing_agent") {
@@ -1851,33 +1939,21 @@ export function CustomerOrderTransferView() {
 
                   setTransferModalOpen(false);
 
-                  // Navigate to destination if requested
-                  if (transferTarget === "customs") {
-                    router.push(
-                      `/dashboard/clearing-agent/customs-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
-                        selectedOrder.order_no
-                      )}&customerId=${selectedOrder.customer_id || ""}&assignedUserId=${transferUserId}&date=${transferDate}`
-                    );
-                  } else if (transferTarget === "truck") {
-                    router.push(
-                      `/dashboard/clearing-agent/truck-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
-                        selectedOrder.order_no
-                      )}&truckNo=${encodeURIComponent(selectedOrder.truck_number || "")}&driver=${encodeURIComponent(
-                        selectedOrder.truck_driver_name || ""
-                      )}&assignedUserId=${transferUserId}&date=${transferDate}`
-                    );
-                  } else if (transferTarget === "customer") {
-                    router.push(
-                      `/dashboard/clearing-agent/customer-bill?type=expenses&orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
-                        selectedOrder.order_no
-                      )}&customerId=${selectedOrder.customer_id || ""}&assignedUserId=${transferUserId}&date=${transferDate}`
-                    );
-                  } else if (transferTarget === "other") {
-                    router.push(
-                      `/dashboard/clearing-agent/other-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
-                        selectedOrder.order_no
-                      )}&assignedUserId=${transferUserId}&date=${transferDate}`
-                    );
+                  // Open the destination on this order: the expense bill page reads the order (scope-checked) and opens its entry
+                  // form attached to it; the Clearing Agent desk opens the General Received Bills with this order first.
+                  if (transferTarget === "clearing_agent") {
+                    router.push(`${GENERAL_RECEIVED_BILLS_HREF}?orderId=${encodeURIComponent(selectedOrder.id)}` as never);
+                  } else if (transferTarget) {
+                    router.push(orderBillHref(transferTarget, {
+                      orderId: selectedOrder.id,
+                      orderNo: selectedOrder.order_no,
+                      customerId: selectedOrder.customer_id,
+                      truckNo: transferTarget === "truck" ? selectedOrder.truck_number : null,
+                      driver: transferTarget === "truck" ? selectedOrder.truck_driver_name : null,
+                      assignedUserId: transferUserId,
+                      assignedUser: userName,
+                      date: transferDate,
+                    }) as never);
                   }
                 }}
                 className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5"

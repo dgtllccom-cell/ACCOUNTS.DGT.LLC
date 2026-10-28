@@ -143,6 +143,7 @@ export type UiKey =
   | "owf.narration_ph"
   | "owf.no_legs"
   | "owf.not_found"
+  | "api.invalid_record_id"
   | "owf.registered_truck"
   | "owf.select"
   | "owf.select_leg"
@@ -12388,6 +12389,49 @@ export type UiKey =
   | "dverify.g_records"
   | "dverify.d_qty_calculated"
   | "dverify.d_choose_party"
+  | "obill.type_customs"
+  | "obill.type_truck"
+  | "obill.type_customer"
+  | "obill.type_other"
+  | "obill.checking"
+  | "obill.no_access"
+  | "obill.none"
+  | "obill.create"
+  | "obill.posted"
+  | "obill.created"
+  | "obill.open"
+  | "obill.bill_not_found"
+  | "obill.attached_to_order"
+  | "obill.loading_order"
+  | "obill.order_unavailable"
+  | "obill.linked_order"
+  | "obill.back_to_transfer"
+  | "obill.general_received"
+  | "obill.customer"
+  | "obill.assigned_to"
+  | "obill.transfer_date"
+  | "obill.opening_bill"
+  | "obill.attached_hint"
+  | "obill.open_general_received"
+  | "grb.title"
+  | "grb.subtitle"
+  | "grb.orders"
+  | "grb.with_bills"
+  | "grb.refresh"
+  | "grb.search_ph"
+  | "grb.only_missing"
+  | "grb.loading"
+  | "grb.load_failed"
+  | "grb.empty"
+  | "grb.col_order"
+  | "grb.col_route_truck"
+  | "obill.transfer_failed"
+  | "grb.tab_received"
+  | "grb.tab_all"
+  | "grb.col_received"
+  | "grb.not_received"
+  | "grb.received_by"
+  | "grb.no_received_hint"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -31870,6 +31914,7 @@ const en: Dict = {
   "owf.narration_ph": "Note for the receiving office...",
   "owf.no_legs": "No route legs recorded.",
   "owf.not_found": "Order not found.",
+  "api.invalid_record_id": "The record reference \"{value}\" is not a valid ID. Select the record from the list instead of typing its number or code, then try again.",
   "owf.registered_truck": "Registered Truck",
   "owf.select": "Select...",
   "owf.select_leg": "Select a leg.",
@@ -37748,6 +37793,49 @@ const en: Dict = {
   "dverify.g_records": "Against existing documents and records",
   "dverify.d_qty_calculated": "quantity calculated from amount ÷ unit price",
   "dverify.d_choose_party": "several matches — choose the right account",
+  "obill.type_customs": "Customs Bills",
+  "obill.type_truck": "Truck Expenses Bills",
+  "obill.type_customer": "Customer Expenses Bills",
+  "obill.type_other": "Other Expenses Bills",
+  "obill.checking": "Checking bills…",
+  "obill.no_access": "No access",
+  "obill.none": "No bill yet",
+  "obill.create": "Create bill",
+  "obill.posted": "Posted",
+  "obill.created": "Bill created",
+  "obill.open": "Open bill",
+  "obill.bill_not_found": "This bill was not found for the order (it may be outside your branch scope).",
+  "obill.attached_to_order": "Attached to customer order",
+  "obill.loading_order": "Opening the customer order…",
+  "obill.order_unavailable": "The customer order could not be opened (not found or outside your scope). This bill is not linked to an order.",
+  "obill.linked_order": "Linked customer order",
+  "obill.back_to_transfer": "Order Transfer",
+  "obill.general_received": "General Received Bills",
+  "obill.customer": "Customer",
+  "obill.assigned_to": "Assigned to",
+  "obill.transfer_date": "Transfer date",
+  "obill.opening_bill": "Opening this order's bill.",
+  "obill.attached_hint": "The bill is attached to this order: its reference is the order number. Lock the header, add the expense lines and save as usual.",
+  "obill.open_general_received": "Open General Received Bills desk",
+  "grb.title": "General Received Bills — Clearing Agent",
+  "grb.subtitle": "Customer orders received at the Clearing Agent desk and the expense bills made for each. Create or open a bill — nothing is posted from here.",
+  "grb.orders": "Orders",
+  "grb.with_bills": "With bills",
+  "grb.refresh": "Refresh",
+  "grb.search_ph": "Search order no., customer, truck, goods…",
+  "grb.only_missing": "Only orders with a bill still to make",
+  "grb.loading": "Loading customer orders…",
+  "grb.load_failed": "Customer orders could not be loaded.",
+  "grb.empty": "No customer orders found.",
+  "grb.col_order": "Order",
+  "grb.col_route_truck": "Route / Truck",
+  "obill.transfer_failed": "The transfer could not be saved. Nothing was changed — please try again.",
+  "grb.tab_received": "Received at the desk",
+  "grb.tab_all": "All orders",
+  "grb.col_received": "Received",
+  "grb.not_received": "Not received yet",
+  "grb.received_by": "Handler: {name}",
+  "grb.no_received_hint": "No order has been received at the Clearing Agent desk yet. Transfer an order from Order Transfer, or switch to All orders.",
 };
 
 const ur: Dict = {
@@ -57278,6 +57366,7 @@ const ur: Dict = {
   "owf.narration_ph": "وصول کرنے والے دفتر کے لیے نوٹ...",
   "owf.no_legs": "کوئی روٹ لیگ درج نہیں۔",
   "owf.not_found": "آرڈر نہیں ملا۔",
+  "api.invalid_record_id": "ریکارڈ کا حوالہ \"{value}\" درست آئی ڈی نہیں ہے۔ اس کا نمبر یا کوڈ لکھنے کے بجائے فہرست سے ریکارڈ منتخب کریں، پھر دوبارہ کوشش کریں۔",
   "owf.registered_truck": "رجسٹرڈ ٹرک",
   "owf.select": "منتخب کریں...",
   "owf.select_leg": "ایک لیگ منتخب کریں۔",
@@ -63076,6 +63165,49 @@ const ur: Dict = {
   "dverify.g_records": "موجودہ دستاویزات اور ریکارڈ سے موازنہ",
   "dverify.d_qty_calculated": "مقدار رقم ÷ فی یونٹ قیمت سے نکالی گئی",
   "dverify.d_choose_party": "کئی مطابقتیں — درست اکاؤنٹ منتخب کریں",
+  "obill.type_customs": "کسٹم بلز",
+  "obill.type_truck": "ٹرک اخراجات بلز",
+  "obill.type_customer": "کسٹمر اخراجات بلز",
+  "obill.type_other": "دیگر اخراجات بلز",
+  "obill.checking": "بلز چیک ہو رہے ہیں…",
+  "obill.no_access": "رسائی نہیں",
+  "obill.none": "ابھی کوئی بل نہیں",
+  "obill.create": "بل بنائیں",
+  "obill.posted": "پوسٹ شدہ",
+  "obill.created": "بل بن گیا",
+  "obill.open": "بل کھولیں",
+  "obill.bill_not_found": "اس آرڈر کا یہ بل نہیں ملا (ممکن ہے یہ آپ کی برانچ کے دائرے سے باہر ہو)۔",
+  "obill.attached_to_order": "کسٹمر آرڈر سے منسلک",
+  "obill.loading_order": "کسٹمر آرڈر کھولا جا رہا ہے…",
+  "obill.order_unavailable": "کسٹمر آرڈر نہیں کھل سکا (موجود نہیں یا آپ کے دائرے سے باہر ہے)۔ یہ بل کسی آرڈر سے منسلک نہیں۔",
+  "obill.linked_order": "منسلک کسٹمر آرڈر",
+  "obill.back_to_transfer": "آرڈر ٹرانسفر",
+  "obill.general_received": "جنرل موصول شدہ بلز",
+  "obill.customer": "کسٹمر",
+  "obill.assigned_to": "ذمہ دار",
+  "obill.transfer_date": "ٹرانسفر کی تاریخ",
+  "obill.opening_bill": "اس آرڈر کا بل کھولا جا رہا ہے۔",
+  "obill.attached_hint": "بل اس آرڈر سے منسلک ہے: اس کا حوالہ آرڈر نمبر ہے۔ ہیڈر لاک کریں، اخراجات کی لائنیں شامل کریں اور معمول کے مطابق محفوظ کریں۔",
+  "obill.open_general_received": "جنرل موصول شدہ بلز ڈیسک کھولیں",
+  "grb.title": "جنرل موصول شدہ بلز — کلیئرنگ ایجنٹ",
+  "grb.subtitle": "کلیئرنگ ایجنٹ ڈیسک پر موصول کسٹمر آرڈرز اور ہر ایک کے لیے بنے اخراجات کے بلز۔ بل بنائیں یا کھولیں — یہاں سے کچھ پوسٹ نہیں ہوتا۔",
+  "grb.orders": "آرڈرز",
+  "grb.with_bills": "بلز کے ساتھ",
+  "grb.refresh": "تازہ کریں",
+  "grb.search_ph": "آرڈر نمبر، کسٹمر، ٹرک، سامان تلاش کریں…",
+  "grb.only_missing": "صرف وہ آرڈرز جن کا بل ابھی بنانا ہے",
+  "grb.loading": "کسٹمر آرڈرز لوڈ ہو رہے ہیں…",
+  "grb.load_failed": "کسٹمر آرڈرز لوڈ نہیں ہو سکے۔",
+  "grb.empty": "کوئی کسٹمر آرڈر نہیں ملا۔",
+  "grb.col_order": "آرڈر",
+  "grb.col_route_truck": "روٹ / ٹرک",
+  "obill.transfer_failed": "ٹرانسفر محفوظ نہیں ہو سکا۔ کوئی تبدیلی نہیں ہوئی — براہِ کرم دوبارہ کوشش کریں۔",
+  "grb.tab_received": "ڈیسک پر موصول",
+  "grb.tab_all": "تمام آرڈرز",
+  "grb.col_received": "موصولی",
+  "grb.not_received": "ابھی موصول نہیں ہوا",
+  "grb.received_by": "ذمہ دار: {name}",
+  "grb.no_received_hint": "ابھی کلیئرنگ ایجنٹ ڈیسک پر کوئی آرڈر موصول نہیں ہوا۔ آرڈر ٹرانسفر سے آرڈر منتقل کریں یا تمام آرڈرز دیکھیں۔",
 };
 
 const ar: Dict = {
@@ -82607,6 +82739,7 @@ const ar: Dict = {
   "owf.narration_ph": "ملاحظة للمكتب المستلم...",
   "owf.no_legs": "لم يتم تسجيل مراحل طريق.",
   "owf.not_found": "الطلب غير موجود.",
+  "api.invalid_record_id": "مرجع السجل \"{value}\" ليس معرّفًا صالحًا. اختر السجل من القائمة بدلًا من كتابة رقمه أو رمزه، ثم حاول مرة أخرى.",
   "owf.registered_truck": "شاحنة مسجلة",
   "owf.select": "اختر...",
   "owf.select_leg": "حدد مرحلة.",
@@ -88405,6 +88538,49 @@ const ar: Dict = {
   "dverify.g_records": "مقارنة بالمستندات والسجلات الموجودة",
   "dverify.d_qty_calculated": "الكمية محسوبة من المبلغ ÷ سعر الوحدة",
   "dverify.d_choose_party": "عدة تطابقات — اختر الحساب الصحيح",
+  "obill.type_customs": "فواتير الجمارك",
+  "obill.type_truck": "فواتير مصاريف الشاحنات",
+  "obill.type_customer": "فواتير مصاريف العملاء",
+  "obill.type_other": "فواتير المصاريف الأخرى",
+  "obill.checking": "جارٍ فحص الفواتير…",
+  "obill.no_access": "لا صلاحية",
+  "obill.none": "لا توجد فاتورة بعد",
+  "obill.create": "إنشاء فاتورة",
+  "obill.posted": "مُرحّل",
+  "obill.created": "تم إنشاء الفاتورة",
+  "obill.open": "فتح الفاتورة",
+  "obill.bill_not_found": "لم يتم العثور على هذه الفاتورة لهذا الطلب (قد تكون خارج نطاق فرعك).",
+  "obill.attached_to_order": "مرتبط بطلب العميل",
+  "obill.loading_order": "جارٍ فتح طلب العميل…",
+  "obill.order_unavailable": "تعذّر فتح طلب العميل (غير موجود أو خارج نطاقك). هذه الفاتورة غير مرتبطة بطلب.",
+  "obill.linked_order": "طلب العميل المرتبط",
+  "obill.back_to_transfer": "تحويل الطلب",
+  "obill.general_received": "الفواتير العامة المستلمة",
+  "obill.customer": "العميل",
+  "obill.assigned_to": "مُسند إلى",
+  "obill.transfer_date": "تاريخ التحويل",
+  "obill.opening_bill": "جارٍ فتح فاتورة هذا الطلب.",
+  "obill.attached_hint": "الفاتورة مرتبطة بهذا الطلب: مرجعها هو رقم الطلب. اقفل الترويسة وأضف بنود المصاريف واحفظ كالمعتاد.",
+  "obill.open_general_received": "فتح مكتب الفواتير العامة المستلمة",
+  "grb.title": "الفواتير العامة المستلمة — وكيل التخليص",
+  "grb.subtitle": "طلبات العملاء المستلمة في مكتب وكيل التخليص وفواتير المصاريف المنشأة لكل منها. أنشئ فاتورة أو افتحها — لا يُرحّل شيء من هنا.",
+  "grb.orders": "الطلبات",
+  "grb.with_bills": "لها فواتير",
+  "grb.refresh": "تحديث",
+  "grb.search_ph": "ابحث برقم الطلب أو العميل أو الشاحنة أو البضاعة…",
+  "grb.only_missing": "الطلبات التي لا تزال تحتاج فاتورة فقط",
+  "grb.loading": "جارٍ تحميل طلبات العملاء…",
+  "grb.load_failed": "تعذّر تحميل طلبات العملاء.",
+  "grb.empty": "لم يتم العثور على طلبات عملاء.",
+  "grb.col_order": "الطلب",
+  "grb.col_route_truck": "المسار / الشاحنة",
+  "obill.transfer_failed": "تعذّر حفظ التحويل. لم يتغير شيء — يرجى المحاولة مرة أخرى.",
+  "grb.tab_received": "المستلمة في المكتب",
+  "grb.tab_all": "كل الطلبات",
+  "grb.col_received": "الاستلام",
+  "grb.not_received": "لم يُستلم بعد",
+  "grb.received_by": "المسؤول: {name}",
+  "grb.no_received_hint": "لم يُستلم أي طلب في مكتب وكيل التخليص بعد. حوّل طلبًا من تحويل الطلبات أو انتقل إلى كل الطلبات.",
 };
 
 const fa: Dict = {
@@ -107935,6 +108111,7 @@ const fa: Dict = {
   "owf.narration_ph": "یادداشت برای دفتر دریافت‌کننده...",
   "owf.no_legs": "هیچ مرحله مسیری ثبت نشده است.",
   "owf.not_found": "سفارش یافت نشد.",
+  "api.invalid_record_id": "مرجع رکورد \"{value}\" شناسه معتبری نیست. به‌جای تایپ شماره یا کد، رکورد را از فهرست انتخاب کنید و دوباره تلاش کنید.",
   "owf.registered_truck": "کامیون ثبت‌شده",
   "owf.select": "انتخاب کنید...",
   "owf.select_leg": "یک مرحله را انتخاب کنید.",
@@ -113733,6 +113910,49 @@ const fa: Dict = {
   "dverify.g_records": "در برابر اسناد و سوابق موجود",
   "dverify.d_qty_calculated": "مقدار از مبلغ ÷ قیمت واحد محاسبه شد",
   "dverify.d_choose_party": "چند مورد منطبق — حساب درست را انتخاب کنید",
+  "obill.type_customs": "صورت‌حساب‌های گمرکی",
+  "obill.type_truck": "صورت‌حساب‌های هزینهٔ کامیون",
+  "obill.type_customer": "صورت‌حساب‌های هزینهٔ مشتری",
+  "obill.type_other": "صورت‌حساب‌های هزینه‌های دیگر",
+  "obill.checking": "در حال بررسی صورت‌حساب‌ها…",
+  "obill.no_access": "بدون دسترسی",
+  "obill.none": "هنوز صورت‌حسابی نیست",
+  "obill.create": "ایجاد صورت‌حساب",
+  "obill.posted": "ثبت‌شده",
+  "obill.created": "صورت‌حساب ایجاد شد",
+  "obill.open": "باز کردن صورت‌حساب",
+  "obill.bill_not_found": "این صورت‌حساب برای این سفارش پیدا نشد (ممکن است خارج از دامنهٔ شعبهٔ شما باشد).",
+  "obill.attached_to_order": "پیوست به سفارش مشتری",
+  "obill.loading_order": "در حال باز کردن سفارش مشتری…",
+  "obill.order_unavailable": "سفارش مشتری باز نشد (وجود ندارد یا خارج از دامنهٔ شماست). این صورت‌حساب به سفارشی پیوند ندارد.",
+  "obill.linked_order": "سفارش مشتری پیوست‌شده",
+  "obill.back_to_transfer": "انتقال سفارش",
+  "obill.general_received": "صورت‌حساب‌های دریافتی عمومی",
+  "obill.customer": "مشتری",
+  "obill.assigned_to": "واگذارشده به",
+  "obill.transfer_date": "تاریخ انتقال",
+  "obill.opening_bill": "در حال باز کردن صورت‌حساب این سفارش.",
+  "obill.attached_hint": "صورت‌حساب به این سفارش پیوست است: مرجع آن شمارهٔ سفارش است. سربرگ را قفل کنید، ردیف‌های هزینه را اضافه کنید و مانند همیشه ذخیره کنید.",
+  "obill.open_general_received": "باز کردن میز صورت‌حساب‌های دریافتی عمومی",
+  "grb.title": "صورت‌حساب‌های دریافتی عمومی — ترخیص‌کار",
+  "grb.subtitle": "سفارش‌های مشتری دریافت‌شده در میز ترخیص‌کار و صورت‌حساب‌های هزینهٔ هر یک. صورت‌حساب ایجاد یا باز کنید — از اینجا چیزی ثبت نمی‌شود.",
+  "grb.orders": "سفارش‌ها",
+  "grb.with_bills": "دارای صورت‌حساب",
+  "grb.refresh": "تازه‌سازی",
+  "grb.search_ph": "جستجوی شمارهٔ سفارش، مشتری، کامیون، کالا…",
+  "grb.only_missing": "فقط سفارش‌هایی که هنوز صورت‌حساب لازم دارند",
+  "grb.loading": "در حال بارگیری سفارش‌های مشتری…",
+  "grb.load_failed": "سفارش‌های مشتری بارگیری نشد.",
+  "grb.empty": "سفارش مشتری‌ای پیدا نشد.",
+  "grb.col_order": "سفارش",
+  "grb.col_route_truck": "مسیر / کامیون",
+  "obill.transfer_failed": "انتقال ذخیره نشد. چیزی تغییر نکرد — لطفاً دوباره تلاش کنید.",
+  "grb.tab_received": "دریافت‌شده در میز",
+  "grb.tab_all": "همهٔ سفارش‌ها",
+  "grb.col_received": "دریافت",
+  "grb.not_received": "هنوز دریافت نشده",
+  "grb.received_by": "مسئول: {name}",
+  "grb.no_received_hint": "هنوز سفارشی در میز ترخیص‌کار دریافت نشده است. از انتقال سفارش، سفارشی را منتقل کنید یا همهٔ سفارش‌ها را ببینید.",
 };
 
 const ps: Dict = {
@@ -133261,6 +133481,7 @@ const ps: Dict = {
   "owf.narration_ph": "د ترلاسه کوونکي دفتر لپاره یادښت...",
   "owf.no_legs": "د لارې هېڅ پړاو ثبت نه دی شوی.",
   "owf.not_found": "امر ونه موندل شو.",
+  "api.invalid_record_id": "د ریکارډ حواله \"{value}\" سمه پېژند (ID) نه ده. د شمېرې یا کوډ لیکلو پر ځای ریکارډ له لېست څخه وټاکئ، بیا هڅه وکړئ.",
   "owf.registered_truck": "ثبت شوې لاری",
   "owf.select": "وټاکئ...",
   "owf.select_leg": "یو پړاو وټاکئ.",
@@ -139068,6 +139289,49 @@ const ps: Dict = {
   "dverify.g_records": "د موجودو سندونو او ریکارډونو سره پرتله",
   "dverify.d_qty_calculated": "مقدار له مبلغ ÷ د واحد بیې څخه محاسبه شو",
   "dverify.d_choose_party": "څو سمونونه — سم حساب وټاکئ",
+  "obill.type_customs": "د ګمرک بلونه",
+  "obill.type_truck": "د ټرک د لګښتونو بلونه",
+  "obill.type_customer": "د پېرودونکي د لګښتونو بلونه",
+  "obill.type_other": "د نورو لګښتونو بلونه",
+  "obill.checking": "بلونه کتل کېږي…",
+  "obill.no_access": "لاسرسی نشته",
+  "obill.none": "تر اوسه بل نشته",
+  "obill.create": "بل جوړ کړئ",
+  "obill.posted": "پوسټ شوی",
+  "obill.created": "بل جوړ شو",
+  "obill.open": "بل پرانیزئ",
+  "obill.bill_not_found": "دا بل د دې امر لپاره ونه موندل شو (کېدای شي ستاسو د څانګې له ساحې بهر وي).",
+  "obill.attached_to_order": "د پېرودونکي له امر سره تړلی",
+  "obill.loading_order": "د پېرودونکي امر پرانیستل کېږي…",
+  "obill.order_unavailable": "د پېرودونکي امر پرانیستل نه شو (نشته یا ستاسو له ساحې بهر دی). دا بل له کوم امر سره تړلی نه دی.",
+  "obill.linked_order": "تړلی د پېرودونکي امر",
+  "obill.back_to_transfer": "د امر لېږد",
+  "obill.general_received": "عمومي ترلاسه شوي بلونه",
+  "obill.customer": "پېرودونکی",
+  "obill.assigned_to": "سپارل شوی",
+  "obill.transfer_date": "د لېږد نېټه",
+  "obill.opening_bill": "د دې امر بل پرانیستل کېږي.",
+  "obill.attached_hint": "بل له دې امر سره تړلی دی: د هغه مرجع د امر شمېره ده. سرلیک قفل کړئ، د لګښت کرښې ورزیاتې کړئ او د تل په څېر یې خوندي کړئ.",
+  "obill.open_general_received": "د عمومي ترلاسه شویو بلونو مېز پرانیزئ",
+  "grb.title": "عمومي ترلاسه شوي بلونه — کلیرنګ اجنټ",
+  "grb.subtitle": "د کلیرنګ اجنټ په مېز ترلاسه شوي د پېرودونکو امرونه او د هر یوه لپاره جوړ شوي د لګښت بلونه. بل جوړ یا پرانیزئ — له دې ځایه هیڅ شی نه پوسټ کېږي.",
+  "grb.orders": "امرونه",
+  "grb.with_bills": "له بلونو سره",
+  "grb.refresh": "تازه کول",
+  "grb.search_ph": "د امر شمېره، پېرودونکی، ټرک، توکي ولټوئ…",
+  "grb.only_missing": "یوازې هغه امرونه چې بل یې لا جوړول دي",
+  "grb.loading": "د پېرودونکو امرونه پورته کېږي…",
+  "grb.load_failed": "د پېرودونکو امرونه پورته نه شول.",
+  "grb.empty": "د پېرودونکي امر ونه موندل شو.",
+  "grb.col_order": "امر",
+  "grb.col_route_truck": "لاره / ټرک",
+  "obill.transfer_failed": "لېږد خوندي نه شو. هیڅ بدلون نه دی راغلی — مهرباني وکړئ بیا هڅه وکړئ.",
+  "grb.tab_received": "په مېز ترلاسه شوي",
+  "grb.tab_all": "ټول امرونه",
+  "grb.col_received": "ترلاسه کول",
+  "grb.not_received": "لا نه دی ترلاسه شوی",
+  "grb.received_by": "مسؤل: {name}",
+  "grb.no_received_hint": "تر اوسه د کلیرنګ اجنټ په مېز کې کوم امر نه دی ترلاسه شوی. له د امر لېږد څخه یو امر ولېږئ یا ټول امرونه وګورئ.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
