@@ -348,7 +348,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                 className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 cursor-pointer flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-lg border border-blue-200/50 dark:border-blue-900/50 transition-colors"
               >
                 <span>{translateHeader(lang, "VIEW ALL")}</span>
-                <span className="text-[10px] bg-blue-600 text-white rounded-full px-1.5 py-0.2">
+                <span className="text-[11px] bg-blue-600 text-white rounded-full px-1.5 py-0.2">
                   {countrySummaries.length || 6}
                 </span>
               </button>
@@ -459,10 +459,10 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-foreground truncate">{act.title}</p>
-                          <p className="text-[10px] font-medium text-muted-foreground truncate">{act.subtitle}</p>
+                          <p className="text-[11px] font-medium text-muted-foreground truncate">{act.subtitle}</p>
                         </div>
                       </div>
-                      <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap shrink-0">
+                      <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap shrink-0">
                         {act.time}
                       </span>
                     </div>
@@ -519,7 +519,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                         ? `${totalSalesSum.toLocaleString()} ${salesCurrencies[0]}`
                         : t(lang, "dash.mixed_currencies", "Several currencies")}
                   </span>
-                  <span className="text-[9.5px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                     {t(lang, "dash.total_sales", "Total Sales")}
                   </span>
                 </div>
@@ -588,11 +588,11 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                         <td className="py-2 px-2 text-foreground font-medium truncate max-w-[90px]">{shp.customer}</td>
                         <td className="py-2 px-1.5 text-muted-foreground">{shp.country}</td>
                         <td className="py-2 px-1 text-center">
-                          <span className="text-[10px] text-muted-foreground font-semibold">{shp.mode}</span>
+                          <span className="text-[11px] text-muted-foreground font-semibold">{shp.mode}</span>
                         </td>
                         <td className="py-2 px-1.5 text-center">
                           <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
                               shp.statusTone === "green"
                                 ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
                                 : shp.statusTone === "blue"
@@ -612,7 +612,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                             {shp.status}
                           </span>
                         </td>
-                        <td className="py-2 px-2 text-right text-muted-foreground text-[10px]">{shp.eta}</td>
+                        <td className="py-2 px-2 text-right text-muted-foreground text-[11px]">{shp.eta}</td>
                       </tr>
                     ))}
                   </tbody>

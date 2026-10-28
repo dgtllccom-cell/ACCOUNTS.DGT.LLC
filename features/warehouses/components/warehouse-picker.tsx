@@ -97,36 +97,36 @@ export function WarehousePicker({
                 <p className="text-xs text-slate-500 dark:text-slate-300 font-medium">{t(lang, "branch.code_prefix", "Code:")} {viewWarehouse.warehouse_code || viewWarehouse.id.slice(0, 8)}</p>
               </div>
               <div className="text-right">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500 text-slate-950">
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-black uppercase bg-emerald-500 text-slate-950">
                   {viewWarehouse.is_active !== false ? t(lang, "wh.wp_active_facility", "Active Facility") : t(lang, "god.inactive", "Inactive")}
                 </span>
-                <p className="text-[10px] text-slate-400 mt-1">{t(lang, "acct.apv_type_colon", "Type:")} <span className="font-bold text-slate-800 dark:text-white uppercase">{viewWarehouse.warehouse_type || "general"}</span></p>
+                <p className="text-[11px] text-slate-400 mt-1">{t(lang, "acct.apv_type_colon", "Type:")} <span className="font-bold text-slate-800 dark:text-white uppercase">{viewWarehouse.warehouse_type || "general"}</span></p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 bg-slate-50/50 dark:bg-slate-900/50">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "creg.cp_country_city", "Country / City")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "creg.cp_country_city", "Country / City")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.country_name || "UAE"} {viewWarehouse.city_name ? `/ ${viewWarehouse.city_name}` : ""}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_managed_branch", "Managed Branch")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_managed_branch", "Managed Branch")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.branch_name || t(lang, "report.scope_main_branch", "Main Branch")}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_storage_capacity", "Storage Capacity")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_storage_capacity", "Storage Capacity")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.total_capacity_tons ? `${viewWarehouse.total_capacity_tons} Tons` : t(lang, "wh.wp_standard_storage", "Standard Storage")}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_address_location", "Address / Location")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_address_location", "Address / Location")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.address || viewWarehouse.area_name || "-"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_manager_contact", "Manager Contact")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_manager_contact", "Manager Contact")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.manager_name || viewWarehouse.phone_number || "-"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_cold_storage_temperature", "Cold Storage / Temperature")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_cold_storage_temperature", "Cold Storage / Temperature")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.is_cold_storage ? t(lang, "wh.wp_cold_storage_facility", "Cold Storage Facility") : t(lang, "wh.wp_ambient_storage", "Ambient Storage")}</span>
               </div>
             </div>

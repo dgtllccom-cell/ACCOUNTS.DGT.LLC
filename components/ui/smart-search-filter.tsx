@@ -295,7 +295,7 @@ export function SmartFilterDropdown({
 
   return (
     <div className={`relative inline-block text-left w-full sm:w-auto ${className}`} ref={popoverRef}>
-      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
         {label}
       </label>
       <button
@@ -490,7 +490,7 @@ export function SmartSearchFilter({
                 <h3 className="text-sm font-black text-slate-900 dark:text-white">
                   {tx("headerTitle", lang)}
                 </h3>
-                <span className="rounded-full border border-blue-200 bg-blue-50/80 px-2 py-0.5 text-[9.5px] font-bold text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300">
+                <span className="rounded-full border border-blue-200 bg-blue-50/80 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300">
                   {tx("badgeCompact", lang)}
                 </span>
               </div>
@@ -645,7 +645,7 @@ export function SmartSearchFilter({
         {/* Date range (universal picker) */}
         {!hideDateRange && (
           <div className="w-full sm:col-span-2">
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
               {centralT(lang, "datepick.date_range", "Date Range")}
             </label>
             <ErpDatePicker
@@ -813,7 +813,7 @@ export function SmartSearchFilter({
               {!hideDateRange && (
                 <div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                       {centralT(lang, "datepick.date_range", "Date Range")}
                     </label>
                     <ErpDatePicker

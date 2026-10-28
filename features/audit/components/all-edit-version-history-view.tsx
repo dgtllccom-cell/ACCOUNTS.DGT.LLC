@@ -366,7 +366,7 @@ export function AllEditVersionHistoryView() {
                   <Globe className="h-3.5 w-3.5 text-emerald-600" />
                   {t(lang, "audit.all_countries_report", "All Countries Audit Report")}
                 </span>
-                <span className="px-1.5 py-0.5 text-[9px] font-black uppercase rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                <span className="px-1.5 py-0.5 text-[11px] font-black uppercase rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
                   {t(lang, "audit.super_admin_only", "Super Admin Only")}
                 </span>
               </div>
@@ -564,7 +564,7 @@ export function AllEditVersionHistoryView() {
                   return (
                     <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
                       <td className="py-2.5 px-3 text-center"><input type="checkbox" className="rounded border-slate-300" /></td>
-                      <td className="py-2.5 px-3 text-center font-mono text-slate-400 text-[10.5px]">{itemNumber}</td>
+                      <td className="py-2.5 px-3 text-center font-mono text-slate-400 text-[11px]">{itemNumber}</td>
 
                       {/* Bill / Ref No */}
                       <td className="py-2.5 px-3">
@@ -575,7 +575,7 @@ export function AllEditVersionHistoryView() {
 
                       {/* Edit Count */}
                       <td className="py-2.5 px-3 text-center">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-black bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                           <Sparkles className="h-3 w-3" />
                           +{editCount}
                         </span>
@@ -583,7 +583,7 @@ export function AllEditVersionHistoryView() {
 
                       {/* Module */}
                       <td className="py-2.5 px-3">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[10.5px] bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[11px] bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
                           {row.module}
                         </span>
                       </td>
@@ -609,14 +609,14 @@ export function AllEditVersionHistoryView() {
 
                       {/* Change Type */}
                       <td className="py-2.5 px-3 text-center">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                           {row.reason || t(lang, "audit.field_update", "Field Update")}
                         </span>
                       </td>
 
                       {/* Risk Level */}
                       <td className="py-2.5 px-3 text-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black ${
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-black ${
                           row.risk_level === "High"
                             ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300"
                             : row.risk_level === "Medium"
@@ -629,7 +629,7 @@ export function AllEditVersionHistoryView() {
 
                       {/* Approval Status */}
                       <td className="py-2.5 px-3 text-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black ${
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-black ${
                           row.approval_status === "Pending"
                             ? "bg-amber-50 text-amber-600 border border-amber-200"
                             : row.approval_status === "Rejected"

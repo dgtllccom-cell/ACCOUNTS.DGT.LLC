@@ -89,11 +89,11 @@ export function LeadReactivationView({ lang }: { lang?: string }) {
                 <tr key={r.id} data-testid="react-row" data-id={r.id} className="border-t border-slate-100 align-top dark:border-slate-800">
                   <td className="px-3 py-2"><span className={`inline-block min-w-10 rounded-full px-2 py-0.5 text-center text-[11px] font-bold tabular-nums ${r.score >= 70 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200" : r.score >= 40 ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{r.score}</span></td>
                   <td className="px-3 py-2 font-mono"><a href={`/dashboard/customer-inquiries?id=${r.id}`} className="font-semibold text-blue-700 hover:underline dark:text-blue-300">{r.inquiry_no}</a></td>
-                  <td className="px-3 py-2">{r.customer_name}{r.company_name ? <div className="text-[10px] text-slate-400">{r.company_name}</div> : null}</td>
-                  <td className="px-3 py-2">{s.tGlobal(`cinq.status_${r.status}`, r.status)}{r.lost_reason ? <div className="text-[10px] text-slate-400">{r.lost_reason}</div> : null}</td>
+                  <td className="px-3 py-2">{r.customer_name}{r.company_name ? <div className="text-[11px] text-slate-400">{r.company_name}</div> : null}</td>
+                  <td className="px-3 py-2">{s.tGlobal(`cinq.status_${r.status}`, r.status)}{r.lost_reason ? <div className="text-[11px] text-slate-400">{r.lost_reason}</div> : null}</td>
                   <td className="px-3 py-2 tabular-nums">{r.idle_days}</td>
                   <td className="px-3 py-2" dir="ltr">{r.whatsapp || r.mobile || r.email || <span className="text-rose-600">{s.t("no_contact", "none")}</span>}</td>
-                  <td className="px-3 py-2">{r.call_count}{r.last_call_risk ? <span className="ms-1 text-[10px] text-slate-500">({s.t(`risk_${r.last_call_risk}`, r.last_call_risk)})</span> : null}</td>
+                  <td className="px-3 py-2">{r.call_count}{r.last_call_risk ? <span className="ms-1 text-[11px] text-slate-500">({s.t(`risk_${r.last_call_risk}`, r.last_call_risk)})</span> : null}</td>
                   <td className="max-w-xs px-3 py-2 text-[11px] text-slate-600 dark:text-slate-300">{(r.talkingPoints ?? []).slice(0, 3).map((p: string, i: number) => <div key={i} className="line-clamp-2">• {p}</div>)}</td>
                   <td className="px-3 py-2"><button type="button" data-testid="react-start" onClick={() => start(r)} className="rounded-lg bg-emerald-700 px-2.5 py-1 text-[11px] font-bold text-white">{s.t("reactivate", "Reactivate")}</button></td>
                 </tr>
@@ -133,5 +133,5 @@ export function LeadReactivationView({ lang }: { lang?: string }) {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
+  return <div><label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
 }

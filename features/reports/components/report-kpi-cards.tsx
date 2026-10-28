@@ -48,7 +48,7 @@ export function ReportKpiCards({ lang, summary, reportType, currency = "USD", is
         const Icon = card.icon;
         return (
           <div key={card.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <div className="flex items-center gap-2"><Icon className={`h-4 w-4 ${card.color}`} /><span className="text-[10px] font-black uppercase tracking-wide text-slate-400">{card.label}</span></div>
+            <div className="flex items-center gap-2"><Icon className={`h-4 w-4 ${card.color}`} /><span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{card.label}</span></div>
             <div className={`mt-2 text-lg font-black tabular-nums ${card.color}`}>{card.monetary ? `${currency} ` : ""}{format(card.value, card.monetary)}{card.suffix || ""}</div>
           </div>
         );

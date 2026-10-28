@@ -53,7 +53,7 @@ export function AuthPortalShell({
             </div>
 
             {/* Subtle Footer */}
-            <div className="relative z-10 flex flex-col items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-900 pt-4 text-[10px] font-semibold text-slate-400 sm:flex-row mt-4">
+            <div className="relative z-10 flex flex-col items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-900 pt-4 text-[11px] font-semibold text-slate-400 sm:flex-row mt-4">
               <span>
                 {lang === "ur"
                   ? "© 2026 ڈی جی ٹی اکاؤنٹس ای آر پی (DGT.LLC)۔ جملہ حقوق محفوظ ہیں۔"

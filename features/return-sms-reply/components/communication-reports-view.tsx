@@ -108,7 +108,7 @@ export function CommunicationReportsView({ lang }: Props) {
         {kpis.map((kpi, i) => (
           <div key={i} className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase text-slate-500">{kpi.label}</span>
+              <span className="text-[11px] font-bold uppercase text-slate-500">{kpi.label}</span>
               <div className={cn("rounded-xl p-1.5 border", kpi.color)}>
                 {kpi.icon}
               </div>
@@ -171,7 +171,7 @@ export function CommunicationReportsView({ lang }: Props) {
                 <td className="px-4 py-3 text-center uppercase font-bold">{log.channel}</td>
                 <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-400">{log.recipient}</td>
                 <td className="px-4 py-3 text-center">
-                  <span className="text-[10px] font-black rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+                  <span className="text-[11px] font-black rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
                     {log.status}
                   </span>
                 </td>

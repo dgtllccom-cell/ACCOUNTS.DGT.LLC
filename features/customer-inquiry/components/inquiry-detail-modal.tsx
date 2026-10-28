@@ -137,7 +137,7 @@ export function InquiryDetailModal({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-black text-slate-900 dark:text-white truncate">{inq?.customer_name || "…"}</span>
-              {inq && <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusTone(inq.status as InquiryStatus)}`}>{s.t(`status_${inq.status}`, inq.status)}</span>}
+              {inq && <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${statusTone(inq.status as InquiryStatus)}`}>{s.t(`status_${inq.status}`, inq.status)}</span>}
             </div>
             <span className="text-[11px] text-slate-400 font-mono">{inq?.inquiry_no}</span>
           </div>
@@ -190,7 +190,7 @@ export function InquiryDetailModal({
                   {inq.canEdit && (
                     <>
                       <input ref={fileRef} type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadFile(f); e.currentTarget.value = ""; }} />
-                      <Button type="button" size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => fileRef.current?.click()} disabled={busy}>{s.t("upload", "Upload")}</Button>
+                      <Button type="button" size="sm" variant="outline" className="h-6 text-[11px]" onClick={() => fileRef.current?.click()} disabled={busy}>{s.t("upload", "Upload")}</Button>
                     </>
                   )}
                 </div>
@@ -248,9 +248,9 @@ export function InquiryDetailModal({
 
                   {/* customer approval */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="text-[10.5px] text-slate-500">{s.t("customer_approval", "Customer Approval")}: <b>{s.t(`appr_${inq.customer_approval_status}`, inq.customer_approval_status)}</b></span>
-                    <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px] text-emerald-600" disabled={busy} onClick={() => act("/customer-approval", { status: "approved", note: window.prompt(s.t("appr_note", "Approval note (optional)")) })}><CheckCircle2 className="h-3 w-3 me-0.5" />{s.t("appr_approve", "Approved")}</Button>
-                    <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px] text-rose-600" disabled={busy} onClick={() => act("/customer-approval", { status: "declined", note: window.prompt(s.t("decl_note", "Reason")) })}><XCircle className="h-3 w-3 me-0.5" />{s.t("appr_decline", "Declined")}</Button>
+                    <span className="text-[11px] text-slate-500">{s.t("customer_approval", "Customer Approval")}: <b>{s.t(`appr_${inq.customer_approval_status}`, inq.customer_approval_status)}</b></span>
+                    <Button type="button" size="sm" variant="ghost" className="h-6 text-[11px] text-emerald-600" disabled={busy} onClick={() => act("/customer-approval", { status: "approved", note: window.prompt(s.t("appr_note", "Approval note (optional)")) })}><CheckCircle2 className="h-3 w-3 me-0.5" />{s.t("appr_approve", "Approved")}</Button>
+                    <Button type="button" size="sm" variant="ghost" className="h-6 text-[11px] text-rose-600" disabled={busy} onClick={() => act("/customer-approval", { status: "declined", note: window.prompt(s.t("decl_note", "Reason")) })}><XCircle className="h-3 w-3 me-0.5" />{s.t("appr_decline", "Declined")}</Button>
                   </div>
 
                   {/* link / convert */}
@@ -296,7 +296,7 @@ export function InquiryDetailModal({
                     </div>
                   )}
                   {inq.linked_task_id && (
-                    <a href={`/dashboard/user-tasks?id=${inq.linked_task_id}`} className="text-[10.5px] text-blue-600 hover:underline flex items-center gap-1"><ListPlus className="h-3 w-3" />{s.t("open_task", "Open the linked follow-up task")}</a>
+                    <a href={`/dashboard/user-tasks?id=${inq.linked_task_id}`} className="text-[11px] text-blue-600 hover:underline flex items-center gap-1"><ListPlus className="h-3 w-3" />{s.t("open_task", "Open the linked follow-up task")}</a>
                   )}
                   <div className="pt-1">
                     <Button type="button" size="sm" variant="outline" className="h-7 text-[11px] gap-1" onClick={() => setHandoffModalOpen(true)}>
@@ -317,7 +317,7 @@ export function InquiryDetailModal({
                     <span className="font-bold text-slate-700 dark:text-slate-200">{s.t(`ev_${e.event_type}`, e.event_type)}</span>
                     {e.to_status && <span className="text-slate-400"> → {s.t(`status_${e.to_status}`, e.to_status)}</span>}
                     {e.note && <span className="text-slate-500"> — {e.note}</span>}
-                    <div className="text-[10px] text-slate-400">{e.actor_display || ""} · {fmtDateTime(e.created_at)}</div>
+                    <div className="text-[11px] text-slate-400">{e.actor_display || ""} · {fmtDateTime(e.created_at)}</div>
                   </div>
                 </li>
               ))}

@@ -230,7 +230,7 @@ export function TempBillsRegisterView({ lang: langProp, section = "all" }: { lan
                     {list.map((r) => (
                       <li key={r.id} className="space-y-2 p-3 md:border-b md:border-border/60">
                         <div className="flex items-center justify-between gap-2">
-                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${r.bill_kind === "purchase" ? "bg-blue-500/15 text-blue-600" : "bg-emerald-500/15 text-emerald-600"}`}>
+                          <span className={`rounded px-1.5 py-0.5 text-[11px] font-bold ${r.bill_kind === "purchase" ? "bg-blue-500/15 text-blue-600" : "bg-emerald-500/15 text-emerald-600"}`}>
                             {r.bill_kind === "purchase" ? s.t("kind_purchase", "Purchase") : s.t("kind_sale", "Sale")}
                           </span>
                           <span className="font-mono text-xs text-muted-foreground">{r.bill_date?.slice(0, 10)}</span>
@@ -274,7 +274,7 @@ export function TempBillsRegisterView({ lang: langProp, section = "all" }: { lan
                           <tr key={r.id} className="border-b border-border/60 hover:bg-muted/30">
                             <td className="whitespace-nowrap px-2 py-1.5 font-mono text-xs">{r.bill_date?.slice(0, 10)}</td>
                             <td className="px-2 py-1.5">
-                              <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${r.bill_kind === "purchase" ? "bg-blue-500/15 text-blue-600" : "bg-emerald-500/15 text-emerald-600"}`}>
+                              <span className={`rounded px-1.5 py-0.5 text-[11px] font-bold ${r.bill_kind === "purchase" ? "bg-blue-500/15 text-blue-600" : "bg-emerald-500/15 text-emerald-600"}`}>
                                 {r.bill_kind === "purchase" ? s.t("kind_purchase", "Purchase") : s.t("kind_sale", "Sale")}
                               </span>
                             </td>
@@ -346,7 +346,7 @@ export function TempBillsRegisterView({ lang: langProp, section = "all" }: { lan
                 <div className="overflow-x-auto rounded-lg border border-border">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-muted text-[10px] uppercase text-muted-foreground">
+                      <tr className="bg-muted text-[11px] uppercase text-muted-foreground">
                         <th className={`p-2 ${textStart}`}>{s.t("col_goods", "Goods")}</th>
                         <th className={`p-2 ${textEnd}`}>{s.t("col_qty", "Qty")}</th>
                         <th className={`p-2 ${textEnd}`}>{s.t("col_rate", "Rate")}</th>
@@ -378,7 +378,7 @@ function Kpi({ label, value, tone }: { label: string; value: string; tone: "blue
   const c = tone === "blue" ? "border-s-blue-500" : "border-s-emerald-500";
   return (
     <div className={`rounded-lg border border-border border-s-4 ${c} bg-background p-3`}>
-      <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-1 text-lg font-black tabular-nums">{value}</p>
     </div>
   );
@@ -637,7 +637,7 @@ function TempBillForm({
                   <button type="button" onClick={addItem} className="rounded-lg border border-blue-300 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">+ {s.t("add_item", "Add Item")}</button>
                 </div>
                 {/* Desktop table header */}
-                <div className="hidden gap-2 px-1 pb-1 text-[10px] font-bold uppercase text-muted-foreground lg:grid lg:grid-cols-[1.6fr_0.8fr_0.9fr_0.7fr_0.8fr_0.9fr_auto]">
+                <div className="hidden gap-2 px-1 pb-1 text-[11px] font-bold uppercase text-muted-foreground lg:grid lg:grid-cols-[1.6fr_0.8fr_0.9fr_0.7fr_0.8fr_0.9fr_auto]">
                   <span>{s.t("col_goods", "Goods")}</span><span className="text-right">{s.t("col_qty", "Quantity")}</span><span className="text-right">{s.t("col_weight", "Weight / Cartons")}</span><span>{s.t("f_unit", "Unit")}</span><span className="text-right">{s.t("col_rate", "Rate")}</span><span className="text-right">{s.t("col_amount", "Amount")}</span><span></span>
                 </div>
                 <div className="space-y-2">
@@ -675,7 +675,7 @@ function TempBillForm({
                 </label>
                 <div className="overflow-x-auto rounded-lg border border-border">
                   <table className="w-full text-xs">
-                    <thead><tr className="bg-muted text-[10px] uppercase text-muted-foreground">
+                    <thead><tr className="bg-muted text-[11px] uppercase text-muted-foreground">
                       <Th className="p-2 text-start">{s.t("col_goods", "Goods")}</Th><Th className="p-2 text-end">{s.t("col_qty", "Quantity")}</Th><Th className="p-2 text-end">{s.t("col_rate", "Rate")}</Th><Th className="p-2 text-end">{s.t("col_amount", "Amount")}</Th>
                     </tr></thead>
                     <tbody>
@@ -715,7 +715,7 @@ function TempBillForm({
                   <span className="text-base font-black text-blue-700 dark:text-blue-300">{currencyCode} {fmt(totalAmount)}</span>
                 </div>
               </div>
-              <p className="mt-3 rounded-md bg-amber-50 p-2 text-[10px] text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+              <p className="mt-3 rounded-md bg-amber-50 p-2 text-[11px] text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
                 {s.t("form_note", "This bill is stored only in the Temporary Bills Register. It does not post to Ledger, Roznamcha, Journal, DR/CR, Stock or any Voucher, and it is not transferred to the main ERP.")}
               </p>
               <div className="mt-3 grid gap-2">

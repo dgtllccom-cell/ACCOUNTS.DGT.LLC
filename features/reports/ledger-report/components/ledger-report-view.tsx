@@ -917,7 +917,7 @@ export function LedgerReportView({
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900">
                     {columns.map((c) => (
-                      <Th key={c.key} className={cn("whitespace-nowrap px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "")}>
+                      <Th key={c.key} className={cn("whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-500", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "")}>
                         {c.header}
                       </Th>
                     ))}

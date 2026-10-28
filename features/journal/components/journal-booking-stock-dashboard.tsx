@@ -212,7 +212,7 @@ function ProgressCell({ r }: { r: StockJournalRow }) {
           style={{ width: `${loaded === 0 ? 0 : Math.max(pct, received > 0 ? 8 : 0)}%` }}
         />
       </div>
-      <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+      <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
         <span>
           Damage: <span className={damage > 0 ? "font-bold text-red-600" : ""}>{fmtNum(damage)}</span>
         </span>
@@ -943,11 +943,11 @@ export function JournalBookingStockDashboard({
           </span>
           <div>
             <div className="flex items-center gap-1.5 leading-none">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
                 {s.t("eyebrow_inventory_journal", "INVENTORY / STOCK JOURNAL")}
               </span>
-              <span className="hidden text-[9px] font-bold text-slate-300 dark:text-slate-600 md:inline">•</span>
-              <span className="hidden text-[9px] font-medium text-slate-400 md:inline">
+              <span className="hidden text-[11px] font-bold text-slate-300 dark:text-slate-600 md:inline">•</span>
+              <span className="hidden text-[11px] font-medium text-slate-400 md:inline">
                 {s.t("subtitle_purchase_general_stock", "Your stock, from booking to delivery.")}
               </span>
             </div>
@@ -1039,7 +1039,7 @@ export function JournalBookingStockDashboard({
             <Filter className="h-3.5 w-3.5 text-blue-600" />
             <span>{s.t("filters", "Filters")}</span>
             {activeChips.length > 0 && (
-              <span className="rounded-full bg-blue-100 px-1.5 py-0.2 text-[9px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+              <span className="rounded-full bg-blue-100 px-1.5 py-0.2 text-[11px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                 {activeChips.length}
               </span>
             )}
@@ -1152,7 +1152,7 @@ export function JournalBookingStockDashboard({
                   {s.t("panel_stock_summary", "Stock Summary")}
                 </h2>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 {s.t("panel_selected_scope", "Selected scope")}
               </span>
             </div>
@@ -1179,12 +1179,12 @@ export function JournalBookingStockDashboard({
                         <span className="text-[17px] font-black text-slate-900 dark:text-slate-50 tabular-nums">
                           {fmtNum(qty)}
                         </span>
-                        <span className="text-[10px] font-medium text-slate-400">{u}</span>
+                        <span className="text-[11px] font-medium text-slate-400">{u}</span>
                       </div>
                     );
                   })}
                 </div>
-                <span className="text-[10px] text-blue-600 font-semibold dark:text-blue-400">
+                <span className="text-[11px] text-blue-600 font-semibold dark:text-blue-400">
                   {metricFilter === "total" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
                 </span>
               </button>
@@ -1210,12 +1210,12 @@ export function JournalBookingStockDashboard({
                         <span className="text-[17px] font-black text-amber-600 dark:text-amber-400 tabular-nums">
                           {fmtNum(qty)}
                         </span>
-                        <span className="text-[10px] font-medium text-slate-400">{u}</span>
+                        <span className="text-[11px] font-medium text-slate-400">{u}</span>
                       </div>
                     );
                   })}
                 </div>
-                <span className="text-[10px] text-amber-600 font-semibold dark:text-amber-400">
+                <span className="text-[11px] text-amber-600 font-semibold dark:text-amber-400">
                   {metricFilter === "remaining" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
                 </span>
               </button>
@@ -1241,19 +1241,19 @@ export function JournalBookingStockDashboard({
                         <span className="text-[17px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
                           {fmtNum(qty)}
                         </span>
-                        <span className="text-[10px] font-medium text-slate-400">{u}</span>
+                        <span className="text-[11px] font-medium text-slate-400">{u}</span>
                       </div>
                     );
                   })}
                 </div>
-                <span className="text-[10px] text-emerald-600 font-semibold dark:text-emerald-400">
+                <span className="text-[11px] text-emerald-600 font-semibold dark:text-emerald-400">
                   {metricFilter === "available" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
                 </span>
               </button>
             </div>
           </div>
 
-          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[10px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
+          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
             {s.t("panel_stock_footnote", "Quantities stay separate by unit. No Bags / Boxes conversion.")}
           </div>
         </article>
@@ -1270,7 +1270,7 @@ export function JournalBookingStockDashboard({
                   {s.t("panel_stock_by_stage", "Stock by Stage")}
                 </h2>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 {s.t("panel_stage_records", "Records")}
               </span>
             </div>
@@ -1297,7 +1297,7 @@ export function JournalBookingStockDashboard({
                       <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${st.dotClass}`} />
                       <span className="truncate">{st.label}</span>
                     </span>
-                    <span className="ms-1.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-black tabular-nums text-slate-700 dark:bg-slate-700 dark:text-slate-200" dir="ltr">
+                    <span className="ms-1.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-slate-700 dark:bg-slate-700 dark:text-slate-200" dir="ltr">
                       {count}
                     </span>
                   </button>
@@ -1306,7 +1306,7 @@ export function JournalBookingStockDashboard({
             </div>
           </div>
 
-          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[10px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
+          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
             {s.t("panel_stage_footnote", "Click any stage to filter the table below.")}
           </div>
         </article>
@@ -1323,12 +1323,12 @@ export function JournalBookingStockDashboard({
                   {s.t("panel_country_wise_stock", "Country-wise Stock")}
                 </h2>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">
                 {s.t("panel_click_to_filter", "Click to filter")}
               </span>
             </div>
 
-            <div className="grid grid-cols-12 bg-slate-50/80 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:bg-slate-800/80">
+            <div className="grid grid-cols-12 bg-slate-50/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-slate-400 dark:bg-slate-800/80">
               <span className="col-span-6">{s.t("col_country_branch", "Country / Branch")}</span>
               <span className="col-span-3 text-end">{s.t("unit_bags", "Bags")}</span>
               <span className="col-span-3 text-end">{s.t("unit_boxes", "Boxes")}</span>
@@ -1356,7 +1356,7 @@ export function JournalBookingStockDashboard({
                       <span className="col-span-6 flex items-center gap-1.5 truncate">
                         <span className="text-sm leading-none shrink-0">{c.flag}</span>
                         <span className="truncate font-semibold">{c.country}</span>
-                        {c.branch && <span className="text-[10px] text-slate-400 truncate">({c.branch})</span>}
+                        {c.branch && <span className="text-[11px] text-slate-400 truncate">({c.branch})</span>}
                       </span>
                       <span className="col-span-3 text-end font-bold tabular-nums" dir="ltr">
                         {fmtNum(c.bags)}
@@ -1371,7 +1371,7 @@ export function JournalBookingStockDashboard({
             </div>
           </div>
 
-          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[10px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
+          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
             {selectedCountry ? `Filtering by ${selectedCountry} · Click row to clear` : "Click any country to filter records."}
           </div>
         </article>
@@ -1871,11 +1871,11 @@ export function JournalBookingStockDashboard({
 
                       {/* 12. Booking / Invoice No. */}
                       <td className="px-3 py-3 text-[11px]">
-                        <div className="text-[10px] font-medium text-slate-400">Booking No.</div>
+                        <div className="text-[11px] font-medium text-slate-400">Booking No.</div>
                         <div className="font-bold text-blue-600 dark:text-blue-400" dir="ltr">
                           {r.bookingNo || "—"}
                         </div>
-                        <div className="mt-0.5 text-[10px] font-medium text-slate-400">Invoice No.</div>
+                        <div className="mt-0.5 text-[11px] font-medium text-slate-400">Invoice No.</div>
                         <div className="font-bold text-blue-600 dark:text-blue-400" dir="ltr">
                           {r.invoiceNo || "—"}
                         </div>
@@ -2089,23 +2089,23 @@ export function JournalBookingStockDashboard({
 
                 <div className="grid grid-cols-2 gap-2 text-[12px] text-slate-600 dark:text-slate-300">
                   <div>
-                    <span className="block text-[10px] uppercase text-slate-400">Origin</span>
+                    <span className="block text-[11px] uppercase text-slate-400">Origin</span>
                     <span className="font-semibold">{r.origin || r.countryName || "—"}</span>
                   </div>
                   <div>
-                    <span className="block text-[10px] uppercase text-slate-400">Date</span>
+                    <span className="block text-[11px] uppercase text-slate-400">Date</span>
                     <span className="font-semibold" dir="ltr">
                       {fmtDateDisplay(r.date)}
                     </span>
                   </div>
                   <div>
-                    <span className="block text-[10px] uppercase text-slate-400">Gross / Net (Kg)</span>
+                    <span className="block text-[11px] uppercase text-slate-400">Gross / Net (Kg)</span>
                     <span className="font-semibold" dir="ltr">
                       {fmtNum(r.grossWeight || r.quantity)} / {fmtNum(r.netWeight || r.quantity)}
                     </span>
                   </div>
                   <div>
-                    <span className="block text-[10px] uppercase text-slate-400">Customs</span>
+                    <span className="block text-[11px] uppercase text-slate-400">Customs</span>
                     <CustomsBadge status={r.customsStatus} stage={r.stage} />
                   </div>
                 </div>

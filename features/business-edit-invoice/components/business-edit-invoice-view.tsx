@@ -277,19 +277,19 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
             <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] gap-2 text-center text-xs">
               <div className="rounded-xl bg-slate-50/80 p-2 dark:bg-slate-800/60">
                 <div className="text-lg font-black text-slate-900 dark:text-slate-100">{rows.length}</div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase">{s.t("total_edit_invoices", "Total Edit Invoices")}</div>
+                <div className="text-[11px] font-bold text-slate-500 uppercase">{s.t("total_edit_invoices", "Total Edit Invoices")}</div>
               </div>
               <div className="rounded-xl bg-blue-50/60 p-2 dark:bg-blue-950/40">
                 <div className="text-lg font-black text-blue-600 dark:text-blue-400">{stats.draft}</div>
-                <div className="text-[10px] font-bold text-blue-600 uppercase">{s.t("draft", "Draft")}</div>
+                <div className="text-[11px] font-bold text-blue-600 uppercase">{s.t("draft", "Draft")}</div>
               </div>
               <div className="rounded-xl bg-emerald-50/60 p-2 dark:bg-emerald-950/40">
                 <div className="text-lg font-black text-emerald-600 dark:text-emerald-400">{stats.finalized}</div>
-                <div className="text-[10px] font-bold text-emerald-600 uppercase">{s.t("finalized", "Finalized")}</div>
+                <div className="text-[11px] font-bold text-emerald-600 uppercase">{s.t("finalized", "Finalized")}</div>
               </div>
               <div className="rounded-xl bg-rose-50/60 p-2 dark:bg-rose-950/40">
                 <div className="text-lg font-black text-rose-600 dark:text-rose-400">{stats.void_}</div>
-                <div className="text-[10px] font-bold text-rose-600 uppercase">{s.t("void", "Void")}</div>
+                <div className="text-[11px] font-bold text-rose-600 uppercase">{s.t("void", "Void")}</div>
               </div>
             </div>
           </div>
@@ -307,19 +307,19 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
             <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] gap-2 text-center text-xs">
               <div className="rounded-xl bg-slate-50/80 p-2 dark:bg-slate-800/60">
                 <div className="text-lg font-black text-purple-700 dark:text-purple-300">{stats.bySource("purchase_booking")}</div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase">{s.t("m_purchase_booking", "Purchase")}</div>
+                <div className="text-[11px] font-bold text-slate-500 uppercase">{s.t("m_purchase_booking", "Purchase")}</div>
               </div>
               <div className="rounded-xl bg-slate-50/80 p-2 dark:bg-slate-800/60">
                 <div className="text-lg font-black text-purple-700 dark:text-purple-300">{stats.bySource("sales_booking")}</div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase">{s.t("m_sales_booking", "Sales")}</div>
+                <div className="text-[11px] font-bold text-slate-500 uppercase">{s.t("m_sales_booking", "Sales")}</div>
               </div>
               <div className="rounded-xl bg-slate-50/80 p-2 dark:bg-slate-800/60">
                 <div className="text-lg font-black text-purple-700 dark:text-purple-300">{stats.bySource("local_purchase")}</div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase">{s.t("m_local_purchase", "Local Purchase")}</div>
+                <div className="text-[11px] font-bold text-slate-500 uppercase">{s.t("m_local_purchase", "Local Purchase")}</div>
               </div>
               <div className="rounded-xl bg-slate-50/80 p-2 dark:bg-slate-800/60">
                 <div className="text-lg font-black text-purple-700 dark:text-purple-300">{stats.bySource("local_sales")}</div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase">{s.t("m_local_sales", "Local Sales")}</div>
+                <div className="text-[11px] font-bold text-slate-500 uppercase">{s.t("m_local_sales", "Local Sales")}</div>
               </div>
             </div>
           </div>
@@ -329,7 +329,7 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
             <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/70 via-white to-amber-50/20 p-4 shadow-sm dark:border-amber-950/60 dark:from-amber-950/30 dark:via-slate-900 dark:to-slate-900">
               <div className="flex items-center justify-between pb-3 border-b border-amber-100/70 dark:border-amber-900/40">
                 <span className="text-xs font-bold text-amber-950 dark:text-amber-200">{s.t("all_countries_report", "All Countries Edit Invoice Report")}</span>
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 uppercase tracking-wider">
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-black text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 uppercase tracking-wider">
                   {s.t("super_admin_only", "Super Admin Only")}
                 </span>
               </div>
@@ -719,7 +719,7 @@ function BillPicker({ s, onClose, onCreated }: { s: Screen; onClose: () => void;
               : bills.length === 0 ? <tr><td colSpan={6} className="p-8 text-center text-slate-400">{s.t("no_bills", "No finalized bills available in your scope.")}</td></tr>
               : bills.map((b) => (
                 <tr key={`${b.sourceModule}:${b.sourceId}`} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                  <td className="p-2 font-bold">{b.billNo || b.manualBillNo || "—"}<div className="text-[10px] text-slate-400">{fmtD(b.transactionDate)}</div></td>
+                  <td className="p-2 font-bold">{b.billNo || b.manualBillNo || "—"}<div className="text-[11px] text-slate-400">{fmtD(b.transactionDate)}</div></td>
                   <td className="p-2">{s.t(`m_${b.sourceModule}`, b.sourceModule)}</td>
                   <td className="p-2">{b.branchLabel || "—"}</td>
                   <td className="p-2">{b.partyName || "—"}</td>

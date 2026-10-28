@@ -84,7 +84,7 @@ export function ConversationItem({ conversation: conv, isActive, onClick }: Prop
             <span className={`truncate text-xs ${hasUnread ? "font-semibold text-foreground" : "font-medium text-foreground/90"}`}>
               {label}
             </span>
-            <span className="flex-shrink-0 text-[10px] text-muted-foreground">
+            <span className="flex-shrink-0 text-[11px] text-muted-foreground">
               {conv.lastMessageAt ? formatDistanceToNow(conv.lastMessageAt) : ""}
             </span>
           </div>
@@ -92,7 +92,7 @@ export function ConversationItem({ conversation: conv, isActive, onClick }: Prop
           <div className="mt-0.5 flex items-center justify-between gap-1">
             <div className="flex min-w-0 flex-1 items-center gap-1">
               {conv.lastMessageDir === "outbound" && (
-                <span className="text-[10px] text-muted-foreground flex-shrink-0">You:</span>
+                <span className="text-[11px] text-muted-foreground flex-shrink-0">You:</span>
               )}
               <MessagePreviewIcon type={null} />
               <span className={`truncate text-[11px] ${hasUnread ? "text-foreground/80" : "text-muted-foreground"}`}>
@@ -102,7 +102,7 @@ export function ConversationItem({ conversation: conv, isActive, onClick }: Prop
 
             <div className="flex flex-shrink-0 items-center gap-1">
               {hasUnread && (
-                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#25D366] px-1 text-[9px] font-bold text-white">
+                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#25D366] px-1 text-[11px] font-bold text-white leading-none">
                   {conv.unreadCount > 99 ? "99+" : conv.unreadCount}
                 </span>
               )}
@@ -112,7 +112,7 @@ export function ConversationItem({ conversation: conv, isActive, onClick }: Prop
 
           {/* Branch info */}
           {conv.cityBranch && (
-            <p className="mt-0.5 truncate text-[9px] text-muted-foreground/60">
+            <p className="mt-0.5 truncate text-[11px] text-muted-foreground/60">
               {conv.cityBranch.cityName} · {conv.whatsappAccount?.displayName ?? ""}
             </p>
           )}

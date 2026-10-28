@@ -272,7 +272,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
               </CardHeader>
               <CardContent className="p-3">
                 <div className="font-mono text-lg font-black text-slate-800 dark:text-white">{c.value}</div>
-                {c.sub && <div className="mt-0.5 text-[10px] text-slate-400">{c.sub}</div>}
+                {c.sub && <div className="mt-0.5 text-[11px] text-slate-400">{c.sub}</div>}
               </CardContent>
             </Card>
           ))}
@@ -416,12 +416,12 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
             <CardHeader className="border-b border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/60">
               <CardTitle className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-slate-600 dark:text-slate-300">
                 <Receipt className="h-3.5 w-3.5" /> {s.t("daily_expenses_bills", "Daily Payment — Expenses Bills")}
-                <span className="ml-1 rounded bg-slate-200 px-1.5 text-[10px] text-slate-500 dark:bg-slate-700">{expensesBills.length}</span>
+                <span className="ml-1 rounded bg-slate-200 px-1.5 text-[11px] text-slate-500 dark:bg-slate-700">{expensesBills.length}</span>
               </CardTitle>
             </CardHeader>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="border-b bg-slate-50 text-[10px] uppercase text-slate-500 dark:bg-slate-900/40">
+                <thead className="border-b bg-slate-50 text-[11px] uppercase text-slate-500 dark:bg-slate-900/40">
                   <tr>
                     <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</Th>
                     <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("f_details", "Details / Narration")}</Th>
@@ -445,15 +445,15 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
                         <td className="px-3 py-2 text-right font-mono font-bold">{b.currency || ""} {money(b.grandTotal)}</td>
                         <td className="px-3 py-2 text-center">
                           {b.transferredToRoznamcha ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
                               <CheckCircle2 className="h-3 w-3" /> {s.t("posting_posted", "Posted")}
                             </span>
                           ) : (
-                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500 dark:bg-slate-800">{s.t("posting_unposted", "Not posted")}</span>
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500 dark:bg-slate-800">{s.t("posting_unposted", "Not posted")}</span>
                           )}
                         </td>
                         <td className="px-3 py-2 text-center">
-                          <a href="/dashboard/roznamcha/expenses-bill" className="text-[10px] text-blue-600 hover:underline dark:text-blue-400">{s.t("open", "Open")}</a>
+                          <a href="/dashboard/roznamcha/expenses-bill" className="text-[11px] text-blue-600 hover:underline dark:text-blue-400">{s.t("open", "Open")}</a>
                         </td>
                       </tr>
                     ))
@@ -500,7 +500,7 @@ function BillExpenseRow({
   return (
     <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40">
       <td className="px-4 py-3">
-        <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+        <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
           {moduleLabel(r.sourceModule)}
         </span>
       </td>
@@ -512,7 +512,7 @@ function BillExpenseRow({
       <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.branchLabel}</td>
       <td className="px-4 py-3">
         <div className="font-medium text-slate-800 dark:text-white">{r.partyName || "—"}</div>
-        {r.partyAccountNo && <div className="text-[10px] text-slate-400">{r.partyAccountNo}</div>}
+        {r.partyAccountNo && <div className="text-[11px] text-slate-400">{r.partyAccountNo}</div>}
       </td>
       <td className="px-4 py-3 text-right font-mono">
         <span className="mr-1 text-xs font-normal text-slate-400">{r.currency}</span>
@@ -520,15 +520,15 @@ function BillExpenseRow({
       </td>
       <td className="bg-slate-50/50 px-4 py-3 text-right font-mono font-bold text-rose-600 dark:bg-slate-800/40">
         {money(r.expenseTotal)}
-        {r.expenseCount > 0 && <span className="ml-1 text-[10px] font-normal text-slate-400">({r.expenseCount})</span>}
+        {r.expenseCount > 0 && <span className="ml-1 text-[11px] font-normal text-slate-400">({r.expenseCount})</span>}
       </td>
       <td className="px-4 py-3 text-center">
         {r.eligibility === "withdrawn" ? (
-          <span className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+          <span className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-bold uppercase text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
             {s.t("eligibility_withdrawn", "Withdrawn")}
           </span>
         ) : (
-          <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[9px] font-bold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             {statusLabel(r.status)}
           </span>
         )}
@@ -871,7 +871,7 @@ function BillExpenseDetailModal({
                       ...(src?.goods_name || src?.product_summary ? [[s.t("f_details", "Details / Narration"), src.goods_name || src.product_summary]] : [])
                     ].map(([k, v], i) => (
                       <div key={i} className="flex flex-col">
-                        <span className="text-[10px] uppercase text-slate-400">{k}</span>
+                        <span className="text-[11px] uppercase text-slate-400">{k}</span>
                         <span className="font-semibold text-slate-800 dark:text-slate-100">{v || "—"}</span>
                       </div>
                     ))}
@@ -889,7 +889,7 @@ function BillExpenseDetailModal({
                 </CardHeader>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="border-b bg-slate-50 text-[10px] uppercase text-slate-500 dark:bg-slate-900/40">
+                    <thead className="border-b bg-slate-50 text-[11px] uppercase text-slate-500 dark:bg-slate-900/40">
                       <tr>
                         <Th className="px-3 py-2 text-center font-semibold w-8">#</Th>
                         <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("expense_type", "Expense Type")}</Th>
@@ -924,7 +924,7 @@ function BillExpenseDetailModal({
                               {l.taxPct > 0 ? (
                                 <span className="inline-flex flex-col items-end">
                                   <span>{money(l.taxAmount)}</span>
-                                  <span className="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-600" title={l.taxCode || undefined}>
+                                  <span className="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-600" title={l.taxCode || undefined}>
                                     <BadgePercent className="mr-0.5 h-3 w-3" /> {l.taxPct}% · {l.taxMode === "inclusive" ? s.t("tax_inclusive", "Tax included in price") : s.t("tax_exclusive", "Tax added on top")}
                                   </span>
                                 </span>
@@ -934,13 +934,13 @@ function BillExpenseDetailModal({
                             <td className="px-3 py-2 text-center">
                               {l.postingStatus === "posted" ? (
                                 <span className="inline-flex flex-col items-center gap-1">
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
                                     <CheckCircle2 className="h-3 w-3" /> {s.t("posting_posted", "Posted")}
                                   </span>
                                   {l.roznamchaEntryId && (
                                     <a
                                       href={`/dashboard/roznamcha/super-admin?entry=${l.roznamchaEntryId}`}
-                                      className="text-[9px] font-mono text-blue-600 hover:underline dark:text-blue-400"
+                                      className="text-[11px] font-mono text-blue-600 hover:underline dark:text-blue-400"
                                     >
                                       {s.t("posting_view_journal", "View journal")}
                                     </a>
@@ -950,7 +950,7 @@ function BillExpenseDetailModal({
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="h-6 gap-1 px-2 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300"
+                                  className="h-6 gap-1 px-2 text-[11px] font-bold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300"
                                   onClick={() => { setPostForm({ expenseAccountId: "", counterAccountId: "" }); setPostLine(l); }}
                                   disabled={busy || be.eligibility !== "active"}
                                 >
@@ -988,7 +988,7 @@ function BillExpenseDetailModal({
                       </CardTitle>
                       <Link
                         href="/dashboard/document-intelligence"
-                        className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300"
+                        className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300"
                       >
                         <ScanLine className="h-3.5 w-3.5" /> {s.t("ai_scan_receipt", "Scan / upload receipt")}
                       </Link>

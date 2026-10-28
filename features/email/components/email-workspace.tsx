@@ -505,7 +505,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                 <span>{s.t('inbox', 'Inbox')}</span>
               </div>
               {unreadCount > 0 && (
-                <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <span className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
                   {unreadCount}
                 </span>
               )}
@@ -611,7 +611,7 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
           <div className="flex-1">
             <div className="text-[11px] font-bold text-slate-800 dark:text-slate-200 tracking-wider uppercase px-2 mb-2 flex items-center justify-between">
               <span>{s.t('mailboxes', 'Mailboxes')}</span>
-              <span className="text-[10px] text-slate-400 lowercase">{availableMailboxes.length} active</span>
+              <span className="text-[11px] text-slate-400 lowercase">{availableMailboxes.length} active</span>
             </div>
 
             <div className="space-y-1">
@@ -949,7 +949,7 @@ ${activeEmail.body}`,
                           <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
                             {att.name}
                           </div>
-                          <div className="text-[10px] text-slate-400">{att.size}</div>
+                          <div className="text-[11px] text-slate-400">{att.size}</div>
                         </div>
                         <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg">
                           <Download className="w-3.5 h-3.5" />

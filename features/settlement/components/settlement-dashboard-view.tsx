@@ -201,15 +201,15 @@ export function SettlementDashboardView() {
           <div className="mt-3 flex items-center justify-between gap-2">
             <div className="text-center flex-1">
               <div className="text-lg font-bold text-emerald-600">{kpis?.countSettled ?? 0}</div>
-              <div className="text-[10px] text-slate-400 uppercase">{s.t("settled","Settled")}</div>
+              <div className="text-[11px] text-slate-400 uppercase">{s.t("settled","Settled")}</div>
             </div>
             <div className="text-center flex-1 border-x border-slate-100 dark:border-slate-800">
               <div className="text-lg font-bold text-amber-600">{kpis?.countPartial ?? 0}</div>
-              <div className="text-[10px] text-slate-400 uppercase">{s.t("partial","Partial")}</div>
+              <div className="text-[11px] text-slate-400 uppercase">{s.t("partial","Partial")}</div>
             </div>
             <div className="text-center flex-1">
               <div className="text-lg font-bold text-rose-600">{kpis?.countUnsettled ?? 0}</div>
-              <div className="text-[10px] text-slate-400 uppercase">{s.t("unsettled","Unsettled")}</div>
+              <div className="text-[11px] text-slate-400 uppercase">{s.t("unsettled","Unsettled")}</div>
             </div>
           </div>
         </div>
@@ -272,7 +272,7 @@ export function SettlementDashboardView() {
                   {item.label}
                 </span>
                 {item.count !== null && item.count !== undefined && item.count > 0 && (
-                  <span className="mt-1 rounded-full bg-rose-500/10 text-rose-600 px-2 py-0.5 text-[10px] font-bold">
+                  <span className="mt-1 rounded-full bg-rose-500/10 text-rose-600 px-2 py-0.5 text-[11px] font-bold">
                     {item.count} {s.t("open","open")}
                   </span>
                 )}
@@ -323,7 +323,7 @@ export function SettlementDashboardView() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[10px]">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[11px]">
               <tr>
                 <Th className="py-3 px-4">{s.t("c_date_ref","Date / Ref")}</Th>
                 <Th className="py-3 px-4">{s.t("c_module_type","Module / Type")}</Th>
@@ -366,19 +366,19 @@ export function SettlementDashboardView() {
                         <div className="font-semibold text-slate-900 dark:text-white">
                           {txn.source_reference_no || txn.source_id.substring(0, 8)}
                         </div>
-                        <div className="text-[10px] text-slate-400">{txn.source_date}</div>
+                        <div className="text-[11px] text-slate-400">{txn.source_date}</div>
                       </td>
                       <td className="py-3 px-4">
                         <span className="capitalize font-medium text-slate-700 dark:text-slate-300">
                           {txn.source_module.replace("_", " ")}
                         </span>
-                        <div className="text-[10px] text-slate-400">{txn.settlement_type}</div>
+                        <div className="text-[11px] text-slate-400">{txn.settlement_type}</div>
                       </td>
                       <td className="py-3 px-4 font-medium text-slate-900 dark:text-white max-w-[180px] truncate">
                         {txn.party_name || "—"}
                       </td>
                       <td className="py-3 px-4">
-                        <span className={`font-black uppercase text-[10px] px-1.5 py-0.5 rounded ${
+                        <span className={`font-black uppercase text-[11px] px-1.5 py-0.5 rounded ${
                           isCr ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
                         }`}>
                           {txn.direction}
@@ -394,7 +394,7 @@ export function SettlementDashboardView() {
                         {txn.local_currency} {Number(txn.remaining_local).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[txn.settlement_status] || "bg-slate-100 text-slate-700"}`}>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${statusColors[txn.settlement_status] || "bg-slate-100 text-slate-700"}`}>
                           {txn.settlement_status.replace("_", " ")}
                         </span>
                       </td>

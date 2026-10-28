@@ -346,10 +346,20 @@ body {
 
 
 /* ── Enterprise SaaS Typography & Font Engine (Zoho / Stripe Quality) ── */
+/* ONE place for the per-language font: every RTL rule below reads var(--font-arabic).
+   Urdu: Jameel Noori Nastaleeq when installed on the device (the usual Urdu font in Pakistan), else the open-licence
+   Noto Nastaliq Urdu web font. Arabic: Cairo. Farsi: Vazirmatn. Pashto: Noto Sans Arabic (complete Pashto letters
+   ټ ډ ړ ږ ښ ګ ڼ ې ۍ). All web fonts are requested once in app/layout.tsx; a browser downloads only the face it uses. */
 :root {
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-arabic: "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
 }
+html:lang(ur) { --font-arabic: "Jameel Noori Nastaleeq", "Jameel Noori Nastaleeq Kasheeda", "Noto Nastaliq Urdu", "Noto Sans Arabic", "Segoe UI", Tahoma, serif; }
+html:lang(ar) { --font-arabic: "Cairo", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif; }
+html:lang(fa) { --font-arabic: "Vazirmatn", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif; }
+html:lang(ps) { --font-arabic: "Noto Sans Arabic", "Noto Naskh Arabic", "Segoe UI", Tahoma, Arial, sans-serif; }
+/* Nastaleeq is a tall, sloping script: give its lines room so stacked letters do not touch the next line. */
+html:lang(ur) body { line-height: 1.8; }
 
 html {
   font-family: var(--font-sans);

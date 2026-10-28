@@ -504,7 +504,7 @@ export function CanonicalShipmentTrackingView({
     <div className="space-y-0.5">
       <div className="font-mono text-xs text-foreground/80 whitespace-nowrap" dir="ltr">{formatDate(row.eta)}</div>
       {isEtaOverdue(row.eta, row.currentStage) && (
-        <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-1.5 py-0.5 text-[10.5px] font-bold text-rose-700 dark:text-rose-400">
+        <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-1.5 py-0.5 text-[11px] font-bold text-rose-700 dark:text-rose-400">
           <Clock className="h-3 w-3" />{s.t("eta_overdue", "ETA passed")}
         </span>
       )}
@@ -1174,7 +1174,7 @@ export function CanonicalShipmentTrackingView({
             <Button type="button" variant={filtersOpen ? "default" : "outline"} aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)} className="h-11 gap-1.5 rounded-xl text-xs sm:h-10 md:hidden">
               <Filter className="h-4 w-4" />
               {s.t("filters", "Filters")}
-              {activeFilterCount > 0 && <Badge className="ms-0.5 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px]">{activeFilterCount}</Badge>}
+              {activeFilterCount > 0 && <Badge className="ms-0.5 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[11px] leading-none">{activeFilterCount}</Badge>}
             </Button>
           </div>
 

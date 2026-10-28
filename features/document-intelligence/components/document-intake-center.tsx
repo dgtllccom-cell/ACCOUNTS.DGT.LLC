@@ -291,7 +291,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900" data-testid="setup-panel">
             {/* 1 · scope */}
             <div>
-              <p className="mb-2 flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-200"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">1</span>{T("setup_scope", "Where is this document for?")}</p>
+              <p className="mb-2 flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-200"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] text-white">1</span>{T("setup_scope", "Where is this document for?")}</p>
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                 <div>
                   <label className="mb-1 flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-slate-400"><Globe className="h-3 w-3" />{s.t("country_label", "Country / Territory *")}</label>
@@ -325,7 +325,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
 
             {/* 2 · module */}
             <div className="mt-4 border-t border-slate-100 pt-3 dark:border-slate-800">
-              <p className="mb-2 flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-200"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">2</span>{T("setup_module_q", "Which module should this document be entered into?")}</p>
+              <p className="mb-2 flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-200"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] text-white">2</span>{T("setup_module_q", "Which module should this document be entered into?")}</p>
               <select value={moduleId} onChange={(e) => setModuleId(e.target.value)} className={`${selectCls} sm:max-w-md`} data-testid="sel-module">
                 <option value="">{T("sel_module", "— Select module —")}</option>
                 {INTAKE_MODULE_GROUPS.map((g) => {
@@ -346,7 +346,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
             {/* 3 · document */}
             <div className="mt-4 border-t border-slate-100 pt-3 dark:border-slate-800">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <p className="flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-200"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">3</span>{T("setup_doc", "Upload a document, or choose one already uploaded")}</p>
+                <p className="flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-200"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] text-white">3</span>{T("setup_doc", "Upload a document, or choose one already uploaded")}</p>
                 <div className="flex rounded-lg bg-slate-100 p-0.5 text-[11px] font-bold dark:bg-slate-800">
                   {(["upload", "existing"] as const).map((m) => (
                     <button key={m} type="button" onClick={() => setDocMode(m)} data-testid={`doc-mode-${m}`} className={`rounded-md px-3 py-1 ${docMode === m ? "bg-white text-blue-700 shadow-xs dark:bg-slate-900" : "text-slate-500"}`}>
@@ -362,7 +362,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }} />
                   {file ? (
                     <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 p-2.5 dark:border-slate-800">
-                      <div className="flex items-center gap-2"><FileText className="h-5 w-5 text-rose-500" /><div><p className="text-xs font-bold" dir="ltr">{file.name}</p><p className="text-[10.5px] text-slate-400">{(file.size / 1024).toFixed(0)} KB</p></div></div>
+                      <div className="flex items-center gap-2"><FileText className="h-5 w-5 text-rose-500" /><div><p className="text-xs font-bold" dir="ltr">{file.name}</p><p className="text-[11px] text-slate-400">{(file.size / 1024).toFixed(0)} KB</p></div></div>
                       <button type="button" onClick={() => setFile(null)} className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600"><Trash2 className="h-3.5 w-3.5" />{T("remove", "Remove")}</button>
                     </div>
                   ) : (
@@ -370,7 +370,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                       className="flex w-full flex-col items-center gap-1 rounded-xl border-2 border-dashed border-slate-300 px-4 py-6 text-center hover:border-blue-500 hover:bg-blue-50/30 dark:border-slate-700">
                       <UploadCloud className="h-6 w-6 text-blue-600" />
                       <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{s.t("drop_title", "Click to browse or drop an invoice, contract, or bill")}</span>
-                      <span className="text-[10.5px] text-slate-400">{s.t("drop_sub", "Supports PDF, JPG, PNG, WEBP, TIFF (Max 25 MB, 60 pages)")}</span>
+                      <span className="text-[11px] text-slate-400">{s.t("drop_sub", "Supports PDF, JPG, PNG, WEBP, TIFF (Max 25 MB, 60 pages)")}</span>
                     </button>
                   )}
                   {isNativeApp() && (
@@ -432,7 +432,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
             </div>
             <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
               <table className="w-full min-w-[720px] text-start text-xs">
-                <thead className="border-b border-slate-100 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400 dark:border-slate-800 dark:bg-slate-800">
+                <thead className="border-b border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400 dark:border-slate-800 dark:bg-slate-800">
                   <tr>
                     <Th className="p-3 text-start">{T("q_job", "Job no.")}</Th><Th className="p-3 text-start">{T("q_file", "Document")}</Th><Th className="p-3 text-start">{T("q_scope", "Scope / office")}</Th>
                     <Th className="p-3 text-start">{T("q_module", "Module")}</Th><Th className="p-3 text-start">{T("q_draft", "Draft")}</Th><Th className="p-3 text-start">{T("q_fields", "Fields")}</Th><Th className="p-3 text-start">{T("q_status", "Status")}</Th><Th className="p-3 text-end">{T("q_actions", "Actions")}</Th>
@@ -453,7 +453,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
                         <td className="p-3 text-[11px] font-semibold text-slate-600 dark:text-slate-300">{m ? s.t(m.labelKey, m.label) : r.target_module || "—"}</td>
                         <td className="p-3 font-mono text-[11px] text-slate-500" dir="ltr">{r.draft_reference || "—"}</td>
                         <td className="p-3 font-mono text-[11px] text-slate-500">{r.field_count ?? 0}</td>
-                        <td className="p-3"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.uploaded}`}>{r.status}</span></td>
+                        <td className="p-3"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.uploaded}`}>{r.status}</span></td>
                         <td className="p-3 text-end">
                           <button type="button" onClick={() => openExisting(r)} data-testid={`open-${r.job_no}`}
                             className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-300">
@@ -476,7 +476,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
 function Kpi({ label, value, tone, icon: Icon }: { label: string; value: number; tone?: string; icon?: any }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-center gap-1.5">{Icon ? <Icon className={`h-3.5 w-3.5 ${tone || "text-slate-400"}`} /> : null}<span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</span></div>
+      <div className="flex items-center gap-1.5">{Icon ? <Icon className={`h-3.5 w-3.5 ${tone || "text-slate-400"}`} /> : null}<span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{label}</span></div>
       <div className="mt-1 text-xl font-black">{value}</div>
     </div>
   );

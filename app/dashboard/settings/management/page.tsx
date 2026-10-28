@@ -139,7 +139,7 @@ export default function ManagementSettingsPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-cyan-500 animate-pulse" />
-            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
               {t(lang, "mgmt.eyebrow", "Settings & Master Data Management")}
             </p>
           </div>
@@ -251,7 +251,7 @@ export default function ManagementSettingsPage() {
 
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left text-foreground">
-                  <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border/60">
+                  <thead className="bg-muted/40 text-muted-foreground uppercase text-[11px] font-bold tracking-wider border-b border-border/60">
                     <tr>
                       <Th className="px-5 py-3.5">{t(lang, "mgmt.col_country", "Country Name")}</Th>
                       <Th className="px-5 py-3.5">{t(lang, "mgmt.col_iso", "ISO")}</Th>
@@ -275,7 +275,7 @@ export default function ManagementSettingsPage() {
                           <td className="px-5 py-3.5 font-mono font-bold text-foreground">{c.currency_code}</td>
                           <td className="px-5 py-3.5 text-muted-foreground font-mono">{c.official_email || c.admin_email || "-"}</td>
                           <td className="px-5 py-3.5">
-                            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                               {t(lang, "mgmt.active_node", "Active Node")}
                             </span>
                           </td>

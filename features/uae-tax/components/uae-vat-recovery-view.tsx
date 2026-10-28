@@ -97,7 +97,7 @@ export function UaeVatRecoveryView({ lang: langProp }: { lang?: SupportedLanguag
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {(["recoverable", "claimed", "refund_requested", "refund_received"] as const).map((k) => (
             <div key={k} className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{s.t(`rc_status_${k}`, k)}</p>
+              <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">{s.t(`rc_status_${k}`, k)}</p>
               <p className="mt-1 text-base font-black tabular-nums text-slate-800 dark:text-slate-100">{fmtAed(totals[k] || 0)}</p>
             </div>
           ))}

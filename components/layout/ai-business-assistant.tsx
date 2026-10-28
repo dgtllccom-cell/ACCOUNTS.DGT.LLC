@@ -188,7 +188,7 @@ export function AiBusinessAssistant() {
 
           {!minimized && (
             <>
-              <p className="px-3 pt-2 text-[10px] leading-snug text-slate-400">
+              <p className="px-3 pt-2 text-[11px] leading-snug text-slate-400">
                 {tt("disclaimer", "Read-only — answers use your existing ERP data only. It can never create, edit, delete or post any transaction.")}
               </p>
 

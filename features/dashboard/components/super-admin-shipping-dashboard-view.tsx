@@ -160,11 +160,11 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
                 {tr("Global Shipping Line")}
               </h1>
-              <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-black uppercase text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
                 <Anchor className="h-3 w-3" />
                 {tr("Executive Shipping Dashboard")}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[9px] font-black uppercase text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
                 <ShieldCheck className="h-3 w-3" />
                 {tr("Super Management")}
               </span>
@@ -228,15 +228,15 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[100px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{tr("Countries")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-300">{tr("Countries")}</p>
               <p className="text-sm font-black text-white">{data.totalCountries}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[100px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{tr("Branches")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-300">{tr("Branches")}</p>
               <p className="text-sm font-black text-white">{data.totalBranches}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[100px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{tr("Shipments")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-300">{tr("Shipments")}</p>
               <p className="text-sm font-black text-white">{data.totalShipments}</p>
             </div>
           </div>
@@ -248,7 +248,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
         {/* Global Branches */}
         <div className="bg-card text-card-foreground border border-border/80 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               {tr("Shipping Branches")}
             </p>
             <p className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-foreground">
@@ -266,7 +266,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
         {/* Total Shipments */}
         <div className="bg-card text-card-foreground border border-border/80 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               {tr("Global Shipments")}
             </p>
             <p className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-foreground">
@@ -284,7 +284,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
         {/* In Transit */}
         <div className="bg-card text-card-foreground border border-border/80 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               {tr("In Transit")}
             </p>
             <p className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-blue-600 dark:text-blue-400">
@@ -302,7 +302,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
         {/* Arrived */}
         <div className="bg-card text-card-foreground border border-border/80 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               {tr("Arrived & Cleared")}
             </p>
             <p className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-emerald-600 dark:text-emerald-400">
@@ -327,7 +327,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
               <Globe2 className="h-4 w-4 text-blue-600" />
               {tr("Country Wise Shipments")}
             </CardTitle>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase">
               {tr("Total shipments distribution by national hub")}
             </p>
           </CardHeader>
@@ -368,7 +368,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
               <Activity className="h-4 w-4 text-emerald-500" />
               {tr("Global Shipment Status")}
             </CardTitle>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase">
               {tr("Status proportion across international routes")}
             </p>
           </CardHeader>
@@ -405,7 +405,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
                   </ResponsiveContainer>
                 ) : null}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{tr("Total")}</span>
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase">{tr("Total")}</span>
                   <span className="text-lg font-black text-foreground">{data.totalShipments}</span>
                 </div>
               </div>
@@ -454,7 +454,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
               <Globe2 className="h-4 w-4 text-blue-600" />
               {tr("Country Shipping Hubs")} ({data.countries.length})
             </CardTitle>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase">
               {tr("National operations, branch counts, and active shipping volumes")}
             </p>
           </div>
@@ -473,7 +473,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-muted/50 border-y border-border/80 text-[10px] font-black uppercase text-muted-foreground">
+              <thead className="bg-muted/50 border-y border-border/80 text-[11px] font-black uppercase text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">{tr("Country")}</th>
                   <th className="px-3 py-3">{tr("Code")}</th>

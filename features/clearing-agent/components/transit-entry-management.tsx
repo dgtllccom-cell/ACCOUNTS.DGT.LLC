@@ -425,7 +425,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
           <div>
             <h1 className="text-base font-black tracking-tight text-foreground sm:text-lg flex items-center gap-2">
               {tt("transit.title", "TRANSIT ENTRY")}
-              <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 flex items-center gap-1">
+              <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 flex items-center gap-1">
                 <Database className="h-3 w-3 text-emerald-500" />
                 {tt("transit.db_active", "DB ACTIVE")}
               </span>
@@ -911,7 +911,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                   <div className="mb-3 overflow-hidden rounded-xl border border-border bg-card">
                     <div className="overflow-x-auto">
                     <table className="w-full text-xs text-left">
-                      <thead className="bg-muted/50 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
+                      <thead className="bg-muted/50 text-[11px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                         <tr>
                           <Th className="px-3 py-2">{tt("transit.col_file_name", "File Name")}</Th>
                           <Th className="px-3 py-2 text-center w-28">{tt("transit.col_size", "Size")}</Th>
@@ -961,7 +961,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                   <p className="text-xs font-bold text-foreground">
                     {tt("transit.upload_hint", "Drag & Drop files here or")} <span className="text-blue-600 dark:text-blue-400 underline">{tt("transit.click_browse", "Click to Browse")}</span>
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{tt("transit.upload_formats", "(PDF, JPG, PNG – Max 5MB each)")}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{tt("transit.upload_formats", "(PDF, JPG, PNG – Max 5MB each)")}</p>
                 </div>
               </div>
 
@@ -969,7 +969,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
               <div>
                 <div className="mb-2 flex items-center justify-between border-b border-border/80 pb-1">
                   <h3 className="text-xs font-black uppercase tracking-wider text-[#1e40af] dark:text-blue-400">
-                    {tt("transit.sec_notes", "NOTES")} <span className="text-[10px] lowercase text-muted-foreground font-normal">{tt("transit.notes_optional", "(Optional)")}</span>
+                    {tt("transit.sec_notes", "NOTES")} <span className="text-[11px] lowercase text-muted-foreground font-normal">{tt("transit.notes_optional", "(Optional)")}</span>
                   </h3>
                   <VoiceDictateButton
                     context="clearing"
@@ -1028,26 +1028,26 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                     className="h-16 w-16 sm:h-20 sm:w-20"
                   />
                 </div>
-                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mt-1">{tt("transit.scan_to_verify", "Scan to Verify")}</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-1">{tt("transit.scan_to_verify", "Scan to Verify")}</p>
               </div>
             </div>
 
             {/* Serial Metadata Summary Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-b border-slate-200 text-xs">
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-500 block">{tt("transit.lbl_super_agent", "Super Agent")}</span>
+                <span className="text-[11px] font-bold uppercase text-slate-500 block">{tt("transit.lbl_super_agent", "Super Agent")}</span>
                 <span className="font-extrabold text-slate-900 text-xs sm:text-sm">{formData.super_agent}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-500 block">{tt("common.country", "Country")}</span>
+                <span className="text-[11px] font-bold uppercase text-slate-500 block">{tt("common.country", "Country")}</span>
                 <span className="font-extrabold text-slate-900 text-xs sm:text-sm">{formData.country.split("-")[1]?.trim() || formData.country}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-500 block">{tt("common.branch", "Branch")}</span>
+                <span className="text-[11px] font-bold uppercase text-slate-500 block">{tt("common.branch", "Branch")}</span>
                 <span className="font-extrabold text-slate-900 text-xs sm:text-sm">{formData.branch.split("-")[1]?.trim() || formData.branch}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-500 block">{tt("transit.lbl_entry_serial", "Entry Serial")}</span>
+                <span className="text-[11px] font-bold uppercase text-slate-500 block">{tt("transit.lbl_entry_serial", "Entry Serial")}</span>
                 <span className="font-black text-red-600 text-xs sm:text-sm">{formData.entry_serial}</span>
               </div>
             </div>
@@ -1188,21 +1188,21 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
               <div className="grid grid-cols-3 gap-6 text-center text-xs">
                 <div>
                   <p className="font-black text-slate-900 mb-8">{formData.created_by || "Maker"}</p>
-                  <div className="border-t border-slate-400 pt-1 font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                  <div className="border-t border-slate-400 pt-1 font-bold text-slate-700 uppercase tracking-wider text-[11px]">
                     {tt("vch.prepared_by", "Prepared By")}
                   </div>
                 </div>
 
                 <div>
                   <div className="h-10 mb-2" />
-                  <div className="border-t border-slate-400 pt-1 font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                  <div className="border-t border-slate-400 pt-1 font-bold text-slate-700 uppercase tracking-wider text-[11px]">
                     {tt("vch.checked_by", "Checked By")}
                   </div>
                 </div>
 
                 <div>
                   <div className="h-10 mb-2" />
-                  <div className="border-t border-slate-400 pt-1 font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                  <div className="border-t border-slate-400 pt-1 font-bold text-slate-700 uppercase tracking-wider text-[11px]">
                     {tt("vch.approved_by", "Approved By")}
                   </div>
                 </div>
@@ -1210,7 +1210,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
             </div>
 
             {/* Document Generation Footer */}
-            <div className="mt-auto pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-slate-500">
+            <div className="mt-auto pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
               <p suppressHydrationWarning>{tt("transit.report_generated", "Report Generated On:")} {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })} {new Date().toLocaleTimeString(`${lang}-u-nu-latn`, { numberingSystem: "latn", hour: '2-digit', minute: '2-digit' })}</p>
               <p className="font-semibold italic">{tt("transit.sys_generated", "This is a system generated report.")}</p>
             </div>
@@ -1271,7 +1271,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
 
             <div className="overflow-x-auto rounded-xl border border-border">
               <table className="w-full text-xs text-left">
-                <thead className="bg-muted/60 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
+                <thead className="bg-muted/60 text-[11px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                   <tr>
                     <Th className="px-3 py-2.5">{tt("transit.col_entry_serial", "Entry Serial")}</Th>
                     <Th className="px-3 py-2.5">{tt("transit.col_invoice_transit", "Invoice / Transit No")}</Th>
@@ -1290,7 +1290,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                       </td>
                       <td className="px-3 py-3 font-medium">
                         <div className="font-semibold text-foreground">{row.invoice_no}</div>
-                        <div className="text-[10px] text-muted-foreground font-mono">{row.transit_no}</div>
+                        <div className="text-[11px] text-muted-foreground font-mono">{row.transit_no}</div>
                       </td>
                       <td className="px-3 py-3 font-semibold text-foreground">
                         {row.goods_name}
@@ -1303,7 +1303,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                       </td>
                       <td className="px-3 py-3 text-muted-foreground">
                         <div className="font-medium text-foreground">{row.export_company}</div>
-                        <div className="text-[10px]">{row.import_company}</div>
+                        <div className="text-[11px]">{row.import_company}</div>
                       </td>
                       <td className="px-3 py-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">

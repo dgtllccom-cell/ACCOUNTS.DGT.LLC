@@ -296,7 +296,7 @@ export function SuperAdminReportView({
 
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-[10.5px] font-extrabold uppercase tracking-widest">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-[11px] font-extrabold uppercase tracking-widest">
                 <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
                 <span>{tt("sarh.badge", "Reports & Analytics")}</span>
               </div>
@@ -328,7 +328,7 @@ export function SuperAdminReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
             <div className="flex flex-col">
-              <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{tt("sarh.select_report_label", "Select Report")}</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{tt("sarh.select_report_label", "Select Report")}</span>
               <div className="relative">
                 <select
                   value={selectedReport}
@@ -388,7 +388,7 @@ export function SuperAdminReportView({
             >
               <Filter className="h-3.5 w-3.5 text-blue-500" />
               <span>{t(lang, "common.filters", "Filters")}</span>
-              <span className="ms-0.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-[10px] font-black px-1.5 py-0.2">
+              <span className="ms-0.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-[11px] font-black px-1.5 py-0.2">
                 2
               </span>
             </Button>
@@ -470,7 +470,7 @@ export function SuperAdminReportView({
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
               <Users className="h-3.5 w-3.5 text-blue-600" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.role_label", "Role")}:</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase">{tt("sarh.role_label", "Role")}:</span>
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
@@ -485,7 +485,7 @@ export function SuperAdminReportView({
 
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
               <Globe className="h-3.5 w-3.5 text-cyan-600" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.country_label", "Country")}:</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase">{tt("sarh.country_label", "Country")}:</span>
               <select
                 value={selectedCountryId}
                 onChange={(e) => setSelectedCountryId(e.target.value)}
@@ -502,7 +502,7 @@ export function SuperAdminReportView({
 
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
               <Building2 className="h-3.5 w-3.5 text-indigo-600" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.branch_label", "Branch")}:</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase">{tt("sarh.branch_label", "Branch")}:</span>
               <select
                 value={selectedBranchId}
                 onChange={(e) => setSelectedBranchId(e.target.value)}
@@ -514,7 +514,7 @@ export function SuperAdminReportView({
 
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
               <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.currency_label", "Currency")}:</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase">{tt("sarh.currency_label", "Currency")}:</span>
               <select
                 value={selectedCurrency}
                 onChange={(e) => setSelectedCurrency(e.target.value)}
@@ -552,7 +552,7 @@ export function SuperAdminReportView({
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
                     {tt("sarh.card1_title", "1. Branch & User Details")}
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">
+                  <p className="text-[11px] text-slate-400 font-medium">
                     {tt("sarh.card1_sub", "Global user and branch information")}
                   </p>
                 </div>
@@ -560,35 +560,35 @@ export function SuperAdminReportView({
 
               <div className="mt-3.5 space-y-1.5 text-xs font-semibold">
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.country_colon", "Country:")}</span>
+                  <span className="text-slate-400 font-bold uppercase text-[11px]">{tt("sarh.country_colon", "Country:")}</span>
                   <span className="font-extrabold text-slate-850 dark:text-slate-100">{tt("sarh.all_countries_global", "All Countries (Global)")}</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.branch_name_colon", "Branch Name:")}</span>
+                  <span className="text-slate-400 font-bold uppercase text-[11px]">{tt("sarh.branch_name_colon", "Branch Name:")}</span>
                   <span className="font-extrabold text-slate-850 dark:text-slate-100">{tt("sarh.all_branches", "All Branches")}</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.user_id_colon", "User ID:")}</span>
-                  <span className="font-mono text-[10px] font-bold text-slate-600 dark:text-slate-300">{viewerId.slice(0, 16)}…</span>
+                  <span className="text-slate-400 font-bold uppercase text-[11px]">{tt("sarh.user_id_colon", "User ID:")}</span>
+                  <span className="font-mono text-[11px] font-bold text-slate-600 dark:text-slate-300">{viewerId.slice(0, 16)}…</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.user_name_colon", "User Name:")}</span>
+                  <span className="text-slate-400 font-bold uppercase text-[11px]">{tt("sarh.user_name_colon", "User Name:")}</span>
                   <span className="font-black text-slate-900 dark:text-slate-100 uppercase">{viewerName}</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.role_colon", "Role:")}</span>
+                  <span className="text-slate-400 font-bold uppercase text-[11px]">{tt("sarh.role_colon", "Role:")}</span>
                   <span className="font-bold text-blue-600 uppercase">{viewerRole}</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.date_time_colon", "Date & Time:")}</span>
-                  <span className="font-bold text-slate-700 dark:text-slate-300 text-[10.5px]">{currentDateTime}</span>
+                  <span className="text-slate-400 font-bold uppercase text-[11px]">{tt("sarh.date_time_colon", "Date & Time:")}</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{currentDateTime}</span>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.status_colon", "Status:")}</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-extrabold tracking-wider">
+              <span className="text-[11px] font-bold text-slate-400 uppercase">{tt("sarh.status_colon", "Status:")}</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-extrabold tracking-wider">
                 {t(lang, "common.active", "Active").toUpperCase()}
               </span>
             </div>
@@ -605,7 +605,7 @@ export function SuperAdminReportView({
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
                     {tt("sarh.card2_title", "2. Global Financial Summary")}
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">
+                  <p className="text-[11px] text-slate-400 font-medium">
                     {tt("sarh.card2_sub", "Financial overview across all countries")}
                   </p>
                 </div>
@@ -646,7 +646,7 @@ export function SuperAdminReportView({
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
                     {tt("sarh.card3_title", "3. Bill Entries Summary")}
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">
+                  <p className="text-[11px] text-slate-400 font-medium">
                     {tt("sarh.card3_sub", "Status of bill entries worldwide")}
                   </p>
                 </div>
@@ -654,23 +654,23 @@ export function SuperAdminReportView({
 
               <div className="mt-3.5 space-y-2 text-xs font-semibold">
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.total_bill_entries_colon", "Total Bill Entries:")}</span>
+                  <span className="text-slate-500 font-medium uppercase text-[11px]">{tt("sarh.total_bill_entries_colon", "Total Bill Entries:")}</span>
                   <span className="font-mono font-black text-slate-850 dark:text-slate-100">{ledgerSummary?.totalRecords ?? 0}</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.cleared_entries_colon", "Cleared Entries:")}</span>
+                  <span className="text-slate-500 font-medium uppercase text-[11px]">{tt("sarh.cleared_entries_colon", "Cleared Entries:")}</span>
                   <span className="font-mono font-black text-emerald-600">{ledgerSummary?.posted ?? 0}</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.remaining_entries_colon", "Remaining Entries:")}</span>
+                  <span className="text-slate-500 font-medium uppercase text-[11px]">{tt("sarh.remaining_entries_colon", "Remaining Entries:")}</span>
                   <span className="font-mono font-black text-rose-600">{ledgerSummary?.pending ?? 0}</span>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.system_status_colon", "System Status:")}</span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[10px] font-bold">
+              <span className="text-[11px] font-bold text-slate-400 uppercase">{tt("sarh.system_status_colon", "System Status:")}</span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[11px] font-bold">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 <span>{tt("sarh.online_synced", "Online & Synced")}</span>
               </span>
@@ -688,7 +688,7 @@ export function SuperAdminReportView({
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
                     {tt("sarh.card4_title", "4. All Countries Report")}
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">
+                  <p className="text-[11px] text-slate-400 font-medium">
                     {tt("sarh.card4_sub", "Coverage across global operations")}
                   </p>
                 </div>
@@ -696,7 +696,7 @@ export function SuperAdminReportView({
 
               <div className="mt-3.5 space-y-1.5 text-xs font-semibold">
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.active_countries_colon", "Active Countries:")}</span>
+                  <span className="text-slate-500 font-medium uppercase text-[11px]">{tt("sarh.active_countries_colon", "Active Countries:")}</span>
                   <span className="font-mono font-black text-orange-600 text-sm">{totals.activeCountries}</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px]">
@@ -720,7 +720,7 @@ export function SuperAdminReportView({
               <button
                 type="button"
                 onClick={() => setColumnsModalOpen(true)}
-                className="text-[10.5px] font-extrabold text-orange-600 hover:text-orange-700 flex items-center gap-1 hover:underline"
+                className="text-[11px] font-extrabold text-orange-600 hover:text-orange-700 flex items-center gap-1 hover:underline"
               >
                 <span>{tt("sarh.show_details", "Show Details").toUpperCase()}</span>
                 <span>{isRtl ? "←" : "→"}</span>
@@ -728,7 +728,7 @@ export function SuperAdminReportView({
               <button
                 type="button"
                 onClick={handlePrint}
-                className="px-2 py-0.5 rounded border border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 text-[10px] font-bold flex items-center gap-1"
+                className="px-2 py-0.5 rounded border border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 text-[11px] font-bold flex items-center gap-1"
               >
                 <span>{tt("sarh.explore", "Explore").toUpperCase()}</span>
                 <ArrowUpRight className="h-3 w-3" />
@@ -748,14 +748,14 @@ export function SuperAdminReportView({
                 <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
                   {tt("sarh.country_performance_title", "Country Performance")}
                 </h2>
-                <p className="text-[10px] text-slate-400 font-medium">
+                <p className="text-[11px] text-slate-400 font-medium">
                   {tt("sarh.country_performance_sub", "Country-wise branch and user coverage")}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 text-[10px] font-extrabold">
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 text-[11px] font-extrabold">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 <span>{tt("sarh.records_loaded", "Records Loaded")}</span>
               </div>
@@ -788,7 +788,7 @@ export function SuperAdminReportView({
           <div className="overflow-x-auto">
             <table className="w-full text-start text-xs">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-100/60 dark:border-slate-800 dark:bg-slate-900/90 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-slate-200 bg-slate-100/60 dark:border-slate-800 dark:bg-slate-900/90 text-[11px] font-black uppercase tracking-wider text-slate-500">
                   {visibleColumns.index && <Th className="py-2.5 px-3 w-10 text-center">#</Th>}
                   {visibleColumns.country && <Th className="py-2.5 px-4 text-start">{tt("sarh.col_country", "Country")}</Th>}
                   {visibleColumns.totalBranches && <Th className="py-2.5 px-3 text-center">{tt("sarh.col_total_branches", "Total Branches")}</Th>}
@@ -860,7 +860,7 @@ export function SuperAdminReportView({
                       {visibleColumns.status && (
                         <td className="py-2.5 px-3 text-center">
                           <span className={cn(
-                            "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
+                            "px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider border",
                             row.status === "ACTIVE"
                               ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
                               : "bg-slate-50 text-slate-500 border-slate-200"
@@ -877,7 +877,7 @@ export function SuperAdminReportView({
                               setSelectedCountryId(row.id);
                               window.scrollTo({ top: 0, behavior: "smooth" });
                             }}
-                            className="px-2 py-1 rounded text-[10px] font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-300 transition"
+                            className="px-2 py-1 rounded text-[11px] font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-300 transition"
                           >
                             {t(lang, "common.view", "View")}
                           </button>

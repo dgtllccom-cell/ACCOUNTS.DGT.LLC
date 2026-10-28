@@ -233,7 +233,7 @@ export default function DashboardSettingsPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-cyan-500 animate-pulse" />
-            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
               {tt("super_admin_settings_controls", "Super Admin Settings & Controls")}
             </p>
           </div>
@@ -289,7 +289,7 @@ export default function DashboardSettingsPage() {
                 <div className={cn("p-2 rounded-xl border border-border/50 bg-muted/30", isSelected ? "text-cyan-600 dark:text-cyan-400" : "text-muted-foreground")}>
                   <Icon className="h-5 w-5" />
                 </div>
-                <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full border border-border/60 bg-muted/40 text-muted-foreground">
+                <span className="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-full border border-border/60 bg-muted/40 text-muted-foreground">
                   {translateHeader(lang, scope.badge)}
                 </span>
               </div>
@@ -329,7 +329,7 @@ export default function DashboardSettingsPage() {
                 <div className="flex items-center gap-2 border-b border-border/50 pb-2">
                   <CatIcon className={cn("h-4 w-4", catMeta.color)} />
                   <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{catMeta.label}</h3>
-                  <span className="text-[10px] font-bold text-muted-foreground ml-auto">
+                  <span className="text-[11px] font-bold text-muted-foreground ml-auto">
                     {catModules.filter((m) => allotments[selectedRole]?.[m.key]?.enabled !== false).length} / {catModules.length} Enabled
                   </span>
                 </div>
@@ -352,7 +352,7 @@ export default function DashboardSettingsPage() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1">
                             <span className="text-xs font-bold text-foreground block">{mod.label}</span>
-                            <span className="text-[10px] text-muted-foreground font-mono">Key: {mod.key}</span>
+                            <span className="text-[11px] text-muted-foreground font-mono">Key: {mod.key}</span>
                           </div>
 
                           <button
@@ -374,7 +374,7 @@ export default function DashboardSettingsPage() {
 
                         {!isEnabled && (
                           <div className="pt-2 border-t border-border/40 space-y-1.5">
-                            <Label className="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                            <Label className="text-[11px] font-bold uppercase text-amber-600 dark:text-amber-400 flex items-center gap-1">
                               <AlertCircle className="h-3 w-3" /> {tt("custom_restriction_notice", "Custom Restriction Notice / Alert Text")}
                             </Label>
                             <Input

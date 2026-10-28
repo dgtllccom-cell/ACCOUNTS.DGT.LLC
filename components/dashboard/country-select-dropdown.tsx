@@ -80,7 +80,7 @@ export function CountrySelectDropdown({
 
       {open && (
         <div className="absolute right-0 mt-1.5 w-64 origin-top-right rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-900/10 dark:shadow-black/40 z-50 p-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-          <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800/80 mb-1">
+          <div className="px-3 py-2 text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800/80 mb-1">
             {t(lang, "common.all_countries", "All Countries")} ({countries.length})
           </div>
           <div className="max-h-60 overflow-y-auto space-y-0.5">
@@ -101,7 +101,7 @@ export function CountrySelectDropdown({
                   <div className="flex items-center gap-2 truncate">
                     <span className="text-base leading-none">{flag}</span>
                     <span className="truncate">{c.name}</span>
-                    <span className={`text-[10px] font-mono px-1 rounded ${isCurrent ? "bg-blue-700/60 text-blue-100" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}>
+                    <span className={`text-[11px] font-mono px-1 rounded ${isCurrent ? "bg-blue-700/60 text-blue-100" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}>
                       {c.currency_code}
                     </span>
                   </div>

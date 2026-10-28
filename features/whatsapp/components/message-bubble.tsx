@@ -59,7 +59,7 @@ function MediaPreview({ message }: { message: WhatsAppMessage }) {
             <div key={i} className="w-0.5 rounded-full bg-current opacity-40" style={{ height: `${4 + Math.random() * 12}px` }} />
           ))}
         </div>
-        <span className="text-[10px] text-muted-foreground">{message.mediaSizeBytes ? `${Math.ceil(message.mediaSizeBytes / 1024)}KB` : ""}</span>
+        <span className="text-[11px] text-muted-foreground">{message.mediaSizeBytes ? `${Math.ceil(message.mediaSizeBytes / 1024)}KB` : ""}</span>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export function MessageBubble({ message: msg, prevMessage }: Props) {
     <>
       {showDate && (
         <div className="flex justify-center py-2">
-          <span className="rounded-full bg-muted px-3 py-0.5 text-[10px] text-muted-foreground shadow-sm">
+          <span className="rounded-full bg-muted px-3 py-0.5 text-[11px] text-muted-foreground shadow-sm">
             {formatDateTime(msg.createdAt, "MMMM d, yyyy")}
           </span>
         </div>
@@ -114,9 +114,9 @@ export function MessageBubble({ message: msg, prevMessage }: Props) {
         {/* Internal note */}
         {isNote ? (
           <div className="max-w-[70%] rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 shadow-sm dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-200">
-            <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-wide opacity-60">{tt("wa.internal_note", "Internal Note")}</p>
+            <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide opacity-60">{tt("wa.internal_note", "Internal Note")}</p>
             <p className="whitespace-pre-wrap">{msg.body}</p>
-            <p className="mt-1 text-[9px] text-right opacity-50">
+            <p className="mt-1 text-[11px] text-right opacity-50">
               {msg.senderProfile?.fullName ?? ""}
             </p>
           </div>
@@ -131,7 +131,7 @@ export function MessageBubble({ message: msg, prevMessage }: Props) {
           >
             {/* Quoted/replied message context */}
             {msg.contextMessageId && (
-              <div className="mb-1.5 rounded-md border-s-2 border-[#25D366] bg-black/5 ps-2 py-1 text-[10px] text-muted-foreground">
+              <div className="mb-1.5 rounded-md border-s-2 border-[#25D366] bg-black/5 ps-2 py-1 text-[11px] text-muted-foreground">
                 {tt("wa.replied_to", "Replied to message")}
               </div>
             )}
@@ -148,7 +148,7 @@ export function MessageBubble({ message: msg, prevMessage }: Props) {
 
             {/* Time + delivery status */}
             <div className="mt-1 flex items-center justify-end gap-1">
-              <span className="text-[10px] text-muted-foreground/70">
+              <span className="text-[11px] text-muted-foreground/70">
                 {msg.sentAt ? formatDateTime(msg.sentAt, "HH:mm") : formatDateTime(msg.createdAt, "HH:mm")}
               </span>
               {isOutbound && <DeliveryIcon status={msg.status} />}

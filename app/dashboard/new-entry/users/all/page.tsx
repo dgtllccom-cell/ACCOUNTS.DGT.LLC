@@ -977,7 +977,7 @@ function EmployeeAvatar({
   const portraits = [
     // 0: Corporate executive with suit & sky blue tie (Ismat Ullah)
     (
-      <svg viewBox="0 0 64 64" className="w-full h-full">
+      <svg key="portrait-0" viewBox="0 0 64 64" className="w-full h-full">
         <rect width="64" height="64" fill="#e0f2fe" />
         <circle cx="32" cy="24" r="14" fill="#fcd34d" />
         <path d="M18 20 C18 10 46 10 46 20 C46 13 40 8 32 8 C24 8 18 13 18 20 Z" fill="#1e293b" />
@@ -988,7 +988,7 @@ function EmployeeAvatar({
     ),
     // 1: Executive Leader with beard & traditional dignitary style (Izzat Ullah Khan)
     (
-      <svg viewBox="0 0 64 64" className="w-full h-full">
+      <svg key="portrait-1" viewBox="0 0 64 64" className="w-full h-full">
         <rect width="64" height="64" fill="#ede9fe" />
         <circle cx="32" cy="25" r="13" fill="#fbcfe8" />
         <path d="M18 18 C18 9 46 9 46 18 C43 11 37 9 32 9 C27 9 21 11 18 18 Z" fill="#312e81" />
@@ -999,7 +999,7 @@ function EmployeeAvatar({
     ),
     // 2: Executive with beard & glasses (Ahmad Shah Durrani)
     (
-      <svg viewBox="0 0 64 64" className="w-full h-full">
+      <svg key="portrait-2" viewBox="0 0 64 64" className="w-full h-full">
         <rect width="64" height="64" fill="#fef3c7" />
         <circle cx="32" cy="25" r="13" fill="#fed7aa" />
         <path d="M20 18 C20 10 44 10 44 18 C41 12 37 10 32 10 C27 10 23 12 20 18 Z" fill="#292524" />
@@ -1013,7 +1013,7 @@ function EmployeeAvatar({
     ),
     // 3: Corporate manager in sleek blazer (John S. Khan)
     (
-      <svg viewBox="0 0 64 64" className="w-full h-full">
+      <svg key="portrait-3" viewBox="0 0 64 64" className="w-full h-full">
         <rect width="64" height="64" fill="#fee2e2" />
         <circle cx="32" cy="24" r="14" fill="#fed7aa" />
         <path d="M19 19 C19 11 45 11 45 19 C42 12 37 10 32 10 C27 10 22 12 19 19 Z" fill="#451a03" />
@@ -1024,7 +1024,7 @@ function EmployeeAvatar({
     ),
     // 4: Branch Director in emerald business suit (Rashid Mehmood)
     (
-      <svg viewBox="0 0 64 64" className="w-full h-full">
+      <svg key="portrait-4" viewBox="0 0 64 64" className="w-full h-full">
         <rect width="64" height="64" fill="#dcfce7" />
         <circle cx="32" cy="25" r="13" fill="#fde68a" />
         <path d="M20 18 C20 11 44 11 44 18 C41 12 37 10 32 10 C27 10 23 12 20 18 Z" fill="#14532d" />
@@ -1035,7 +1035,7 @@ function EmployeeAvatar({
     ),
     // 5: Global Group Executive with dark navy suit & crest (Muhammad Asad)
     (
-      <svg viewBox="0 0 64 64" className="w-full h-full">
+      <svg key="portrait-5" viewBox="0 0 64 64" className="w-full h-full">
         <rect width="64" height="64" fill="#e0e7ff" />
         <circle cx="32" cy="24" r="14" fill="#fed7aa" />
         <path d="M18 19 C18 10 46 10 46 19 C42 12 37 9 32 9 C27 9 22 12 18 19 Z" fill="#0f172a" />
@@ -1047,7 +1047,7 @@ function EmployeeAvatar({
     ),
     // 6: Sports Director with athletic sport coat (M. Ramzan Sports)
     (
-      <svg viewBox="0 0 64 64" className="w-full h-full">
+      <svg key="portrait-6" viewBox="0 0 64 64" className="w-full h-full">
         <rect width="64" height="64" fill="#fce7f3" />
         <circle cx="32" cy="24" r="14" fill="#fde68a" />
         <path d="M19 18 C19 11 45 11 45 18 C42 12 37 10 32 10 C27 10 22 12 19 18 Z" fill="#831843" />
@@ -1057,7 +1057,7 @@ function EmployeeAvatar({
     ),
     // 7: Super Administrator with distinguished crest suit (Izzatullah Admin)
     (
-      <svg viewBox="0 0 64 64" className="w-full h-full">
+      <svg key="portrait-7" viewBox="0 0 64 64" className="w-full h-full">
         <rect width="64" height="64" fill="#fae8ff" />
         <circle cx="32" cy="24" r="14" fill="#fed7aa" />
         <path d="M18 19 C18 10 46 10 46 19 C42 12 37 9 32 9 C27 9 22 12 18 19 Z" fill="#3b0764" />
@@ -1070,7 +1070,7 @@ function EmployeeAvatar({
     ),
     // 8: Shipping Line Officer in maritime crest blazer (Sohail Ahmad)
     (
-      <svg viewBox="0 0 64 64" className="w-full h-full">
+      <svg key="portrait-8" viewBox="0 0 64 64" className="w-full h-full">
         <rect width="64" height="64" fill="#ccfbf1" />
         <circle cx="32" cy="24" r="13" fill="#fde68a" />
         <path d="M18 18 C18 10 46 10 46 18 C42 12 37 9 32 9 C27 9 22 12 18 18 Z" fill="#0f766e" />
@@ -1082,7 +1082,7 @@ function EmployeeAvatar({
     ),
     // 9: Transport & Fleet Director (Tariq Jameel)
     (
-      <svg viewBox="0 0 64 64" className="w-full h-full">
+      <svg key="portrait-9" viewBox="0 0 64 64" className="w-full h-full">
         <rect width="64" height="64" fill="#ffedd5" />
         <circle cx="32" cy="24" r="14" fill="#fed7aa" />
         <path d="M19 19 C19 11 45 11 45 19 C42 12 37 10 32 10 C27 10 22 12 19 19 Z" fill="#7c2d12" />
@@ -1750,7 +1750,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
                   {th("S Admin / All Users Directory")}
                 </h1>
-                <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">
+                <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[11px] font-black uppercase px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">
                   {th("USER MANAGEMENT")}
                 </span>
               </div>
@@ -1782,23 +1782,23 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   <div className="p-1.5 space-y-1 text-xs">
                     <a href="/auth/login" target="_blank" className="flex items-center justify-between p-2 rounded-lg hover:bg-muted font-medium transition-colors">
                       <span>{th("Universal Login")}</span>
-                      <span className="text-[10px] font-mono text-muted-foreground">/auth/login</span>
+                      <span className="text-[11px] font-mono text-muted-foreground">/auth/login</span>
                     </a>
                     <a href="/auth/login/admin" target="_blank" className="flex items-center justify-between p-2 rounded-lg hover:bg-muted font-medium text-rose-600 transition-colors">
                       <span>{th("Super Admin Portal")}</span>
-                      <span className="text-[10px] font-mono text-muted-foreground">/admin</span>
+                      <span className="text-[11px] font-mono text-muted-foreground">/admin</span>
                     </a>
                     <a href="/auth/login/country" target="_blank" className="flex items-center justify-between p-2 rounded-lg hover:bg-muted font-medium text-purple-600 transition-colors">
                       <span>{th("Country Admin Portal")}</span>
-                      <span className="text-[10px] font-mono text-muted-foreground">/country</span>
+                      <span className="text-[11px] font-mono text-muted-foreground">/country</span>
                     </a>
                     <a href="/auth/login/city" target="_blank" className="flex items-center justify-between p-2 rounded-lg hover:bg-muted font-medium text-sky-600 transition-colors">
                       <span>{th("City Branch Portal")}</span>
-                      <span className="text-[10px] font-mono text-muted-foreground">/city</span>
+                      <span className="text-[11px] font-mono text-muted-foreground">/city</span>
                     </a>
                     <a href="/auth/login/clearing-agent" target="_blank" className="flex items-center justify-between p-2 rounded-lg hover:bg-muted font-medium text-amber-600 transition-colors">
                       <span>{th("Shipping / Clearing Portal")}</span>
-                      <span className="text-[10px] font-mono text-muted-foreground">/clearing</span>
+                      <span className="text-[11px] font-mono text-muted-foreground">/clearing</span>
                     </a>
                   </div>
                 </div>
@@ -1971,7 +1971,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
             </div>
           </div>
 
-          <div className="text-[10px] text-muted-foreground pt-1 border-t border-border/60">
+          <div className="text-[11px] text-muted-foreground pt-1 border-t border-border/60">
             {th("Last updated")}: {currentTime}
           </div>
         </div>
@@ -2188,7 +2188,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
 
                       {/* 4. Role / Level */}
                       <td className="py-3.5 px-3">
-                        <span className={cn("px-2.5 py-1 text-[10px] font-black rounded-md uppercase tracking-wider inline-block", getRoleBadgeStyle(u.roleLabel))}>
+                        <span className={cn("px-2.5 py-1 text-[11px] font-black rounded-md uppercase tracking-wider inline-block", getRoleBadgeStyle(u.roleLabel))}>
                           {u.roleLabel}
                         </span>
                       </td>
@@ -2437,7 +2437,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
       {/* ─── 5. FOOTER SPECIFICATION ─── */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-border/60 text-xs text-muted-foreground print:hidden">
         <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded bg-blue-600 text-white font-black text-[10px] flex items-center justify-center">
+          <div className="h-5 w-5 rounded bg-blue-600 text-white font-black text-[11px] flex items-center justify-center">
             D
           </div>
           <span className="font-bold text-foreground">DGT ERP</span>
@@ -2537,14 +2537,14 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         <span className="text-sm font-black text-foreground truncate">
                           {selectedUser.fullName}
                         </span>
-                        <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/30">
+                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/30">
                           {selectedUser.userCode}
                         </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 uppercase">
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 uppercase">
                           {selectedUser.roleLabel}
                         </span>
                         <span className={cn(
-                          "text-[9px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1",
+                          "text-[11px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1",
                           selectedUser.isActive ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300" : "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300"
                         )}>
                           <span className={cn("h-1.5 w-1.5 rounded-full", selectedUser.isActive ? "bg-emerald-500" : "bg-rose-500")} />
@@ -2573,7 +2573,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   {/* Right Live Allotment Indicator */}
                   <div className="lg:col-span-4 bg-background/80 dark:bg-slate-900/80 border border-indigo-500/30 rounded-2xl p-3 flex items-center justify-between sm:justify-end gap-3 shadow-xs">
                     <div className="text-left sm:text-right">
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                         {th("Allotted in Menu")}
                       </div>
                       <div className="flex items-baseline gap-1">
@@ -2725,7 +2725,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     {/* Rules Table ("Neeche rules aayega") */}
                     <div className="overflow-hidden rounded-2xl border border-border bg-card">
                       <table className="w-full text-xs text-left">
-                        <thead className="bg-muted/70 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
+                        <thead className="bg-muted/70 text-[11px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                           <tr>
                             <Th className="px-4 py-3">{th("Form / Module & URL")}</Th>
                             <Th className="px-3 py-3">{th("Category")}</Th>
@@ -2758,14 +2758,14 @@ export default function SuperAdminAllUsersDirectoryPage() {
                                     <div className="flex items-center gap-1.5">
                                       <span>{th(form.name)}</span>
                                     </div>
-                                    <div className="text-[10px] font-mono text-muted-foreground font-normal">
+                                    <div className="text-[11px] font-mono text-muted-foreground font-normal">
                                       {form.route}
                                     </div>
                                   </td>
 
                                   {/* Category pill */}
                                   <td className="px-3 py-2.5">
-                                    <span className="inline-block rounded px-2 py-0.5 text-[9px] font-extrabold bg-muted text-muted-foreground border border-border">
+                                    <span className="inline-block rounded px-2 py-0.5 text-[11px] font-extrabold bg-muted text-muted-foreground border border-border">
                                       {th(form.category)}
                                     </span>
                                   </td>
@@ -2776,7 +2776,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                                       type="button"
                                       onClick={() => toggleFormAccess(form.id)}
                                       className={cn(
-                                        "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer inline-flex items-center gap-1",
+                                        "px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer inline-flex items-center gap-1",
                                         p.allowed
                                           ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
                                           : "bg-muted hover:bg-slate-200 dark:hover:bg-slate-700 text-muted-foreground"
@@ -2898,7 +2898,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleOpenPasswordModal(selectedUser)}
-                                className="h-6 px-2 text-[10px] font-bold text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded cursor-pointer flex items-center gap-1"
+                                className="h-6 px-2 text-[11px] font-bold text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded cursor-pointer flex items-center gap-1"
                               >
                                 <KeyRound className="w-3 h-3" />
                                 <span>{th("Change")}</span>
@@ -2907,7 +2907,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-muted-foreground">{th("Direct Login URL")}:</span>
-                            <span className="font-mono text-[10px] text-blue-600 truncate max-w-[180px]">{selectedUser.loginUrl}</span>
+                            <span className="font-mono text-[11px] text-blue-600 truncate max-w-[180px]">{selectedUser.loginUrl}</span>
                           </div>
                         </div>
                       </div>
@@ -2922,41 +2922,41 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       <div className="flex items-center justify-between border-b pb-3">
                         <div>
                           <h4 className="text-sm font-black text-slate-900">{brandLine}</h4>
-                          <p className="text-[10px] font-bold text-indigo-700 uppercase">{th("OFFICIAL EMPLOYEE ACCESS SLIP")}</p>
+                          <p className="text-[11px] font-bold text-indigo-700 uppercase">{th("OFFICIAL EMPLOYEE ACCESS SLIP")}</p>
                         </div>
-                        <div className="text-right text-[9px] font-mono text-slate-500">
+                        <div className="text-right text-[11px] font-mono text-slate-500">
                           Date: <span suppressHydrationWarning>{new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</span>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div>
-                          <span className="text-[10px] text-slate-500 font-bold block">{th("EMPLOYEE / OFFICER NAME")}</span>
+                          <span className="text-[11px] text-slate-500 font-bold block">{th("EMPLOYEE / OFFICER NAME")}</span>
                           <span className="font-bold text-slate-900">{selectedUser.fullName}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-500 font-bold block">{th("USER CODE")}</span>
+                          <span className="text-[11px] text-slate-500 font-bold block">{th("USER CODE")}</span>
                           <span className="font-mono font-bold text-slate-900">{selectedUser.userCode}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-500 font-bold block">{th("ROLE & JURISDICTION")}</span>
+                          <span className="text-[11px] text-slate-500 font-bold block">{th("ROLE & JURISDICTION")}</span>
                           <span className="font-bold text-indigo-700">{selectedUser.roleLabel}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-500 font-bold block">{th("BRANCH LOCATION")}</span>
+                          <span className="text-[11px] text-slate-500 font-bold block">{th("BRANCH LOCATION")}</span>
                           <span className="font-bold text-slate-900">{selectedUser.branchName}</span>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-[10px] text-slate-500 font-bold block">{th("LOGIN USERNAME / EMAIL")}</span>
+                          <span className="text-[11px] text-slate-500 font-bold block">{th("LOGIN USERNAME / EMAIL")}</span>
                           <span className="font-mono font-bold text-slate-900 break-all bg-slate-50 p-1.5 rounded border border-slate-200 block">{selectedUser.email}</span>
                         </div>
                         <div className="col-span-2 bg-emerald-50/60 p-2.5 rounded-lg border border-emerald-200">
-                          <span className="text-[10px] text-emerald-800 font-bold block">{th("INITIAL ACCESS PASSWORD")}</span>
+                          <span className="text-[11px] text-emerald-800 font-bold block">{th("INITIAL ACCESS PASSWORD")}</span>
                           <span className="font-mono font-black text-emerald-700 text-sm">{selectedUser.passwordKey || th("Not set in vault")}</span>
                         </div>
                       </div>
 
-                      <div className="pt-3 border-t border-slate-200 flex justify-between text-[9px] text-slate-500 font-medium">
+                      <div className="pt-3 border-t border-slate-200 flex justify-between text-[11px] text-slate-500 font-medium">
                         <span>{th("Authorized by")}: {sess?.user?.fullName || sess?.fullName || sess?.user?.email || "—"}</span>
                         <span>{th("Generated")}: {currentTime || "—"}</span>
                       </div>
@@ -3055,10 +3055,10 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       <h2 className="text-xl font-black tracking-tight text-slate-900">{brandLine}</h2>
                       <p className="text-xs font-bold text-indigo-700 uppercase tracking-widest mt-0.5">{th("OFFICIAL USER ACCESS & CREDENTIAL HANDOVER SLIP")}</p>
                     </div>
-                    <div className="text-right text-[10px] font-mono text-slate-500 space-y-0.5">
+                    <div className="text-right text-[11px] font-mono text-slate-500 space-y-0.5">
                       <div className="font-bold text-slate-800">REF: {printModalUser.userCode}</div>
                       <div suppressHydrationWarning>{th("DATE")}: {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" })}</div>
-                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[9px]">{th("CONFIDENTIAL")}</span>
+                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[11px]">{th("CONFIDENTIAL")}</span>
                     </div>
                   </div>
 
@@ -3069,31 +3069,31 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
                     <div className="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
                       <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">{th("OFFICER & SYSTEM IDENTITY")}</span>
-                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">{th("ACTIVE STATUS")}</span>
+                      <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full">{th("ACTIVE STATUS")}</span>
                     </div>
                     <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("OFFICER / FULL NAME")}</span>
+                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">{th("OFFICER / FULL NAME")}</span>
                         <span className="font-bold text-slate-900 text-sm">{printModalUser.fullName}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("SYSTEM USER CODE")}</span>
+                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">{th("SYSTEM USER CODE")}</span>
                         <span className="font-mono font-bold text-slate-900 text-sm">{printModalUser.userCode}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("SYSTEM ROLE / LEVEL")}</span>
+                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">{th("SYSTEM ROLE / LEVEL")}</span>
                         <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 inline-block mt-0.5">{printModalUser.roleLabel}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("ASSIGNED BRANCH JURISDICTION")}</span>
+                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">{th("ASSIGNED BRANCH JURISDICTION")}</span>
                         <span className="font-bold text-slate-900">{printModalUser.branchName}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("COUNTRY JURISDICTION")}</span>
+                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">{th("COUNTRY JURISDICTION")}</span>
                         <span className="font-bold text-slate-800">{printModalUser.countryName}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{th("DIRECT LOGIN URL")}</span>
+                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">{th("DIRECT LOGIN URL")}</span>
                         <span className="font-mono text-blue-700 font-bold break-all">{printModalUser.loginUrl}</span>
                       </div>
                     </div>
@@ -3106,11 +3106,11 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase block">{th("LOGIN USERNAME / EMAIL")}</span>
+                        <span className="text-[11px] text-slate-500 font-bold uppercase block">{th("LOGIN USERNAME / EMAIL")}</span>
                         <span className="font-mono font-black text-slate-900 text-sm bg-white px-2.5 py-1 rounded border border-slate-300 block break-all mt-1">{printModalUser.email}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase block">{th("INITIAL ACCESS PASSWORD")}</span>
+                        <span className="text-[11px] text-slate-500 font-bold uppercase block">{th("INITIAL ACCESS PASSWORD")}</span>
                         <span className="font-mono font-black text-emerald-700 text-sm bg-white px-2.5 py-1 rounded border border-emerald-300 block mt-1">
                           {printModalUser.passwordKey && !printModalUser.passwordKey.includes("••••") && printModalUser.passwordKey !== "Not set in vault"
                             ? printModalUser.passwordKey
@@ -3120,7 +3120,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     </div>
                   </div>
 
-                  <div className="bg-amber-50/70 border border-amber-200 rounded-lg p-3 text-[10.5px] text-amber-900 space-y-1">
+                  <div className="bg-amber-50/70 border border-amber-200 rounded-lg p-3 text-[11px] text-amber-900 space-y-1">
                     <div className="font-bold flex items-center gap-1 text-[11px]">
                       <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
                       {th("SECURITY & COMPLIANCE NOTICE:")}
@@ -3134,12 +3134,12 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     <div className="space-y-4">
                       <div className="font-bold text-slate-800 uppercase text-[11px]">{th("Super Admin Authorization")}</div>
                       <div className="border-b border-slate-400 h-10"></div>
-                      <div className="text-[10px] text-slate-500 font-medium">{th("Signature & Official Stamp")}</div>
+                      <div className="text-[11px] text-slate-500 font-medium">{th("Signature & Official Stamp")}</div>
                     </div>
                     <div className="space-y-4">
                       <div className="font-bold text-slate-800 uppercase text-[11px]">{th("Staff Member Acknowledgement")}</div>
                       <div className="border-b border-slate-400 h-10"></div>
-                      <div className="text-[10px] text-slate-500 font-medium">{th("Received By, Signature & Date")}</div>
+                      <div className="text-[11px] text-slate-500 font-medium">{th("Received By, Signature & Date")}</div>
                     </div>
                   </div>
                 </div>
@@ -3151,10 +3151,10 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       <h2 className="text-xl font-black tracking-tight text-slate-900">{brandLine}</h2>
                       <p className="text-xs font-bold text-indigo-700 uppercase tracking-widest mt-0.5">{th("OFFICIAL SYSTEM ACCESS & BATCH CREDENTIAL HANDOVER DIRECTORY")}</p>
                     </div>
-                    <div className="text-right text-[10px] font-mono text-slate-500 space-y-0.5">
+                    <div className="text-right text-[11px] font-mono text-slate-500 space-y-0.5">
                       <div className="font-bold text-slate-800">TOTAL USERS: {filteredUsers.length}</div>
                       <div suppressHydrationWarning>{th("DATE")}: {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" })}</div>
-                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[9px]">{th("CONFIDENTIAL")}</span>
+                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[11px]">{th("CONFIDENTIAL")}</span>
                     </div>
                   </div>
 
@@ -3182,11 +3182,11 @@ export default function SuperAdminAllUsersDirectoryPage() {
                             <td className="p-2 font-mono font-bold text-slate-900 border-r border-slate-200 whitespace-nowrap">{u.userCode}</td>
                             <td className="p-2 border-r border-slate-200">
                               <div className="font-bold text-slate-900">{u.fullName}</div>
-                              <div className="text-[10px] text-indigo-700 font-medium">{u.roleLabel}</div>
+                              <div className="text-[11px] text-indigo-700 font-medium">{u.roleLabel}</div>
                             </td>
                             <td className="p-2 border-r border-slate-200 text-slate-700">
                               <div>{u.branchName}</div>
-                              <div className="text-[9.5px] text-slate-400 font-medium">{u.countryName}</div>
+                              <div className="text-[11px] text-slate-400 font-medium">{u.countryName}</div>
                             </td>
                             <td className="p-2 font-mono font-bold text-slate-900 border-r border-slate-200 break-all">{u.email}</td>
                             <td className="p-2 font-mono font-bold text-emerald-700 border-r border-slate-200 whitespace-nowrap bg-emerald-50/40">
@@ -3205,12 +3205,12 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     <div className="space-y-4">
                       <div className="font-bold text-slate-800 uppercase text-[11px]">{th("Super Admin Authorization")}</div>
                       <div className="border-b border-slate-400 h-10"></div>
-                      <div className="text-[10px] text-slate-500 font-medium">{th("Signature & Official Stamp")}</div>
+                      <div className="text-[11px] text-slate-500 font-medium">{th("Signature & Official Stamp")}</div>
                     </div>
                     <div className="space-y-4">
                       <div className="font-bold text-slate-800 uppercase text-[11px]">{th("Internal Security Verification")}</div>
                       <div className="border-b border-slate-400 h-10"></div>
-                      <div className="text-[10px] text-slate-500 font-medium">{th("Audit Officer Signature & Date")}</div>
+                      <div className="text-[11px] text-slate-500 font-medium">{th("Audit Officer Signature & Date")}</div>
                     </div>
                   </div>
                 </div>
@@ -3286,7 +3286,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 </div>
 
                 <div className="bg-slate-900 text-white rounded-2xl p-4 space-y-2 border border-slate-800">
-                  <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                  <div className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">
                     New Temporary Password
                   </div>
                   <div className="flex items-center justify-between gap-2">
@@ -3303,7 +3303,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       <span>{copiedKey === "temp-modal-key" ? "Copied" : "Copy"}</span>
                     </Button>
                   </div>
-                  <div className="text-[10px] text-amber-300 flex items-center gap-1.5 pt-1">
+                  <div className="text-[11px] text-amber-300 flex items-center gap-1.5 pt-1">
                     <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                     <span>Provide this password to the employee now. For security, it will not be displayed again once closed.</span>
                   </div>
@@ -3395,7 +3395,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
 
                 <div className="relative flex py-1 items-center">
                   <div className="grow border-t border-border"></div>
-                  <span className="shrink mx-3 text-[10px] text-muted-foreground uppercase font-bold tracking-wider">or set custom password</span>
+                  <span className="shrink mx-3 text-[11px] text-muted-foreground uppercase font-bold tracking-wider">or set custom password</span>
                   <div className="grow border-t border-border"></div>
                 </div>
 

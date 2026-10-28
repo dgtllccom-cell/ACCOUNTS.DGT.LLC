@@ -809,7 +809,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                             {doc.frontImage && (
                               <div className="border border-slate-200 rounded-xl p-2 bg-slate-50">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                                <span className="text-[11px] font-bold text-slate-500 uppercase block mb-1">
                                   {tx("frontSide", lang)}
                                 </span>
                                 <img
@@ -821,7 +821,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                             )}
                             {doc.backImage && (
                               <div className="border border-slate-200 rounded-xl p-2 bg-slate-50">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                                <span className="text-[11px] font-bold text-slate-500 uppercase block mb-1">
                                   {tx("backSide", lang)}
                                 </span>
                                 <img

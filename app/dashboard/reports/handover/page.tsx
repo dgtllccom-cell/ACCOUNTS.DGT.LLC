@@ -482,7 +482,7 @@ export default function HandoverReportPage() {
                         <td className="p-3 text-slate-600 dark:text-slate-400 align-middle">{entry.cityBranch}</td>
                         <td className="p-3 font-semibold text-slate-900 dark:text-slate-100 align-middle">{entry.responsiblePerson}</td>
                         <td className="p-3 align-middle">
-                          <span className={`inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-bold rounded-full border shadow-2xs ${roleBadge}`}>
+                          <span className={`inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[11px] font-bold rounded-full border shadow-2xs ${roleBadge}`}>
                             {roleLabel(entry.role)}
                           </span>
                         </td>
@@ -498,7 +498,7 @@ export default function HandoverReportPage() {
                                 </summary>
                                 <div className="mt-1 flex max-w-[260px] flex-wrap gap-1">
                                   {list.map((p, i) => (
-                                    <span key={i} className="rounded bg-slate-100 px-1.5 py-0.5 text-[9.5px] font-mono text-slate-600 dark:bg-slate-800 dark:text-slate-400">{p}</span>
+                                    <span key={i} className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-mono text-slate-600 dark:bg-slate-800 dark:text-slate-400">{p}</span>
                                   ))}
                                 </div>
                               </details>
@@ -509,7 +509,7 @@ export default function HandoverReportPage() {
                           {entry.passwordVaultRef}
                         </td>
                         <td className="p-3 align-middle">
-                          <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                          <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                             {entry.status}
                           </span>
                         </td>
@@ -656,7 +656,7 @@ export default function HandoverReportPage() {
                     <td className="p-2.5 font-mono">{row.l.toLocaleString()}</td>
                     <td className="p-2.5 font-mono font-semibold text-blue-600">{row.v.toLocaleString()}</td>
                     <td className="p-2.5">
-                      <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      <span className="px-2 py-0.5 text-[11px] font-semibold rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                         {th("100% Synced")}
                       </span>
                     </td>
@@ -686,7 +686,7 @@ export default function HandoverReportPage() {
               <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 text-center space-y-1">
                 <div className="text-xs font-mono font-bold uppercase text-slate-500">{lang.code} • {lang.dir}</div>
                 <div className="text-sm font-bold text-slate-900 dark:text-slate-100">{lang.name}</div>
-                <span className="inline-block px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-100 text-emerald-800">
+                <span className="inline-block px-2 py-0.5 text-[11px] font-semibold rounded bg-emerald-100 text-emerald-800">
                   {th(lang.status)}
                 </span>
               </div>

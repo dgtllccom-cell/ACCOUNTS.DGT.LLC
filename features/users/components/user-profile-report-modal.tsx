@@ -261,7 +261,7 @@ export function UserProfileReportModal({
                 <div className="flex justify-between"><span className="text-slate-400">{th("Official Email")}:</span><span className="font-semibold">{user.email || "-"}</span></div>
                 <div className="flex justify-between"><span className="text-slate-400">{th("City Location")}:</span><span>{user.cityBranchName || user.countryName || "-"}</span></div>
                 <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400 block text-[10px]">{th("Permanent Address")}:</span>
+                  <span className="text-slate-400 block text-[11px]">{th("Permanent Address")}:</span>
                   <span className="font-medium text-slate-800 dark:text-slate-200 block truncate" title={user.residentialAddress || ""}>
                     {user.residentialAddress || "Not Provided"}
                   </span>
@@ -279,7 +279,7 @@ export function UserProfileReportModal({
                 <div className="flex justify-between"><span className="text-slate-400">{th("Login Username")}:</span><span className="font-mono font-bold text-blue-600 dark:text-blue-400">{user.username || user.userCode}</span></div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400">{th("Vault Reference")}:</span>
-                  <span className="font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px] text-purple-600">
+                  <span className="font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[11px] text-purple-600">
                     {user.passwordVaultRef || `VAULT-DGT-${user.userCode}`}
                   </span>
                 </div>
@@ -318,7 +318,7 @@ export function UserProfileReportModal({
 
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[10px]">
+                <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[11px]">
                   <tr>
                     <Th className="p-3">{th("ERP Form / Module")}</Th>
                     <Th className="p-3">{th("Category")}</Th>
@@ -363,11 +363,11 @@ export function UserProfileReportModal({
                         </td>
                         <td className="p-3">
                           {hasAny ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                               {mod.canPostApprove ? th("Posting Authorized") : mod.canCreate ? th("Data Entry") : th("Read-Only")}
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800">
+                            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800">
                               {th("Restricted")}
                             </span>
                           )}
@@ -403,7 +403,7 @@ export function UserProfileReportModal({
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {rbacSummary.restrictedModules.map((m, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-md text-[10px] bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800 font-medium">
+                      <span key={i} className="px-2.5 py-1 rounded-md text-[11px] bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800 font-medium">
                         {m}
                       </span>
                     ))}

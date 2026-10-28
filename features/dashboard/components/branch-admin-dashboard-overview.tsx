@@ -115,9 +115,9 @@ function OperationalCard({ label, value, sub, icon: Icon, tone }: { label: strin
     <div className="bg-card text-card-foreground border border-border hover:border-border/80 p-4 rounded-2xl flex items-center justify-between shadow-lg transition-transform hover:-translate-y-0.5 duration-200">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
           <p className="mt-2.5 text-xl font-black tracking-tight text-foreground">{value}</p>
-          <p className="mt-1 text-[10px] font-semibold text-muted-foreground/80">{sub}</p>
+          <p className="mt-1 text-[11px] font-semibold text-muted-foreground/80">{sub}</p>
         </div>
         <span className={`grid h-9 w-9 place-items-center rounded-xl border border-border bg-muted shrink-0 ${tone}`}>
           <Icon className="h-4 w-4" />
@@ -134,7 +134,7 @@ function StatusBadge({ value, draftLabel }: { value: string | null; draftLabel: 
     : normalized === "pending" || normalized === "draft"
       ? "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
       : "border-border bg-muted text-muted-foreground";
-  return <span className={`inline-flex rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase ${tone}`}>{value || draftLabel}</span>;
+  return <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-bold uppercase ${tone}`}>{value || draftLabel}</span>;
 }
 
 export function BranchAdminDashboardOverview({ data, financialsHidden = false }: BranchDashboardOverviewProps & { financialsHidden?: boolean }) {
@@ -200,7 +200,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">{data.branchName}</h1>
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-black uppercase text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
                 <Building2 className="h-3 w-3" />
                 {translateHeader(lang, "Business Dashboard")}
               </span>
@@ -222,12 +222,12 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
 
           <div className="rounded-xl border border-border bg-card px-3.5 py-1.5 backdrop-blur shrink-0 flex items-center gap-3">
             <div>
-              <p className="text-[9px] font-bold uppercase text-muted-foreground">{tt("bdash.branch_code", "Branch Code")}</p>
+              <p className="text-[11px] font-bold uppercase text-muted-foreground">{tt("bdash.branch_code", "Branch Code")}</p>
               <p className="font-mono text-xs font-black text-foreground">{data.branchCode}</p>
             </div>
             <div className="h-6 w-px bg-border" />
             <div>
-              <p className="text-[9px] font-bold uppercase text-muted-foreground">{tt("bdash.base_currency", "Base Currency")}</p>
+              <p className="text-[11px] font-bold uppercase text-muted-foreground">{tt("bdash.base_currency", "Base Currency")}</p>
               <p className="font-mono text-xs font-black text-foreground">{currency}</p>
             </div>
           </div>
@@ -255,11 +255,11 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[100px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{tt("bdash.branch_code", "Code")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-300">{tt("bdash.branch_code", "Code")}</p>
               <p className="text-sm font-black text-white">{data.branchCode}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[100px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{tt("bdash.base_currency", "Currency")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-300">{tt("bdash.base_currency", "Currency")}</p>
               <p className="text-sm font-black text-white">{currency}</p>
             </div>
           </div>
@@ -291,7 +291,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
               <TrendingUp className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
               {tt("bdash.financials", "Branch Financials")}
             </CardTitle>
-            <p className="text-[9px] font-semibold text-muted-foreground uppercase">{tt("bdash.financials_sub", "Purchases, sales & balances")} · {currency}</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase">{tt("bdash.financials_sub", "Purchases, sales & balances")} · {currency}</p>
           </CardHeader>
           <CardContent>
             <div className="h-[250px] w-full" style={{ minHeight: 250 }}>
@@ -323,7 +323,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
               <Activity className="h-4 w-4 text-cyan-500" />
               {tt("bdash.branch_mix", "Branch Mix")}
             </CardTitle>
-            <p className="text-[9px] font-semibold text-muted-foreground uppercase">{tt("bdash.branch_mix_sub", "Spread of core account metrics")}</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase">{tt("bdash.branch_mix_sub", "Spread of core account metrics")}</p>
           </CardHeader>
           <CardContent>
             <div className="h-[180px] w-full flex items-center justify-center relative" style={{ minHeight: 180 }}>
@@ -343,7 +343,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
                 </ResponsiveContainer>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold text-muted-foreground mt-2">
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold text-muted-foreground mt-2">
               {financialData.map((entry, index) => (
                 <div key={entry.name} className={`flex items-center gap-2 ${entry.value > 0 ? "" : "opacity-40"}`}>
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }} />
@@ -361,7 +361,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
               <ClipboardList className="h-4 w-4 text-indigo-500" />
               {tt("dash.quick_actions", "Quick Actions")}
             </CardTitle>
-            <p className="text-[9px] font-semibold text-muted-foreground uppercase">{tt("bdash.fast_ops", "Fast branch operations")}</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase">{tt("bdash.fast_ops", "Fast branch operations")}</p>
           </CardHeader>
           <CardContent className="space-y-2.5">
             {quickActions.map((action) => {
@@ -373,7 +373,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
                       <span className="grid h-8 w-8 place-items-center rounded-lg bg-muted text-muted-foreground border border-border shrink-0"><Icon className="h-4 w-4" /></span>
                       <div className="min-w-0">
                         <p className="text-[11px] font-black text-foreground group-hover:text-primary leading-tight">{tt(action.key, action.label)}</p>
-                        <p className="text-[9px] text-muted-foreground mt-0.5 truncate">{tt(action.descKey, action.desc)}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{tt(action.descKey, action.desc)}</p>
                       </div>
                     </div>
                     <ArrowRight className={`h-3.5 w-3.5 text-muted-foreground transition group-hover:translate-x-0.5 ${isRtl ? "rotate-180" : ""}`} />
@@ -401,7 +401,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
                 <div key={ledger.id} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30">
                   <div>
                     <p className="text-xs font-bold text-foreground/90">{ledger.name}</p>
-                    <p className="font-mono text-[9px] text-muted-foreground mt-0.5">{ledger.code}</p>
+                    <p className="font-mono text-[11px] text-muted-foreground mt-0.5">{ledger.code}</p>
                   </div>
                   <p className="font-mono text-xs font-black text-muted-foreground">{formatMoney(ledger.current_balance, ledger.currency || currency)}</p>
                 </div>
@@ -422,7 +422,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
             <div className="overflow-x-auto">
               <table className="w-full text-start text-[11px]">
                 <thead>
-                  <tr className="bg-muted/40 text-[9px] uppercase font-bold text-muted-foreground">
+                  <tr className="bg-muted/40 text-[11px] uppercase font-bold text-muted-foreground">
                     <Th className="px-4 py-2.5 text-start">{tt("bdash.col_voucher", "Voucher")}</Th>
                     <Th className="px-4 py-2.5 text-start">{tt("bdash.col_date", "Date")}</Th>
                     <Th className="px-4 py-2.5 text-start">{tt("bdash.col_type", "Type")}</Th>
@@ -459,17 +459,17 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
           <CardContent className="grid gap-3 grid-cols-1 sm:grid-cols-3">
             <div className="rounded-xl border border-border p-3 bg-muted/40">
               <PackageOpen className="mb-2 h-4.5 w-4.5 text-cyan-500" />
-              <p className="text-[9px] font-bold uppercase text-muted-foreground">{tt("bdash.products", "Products")}</p>
+              <p className="text-[11px] font-bold uppercase text-muted-foreground">{tt("bdash.products", "Products")}</p>
               <p className="text-lg font-black text-foreground mt-1 leading-none">{data.productsCount}</p>
             </div>
             <div className="rounded-xl border border-border p-3 bg-muted/40">
               <Users className="mb-2 h-4.5 w-4.5 text-indigo-500" />
-              <p className="text-[9px] font-bold uppercase text-muted-foreground">{tt("bdash.customers", "Customers")}</p>
+              <p className="text-[11px] font-bold uppercase text-muted-foreground">{tt("bdash.customers", "Customers")}</p>
               <p className="text-lg font-black text-foreground mt-1 leading-none">{data.customersCount}</p>
             </div>
             <div className="rounded-xl border border-border p-3 bg-muted/40">
               <Banknote className={`mb-2 h-4.5 w-4.5 ${profit > 0 ? "text-emerald-500" : profit < 0 ? "text-rose-500" : "text-muted-foreground/50"}`} />
-              <p className="text-[9px] font-bold uppercase text-muted-foreground">{tt("bdash.profit", "Profit")}</p>
+              <p className="text-[11px] font-bold uppercase text-muted-foreground">{tt("bdash.profit", "Profit")}</p>
               <p className={`text-lg font-black mt-1 leading-none ${profit > 0 ? "text-emerald-600 dark:text-emerald-400" : profit < 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>{formatMoney(profit, currency)}</p>
             </div>
           </CardContent>
@@ -487,8 +487,8 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
             {data.customers.length ? data.customers.slice(0, 4).map((customer) => (
               <div key={customer.id} className="rounded-xl border border-border p-3 bg-muted/20">
                 <p className="truncate text-[11px] font-black text-foreground/90">{customer.customer_name}</p>
-                <p className="mt-0.5 truncate text-[9px] font-bold text-blue-500 dark:text-blue-400">{customer.company_name || tt("bdash.customer", "Customer")}</p>
-                <div className="mt-2.5 flex flex-col gap-1 text-[9px] text-muted-foreground">
+                <p className="mt-0.5 truncate text-[11px] font-bold text-blue-500 dark:text-blue-400">{customer.company_name || tt("bdash.customer", "Customer")}</p>
+                <div className="mt-2.5 flex flex-col gap-1 text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1.5 truncate">
                     <Phone className="h-3 w-3 shrink-0 text-muted-foreground/50" />
                     <span className="truncate">{customer.mobile || tt("bdash.no_mobile", "No mobile")}</span>

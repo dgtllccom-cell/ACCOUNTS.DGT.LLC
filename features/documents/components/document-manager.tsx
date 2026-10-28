@@ -1082,12 +1082,12 @@ export function DocumentManager() {
               <h1 className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 tracking-tight whitespace-nowrap">
                 {th("Document Management")}
               </h1>
-              <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
+              <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 shrink-0" />
                 {filteredDocuments.length} {t("active_docs", "Active")}
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-semibold -mt-0.5 hidden sm:block">{th("Camera Capture & Cloud Storage")}</p>
+            <p className="text-[11px] text-slate-400 font-semibold -mt-0.5 hidden sm:block">{th("Camera Capture & Cloud Storage")}</p>
           </div>
         </div>
 
@@ -1143,7 +1143,7 @@ export function DocumentManager() {
             {isDateMenuOpen && (
               <div className="absolute left-0 mt-1.5 w-72 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-2xl p-3 z-50 text-xs space-y-3 font-sans">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{th("Quick Presets")}</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{th("Quick Presets")}</span>
                   <div className="grid grid-cols-2 gap-1 mt-1.5">
                     {[
                       { key: "all", label: th("All Dates") },
@@ -1174,7 +1174,7 @@ export function DocumentManager() {
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{th("Date Range")}</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{th("Date Range")}</span>
                   <ErpDatePicker
                     mode="range"
                     lang={lang}
@@ -1225,7 +1225,7 @@ export function DocumentManager() {
             <Filter className="h-3.5 w-3.5" />
             <span>{t("filters", "Scope & Hierarchy Filters")}</span>
             {activeFiltersCount > 0 && (
-              <span className="h-4 w-4 rounded-full bg-white text-indigo-700 font-black text-[10px] flex items-center justify-center">
+              <span className="h-4 w-4 rounded-full bg-white text-indigo-700 font-black text-[11px] flex items-center justify-center leading-none">
                 {activeFiltersCount}
               </span>
             )}
@@ -1275,7 +1275,7 @@ export function DocumentManager() {
                   </div>
                   <div>
                     <p className="font-bold text-xs">{t("start_scan", "Camera Capture")}</p>
-                    <p className="text-[10px] text-slate-400 font-normal">{th("Device camera (webcam / phone)")}</p>
+                    <p className="text-[11px] text-slate-400 font-normal">{th("Device camera (webcam / phone)")}</p>
                   </div>
                 </button>
 
@@ -1294,7 +1294,7 @@ export function DocumentManager() {
                   </div>
                   <div>
                     <p className="font-bold text-xs">{isUploading ? t("uploading", "Uploading...") : t("upload_file", "Upload File")}</p>
-                    <p className="text-[10px] text-slate-400 font-normal">{th("PDF, DOC, Images, XLS")}</p>
+                    <p className="text-[11px] text-slate-400 font-normal">{th("PDF, DOC, Images, XLS")}</p>
                   </div>
                 </button>
 
@@ -1312,7 +1312,7 @@ export function DocumentManager() {
                   </div>
                   <div>
                     <p className="font-bold text-xs">{t("new_folder", "New Custom Folder")}</p>
-                    <p className="text-[10px] text-slate-400 font-normal">{th("Create repository folder")}</p>
+                    <p className="text-[11px] text-slate-400 font-normal">{th("Create repository folder")}</p>
                   </div>
                 </button>
               </div>
@@ -1588,7 +1588,7 @@ export function DocumentManager() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Globe className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {t("card_1_title", "BRANCH & USER DETAILS")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">1. {t("card_1_title", "BRANCH & USER DETAILS")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between gap-2">
@@ -1605,7 +1605,7 @@ export function DocumentManager() {
             </div>
             <div className="flex justify-between gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
               <span className="shrink-0">{t("status", "Status")}:</span>
-              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1">
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[11px] flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 {t("active_session", "Active Session")}
               </span>
@@ -1617,7 +1617,7 @@ export function DocumentManager() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <FileText className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. {t("card_2_title", "DOCUMENTS SUMMARY")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">2. {t("card_2_title", "DOCUMENTS SUMMARY")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -1639,7 +1639,7 @@ export function DocumentManager() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <HardDrive className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {t("card_3_title", "STORAGE & SCANNER")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">3. {t("card_3_title", "STORAGE & SCANNER")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -1648,11 +1648,11 @@ export function DocumentManager() {
             </div>
             <div className="flex justify-between text-purple-600 font-bold">
               <span>{t("direct_scan_bridge", "Scanner Bridge")}:</span>
-              <span className="text-[10px] bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 rounded">{th("Camera Ready")}</span>
+              <span className="text-[11px] bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 rounded">{th("Camera Ready")}</span>
             </div>
             <div className="flex justify-between text-indigo-600 font-bold">
               <span>{t("cloud_bucket", "Cloud Bucket")}:</span>
-              <span className="text-[10px]">erp-documents</span>
+              <span className="text-[11px]">erp-documents</span>
             </div>
           </div>
         </div>
@@ -1661,7 +1661,7 @@ export function DocumentManager() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-indigo-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {t("card_4_title", "BRANCHES & COMPANIES")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">4. {t("card_4_title", "BRANCHES & COMPANIES")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -1683,9 +1683,9 @@ export function DocumentManager() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Activity className="h-4 w-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {t("card_5_title", "QUICK ACTIONS")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">5. {t("card_5_title", "QUICK ACTIONS")}</span>
           </div>
-          <div className="mt-2 space-y-1 text-[10px] font-semibold">
+          <div className="mt-2 space-y-1 text-[11px] font-semibold">
             <div
               onClick={() => setDateFilter("today")}
               className="flex justify-between items-center text-slate-600 dark:text-slate-400 hover:text-blue-600 cursor-pointer"
@@ -1758,7 +1758,7 @@ export function DocumentManager() {
                 <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
                 👑 {th("Super Admin Storage")} ({th("All")})
               </span>
-              <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded-full font-mono">
+              <span className="text-[11px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded-full font-mono">
                 {documents.length}
               </span>
             </div>
@@ -1788,7 +1788,7 @@ export function DocumentManager() {
                         <Folder className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                         {c.name}
                       </span>
-                      <span className="text-[10px] font-mono text-slate-400">{cDocCount}</span>
+                      <span className="text-[11px] font-mono text-slate-400">{cDocCount}</span>
                     </div>
 
                     {/* Main Branches */}
@@ -1839,7 +1839,7 @@ export function DocumentManager() {
                                             setSelectedModule("all");
                                           }}
                                           className={cn(
-                                            "flex items-center justify-between p-1 rounded-md cursor-pointer text-[10.5px] transition-colors",
+                                            "flex items-center justify-between p-1 rounded-md cursor-pointer text-[11px] transition-colors",
                                             isSelectedCB && !selectedAccountId
                                               ? "bg-blue-600 text-white font-bold"
                                               : "hover:bg-slate-50 text-slate-600 dark:text-slate-400"
@@ -1870,7 +1870,7 @@ export function DocumentManager() {
                                                       setSelectedModule("all");
                                                     }}
                                                     className={cn(
-                                                      "flex items-center justify-between px-1.5 py-1 rounded-md cursor-pointer text-[9.5px] transition-colors",
+                                                      "flex items-center justify-between px-1.5 py-1 rounded-md cursor-pointer text-[11px] transition-colors",
                                                       isSelectedAcc
                                                         ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-black border border-amber-300"
                                                         : "hover:bg-slate-100 text-slate-700 dark:text-slate-300"
@@ -1879,12 +1879,12 @@ export function DocumentManager() {
                                                   >
                                                     <span className="flex min-w-0 items-center gap-1">
                                                       <CreditCard className="h-2.5 w-2.5 text-amber-600 shrink-0" />
-                                                      <span className="max-w-[84px] shrink-0 truncate font-mono font-bold text-[9px] text-blue-600 dark:text-blue-400">
+                                                      <span className="max-w-[84px] shrink-0 truncate font-mono font-bold text-[11px] text-blue-600 dark:text-blue-400">
                                                         {acc.manualReferenceNumber || acc.accountCode}
                                                       </span>
                                                       <span className="min-w-0 truncate">{acc.accountName}</span>
                                                     </span>
-                                                    <span className="ms-1 text-[8.5px] font-mono text-slate-400 shrink-0">
+                                                    <span className="ms-1 text-[11px] font-mono text-slate-400 shrink-0">
                                                       {accDocCount}
                                                     </span>
                                                   </div>
@@ -1910,7 +1910,7 @@ export function DocumentManager() {
                                                               setSelectedModule(catName);
                                                             }}
                                                             className={cn(
-                                                              "flex items-center justify-between px-1.5 py-0.5 rounded text-[8.5px] cursor-pointer transition-colors",
+                                                              "flex items-center justify-between px-1.5 py-0.5 rounded text-[11px] cursor-pointer transition-colors",
                                                               isCatSelected
                                                                 ? "bg-emerald-600 text-white font-black shadow-xs"
                                                                 : "hover:bg-slate-100 text-slate-600 dark:text-slate-400 font-semibold"
@@ -1920,7 +1920,7 @@ export function DocumentManager() {
                                                               <Folder className="h-2 w-2 shrink-0" />
                                                               {th(catName)}
                                                             </span>
-                                                            <span className={cn("ms-1 text-[8px] font-mono", isCatSelected ? "text-emerald-100" : "text-slate-400")}>
+                                                            <span className={cn("ms-1 text-[11px] font-mono", isCatSelected ? "text-emerald-100" : "text-slate-400")}>
                                                               {catCount}
                                                             </span>
                                                           </div>
@@ -1950,7 +1950,7 @@ export function DocumentManager() {
 
             {/* Module Folders Quick List */}
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1">
+              <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 px-1">
                 {t("folder_categories", "Folder Categories")}
               </div>
               {allFolderList.map((folderName) => {
@@ -1971,7 +1971,7 @@ export function DocumentManager() {
                       <Folder className="h-3 w-3 text-amber-500 shrink-0" />
                       {th(folderName)}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">{count}</span>
+                    <span className="text-[11px] font-mono text-slate-400">{count}</span>
                   </div>
                 );
               })}
@@ -2161,38 +2161,38 @@ export function DocumentManager() {
                               <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate" title={doc.title}>
                                 {doc.title}
                               </h3>
-                              <p className="text-[10px] font-mono text-slate-400 truncate" title={doc.file_name}>
+                              <p className="text-[11px] font-mono text-slate-400 truncate" title={doc.file_name}>
                                 {doc.file_name}
                               </p>
                             </div>
                           </div>
 
-                          <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 whitespace-nowrap">
                             {formatBytes(doc.file_size)}
                           </span>
                         </div>
 
                         <div className="mt-2.5 flex max-w-full flex-wrap gap-1 overflow-hidden">
-                          <span className="max-w-full truncate text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                          <span className="max-w-full truncate text-[11px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                             {doc.module_type}
                           </span>
                           {doc.country_name && (
-                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            <span className="max-w-full truncate text-[11px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                               🌍 {doc.country_name}
                             </span>
                           )}
                           {doc.main_branch_name && (
-                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            <span className="max-w-full truncate text-[11px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                               🏢 {doc.main_branch_name}
                             </span>
                           )}
                           {doc.company_name && (
-                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300" title={doc.company_name}>
+                            <span className="max-w-full truncate text-[11px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300" title={doc.company_name}>
                               {doc.company_name}
                             </span>
                           )}
                           {doc.person_account_name && (
-                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" title={doc.person_account_name}>
+                            <span className="max-w-full truncate text-[11px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" title={doc.person_account_name}>
                               👤 {doc.person_account_name}
                             </span>
                           )}
@@ -2200,7 +2200,7 @@ export function DocumentManager() {
                       </div>
 
                       <div className="pt-2 border-t border-slate-100 dark:border-slate-850 flex items-center justify-between gap-2">
-                        <span className="text-[10px] text-slate-400 font-mono">
+                        <span className="text-[11px] text-slate-400 font-mono">
                           {new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
                         </span>
 
@@ -2250,7 +2250,7 @@ export function DocumentManager() {
               /* Table View */
               <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px]">
+                  <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase text-[11px]">
                     <tr>
                       <Th className="p-2.5">{th("Title / File")}</Th>
                       <Th className="p-2.5">{th("Country & Branch")}</Th>
@@ -2266,11 +2266,11 @@ export function DocumentManager() {
                       <tr key={doc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
                         <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">
                           <div className="truncate max-w-[180px]">{doc.title}</div>
-                          <div className="text-[10px] font-mono text-slate-400 truncate max-w-[180px]">{doc.file_name}</div>
+                          <div className="text-[11px] font-mono text-slate-400 truncate max-w-[180px]">{doc.file_name}</div>
                         </td>
                         <td className="p-2.5 text-slate-600 dark:text-slate-300">
                           <div>{doc.country_name || "—"}</div>
-                          <div className="text-[10px] text-slate-400">{doc.main_branch_name || ""}</div>
+                          <div className="text-[11px] text-slate-400">{doc.main_branch_name || ""}</div>
                         </td>
                         <td className="p-2.5">
                           <span className="font-semibold text-blue-600">{doc.module_type}</span>
@@ -2278,10 +2278,10 @@ export function DocumentManager() {
                         </td>
                         <td className="p-2.5 text-slate-600 dark:text-slate-300">
                           <div>{doc.company_name || "—"}</div>
-                          <div className="text-[10px] text-slate-400">{doc.person_account_name || doc.account_name || ""}</div>
+                          <div className="text-[11px] text-slate-400">{doc.person_account_name || doc.account_name || ""}</div>
                         </td>
                         <td className="p-2.5 font-mono text-slate-500">{formatBytes(doc.file_size)}</td>
-                        <td className="p-2.5 text-slate-500 font-mono text-[10px]">
+                        <td className="p-2.5 text-slate-500 font-mono text-[11px]">
                           {new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
                         </td>
                         <td className="p-2.5 text-right space-x-1">
@@ -2338,48 +2338,48 @@ export function DocumentManager() {
             {/* Inherited Pre-populated Metadata (Read-Only) */}
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-900/60 space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
                   {t("inherited_metadata", "INHERITED HIERARCHY & CONTEXT")}
                 </span>
-                <span className="rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 text-[9px] font-bold">
+                <span className="rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 text-[11px] font-bold">
                   Auto-Prefilled
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-[11px]">
                 <div>
-                  <span className="text-slate-400 block text-[10px] font-semibold">{t("country", "Country")}</span>
+                  <span className="text-slate-400 block text-[11px] font-semibold">{t("country", "Country")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
                     {activeCountry?.name || sessionCtx?.countryName || "All Countries"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] font-semibold">{t("branch", "Branch / City")}</span>
+                  <span className="text-slate-400 block text-[11px] font-semibold">{t("branch", "Branch / City")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
                     {activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName || "Main Office"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] font-semibold">{t("account_folder", "Account Folder")}</span>
+                  <span className="text-slate-400 block text-[11px] font-semibold">{t("account_folder", "Account Folder")}</span>
                   <span className="font-bold text-amber-700 dark:text-amber-400 truncate block">
                     {selectedAccountCode ? `${selectedAccountCode} — ${selectedAccountName}` : "General (No Account Folder)"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] font-semibold">{t("category_folder", "Category Folder")}</span>
+                  <span className="text-slate-400 block text-[11px] font-semibold">{t("category_folder", "Category Folder")}</span>
                   <span className="font-bold text-emerald-700 dark:text-emerald-400 truncate block">
                     {selectedModule === "all" ? "Purchase Documents" : selectedModule}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] font-semibold">{t("uploaded_by", "Uploaded By")}</span>
+                  <span className="text-slate-400 block text-[11px] font-semibold">{t("uploaded_by", "Uploaded By")}</span>
                   <span className="font-bold text-slate-700 dark:text-slate-300 truncate block">
                     {sessionCtx?.userName || "Admin User"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] font-semibold">{t("date_time", "Date & Time")}</span>
-                  <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 block">
+                  <span className="text-slate-400 block text-[11px] font-semibold">{t("date_time", "Date & Time")}</span>
+                  <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400 block">
                     {new Date().toLocaleString()}
                   </span>
                 </div>
@@ -2401,7 +2401,7 @@ export function DocumentManager() {
                     <p className="font-mono font-bold text-xs text-blue-600 dark:text-blue-400 truncate">
                       {smartUploadFile.name}
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
+                    <p className="text-[11px] text-slate-400 mt-0.5">
                       {formatBytes(smartUploadFile.size)} · {smartUploadFile.type || "Document"}
                     </p>
                   </div>
@@ -2410,7 +2410,7 @@ export function DocumentManager() {
                     <p className="font-semibold text-slate-700 dark:text-slate-300 text-xs">
                       {t("click_to_pick", "Click to select a file (PDF, Images, Excel, Word)")}
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Max 50 MB</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Max 50 MB</p>
                   </div>
                 )}
                 <input
@@ -2436,7 +2436,7 @@ export function DocumentManager() {
                 <label className="font-bold text-slate-800 dark:text-slate-200">
                   {t("doc_title_mandatory", "Document Name / Title *")}
                 </label>
-                <span className="text-[10px] font-bold text-rose-500">Required</span>
+                <span className="text-[11px] font-bold text-rose-500">Required</span>
               </div>
               <Input
                 type="text"
@@ -2446,7 +2446,7 @@ export function DocumentManager() {
                 placeholder="e.g. Kandahar Grain Supplier Invoice Sept 2026"
                 className="h-10 rounded-xl text-xs font-semibold"
               />
-              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                 ℹ️ Both this meaningful title and original filename ({smartUploadFile ? smartUploadFile.name : "e.g. IMG_847362.jpg"}) are preserved and searchable.
               </p>
             </div>
@@ -2517,7 +2517,7 @@ export function DocumentManager() {
             </p>
 
             <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-2.5 border border-slate-200 dark:border-slate-700 space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{th("Destination Filing Path")}</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{th("Destination Filing Path")}</span>
               <div className="text-[11px] font-mono text-slate-700 dark:text-slate-300 truncate">
                 {activeCountry?.name || th("Super Admin Storage")} › {activeMainBranch?.name || th("All Branches")} › {selectedModule}
               </div>
@@ -2542,7 +2542,7 @@ export function DocumentManager() {
 
             {capturedShots.length > 0 && (
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   {t("captured_pages", "Captured pages")} ({capturedShots.length})
                 </span>
                 <div className="flex gap-2 mt-1.5 flex-wrap">
@@ -2553,7 +2553,7 @@ export function DocumentManager() {
                       <button
                         type="button"
                         onClick={() => setCapturedShots((p) => p.filter((_, idx) => idx !== i))}
-                        className="absolute top-0 right-0 bg-red-600 text-white h-4 w-4 flex items-center justify-center text-[10px] leading-none"
+                        className="absolute top-0 right-0 bg-red-600 text-white h-4 w-4 flex items-center justify-center text-[11px] leading-none"
                         aria-label={t("remove", "Remove")}
                       >
                         ×
@@ -2737,19 +2737,19 @@ export function DocumentManager() {
             <div className="space-y-3.5 py-2 text-xs">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-xl bg-slate-50 dark:bg-slate-900 p-3 border border-slate-200 dark:border-slate-800 text-[11px]">
                 <div>
-                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Module")}</span>
+                  <span className="text-slate-400 block text-[11px] uppercase font-bold">{th("Module")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{previewDoc.module_type}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Type")}</span>
+                  <span className="text-slate-400 block text-[11px] uppercase font-bold">{th("Type")}</span>
                   <span className="font-bold text-purple-600">{previewDoc.document_type || th("Document")}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Size")}</span>
+                  <span className="text-slate-400 block text-[11px] uppercase font-bold">{th("Size")}</span>
                   <span className="font-bold font-mono text-slate-800 dark:text-slate-200">{formatBytes(previewDoc.file_size)}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Scanned At")}</span>
+                  <span className="text-slate-400 block text-[11px] uppercase font-bold">{th("Scanned At")}</span>
                   <span className="font-bold font-mono text-slate-800 dark:text-slate-200">
                     {new Date(previewDoc.scanned_at || previewDoc.created_at).toLocaleDateString()}
                   </span>
@@ -2764,11 +2764,11 @@ export function DocumentManager() {
 
               <div className="grid grid-cols-2 gap-3 text-[11px]">
                 <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-2">
-                  <span className="text-slate-400 font-bold uppercase tracking-wide text-[10px]">{th("Version")}</span>
+                  <span className="text-slate-400 font-bold uppercase tracking-wide text-[11px]">{th("Version")}</span>
                   <p className="font-bold font-mono text-slate-800 dark:text-slate-200">v{(previewDoc as any).version ?? 1}</p>
                 </div>
                 <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-2">
-                  <span className="text-slate-400 font-bold uppercase tracking-wide text-[10px]">{th("Checksum")}</span>
+                  <span className="text-slate-400 font-bold uppercase tracking-wide text-[11px]">{th("Checksum")}</span>
                   <p className="font-mono text-slate-600 dark:text-slate-300 truncate">{((previewDoc as any).checksum_sha256 || "—").slice(0, 16)}</p>
                 </div>
               </div>
@@ -2844,12 +2844,12 @@ export function DocumentManager() {
                     <span className="absolute -start-1.5 mt-1 h-3 w-3 rounded-full bg-indigo-500 border border-white dark:border-slate-900" />
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-[11px] font-black text-slate-800 dark:text-slate-200">{th(ev.action.replace("office_document.", "").toUpperCase())}</span>
-                      <span className="text-[10px] text-slate-400">{new Date(ev.created_at).toLocaleString(lang)}</span>
-                      {ev.actor_name && <span className="text-[10px] text-slate-500 font-semibold">· {ev.actor_name}</span>}
-                      {ev.ip_address && <span className="text-[10px] font-mono text-slate-400">· {ev.ip_address}</span>}
+                      <span className="text-[11px] text-slate-400">{new Date(ev.created_at).toLocaleString(lang)}</span>
+                      {ev.actor_name && <span className="text-[11px] text-slate-500 font-semibold">· {ev.actor_name}</span>}
+                      {ev.ip_address && <span className="text-[11px] font-mono text-slate-400">· {ev.ip_address}</span>}
                     </div>
                     {(ev.before || ev.after) && (
-                      <pre className="mt-1 text-[10px] bg-slate-50 dark:bg-slate-800 rounded-lg p-2 overflow-x-auto text-slate-600 dark:text-slate-300 max-h-40">
+                      <pre className="mt-1 text-[11px] bg-slate-50 dark:bg-slate-800 rounded-lg p-2 overflow-x-auto text-slate-600 dark:text-slate-300 max-h-40">
                         {JSON.stringify(ev.after ?? ev.before, null, 2)}
                       </pre>
                     )}

@@ -56,7 +56,7 @@ import { dashboardForRoles } from "@/lib/permissions/enterprise-roles";
 import { isUserManager } from "@/lib/permissions/user-management-scope";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { ErpPageActions } from "@/components/layout/erp-page-actions";
-import { TableCardViewController } from "@/components/layout/table-card-view-controller";
+import { TableCardViewController, TOPBAR_VIEW_SLOT_ID } from "@/components/layout/table-card-view-controller";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { ActiveRecordProvider } from "@/lib/support/active-record-context";
@@ -596,7 +596,7 @@ export function DashboardFrame({
               >
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <span className="erp-search-label font-semibold text-foreground/80 hidden sm:inline">{t(lang, "nav.search_and_filter", "Search & Filter")}</span>
-                <kbd className="erp-search-kbd pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 md:flex">
+                <kbd className="erp-search-kbd pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[11px] font-medium text-muted-foreground opacity-100 md:flex">
                   <span className="text-xs">⌘</span>K
                 </kbd>
               </button>
@@ -615,9 +615,9 @@ export function DashboardFrame({
 
                 {dateMenuOpen && (
                   <div className="absolute top-full left-0 mt-2 w-64 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50 p-1.5 font-sans">
-                    <div className="px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground border-b border-border/80 mb-1 flex items-center justify-between">
+                    <div className="px-2.5 py-1.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground border-b border-border/80 mb-1 flex items-center justify-between">
                       <span>{t(lang, "nav.filter_by_date_range", "Filter by date range")}</span>
-                      <span className="font-mono text-[9px] text-primary">{new Date().getFullYear()}</span>
+                      <span className="font-mono text-[11px] text-primary">{new Date().getFullYear()}</span>
                     </div>
 
                     {[
@@ -674,6 +674,7 @@ export function DashboardFrame({
                 )}
               </div>
 
+              <div id={TOPBAR_VIEW_SLOT_ID} className="hidden md:contents" />
               <GlobalCalculator />
               <AiBusinessAssistant />
 
@@ -692,20 +693,20 @@ export function DashboardFrame({
                   <div className="absolute top-full end-0 mt-2 w-80 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
                     <div className="p-3 border-b border-border flex items-center justify-between bg-muted/40">
                       <span className="font-bold text-xs">{t(lang, "dashboard.system_notifications", "System Notifications")}</span>
-                      <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{t(lang, "dashboard.live", "Live")}</span>
+                      <span className="text-[11px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{t(lang, "dashboard.live", "Live")}</span>
                     </div>
                     <div className="divide-y divide-border/60 max-h-64 overflow-y-auto text-xs">
                       <div className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
                         <div className="font-semibold text-foreground flex items-center justify-between">
                            <span>{t(lang, "dashboard.roznamcha_cash_active", "Roznamcha Cash Active")}</span>
-                           <span className="text-[10px] text-muted-foreground">{t(lang, "dashboard.just_now", "Just now")}</span>
+                           <span className="text-[11px] text-muted-foreground">{t(lang, "dashboard.just_now", "Just now")}</span>
                         </div>
                          <p className="text-[11px] text-muted-foreground mt-0.5">{t(lang, "dashboard.real_time_balances_and_ledger_sync_operational", "Real-time balances and ledger sync operational.")}</p>
                       </div>
                       <div className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
                         <div className="font-semibold text-foreground flex items-center justify-between">
                            <span>{t(lang, "dashboard.exchange_rates_synced", "Exchange Rates Synced")}</span>
-                           <span className="text-[10px] text-muted-foreground">{t(lang, "dashboard.today", "Today")}</span>
+                           <span className="text-[11px] text-muted-foreground">{t(lang, "dashboard.today", "Today")}</span>
                         </div>
                          <p className="text-[11px] text-muted-foreground mt-0.5">{t(lang, "dashboard.intra_day_multi_currency_exchange_tables_updated", "Intra-day multi-currency exchange tables updated.")}</p>
                       </div>
@@ -729,7 +730,7 @@ export function DashboardFrame({
                   </div>
                   <div className="min-w-0 max-w-[260px] hidden sm:block">
                     <p className="font-bold text-foreground leading-none truncate">{userName || t(lang, "role.super_admin", "Super Admin")}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5 truncate" title={fullRoleScopeLabel}>
+                    <p className="text-[11px] text-muted-foreground font-medium mt-0.5 truncate" title={fullRoleScopeLabel}>
                       {fullRoleScopeLabel}
                     </p>
                   </div>
@@ -754,19 +755,19 @@ export function DashboardFrame({
 
                   <div className="p-4 border-b border-border">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t(lang, "nav.assigned_permissions", "Assigned Permissions")}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t(lang, "nav.assigned_permissions", "Assigned Permissions")}</p>
                       {activeScopeLocation && (
-                        <span className="text-[10px] font-semibold text-primary truncate max-w-[140px] text-end" title={activeScopeLocation}>{activeScopeLocation}</span>
+                        <span className="text-[11px] font-semibold text-primary truncate max-w-[140px] text-end" title={activeScopeLocation}>{activeScopeLocation}</span>
                       )}
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {roles?.map((r, i) => (
-                        <span key={i} className="inline-flex items-center rounded bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50">
+                        <span key={i} className="inline-flex items-center rounded bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50">
                           {t(lang, `role.${r}` as const, r.replace(/_/g, ' '))}
                         </span>
                       ))}
                       {activeScopeLocation && (
-                        <span className="inline-flex items-center rounded bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50">
+                        <span className="inline-flex items-center rounded bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50">
                           {activeScopeLocation}
                         </span>
                       )}
@@ -790,7 +791,7 @@ export function DashboardFrame({
                         className="px-3 py-2 text-xs font-semibold rounded-lg hover:bg-muted text-foreground flex items-center justify-between transition-colors"
                       >
                         <span>{label}</span>
-                          <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded", tone)}>{t(lang, "dashboard.access", "Access")}</span>
+                          <span className={cn("text-[11px] font-bold px-1.5 py-0.5 rounded", tone)}>{t(lang, "dashboard.access", "Access")}</span>
                       </Link>
                     ))}
                   </div>
@@ -851,7 +852,7 @@ export function DashboardFrame({
                   type="button"
                   onClick={() => setMobileOpen((prev) => !prev)}
                   className={cn(
-                    "flex min-h-11 min-w-12 flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors",
+                    "flex min-h-11 min-w-12 flex-col items-center justify-center gap-1 text-[11px] font-bold transition-colors",
                     item.active ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground"
                   )}
                   aria-label={item.label}
@@ -866,7 +867,7 @@ export function DashboardFrame({
                 key={item.key}
                 href={item.href as never}
                 className={cn(
-                  "flex min-h-11 min-w-12 flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors",
+                  "flex min-h-11 min-w-12 flex-col items-center justify-center gap-1 text-[11px] font-bold transition-colors",
                   item.active ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -912,7 +913,7 @@ export function DashboardFrame({
               >
                 <span>{cat === "All" ? t(lang, "common.all_categories", "All Categories") : t(lang, `cmd.cat_${cat.toLowerCase()}` as any, cat)}</span>
                 <span className={cn(
-                  "px-1.5 py-0.2 rounded-full text-[10px] font-mono",
+                  "px-1.5 py-0.2 rounded-full text-[11px] font-mono",
                   selectedCategoryTab === cat ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-900 text-muted-foreground"
                 )}>
                   {count}
@@ -958,7 +959,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ms-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800">
                     {t(lang, "dashboard.navigation", "Navigation")}
                   </span>
                 </CommandItem>
@@ -996,7 +997,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ms-3 rounded-lg bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-sky-700 dark:text-sky-300 ring-1 ring-sky-200 dark:ring-sky-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-sky-700 dark:text-sky-300 ring-1 ring-sky-200 dark:ring-sky-800">
                      {t(lang, "dashboard.module", "Module")}
                   </span>
                 </CommandItem>
@@ -1022,7 +1023,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ms-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800">
                      {t(lang, "dashboard.action", "Action")}
                   </span>
                 </CommandItem>
@@ -1048,7 +1049,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ms-3 rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-extrabold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700">
+                  <span className="shrink-0 ms-3 rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700">
                      {t(lang, "dashboard.settings", "Settings")}
                   </span>
                 </CommandItem>
@@ -1076,7 +1077,7 @@ export function DashboardFrame({
                       </p>
                     </div>
                   </div>
-                  <span className="shrink-0 ms-3 rounded-lg bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-800">
                     {item.entityType}
                   </span>
                 </CommandItem>
@@ -1089,16 +1090,16 @@ export function DashboardFrame({
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-t border-border/80 bg-slate-50/90 dark:bg-slate-900/90 text-[11px] font-medium text-muted-foreground">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px] shadow-2xs">↑</kbd>
-              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px] shadow-2xs">↓</kbd>
+              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[11px] shadow-2xs">↑</kbd>
+              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[11px] shadow-2xs">↓</kbd>
               <span>{t(lang, "common.navigate", "Navigate")}</span>
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px] shadow-2xs">↵</kbd>
+              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[11px] shadow-2xs">↵</kbd>
               <span>{t(lang, "common.select", "Select")}</span>
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px] shadow-2xs">ESC</kbd>
+              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[11px] shadow-2xs">ESC</kbd>
               <span>{t(lang, "common.close", "Close")}</span>
             </span>
           </div>

@@ -168,13 +168,13 @@ export function TranslationReviewQueue() {
                     <td className="p-3 align-top">
                       <span className="block text-xs font-semibold text-primary">{tableLabel(item.recordTable)}</span>
                       <span className="block text-xs text-muted-foreground">{fieldLabel(item.fieldName)}</span>
-                      <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${item.kind === "name" ? "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"}`}>
+                      <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${item.kind === "name" ? "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"}`}>
                         {item.kind === "name" ? tt("trm.rv_kind_name", "Name") : tt("trm.rv_kind_text", "Text")}
                       </span>
                     </td>
                     <td className="p-3 align-top">
                       <bdi dir="auto" className="block font-medium" data-testid="review-saved">{item.originalText}</bdi>
-                      <span className="text-[10px] text-muted-foreground">{tt("trm.rv_saved_in", "Saved in {lang}").replace("{lang}", LANG_LABEL[item.originalLanguageCode] || item.originalLanguageCode)}</span>
+                      <span className="text-[11px] text-muted-foreground">{tt("trm.rv_saved_in", "Saved in {lang}").replace("{lang}", LANG_LABEL[item.originalLanguageCode] || item.originalLanguageCode)}</span>
                     </td>
                     <td className="p-3 align-top">
                       {suggestion ? <bdi dir="auto" className="italic text-muted-foreground" data-testid="review-suggestion">{suggestion}</bdi> : <span className="text-muted-foreground">—</span>}
@@ -211,7 +211,7 @@ export function TranslationReviewQueue() {
               <div className="rounded-lg border bg-muted/40 p-3">
                 <div className="text-xs text-muted-foreground">{tableLabel(editing.recordTable)} · {fieldLabel(editing.fieldName)}</div>
                 <bdi dir="auto" className="block text-base font-bold" data-testid="review-dialog-saved">{editing.originalText}</bdi>
-                <span className="text-[10px] text-muted-foreground">{tt("trm.rv_saved_in", "Saved in {lang}").replace("{lang}", LANG_LABEL[editing.originalLanguageCode] || editing.originalLanguageCode)}</span>
+                <span className="text-[11px] text-muted-foreground">{tt("trm.rv_saved_in", "Saved in {lang}").replace("{lang}", LANG_LABEL[editing.originalLanguageCode] || editing.originalLanguageCode)}</span>
               </div>
               {LANGS.filter((l) => l.code !== editing.originalLanguageCode).map((l) => {
                 const suggestion = editing.suggestions[l.code];

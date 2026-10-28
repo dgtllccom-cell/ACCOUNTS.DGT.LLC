@@ -129,13 +129,13 @@ export function CustomerOrderBranchAssignmentModal({
           <div className="flex items-center gap-2.5">
             <Building2 className="h-5 w-5 shrink-0" />
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider opacity-75">
+              <p className="text-[11px] font-bold uppercase tracking-wider opacity-75">
                 {isOrigin ? tt("origin_clearance_branch", "Origin Clearance Branch") : tt("dest_clearance_branch", "Destination Clearance Branch")}
               </p>
               <h4 className="font-bold text-xs sm:text-sm">{branchName || tt("selected_branch", "Selected Branch")}</h4>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/80 dark:bg-slate-900/80 border border-current shadow-2xs">
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-white/80 dark:bg-slate-900/80 border border-current shadow-2xs">
             {isOrigin ? tt("origin_badge", "Origin / Export") : tt("dest_badge", "Dest / Import")}
           </span>
         </div>
@@ -148,15 +148,15 @@ export function CustomerOrderBranchAssignmentModal({
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
             <div>
-              <span className="block text-[10px] font-semibold text-slate-500">{tt("order_no", "Order No")}</span>
+              <span className="block text-[11px] font-semibold text-slate-500">{tt("order_no", "Order No")}</span>
               <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{orderNo || "Draft Order"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-semibold text-slate-500">{tt("customer_name", "Customer / Party")}</span>
+              <span className="block text-[11px] font-semibold text-slate-500">{tt("customer_name", "Customer / Party")}</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block max-w-[150px]">{customerName || "—"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-semibold text-slate-500">{tt("transport_mode", "Transport Mode")}</span>
+              <span className="block text-[11px] font-semibold text-slate-500">{tt("transport_mode", "Transport Mode")}</span>
               <span className="font-semibold text-blue-600 dark:text-blue-400 capitalize">{transportMode || "By Road"}</span>
             </div>
             <div className="col-span-2 sm:col-span-3 pt-1 border-t border-slate-200/50 dark:border-slate-800 flex flex-wrap items-center gap-2 text-[11px]">

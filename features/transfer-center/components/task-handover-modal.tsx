@@ -210,7 +210,7 @@ export function TaskHandoverModal({
               <span className="font-bold text-slate-700 dark:text-slate-300">{orderReference}</span>
             </div>
             {currentStage && (
-              <Badge variant="outline" className="text-[10px] font-semibold">
+              <Badge variant="outline" className="text-[11px] font-semibold">
                 {s.t("current_stage", "Current Stage")}: {currentStage}
               </Badge>
             )}
@@ -239,7 +239,7 @@ export function TaskHandoverModal({
                 ))}
               </select>
             )}
-            <p className="mt-1 text-[10px] text-slate-400">
+            <p className="mt-1 text-[11px] text-slate-400">
               {s.t("rbac_scope_note", "Filtered strictly to authorized users within your branch and operational domain.")}
             </p>
           </div>

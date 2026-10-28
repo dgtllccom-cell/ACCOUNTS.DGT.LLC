@@ -492,7 +492,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                 
                 {/* Module Loading Category Selector */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.loading_category")}</label>
+                  <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.loading_category")}</label>
                   <select
                     value={form.loading_type ?? "local"}
                     onChange={(e) => setForm({ ...form, loading_type: e.target.value })}
@@ -517,7 +517,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                       type="button"
                       onClick={() => setActiveTab(tab.id as any)}
                       className={cn(
-                        "h-8 rounded-lg text-[9px] font-black transition border",
+                        "h-8 rounded-lg text-[11px] font-black transition border",
                         activeTab === tab.id
                           ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                           : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100"
@@ -531,10 +531,10 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                 {/* TAB 1: PARTIES & BOOKING */}
                 {activeTab === "parties" && (
                   <div className="space-y-3 animate-in fade-in duration-150">
-                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step1_title")}</div>
+                    <div className="text-[11px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step1_title")}</div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.customer_account_no")}</label>
+                      <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.customer_account_no")}</label>
                       <input
                         type="text"
                         value={form.customerAccountNo}
@@ -545,7 +545,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.shipping_type")}</label>
+                        <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.shipping_type")}</label>
                         <select
                           value={form.shippingType || "By Sea"}
                           onChange={e => setForm({ ...form, shippingType: e.target.value })}
@@ -557,7 +557,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         </select>
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.shipment_type")}</label>
+                        <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.shipment_type")}</label>
                         <select
                           value={form.shipmentType || "Import"}
                           onChange={e => setForm({ ...form, shipmentType: e.target.value })}
@@ -571,7 +571,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.importer_name")}</label>
+                      <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.importer_name")}</label>
                       <input
                         type="text"
                         value={form.importer || ""}
@@ -582,7 +582,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.exporter_name")}</label>
+                      <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.exporter_name")}</label>
                       <input
                         type="text"
                         value={form.exporter || ""}
@@ -594,7 +594,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.booking_no")}</label>
+                        <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.booking_no")}</label>
                         <input
                           type="text"
                           value={form.bookingNo}
@@ -626,11 +626,11 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                 {/* TAB 2: BL & ROUTE DETAILS */}
                 {activeTab === "bl" && (
                   <div className="space-y-3 animate-in fade-in duration-150">
-                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step2_title")}</div>
+                    <div className="text-[11px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step2_title")}</div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.issue_date")}</label>
+                        <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.issue_date")}</label>
                         <input
                           type="date"
                           value={form.issueDate || ""}
@@ -639,7 +639,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.issue_serial")}</label>
+                        <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.issue_serial")}</label>
                         <input
                           type="text"
                           value={form.issueSerial}
@@ -651,7 +651,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.bl_type")}</label>
+                        <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.bl_type")}</label>
                         <select
                           value={form.blType || "New BL"}
                           onChange={e => setForm({ ...form, blType: e.target.value })}
@@ -662,7 +662,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         </select>
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.bl_no")}</label>
+                        <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.bl_no")}</label>
                         <input
                           type="text"
                           value={form.blNo}
@@ -673,10 +673,10 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                     </div>
 
                     <div className="rounded-xl border border-cyan-200 bg-cyan-50/50 p-3 dark:border-cyan-900/40 dark:bg-slate-900 space-y-2">
-                      <p className="text-[10px] font-black uppercase text-cyan-700 dark:text-cyan-300">{t(lang, "tl.loading_receiving_borders")}</p>
+                      <p className="text-[11px] font-black uppercase text-cyan-700 dark:text-cyan-300">{t(lang, "tl.loading_receiving_borders")}</p>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.loading_country")}</label>
+                          <label className="text-[11px] font-bold text-slate-500">{t(lang, "tl.loading_country")}</label>
                           <input
                             type="text"
                             value={form.loadCountry}
@@ -685,7 +685,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.loading_border_port")}</label>
+                          <label className="text-[11px] font-bold text-slate-500">{t(lang, "tl.loading_border_port")}</label>
                           <input
                             type="text"
                             value={form.loadPlace}
@@ -694,7 +694,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.receiving_country")}</label>
+                          <label className="text-[11px] font-bold text-slate-500">{t(lang, "tl.receiving_country")}</label>
                           <input
                             type="text"
                             value={form.receiveCountry}
@@ -703,7 +703,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.receiving_border_port")}</label>
+                          <label className="text-[11px] font-bold text-slate-500">{t(lang, "tl.receiving_border_port")}</label>
                           <input
                             type="text"
                             value={form.receivePlace}
@@ -729,10 +729,10 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                 {/* TAB 3: GOODS ENTRY */}
                 {activeTab === "goods" && (
                   <div className="space-y-3 animate-in fade-in duration-150">
-                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step3_title")}</div>
+                    <div className="text-[11px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step3_title")}</div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.select_registered_truck")}</label>
+                      <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.select_registered_truck")}</label>
                       <select
                         value={form.truck_id ?? ""}
                         onChange={(e) => onSelectTruck(e.target.value)}
@@ -748,7 +748,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.goods_name_label")}</label>
+                      <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.goods_name_label")}</label>
                       <input
                         type="text"
                         value={form.goods_name}
@@ -759,7 +759,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.size")}</label>
+                        <label className="text-[11px] font-bold text-slate-500">{t(lang, "tl.size")}</label>
                         <input
                           type="text"
                           value={form.goodsSize}
@@ -768,7 +768,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.brand")}</label>
+                        <label className="text-[11px] font-bold text-slate-500">{t(lang, "tl.brand")}</label>
                         <input
                           type="text"
                           value={form.goodsBrand}
@@ -777,7 +777,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.quantity_bags")}</label>
+                        <label className="text-[11px] font-bold text-slate-500">{t(lang, "tl.quantity_bags")}</label>
                         <input
                           type="number"
                           value={form.quantity}
@@ -786,7 +786,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.gross_weight_kg")}</label>
+                        <label className="text-[11px] font-bold text-slate-500">{t(lang, "tl.gross_weight_kg")}</label>
                         <input
                           type="number"
                           value={form.gross_weight}
@@ -797,7 +797,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                     </div>
 
                     {/* Weight summary box */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-2 text-[10px] space-y-1 dark:border-slate-800 dark:bg-slate-950">
+                    <div className="rounded-xl border border-slate-200 bg-white p-2 text-[11px] space-y-1 dark:border-slate-800 dark:bg-slate-950">
                       <div className="flex justify-between text-slate-500">
                         <span>{t(lang, "tl.total_empty_wt")}</span>
                         <span className="font-bold">{totalEmptyKg} KG</span>
@@ -823,11 +823,11 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                 {/* TAB 4: CARRIER & CONTAINER DETAILS */}
                 {activeTab === "carrier" && (
                   <div className="space-y-3 animate-in fade-in duration-150">
-                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step4_title")}</div>
+                    <div className="text-[11px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step4_title")}</div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.carrier_type")}</label>
+                        <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.carrier_type")}</label>
                         <select
                           value={form.carrierType || "container"}
                           onChange={e => setForm({ ...form, carrierType: e.target.value })}
@@ -839,7 +839,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         </select>
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.container_sub_type")}</label>
+                        <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.container_sub_type")}</label>
                         <input
                           type="text"
                           value={form.carrierSubType || "Dry Container 20FT"}
@@ -851,7 +851,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.container_truck_no")}</label>
+                        <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.container_truck_no")}</label>
                         <input
                           type="text"
                           value={form.containerNumber}
@@ -861,7 +861,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.seal_number")}</label>
+                        <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.seal_number")}</label>
                         <input
                           type="text"
                           value={form.sealNumber}
@@ -873,7 +873,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.driver_name_label")}</label>
+                      <label className="text-[11px] font-black uppercase text-slate-500">{t(lang, "tl.driver_name_label")}</label>
                       <input
                         type="text"
                         value={form.driver_name || ""}
@@ -886,7 +886,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                     {/* Dynamic Import/Transit fields */}
                     {(form.loading_type === "import" || form.loading_type === "transit") && (
                       <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 p-2.5 space-y-2">
-                        <p className="text-[10px] font-black text-amber-800 dark:text-amber-300 uppercase">{t(lang, "tl.customs_transit_details")}</p>
+                        <p className="text-[11px] font-black text-amber-800 dark:text-amber-300 uppercase">{t(lang, "tl.customs_transit_details")}</p>
                         <input
                           type="text"
                           placeholder={t(lang, "tl.clearing_agent_name")}
@@ -919,61 +919,61 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                         <FileText className="h-4 w-4 text-blue-600" />
                         {t(lang, "tl.board_bl_report")}
                       </h3>
-                      <p className="text-[10px] font-medium text-slate-400">{t(lang, "tl.one_page_summary")}</p>
+                      <p className="text-[11px] font-medium text-slate-400">{t(lang, "tl.one_page_summary")}</p>
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                       {t(lang, "tl.live_updating")}
                     </span>
                   </div>
 
                   {/* Grid details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-[11px] font-medium">
-                    <div className="col-span-full font-black text-blue-600 dark:text-blue-400 uppercase text-[9.5px] tracking-wider pt-1 border-b border-slate-100 dark:border-slate-800 pb-1">
+                    <div className="col-span-full font-black text-blue-600 dark:text-blue-400 uppercase text-[11px] tracking-wider pt-1 border-b border-slate-100 dark:border-slate-800 pb-1">
                       {th("1. BL Basic / Board & Route Details")}
                     </div>
                     
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Mode")}:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[11px]">{th("Mode")}:</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100">{form.blType || "New BL"}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Issue Date")}:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[11px]">{th("Issue Date")}:</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100">{form.issueDate}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Issue Serial")}:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[11px]">{th("Issue Serial")}:</span>
                       <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">{form.issueSerial}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("BL / Loading No")}:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[11px]">{th("BL / Loading No")}:</span>
                       <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">{form.blNo}</span>
                     </div>
 
                     <div className="col-span-full flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Full Route")}:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[11px]">{th("Full Route")}:</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate">
                         {form.shippingType} | {form.routeCountry} | L: {form.loadCountry} / {form.loadPlace} → R: {form.receiveCountry} / {form.receivePlace}
                       </span>
                     </div>
 
-                    <div className="col-span-full font-black text-blue-600 dark:text-blue-400 uppercase text-[9.5px] tracking-wider pt-2 border-b border-slate-100 dark:border-slate-800 pb-1">
+                    <div className="col-span-full font-black text-blue-600 dark:text-blue-400 uppercase text-[11px] tracking-wider pt-2 border-b border-slate-100 dark:border-slate-800 pb-1">
                       {th("2. Booking & Carrier Details")}
                     </div>
 
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Shipping / Category")}:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[11px]">{th("Shipping / Category")}:</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100 capitalize">{form.loading_type} / {form.shippingType}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Booking Company")}:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[11px]">{th("Booking Company")}:</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100">{form.bookingCompanyName}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Truck / Vehicle No")}:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[11px]">{th("Truck / Vehicle No")}:</span>
                       <span className="font-mono font-black text-blue-600 dark:text-blue-400">{form.truck_number || "CONT-123456"}</span>
                     </div>
                     <div className="flex justify-between border-b border-dotted pb-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px]">{th("Seal Number")}:</span>
+                      <span className="text-slate-400 font-bold uppercase text-[11px]">{th("Seal Number")}:</span>
                       <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{form.sealNumber || "SEAL-7788"}</span>
                     </div>
                   </div>
@@ -986,11 +986,11 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                       <h3 className="text-sm font-black uppercase text-slate-900 dark:text-slate-100">
                         {t(lang, "tl.goods_loading_report")}
                       </h3>
-                      <p className="text-[10px] font-medium text-slate-400">{t(lang, "tl.live_inventory_breakdown")}</p>
+                      <p className="text-[11px] font-medium text-slate-400">{t(lang, "tl.live_inventory_breakdown")}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700">
+                      <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700">
                         {t(lang, "tl.live_inventory")}
                       </span>
                     </div>
@@ -998,7 +998,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
 
                   <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                     <table className="w-full text-left text-xs whitespace-nowrap">
-                      <thead className="bg-slate-900 text-white font-black text-[10px] uppercase tracking-wider dark:bg-slate-950">
+                      <thead className="bg-slate-900 text-white font-black text-[11px] uppercase tracking-wider dark:bg-slate-950">
                         <tr>
                           <Th className="p-2.5">SR#</Th>
                           <Th className="p-2.5">Goods Name</Th>
@@ -1034,11 +1034,11 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                   {/* Totals strip */}
                   <div className="flex justify-end items-center gap-8 rounded-xl bg-slate-50 dark:bg-slate-950 p-3 border border-slate-200 dark:border-slate-800 text-right">
                     <div>
-                      <span className="block text-[9px] font-black uppercase text-slate-400">{t(lang, "tl.total_gross_weight")}</span>
+                      <span className="block text-[11px] font-black uppercase text-slate-400">{t(lang, "tl.total_gross_weight")}</span>
                       <span className="text-base font-black text-slate-900 dark:text-slate-100 font-mono">{grossKg.toLocaleString()} KG</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] font-black uppercase text-slate-400">{t(lang, "tl.total_net_weight")}</span>
+                      <span className="block text-[11px] font-black uppercase text-slate-400">{t(lang, "tl.total_net_weight")}</span>
                       <span className="text-base font-black text-amber-600 dark:text-amber-400 font-mono">{computedNetKg.toLocaleString()} KG</span>
                     </div>
                   </div>

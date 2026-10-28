@@ -145,7 +145,7 @@ export function GeneralReceivedBillView() {
         <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
           <table className="w-full border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-[10px] font-black uppercase text-slate-500 dark:border-slate-700 dark:bg-slate-800">
+              <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-black uppercase text-slate-500 dark:border-slate-700 dark:bg-slate-800">
                 <th className="px-3 py-2 text-start">{tt("grb.col_order", "Order")}</th>
                 <th className="px-3 py-2 text-start">{tt("obill.customer", "Customer")}</th>
                 <th className="px-3 py-2 text-start">{tt("grb.col_route_truck", "Route / Truck")}</th>
@@ -160,7 +160,7 @@ export function GeneralReceivedBillView() {
                   <tr key={o.id} data-testid="grb-row" data-order-no={o.order_no} className={cn("align-top", o.id === focusId && "bg-cyan-50/70 dark:bg-cyan-950/20")}>
                     <td className="px-3 py-2">
                       <Link href={`/dashboard/clearing-agent/order-transfer?orderId=${encodeURIComponent(o.id)}` as never} className="font-mono font-black text-blue-700 hover:underline dark:text-blue-300" dir="ltr">{o.order_no}</Link>
-                      {o.created_at && <div className="text-[10px] text-slate-400" dir="ltr">{String(o.created_at).slice(0, 10)}</div>}
+                      {o.created_at && <div className="text-[11px] text-slate-400" dir="ltr">{String(o.created_at).slice(0, 10)}</div>}
                     </td>
                     <td className="px-3 py-2 font-semibold text-slate-800 dark:text-slate-200">{o.customer_name || "—"}</td>
                     <td className="px-3 py-2 text-[11px] text-slate-600 dark:text-slate-300">

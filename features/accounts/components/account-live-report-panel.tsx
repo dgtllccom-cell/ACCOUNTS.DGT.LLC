@@ -314,7 +314,7 @@ export function AccountLiveReportPanel({
                 {getLabel("operationalBranchFromMaster", lang)}
               </h3>
             </div>
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800">
               {getLabel("automaticFromBranchMaster", lang)}
             </span>
           </div>
@@ -406,9 +406,9 @@ export function AccountLiveReportPanel({
               <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span>{getLabel("step3Label", lang)}</span>
                 {!companyRequired ? (
-                  <span className="text-[10px] font-normal text-slate-400">({lang === "ur" ? "شامل نہیں" : "Skipped"})</span>
+                  <span className="text-[11px] font-normal text-slate-400">({lang === "ur" ? "شامل نہیں" : "Skipped"})</span>
                 ) : linkedCompanies && linkedCompanies.length > 1 ? (
-                  <span className="px-1.5 py-0.2 rounded-full text-[9.5px] font-mono bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300" dir="ltr">
+                  <span className="px-1.5 py-0.2 rounded-full text-[11px] font-mono bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300" dir="ltr">
                     +{linkedCompanies.length - 1}
                   </span>
                 ) : null}
@@ -477,9 +477,9 @@ export function AccountLiveReportPanel({
               <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span>{getLabel("step4Label", lang)}</span>
                 {!bankRequired ? (
-                  <span className="text-[10px] font-normal text-slate-400">({lang === "ur" ? "شامل نہیں" : "Skipped"})</span>
+                  <span className="text-[11px] font-normal text-slate-400">({lang === "ur" ? "شامل نہیں" : "Skipped"})</span>
                 ) : linkedBanks && linkedBanks.length > 1 ? (
-                  <span className="px-1.5 py-0.2 rounded-full text-[9.5px] font-mono bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" dir="ltr">
+                  <span className="px-1.5 py-0.2 rounded-full text-[11px] font-mono bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" dir="ltr">
                     +{linkedBanks.length - 1}
                   </span>
                 ) : null}
@@ -548,9 +548,9 @@ export function AccountLiveReportPanel({
               <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span>{getLabel("warehouseDetails", lang)}</span>
                 {!warehouseRequired ? (
-                  <span className="text-[10px] font-normal text-slate-400">({lang === "ur" ? "شامل نہیں" : "Skipped"})</span>
+                  <span className="text-[11px] font-normal text-slate-400">({lang === "ur" ? "شامل نہیں" : "Skipped"})</span>
                 ) : linkedWarehouses && linkedWarehouses.length > 1 ? (
-                  <span className="px-1.5 py-0.2 rounded-full text-[9.5px] font-mono bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300" dir="ltr">
+                  <span className="px-1.5 py-0.2 rounded-full text-[11px] font-mono bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300" dir="ltr">
                     +{linkedWarehouses.length - 1}
                   </span>
                 ) : null}
@@ -628,7 +628,7 @@ export function AccountLiveReportPanel({
             </div>
             <div className="flex items-center justify-between text-[11px] pt-1">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("status", lang)}</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300">
                 {getLabel("inProgress", lang)}
               </span>
             </div>

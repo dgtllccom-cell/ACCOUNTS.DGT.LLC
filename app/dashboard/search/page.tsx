@@ -302,14 +302,14 @@ export default function SearchPage() {
           <div className="bg-white border rounded-xl p-3 shadow-sm flex items-center gap-3 dark:bg-slate-900/40 dark:border-slate-800">
             <Building2 className="h-8 w-8 text-teal-600/30" />
             <div>
-              <span className="text-[10px] text-slate-400 uppercase font-black block">{th("Customers")}</span>
+              <span className="text-[11px] text-slate-400 uppercase font-black block">{th("Customers")}</span>
               <strong className="text-lg text-slate-900 dark:text-slate-100">{filteredCustomers.length}</strong>
             </div>
           </div>
           <div className="bg-white border rounded-xl p-3 shadow-sm flex items-center gap-3 dark:bg-slate-900/40 dark:border-slate-800">
             <FileText className="h-8 w-8 text-blue-600/30" />
             <div>
-              <span className="text-[10px] text-slate-400 uppercase font-black block">{th("Transactions")}</span>
+              <span className="text-[11px] text-slate-400 uppercase font-black block">{th("Transactions")}</span>
               <strong className="text-lg text-slate-900 dark:text-slate-100">{filteredTransactions.length}</strong>
             </div>
           </div>
@@ -437,7 +437,7 @@ export default function SearchPage() {
               )}
             >
               {tab.label}
-              <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-[10px] px-2 py-0.5 rounded-full font-black text-slate-500">
+              <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-[11px] px-2 py-0.5 rounded-full font-black text-slate-500">
                 {tab.count}
               </span>
             </button>
@@ -483,25 +483,25 @@ export default function SearchPage() {
                             <strong className="text-sm font-extrabold text-slate-900 dark:text-slate-100">{c.customer_name}</strong>
                             <p className="text-xs text-slate-400 mt-0.5">{parsed.companyBusinessType || th("Sole Proprietorship")} · {c.mobile || th("No Contact")}</p>
                           </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest font-mono bg-teal-50 text-teal-700 px-2 py-0.5 rounded border border-teal-200">
+                          <span className="text-[11px] font-black uppercase tracking-widest font-mono bg-teal-50 text-teal-700 px-2 py-0.5 rounded border border-teal-200">
                             CUST-{c.id.slice(0, 6).toUpperCase()}
                           </span>
                         </div>
                         <div className="grid grid-cols-2 gap-2.5 text-xs border-y py-2.5 border-slate-100 dark:border-slate-850">
                           <div>
-                            <span className="text-slate-400 block text-[10px]">{th("Account Name")}</span>
+                            <span className="text-slate-400 block text-[11px]">{th("Account Name")}</span>
                             <span className="font-bold text-slate-800 dark:text-slate-200">{parsed.accountName || c.customer_name}</span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block text-[10px]">{th("Registration No.")}</span>
+                            <span className="text-slate-400 block text-[11px]">{th("Registration No.")}</span>
                             <span className="font-bold text-slate-800 dark:text-slate-200">{parsed.companyRegNo || "—"}</span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block text-[10px]">{th("Tax NTN Number")}</span>
+                            <span className="text-slate-400 block text-[11px]">{th("Tax NTN Number")}</span>
                             <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{parsed.companyTaxNo || "—"}</span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block text-[10px]">{th("Manual Ref")}</span>
+                            <span className="text-slate-400 block text-[11px]">{th("Manual Ref")}</span>
                             <span className="font-bold text-slate-850 dark:text-slate-200 font-mono">{parsed.manualReference || "—"}</span>
                           </div>
                         </div>
@@ -540,7 +540,7 @@ export default function SearchPage() {
               </h3>
               <div className="overflow-x-auto border rounded-xl bg-white shadow-sm dark:bg-slate-950 dark:border-slate-850">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 uppercase text-[10px] font-black text-slate-500 border-b dark:bg-slate-900 dark:border-slate-850 dark:text-slate-400">
+                  <thead className="bg-slate-50 uppercase text-[11px] font-black text-slate-500 border-b dark:bg-slate-900 dark:border-slate-850 dark:text-slate-400">
                     <tr>
                       <Th className="px-4 py-3">Voucher</Th>
                       <Th className="px-4 py-3">Triple Sequence Serials</Th>
@@ -563,13 +563,13 @@ export default function SearchPage() {
                       return (
                         <tr key={t.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/40">
                           <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">{t.voucher_no}</td>
-                          <td className="px-4 py-3 font-mono text-[10px] text-slate-400">
+                          <td className="px-4 py-3 font-mono text-[11px] text-slate-400">
                             {[t.super_admin_serial_number, t.country_transaction_serial_number, t.branch_transaction_serial_number].filter(Boolean).join(" / ") || "—"}
                           </td>
                           <td className="px-4 py-3 font-mono text-slate-500">{t.entry_date}</td>
                           <td className="px-4 py-3 space-y-0.5">
                             <div className="font-bold text-slate-900 dark:text-slate-100">{firstLine?.ledgers?.name || "Counterparty"}</div>
-                            <div className="text-[10px] text-slate-400">vs {secondLine?.ledgers?.name || "Cash/Bank Account"}</div>
+                            <div className="text-[11px] text-slate-400">vs {secondLine?.ledgers?.name || "Cash/Bank Account"}</div>
                           </td>
                           <td className="px-4 py-3 text-right font-mono text-emerald-600 font-bold">
                             {debitAmount > 0 ? `${fmtAmount(debitAmount)} ${currencyText}` : "—"}
@@ -579,7 +579,7 @@ export default function SearchPage() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span className={cn(
-                              "inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
+                              "inline-flex rounded-full border px-2 py-0.5 text-[11px] font-black uppercase tracking-wider",
                               t.status === "posted" || t.status === "approved"
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900"
                                 : t.status === "draft"

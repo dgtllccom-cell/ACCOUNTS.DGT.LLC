@@ -68,7 +68,7 @@ export function SavedText({
       <span
         aria-hidden="true"
         data-chip={CHIP[saved]}
-        className="ms-1 inline-flex select-none items-center rounded border border-amber-300 bg-amber-50 px-1 align-middle text-[9px] font-bold leading-4 text-amber-700 after:content-[attr(data-chip)] dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+        className="ms-1 inline-flex select-none items-center rounded border border-amber-300 bg-amber-50 px-1 align-middle text-[11px] font-bold leading-4 text-amber-700 after:content-[attr(data-chip)] dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
       />
     </span>
   );

@@ -250,7 +250,7 @@ export function ModulePermissionModal({
           <div className="flex items-center gap-2 flex-wrap">
             {/* Quick Bulk Action Buttons */}
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-[11px] font-semibold">
-              <span className="text-slate-500 px-1 text-[10px] uppercase font-bold">Edit:</span>
+              <span className="text-slate-500 px-1 text-[11px] uppercase font-bold">Edit:</span>
               <button
                 type="button"
                 onClick={() => handleBulkEdit(true)}
@@ -268,7 +268,7 @@ export function ModulePermissionModal({
             </div>
 
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-[11px] font-semibold">
-              <span className="text-slate-500 px-1 text-[10px] uppercase font-bold">Delete:</span>
+              <span className="text-slate-500 px-1 text-[11px] uppercase font-bold">Delete:</span>
               <button
                 type="button"
                 onClick={() => handleBulkDelete(true)}
@@ -297,7 +297,7 @@ export function ModulePermissionModal({
           ) : (
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-slate-100 dark:bg-slate-800/80 sticky top-0 z-10 text-[10px] uppercase font-bold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
+                <thead className="bg-slate-100 dark:bg-slate-800/80 sticky top-0 z-10 text-[11px] uppercase font-bold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <Th className="p-3">User & Credentials</Th>
                     <Th className="p-3">Role / Level</Th>
@@ -316,7 +316,7 @@ export function ModulePermissionModal({
                       {/* User Info */}
                       <td className="p-3">
                         <div className="font-bold text-slate-900 dark:text-slate-100">{u.fullName}</div>
-                        <div className="text-[10px] font-mono text-slate-400">
+                        <div className="text-[11px] font-mono text-slate-400">
                           {u.userCode} • {u.email || "No email"}
                         </div>
                       </td>
@@ -324,7 +324,7 @@ export function ModulePermissionModal({
                       {/* Role */}
                       <td className="p-3">
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-bold ${
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold ${
                             u.isSuperAdmin
                               ? "bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300"
                               : u.role.includes("admin")
@@ -343,7 +343,7 @@ export function ModulePermissionModal({
                           <Globe className="h-3 w-3 text-slate-400" />
                           <span>{u.countryName}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                        <div className="flex items-center gap-1 text-[11px] text-slate-500">
                           <Building2 className="h-2.5 w-2.5 text-slate-400" />
                           <span>{u.branchName}</span>
                         </div>
@@ -352,7 +352,7 @@ export function ModulePermissionModal({
                       {/* Who Can Edit? */}
                       <td className="p-3 text-center bg-blue-50/20 dark:bg-blue-950/10">
                         {u.isSuperAdmin ? (
-                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                             Super Admin (Always)
                           </span>
                         ) : (
@@ -373,7 +373,7 @@ export function ModulePermissionModal({
                       {/* Who Can Delete? */}
                       <td className="p-3 text-center bg-rose-50/20 dark:bg-rose-950/10">
                         {u.isSuperAdmin ? (
-                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                             Super Admin (Always)
                           </span>
                         ) : (

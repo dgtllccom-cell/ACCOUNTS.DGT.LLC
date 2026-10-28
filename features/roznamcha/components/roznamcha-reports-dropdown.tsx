@@ -52,7 +52,7 @@ export function RoznamchaReportsDropdown({ lang }: { lang: SupportedLanguage }) 
 
       {open && (
         <div className="absolute left-0 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl z-50 dark:border-slate-800 dark:bg-slate-900">
-          <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">
+          <div className="px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">
             {t(lang, "roz.daily_payment_reports", "Daily Payment Reports")}
           </div>
 

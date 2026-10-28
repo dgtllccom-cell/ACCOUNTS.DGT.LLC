@@ -469,7 +469,7 @@ export function DailyExchangeRateManager() {
               <Globe className="w-4 h-4 text-blue-600" />
               {th("EXCHANGE RATE ENTRY FORM")}
             </h3>
-            <span className="text-[9px] font-black uppercase bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
+            <span className="text-[11px] font-black uppercase bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
               {th("INTRA-DAY LIVE ENTRY")}
             </span>
           </div>
@@ -481,7 +481,7 @@ export function DailyExchangeRateManager() {
               <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 flex items-center justify-between">
                 <span>{th("1. COUNTRY NAME")}</span>
                 {selectedCountry && (
-                  <span className="text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400">
+                  <span className="text-[11px] font-mono font-bold text-blue-600 dark:text-blue-400">
                     Currency: {selectedCountry.currency_code}
                   </span>
                 )}
@@ -566,7 +566,7 @@ export function DailyExchangeRateManager() {
                   <ArrowUpRight className="w-3.5 h-3.5" />
                   {selectedCountry ? `4. CREDIT RATE (SELLING RATE)` : th("4. CREDIT RATE (LOCAL PER USD)")}
                 </span>
-                <span className="text-[9px] font-bold text-slate-400">
+                <span className="text-[11px] font-bold text-slate-400">
                   {selectedCountry ? `1 USD = ? ${selectedCountry.currency_code}` : "Local / USD"}
                 </span>
               </Label>
@@ -585,7 +585,7 @@ export function DailyExchangeRateManager() {
                 </span>
               </div>
               {selectedCountry && creditPrice && Number(creditPrice) > 0 && (
-                <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
                   ⚡ Conversion: 1.00 USD = {money(Number(creditPrice), 2)} {selectedCountry.currency_code} (Credit / Selling)
                 </p>
               )}
@@ -598,7 +598,7 @@ export function DailyExchangeRateManager() {
                   <ArrowDownLeft className="w-3.5 h-3.5" />
                   {selectedCountry ? `5. DEBIT RATE (BUYING RATE)` : th("5. DEBIT RATE (LOCAL PER USD)")}
                 </span>
-                <span className="text-[9px] font-bold text-slate-400">
+                <span className="text-[11px] font-bold text-slate-400">
                   {selectedCountry ? `1 USD = ? ${selectedCountry.currency_code}` : "Local / USD"}
                 </span>
               </Label>
@@ -617,7 +617,7 @@ export function DailyExchangeRateManager() {
                 </span>
               </div>
               {selectedCountry && debitPrice && Number(debitPrice) > 0 && (
-                <p className="text-[10px] font-bold text-blue-700 dark:text-blue-400">
+                <p className="text-[11px] font-bold text-blue-700 dark:text-blue-400">
                   ⚡ Conversion: 1.00 USD = {money(Number(debitPrice), 2)} {selectedCountry.currency_code} (Debit / Buying)
                 </p>
               )}
@@ -662,11 +662,11 @@ export function DailyExchangeRateManager() {
                   <Clock className="w-4 h-4" />
                   {th("SUPER ADMIN LIVE EXCHANGE RATES TABLE")}
                 </h3>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                   {th("Audited intra-day exchange rates recorded by users and branch terminals worldwide.")}
                 </p>
               </div>
-              <span className="text-[10px] font-mono font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs">
+              <span className="text-[11px] font-mono font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs">
                 {th("TOTAL ENTRIES:")} {rates.length}
               </span>
             </div>
@@ -760,12 +760,12 @@ export function DailyExchangeRateManager() {
                         </span>
                         <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
                         <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-slate-100 whitespace-nowrap font-mono">{date}</span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 whitespace-nowrap">
                           {dayRates.length} {dayRates.length === 1 ? th("RATE") : th("RATES")}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="hidden sm:inline text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase truncate max-w-[220px]">{dayCurrencies.join(" / ")}</span>
+                        <span className="hidden sm:inline text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase truncate max-w-[220px]">{dayCurrencies.join(" / ")}</span>
                         <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform", open && "rotate-180")} />
                       </div>
                     </button>
@@ -773,7 +773,7 @@ export function DailyExchangeRateManager() {
                       <div className="overflow-x-auto border-t border-slate-100 dark:border-slate-800">
                         <table className="w-full text-xs text-left border-collapse">
                           <thead>
-                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[11px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
                               <Th className="py-2.5 px-3 text-center">{th("SR NO")}</Th>
                               <Th className="py-2.5 px-3">{th("COUNTRY NAME")}</Th>
                               <Th className="py-2.5 px-3">{th("BRANCH NAME")}</Th>
@@ -802,25 +802,25 @@ export function DailyExchangeRateManager() {
                                     isSelected && "bg-blue-50/50 dark:bg-blue-950/30"
                                   )}
                                 >
-                                  <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-400 text-[10px]">
+                                  <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-400 text-[11px]">
                                     {idx + 1}
                                   </td>
                                   <td className="py-2.5 px-3 font-bold flex items-center gap-2 text-[11px]">
                                     <span className="text-base">{getFlag(iso2)}</span>
                                     <span className="uppercase">{countryName}</span>
                                   </td>
-                                  <td className="py-2.5 px-3 font-bold text-[10px] text-slate-600 dark:text-slate-300 uppercase">
+                                  <td className="py-2.5 px-3 font-bold text-[11px] text-slate-600 dark:text-slate-300 uppercase">
                                     {r.branch_name ? branchLabel(r.branch_name) : "-"}
                                   </td>
-                                  <td className="py-2.5 px-3 font-bold text-[10px] text-blue-700 dark:text-blue-400 uppercase">
+                                  <td className="py-2.5 px-3 font-bold text-[11px] text-blue-700 dark:text-blue-400 uppercase">
                                     {r.user_name || "-"}
                                   </td>
                                   <td className="py-2.5 px-3 text-center">
-                                    <span className="font-mono font-black bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[9px]">
+                                    <span className="font-mono font-black bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px]">
                                       {currencyCode}
                                     </span>
                                   </td>
-                                  <td className="py-2.5 px-3 font-mono text-[10px] text-slate-600 dark:text-slate-300">
+                                  <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-300">
                                     {r.rate_date || isoToday()} {r.rate_time || "09:00 AM"}
                                   </td>
                                   <td className="py-2.5 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-[11px]">
@@ -829,7 +829,7 @@ export function DailyExchangeRateManager() {
                                   <td className="py-2.5 px-3 text-right font-mono font-extrabold text-blue-600 dark:text-blue-400 text-[11px]">
                                     {money(r.debit_rate || r.buying_rate, 2)} {currencyCode}
                                   </td>
-                                  <td className="py-2.5 px-3 text-right text-[9px] text-slate-400 font-mono">
+                                  <td className="py-2.5 px-3 text-right text-[11px] text-slate-400 font-mono">
                                     {new Date(r.updated_at || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                   </td>
                                 </tr>

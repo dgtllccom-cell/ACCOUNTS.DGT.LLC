@@ -82,7 +82,7 @@ export function SalesBookingStep3({
             {/* Shipping Mode * & Shipping Line */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Shipping Mode <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -98,7 +98,7 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Shipping Line
                 </label>
                 <select
@@ -121,7 +121,7 @@ export function SalesBookingStep3({
             {/* Vessel Name & Voyage No */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Vessel Name
                 </label>
                 <input
@@ -134,7 +134,7 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Voyage No.
                 </label>
                 <input
@@ -150,7 +150,7 @@ export function SalesBookingStep3({
             {/* Loading Country * & Loading Port */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Loading Country <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -168,7 +168,7 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Loading Port
                 </label>
                 <select
@@ -187,7 +187,7 @@ export function SalesBookingStep3({
             {/* Loading Date & Receiving Country * */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Loading Date
                 </label>
                 <input
@@ -199,7 +199,7 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Receiving Country <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -220,7 +220,7 @@ export function SalesBookingStep3({
             {/* Receiving Port & Receiving Date */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Receiving Port
                 </label>
                 <select
@@ -236,7 +236,7 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Receiving Date
                 </label>
                 <input
@@ -251,7 +251,7 @@ export function SalesBookingStep3({
             {/* Destination Country * & Destination City */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Destination Country <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -267,7 +267,7 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Destination City
                 </label>
                 <input
@@ -283,7 +283,7 @@ export function SalesBookingStep3({
             {/* Container Number & Transport Type */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Container Number
                 </label>
                 <input
@@ -296,7 +296,7 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Transport Type
                 </label>
                 <select
@@ -324,7 +324,7 @@ export function SalesBookingStep3({
             {/* Payment Type *, Advance Percentage, Advance Amount */}
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
-                <label className="block text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
                   Payment Type <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -342,7 +342,7 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
                   Advance %
                 </label>
                 <input
@@ -354,7 +354,7 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
                   Advance Amount
                 </label>
                 <div className="h-8 px-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg flex items-center font-mono font-bold text-xs text-slate-800 dark:text-slate-200 truncate">
@@ -366,7 +366,7 @@ export function SalesBookingStep3({
             {/* Advance Payment Date, Final Payment Date, Currency */}
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
-                <label className="block text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
                   Advance Date
                 </label>
                 <input
@@ -378,7 +378,7 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
                   Final Payment Date
                 </label>
                 <input
@@ -390,7 +390,7 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
                   Currency
                 </label>
                 <select
@@ -409,7 +409,7 @@ export function SalesBookingStep3({
 
             {/* Remarks & Note */}
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Remarks & Note
               </label>
               <textarea
@@ -464,14 +464,14 @@ export function SalesBookingStep3({
                 <Package className="w-4 h-4 text-blue-600" />
                 {tUi(lang, "sales.goods_items", "GOODS ITEMS")}
               </h3>
-              <span className="text-[10px] font-bold text-slate-500 font-mono">
+              <span className="text-[11px] font-bold text-slate-500 font-mono">
                 {goodsEntries.length} Items Added
               </span>
             </div>
 
             <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
               <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="p-2 w-8 text-center">#</th>
                     <th className="p-2">Product Name</th>
@@ -491,7 +491,7 @@ export function SalesBookingStep3({
                     const net = Number(item.netWeight || (Number(item.qtyNo || 0) * 1100));
                     return (
                       <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                        <td className="p-2 text-center font-mono text-[10px] text-slate-400">{idx + 1}</td>
+                        <td className="p-2 text-center font-mono text-[11px] text-slate-400">{idx + 1}</td>
                         <td className="p-2 font-bold text-slate-900 dark:text-slate-100">{item.goodsName || item.productName}</td>
                         <td className="p-2 font-mono text-slate-500">{item.hsCode}</td>
                         <td className="p-2 text-center font-semibold text-slate-600 dark:text-slate-400">{item.qtyName || item.unit}</td>
@@ -571,7 +571,7 @@ export function SalesBookingStep3({
           {/* Three Lower Reports: Goods Summary, Shipping Details, Payment Details */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* 1. GOODS SUMMARY REPORT */}
-            <div className="bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-blue-900/60 rounded-xl p-3 shadow-xs space-y-2 text-[10px]">
+            <div className="bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-blue-900/60 rounded-xl p-3 shadow-xs space-y-2 text-[11px]">
               <div className="flex items-center gap-2 border-b border-blue-100 dark:border-blue-900/40 pb-1.5 text-blue-700 dark:text-blue-400 font-black uppercase tracking-wider">
                 <Package className="w-3.5 h-3.5" />
                 <span>{tUi(lang, "sales.goods_summary_report", "GOODS SUMMARY REPORT")}</span>
@@ -603,7 +603,7 @@ export function SalesBookingStep3({
             </div>
 
             {/* 2. SHIPPING DETAILS REPORT */}
-            <div className="bg-white dark:bg-slate-900 border border-purple-200/80 dark:border-purple-900/60 rounded-xl p-3 shadow-xs space-y-2 text-[10px]">
+            <div className="bg-white dark:bg-slate-900 border border-purple-200/80 dark:border-purple-900/60 rounded-xl p-3 shadow-xs space-y-2 text-[11px]">
               <div className="flex items-center gap-2 border-b border-purple-100 dark:border-purple-900/40 pb-1.5 text-purple-700 dark:text-purple-400 font-black uppercase tracking-wider">
                 <Truck className="w-3.5 h-3.5" />
                 <span>{tUi(lang, "sales.shipping_details_report", "SHIPPING DETAILS REPORT")}</span>
@@ -641,7 +641,7 @@ export function SalesBookingStep3({
             </div>
 
             {/* 3. PAYMENT DETAILS REPORT */}
-            <div className="bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-emerald-900/60 rounded-xl p-3 shadow-xs space-y-2 text-[10px]">
+            <div className="bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-emerald-900/60 rounded-xl p-3 shadow-xs space-y-2 text-[11px]">
               <div className="flex items-center gap-2 border-b border-emerald-100 dark:border-emerald-900/40 pb-1.5 text-emerald-700 dark:text-emerald-400 font-black uppercase tracking-wider">
                 <Landmark className="w-3.5 h-3.5" />
                 <span>{tUi(lang, "sales.payment_details_report", "PAYMENT DETAILS REPORT")}</span>

@@ -138,7 +138,7 @@ function ExpenseBillPageInner({ type, billCategory, backKey, backFallback }: Pro
                 {assignedUser && <span className="inline-flex items-center gap-1"><UserCheck className="h-3.5 w-3.5 text-slate-400" />{tt("obill.assigned_to", "Assigned to")}: <b>{assignedUser}</b></span>}
                 {transferDate && <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5 text-slate-400" />{tt("obill.transfer_date", "Transfer date")}: <span dir="ltr">{transferDate}</span></span>}
               </div>
-              <p className="mt-1 text-[10px] text-blue-800/80 dark:text-blue-200/80">
+              <p className="mt-1 text-[11px] text-blue-800/80 dark:text-blue-200/80">
                 {billId
                   ? tt("obill.opening_bill", "Opening this order's bill.")
                   : tt("obill.attached_hint", "The bill is attached to this order: its reference is the order number. Lock the header, add the expense lines and save as usual.")}

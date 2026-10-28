@@ -80,7 +80,7 @@ export function ShippingHandoverInbox({ lang }: { lang?: string }) {
         <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h1 className="text-base font-black text-slate-900 dark:text-slate-50">{open.handover_no}</h1>
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${TONE[open.status] || TONE.draft}`}>{s.t(`hi_st_${open.status}`, open.status)}</span>
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[open.status] || TONE.draft}`}>{s.t(`hi_st_${open.status}`, open.status)}</span>
           </div>
           <p className="mt-0.5 text-xs text-slate-500">{s.t(`hi_action_${open.action_type}`, open.action_type)} · {open.clearing_agent_name || "—"}</p>
 
@@ -137,7 +137,7 @@ export function ShippingHandoverInbox({ lang }: { lang?: string }) {
             </p>
           ) : null}
 
-          <p className="mt-3 rounded-lg bg-slate-50 px-2 py-1.5 text-[10px] text-slate-400 dark:bg-slate-800/60">
+          <p className="mt-3 rounded-lg bg-slate-50 px-2 py-1.5 text-[11px] text-slate-400 dark:bg-slate-800/60">
             {s.t("hi_privacy", "This is the approved operational information only. Business prices, profit and ledgers are never shared with the shipping side.")}
           </p>
 
@@ -216,7 +216,7 @@ export function ShippingHandoverInbox({ lang }: { lang?: string }) {
                   <td className="px-3 py-2 text-slate-500">{s.t(`hi_action_${r.action_type}`, r.action_type)}</td>
                   <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{r.contract_reference || r.bl_reference || "—"}</td>
                   <td className="px-3 py-2 tabular-nums text-slate-500">{(r.container_numbers ?? []).length}</td>
-                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${TONE[r.status] || TONE.draft}`}>{s.t(`hi_st_${r.status}`, r.status)}</span></td>
+                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[r.status] || TONE.draft}`}>{s.t(`hi_st_${r.status}`, r.status)}</span></td>
                 </tr>
               ))}
             </tbody>

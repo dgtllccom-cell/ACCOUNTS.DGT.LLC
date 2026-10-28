@@ -106,13 +106,13 @@ export function BusinessHandovers({ lang }: { lang?: string }) {
               ) : rows.map((r) => (
                 <tr key={r.id} className="border-t border-slate-100 dark:border-slate-800">
                   <td className="px-3 py-2 font-mono font-bold text-slate-700 dark:text-slate-200">{r.handover_no}</td>
-                  <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{r.business_reference_no || r.contract_reference || "—"}<span className="ms-1 text-[10px] text-slate-400">{r.business_source_module === "sales_orders" ? "SO" : "PO"}</span></td>
+                  <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{r.business_reference_no || r.contract_reference || "—"}<span className="ms-1 text-[11px] text-slate-400">{r.business_source_module === "sales_orders" ? "SO" : "PO"}</span></td>
                   <td className="px-3 py-2 text-slate-500">{s.t(`hi_action_${r.action_type}`, r.action_type)}</td>
                   <td className="px-3 py-2 text-slate-500">{r.clearing_agent_id ? (agents.find((a) => a.id === r.clearing_agent_id)?.name ?? "—") : "—"}</td>
-                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${TONE[r.status] || TONE.draft}`}>{s.t(`hi_st_${r.status}`, r.status)}</span></td>
+                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[r.status] || TONE.draft}`}>{s.t(`hi_st_${r.status}`, r.status)}</span></td>
                   <td className="px-3 py-2 text-end">
                     {["submitted", "draft"].includes(r.status) ? (
-                      <button type="button" onClick={() => void cancel(r.id)} className="rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-500 hover:bg-slate-50 dark:border-slate-700"><Ban className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => void cancel(r.id)} className="rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold text-slate-500 hover:bg-slate-50 dark:border-slate-700"><Ban className="h-3 w-3" /></button>
                     ) : null}
                   </td>
                 </tr>
@@ -212,7 +212,7 @@ function NewHandoverDrawer({ s, agents, pos, onClose, onDone }: { s: ReturnType<
 function L({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
+      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
       {children}
     </div>
   );

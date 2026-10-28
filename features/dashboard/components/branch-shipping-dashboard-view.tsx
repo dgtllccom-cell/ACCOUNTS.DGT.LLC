@@ -110,7 +110,7 @@ function StatusBadge({ status }: { status: string }) {
   }
 
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${tone}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider ${tone}`}>
       {status || "Pending"}
     </span>
   );
@@ -190,7 +190,7 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
                 {data.branchName}
               </h1>
-              <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-black uppercase text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
                 <Anchor className="h-3 w-3" />
                 {tr("Shipping Line Dashboard")}
               </span>
@@ -247,15 +247,15 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
 
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md px-4 py-2.5 text-center min-w-[90px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">{tr("Branch Code")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200">{tr("Branch Code")}</p>
               <p className="font-mono text-sm font-black text-white mt-0.5">{data.branchCode || "BR"}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md px-4 py-2.5 text-center min-w-[90px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">{tr("Base Currency")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200">{tr("Base Currency")}</p>
               <p className="font-mono text-sm font-black text-white mt-0.5">{data.currency || "PKR"}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md px-4 py-2.5 text-center min-w-[90px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">{tr("Country")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200">{tr("Country")}</p>
               <p className="text-sm font-black text-white mt-0.5">{data.countryName ? localizeCountryName(data.countryName, lang) : "—"}</p>
             </div>
           </div>
@@ -368,7 +368,7 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
                 )}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-2xl font-black tracking-tight text-foreground">{totalStatusCount}</span>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{tr("Shipments")}</span>
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase">{tr("Shipments")}</span>
                 </div>
               </div>
 
@@ -566,7 +566,7 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-muted/50 border-b border-border text-[10px] font-black uppercase text-muted-foreground">
+                <thead className="bg-muted/50 border-b border-border text-[11px] font-black uppercase text-muted-foreground">
                   <tr>
                     <th className="px-4 py-2.5">{tr("BL / REF NO")}</th>
                     <th className="px-4 py-2.5">{tr("VESSEL / CARGO")}</th>
@@ -581,11 +581,11 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
                       <tr key={s.id} className="hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3 font-mono font-bold text-foreground">
                           {s.blNumber}
-                          {s.customerName && <p className="font-sans text-[10px] text-muted-foreground font-normal">{s.customerName}</p>}
+                          {s.customerName && <p className="font-sans text-[11px] text-muted-foreground font-normal">{s.customerName}</p>}
                         </td>
                         <td className="px-4 py-3">
                           <p className="font-semibold text-foreground">{s.vesselName}</p>
-                          {s.voyageNumber && <p className="font-mono text-[10px] text-muted-foreground">Voy: {s.voyageNumber}</p>}
+                          {s.voyageNumber && <p className="font-mono text-[11px] text-muted-foreground">Voy: {s.voyageNumber}</p>}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground font-medium">{s.portOfDischarge || "-"}</td>
                         <td className="px-4 py-3">
@@ -636,7 +636,7 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
                   <div key={l.id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
                     <div>
                       <p className="text-xs font-bold text-foreground">{l.name}</p>
-                      <p className="font-mono text-[10px] text-muted-foreground">{l.code}</p>
+                      <p className="font-mono text-[11px] text-muted-foreground">{l.code}</p>
                     </div>
                     <p className={`font-mono text-xs font-black ${l.current_balance >= 0 ? "text-foreground" : "text-rose-600"}`}>
                       {formatMoney(l.current_balance, l.currency || data.currency)}

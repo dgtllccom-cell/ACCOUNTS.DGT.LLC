@@ -347,7 +347,7 @@ export function AllDeletedRecordsView() {
               <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                 {kpis.totalCountries}
               </div>
-              <div className="text-[10.5px] font-medium text-slate-400 mt-1">
+              <div className="text-[11px] font-medium text-slate-400 mt-1">
                 {t(lang, "audit.all_operating_countries", "All operating countries")}
               </div>
             </div>
@@ -367,7 +367,7 @@ export function AllDeletedRecordsView() {
               <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                 {kpis.totalBranches}
               </div>
-              <div className="text-[10.5px] font-medium text-slate-400 mt-1">
+              <div className="text-[11px] font-medium text-slate-400 mt-1">
                 {t(lang, "audit.all_offices_branches", "All offices / branches")}
               </div>
             </div>
@@ -612,7 +612,7 @@ export function AllDeletedRecordsView() {
                   const itemNumber = (currentPage - 1) * pageSize + idx + 1;
                   return (
                     <tr key={row.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
-                      <td className="py-2.5 px-3.5 text-center font-mono text-slate-400 text-[10.5px]">
+                      <td className="py-2.5 px-3.5 text-center font-mono text-slate-400 text-[11px]">
                         {itemNumber}
                       </td>
                       
@@ -628,7 +628,7 @@ export function AllDeletedRecordsView() {
 
                       {/* Module Badge */}
                       <td className="py-2.5 px-3">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[10.5px] bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[11px] bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                           {row.module}
                         </span>
                       </td>
@@ -650,7 +650,7 @@ export function AllDeletedRecordsView() {
                             {row.reference_no || row.entity_id}
                           </span>
                           {(row.previous_edit_count || 0) > 0 && (
-                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[11px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
                               +History
                             </span>
                           )}
@@ -679,7 +679,7 @@ export function AllDeletedRecordsView() {
 
                       {/* Risk Level Badge */}
                       <td className="py-2.5 px-3 text-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black ${
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-black ${
                           row.risk_level === "High"
                             ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300"
                             : row.risk_level === "Medium"
@@ -692,7 +692,7 @@ export function AllDeletedRecordsView() {
 
                       {/* Review Status Badge */}
                       <td className="py-2.5 px-3 text-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black ${
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-black ${
                           row.review_status === "Pending"
                             ? "bg-amber-50 text-amber-600 border border-amber-200"
                             : "bg-emerald-50 text-emerald-700 border border-emerald-200"

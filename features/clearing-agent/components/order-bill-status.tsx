@@ -138,15 +138,15 @@ export function OrderBillStatusCell({
 }) {
   const tt = (k: string, fb: string) => t(lang, k as never, fb);
   if (loading && !orderBills) {
-    return <span className="inline-flex items-center gap-1 text-[10px] text-slate-400"><Loader2 className="h-3 w-3 animate-spin" />{tt("obill.checking", "Checking bills…")}</span>;
+    return <span className="inline-flex items-center gap-1 text-[11px] text-slate-400"><Loader2 className="h-3 w-3 animate-spin" />{tt("obill.checking", "Checking bills…")}</span>;
   }
   if (denied) {
-    return <span className="inline-flex items-center gap-1 text-[10px] text-slate-400" data-testid={`obill-${type}-denied`}><Lock className="h-3 w-3" />{tt("obill.no_access", "No access")}</span>;
+    return <span className="inline-flex items-center gap-1 text-[11px] text-slate-400" data-testid={`obill-${type}-denied`}><Lock className="h-3 w-3" />{tt("obill.no_access", "No access")}</span>;
   }
   const list = orderBills ?? [];
   if (!list.length) {
     return (
-      <span className={cn("inline-flex flex-wrap items-center gap-1.5", compact ? "text-[10px]" : "text-[11px]")} data-testid={`obill-${type}-none`}>
+      <span className={cn("inline-flex flex-wrap items-center gap-1.5", compact ? "text-[11px]" : "text-[11px]")} data-testid={`obill-${type}-none`}>
         <span className="rounded-full bg-slate-100 px-1.5 py-0.5 font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">{tt("obill.none", "No bill yet")}</span>
         {onCreate ? (
           <button type="button" onClick={onCreate} className="inline-flex items-center gap-0.5 font-bold text-blue-600 hover:underline dark:text-blue-400">
@@ -161,7 +161,7 @@ export function OrderBillStatusCell({
     );
   }
   return (
-    <span className={cn("inline-flex flex-col gap-0.5", compact ? "text-[10px]" : "text-[11px]")} data-testid={`obill-${type}-made`}>
+    <span className={cn("inline-flex flex-col gap-0.5", compact ? "text-[11px]" : "text-[11px]")} data-testid={`obill-${type}-made`}>
       {list.slice(0, 3).map((b) => (
         <span key={b.id} className="inline-flex flex-wrap items-center gap-1.5">
           <span className={cn("rounded-full px-1.5 py-0.5 font-bold", b.transferred ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" : "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300")}>

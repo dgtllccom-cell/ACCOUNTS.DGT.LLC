@@ -1104,7 +1104,7 @@ export function GeneralOfficeDashboardView() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Users className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {tr("BRANCH & USER DETAILS")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">1. {tr("BRANCH & USER DETAILS")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
@@ -1121,7 +1121,7 @@ export function GeneralOfficeDashboardView() {
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
               <span>{tr("Status")}:</span>
-              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1">
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[11px] flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 {tr("Active Session")}
               </span>
@@ -1133,7 +1133,7 @@ export function GeneralOfficeDashboardView() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <ClipboardList className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. {tr("EMPLOYEES SUMMARY")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">2. {tr("EMPLOYEES SUMMARY")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -1155,7 +1155,7 @@ export function GeneralOfficeDashboardView() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Banknote className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {tr("PAYROLL & ASSETS")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">3. {tr("PAYROLL & ASSETS")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -1177,7 +1177,7 @@ export function GeneralOfficeDashboardView() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-indigo-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {tr("BRANCHES & COMPANIES")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">4. {tr("BRANCHES & COMPANIES")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -1195,9 +1195,9 @@ export function GeneralOfficeDashboardView() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <FileText className="h-4 w-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {tr("QUICK REPORTS")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">5. {tr("QUICK REPORTS")}</span>
           </div>
-          <div className="mt-2 space-y-1 text-[10px] font-semibold">
+          <div className="mt-2 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 font-sans">
               <span>{tr("Today Report")}</span>
               <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5 font-bold">📈 {tr("View")}</span>
@@ -1233,7 +1233,7 @@ export function GeneralOfficeDashboardView() {
           >
             <Users className="h-4 w-4" />
             <span>{tr("EMPLOYEES LIST")}</span>
-            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/20 text-current">{employees.length}</span>
+            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[11px] bg-white/20 text-current">{employees.length}</span>
           </button>
 
           <button
@@ -1277,7 +1277,7 @@ export function GeneralOfficeDashboardView() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50/70 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200/80 dark:border-slate-800">
+            <thead className="bg-slate-50/70 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200/80 dark:border-slate-800">
               <tr>
                 <Th className="p-3.5 w-10">#</Th>
                 <Th className="p-3.5">{t.colEmpCode}</Th>
@@ -1386,7 +1386,7 @@ export function GeneralOfficeDashboardView() {
                           </div>
                         )}
                         {(emp.person?.father_name || emp.person?.contact_person) && (
-                          <div className="text-[10px] text-slate-500 font-normal mt-0.5">
+                          <div className="text-[11px] text-slate-500 font-normal mt-0.5">
                             {ct(lang as never, "godv.son_of" as never, "S/O: ")}
                             {localizeVisibleName(emp.person?.father_name || emp.person?.contact_person)}
                           </div>
@@ -1399,7 +1399,7 @@ export function GeneralOfficeDashboardView() {
                       </td>
                       <td className="p-3.5 font-sans">
                         <div className="font-semibold text-slate-800 dark:text-slate-200">{tr(emp.designation || "-")}</div>
-                        <div className="text-[10px] text-slate-400">{tr(emp.department || "-")}</div>
+                        <div className="text-[11px] text-slate-400">{tr(emp.department || "-")}</div>
                       </td>
                       <td className="p-3.5 font-medium text-slate-700 dark:text-slate-300">
                         {countryName || "—"}
@@ -1407,7 +1407,7 @@ export function GeneralOfficeDashboardView() {
                       <td className="p-3.5 font-medium text-slate-700 dark:text-slate-300">
                         <div className="font-semibold text-slate-800 dark:text-slate-200">{branchName || "—"}</div>
                         {emp.city_branch?.name && emp.country_branch?.name && (
-                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                             {localizeVisibleName(emp.city_branch.name)}
                           </div>
                         )}
@@ -1424,7 +1424,7 @@ export function GeneralOfficeDashboardView() {
                       <td className="p-3.5">
                         <Badge
                           variant="outline"
-                          className={`font-black text-[10px] uppercase px-2 py-0.5 rounded-full ${
+                          className={`font-black text-[11px] uppercase px-2 py-0.5 rounded-full ${
                             emp.status === "Active"
                               ? "bg-emerald-50 text-emerald-700 border-emerald-300"
                               : "bg-slate-100 text-slate-600 border-slate-300"
@@ -1614,7 +1614,7 @@ export function GeneralOfficeDashboardView() {
                     <div key={dept.id} className="rounded-xl border p-4 hover:border-emerald-500 transition">
                       <div className="flex items-center justify-between">
                         <div className="font-bold text-sm">{dept.name}</div>
-                        <Badge variant="outline" className="font-mono text-[10px]">{dept.code}</Badge>
+                        <Badge variant="outline" className="font-mono text-[11px]">{dept.code}</Badge>
                       </div>
                       <div className="mt-3 text-xs space-y-1 text-muted-foreground">
                         <div><strong className="text-foreground">{tr("Head of Dept")}:</strong> {dept.head}</div>
@@ -1753,9 +1753,9 @@ export function GeneralOfficeDashboardView() {
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                       <div>
                         <div className="font-extrabold text-sm text-blue-600 dark:text-blue-400">ACCOUNTS.DGT.LLC</div>
-                        <div className="text-[9px] text-slate-500 dark:text-slate-400 font-mono">{tr("Official Identity Card").toUpperCase()}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{tr("Official Identity Card").toUpperCase()}</div>
                       </div>
-                      <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/40 text-[9px]">
+                      <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/40 text-[11px]">
                         {tr("Verified").toUpperCase()}
                       </Badge>
                     </div>
@@ -1767,7 +1767,7 @@ export function GeneralOfficeDashboardView() {
                       <div>
                         <div className="font-bold text-sm text-slate-900 dark:text-white">{personFullName(emp.person || {})}</div>
                         <div className="text-xs text-blue-300 font-semibold">{emp.designation ? tr(emp.designation) : tr("Staff Member")}</div>
-                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">{emp.employee_code} • {emp.department ? tr(emp.department) : tr("General")}</div>
+                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">{emp.employee_code} • {emp.department ? tr(emp.department) : tr("General")}</div>
                       </div>
                     </div>
 

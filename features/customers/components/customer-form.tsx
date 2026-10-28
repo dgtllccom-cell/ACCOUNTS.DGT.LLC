@@ -468,7 +468,7 @@ export function CustomerForm({
           <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
               {t(lang, "cusm.settings_management", "Settings / Management")}
             </p>
             <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-900 dark:text-slate-100">
@@ -541,7 +541,7 @@ export function CustomerForm({
                   <p className={`text-xs font-bold truncate leading-tight ${active ? "text-blue-950 dark:text-blue-100" : "text-slate-800 dark:text-slate-200"}`}>
                     {s.title}
                   </p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5 leading-tight">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 leading-tight">
                     {s.sub}
                   </p>
                 </div>
@@ -755,10 +755,10 @@ export function CustomerForm({
                         <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                           {getLabel("clickToUploadPhoto", lang)}
                         </span>
-                        <span className="text-[10px] text-slate-400 mt-0.5">
+                        <span className="text-[11px] text-slate-400 mt-0.5">
                           {getLabel("uploadPhotoHint1", lang)}
                         </span>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[11px] text-slate-400">
                           {getLabel("uploadPhotoHint2", lang)}
                         </span>
                       </div>
@@ -862,7 +862,7 @@ export function CustomerForm({
                     <div key={idx} className="border-b pb-3 last:border-b-0 last:pb-0 space-y-2">
                       <div className="flex gap-2 items-end">
                         <div className="w-1/3 space-y-1">
-                          <Label className="text-[10px] font-semibold text-slate-500">{getLabel("typeLabel", lang)}</Label>
+                          <Label className="text-[11px] font-semibold text-slate-500">{getLabel("typeLabel", lang)}</Label>
                           <select
                             value={isCustom ? "Custom" : contact.type}
                             onChange={(e) => {
@@ -887,7 +887,7 @@ export function CustomerForm({
                         </div>
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center justify-between">
-                            <Label className="text-[10px] font-semibold text-slate-500">{getLabel("contactValue", lang)}</Label>
+                            <Label className="text-[11px] font-semibold text-slate-500">{getLabel("contactValue", lang)}</Label>
                             {contact.type !== "Email" && (
                               <div className="flex items-center gap-1" dir="ltr">
                                 {["+92", "+971", "+93", "+966"].map((cc) => (
@@ -904,7 +904,7 @@ export function CustomerForm({
                                       }
                                       setContacts(updated);
                                     }}
-                                    className="text-[9px] px-1 py-0.5 rounded bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 font-mono font-bold border border-slate-200"
+                                    className="text-[11px] px-1 py-0.5 rounded bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 font-mono font-bold border border-slate-200"
                                   >
                                     {cc}
                                   </button>
@@ -948,7 +948,7 @@ export function CustomerForm({
                       
                       {isCustom && (
                         <div className="w-full space-y-1 pl-1 border-l-2 border-teal-500/30">
-                          <Label className="text-[9px] font-bold text-teal-700">{getLabel("typeCustomContactLabelName", lang)}</Label>
+                          <Label className="text-[11px] font-bold text-teal-700">{getLabel("typeCustomContactLabelName", lang)}</Label>
                           <Input
                             value={contact.type.startsWith("Custom: ") ? contact.type.slice(8) : contact.type}
                             onChange={(e) => {
@@ -1008,7 +1008,7 @@ export function CustomerForm({
                       </div>
                       <div className="grid gap-3 grid-cols-2">
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-semibold text-slate-500">{getLabel("documentType", lang)}</Label>
+                          <Label className="text-[11px] font-semibold text-slate-500">{getLabel("documentType", lang)}</Label>
                           <select
                             value={isCustom ? "Custom" : doc.type}
                             onChange={(e) => {
@@ -1031,7 +1031,7 @@ export function CustomerForm({
                           </select>
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-semibold text-slate-500">{getLabel("documentNumber", lang)}</Label>
+                          <Label className="text-[11px] font-semibold text-slate-500">{getLabel("documentNumber", lang)}</Label>
                           <Input
                             value={doc.number}
                             onChange={(e) => {
@@ -1047,7 +1047,7 @@ export function CustomerForm({
 
                       {isCustom && (
                         <div className="w-full space-y-1 border-l-2 border-teal-500/30 pl-2">
-                          <Label className="text-[9px] font-bold text-teal-700">{getLabel("typeCustomDocumentLabelName", lang)}</Label>
+                          <Label className="text-[11px] font-bold text-teal-700">{getLabel("typeCustomDocumentLabelName", lang)}</Label>
                           <Input
                             value={doc.type.startsWith("Custom: ") ? doc.type.slice(8) : doc.type}
                             onChange={(e) => {
@@ -1062,9 +1062,9 @@ export function CustomerForm({
                       )}
 
                       <div className="space-y-1">
-                        <Label className="text-[10px] font-semibold text-slate-500">{getLabel("documentUpload", lang)}</Label>
+                        <Label className="text-[11px] font-semibold text-slate-500">{getLabel("documentUpload", lang)}</Label>
                         <div className="flex items-center gap-2">
-                          <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
+                          <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[11px] font-semibold">
                             <Paperclip className="h-3 w-3" />
                             <span>{getLabel("attach", lang)}</span>
                             <Input
@@ -1080,7 +1080,7 @@ export function CustomerForm({
                               className="hidden"
                             />
                           </Label>
-                          {doc.upload && <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-1.5 rounded border truncate max-w-[200px]">{doc.upload}</span>}
+                          {doc.upload && <span className="text-[11px] font-mono text-slate-500 bg-slate-50 px-2 py-1.5 rounded border truncate max-w-[200px]">{doc.upload}</span>}
                         </div>
                       </div>
                     </div>
@@ -1263,7 +1263,7 @@ export function CustomerForm({
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   {getLabel("customerName", lang)}
                 </p>
                 <p className="text-base font-black text-slate-900 dark:text-slate-100 truncate">
@@ -1271,7 +1271,7 @@ export function CustomerForm({
                     ? (businessName || getLabel("newBusiness", lang))
                     : (firstName || lastName ? `${firstName} ${lastName}`.trim() : getLabel("newCustomer", lang))}
                 </p>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-2">
                   {getLabel("customerType", lang)}
                 </p>
                 <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">
@@ -1285,7 +1285,7 @@ export function CustomerForm({
             {/* Location Section */}
             <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
               <div className="flex items-center justify-between mb-1.5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5 text-slate-400" />
                   <span>{getLabel("location", lang)}</span>
                 </p>
@@ -1310,7 +1310,7 @@ export function CustomerForm({
             {/* Contacts Section */}
             <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
               <div className="flex items-center justify-between mb-1.5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                   <Phone className="h-3.5 w-3.5 text-slate-400" />
                   <span>{getLabel("contacts", lang)} ({contacts.filter(c => c.value.trim()).length})</span>
                 </p>
@@ -1344,7 +1344,7 @@ export function CustomerForm({
             {/* Documents Section */}
             <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
               <div className="flex items-center justify-between mb-1.5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                   <FileText className="h-3.5 w-3.5 text-slate-400" />
                   <span>{getLabel("documents", lang)} ({documents.filter(d => d.number.trim()).length})</span>
                 </p>

@@ -3053,7 +3053,7 @@ export function CashEntryForm({
             <div className="p-3.5 grid grid-cols-1 2xl:grid-cols-2 gap-3 text-xs">
               {/* Left Column: Branch Details */}
               <div className="grid grid-cols-[95px_1fr] gap-x-2 gap-y-1.5 font-semibold">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "common.country", "COUNTRY")}</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "common.country", "COUNTRY")}</span>
                 <div className="relative flex items-center">
                   <select
                     value={countryId}
@@ -3074,7 +3074,7 @@ export function CashEntryForm({
                   </select>
                 </div>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_category", "BRANCH CATEGORY")}</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_category", "BRANCH CATEGORY")}</span>
                 <div className="relative flex items-center">
                   <select
                     value={branchCategory}
@@ -3089,7 +3089,7 @@ export function CashEntryForm({
                   </select>
                 </div>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_name", "BRANCH NAME")}</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_name", "BRANCH NAME")}</span>
                 <div className="relative flex items-center">
                   <select
                     value={countryBranchId}
@@ -3104,12 +3104,12 @@ export function CashEntryForm({
                   </select>
                 </div>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_code", "BRANCH CODE")}</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_code", "BRANCH CODE")}</span>
                 <span className="font-extrabold text-slate-850 dark:text-slate-150">
                   {selectedMainBranch?.code || "—"}
                 </span>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.city_branch", "CITY BRANCH")}</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.city_branch", "CITY BRANCH")}</span>
                 <div className="relative flex items-center">
                   <select
                     value={cityBranchId}
@@ -3124,7 +3124,7 @@ export function CashEntryForm({
                   </select>
                 </div>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "common.date", "DATE")}</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "common.date", "DATE")}</span>
                 <input
                   type="date"
                   value={entryDate}
@@ -3135,19 +3135,19 @@ export function CashEntryForm({
 
               {/* Right Column: Voucher Audit & Status */}
               <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-2 font-semibold border-t border-slate-100 pt-3 dark:border-slate-800 2xl:border-t-0 2xl:pt-0 2xl:border-s 2xl:ps-3 content-start">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-start">{tr("cj.createdBy", "CREATED BY")}</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-start">{tr("cj.createdBy", "CREATED BY")}</span>
                 <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate" title={activeCreator || session?.user?.fullName || "—"}>
                   {activeCreator || session?.user?.fullName || "—"}
                 </span>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-start">{tr("cj.approvedBy", "APPROVED BY")}</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-start">{tr("cj.approvedBy", "APPROVED BY")}</span>
                 <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate" title={activeApprover || tr("cj.pending", "Pending")}>
                   {activeApprover || tr("cj.pending", "Pending")}
                 </span>
 
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-start">{tr("cj.status", "STATUS")}</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-start">{tr("cj.status", "STATUS")}</span>
                 <div>
-                  <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400">
+                  <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400">
                     {activeStatus ? translateValue(lang, activeStatus.toUpperCase()) : tr("cj.statusDraft", "DRAFT")}
                   </span>
                 </div>
@@ -3182,7 +3182,7 @@ export function CashEntryForm({
               </h4>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-[10px] font-bold text-slate-500">{tr("cj.role", "Role:")}</span>
+              <span className="text-[11px] font-bold text-slate-500">{tr("cj.role", "Role:")}</span>
               {isSuperAdmin ? (
                 <select
                   value={serialRoleFilter}
@@ -3216,7 +3216,7 @@ export function CashEntryForm({
                 <button
                   type="button"
                   onClick={() => setShowSerialsDropdown((prev) => !prev)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-blue-200 bg-blue-50 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 transition"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-blue-200 bg-blue-50 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 transition"
                 >
                   {tr("cj.viewSerials", "View Serials")} <ChevronDown className="h-3 w-3" />
                 </button>
@@ -3226,14 +3226,14 @@ export function CashEntryForm({
               {showSerialsDropdown && (
                 <div className="mb-3 p-2.5 rounded-lg border border-blue-200 bg-blue-50/40 dark:border-blue-900 dark:bg-blue-950/20 text-xs grid grid-cols-2 gap-2 font-mono">
                   {canViewUsd && (
-                    <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialSuperAdmin", "Super Admin:")}</span> <strong className="text-blue-700 dark:text-blue-300">{savedSerials?.superAdmin || liveSerials.superAdmin}</strong></div>
+                    <div><span className="text-[11px] text-slate-500 block">{tr("cj.serialSuperAdmin", "Super Admin:")}</span> <strong className="text-blue-700 dark:text-blue-300">{savedSerials?.superAdmin || liveSerials.superAdmin}</strong></div>
                   )}
                   {(isSuperAdmin || isCountryAdmin) && (
-                    <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialCountry", "Country:")}</span> <strong className="text-blue-700 dark:text-blue-300">{savedSerials?.country || liveSerials.country}</strong></div>
+                    <div><span className="text-[11px] text-slate-500 block">{tr("cj.serialCountry", "Country:")}</span> <strong className="text-blue-700 dark:text-blue-300">{savedSerials?.country || liveSerials.country}</strong></div>
                   )}
-                  <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialMainBranch", "Main Branch:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.mainBranch || liveSerials.mainBranch}</strong></div>
-                  <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialCityBranch", "City Branch:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.cityBranch || liveSerials.cityBranch}</strong></div>
-                  <div><span className="text-[10px] text-slate-500 block">{t(lang, "cef.print_entry_serial", "Entry Serial:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.entrySerial || liveSerials.entrySerial}</strong></div>
+                  <div><span className="text-[11px] text-slate-500 block">{tr("cj.serialMainBranch", "Main Branch:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.mainBranch || liveSerials.mainBranch}</strong></div>
+                  <div><span className="text-[11px] text-slate-500 block">{tr("cj.serialCityBranch", "City Branch:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.cityBranch || liveSerials.cityBranch}</strong></div>
+                  <div><span className="text-[11px] text-slate-500 block">{t(lang, "cef.print_entry_serial", "Entry Serial:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.entrySerial || liveSerials.entrySerial}</strong></div>
                 </div>
               )}
 
@@ -3244,17 +3244,17 @@ export function CashEntryForm({
                     <span className="text-xs font-black text-slate-900 dark:text-white">
                       {selectedCountry?.name || activeCountryIso} ({selectedCountry?.currency_code || branchCurrency})
                     </span>
-                    <span className="text-[10px] text-slate-500 font-mono">
+                    <span className="text-[11px] text-slate-500 font-mono">
                       {entryDate}
                     </span>
                   </div>
                   {dailyRate?.found ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                       {tr("cj.rateApproved", "APPROVED / ACTIVE")}
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
                       <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                       {tr("cj.ratePending", "PENDING / MISSING")}
                     </span>
@@ -3263,13 +3263,13 @@ export function CashEntryForm({
 
                 <div className="grid grid-cols-2 gap-2 text-center">
                   <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                    <div className="text-[10px] uppercase font-bold text-slate-500">{tr("cj.drRate", "DR Rate (Buying)")}</div>
+                    <div className="text-[11px] uppercase font-bold text-slate-500">{tr("cj.drRate", "DR Rate (Buying)")}</div>
                     <div className="font-mono text-sm font-black text-rose-600 dark:text-rose-400">
                       {dailyRate?.found ? (dailyRate.debitRate ?? dailyRate.buyingRate ?? "—") : "—"}
                     </div>
                   </div>
                   <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                    <div className="text-[10px] uppercase font-bold text-slate-500">{tr("cj.crRate", "CR Rate (Selling)")}</div>
+                    <div className="text-[11px] uppercase font-bold text-slate-500">{tr("cj.crRate", "CR Rate (Selling)")}</div>
                     <div className="font-mono text-sm font-black text-emerald-600 dark:text-emerald-400">
                       {dailyRate?.found ? (dailyRate.creditRate ?? dailyRate.sellingRate ?? "—") : "—"}
                     </div>
@@ -3289,7 +3289,7 @@ export function CashEntryForm({
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-xs font-bold text-slate-200">{tr("cj.speakToFill", "Speak to fill this form")}</span>
-                <span className="px-1.5 py-0.5 rounded text-[9.5px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                <span className="px-1.5 py-0.5 rounded text-[11px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
                   {tr("cj.micReady", "MIC READY")}
                 </span>
               </div>
@@ -3364,7 +3364,7 @@ export function CashEntryForm({
                       </select>
                     </div>
                   ) : (
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200">
+                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200">
                       {userCountry?.countryName || tr("cj.authorizedScope", "Authorized Scope")}
                     </span>
                   )}
@@ -3392,7 +3392,7 @@ export function CashEntryForm({
                       className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 cursor-pointer hover:border-emerald-300 transition-colors"
                       title={tr("cj.drillTip", "Click for branch drill-down")}
                     >
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.totalCreditU", "TOTAL CREDIT")}</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.totalCreditU", "TOTAL CREDIT")}</span>
                       <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 font-mono">
                         {fmtAmount(totalCreditVal)} {displayCurrency}
                       </span>
@@ -3417,21 +3417,21 @@ export function CashEntryForm({
                       className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 cursor-pointer hover:border-rose-300 transition-colors"
                       title={tr("cj.drillTip", "Click for branch drill-down")}
                     >
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.totalDebitU", "TOTAL DEBIT")}</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.totalDebitU", "TOTAL DEBIT")}</span>
                       <span className="text-xs font-black text-rose-700 dark:text-rose-400 font-mono">
                         {fmtAmount(totalDebitVal)} {displayCurrency}
                       </span>
                     </div>
 
                     <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.netBalanceU", "NET BALANCE")}</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.netBalanceU", "NET BALANCE")}</span>
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
                         {balanceText}
                       </span>
                     </div>
 
                     <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.entriesU", "ENTRIES")}</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.entriesU", "ENTRIES")}</span>
                       <span className="text-xs font-black text-slate-800 dark:text-slate-200 font-mono">
                         {totalEntriesVal}
                       </span>
@@ -3443,7 +3443,7 @@ export function CashEntryForm({
                     {!isSuper ? (
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-500">
                             <th className="py-2 px-3">{tr("cj.authorizedBranch", "Authorized Branch")}</th>
                             <th className="py-2 px-2 text-end">{tr("cj.colCredit", "Credit")} ({userCountry?.currencyCode || "—"})</th>
                             <th className="py-2 px-2 text-end">{tr("cj.colDebit", "Debit")} ({userCountry?.currencyCode || "—"})</th>
@@ -3474,7 +3474,7 @@ export function CashEntryForm({
                               >
                                 <td className="py-2 px-3">
                                   <div className="font-bold text-slate-900 dark:text-slate-100">{b.branchName}</div>
-                                  <div className="font-mono text-[10px] text-slate-400">{b.branchCode}</div>
+                                  <div className="font-mono text-[11px] text-slate-400">{b.branchCode}</div>
                                 </td>
                                 <td className="py-2 px-2 text-right font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
                                   {fmtAmount(b.totalCredit)}
@@ -3504,7 +3504,7 @@ export function CashEntryForm({
                     ) : (
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-500">
                             <th className="py-2 px-3">{tr("cj.colCountry", "Country")}</th>
                             <th className="py-2 px-2.5">{tr("cj.colCredit", "Credit")}</th>
                             <th className="py-2 px-2.5">{tr("cj.colDebit", "Debit")}</th>
@@ -3576,41 +3576,41 @@ export function CashEntryForm({
           </div>
           <div className="flex flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3">
             <div className="flex flex-col">
-              <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "rozrep.account_no", "Account No")}</span>
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(lang, "rozrep.account_no", "Account No")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono text-xs">
                 {selectedCounterLedger.accountCode || selectedCounterLedger.ledgerCode || "-"}
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "roz.account_name", "Account Name")}</span>
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(lang, "roz.account_name", "Account Name")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 text-xs truncate max-w-[180px]" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
                 {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
               </span>
             </div>
             {selectedCounterLedger.accountKind && (
               <div className="flex flex-col">
-                <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "common.category", "Category")}</span>
-                <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:text-purple-300">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(lang, "common.category", "Category")}</span>
+                <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 px-2 py-0.5 text-[11px] font-bold text-purple-700 dark:text-purple-300">
                   {localizeTerm(selectedCounterLedger.accountKind, lang)}
                 </span>
               </div>
             )}
             <div className="h-8 w-px bg-slate-150 dark:bg-slate-800" />
             <div className="flex flex-col">
-              <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "roz.owner_customer", "Owner / Customer")}</span>
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(lang, "roz.owner_customer", "Owner / Customer")}</span>
               <span className="inline-flex items-center gap-1.5 font-extrabold text-slate-850 dark:text-slate-150 text-xs">
                 <User className="h-3 w-3 text-slate-400" />
                 <span className="truncate max-w-[160px]" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
                   {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
                 </span>
                 {selectedCounterLedger.customerNumber && (
-                  <span className="font-mono text-[10px] text-slate-400">({selectedCounterLedger.customerNumber})</span>
+                  <span className="font-mono text-[11px] text-slate-400">({selectedCounterLedger.customerNumber})</span>
                 )}
               </span>
             </div>
             {selectedCounterLedger.companyName && (
               <div className="flex flex-col">
-                <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "hr.pp_company", "Company")}</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(lang, "hr.pp_company", "Company")}</span>
                 <span className="inline-flex items-center gap-1.5 font-extrabold text-slate-850 dark:text-slate-150 text-xs">
                   <Building2 className="h-3 w-3 text-slate-400" />
                   <span className="truncate max-w-[160px]" title={selectedCounterLedger.companyName}>{selectedCounterLedger.companyName}</span>
@@ -3618,7 +3618,7 @@ export function CashEntryForm({
               </div>
             )}
             <div className="flex flex-col">
-              <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">{t(lang, "hr.f_currency", "Currency")}</span>
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(lang, "hr.f_currency", "Currency")}</span>
               <span className="inline-flex items-center gap-1.5 font-extrabold text-slate-850 dark:text-slate-150 text-xs">
                 <CircleDollarSign className="h-3 w-3 text-slate-400" />
                 {selectedCounterLedger.ledgerCurrency || "-"}
@@ -3758,19 +3758,19 @@ export function CashEntryForm({
                             <h4 className="text-xs font-black text-slate-900 dark:text-white">
                               {tr("cj.mStep1", "Entry Scope & Branch")}
                             </h4>
-                            <p className="text-[10px] text-slate-400 font-medium">
+                            <p className="text-[11px] text-slate-400 font-medium">
                               {tr("cj.mStep1Sub", "Select the operating branch for this entry")}
                             </p>
                           </div>
                         </div>
 
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[10px] font-black uppercase">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[11px] font-black uppercase">
                           <Building2 className="h-3 w-3" />
                           <span>
                             {selectedCountry ? `${selectedCountry.name.toUpperCase()} - ${selectedCityBranch?.name?.toUpperCase() || selectedMainBranch?.name?.toUpperCase() || tr("cj.mSelectBranchU", "SELECT BRANCH")}` : tr("cj.mSelectCountryBranchU", "SELECT COUNTRY & BRANCH")}
                           </span>
                           {isCountryAdmin && (
-                            <span className="inline-flex items-center gap-0.5 bg-amber-500 text-white rounded px-1.5 py-0.5 text-[8px] font-black tracking-wider">
+                            <span className="inline-flex items-center gap-0.5 bg-amber-500 text-white rounded px-1.5 py-0.5 text-[11px] font-black tracking-wider">
                               <Lock className="h-2 w-2" />
                               {tr("cj.mLockedU", "LOCKED")}
                             </span>
@@ -3781,9 +3781,9 @@ export function CashEntryForm({
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "common.country", "Country")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "common.country", "Country")}</Label>
                             {isCountryAdmin && (
-                              <span className="text-[8px] font-black text-amber-700 dark:text-amber-400 flex items-center gap-0.5">
+                              <span className="text-[11px] font-black text-amber-700 dark:text-amber-400 flex items-center gap-0.5">
                                 <Lock className="h-2 w-2" />
                                 {tr("cj.mLocked", "Locked")}
                               </span>
@@ -3811,7 +3811,7 @@ export function CashEntryForm({
                         </div>
 
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "roz.branch_name", "Main Branch")}</Label>
+                          <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "roz.branch_name", "Main Branch")}</Label>
                           <select
                             value={countryBranchId}
                             disabled={!countryId}
@@ -3831,7 +3831,7 @@ export function CashEntryForm({
                         </div>
 
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.branch_category", "Branch Category")}</Label>
+                          <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.branch_category", "Branch Category")}</Label>
                           <select
                             value={branchCategory}
                             onChange={(e) => {
@@ -3846,7 +3846,7 @@ export function CashEntryForm({
                         </div>
 
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.city_branch_label", "City / Branch")}</Label>
+                          <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.city_branch_label", "City / Branch")}</Label>
                           <select
                             value={cityBranchId}
                             disabled={!countryBranchId && cityBranches.length === 0}
@@ -3875,7 +3875,7 @@ export function CashEntryForm({
                             <h4 className="text-xs font-black text-slate-900 dark:text-white">
                               {tr("cef.step2_title", "Search & Select Account")}
                             </h4>
-                            <p className="text-[10px] text-slate-400 font-medium">
+                            <p className="text-[11px] text-slate-400 font-medium">
                               {tr("cef.step2_subtitle", "Choose recipient customer or account for payment posting")}
                             </p>
                           </div>
@@ -3915,7 +3915,7 @@ export function CashEntryForm({
                             >
                               <Globe className="h-3 w-3" />
                               <span>{tr("cef.cross_branch_recipient", "Cross-Branch Recipient")}</span>
-                              <span className="text-[8px] bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-1 rounded font-black">
+                              <span className="text-[11px] bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-1 rounded font-black">
                                 {tr("cef.same_country_badge", "Same Country")}
                               </span>
                             </button>
@@ -3955,7 +3955,7 @@ export function CashEntryForm({
                             )}
                           </div>
 
-                          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold px-1">
+                          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-semibold px-1">
                             <ShieldCheck className="h-3 w-3 text-indigo-600 shrink-0" />
                             <span>{tr("cef.restricted_lookup_hint", "Restricted Lookup: Displays only account number, customer name and branch. Ledger balances and history remain isolated.")}</span>
                           </div>
@@ -3978,13 +3978,13 @@ export function CashEntryForm({
                                         {acc.name || acc.customerName}
                                       </span>
                                     </div>
-                                    <div className="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
+                                    <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
                                       <span>🏢 {acc.owningBranchName} ({acc.owningBranchCode})</span>
                                       {acc.cityName && <span>• {acc.cityName}</span>}
                                       {acc.currency && <span className="font-mono font-bold">• {acc.currency}</span>}
                                     </div>
                                   </div>
-                                  <span className="shrink-0 text-[9px] font-black uppercase px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200">
+                                  <span className="shrink-0 text-[11px] font-black uppercase px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200">
                                     {tr("cef.select_recipient", "Select Recipient")}
                                   </span>
                                 </button>
@@ -4015,7 +4015,7 @@ export function CashEntryForm({
                                 selectedCrossBranchAccount ? "text-indigo-600 dark:text-indigo-400" : "text-emerald-600 dark:text-emerald-400"
                               )} />
                               <span className={cn(
-                                "font-extrabold uppercase text-[10px] tracking-wide",
+                                "font-extrabold uppercase text-[11px] tracking-wide",
                                 selectedCrossBranchAccount ? "text-indigo-900 dark:text-indigo-200" : "text-emerald-900 dark:text-emerald-200"
                               )}>
                                 {selectedCrossBranchAccount ? tr("cef.cross_branch_confirmed", "Cross-Branch Recipient Confirmed") : tr("cef.account_selected", "Account Selected")}
@@ -4028,7 +4028,7 @@ export function CashEntryForm({
                               </span>
                             </div>
                             <span className={cn(
-                              "px-2 py-0.5 rounded-full text-[10px] font-black border",
+                              "px-2 py-0.5 rounded-full text-[11px] font-black border",
                               selectedCrossBranchAccount
                                 ? "bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700"
                                 : "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700"
@@ -4054,7 +4054,7 @@ export function CashEntryForm({
                           </div>
 
                           {selectedCrossBranchAccount && (
-                            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-100/50 dark:bg-indigo-900/30 p-2 rounded-lg">
+                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-100/50 dark:bg-indigo-900/30 p-2 rounded-lg">
                               <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
                               <span>{tr("cef.isolated_ledger_notice", "Confidential Isolation Active: Recipient ledger records and balances remain restricted. Payment will post with inter-branch settlement audit trail.")}</span>
                             </div>
@@ -4074,14 +4074,14 @@ export function CashEntryForm({
                             <h4 className="text-xs font-black text-slate-900 dark:text-white">
                               {tr("cj.mStep3", "Roznamcha Details")}
                             </h4>
-                            <p className="text-[10px] text-slate-400 font-medium">
+                            <p className="text-[11px] text-slate-400 font-medium">
                               {tr("cj.mStep3Sub", "Transaction type, category and reference information")}
                             </p>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Label className="text-[10px] font-black text-slate-500 uppercase">
+                          <Label className="text-[11px] font-black text-slate-500 uppercase">
                             {tr("cj.mDailyDate", "Daily Payment Date")} <span className="text-red-500">*</span>
                           </Label>
                           <div className="relative">
@@ -4097,7 +4097,7 @@ export function CashEntryForm({
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                          <Label className="text-[11px] font-bold text-slate-500 uppercase">
                             {tr("cj.mRozType", "Roznamcha Type")} <span className="text-red-500">*</span>
                           </Label>
                           <select
@@ -4112,7 +4112,7 @@ export function CashEntryForm({
                         </div>
 
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                          <Label className="text-[11px] font-bold text-slate-500 uppercase">
                             {tr("cj.mRozNumber", "Roznamcha Number")} <span className="text-red-500">*</span>
                           </Label>
                           <Input
@@ -4124,7 +4124,7 @@ export function CashEntryForm({
                         </div>
 
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                          <Label className="text-[11px] font-bold text-slate-500 uppercase">
                             {tr("cj.mRozCategory", "Roznamcha Category")} <span className="text-red-500">*</span>
                           </Label>
                           <select
@@ -4145,7 +4145,7 @@ export function CashEntryForm({
                         </div>
 
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                          <Label className="text-[11px] font-bold text-slate-500 uppercase">
                             {tr("cj.mCurrencyType", "Currency Type")} <span className="text-red-500">*</span>
                           </Label>
                           <select
@@ -4180,7 +4180,7 @@ export function CashEntryForm({
                               ? tr("cj.mTransferDetails", "Transfer Details")
                               : tr("cj.mCashDetails", "Cash Details")}
                           </h4>
-                          <p className="text-[10px] text-slate-400 font-medium">
+                          <p className="text-[11px] text-slate-400 font-medium">
                             {paymentType === "bank"
                               ? tr("cj.mBankSub", "Bank account, method and reference for {c} banking").replace("{c}", activeCountryIso || tr("cj.mLocal", "local"))
                               : paymentType === "transfer"
@@ -4221,7 +4221,7 @@ export function CashEntryForm({
                             </div>
 
                             <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.transfer_method", "Transfer Mode")}</Label>
+                              <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.transfer_method", "Transfer Mode")}</Label>
                               <select
                                 value={typeDetails.method || "Online Transfer"}
                                 onChange={(e) => setTypeDetails((p) => ({ ...p, method: e.target.value }))}
@@ -4249,31 +4249,31 @@ export function CashEntryForm({
                                     <span className="text-[11px] font-normal text-slate-500">({selectedBankRecord.branch_name})</span>
                                   )}
                                 </span>
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">
+                                <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">
                                   {tr("cj.mBankVerified", "Bank Master Verified ✓")}
                                 </span>
                               </div>
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
                                 <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mAccountTitle", "Account Title")}</span>
+                                  <span className="text-[11px] uppercase font-bold text-slate-400 block">{tr("cj.mAccountTitle", "Account Title")}</span>
                                   <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
                                     {selectedBankRecord.account_title || "—"}
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mAccountNumber", "Account Number")}</span>
+                                  <span className="text-[11px] uppercase font-bold text-slate-400 block">{tr("cj.mAccountNumber", "Account Number")}</span>
                                   <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block">
                                     {selectedBankRecord.account_number || "—"}
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mIban", "IBAN Number")}</span>
+                                  <span className="text-[11px] uppercase font-bold text-slate-400 block">{tr("cj.mIban", "IBAN Number")}</span>
                                   <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block" title={selectedBankRecord.iban_number || ""}>
                                     {selectedBankRecord.iban_number || "—"}
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mCurrency", "Currency")}</span>
+                                  <span className="text-[11px] uppercase font-bold text-slate-400 block">{tr("cj.mCurrency", "Currency")}</span>
                                   <span className="font-bold text-emerald-700 dark:text-emerald-400 block">
                                     {selectedBankRecord.currency || currency || "AED"}
                                   </span>
@@ -4288,7 +4288,7 @@ export function CashEntryForm({
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.cheque_ref_number", "Cheque / Ref Number")}</Label>
+                              <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.cheque_ref_number", "Cheque / Ref Number")}</Label>
                               <Input
                                 value={typeDetails.transferReferenceNumber || typeDetails.refNo || ""}
                                 onChange={(e) => setTypeDetails((p) => ({ ...p, transferReferenceNumber: e.target.value, refNo: e.target.value }))}
@@ -4298,7 +4298,7 @@ export function CashEntryForm({
                             </div>
 
                             <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.bank_receipt_upload", "Bank Receipt / Slip Upload")}</Label>
+                              <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.bank_receipt_upload", "Bank Receipt / Slip Upload")}</Label>
                               <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
                                 <Paperclip className="h-3.5 w-3.5" />
                                 <span>{attachmentFile ? attachmentFile.name.slice(0, 16) : tr("cj.mUploadSlip", "Upload Deposit / Cheque Slip")}</span>
@@ -4317,7 +4317,7 @@ export function CashEntryForm({
                       ) : paymentType === "business" || paymentType === "invoice" ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mInvoiceNumber", "Invoice / Bill Number")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{tr("cj.mInvoiceNumber", "Invoice / Bill Number")}</Label>
                             <Input
                               value={typeDetails.invoiceNumber || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceNumber: e.target.value }))}
@@ -4327,7 +4327,7 @@ export function CashEntryForm({
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.business_vendor_name", "Business / Vendor Name")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.business_vendor_name", "Business / Vendor Name")}</Label>
                             <Input
                               value={typeDetails.purchaseInfo || typeDetails.businessName || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, purchaseInfo: e.target.value, businessName: e.target.value }))}
@@ -4337,7 +4337,7 @@ export function CashEntryForm({
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.contact_person", "Contact Person")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.contact_person", "Contact Person")}</Label>
                             <Input
                               value={typeDetails.receiverSenderName || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))}
@@ -4347,7 +4347,7 @@ export function CashEntryForm({
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.invoice_copy_upload", "Invoice Copy Upload")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.invoice_copy_upload", "Invoice Copy Upload")}</Label>
                             <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
                               <Paperclip className="h-3.5 w-3.5" />
                               <span>{attachmentFile ? attachmentFile.name.slice(0, 12) : t(lang, "cef.attach_file", "Attach File")}</span>
@@ -4365,7 +4365,7 @@ export function CashEntryForm({
                       ) : paymentType === "transfer" ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.from_account_branch", "From Account / Branch")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.from_account_branch", "From Account / Branch")}</Label>
                             <Input
                               value={typeDetails.from || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, from: e.target.value }))}
@@ -4375,7 +4375,7 @@ export function CashEntryForm({
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.to_account_branch", "To Account / Branch")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.to_account_branch", "To Account / Branch")}</Label>
                             <Input
                               value={typeDetails.to || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, to: e.target.value }))}
@@ -4385,7 +4385,7 @@ export function CashEntryForm({
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.reference_number", "Reference Number")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.reference_number", "Reference Number")}</Label>
                             <Input
                               value={typeDetails.ref || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value }))}
@@ -4395,7 +4395,7 @@ export function CashEntryForm({
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mTransferAdvice", "Transfer Advice Upload")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{tr("cj.mTransferAdvice", "Transfer Advice Upload")}</Label>
                             <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
                               <Paperclip className="h-3.5 w-3.5" />
                               <span>{attachmentFile ? attachmentFile.name.slice(0, 12) : tr("cj.mAttach", "Attach File")}</span>
@@ -4413,7 +4413,7 @@ export function CashEntryForm({
                       ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.receiver_sender_name", "Receiver / Sender Name")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cef.receiver_sender_name", "Receiver / Sender Name")}</Label>
                             <Input
                               value={typeDetails.receiverSenderName || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))}
@@ -4423,7 +4423,7 @@ export function CashEntryForm({
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mMobile", "Mobile Number")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{tr("cj.mMobile", "Mobile Number")}</Label>
                             <Input
                               value={typeDetails.mobileNumber || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))}
@@ -4434,7 +4434,7 @@ export function CashEntryForm({
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mWhatsapp", "WhatsApp Number")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{tr("cj.mWhatsapp", "WhatsApp Number")}</Label>
                             <Input
                               value={typeDetails.whatsappNumber || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, whatsappNumber: e.target.value }))}
@@ -4445,7 +4445,7 @@ export function CashEntryForm({
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mIdCard", "ID Card Copy Upload")}</Label>
+                            <Label className="text-[11px] font-bold text-slate-500 uppercase">{tr("cj.mIdCard", "ID Card Copy Upload")}</Label>
                             <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
                               <Paperclip className="h-3.5 w-3.5" />
                               <span>{attachmentFile ? attachmentFile.name.slice(0, 12) : tr("cj.mAttach", "Attach File")}</span>
@@ -4473,7 +4473,7 @@ export function CashEntryForm({
                           <h4 className="text-xs font-black text-slate-900 dark:text-white">
                             {tr("cj.mStep5", "Transaction Conversion (Local Calculation)")}
                           </h4>
-                          <p className="text-[10px] text-slate-400 font-medium">
+                          <p className="text-[11px] text-slate-400 font-medium">
                             {tr("cj.mStep5Sub", "Enter amount and conversion rate")} (1 {currency || "—"} = {exchangeRate || "—"})
                           </p>
                         </div>
@@ -4481,7 +4481,7 @@ export function CashEntryForm({
 
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
                         <div className={cn("space-y-1", isLocalCurrency ? "sm:col-span-6" : "sm:col-span-3")}>
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                          <Label className="text-[11px] font-bold text-slate-500 uppercase">
                             {isLocalCurrency ? tr("cj.mAmount", "Amount") : tr("cj.mQuantity", "Quantity (Foreign Amount)")} <span className="text-red-500">*</span>
                           </Label>
                           <Input
@@ -4498,7 +4498,7 @@ export function CashEntryForm({
                         {!isLocalCurrency && (
                           <>
                             <div className="sm:col-span-3 space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                              <Label className="text-[11px] font-bold text-slate-500 uppercase">
                                 {tr("cj.mRate", "Transaction Rate")} ({branchCurrency || "—"}) <span className="text-red-500">*</span>
                               </Label>
                               <Input
@@ -4523,7 +4523,7 @@ export function CashEntryForm({
                             </div>
 
                             <div className="sm:col-span-2 space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mOperation", "Operation")}</Label>
+                              <Label className="text-[11px] font-bold text-slate-500 uppercase">{tr("cj.mOperation", "Operation")}</Label>
                               <select
                                 value={calcOp}
                                 onChange={(e) => setCalcOp(e.target.value as any)}
@@ -4538,7 +4538,7 @@ export function CashEntryForm({
 
                         <div className={cn(isLocalCurrency ? "sm:col-span-6" : "sm:col-span-3")}>
                           <div className="p-2 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-right">
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 block">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
                               {isLocalCurrency ? tr("cj.mFinalAmount", "Final Amount") : tr("cj.mConverted", "Converted Amount")}
                             </span>
                             <span className="font-mono font-black text-sm text-emerald-700 dark:text-emerald-300">
@@ -4559,7 +4559,7 @@ export function CashEntryForm({
                           <h4 className="text-xs font-black text-slate-900 dark:text-white">
                             {tr("cj.mStep6", "Debit / Credit Entry")}
                           </h4>
-                          <p className="text-[10px] text-slate-400 font-medium">
+                          <p className="text-[11px] text-slate-400 font-medium">
                             {tr("cj.mStep6Sub", "Select transaction nature and confirm amount")}
                           </p>
                         </div>
@@ -4619,7 +4619,7 @@ export function CashEntryForm({
                         </div>
 
                         <div className="sm:col-span-5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mFinalAmount", "Final Amount")}</span>
+                          <span className="text-[11px] font-bold text-slate-500 uppercase">{tr("cj.mFinalAmount", "Final Amount")}</span>
                           <span className="font-mono font-black text-sm text-slate-900 dark:text-white">
                             {branchCurrency || "AED"} {calcFinal !== null ? fmtAmount(calcFinal) : (finalPayment ? fmtAmount(Number(finalPayment)) : fmtAmount(0))}
                           </span>
@@ -4628,7 +4628,7 @@ export function CashEntryForm({
 
                       {/* Remarks / Notes Textarea */}
                       <div className="space-y-1">
-                        <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mRemarks", "Remarks / Notes")}</Label>
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase">{tr("cj.mRemarks", "Remarks / Notes")}</Label>
                         <textarea
                           rows={2}
                           value={remarks}
@@ -4636,7 +4636,7 @@ export function CashEntryForm({
                           placeholder={tr("cj.mRemarksPh", "Enter transaction details...")}
                           className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                        <div className="text-right text-[10px] font-mono text-slate-400">
+                        <div className="text-right text-[11px] font-mono text-slate-400">
                           {remarks.length}/500
                         </div>
                       </div>
@@ -4723,7 +4723,7 @@ export function CashEntryForm({
                             <CardTitle className="text-xs font-black text-slate-900 dark:text-white">
                               {tr("cj.mAcctDetails", "Selected Account Details")}
                             </CardTitle>
-                            <p className="text-[10px] text-slate-400 font-medium">
+                            <p className="text-[11px] text-slate-400 font-medium">
                               {tr("cj.mAcctDetailsSub", "Complete information for the selected account")}
                             </p>
                           </div>
@@ -4744,11 +4744,11 @@ export function CashEntryForm({
                                   : (selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || t(lang, "ledger.select_account_ph", "Select account"))}
                               </h4>
                               {selectedCrossBranchAccount ? (
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200">
+                                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200">
                                   {tr("cj.mCrossRecipient", "Cross-Branch Recipient")}
                                 </span>
                               ) : selectedCounterLedger?.accountKind ? (
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200">
+                                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200">
                                   {localizeTerm(selectedCounterLedger.accountKind, lang)}
                                 </span>
                               ) : null}
@@ -4757,7 +4757,7 @@ export function CashEntryForm({
                                 const kind = selectedCrossBranchAccount ? "active" : selectedCounterLedger ? accountStatusKind(selectedCounterLedger) : null;
                                 return (
                                   <span className={cn(
-                                    "px-2 py-0.5 rounded-full text-[9px] font-bold border",
+                                    "px-2 py-0.5 rounded-full text-[11px] font-bold border",
                                     kind === "active"
                                       ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200"
                                       : kind === "inactive"
@@ -4857,7 +4857,7 @@ export function CashEntryForm({
                             {tr("cj.mSnapshot", "Financial Snapshot")}
                           </CardTitle>
                           {accountSnapshot.loading && (
-                            <span className="text-[10px] text-blue-500 animate-pulse ms-auto">{tr("cj.mUpdating", "Updating...")}</span>
+                            <span className="text-[11px] text-blue-500 animate-pulse ms-auto">{tr("cj.mUpdating", "Updating...")}</span>
                           )}
                         </div>
                       </CardHeader>
@@ -4969,25 +4969,25 @@ export function CashEntryForm({
                       <div className="space-y-4 text-xs">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block">{tr("cj.colCredit", "Credit")}</span>
+                            <span className="text-[11px] font-bold text-slate-400 uppercase block">{tr("cj.colCredit", "Credit")}</span>
                             <span className="text-xs font-black text-emerald-600 font-mono">
                               {drilldownBranch?.currency} {fmtAmount(drilldownBranch?.totalCredit || 0)}
                             </span>
                           </div>
                           <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block">{tr("cj.colDebit", "Debit")}</span>
+                            <span className="text-[11px] font-bold text-slate-400 uppercase block">{tr("cj.colDebit", "Debit")}</span>
                             <span className="text-xs font-black text-rose-600 font-mono">
                               {drilldownBranch?.currency} {fmtAmount(drilldownBranch?.totalDebit || 0)}
                             </span>
                           </div>
                           <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block">{tr("cj.colNetBalance", "Net Balance")}</span>
+                            <span className="text-[11px] font-bold text-slate-400 uppercase block">{tr("cj.colNetBalance", "Net Balance")}</span>
                             <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
                               {drilldownBranch?.currency} {fmtAmount(drilldownBranch?.balance || 0)} ({drilldownBranch?.balanceType || "—"})
                             </span>
                           </div>
                           <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block">{tr("cj.mTotalEntries", "Total Entries")}</span>
+                            <span className="text-[11px] font-bold text-slate-400 uppercase block">{tr("cj.mTotalEntries", "Total Entries")}</span>
                             <span className="text-xs font-black text-blue-600 font-mono">
                               {drilldownBranch?.entryCount || 0}
                             </span>
@@ -4995,13 +4995,13 @@ export function CashEntryForm({
                         </div>
 
                         <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                          <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 font-black text-[10px] uppercase text-slate-600 dark:text-slate-300">
+                          <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 font-black text-[11px] uppercase text-slate-600 dark:text-slate-300">
                             {tr("cj.mScopedTx", "Relevant Scoped Transactions")}
                           </div>
                           <div className="max-h-64 overflow-y-auto">
                             <table className="w-full text-left text-xs">
                               <thead>
-                                <tr className="bg-slate-100 dark:bg-slate-800 text-[10px] font-bold uppercase text-slate-500 border-b border-slate-200 dark:border-slate-700">
+                                <tr className="bg-slate-100 dark:bg-slate-800 text-[11px] font-bold uppercase text-slate-500 border-b border-slate-200 dark:border-slate-700">
                                   <th className="py-2 px-2.5">{tr("cj.mVoucher", "Voucher")}</th>
                                   <th className="py-2 px-2.5">{tr("cj.mTime", "Time")}</th>
                                   <th className="py-2 px-2.5">{tr("cj.mParty", "Party / Account")}</th>
@@ -5015,7 +5015,7 @@ export function CashEntryForm({
                                   drilldownBranch.transactions.map((tx: any) => (
                                     <tr key={tx.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
                                       <td className="py-1.5 px-2.5 font-mono font-bold text-blue-600">{tx.voucherNo}</td>
-                                      <td className="py-1.5 px-2.5 text-slate-400 font-mono text-[10px]">{tx.time}</td>
+                                      <td className="py-1.5 px-2.5 text-slate-400 font-mono text-[11px]">{tx.time}</td>
                                       <td className="py-1.5 px-2.5 font-bold text-slate-800 dark:text-slate-200">{tx.partyName}</td>
                                       <td className="py-1.5 px-2.5 text-slate-500 text-[11px] truncate max-w-[150px]" title={tx.narration}>{tx.narration}</td>
                                       <td className="py-1.5 px-2.5 text-right font-mono text-rose-600 font-bold">
@@ -5056,7 +5056,7 @@ export function CashEntryForm({
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300 flex items-center gap-2">
             <span>📋 {t(lang, "roz.journal_roznamcha_entry_table", "JOURNAL ROZNAMCHA — ENTRY TABLE")}</span>
-            <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
               {recentEntriesSummary.count} {t(lang, "creg.entries", "Entries")}
             </span>
           </h3>
@@ -5277,7 +5277,7 @@ export function CashEntryForm({
                           <div className="font-bold text-slate-900 dark:text-slate-100">
                             {row.entry_date ? String(row.entry_date).slice(0, 10) : new Date(row.created_at).toLocaleDateString()}
                           </div>
-                          <div className="text-[10px] text-muted-foreground font-mono">
+                          <div className="text-[11px] text-muted-foreground font-mono">
                             {new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                           </div>
                         </td>
@@ -5299,7 +5299,7 @@ export function CashEntryForm({
                         {/* 4. Entry Serial / RZ Reference */}
                         <td className="p-2.5 font-mono text-[11px] border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
                           <span className={cn(
-                            "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-black border",
+                            "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-black border",
                             isDebit
                               ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300"
                               : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-300"
@@ -5311,7 +5311,7 @@ export function CashEntryForm({
                         {/* 5. B2B */}
                         <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
                           <span className={cn(
-                            "inline-flex items-center rounded-md px-2 py-0.5 text-[10.5px] font-bold ring-1 ring-inset",
+                            "inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold ring-1 ring-inset",
                             isPur ? "bg-purple-50 text-purple-700 ring-purple-700/10 dark:bg-purple-400/10 dark:text-purple-400" :
                             isSale ? "bg-pink-50 text-pink-700 ring-pink-700/10 dark:bg-pink-400/10 dark:text-pink-400" :
                             isCash ? "bg-blue-50 text-blue-700 ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400" :
@@ -5334,7 +5334,7 @@ export function CashEntryForm({
                             {resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || translateNarrationBlock(line.description || row.narration, lang) || line.ledgers?.name || "-"}
                           </div>
                           {(line.customer_number || row.source_reference_no) && (
-                            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                            <div className="text-[11px] text-slate-400 font-mono mt-0.5">
                               {line.customer_number ? `${tr("cj.custShort", "Cust:")} ${line.customer_number}` : ""} {row.source_reference_no ? `${tr("cj.refShort", "Ref:")} ${row.source_reference_no}` : ""}
                             </div>
                           )}
@@ -5357,10 +5357,10 @@ export function CashEntryForm({
                               {lineExchangeRate ? (
                                 <div className="text-[11px] font-mono font-bold text-blue-700 dark:text-blue-400 leading-tight">
                                   <span>{Number(lineExchangeRate).toFixed(4)}</span>
-                                  <span className="block text-[9px] text-slate-400 font-sans">{line.currency || branchCurrency}/USD</span>
+                                  <span className="block text-[11px] text-slate-400 font-sans">{line.currency || branchCurrency}/USD</span>
                                 </div>
                               ) : (
-                                <span className="text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                                <span className="text-amber-600 dark:text-amber-400 text-[11px] font-bold">
                                   {translateHeader(lang, "Rate Missing")}
                                 </span>
                               )}
@@ -5369,7 +5369,7 @@ export function CashEntryForm({
                             {/* 11. USD Credit */}
                             <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 align-top">
                               {isCredit ? (
-                                usdCredit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
+                                usdCredit || <span className="text-amber-600 dark:text-amber-400 text-[11px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
                               ) : (
                                 <span className="text-slate-300 dark:text-slate-700">—</span>
                               )}
@@ -5378,7 +5378,7 @@ export function CashEntryForm({
                             {/* 12. USD Debit */}
                             <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-rose-600 dark:text-rose-400 align-top">
                               {isDebit ? (
-                                usdDebit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
+                                usdDebit || <span className="text-amber-600 dark:text-amber-400 text-[11px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
                               ) : (
                                 <span className="text-slate-300 dark:text-slate-700">—</span>
                               )}
@@ -5395,7 +5395,7 @@ export function CashEntryForm({
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  className="h-6 px-1.5 text-[10px] font-bold border-slate-200 text-blue-600 hover:bg-slate-50 dark:border-slate-800"
+                                  className="h-6 px-1.5 text-[11px] font-bold border-slate-200 text-blue-600 hover:bg-slate-50 dark:border-slate-800"
                                   onClick={() => handleEditEntry(row)}
                                 >
                                   {t(lang, "common.edit", "Edit")}
@@ -5659,7 +5659,7 @@ function MiniMetric({ label, value, tone }: { label: string; value: string; tone
 
   return (
     <div className="rounded-lg border bg-white p-2 text-center shadow-sm dark:bg-slate-950">
-      <div className="text-[10px] font-black text-slate-700 dark:text-slate-300">{label}</div>
+      <div className="text-[11px] font-black text-slate-700 dark:text-slate-300">{label}</div>
       <div className={cn("mt-2 text-base font-black", toneClass)}>{value}</div>
     </div>
   );
@@ -5668,7 +5668,7 @@ function MiniMetric({ label, value, tone }: { label: string; value: string; tone
 function FieldBlock({ label, required, children, className }: { label: string; required?: boolean; children: ReactNode; className?: string }) {
   return (
     <label className={cn("block min-w-0", className)}>
-      <span className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+      <span className="mb-1 block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
         {label}
         {required ? <span className="text-red-600"> *</span> : null}
       </span>

@@ -458,7 +458,7 @@ export function BranchFinalReview({
             </Button>
           )}
           <div>
-            <nav className="text-[10px] font-semibold text-slate-400 mb-0.5 flex items-center gap-1.5">
+            <nav className="text-[11px] font-semibold text-slate-400 mb-0.5 flex items-center gap-1.5">
               <span>New Entry</span>
               <span>›</span>
               <span>Branch Entry</span>
@@ -575,7 +575,7 @@ export function BranchFinalReview({
       {/* ── SAVE STATUS NOTIFICATION BANNER ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-xs font-semibold text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300 shadow-xs">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black shrink-0">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px] font-black shrink-0">
             ✓
           </span>
           <span>All information has been saved successfully and is ready for final review.</span>
@@ -835,7 +835,7 @@ export function BranchFinalReview({
               className="flex items-center justify-between gap-3 py-1.5 border-b border-dashed border-slate-100 dark:border-slate-900"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 shrink-0">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-500 shrink-0">
                   {item.id}
                 </span>
                 <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">
@@ -845,13 +845,13 @@ export function BranchFinalReview({
 
               <div className="flex items-center gap-2 shrink-0">
                 {item.isCompleted ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300">
                     <CheckCircle2 className="h-3 w-3" />
                     <span>Completed</span>
                   </span>
                 ) : (
                   <div className="flex items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300">
                       <AlertTriangle className="h-3 w-3" />
                       <span>Pending</span>
                     </span>
@@ -859,7 +859,7 @@ export function BranchFinalReview({
                       <button
                         type="button"
                         onClick={() => onGoToStep(item.stepNumber)}
-                        className="text-[10px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline flex items-center gap-0.5 ml-1 cursor-pointer"
+                        className="text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline flex items-center gap-0.5 ml-1 cursor-pointer"
                       >
                         <span>Go to step</span>
                         <ChevronRight className="h-3 w-3" />
@@ -896,7 +896,7 @@ export function BranchFinalReview({
           {/* Scrollable Permissions Table */}
           <div className="max-h-56 overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/30">
             <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-slate-100 dark:bg-slate-800/80 sticky top-0 z-10 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <thead className="bg-slate-100 dark:bg-slate-800/80 sticky top-0 z-10 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 <tr>
                   <Th className="py-2.5 px-3">User Name</Th>
                   <Th className="py-2.5 px-3">Role</Th>
@@ -934,12 +934,12 @@ export function BranchFinalReview({
                     </td>
                     <td className="py-2.5 px-3 text-right whitespace-nowrap">
                       {user.status === "Active" ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300">
                           <CheckCircle2 className="h-2.5 w-2.5" />
                           <span>Active</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300" title={user.statusReason}>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300" title={user.statusReason}>
                           <AlertTriangle className="h-2.5 w-2.5" />
                           <span>{user.status}</span>
                         </span>
@@ -974,7 +974,7 @@ export function BranchFinalReview({
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 w-full md:w-auto">
             {missingItems.map((item, idx) => (
               <div key={item.id} className="flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[10px] font-bold">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-bold">
                   {idx + 1}
                 </span>
                 <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
@@ -1048,7 +1048,7 @@ export function BranchFinalReview({
               <CheckCircle2 className="h-4 w-4" />
               <span>{isEditing ? "✓ Save & Update Branch" : "✓ Approve & Activate Branch"}</span>
             </Button>
-            <span className="text-[10px] text-center text-slate-400 mt-1.5">
+            <span className="text-[11px] text-center text-slate-400 mt-1.5">
               {isApprovalReady
                 ? isEditing
                   ? "Save all branch modifications to database"
@@ -1068,7 +1068,7 @@ export function BranchFinalReview({
             >
               <span>✏️ Send Back for Edit</span>
             </Button>
-            <span className="text-[10px] text-center text-slate-400 mt-1.5">
+            <span className="text-[11px] text-center text-slate-400 mt-1.5">
               Return to previous step for modification
             </span>
           </div>
@@ -1084,7 +1084,7 @@ export function BranchFinalReview({
             >
               <span>⚠️ Request Changes</span>
             </Button>
-            <span className="text-[10px] text-center text-slate-400 mt-1.5">
+            <span className="text-[11px] text-center text-slate-400 mt-1.5">
               Send for changes with comments
             </span>
           </div>

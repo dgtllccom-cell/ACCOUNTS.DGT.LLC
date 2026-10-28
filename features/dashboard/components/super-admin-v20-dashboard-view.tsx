@@ -272,7 +272,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                           ☷
                         </span>
                         <div>
-                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">
+                          <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400">
                             {tt("dash.dashboard_view", "Dashboard View")}
                           </span>
                           <strong className="text-sm font-black text-slate-800 dark:text-slate-100">
@@ -355,7 +355,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                       </Button>
                     </div>
 
-                    <small className="mt-3 block text-center text-[10px] text-slate-400">
+                    <small className="mt-3 block text-center text-[11px] text-slate-400">
                       Live ERP database connected
                     </small>
                   </div>
@@ -384,7 +384,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
             <span className="text-[#ffd66a]">📅</span>
             <span>{todayStr}</span>
             <span className="text-white/40">•</span>
-            <span className="text-[10px] text-emerald-300 font-semibold tracking-wide flex items-center gap-1">
+            <span className="text-[11px] text-emerald-300 font-semibold tracking-wide flex items-center gap-1">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
               {tt("dash.live_sync", "Live Sync")}
             </span>
@@ -410,7 +410,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
             <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
               {tt("dash.key_business_indicators", "Key Business Indicators")}
             </h2>
-            <span className="text-[10px] font-bold text-slate-400 uppercase">
+            <span className="text-[11px] font-bold text-slate-400 uppercase">
               {tt("dash.live_records", "Live records")}
             </span>
           </div>
@@ -424,14 +424,14 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                 {/* Watermark circular arc */}
                 <div className="pointer-events-none absolute -right-4 top-2 h-16 w-16 rounded-full border-2 border-white/20 rtl:-left-4 rtl:right-auto" />
 
-                <div className="text-[10px] sm:text-xs font-black opacity-85">◇</div>
+                <div className="text-[11px] sm:text-xs font-black opacity-85">◇</div>
                 <div className="mt-1 sm:mt-1.5 text-lg sm:text-2xl md:text-3xl font-black tracking-tight leading-none">
                   {kpi.value.toLocaleString()}
                 </div>
-                <div className="mt-1 text-[10px] sm:text-[11px] font-bold leading-tight truncate">
+                <div className="mt-1 text-[11px] sm:text-[11px] font-bold leading-tight truncate">
                   {kpi.label}
                 </div>
-                <div className="mt-1 text-[8px] sm:text-[9px] font-medium text-white/80 truncate">
+                <div className="mt-1 text-[11px] sm:text-[11px] font-medium text-white/80 truncate">
                   {kpi.subtitle}
                 </div>
               </div>
@@ -456,7 +456,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                 className="flex flex-col justify-between rounded-xl border border-slate-200/90 bg-white p-2.5 sm:p-3.5 shadow-xs transition hover:shadow-sm dark:border-slate-800 dark:bg-slate-900"
               >
                 <div>
-                  <div className="text-[10px] sm:text-[11px] font-bold text-[#7394ba] truncate">
+                  <div className="text-[11px] sm:text-[11px] font-bold text-[#7394ba] truncate">
                     {fin.title}
                   </div>
                   <div className="mt-1 text-base sm:text-lg md:text-xl font-black text-[#123d70] tracking-tight dark:text-blue-300">
@@ -464,7 +464,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                   </div>
                 </div>
                 {/* These totals are real ledger/order records — no "sample" wording and no growth arrow (there is no period comparison here). */}
-                <div className="mt-2 text-[8px] sm:text-[9px] font-semibold text-slate-400 flex items-center gap-1">
+                <div className="mt-2 text-[11px] sm:text-[11px] font-semibold text-slate-400 flex items-center gap-1">
                   <span>{tt("dash.live_records", "Live records")}</span>
                 </div>
               </div>

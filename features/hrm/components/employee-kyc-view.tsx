@@ -417,7 +417,7 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
                   </div>
                   <span className="text-xs font-bold text-blue-950 dark:text-blue-200">{s.t("kyc_all_countries_report", "All Countries KYC Report")}</span>
                 </div>
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider">
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider">
                   {s.t("super_admin_only", "Super Admin Only")}
                 </span>
               </div>
@@ -889,11 +889,11 @@ function KycChecklistDrawer({
                   <div>
                     <span className="text-xs font-black text-slate-800 dark:text-slate-100">{it.label}</span>
                     {it.is_mandatory ? <span className="ms-1 text-[11px] font-bold text-rose-500">* {s.t("kyc_required", "Required")}</span> : null}
-                    <span className={`ms-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[it.status || "pending"] || STATUS_TONE.pending}`}>
+                    <span className={`ms-2 rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[it.status || "pending"] || STATUS_TONE.pending}`}>
                       {it.status === "verified" ? s.t("kyc_docstatus_verified", "Verified") : it.status === "rejected" ? s.t("kyc_docstatus_rejected", "Rejected") : s.t("kyc_docstatus_pending", "Pending")}
                     </span>
                     {it.expiry_date ? (
-                      <span className="ms-2 text-[10px] text-slate-500">
+                      <span className="ms-2 text-[11px] text-slate-500">
                         {s.t("kyc_expires", "Expires")}: <strong className="text-slate-700 dark:text-slate-300">{it.expiry_date}</strong>
                       </span>
                     ) : null}
@@ -902,7 +902,7 @@ function KycChecklistDrawer({
                     <button
                       type="button"
                       onClick={() => startEdit(it)}
-                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 shadow-sm"
+                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 shadow-sm"
                     >
                       {it.document_number ? s.t("kyc_update_edit", "Update / Edit") : s.t("kyc_add_doc", "Add Document")}
                     </button>
@@ -911,7 +911,7 @@ function KycChecklistDrawer({
                         type="button"
                         disabled={busy}
                         onClick={() => void verify(it.document_id, "verified")}
-                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                       >
                         <Check className="h-3 w-3" /> {s.t("kyc_verify", "Verify")}
                       </button>
@@ -921,7 +921,7 @@ function KycChecklistDrawer({
                         type="button"
                         disabled={busy}
                         onClick={() => void verify(it.document_id, "rejected")}
-                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-[10px] font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900"
+                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900"
                       >
                         <Ban className="h-3 w-3" /> {s.t("kyc_reject", "Reject")}
                       </button>
@@ -962,7 +962,7 @@ function KycChecklistDrawer({
 function L({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
+      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
       {children}
     </div>
   );

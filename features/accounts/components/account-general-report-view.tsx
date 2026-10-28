@@ -243,7 +243,7 @@ function ContactIconPopup({ row }: { row: AccountGeneralReportRow }) {
       ) : null}
 
       {!mobile && !whatsapp && !email && (
-        <span className="text-slate-400 text-[10px]">—</span>
+        <span className="text-slate-400 text-[11px]">—</span>
       )}
     </div>
   );
@@ -1439,7 +1439,7 @@ export function AccountGeneralReportView({
           variant="outline"
           onClick={() => setReportDropdownOpen((prev) => !prev)}
           className={cn(
-            "h-7 rounded-lg font-black text-[10.5px] px-2.5 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer border",
+            "h-7 rounded-lg font-black text-[11px] px-2.5 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer border",
             activeReportView.id === "super_admin" && "border-indigo-300 bg-indigo-50/80 text-indigo-900 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:border-indigo-800 dark:text-indigo-200",
             activeReportView.id === "user_branch" && "border-blue-300 bg-blue-50/80 text-blue-900 hover:bg-blue-100 dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-200",
             activeReportView.id === "4_country" && "border-teal-300 bg-teal-50/80 text-teal-900 hover:bg-teal-100 dark:bg-teal-950/50 dark:border-teal-800 dark:text-teal-200",
@@ -1451,7 +1451,7 @@ export function AccountGeneralReportView({
           <activeReportView.icon className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate max-w-[140px] sm:max-w-none">{activeReportView.label}</span>
           {activeReportView.badge && (
-            <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-black bg-teal-600 text-white">
+            <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[11px] font-black bg-teal-600 text-white">
               {activeReportView.badge}
             </span>
           )}
@@ -1460,9 +1460,9 @@ export function AccountGeneralReportView({
 
         {reportDropdownOpen && (
           <div className="absolute left-0 top-full z-50 mt-1.5 w-72 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in slide-in-from-top-1">
-            <div className="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1 flex items-center justify-between">
+            <div className="px-2 py-1 text-[11px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1 flex items-center justify-between">
               <span>{tr("SELECT REPORT VIEW")}</span>
-              <span className="text-[8.5px] font-mono text-slate-400">6 {tr("VIEWS")}</span>
+              <span className="text-[11px] font-mono text-slate-400">6 {tr("VIEWS")}</span>
             </div>
             <div className="space-y-0.5">
               {reportViewOptions.map((opt) => {
@@ -1493,14 +1493,14 @@ export function AccountGeneralReportView({
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10.5px] font-bold tracking-tight">{opt.label}</span>
+                          <span className="text-[11px] font-bold tracking-tight">{opt.label}</span>
                           {opt.badge && (
-                            <span className="px-1.5 py-0.2 rounded-full text-[8.5px] font-black bg-teal-600 text-white">
+                            <span className="px-1.5 py-0.2 rounded-full text-[11px] font-black bg-teal-600 text-white">
                               {opt.badge}
                             </span>
                           )}
                         </div>
-                        <p className="text-[9px] text-slate-400 group-hover:text-slate-500 dark:text-slate-400 line-clamp-1">
+                        <p className="text-[11px] text-slate-400 group-hover:text-slate-500 dark:text-slate-400 line-clamp-1">
                           {opt.subtitle}
                         </p>
                       </div>
@@ -1531,7 +1531,7 @@ export function AccountGeneralReportView({
         variant="outline"
         onClick={() => setFiltersOpen(true)}
         className={cn(
-          "h-7 rounded-lg font-bold text-[10.5px] px-2 shadow-2xs transition-all flex items-center gap-1 cursor-pointer",
+          "h-7 rounded-lg font-bold text-[11px] px-2 shadow-2xs transition-all flex items-center gap-1 cursor-pointer",
           activeFilterCount > 0
             ? "bg-indigo-50 border-indigo-300 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:border-indigo-700 dark:text-indigo-300"
             : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
@@ -1540,13 +1540,13 @@ export function AccountGeneralReportView({
         <SlidersHorizontal className="h-3 w-3" />
         <span>{tr("FILTER")}</span>
         {activeFilterCount > 0 && (
-          <span className="ml-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-indigo-600 px-1 text-[9px] font-extrabold text-white">
+          <span className="ml-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-indigo-600 px-1 text-[11px] font-extrabold text-white leading-none">
             {activeFilterCount}
           </span>
         )}
       </Button>
 
-      <Button type="button" size="sm" variant="outline" onClick={resetFilters} className="h-7 rounded-lg border-slate-200 font-bold text-[10.5px] px-2 shadow-2xs cursor-pointer hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+      <Button type="button" size="sm" variant="outline" onClick={resetFilters} className="h-7 rounded-lg border-slate-200 font-bold text-[11px] px-2 shadow-2xs cursor-pointer hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
         <RefreshCw className={loading ? "mr-1 h-3 w-3 animate-spin" : "mr-1 h-3 w-3"} /> {tr("RESET")}
       </Button>
 
@@ -1570,7 +1570,7 @@ export function AccountGeneralReportView({
         type="button"
         size="sm"
         onClick={() => router.push("/dashboard/accounts/setup")}
-        className="h-7 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10.5px] shadow-xs px-2.5 gap-1 shrink-0 cursor-pointer"
+        className="h-7 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] shadow-xs px-2.5 gap-1 shrink-0 cursor-pointer"
       >
         <Plus className="h-3 w-3" /> {tr("NEW ACCOUNT")}
       </Button>
@@ -1580,7 +1580,7 @@ export function AccountGeneralReportView({
         size="sm"
         variant="outline"
         onClick={() => exportCsv("filtered")}
-        className="h-7 rounded-lg border-slate-200 font-bold text-[10.5px] px-2 shadow-2xs gap-1 cursor-pointer text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-emerald-950/40"
+        className="h-7 rounded-lg border-slate-200 font-bold text-[11px] px-2 shadow-2xs gap-1 cursor-pointer text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-emerald-950/40"
       >
         <FileSpreadsheet className="h-3 w-3 text-emerald-600" /> {tr("EXPORT EXCEL / CSV")}
       </Button>
@@ -1590,7 +1590,7 @@ export function AccountGeneralReportView({
         size="sm"
         variant="outline"
         onClick={() => openPrint(true)}
-        className="h-7 rounded-lg border-slate-200 font-bold text-[10.5px] px-2 shadow-2xs gap-1 cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        className="h-7 rounded-lg border-slate-200 font-bold text-[11px] px-2 shadow-2xs gap-1 cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
       >
         <Printer className="h-3 w-3" /> {tr("PRINT")}
       </Button>
@@ -1600,7 +1600,7 @@ export function AccountGeneralReportView({
         size="sm"
         variant="outline"
         onClick={() => openPrint(false)}
-        className="h-7 rounded-lg border-slate-200 font-bold text-[10.5px] px-2 shadow-2xs gap-1 cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        className="h-7 rounded-lg border-slate-200 font-bold text-[11px] px-2 shadow-2xs gap-1 cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
       >
         <Download className="h-3 w-3" /> {tr("EXPORT PDF")}
       </Button>
@@ -1612,8 +1612,8 @@ export function AccountGeneralReportView({
       {actionsPortal && createPortal(pageActionsContent, actionsPortal)}
 
       {/* Scope Subtitle Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-[10.5px] font-bold text-slate-500 dark:text-slate-400 px-1 py-1">
-        <div className="flex flex-wrap items-center gap-3 text-[10px] font-black uppercase tracking-wider">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 px-1 py-1">
+        <div className="flex flex-wrap items-center gap-3 text-[11px] font-black uppercase tracking-wider">
           <span className="flex items-center gap-1.5">
             <span className="text-slate-400 dark:text-slate-500">{tr("VIEW:")}</span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
@@ -1635,7 +1635,7 @@ export function AccountGeneralReportView({
               setSelectedCountryForSummary(null);
               setCountryName("all");
             }}
-            className="text-[10px] font-bold text-rose-600 hover:underline uppercase cursor-pointer"
+            className="text-[11px] font-bold text-rose-600 hover:underline uppercase cursor-pointer"
           >
             Clear Filter ({selectedCountryForSummary})
           </button>
@@ -1650,7 +1650,7 @@ export function AccountGeneralReportView({
             <div className="bg-blue-600 p-1 rounded-md text-white">
               <User className="h-3 w-3" />
             </div>
-            <h4 className="text-[10.5px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
               {isAllAccess
                 ? tr("1. BRANCH & USER DETAILS")
                 : isCountryAdmin
@@ -1660,7 +1660,7 @@ export function AccountGeneralReportView({
                 : tr("1. BRANCH & USER DETAILS")}
             </h4>
           </div>
-          <div className="p-2.5 flex flex-col gap-1.5 text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+          <div className="p-2.5 flex flex-col gap-1.5 text-[11px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>{tr("COUNTRY:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -1683,7 +1683,7 @@ export function AccountGeneralReportView({
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("USER ID:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[11px] font-mono">
                 {(session as any)?.user?.id || (session as any)?.userId || (session as any)?.id || "—"}
               </span>
             </div>
@@ -1713,7 +1713,7 @@ export function AccountGeneralReportView({
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span>{tr("STATUS:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[9.5px]">
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px]">
                 {tr("ACTIVE")}
               </span>
             </div>
@@ -1726,7 +1726,7 @@ export function AccountGeneralReportView({
             <div className="bg-emerald-600 p-1 rounded-md text-white">
               <Building2 className="h-3 w-3" />
             </div>
-            <h4 className="text-[10.5px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
               {isSuperAdmin
                 ? tr("2. ACCOUNTS & REGISTRY SUMMARY")
                 : isCountryAdmin
@@ -1736,7 +1736,7 @@ export function AccountGeneralReportView({
                 : "2. BRANCH ACCOUNTS & REGISTRY"}
             </h4>
           </div>
-          <div className="p-2.5 flex flex-col gap-1.5 text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+          <div className="p-2.5 flex flex-col gap-1.5 text-[11px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>{tr("TOTAL ACCOUNTS:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -1781,7 +1781,7 @@ export function AccountGeneralReportView({
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-700 dark:text-slate-300">{tr("REGISTRY STATUS:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[9.5px]">
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px]">
                 {tr("VERIFIED ACTIVE")}
               </span>
             </div>
@@ -1794,7 +1794,7 @@ export function AccountGeneralReportView({
             <div className="bg-purple-600 p-1 rounded-md text-white">
               <FileText className="h-3 w-3" />
             </div>
-            <h4 className="text-[10.5px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
               {isSuperAdmin
                 ? tr("3. CATEGORIES & LEDGERS")
                 : isCountryAdmin
@@ -1804,7 +1804,7 @@ export function AccountGeneralReportView({
                 : "3. BRANCH CATEGORIES & LEDGERS"}
             </h4>
           </div>
-          <div className="p-2.5 flex flex-col gap-1.5 text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+          <div className="p-2.5 flex flex-col gap-1.5 text-[11px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>{tr("TOTAL LEDGERS:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{filteredRows.reduce((sum, r) => sum + r.linkedLedgerCount, 0)}</span>
@@ -1831,7 +1831,7 @@ export function AccountGeneralReportView({
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-700 dark:text-slate-300">{tr("SYSTEM STATUS:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[9.5px]">{tr("ALL CLEAR")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px]">{tr("ALL CLEAR")}</span>
             </div>
           </div>
         </div>
@@ -1843,7 +1843,7 @@ export function AccountGeneralReportView({
               <div className="bg-amber-600 p-1 rounded-md text-white">
                 <Globe className="h-3 w-3" />
               </div>
-              <h4 className="text-[10.5px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
+              <h4 className="text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
                 {isAllAccess
                   ? tr("4. ALL COUNTRIES REPORT")
                   : isCountryAdmin
@@ -1857,13 +1857,13 @@ export function AccountGeneralReportView({
             </div>
             <button
               onClick={() => setShowAllCountries(!showAllCountries)}
-              className="text-[10px] font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+              className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
             >
               {showAllCountries ? tr("Hide List") : tr("View List")}
               <ChevronDown className={cn("h-3 w-3 transition-transform", showAllCountries ? "rotate-180" : "")} />
             </button>
           </div>
-          <div className="p-2.5 flex flex-col gap-1.5 text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+          <div className="p-2.5 flex flex-col gap-1.5 text-[11px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             {isAllAccess ? (
               <>
                 <div className="flex justify-between items-center">
@@ -1888,7 +1888,7 @@ export function AccountGeneralReportView({
                           setCountryName(isSelected ? "all" : c.countryName);
                         }}
                         className={cn(
-                          "px-1.5 py-0.5 rounded text-[9.5px] font-bold transition flex items-center gap-1 cursor-pointer",
+                          "px-1.5 py-0.5 rounded text-[11px] font-bold transition flex items-center gap-1 cursor-pointer",
                           isSelected
                             ? "bg-amber-600 text-white shadow-2xs"
                             : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200"
@@ -1927,7 +1927,7 @@ export function AccountGeneralReportView({
                           setBranchCode(isSelected ? "all" : b.branchCode);
                         }}
                         className={cn(
-                          "px-1.5 py-0.5 rounded text-[9.5px] font-bold transition flex items-center gap-1 cursor-pointer uppercase",
+                          "px-1.5 py-0.5 rounded text-[11px] font-bold transition flex items-center gap-1 cursor-pointer uppercase",
                           isSelected
                             ? "bg-amber-600 text-white shadow-2xs"
                             : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200"
@@ -1968,7 +1968,7 @@ export function AccountGeneralReportView({
                 <button
                   type="button"
                   onClick={() => setSelectedCountryForSummary(null)}
-                  className="text-[10px] font-bold text-rose-600 hover:underline uppercase cursor-pointer"
+                  className="text-[11px] font-bold text-rose-600 hover:underline uppercase cursor-pointer"
                 >
                   Clear Selection (Show All Countries)
                 </button>
@@ -2002,11 +2002,11 @@ export function AccountGeneralReportView({
                     <span className="flex items-center gap-2">
                       <span className="text-base">{getFlag(c.countryName)}</span>
                       <span className="hover:text-blue-600 transition">{c.countryName}</span>
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                         {c.totalAccounts} {tr("accounts")}
                       </span>
                       {isSelected && (
-                        <span className="rounded bg-blue-100 text-blue-700 px-1.5 py-0.5 text-[9px] font-black uppercase">
+                        <span className="rounded bg-blue-100 text-blue-700 px-1.5 py-0.5 text-[11px] font-black uppercase">
                           {tr("FILTERED")}
                         </span>
                       )}
@@ -2020,7 +2020,7 @@ export function AccountGeneralReportView({
                   </summary>
 
                   <div className="mt-3 space-y-2 border-t border-slate-100 pt-2 text-[11px] dark:border-slate-800">
-                    <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-bold">
+                    <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-bold">
                       <div className="rounded bg-rose-50 p-1.5 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
                         {tr("DR:")} {fmtNumber(c.debitTotal)}
                       </div>
@@ -2033,7 +2033,7 @@ export function AccountGeneralReportView({
                     </div>
 
                     <div className="space-y-1 pt-1">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tr("Branches")}</div>
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{tr("Branches")}</div>
                       {c.branches.map((b) => (
                         <div
                           key={b.branchCode}
@@ -2046,8 +2046,8 @@ export function AccountGeneralReportView({
                             branchCode === b.branchCode ? "border border-blue-400 bg-blue-50/80 text-blue-700 font-bold" : ""
                           )}
                         >
-                          <span className="font-semibold text-[10px] uppercase">{b.branchName} ({b.totalAccounts} accs)</span>
-                          <div className="flex items-center gap-2 font-mono text-[10px]">
+                          <span className="font-semibold text-[11px] uppercase">{b.branchName} ({b.totalAccounts} accs)</span>
+                          <div className="flex items-center gap-2 font-mono text-[11px]">
                             <span className="text-rose-600">Dr: {fmtNumber(b.debitTotal)}</span>
                             <span className="text-emerald-600">Cr: {fmtNumber(b.creditTotal)}</span>
                             <span className={cn("font-bold", b.netBalance < 0 ? "text-rose-600" : "text-emerald-600")}>
@@ -2095,11 +2095,11 @@ export function AccountGeneralReportView({
                 <div>
                   <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                     {tr("ACCOUNT MASTER REGISTRY")}
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                       {sortedRows.length} {sortedRows.length === 1 ? tr("ACCOUNT") : tr("ACCOUNTS")}
                     </span>
                   </h2>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                     {tr("Enterprise Multi-Country General Ledger Directory & Live Balances")}
                   </p>
                 </div>
@@ -2111,7 +2111,7 @@ export function AccountGeneralReportView({
                   size="sm"
                   variant="outline"
                   onClick={() => setExpandedView((prev) => !prev)}
-                  className="h-7 rounded-lg border-slate-200 dark:border-slate-700 text-[10.5px] font-bold px-2.5 gap-1.5 shadow-2xs cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
+                  className="h-7 rounded-lg border-slate-200 dark:border-slate-700 text-[11px] font-bold px-2.5 gap-1.5 shadow-2xs cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <Expand className="h-3 w-3 text-slate-500" />
                   <span>{expandedView ? tr("COLLAPSE VIEW") : tr("EXPAND VIEW")}</span>
@@ -2119,7 +2119,7 @@ export function AccountGeneralReportView({
               </div>
             </div>
 
-            <div className="lg:hidden flex items-center justify-center gap-1.5 px-4 py-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800/60">
+            <div className="lg:hidden flex items-center justify-center gap-1.5 px-4 py-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800/60">
               <span aria-hidden>↔</span>
               <span>{t(lang, "acct.swipe_cols", "Swipe sideways to see all columns")}</span>
             </div>
@@ -2144,7 +2144,7 @@ export function AccountGeneralReportView({
                       </Th>
                     ))}
                   </tr>
-                  <tr className="bg-slate-100/90 dark:bg-slate-900 text-[10.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 border-b-2 border-slate-300 dark:border-slate-700">
+                  <tr className="bg-slate-100/90 dark:bg-slate-900 text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 border-b-2 border-slate-300 dark:border-slate-700">
                     {[
                       { label: "ACCOUNT NO.", align: "text-center", width: "min-w-[130px]" },
                       { label: "ACCOUNT NAME", align: "text-left", width: "min-w-[210px]" },
@@ -2204,7 +2204,7 @@ export function AccountGeneralReportView({
                               <span>{row.accountCode}</span>
                             </div>
                             {row.manualReferenceNumber ? (
-                              <div className="mt-0.5 font-mono text-[9px] font-medium text-slate-400 dark:text-slate-500">{row.manualReferenceNumber}</div>
+                              <div className="mt-0.5 font-mono text-[11px] font-medium text-slate-400 dark:text-slate-500">{row.manualReferenceNumber}</div>
                             ) : null}
                           </td>
 
@@ -2216,14 +2216,14 @@ export function AccountGeneralReportView({
                                   <SavedText value={localizeName(row.accountName, lang)} lang={lang} kind="name" />
                                 </span>
                                 {isCountryAccountRow(row) && (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 font-mono font-bold text-[9px] uppercase tracking-wider">
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 font-mono font-bold text-[11px] uppercase tracking-wider">
                                     <Globe className="h-2.5 w-2.5" />
                                     {tr("INTER-COUNTRY")}
                                   </span>
                                 )}
                               </div>
                               {row.journalCode && row.journalCode !== "-" ? (
-                                <span className="text-[9.5px] font-mono font-medium text-slate-400 dark:text-slate-500 mt-0.5">
+                                <span className="text-[11px] font-mono font-medium text-slate-400 dark:text-slate-500 mt-0.5">
                                   {row.journalCode}
                                 </span>
                               ) : null}
@@ -2233,12 +2233,12 @@ export function AccountGeneralReportView({
                           {/* 3. Country */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <div className="inline-flex flex-col items-center gap-0.5">
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[10.5px] font-bold shadow-2xs">
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[11px] font-bold shadow-2xs">
                                 <span>{getFlag(row.countryName)}</span>
                                 <span>{localizeTerm(row.countryName, lang)}</span>
                               </div>
                               {row.countryCode && row.countryCode !== "-" && (
-                                <span className="font-mono text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase">
+                                <span className="font-mono text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase">
                                   ({row.countryCode})
                                 </span>
                               )}
@@ -2253,12 +2253,12 @@ export function AccountGeneralReportView({
                                   {localizeName(row.branchName || "—", lang)}
                                 </span>
                                 {row.branchCode && row.branchCode !== "—" && (
-                                  <span className="inline-block px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 font-mono font-bold text-[9.5px] text-indigo-700 dark:text-indigo-300">
+                                  <span className="inline-block px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 font-mono font-bold text-[11px] text-indigo-700 dark:text-indigo-300">
                                     {row.branchCode}
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-1 text-[9.5px] text-slate-500 dark:text-slate-400 font-medium">
+                              <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                                 <User className="h-2.5 w-2.5 text-blue-500 shrink-0" />
                                 <span>{tr("By:")}</span>
                                 <span className="font-bold text-slate-700 dark:text-slate-300">
@@ -2271,11 +2271,11 @@ export function AccountGeneralReportView({
                           {/* 5. Company (Yes/No) */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             {row.companyName && row.companyName !== "-" ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[9.5px] font-black uppercase">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[11px] font-black uppercase">
                                 {t(lang, "common.yes", "Yes")}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[9.5px] font-black uppercase">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[11px] font-black uppercase">
                                 {t(lang, "common.no", "No")}
                               </span>
                             )}
@@ -2295,7 +2295,7 @@ export function AccountGeneralReportView({
                                 type="button"
                                 title={t(lang, "acct.agrv_open_bank_registry", "Open Bank Registry")}
                                 onClick={(e) => { e.stopPropagation(); router.push("/dashboard/settings/bank" as Route); }}
-                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 text-[10px] font-bold hover:border-emerald-400 dark:hover:border-emerald-600 hover:underline cursor-pointer transition-colors"
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 text-[11px] font-bold hover:border-emerald-400 dark:hover:border-emerald-600 hover:underline cursor-pointer transition-colors"
                               >
                                 <Landmark className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                                 <span className="truncate max-w-[120px]">{localizeName(row.bankName, lang)}</span>
@@ -2308,11 +2308,11 @@ export function AccountGeneralReportView({
                           {/* 8. Warehouse (Yes/No) */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             {row.warehouseName && row.warehouseName !== "-" ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 text-[9.5px] font-black uppercase">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 text-[11px] font-black uppercase">
                                 {t(lang, "common.yes", "Yes")}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[9.5px] font-black uppercase">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[11px] font-black uppercase">
                                 {t(lang, "common.no", "No")}
                               </span>
                             )}
@@ -2325,7 +2325,7 @@ export function AccountGeneralReportView({
 
                           {/* 10. Currency */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono font-black text-[10.5px] text-slate-700 dark:text-slate-300">
+                            <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono font-black text-[11px] text-slate-700 dark:text-slate-300">
                               {row.currency}
                             </span>
                           </td>
@@ -2333,7 +2333,7 @@ export function AccountGeneralReportView({
                           {/* 11. Status */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <span className={cn(
-                              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wide border shadow-2xs",
+                              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wide border shadow-2xs",
                               row.status === "active"
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
                                 : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
@@ -2383,10 +2383,10 @@ export function AccountGeneralReportView({
                   <tr>
                     <td colSpan={12} className="px-4 py-2.5 text-left uppercase tracking-wider font-extrabold text-slate-700 dark:text-slate-300">
                       <div className="flex items-center gap-3">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-black">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[11px] font-black">
                           {sortedRows.length} {sortedRows.length === 1 ? tr("ACCOUNT") : tr("TOTAL ACCOUNTS")}
                         </span>
-                        <span className="text-[10.5px] text-slate-600 dark:text-slate-300 font-extrabold">
+                        <span className="text-[11px] text-slate-600 dark:text-slate-300 font-extrabold">
                           {tr("Debit / Credit / Balance totals are available in Ledger and Financial Reports")}
                         </span>
                       </div>
@@ -2404,7 +2404,7 @@ export function AccountGeneralReportView({
                   <FileCheck2 className="h-5 w-5 text-blue-600" />
                   {t(lang, "acct.agrv_account_verification", "Account Verification")}
                 </h3>
-                <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-bold">{t(lang, "acct.agrv_review_account_details_sub", "Review account details and balances")}</p>
+                <p className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-bold">{t(lang, "acct.agrv_review_account_details_sub", "Review account details and balances")}</p>
               </div>
 
               <div className="p-3 sm:p-5 space-y-4 sm:space-y-6 flex-1 bg-slate-50/50 dark:bg-slate-900/20">
@@ -2412,57 +2412,57 @@ export function AccountGeneralReportView({
                   <>
                     <div className="space-y-3">
                       <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5"><Building2 className="h-3 w-3" /> {t(lang, "acct.agrv_account_info", "Account Info")}</div>
+                        <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5"><Building2 className="h-3 w-3" /> {t(lang, "acct.agrv_account_info", "Account Info")}</div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div className="col-span-2"><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "purchase.f_account_name", "Account Name")}</span><span className="font-bold truncate">{selectedRow.accountName}</span></div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "common.code", "Code")}</span><span className="font-bold font-mono text-blue-700 dark:text-blue-400">{selectedRow.accountCode}</span></div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "god.asset_category", "Category")}</span><span className="font-bold uppercase text-[10px]">{selectedRow.accountCategory}</span></div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "report.col_created", "Created")}</span><span className="font-bold font-mono text-[10px]">{fmtDateTime(selectedRow.createdAt)}</span></div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "log.tbl_status", "Status")}</span><span className={cn("font-black uppercase text-[10px]", selectedRow.status === 'active' ? 'text-emerald-600' : 'text-slate-500')}>{selectedRow.status}</span></div>
+                          <div className="col-span-2"><span className="text-slate-400 block text-[11px] uppercase">{t(lang, "purchase.f_account_name", "Account Name")}</span><span className="font-bold truncate">{selectedRow.accountName}</span></div>
+                          <div><span className="text-slate-400 block text-[11px] uppercase">{t(lang, "common.code", "Code")}</span><span className="font-bold font-mono text-blue-700 dark:text-blue-400">{selectedRow.accountCode}</span></div>
+                          <div><span className="text-slate-400 block text-[11px] uppercase">{t(lang, "god.asset_category", "Category")}</span><span className="font-bold uppercase text-[11px]">{selectedRow.accountCategory}</span></div>
+                          <div><span className="text-slate-400 block text-[11px] uppercase">{t(lang, "report.col_created", "Created")}</span><span className="font-bold font-mono text-[11px]">{fmtDateTime(selectedRow.createdAt)}</span></div>
+                          <div><span className="text-slate-400 block text-[11px] uppercase">{t(lang, "log.tbl_status", "Status")}</span><span className={cn("font-black uppercase text-[11px]", selectedRow.status === 'active' ? 'text-emerald-600' : 'text-slate-500')}>{selectedRow.status}</span></div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                          <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {t(lang, "company_form.section_location", "Location")}</div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "report.country", "Country")}</span><span className="font-bold text-xs truncate block">{localizeTerm(selectedRow.countryName, lang)}</span></div>
-                          <div className="mt-1"><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "report.branch", "Branch")}</span><span className="font-bold text-xs">{selectedRow.branchName}</span></div>
+                          <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {t(lang, "company_form.section_location", "Location")}</div>
+                          <div><span className="text-slate-400 block text-[11px] uppercase">{t(lang, "report.country", "Country")}</span><span className="font-bold text-xs truncate block">{localizeTerm(selectedRow.countryName, lang)}</span></div>
+                          <div className="mt-1"><span className="text-slate-400 block text-[11px] uppercase">{t(lang, "report.branch", "Branch")}</span><span className="font-bold text-xs">{selectedRow.branchName}</span></div>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                          <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">{t(lang, "acct.agrv_workspace", "Workspace")}</div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "hr.pp_company", "Company")}</span><span className="font-bold text-[10px] truncate block leading-tight">{data?.workspace.companyName ?? "-"}</span></div>
-                          <div className="mt-1"><span className="text-slate-400 block text-[9px] uppercase">{t(lang, "branch.owner_label", "Owner")}</span><span className="font-bold text-[10px] leading-tight">{data?.workspace.companyOwner ?? "-"}</span></div>
+                          <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-2">{t(lang, "acct.agrv_workspace", "Workspace")}</div>
+                          <div><span className="text-slate-400 block text-[11px] uppercase">{t(lang, "hr.pp_company", "Company")}</span><span className="font-bold text-[11px] truncate block leading-tight">{data?.workspace.companyName ?? "-"}</span></div>
+                          <div className="mt-1"><span className="text-slate-400 block text-[11px] uppercase">{t(lang, "branch.owner_label", "Owner")}</span><span className="font-bold text-[11px] leading-tight">{data?.workspace.companyOwner ?? "-"}</span></div>
                         </div>
                       </div>
                     </div>
 
                     <div className="bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900/50">
-                      <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-1.5"><Landmark className="h-3 w-3" /> {t(lang, "lp.financial_summary", "Financial Summary")}</div>
+                      <div className="text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-1.5"><Landmark className="h-3 w-3" /> {t(lang, "lp.financial_summary", "Financial Summary")}</div>
                       <div className="space-y-2 text-xs">
                         <div className="flex justify-between items-center border-b border-blue-100 dark:border-blue-900/30 pb-1">
-                          <span className="text-slate-500 font-bold uppercase text-[9px]">{t(lang, "bankroz.opening_balance", "Opening Balance")}</span>
+                          <span className="text-slate-500 font-bold uppercase text-[11px]">{t(lang, "bankroz.opening_balance", "Opening Balance")}</span>
                           <span className="font-mono font-bold text-[11px] text-slate-700 dark:text-slate-300">{fmtNumber(selectedRow.openingBalance)} {selectedRow.currency}</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-blue-100 dark:border-blue-900/30 pb-1">
-                          <span className="text-rose-600 font-bold uppercase text-[9px]">{tr("TOTAL DEBIT")}</span>
+                          <span className="text-rose-600 font-bold uppercase text-[11px]">{tr("TOTAL DEBIT")}</span>
                           <span className="font-mono font-bold text-[11px] text-rose-700 dark:text-rose-400">{fmtNumber(selectedRow.debitTotal)} {selectedRow.currency}</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-blue-100 dark:border-blue-900/30 pb-1">
-                          <span className="text-emerald-600 font-bold uppercase text-[9px]">{tr("TOTAL CREDIT")}</span>
+                          <span className="text-emerald-600 font-bold uppercase text-[11px]">{tr("TOTAL CREDIT")}</span>
                           <span className="font-mono font-bold text-[11px] text-emerald-700 dark:text-emerald-400">{fmtNumber(selectedRow.creditTotal)} {selectedRow.currency}</span>
                         </div>
                         <div className="flex justify-between items-center pt-1">
-                          <span className="text-blue-700 dark:text-blue-400 font-black uppercase text-[10px]">{t(lang, "acct.current_balance", "Current Balance")}</span>
+                          <span className="text-blue-700 dark:text-blue-400 font-black uppercase text-[11px]">{t(lang, "acct.current_balance", "Current Balance")}</span>
                           <span className={cn("font-mono font-black text-sm", rowTone(selectedRow.currentBalance))}>{fmtNumber(selectedRow.currentBalance)} {selectedRow.currency}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2 pt-2">
-                      <Button type="button" variant="outline" className="flex-1 h-9 font-bold text-[10px] uppercase tracking-wider shadow-sm" onClick={() => router.push(`/dashboard/accounts/setup?accountId=${selectedRow.accountId}` as Route)}>
+                      <Button type="button" variant="outline" className="flex-1 h-9 font-bold text-[11px] uppercase tracking-wider shadow-sm" onClick={() => router.push(`/dashboard/accounts/setup?accountId=${selectedRow.accountId}` as Route)}>
                         <PencilLine className="h-3.5 w-3.5 mr-1.5" /> {t(lang, "acct.asr_edit_account", "Edit Account")}
                       </Button>
-                      <Button type="button" variant="outline" className="flex-1 h-9 font-bold text-[10px] uppercase tracking-wider shadow-sm" onClick={() => printAccountRow(selectedRow)}>
+                      <Button type="button" variant="outline" className="flex-1 h-9 font-bold text-[11px] uppercase tracking-wider shadow-sm" onClick={() => printAccountRow(selectedRow)}>
                         <Printer className="h-3.5 w-3.5 mr-1.5" /> {t(lang, "acct.agrv_print_info", "Print Info")}
                       </Button>
                     </div>
@@ -2471,7 +2471,7 @@ export function AccountGeneralReportView({
                   <div className="flex flex-col items-center justify-center py-12 text-slate-400">
                     <FileCheck2 className="h-12 w-12 mb-3 opacity-20" />
                     <p className="text-xs font-bold uppercase tracking-widest text-center">{t(lang, "acct.agrv_no_account_selected", "No Account Selected")}</p>
-                    <p className="text-[10px] text-center mt-1 w-2/3">{t(lang, "acct.agrv_click_account_registry_msg", "Click on any account in the registry to view its details here.")}</p>
+                    <p className="text-[11px] text-center mt-1 w-2/3">{t(lang, "acct.agrv_click_account_registry_msg", "Click on any account in the registry to view its details here.")}</p>
                   </div>
                 )}
               </div>

@@ -800,7 +800,13 @@ async function fetchSessionInfo() {
   return apiGet<SessionInfo>("/api/erp/auth/session");
 }
 
-function SuperAdminRoznamchaSummary({
+function SuperAdminRoznamchaSummary(props: Parameters<typeof SuperAdminRoznamchaSummaryBody>[0]) {
+  // Guard before any hook: the body below may only mount when there is something to show.
+  if (!props.rows || props.rows.length === 0) return null;
+  return <SuperAdminRoznamchaSummaryBody {...props} />;
+}
+
+function SuperAdminRoznamchaSummaryBody({
   rows,
   ratesApplied,
   session,
@@ -813,7 +819,6 @@ function SuperAdminRoznamchaSummary({
 }) {
   const [showAllCountries, setShowAllCountries] = useState(false);
 
-  if (!rows || rows.length === 0) return null;
 
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -984,7 +989,7 @@ function SuperAdminRoznamchaSummary({
             </div>
             <div className="flex justify-between items-center mt-auto">
               <span>{th("Scope:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{scopeLabel}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px]">{scopeLabel}</span>
             </div>
           </div>
         </div>
@@ -1099,7 +1104,7 @@ function SuperAdminRoznamchaSummary({
             </p>
             <div className="mt-2 flex items-center gap-2">
               <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">{th("Live Updating")}</span>
+              <span className="text-[11px] uppercase font-bold text-emerald-600 dark:text-emerald-400">{th("Live Updating")}</span>
             </div>
           </div>
         </button>
@@ -1120,7 +1125,7 @@ function SuperAdminRoznamchaSummary({
                         </span>
                         {getFlag(item.name)} {item.name}
                       </span>
-                      <span className="bg-white/20 text-[10px] font-bold px-2 py-0.5 rounded-full">{item.entries} {th("Trx")}</span>
+                      <span className="bg-white/20 text-[11px] font-bold px-2 py-0.5 rounded-full">{item.entries} {th("Trx")}</span>
                     </div>
                     <div className="p-4 space-y-3 bg-white dark:bg-slate-950">
                       <div className="flex justify-between items-end border-b border-slate-100 dark:border-slate-800 pb-2">
@@ -1139,7 +1144,7 @@ function SuperAdminRoznamchaSummary({
                         <span className="text-xs font-bold text-slate-500 uppercase">{th("Balance")}</span>
                         <span className="text-lg font-black text-slate-900 dark:text-slate-100">{formatMoney(Math.abs(item.balance))}</span>
                       </div>
-                      <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                      <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
                         <span className="font-semibold text-slate-500">{item.users.size} {th("Users Login")}</span>
                         <span className="font-semibold text-slate-500">{item.branches.size} {th("Branches Login")}</span>
                       </div>
@@ -1148,22 +1153,22 @@ function SuperAdminRoznamchaSummary({
 
                   {/* Branch Details Expanded Content */}
                   <div className="bg-slate-50 dark:bg-slate-900/50 p-3 border-t border-slate-100 dark:border-slate-800 max-h-[300px] overflow-y-auto space-y-2">
-                    <div className="text-[10px] font-bold uppercase text-slate-500 mb-1 pl-1">{th("Branch Breakdown")}</div>
+                    <div className="text-[11px] font-bold uppercase text-slate-500 mb-1 pl-1">{th("Branch Breakdown")}</div>
                     {Array.from(item.branchData.values()).map((b: any) => (
                       <div key={b.name} className="bg-white dark:bg-slate-950 rounded-lg p-2.5 border border-slate-200 dark:border-slate-800 shadow-sm">
                         <div className="flex justify-between items-center mb-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
                           <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase truncate pr-2">{b.name}</span>
-                          <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 rounded">{b.entries} Trx</span>
+                          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 rounded">{b.entries} Trx</span>
                         </div>
-                        <div className="flex justify-between items-center text-[10px] mb-1">
+                        <div className="flex justify-between items-center text-[11px] mb-1">
                           <span className="font-semibold text-slate-500">Debit:</span>
                           <span className="font-bold text-rose-600">{formatMoney(b.debit)}</span>
                         </div>
-                        <div className="flex justify-between items-center text-[10px] mb-1">
+                        <div className="flex justify-between items-center text-[11px] mb-1">
                           <span className="font-semibold text-slate-500">Credit:</span>
                           <span className="font-bold text-emerald-600">{formatMoney(b.credit)}</span>
                         </div>
-                        <div className="flex justify-between items-center text-[10px] pt-1 mt-1 border-t border-slate-50 dark:border-slate-800/50">
+                        <div className="flex justify-between items-center text-[11px] pt-1 mt-1 border-t border-slate-50 dark:border-slate-800/50">
                           <span className="font-bold text-slate-600 dark:text-slate-400">Balance:</span>
                           <span className="font-black text-slate-900 dark:text-slate-100">{formatMoney(Math.abs(b.balance))}</span>
                         </div>
@@ -1894,7 +1899,7 @@ function SuperAdminRoznamchaReportViewContent({
             <button
               type="button"
               onClick={() => setFiltersOpen(!filtersOpen)}
-              className="h-7 rounded-md border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 shadow-sm flex items-center gap-2 hover:bg-slate-50 outline-none"
+              className="h-7 rounded-md border border-slate-200 bg-white px-3 text-[11px] font-bold text-slate-700 shadow-sm flex items-center gap-2 hover:bg-slate-50 outline-none"
             >
               <Filter className="h-3 w-3" />
               <span>{th("Filters")}</span>
@@ -1902,7 +1907,7 @@ function SuperAdminRoznamchaReportViewContent({
             {filtersOpen && (
               <div className="absolute right-0 mt-1 w-64 rounded-xl bg-white border border-slate-200 shadow-2xl z-[80] p-4 space-y-3 text-left">
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">{th("Country")}</Label>
+                  <Label className="text-[11px] text-slate-500 font-bold">{th("Country")}</Label>
                   <SearchSelect
                     label=""
                     value={draftFilters.countryId}
@@ -1913,11 +1918,11 @@ function SuperAdminRoznamchaReportViewContent({
                       setDraftFilters((cur) => ({ ...cur, countryId: val, branchId: "all" }));
                       setAppliedFilters((cur) => ({ ...cur, countryId: val, branchId: "all" }));
                     }}
-                    triggerClassName="h-8 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-semibold text-slate-700 outline-none w-full"
+                    triggerClassName="h-8 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-700 outline-none w-full"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">{th("Branch")}</Label>
+                  <Label className="text-[11px] text-slate-500 font-bold">{th("Branch")}</Label>
                   <SearchSelect
                     label=""
                     value={draftFilters.branchId}
@@ -1928,11 +1933,11 @@ function SuperAdminRoznamchaReportViewContent({
                       setDraftFilters((cur) => ({ ...cur, branchId: val }));
                       setAppliedFilters((cur) => ({ ...cur, branchId: val }));
                     }}
-                    triggerClassName="h-8 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-semibold text-slate-700 outline-none w-full"
+                    triggerClassName="h-8 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-700 outline-none w-full"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">{th("Voucher Type")}</Label>
+                  <Label className="text-[11px] text-slate-500 font-bold">{th("Voucher Type")}</Label>
                   <SearchSelect
                     label=""
                     value={draftFilters.voucherType}
@@ -1943,12 +1948,12 @@ function SuperAdminRoznamchaReportViewContent({
                       setDraftFilters((cur) => ({ ...cur, voucherType: val }));
                       setAppliedFilters((cur) => ({ ...cur, voucherType: val }));
                     }}
-                    triggerClassName="h-8 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-semibold text-slate-700 outline-none w-full"
+                    triggerClassName="h-8 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-700 outline-none w-full"
                   />
                 </div>
                 {showDomainFilter && (
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500 font-bold">{th("Domain")}</Label>
+                    <Label className="text-[11px] text-slate-500 font-bold">{th("Domain")}</Label>
                     <SearchSelect
                       label=""
                       value={draftFilters.domain}
@@ -1963,16 +1968,16 @@ function SuperAdminRoznamchaReportViewContent({
                         setDraftFilters((cur) => ({ ...cur, domain: val }));
                         setAppliedFilters((cur) => ({ ...cur, domain: val }));
                       }}
-                      triggerClassName="h-8 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-semibold text-slate-700 outline-none w-full"
+                      triggerClassName="h-8 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-700 outline-none w-full"
                     />
                   </div>
                 )}
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">{th("Account / Party")}</Label>
+                  <Label className="text-[11px] text-slate-500 font-bold">{th("Account / Party")}</Label>
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
                     <Input
-                      className="h-8 pl-7 text-[10px] rounded-md border-slate-200 bg-white w-full"
+                      className="h-8 pl-7 text-[11px] rounded-md border-slate-200 bg-white w-full"
                       value={draftFilters.partySearch}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -2006,7 +2011,7 @@ function SuperAdminRoznamchaReportViewContent({
             <button
               type="button"
               onClick={() => setExchangeOpen(!exchangeOpen)}
-              className="h-7 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-bold text-blue-600 shadow-sm flex items-center gap-1 hover:bg-slate-50 outline-none"
+              className="h-7 rounded-md border border-slate-200 bg-white px-2 text-[11px] font-bold text-blue-600 shadow-sm flex items-center gap-1 hover:bg-slate-50 outline-none"
             >
               <span>{th("Rates")}</span>
             </button>
@@ -2014,7 +2019,7 @@ function SuperAdminRoznamchaReportViewContent({
               <div className="absolute right-0 mt-1 w-64 rounded-xl bg-white border border-slate-200 shadow-2xl z-[80] p-3 space-y-3 text-left">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500 font-bold">{th("PKR / 1 USD")}</Label>
+                    <Label className="text-[11px] text-slate-500 font-bold">{th("PKR / 1 USD")}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -2024,7 +2029,7 @@ function SuperAdminRoznamchaReportViewContent({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500 font-bold">{th("AED / 1 USD")}</Label>
+                    <Label className="text-[11px] text-slate-500 font-bold">{th("AED / 1 USD")}</Label>
                     <Input
                       type="number"
                       step="0.0001"
@@ -2034,7 +2039,7 @@ function SuperAdminRoznamchaReportViewContent({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500 font-bold">{th("AFN / 1 USD")}</Label>
+                    <Label className="text-[11px] text-slate-500 font-bold">{th("AFN / 1 USD")}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -2044,7 +2049,7 @@ function SuperAdminRoznamchaReportViewContent({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500 font-bold">{th("INR / 1 USD")}</Label>
+                    <Label className="text-[11px] text-slate-500 font-bold">{th("INR / 1 USD")}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -2056,7 +2061,7 @@ function SuperAdminRoznamchaReportViewContent({
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">{th("Show USD Columns")}</Label>
+                  <Label className="text-[11px] text-slate-500 font-bold">{th("Show USD Columns")}</Label>
                   <select
                     value={ratesDraft.showUsd}
                     onChange={(e) => setRatesDraft((cur) => ({ ...cur, showUsd: e.target.value }))}
@@ -2146,8 +2151,8 @@ function SuperAdminRoznamchaReportViewContent({
       <h1 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider">
         {reportDisplayTitle}
       </h1>
-      <span className="text-[10px] text-slate-400">-</span>
-      <span className="hidden lg:block text-[10px] text-slate-500 font-semibold truncate max-w-[400px]">
+      <span className="text-[11px] text-slate-400">-</span>
+      <span className="hidden lg:block text-[11px] text-slate-500 font-semibold truncate max-w-[400px]">
         {effectiveTypeFilter === "super_admin"
           ? "Daily journal details - USD rate used in table columns only (not in summary)"
           : effectiveTypeFilter === "country"
@@ -2385,43 +2390,43 @@ function SuperAdminRoznamchaReportViewContent({
           <div className="space-y-6">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Voucher No")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Voucher No")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.voucherNo || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Journal No")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Journal No")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.journalNo || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Voucher Type")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Voucher Type")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.typeLabel || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Entry Date")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Entry Date")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.entryDate || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Country")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Country")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.countryName || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Branch Office")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Branch Office")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
                   {activeDrawerEntry.cityBranchId ? activeDrawerEntry.cityBranchName : activeDrawerEntry.countryBranchName}
                 </span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Status")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Status")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.status || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Created By")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Created By")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.createdBy || "-"}</span>
               </div>
             </div>
 
             <div className="rounded-lg border p-4 bg-muted/20 space-y-1 dark:bg-slate-900/50 dark:border-slate-800">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{th("Narration / Details")}</span>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{th("Narration / Details")}</span>
               <p className="text-xs text-foreground font-medium leading-relaxed">{activeDrawerEntry.narration || "No narration provided."}</p>
             </div>
 
@@ -2449,7 +2454,7 @@ function SuperAdminRoznamchaReportViewContent({
                               {line.accounts ? `${line.accounts.code} - ${line.accounts.name}` : line.account_id}
                             </div>
                             {line.ledgers && (
-                              <div className="text-[10px] text-muted-foreground">Ledger: {line.ledgers.code} - {line.ledgers.name}</div>
+                              <div className="text-[11px] text-muted-foreground">Ledger: {line.ledgers.code} - {line.ledgers.name}</div>
                             )}
                           </td>
                           <td className="px-3 py-2 text-right font-mono tabular-nums text-rose-600">
@@ -2471,13 +2476,13 @@ function SuperAdminRoznamchaReportViewContent({
 
             <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border dark:bg-slate-900/30 dark:border-slate-800">
               <div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">{th("Debit Total")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase">{th("Debit Total")}</span>
                 <div className="text-sm font-extrabold text-rose-600 mt-0.5">
                   {activeDrawerEntry.countryCurrency || "PKR"} {fmtNumber(activeDrawerEntry.debit)}
                 </div>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">{th("Credit Total")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase">{th("Credit Total")}</span>
                 <div className="text-sm font-extrabold text-emerald-600 mt-0.5">
                   {activeDrawerEntry.countryCurrency || "PKR"} {fmtNumber(activeDrawerEntry.credit)}
                 </div>
@@ -2584,7 +2589,7 @@ function BranchJournalGeneralStyleSummary({
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-purple-50 p-3 text-purple-600 ring-1 ring-purple-100">{card.icon}</div>
               <div>
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{th(card.title)}</div>
+                <div className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">{th(card.title)}</div>
                 <div className="mt-1 text-2xl font-black text-slate-950">{card.value}</div>
                 <div className="text-[11px] font-semibold text-slate-500">{card.subtitle}</div>
               </div>
@@ -2597,22 +2602,22 @@ function BranchJournalGeneralStyleSummary({
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {infoCards.map((card) => (
             <div key={card.label} className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
-              <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{th(card.label)}</div>
+              <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">{th(card.label)}</div>
               <div className="mt-1 text-sm font-black text-slate-950">{card.value || "-"}</div>
             </div>
           ))}
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-rose-500">{th("Total Debit")}</div>
+            <div className="text-[11px] font-black uppercase tracking-[0.16em] text-rose-500">{th("Total Debit")}</div>
             <div className="mt-1 text-lg font-black text-rose-700">{fmtNumber(totalDebit)}</div>
           </div>
           <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-600">{th("Total Credit")}</div>
+            <div className="text-[11px] font-black uppercase tracking-[0.16em] text-emerald-600">{th("Total Credit")}</div>
             <div className="mt-1 text-lg font-black text-emerald-700">{fmtNumber(totalCredit)}</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">{th("Balance")}</div>
+            <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">{th("Balance")}</div>
             <div className="mt-1 text-lg font-black text-slate-950">{fmtNumber(balance)}</div>
           </div>
         </div>

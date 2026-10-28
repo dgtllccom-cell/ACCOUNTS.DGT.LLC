@@ -134,7 +134,7 @@ export default function GlobalClientError({
         </div>
 
         <div>
-          <span className="text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full text-slate-600 dark:text-slate-300" dir="ltr">
+          <span className="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full text-slate-600 dark:text-slate-300" dir="ltr">
             {tt("reference_id", "Reference ID:")} {refId}
           </span>
           <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white mt-2">
@@ -149,7 +149,7 @@ export default function GlobalClientError({
 
         {/* Detailed Error Box */}
         <div className="rounded-xl bg-slate-900 text-slate-100 p-4 text-left font-mono text-[11px] space-y-1.5 overflow-x-auto max-h-48 border border-slate-800" dir="ltr">
-          <div className="flex items-center justify-between text-[10px] text-amber-400 border-b border-slate-800 pb-1">
+          <div className="flex items-center justify-between text-[11px] text-amber-400 border-b border-slate-800 pb-1">
             <span>{error?.name || tt("error_fallback", "Error")}</span>
             <button onClick={handleCopyDiagnostic} className="hover:text-white flex items-center gap-1">
               {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
@@ -158,7 +158,7 @@ export default function GlobalClientError({
           </div>
           <p className="font-bold text-rose-300">{error?.message || tt("unknown_error", "Unknown client error")}</p>
           {error?.stack && (
-            <pre className="text-[10px] text-slate-400 whitespace-pre-wrap opacity-90">{error.stack}</pre>
+            <pre className="text-[11px] text-slate-400 whitespace-pre-wrap opacity-90">{error.stack}</pre>
           )}
         </div>
 

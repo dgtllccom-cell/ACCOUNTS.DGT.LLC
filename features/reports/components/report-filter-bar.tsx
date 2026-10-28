@@ -125,7 +125,7 @@ export function ReportFilterBar({
         {/* Report Type */}
         {showReportTypeFilter && (
           <div className="min-w-[180px] flex-1 space-y-1">
-            <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+            <label className="text-[11px] font-black uppercase text-slate-500 flex items-center gap-1">
               <Filter className="h-3 w-3 text-indigo-500" />
               {_("report.filter_report_type")}
             </label>
@@ -146,7 +146,7 @@ export function ReportFilterBar({
         {/* Country */}
         {showCountryFilter && (
           <div className="min-w-[150px] flex-1 space-y-1">
-            <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+            <label className="text-[11px] font-black uppercase text-slate-500 flex items-center gap-1">
               <Globe2 className="h-3 w-3 text-emerald-500" />
               {_("report.filter_country")}
             </label>
@@ -155,7 +155,7 @@ export function ReportFilterBar({
                 <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 truncate">
                   {lockedCountryName || _("report.filter_country")}
                 </span>
-                <span className="ml-auto text-[9px] font-black text-emerald-500 bg-emerald-100 px-1.5 py-0.5 rounded-full">{_("report.locked", "LOCKED")}</span>
+                <span className="ml-auto text-[11px] font-black text-emerald-500 bg-emerald-100 px-1.5 py-0.5 rounded-full">{_("report.locked", "LOCKED")}</span>
               </div>
             ) : (
               <select
@@ -182,7 +182,7 @@ export function ReportFilterBar({
         {/* Scope workflow */}
         {showBranchFilter && (
           <div className="min-w-[165px] flex-1 space-y-1">
-            <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+            <label className="text-[11px] font-black uppercase text-slate-500 flex items-center gap-1">
               <Building2 className="h-3 w-3 text-cyan-500" />
               {t(lang, "report.filter_scope" as UiKey, "Scope")}
             </label>
@@ -208,7 +208,7 @@ export function ReportFilterBar({
         {/* Main Branch */}
         {showBranchFilter && filters.scopeMode !== "entire-country" && !isBranchLocked && (
           <div className="min-w-[150px] flex-1 space-y-1">
-            <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+            <label className="text-[11px] font-black uppercase text-slate-500 flex items-center gap-1">
               <Building2 className="h-3 w-3 text-blue-500" />
               {_("report.filter_main_branch")}
             </label>
@@ -233,7 +233,7 @@ export function ReportFilterBar({
         {/* City Branch */}
         {showBranchFilter && filters.scopeMode === "city-branch" && (
           <div className="min-w-[150px] flex-1 space-y-1">
-            <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+            <label className="text-[11px] font-black uppercase text-slate-500 flex items-center gap-1">
               <Building2 className="h-3 w-3 text-violet-500" />
               {_("report.filter_branch")}
             </label>
@@ -242,7 +242,7 @@ export function ReportFilterBar({
                 <span className="text-xs font-bold text-violet-700 dark:text-violet-400 truncate">
                   {lockedBranchName || _("report.filter_branch")}
                 </span>
-                <span className="ml-auto text-[9px] font-black text-violet-500 bg-violet-100 px-1.5 py-0.5 rounded-full">{_("report.locked", "LOCKED")}</span>
+                <span className="ml-auto text-[11px] font-black text-violet-500 bg-violet-100 px-1.5 py-0.5 rounded-full">{_("report.locked", "LOCKED")}</span>
               </div>
             ) : (
               <select
@@ -264,7 +264,7 @@ export function ReportFilterBar({
         )}
 
         <div className="min-w-[160px] flex-1 space-y-1">
-          <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+          <label className="text-[11px] font-black uppercase text-slate-500 flex items-center gap-1">
             <FolderKanban className="h-3 w-3 text-fuchsia-500" />
             {t(lang, "report.filter_project" as UiKey, "Project")}
           </label>
@@ -280,7 +280,7 @@ export function ReportFilterBar({
 
         {/* Date range (universal picker) */}
         <div className="min-w-[16rem] flex-[2] space-y-1">
-          <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+          <label className="text-[11px] font-black uppercase text-slate-500 flex items-center gap-1">
             <Calendar className="h-3 w-3 text-orange-500" />
             {t(lang, "datepick.date_range" as UiKey, "Date Range")}
           </label>
@@ -299,7 +299,7 @@ export function ReportFilterBar({
         {/* Currency */}
         {showCurrencyFilter && (
           <div className="min-w-[140px] flex-1 space-y-1">
-            <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+            <label className="text-[11px] font-black uppercase text-slate-500 flex items-center gap-1">
               <span className="text-amber-500 font-black text-xs">$</span>
               {_("report.filter_currency")}
             </label>
@@ -319,7 +319,7 @@ export function ReportFilterBar({
         {/* User Filter */}
         {showUserFilter && (
           <div className="min-w-[150px] flex-1 space-y-1">
-            <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+            <label className="text-[11px] font-black uppercase text-slate-500 flex items-center gap-1">
               <Users className="h-3 w-3 text-teal-500" />
               {_("report.filter_user")}
             </label>

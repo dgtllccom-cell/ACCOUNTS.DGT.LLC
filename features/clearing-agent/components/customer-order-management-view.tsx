@@ -1109,7 +1109,7 @@ function PartyRolePanel({
           {required ? <span className="text-rose-500 font-bold">*</span> : null}
         </div>
         {selection.customerId ? (
-          <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
+          <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
             ✓ {selection.customerName}
           </span>
         ) : null}
@@ -3908,7 +3908,7 @@ export function CustomerOrderManagementView() {
                   <div className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                     {scopedOrders.length}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+                  <div className="text-[11px] text-slate-400 font-medium leading-tight mt-0.5">
                     {tt("all_orders_in_system", "All orders in system")}
                   </div>
                 </div>
@@ -3916,7 +3916,7 @@ export function CustomerOrderManagementView() {
                   <div className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                     {orderCounts.confirmed + orderCounts.inTransit}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+                  <div className="text-[11px] text-slate-400 font-medium leading-tight mt-0.5">
                     {tt("currently_active", "Currently active")}
                   </div>
                 </div>
@@ -3924,7 +3924,7 @@ export function CustomerOrderManagementView() {
                   <div className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                     {orderCounts.cleared}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+                  <div className="text-[11px] text-slate-400 font-medium leading-tight mt-0.5">
                     {tt("delivered_and_invoiced", "Delivered & invoiced")}
                   </div>
                 </div>
@@ -4157,7 +4157,7 @@ export function CustomerOrderManagementView() {
                 }`}
               >
                 <span>{tt("all_orders", "All Orders")}</span>
-                <span className={`text-[10px] font-mono ${statusFilter === "all" ? "text-blue-100" : "text-slate-400"}`}>
+                <span className={`text-[11px] font-mono ${statusFilter === "all" ? "text-blue-100" : "text-slate-400"}`}>
                   ({scopedOrders.length})
                 </span>
               </button>
@@ -4172,7 +4172,7 @@ export function CustomerOrderManagementView() {
                 }`}
               >
                 <span>{tt("pending", "Pending")}</span>
-                <span className={`text-[10px] font-mono ${statusFilter === "draft" ? "text-blue-100" : "text-slate-400"}`}>
+                <span className={`text-[11px] font-mono ${statusFilter === "draft" ? "text-blue-100" : "text-slate-400"}`}>
                   ({orderCounts.draft})
                 </span>
               </button>
@@ -4187,7 +4187,7 @@ export function CustomerOrderManagementView() {
                 }`}
               >
                 <span>{tt("in_transit", "In Transit")}</span>
-                <span className={`text-[10px] font-mono ${statusFilter === "in_transit" ? "text-blue-100" : "text-blue-500"}`}>
+                <span className={`text-[11px] font-mono ${statusFilter === "in_transit" ? "text-blue-100" : "text-blue-500"}`}>
                   ({orderCounts.inTransit})
                 </span>
               </button>
@@ -4202,7 +4202,7 @@ export function CustomerOrderManagementView() {
                 }`}
               >
                 <span>{tt("completed", "Completed")}</span>
-                <span className={`text-[10px] font-mono ${statusFilter === "completed" ? "text-blue-100" : "text-emerald-500"}`}>
+                <span className={`text-[11px] font-mono ${statusFilter === "completed" ? "text-blue-100" : "text-emerald-500"}`}>
                   ({orderCounts.cleared})
                 </span>
               </button>
@@ -4241,7 +4241,7 @@ export function CustomerOrderManagementView() {
                 ]}
                 orientation="landscape"
               />
-              <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+              <span className="text-[11px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                 {visibleOrders.length} / {orders.length} {tt("visible", "visible")}
               </span>
               </div>
@@ -4249,7 +4249,7 @@ export function CustomerOrderManagementView() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="border-b border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-850 text-[10px] font-black uppercase tracking-wider sticky top-0">
+                <thead className="border-b border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-850 text-[11px] font-black uppercase tracking-wider sticky top-0">
                   <tr>
                     <Th className="px-3.5 py-3">#</Th>
                     <Th className="px-3.5 py-3">{tt("th_order_no_date", "Order No / Date")}</Th>
@@ -4838,7 +4838,7 @@ export function CustomerOrderManagementView() {
                                   <Icon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                                   <span>{sc.title}</span>
                                 </div>
-                                <span className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded border ${sc.badgeClass}`}>
+                                <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded border ${sc.badgeClass}`}>
                                   {sc.badge}
                                 </span>
                               </div>
@@ -4855,7 +4855,7 @@ export function CustomerOrderManagementView() {
                                 </button>
                               </div>
 
-                              <p className="text-[10px] text-slate-400 truncate">{sc.subtitle}</p>
+                              <p className="text-[11px] text-slate-400 truncate">{sc.subtitle}</p>
                             </div>
                           );
                         })}
@@ -4868,37 +4868,37 @@ export function CustomerOrderManagementView() {
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                           <div>
-                            <span className="text-[10px] text-slate-400 block">{tt("label_customer", "Customer")}</span>
+                            <span className="text-[11px] text-slate-400 block">{tt("label_customer", "Customer")}</span>
                             <span className="font-bold text-slate-900 dark:text-white truncate block">
                               {order.customer_name || linkedCust?.name || "-"}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block">{tt("label_account", "Linked Account")}</span>
+                            <span className="text-[11px] text-slate-400 block">{tt("label_account", "Linked Account")}</span>
                             <span className="font-bold text-emerald-600 dark:text-emerald-400 truncate block">
                               {linkedAcc ? `#${linkedAcc.account_number || (linkedAcc as any).code} - ${linkedAcc.name}` : "—"}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block">{tt("label_stage", "Current Stage")}</span>
+                            <span className="text-[11px] text-slate-400 block">{tt("label_stage", "Current Stage")}</span>
                             <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
                               {order.current_stage || order.status || "Pending"}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block">{tt("label_weight", "Cargo & Weight")}</span>
+                            <span className="text-[11px] text-slate-400 block">{tt("label_weight", "Cargo & Weight")}</span>
                             <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
                               {order.goods_name || "Goods"} • {order.goods_gross_weight ? `${order.goods_gross_weight} kg` : "—"}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block">{tt("label_corridor", "Route / Corridor")}</span>
+                            <span className="text-[11px] text-slate-400 block">{tt("label_corridor", "Route / Corridor")}</span>
                             <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
                               {order.loading_country_name || "Origin"} &rarr; {order.receiving_country_name || "Destination"}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block">{tt("label_created_at", "Booking Date")}</span>
+                            <span className="text-[11px] text-slate-400 block">{tt("label_created_at", "Booking Date")}</span>
                             <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
                               {order.created_at ? new Date(order.created_at).toLocaleDateString() : "—"}
                             </span>
@@ -4964,7 +4964,7 @@ export function CustomerOrderManagementView() {
                 </button>
 
                 <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-400">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
                     <button
                       type="button"
                       onClick={() => {
@@ -4995,7 +4995,7 @@ export function CustomerOrderManagementView() {
                     <h1 className="text-sm sm:text-base font-black tracking-tight text-slate-900 dark:text-white truncate">
                       {editingOrderId ? `${tt("edit_order_heading", "Edit Customer Order")} • ${formData.order_no || formData.customer_name}` : tt("new_order_heading", "New Customer Order")}
                     </h1>
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 shrink-0">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 shrink-0">
                       {tt("order_voucher", "ORDER VOUCHER")}
                     </span>
                   </div>
@@ -5035,7 +5035,7 @@ export function CustomerOrderManagementView() {
                         title={isLocked ? tt("step_access_restricted", "Section access restricted by permission policy") : st.desc}
                       >
                         <span
-                          className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black ${
+                          className={`flex h-4 w-4 items-center justify-center rounded-full text-[11px] font-black ${
                             isLocked
                               ? "bg-slate-300 text-slate-600 dark:bg-slate-700"
                               : isActive
@@ -5387,7 +5387,7 @@ export function CustomerOrderManagementView() {
                         <button
                           type="button"
                           onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
-                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
                           title={tt("edit", "Edit")}
                         >
                           <Pencil className="h-2.5 w-2.5" />
@@ -5445,7 +5445,7 @@ export function CustomerOrderManagementView() {
                         <button
                           type="button"
                           onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
-                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
                           title={tt("edit", "Edit")}
                         >
                           <Pencil className="h-2.5 w-2.5" />
@@ -5513,7 +5513,7 @@ export function CustomerOrderManagementView() {
                         <button
                           type="button"
                           onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
-                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
                           title={tt("edit", "Edit")}
                         >
                           <Pencil className="h-2.5 w-2.5" />
@@ -5604,7 +5604,7 @@ export function CustomerOrderManagementView() {
                     {/* Stage 1: Origin & Loading */}
                     <div className="rounded-xl border border-sky-100 bg-sky-50/30 p-3 dark:border-sky-950/60 dark:bg-slate-850/50 space-y-2">
                       <div className="flex items-center gap-2 font-bold text-sky-800 dark:text-sky-300 text-xs">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[10px] font-black">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-black">
                           1
                         </span>
                         <span>{tt("origin_loading_stage", "Origin & Loading")}</span>
@@ -5640,7 +5640,7 @@ export function CustomerOrderManagementView() {
                     {/* Stage 2: Border & Transport */}
                     <div className="rounded-xl border border-purple-100 bg-purple-50/30 p-3 dark:border-purple-950/60 dark:bg-slate-850/50 space-y-2">
                       <div className="flex items-center gap-2 font-bold text-purple-800 dark:text-purple-300 text-xs">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-white text-[10px] font-black">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-white text-[11px] font-black">
                           2
                         </span>
                         <span>{tt("border_transport_stage", "Border & Transport")}</span>
@@ -5676,7 +5676,7 @@ export function CustomerOrderManagementView() {
                     {/* Stage 3: Destination & Receiving */}
                     <div className="rounded-xl border border-emerald-100 bg-emerald-50/30 p-3 dark:border-emerald-950/60 dark:bg-slate-850/50 space-y-2">
                       <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300 text-xs">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px] font-black">
                           3
                         </span>
                         <span>{tt("dest_receiving_stage", "Destination & Receiving")}</span>
@@ -5727,7 +5727,7 @@ export function CustomerOrderManagementView() {
                           <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
                           <span className="truncate">{tt("loading_customs_origin", "Loading Customs (Origin)")}</span>
                         </div>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider ${
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
                           formData.loading_customs_required !== false
                             ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800"
                             : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
@@ -5751,7 +5751,7 @@ export function CustomerOrderManagementView() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("handled_by", "Handled By")}</span>
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold ${
                             formData.loading_customs_handled_by === "external_agent"
                               ? "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
                               : "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
@@ -5783,7 +5783,7 @@ export function CustomerOrderManagementView() {
                           </div>
                         )}
                         {formData.loading_customs_instructions && (
-                          <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 truncate" title={formData.loading_customs_instructions}>
+                          <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 truncate" title={formData.loading_customs_instructions}>
                             <span className="font-bold text-slate-600 dark:text-slate-400">{tt("notes", "Notes:")} </span>
                             {formData.loading_customs_instructions}
                           </div>
@@ -5800,7 +5800,7 @@ export function CustomerOrderManagementView() {
                           <Building2 className="h-4 w-4 text-purple-600 shrink-0" />
                           <span className="truncate">{tt("receiving_customs_dest", "Receiving Customs (Dest)")}</span>
                         </div>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider ${
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
                           formData.receiving_customs_required !== false
                             ? "bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800"
                             : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
@@ -5824,7 +5824,7 @@ export function CustomerOrderManagementView() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("handled_by", "Handled By")}</span>
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold ${
                             formData.receiving_customs_handled_by === "our_branch"
                               ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
                               : "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
@@ -5856,7 +5856,7 @@ export function CustomerOrderManagementView() {
                           </div>
                         )}
                         {formData.receiving_customs_instructions && (
-                          <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 truncate" title={formData.receiving_customs_instructions}>
+                          <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 truncate" title={formData.receiving_customs_instructions}>
                             <span className="font-bold text-slate-600 dark:text-slate-400">{tt("notes", "Notes:")} </span>
                             {formData.receiving_customs_instructions}
                           </div>
@@ -5873,7 +5873,7 @@ export function CustomerOrderManagementView() {
                           <Flag className="h-4 w-4 text-emerald-600 shrink-0" />
                           <span className="truncate">{tt("final_destination_title", "Final Destination")}</span>
                         </div>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
                           {tt("delivery_location", "Delivery Spot")}
                         </span>
                       </div>
@@ -5897,8 +5897,8 @@ export function CustomerOrderManagementView() {
                             {formData.final_destination_city || formData.destination_city || "Quetta"}
                           </span>
                         </div>
-                        <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-[10.5px]">
-                          <span className="text-slate-500 block text-[10px]">{tt("full_delivery_address", "Delivery Address")}</span>
+                        <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+                          <span className="text-slate-500 block text-[11px]">{tt("full_delivery_address", "Delivery Address")}</span>
                           <p className="font-medium text-slate-800 dark:text-slate-200 line-clamp-2">
                             {formData.final_destination_address || formData.final_delivery_location || "Quetta Central Warehouse"}
                           </p>
@@ -6007,7 +6007,7 @@ export function CustomerOrderManagementView() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("gps_tracking", "GPS Tracking")}</span>
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                             ● {tt("status_active", "Active")}
                           </span>
                         </div>
@@ -6076,7 +6076,7 @@ export function CustomerOrderManagementView() {
                         {/* Manifest Table */}
                         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                           <table className="w-full text-left text-xs border-collapse">
-                            <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 text-[10px]">
+                            <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 text-[11px]">
                               <tr>
                                 <Th className="py-2.5 px-3">#</Th>
                                 <Th className="py-2.5 px-3">{tt("product_description", "Product Description")}</Th>
@@ -6106,7 +6106,7 @@ export function CustomerOrderManagementView() {
                                     <button
                                       type="button"
                                       onClick={() => handleEditGoodsRow(item.rawIndex)}
-                                      className="inline-flex items-center gap-1 text-[10.5px] font-bold text-blue-600 hover:text-blue-800"
+                                      className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800"
                                     >
                                       <Pencil className="h-3 w-3" />
                                       <span>{tt("edit", "Edit")}</span>
@@ -6122,7 +6122,7 @@ export function CustomerOrderManagementView() {
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-2">
                           {/* Badge 1: Total Packages */}
                           <div className="rounded-xl border border-sky-200 bg-sky-50/50 p-2.5 dark:border-sky-900/60 dark:bg-slate-850/70 text-center">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300 block">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300 block">
                               {tt("total_packages_badge", "Total Packages")}
                             </span>
                             <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-base">
@@ -6132,7 +6132,7 @@ export function CustomerOrderManagementView() {
 
                           {/* Badge 2: Gross Weight */}
                           <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-2.5 dark:border-emerald-900/60 dark:bg-slate-850/70 text-center">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 block">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 block">
                               {tt("gross_weight_badge", "Gross Weight")}
                             </span>
                             <span className="font-mono font-black text-emerald-700 dark:text-emerald-400 text-base">
@@ -6142,7 +6142,7 @@ export function CustomerOrderManagementView() {
 
                           {/* Badge 3: Net Weight */}
                           <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-2.5 dark:border-amber-900/60 dark:bg-slate-850/70 text-center">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 block">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 block">
                               {tt("net_weight_badge", "Net Weight")}
                             </span>
                             <span className="font-mono font-black text-amber-700 dark:text-amber-400 text-base">
@@ -6152,7 +6152,7 @@ export function CustomerOrderManagementView() {
 
                           {/* Badge 4: Total Volume */}
                           <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-2.5 dark:border-purple-900/60 dark:bg-slate-850/70 text-center">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 block">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 block">
                               {tt("total_volume_badge", "Total Volume")}
                             </span>
                             <span className="font-mono font-black text-purple-700 dark:text-purple-400 text-base">
@@ -6162,7 +6162,7 @@ export function CustomerOrderManagementView() {
 
                           {/* Badge 5: Total Items */}
                           <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-2.5 dark:border-rose-900/60 dark:bg-slate-850/70 text-center">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300 block">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300 block">
                               {tt("total_items_badge", "Total Items")}
                             </span>
                             <span className="font-mono font-black text-rose-700 dark:text-rose-400 text-base">
@@ -6172,7 +6172,7 @@ export function CustomerOrderManagementView() {
 
                           {/* Badge 6: Average Wt / Pkg */}
                           <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-2.5 dark:border-blue-900/60 dark:bg-slate-850/70 text-center">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 block">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 block">
                               {tt("avg_wt_pkg_badge", "Average Wt / Pkg")}
                             </span>
                             <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-base">
@@ -6246,7 +6246,7 @@ function SectionHeading({
       </span>
       <div className="min-w-0">
         <h3 className="text-[13px] font-black leading-tight text-slate-900 dark:text-white">{title}</h3>
-        {subtitle ? <p className="text-[10.5px] font-medium leading-tight text-slate-400">{subtitle}</p> : null}
+        {subtitle ? <p className="text-[11px] font-medium leading-tight text-slate-400">{subtitle}</p> : null}
       </div>
     </div>
   );
@@ -7327,7 +7327,7 @@ function Step1BookingCustomer({
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
               }`}
             >
-              <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black ${
+              <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-black ${
                 e1SubSection === 1 ? "bg-blue-600 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
               }`}>
                 1
@@ -7344,7 +7344,7 @@ function Step1BookingCustomer({
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
               }`}
             >
-              <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black ${
+              <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-black ${
                 e1SubSection === 2 ? "bg-blue-600 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
               }`}>
                 2
@@ -7466,12 +7466,12 @@ function Step1BookingCustomer({
                           {tt("loading_country_title", "Loading Country (Origin)")} *
                         </span>
                         {formData.loading_country_name && (
-                          <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 font-semibold text-[10.5px]">
+                          <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 font-semibold text-[11px]">
                             {formData.loading_country_name}
                           </span>
                         )}
                       </div>
-                      <p className="text-[10.5px] text-slate-400 dark:text-slate-500">
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500">
                         {tt("origin_overlay_sub", "Configure origin country, loading branch/location, loading date and exit border or port.")}
                       </p>
                     </div>
@@ -7610,12 +7610,12 @@ function Step1BookingCustomer({
                           {tt("receiving_country_title", "Receiving Country (Destination)")} *
                         </span>
                         {formData.receiving_country_name && (
-                          <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 font-semibold text-[10.5px]">
+                          <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 font-semibold text-[11px]">
                             {formData.receiving_country_name}
                           </span>
                         )}
                       </div>
-                      <p className="text-[10.5px] text-slate-400 dark:text-slate-500">
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500">
                         {tt("dest_overlay_sub", "Configure destination country, receiving branch/location, receiving date and entry border or port.")}
                       </p>
                     </div>
@@ -7768,7 +7768,7 @@ function Step1BookingCustomer({
                     <option value="re_export">{tt("opt_re_export", "Re-Export")}</option>
                     <option value="domestic">{tt("opt_domestic", "Domestic")}</option>
                   </select>
-                  <p className="text-[10.5px] text-slate-400">
+                  <p className="text-[11px] text-slate-400">
                     {tt("op_type_sub", "Primary customs regime and declaration flow")}
                   </p>
                 </div>
@@ -7794,7 +7794,7 @@ function Step1BookingCustomer({
                     <option value="Port to Warehouse">{tt("scenario_port_to_warehouse", "Port to Warehouse")}</option>
                     <option value="Border Clearance">{tt("scenario_border_clearance", "Border Clearance")}</option>
                   </select>
-                  <p className="text-[10.5px] text-slate-400">
+                  <p className="text-[11px] text-slate-400">
                     {tt("movement_scenario_sub", "Routing policy and intermediate handling points")}
                   </p>
                 </div>
@@ -7877,11 +7877,11 @@ function Step1BookingCustomer({
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 font-bold border border-amber-200 dark:border-amber-800">
                       <span>{stg.countryName || `Stage ${i + 1}`}</span>
                       {stg.branchName && (
-                        <span className="font-normal text-[10.5px] text-amber-700 dark:text-amber-400">
+                        <span className="font-normal text-[11px] text-amber-700 dark:text-amber-400">
                           • {stg.branchName}
                         </span>
                       )}
-                      <span className="px-1 py-0.2 rounded text-[9.5px] bg-amber-200/70 text-amber-800 dark:bg-amber-900 dark:text-amber-200 uppercase font-mono">
+                      <span className="px-1 py-0.2 rounded text-[11px] bg-amber-200/70 text-amber-800 dark:bg-amber-900 dark:text-amber-200 uppercase font-mono">
                         {stg.operation || "transit"}
                       </span>
                     </span>
@@ -8281,35 +8281,35 @@ function Step1BookingCustomer({
                           <User className="h-4 w-4 text-purple-600" />
                           <span className="text-xs font-bold text-purple-950 dark:text-purple-200">{agentAcc.name}</span>
                         </div>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
                           {agentAcc.code || "ACC"}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
                         <div>
-                          <span className="text-slate-500 block text-[10px]">{tt("account_type_label", "Account Type")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("account_type_label", "Account Type")}</span>
                           <span className="font-semibold text-slate-800 dark:text-slate-200">{agentAcc.kind || "Clearing Agent / External Vendor"}</span>
                         </div>
                         <div>
-                          <span className="text-slate-500 block text-[10px]">{tt("current_balance_label", "Currency & Balance")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("current_balance_label", "Currency & Balance")}</span>
                           <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
                             {agentAcc.currency || "USD"} {Number(agentAcc.current_balance || 0).toLocaleString()}
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-500 block text-[10px]">{tt("phone", "Phone")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("phone", "Phone")}</span>
                           <span className="font-mono text-slate-800 dark:text-slate-200">{linkedCust?.mobile || linkedCust?.phone || "—"}</span>
                         </div>
                         <div>
-                          <span className="text-slate-500 block text-[10px]">{tt("trn_tax_no", "TRN / Tax")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("trn_tax_no", "TRN / Tax")}</span>
                           <span className="font-mono text-slate-800 dark:text-slate-200">{(linkedCust as any)?.tax_number || (linkedCust as any)?.trn || "—"}</span>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-slate-500 block text-[10px]">{tt("email", "Email")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("email", "Email")}</span>
                           <span className="font-medium text-slate-800 dark:text-slate-200 truncate block">{linkedCust?.email || "—"}</span>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-slate-500 block text-[10px]">{tt("address", "Address")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("address", "Address")}</span>
                           <span className="font-medium text-slate-800 dark:text-slate-200 truncate block">{linkedCust?.address || "—"}</span>
                         </div>
                       </div>
@@ -8517,35 +8517,35 @@ function Step1BookingCustomer({
                           <User className="h-4 w-4 text-purple-600" />
                           <span className="text-xs font-bold text-purple-950 dark:text-purple-200">{agentAcc.name}</span>
                         </div>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
                           {agentAcc.code || "ACC"}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
                         <div>
-                          <span className="text-slate-500 block text-[10px]">{tt("account_type_label", "Account Type")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("account_type_label", "Account Type")}</span>
                           <span className="font-semibold text-slate-800 dark:text-slate-200">{agentAcc.kind || "Clearing Agent / External Vendor"}</span>
                         </div>
                         <div>
-                          <span className="text-slate-500 block text-[10px]">{tt("current_balance_label", "Currency & Balance")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("current_balance_label", "Currency & Balance")}</span>
                           <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
                             {agentAcc.currency || "USD"} {Number(agentAcc.current_balance || 0).toLocaleString()}
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-500 block text-[10px]">{tt("phone", "Phone")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("phone", "Phone")}</span>
                           <span className="font-mono text-slate-800 dark:text-slate-200">{linkedCust?.mobile || linkedCust?.phone || "—"}</span>
                         </div>
                         <div>
-                          <span className="text-slate-500 block text-[10px]">{tt("trn_tax_no", "TRN / Tax")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("trn_tax_no", "TRN / Tax")}</span>
                           <span className="font-mono text-slate-800 dark:text-slate-200">{(linkedCust as any)?.tax_number || (linkedCust as any)?.trn || "—"}</span>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-slate-500 block text-[10px]">{tt("email", "Email")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("email", "Email")}</span>
                           <span className="font-medium text-slate-800 dark:text-slate-200 truncate block">{linkedCust?.email || "—"}</span>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-slate-500 block text-[10px]">{tt("address", "Address")}</span>
+                          <span className="text-slate-500 block text-[11px]">{tt("address", "Address")}</span>
                           <span className="font-medium text-slate-800 dark:text-slate-200 truncate block">{linkedCust?.address || "—"}</span>
                         </div>
                       </div>
@@ -9215,37 +9215,37 @@ function Step1BookingCustomer({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("mobile_phone", "Mobile / Phone")}</span>
+                  <span className="text-slate-400 block text-[11px] uppercase font-bold">{tt("mobile_phone", "Mobile / Phone")}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {selectedCustomer?.mobile || selectedCustomer?.phone || "+92 300 1234567"}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("email", "Email")}</span>
+                  <span className="text-slate-400 block text-[11px] uppercase font-bold">{tt("email", "Email")}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {selectedCustomer?.email || "customer@example.com"}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("country", "Country")}</span>
+                  <span className="text-slate-400 block text-[11px] uppercase font-bold">{tt("country", "Country")}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {selectedCustomer?.country_name || "Pakistan"}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("city", "City")}</span>
+                  <span className="text-slate-400 block text-[11px] uppercase font-bold">{tt("city", "City")}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {selectedCustomer?.city_name || "Quetta"}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 col-span-2">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("address", "Address")}</span>
+                  <span className="text-slate-400 block text-[11px] uppercase font-bold">{tt("address", "Address")}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {selectedCustomer?.address || "Commercial Plaza, M.A. Jinnah Road, Quetta"}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 col-span-2">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("current_balance", "Current Balance")}</span>
+                  <span className="text-slate-400 block text-[11px] uppercase font-bold">{tt("current_balance", "Current Balance")}</span>
                   <span className="font-bold text-emerald-600 text-sm">
                     {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
                   </span>
@@ -9311,53 +9311,53 @@ function Step1BookingCustomer({
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("customer_account_label", "Customer")}</span>
+                <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("customer_account_label", "Customer")}</span>
                 <span className="font-bold text-slate-900 dark:text-white truncate block">{formData.customer_name || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("movement_type_route", "Movement Type")}</span>
+                <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("movement_type_route", "Movement Type")}</span>
                 <span className="font-bold text-purple-700 dark:text-purple-300 capitalize block">{movementTypeLabel(lang, formData.movement_type)}</span>
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("shipment_package_type", "Shipment Type")}</span>
+                <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("shipment_package_type", "Shipment Type")}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 block">{formData.shipment_type || "FCL"}</span>
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("shipping_transport_mode", "Transport Mode")}</span>
+                <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("shipping_transport_mode", "Transport Mode")}</span>
                 <span className="font-bold text-blue-700 dark:text-blue-300 capitalize block">{transportModeLabel(lang, formData.transport_mode)}</span>
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("loading_location", "Loading Location")}</span>
+                <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("loading_location", "Loading Location")}</span>
                 <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
                   {formData.loading_source_name || formData.loading_city_name || countries.find(c => c.id === formData.loading_country_id)?.name || "—"}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("final_destination", "Final Destination")}</span>
+                <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("final_destination", "Final Destination")}</span>
                 <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
                   {formData.destination_city || countries.find(c => c.id === formData.receiving_country_id)?.name || "—"}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("assigned_by", "Assigned By")}</span>
+                <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("assigned_by", "Assigned By")}</span>
                 <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
                   {activeOrder?.latest_handover?.sender_name || (formData.step1b_assignee_name ? "Assigned by User" : (ctx?.userName || "Self (Current User)"))}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("assigning_branch", "Assigning Branch")}</span>
+                <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("assigning_branch", "Assigning Branch")}</span>
                 <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
                   {activeOrder?.latest_handover?.source_branch_name || ctx?.branchName || tt("main_branch", "Main Branch")}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("assignment_date_time", "Assignment Date/Time")}</span>
+                <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("assignment_date_time", "Assignment Date/Time")}</span>
                 <span className="font-medium text-slate-700 dark:text-slate-300 block">
                   {activeOrder?.latest_handover?.created_at ? new Date(activeOrder.latest_handover.created_at).toLocaleString() : (formData.order_date ? `${formData.order_date} ${formData.order_time}` : new Date().toLocaleString())}
                 </span>
               </div>
               <div className="col-span-2 sm:col-span-3">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("route_via_corridor", "Complete Route Via")}</span>
+                <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("route_via_corridor", "Complete Route Via")}</span>
                 <span className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
                   <Route className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                   <span className="truncate">{formData.route_name || tt("direct_route_short", "Direct Route")}</span>
@@ -9375,7 +9375,7 @@ function Step1BookingCustomer({
                   {tt("truck_fleet_assignment_single", "Truck & Transport Confirmation")}
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-slate-400">{tt("road_transport", "Road / Fleet Dispatch")}</span>
+              <span className="text-[11px] font-bold text-slate-400">{tt("road_transport", "Road / Fleet Dispatch")}</span>
             </div>
 
             {/* Road leg this truck is assigned to — a truck belongs to a ROAD leg only */}
@@ -9481,7 +9481,7 @@ function Step1BookingCustomer({
               <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 space-y-2 dark:border-slate-800 dark:bg-slate-800/60 shadow-2xs">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-2 dark:border-slate-700">
                   <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider ${
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
                       formData.truck_assignment_mode === "permanent"
                         ? "bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300"
                         : "bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950 dark:text-amber-300"
@@ -9507,19 +9507,19 @@ function Step1BookingCustomer({
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("driver_label", "Driver Name")}</span>
+                    <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("driver_label", "Driver Name")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
                       {formData.truck_driver_name || "—"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("driver_mobile_label", "Driver Mobile")}</span>
+                    <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("driver_mobile_label", "Driver Mobile")}</span>
                     <span className="font-mono text-slate-700 dark:text-slate-300 block" dir="ltr">
                       {formData.truck_driver_mobile || "—"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("transport_company_label", "Transport Company")}</span>
+                    <span className="text-[11px] uppercase font-bold text-slate-400 block">{tt("transport_company_label", "Transport Company")}</span>
                     <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
                       {formData.truck_transport_company || "—"}
                     </span>
@@ -9545,7 +9545,7 @@ function Step1BookingCustomer({
                   <Clock className="h-4 w-4 text-slate-500" />
                   <span>{tt("assign_later_active_msg", "Dispatch vehicle assignment deferred. Booking is unblocked to proceed.")}</span>
                 </div>
-                <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-[11px] font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                   {tt("status_pending", "Pending Assignment")}
                 </span>
               </div>
@@ -9653,7 +9653,7 @@ function Step1BookingCustomer({
                   <span className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
                     🚚 {tt("stage_1c_banner_title", "Truck Confirmed — Goods Entry Assigned to You")}
                   </span>
-                  <span className="rounded-full bg-emerald-200/80 px-2 py-0.5 text-[10px] font-black text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
+                  <span className="rounded-full bg-emerald-200/80 px-2 py-0.5 text-[11px] font-black text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
                     {tt("stage_1c_active", "Stage 1C Active")}
                   </span>
                 </div>
@@ -9676,7 +9676,7 @@ function Step1BookingCustomer({
               )}
               {formData.truck_number ? (
                 <div className="hidden sm:flex flex-col items-end text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tt("assigned_truck", "Assigned Truck")}</span>
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{tt("assigned_truck", "Assigned Truck")}</span>
                   <span className="font-mono text-emerald-700 dark:text-emerald-400 font-black">{formData.truck_number}</span>
                 </div>
               ) : null}
@@ -9692,23 +9692,23 @@ function Step1BookingCustomer({
                   <FileText className="h-3.5 w-3.5 text-blue-600" />
                   <span>{tt("box_order_account", "1. Order & Customer Account")}</span>
                 </div>
-                <span className="font-mono text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.2 rounded border border-blue-200 dark:border-blue-800">
+                <span className="font-mono text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.2 rounded border border-blue-200 dark:border-blue-800">
                   {formData.order_no || "Draft"}
                 </span>
               </div>
               <div className="space-y-1 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_customer", "Customer")}</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-400">{tt("label_customer", "Customer")}</span>
                   <span className="font-bold text-slate-900 dark:text-white truncate max-w-[170px]">{formData.customer_name || "—"}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_account", "Account")}</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-400">{tt("label_account", "Account")}</span>
                   <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[170px]">
                     {selectedAccount ? `#${selectedAccount.account_number || (selectedAccount as any).code} - ${selectedAccount.name || (selectedAccount as any).account_name}` : "—"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_movement", "Movement")}</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-400">{tt("label_movement", "Movement")}</span>
                   <span className="font-bold text-purple-700 dark:text-purple-300 capitalize">{movementTypeLabel(lang, formData.movement_type)}</span>
                 </div>
               </div>
@@ -9721,24 +9721,24 @@ function Step1BookingCustomer({
                   <Truck className="h-3.5 w-3.5 text-indigo-600" />
                   <span>{tt("box_fleet_driver", "2. Verified Fleet & Driver")}</span>
                 </div>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">
                   <CheckCircle2 className="h-2.5 w-2.5" />
                   <span>{tt("truck_confirmed", "Confirmed")}</span>
                 </span>
               </div>
               <div className="space-y-1 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_truck", "Truck No")}</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-400">{tt("label_truck", "Truck No")}</span>
                   <span className="font-mono font-black text-blue-700 dark:text-blue-300">{formData.truck_number && formData.truck_number !== "TO BE ASSIGNED" ? formData.truck_number : tt("to_be_assigned", "To be assigned")}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_driver", "Driver")}</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-400">{tt("label_driver", "Driver")}</span>
                   <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
                     {formData.truck_driver_name || "—"} {formData.truck_driver_mobile ? `(${formData.truck_driver_mobile})` : ""}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_loading_point", "Loading Place")}</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-400">{tt("label_loading_point", "Loading Place")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]">
                     {formData.truck_loading_location || formData.loading_source_name || tt("terminal_yard", "Terminal Yard")}
                   </span>
@@ -9756,24 +9756,24 @@ function Step1BookingCustomer({
                 <button
                   type="button"
                   onClick={() => selectSub("1B")}
-                  className="text-[10px] font-bold text-blue-600 hover:underline"
+                  className="text-[11px] font-bold text-blue-600 hover:underline"
                 >
                   [{tt("edit_fleet", "Edit Fleet")}]
                 </button>
               </div>
               <div className="space-y-1 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_route", "Route")}</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-400">{tt("label_route", "Route")}</span>
                   <span className="font-bold text-emerald-700 dark:text-emerald-300 truncate max-w-[170px]">{formData.route_name || tt("direct_route_short", "Direct Route")}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_customs_point", "Clearance Gate")}</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-400">{tt("label_customs_point", "Clearance Gate")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]">
                     {formData.customs_clearance_office || formData.entry_border_port_name || formData.exit_border_port_name || tt("customs_gate", "Customs Gate")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_stage_status", "Stage")}</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-400">{tt("label_stage_status", "Stage")}</span>
                   <span className="font-semibold text-slate-600 dark:text-slate-400">{tt("ready_for_goods_entry", "Ready for Goods Manifest")}</span>
                 </div>
               </div>
@@ -9806,12 +9806,12 @@ function Step1BookingCustomer({
             <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-3 space-y-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px] font-black">
                     {editingGoodsIdx !== null ? editingGoodsIdx + 1 : (formData.goods_items || []).length + 1}
                   </span>
                   <span>{editingGoodsIdx !== null ? tt("edit_goods_item_num", "Edit Goods Item #{n}").replace("{n}", String(editingGoodsIdx + 1)) : tt("add_goods_item", "Add Goods Item")}</span>
                 </span>
-                <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
+                <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
                   {tt("goods_entry_flexible_hint", "Complete cargo manifest with weights, warehouse, size, origin and pricing")}
                 </span>
                 {editingGoodsIdx !== null ? (
@@ -9828,11 +9828,11 @@ function Step1BookingCustomer({
               {/* Warehouse Location Selection — Modal Trigger & Summary Card */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <Warehouse className="h-3.5 w-3.5 text-blue-600" />
                     <span>{tt("warehouse_location_toggle_label", "Warehouse Location")} *</span>
                   </label>
-                  <span className="text-[10px] font-bold text-slate-400">{tt("step3_specification", "Step 3 Specification")}</span>
+                  <span className="text-[11px] font-bold text-slate-400">{tt("step3_specification", "Step 3 Specification")}</span>
                 </div>
 
                 {/* Warehouse Summary Card / Modal Trigger */}
@@ -9869,7 +9869,7 @@ function Step1BookingCustomer({
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span
-                          className={`text-[9.5px] font-black uppercase px-1.5 py-0.5 rounded ${
+                          className={`text-[11px] font-black uppercase px-1.5 py-0.5 rounded ${
                             draftGoodsItem.warehouseSourceType === "company_warehouse"
                               ? "bg-blue-200/80 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                               : draftGoodsItem.warehouseSourceType === "customer_warehouse"
@@ -9891,7 +9891,7 @@ function Step1BookingCustomer({
                         {draftGoodsItem.warehouseAddressText || tt("click_to_configure_warehouse", "Click to configure or search warehouse facility...")}
                       </p>
                       {(draftGoodsItem.contactPerson || draftGoodsItem.contactPhone) && (
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
                           {[draftGoodsItem.contactPerson, draftGoodsItem.contactPhone].filter(Boolean).join(" • ")}
                         </p>
                       )}
@@ -9919,7 +9919,7 @@ function Step1BookingCustomer({
               {/* Row 1: Goods Master Selection, Goods Name, CHS Code */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
                     {tt("select_goods_master", "Goods Master")}
                   </label>
                   <SearchSelect
@@ -9942,7 +9942,7 @@ function Step1BookingCustomer({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
                     {tt("goods_name", "Goods Name")} *
                   </label>
                   <input
@@ -9954,7 +9954,7 @@ function Step1BookingCustomer({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
                     {tt("chs_code", "CHS / HS Code")}
                   </label>
                   <input
@@ -9970,15 +9970,15 @@ function Step1BookingCustomer({
               {/* Row 2: Size, Brand / Quality, Variety */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_size_dim", "Size / Dimension")}</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_size_dim", "Size / Dimension")}</label>
                   <input type="text" placeholder={tt("ph_goods_size", "e.g. 40mm / 12x12 / Standard")} value={draftGoodsItem.size || ""} onChange={(e) => handleDraftGoodsChange("size", e.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_brand_quality", "Brand / Quality")}</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_brand_quality", "Brand / Quality")}</label>
                   <input type="text" placeholder={tt("ph_goods_brand", "e.g. Grade A / Premium / Export Quality")} value={draftGoodsItem.brandQuality || ""} onChange={(e) => handleDraftGoodsChange("brandQuality", e.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_variety", "Variety")}</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_variety", "Variety")}</label>
                   <input type="text" placeholder={tt("ph_goods_variety", "e.g. Sella / Golden / Kabuli")} value={draftGoodsItem.goodsVariationLabel || ""} onChange={(e) => handleDraftGoodsChange("goodsVariationLabel", e.target.value)} className={inputClass} />
                 </div>
               </div>
@@ -9986,11 +9986,11 @@ function Step1BookingCustomer({
               {/* Row 2b: Lot Name, Origin, Quality / Inspection reference */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_lot_name", "Lot Name")}</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_lot_name", "Lot Name")}</label>
                   <input type="text" placeholder={tt("ph_goods_lot", "e.g. LOT-2026-014")} value={draftGoodsItem.lotName || ""} onChange={(e) => handleDraftGoodsChange("lotName", e.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("origin_country", "Origin Country")}</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("origin_country", "Origin Country")}</label>
                   <select value={draftGoodsItem.originCountry || ""} onChange={(e) => handleDraftGoodsChange("originCountry", e.target.value)} className={selectClass}>
                     <option value="">— {tt("select_origin_country", "Select Origin")} —</option>
                     {countries.map((c) => (
@@ -9999,7 +9999,7 @@ function Step1BookingCustomer({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_quality_ref", "Quality / Inspection Ref.")}</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_quality_ref", "Quality / Inspection Ref.")}</label>
                   <input type="text" placeholder={tt("ph_goods_quality_ref", "e.g. QC-2291 / Certificate no.")} value={draftGoodsItem.qualityRef || ""} onChange={(e) => handleDraftGoodsChange("qualityRef", e.target.value)} className={inputClass} />
                 </div>
               </div>
@@ -10007,7 +10007,7 @@ function Step1BookingCustomer({
               {/* Row 3: Packaging & Unit Counts */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("qty_unit", "Qty Unit")}</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("qty_unit", "Qty Unit")}</label>
                   <select value={draftGoodsItem.unit} onChange={(e) => handleDraftGoodsChange("unit", e.target.value)} className={selectClass}>
                     <option value="Bags">{tt("unit_bags", "Bags")}</option>
                     <option value="Cartons">{tt("unit_cartons", "Cartons")}</option>
@@ -10021,11 +10021,11 @@ function Step1BookingCustomer({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("quantity", "Quantity")} *</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("quantity", "Quantity")} *</label>
                   <input type="number" min="0" value={draftGoodsItem.quantity} onChange={(e) => handleDraftGoodsChange("quantity", e.target.value)} className={inputClass} placeholder="0" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("kg_per_unit", "KG / Unit")}</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("kg_per_unit", "KG / Unit")}</label>
                   <input type="number" min="0" value={draftGoodsItem.kgPerQty} onChange={(e) => handleDraftGoodsChange("kgPerQty", e.target.value)} className={inputClass} placeholder="0" />
                 </div>
               </div>
@@ -10033,19 +10033,19 @@ function Step1BookingCustomer({
               {/* Row 4: Weights — Gross, Empty KG PER UNIT, TOTAL Empty KG, Net (auto = Gross − Total Empty) */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("gross_wt_kg", "Gross Wt (KG)")} *</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("gross_wt_kg", "Gross Wt (KG)")} *</label>
                   <input type="number" min="0" value={draftGoodsItem.grossWeight || draftGoodsItem.totalKg} onChange={(e) => handleDraftGoodsChange("grossWeight", e.target.value)} className={inputClass} placeholder="0" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("empty_kg_per_unit", "Empty KG per unit")}</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("empty_kg_per_unit", "Empty KG per unit")}</label>
                   <input type="number" min="0" step="0.001" value={draftGoodsItem.emptyKgPerUnit || ""} onChange={(e) => handleDraftGoodsChange("emptyKgPerUnit", e.target.value)} className={inputClass} placeholder="0" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("total_empty_kg", "Total Empty KG")}</label>
+                  <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("total_empty_kg", "Total Empty KG")}</label>
                   <input type="number" min="0" step="0.001" value={draftGoodsItem.emptyWeight || ""} onChange={(e) => handleDraftGoodsChange("emptyWeight", e.target.value)} className={inputClass} placeholder="0" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-0.5">{tt("net_wt_auto", "Net Wt (Auto)")}</label>
+                  <label className="block text-[11px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-0.5">{tt("net_wt_auto", "Net Wt (Auto)")}</label>
                   <div className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50/90 px-2.5 py-2 text-xs font-mono font-black text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 truncate" title={tt("gross_minus_empty", "Gross - Empty Weight")}>
                     <Scale className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                     <span>{goodsWeights(draftGoodsItem).net.toLocaleString()} kg</span>
@@ -10055,7 +10055,7 @@ function Step1BookingCustomer({
 
               {/* Quality Report / Cargo Condition */}
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
                   {tt("goods_notes", "Notes")}
                 </label>
                 <textarea
@@ -10070,7 +10070,7 @@ function Step1BookingCustomer({
               {/* Photo Upload & Add/Update Buttons */}
               <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-emerald-200/50 dark:border-emerald-900/40">
                 <div className="flex items-center gap-2">
-                  <label className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                  <label className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" />
                     <span>{tt("quality_loading_inspection_photo", "Inspection Photo")}:</span>
                   </label>
@@ -10081,7 +10081,7 @@ function Step1BookingCustomer({
                     className="text-[11px] text-slate-500 file:mr-1.5 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/40 dark:file:text-blue-300"
                   />
                   {draftGoodsItem.photoUrl ? (
-                    <span className="text-[10px] text-emerald-600 font-bold">✓ {tt("attached", "Attached")}</span>
+                    <span className="text-[11px] text-emerald-600 font-bold">✓ {tt("attached", "Attached")}</span>
                   ) : null}
                 </div>
 
@@ -10416,7 +10416,7 @@ function Step2PickupGoodsTruck({
           </div>
         ) : formData.loading_source === "customer_warehouse" ? (
           <div className="mt-2 space-y-1">
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {t(lang, "comv.customer_warehouse_note", "Uses the customer's own address — this never creates internal Shipping Link stock.")}
             </p>
             <input
@@ -10470,7 +10470,7 @@ function Step2PickupGoodsTruck({
             {t(lang, "comv.add_allocation", "Add Warehouse")}
           </button>
         </div>
-        <p className="text-[10px] text-slate-500 dark:text-slate-400">
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">
           {t(lang, "comv.loading_allocations_hint", "Leave empty if this order's goods are picked up from a single source above. Add rows only when the same goods item is split across more than one warehouse.")}
         </p>
         {formData.loadingAllocations.map((alloc, aIdx) => (
@@ -10530,7 +10530,7 @@ function Step2PickupGoodsTruck({
           </div>
         ))}
         {formData.loadingAllocations.length > 0 ? (
-          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+          <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
             {t(lang, "comv.allocation_total", "Allocated total:")}{" "}
             {formData.loadingAllocations.reduce((sum, a) => sum + (Number(a.quantity) || 0), 0)}
             {formData.goods_quantity ? ` / ${formData.goods_quantity}` : ""} {formData.goods_unit}
@@ -10551,13 +10551,13 @@ function Step2PickupGoodsTruck({
         />
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs">
           <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("selected_goods", "Selected Goods")}</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("selected_goods", "Selected Goods")}</div>
             <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200 truncate">
               {formData.goods_name ? `${formData.goods_name}${formData.goods_chs_code ? ` • ${formData.goods_chs_code}` : ""}` : "-"}
             </div>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("origin_variation", "Origin / Variation")}</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("origin_variation", "Origin / Variation")}</div>
             <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200 truncate">
               {formData.goods_origin_country_name || "-"}
               {formData.goods_variation_label ? ` • ${formData.goods_variation_label}` : ""}
@@ -10567,7 +10567,7 @@ function Step2PickupGoodsTruck({
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <div>
-            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_quantity", "Quantity")}</label>
+            <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_quantity", "Quantity")}</label>
             <input
               type="number"
               value={formData.goods_quantity}
@@ -10576,7 +10576,7 @@ function Step2PickupGoodsTruck({
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_unit", "Unit")}</label>
+            <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_unit", "Unit")}</label>
             <input
               type="text"
               placeholder={t(lang, "comv.goods_unit_ph", "e.g. KG, TON, PCS")}
@@ -10586,7 +10586,7 @@ function Step2PickupGoodsTruck({
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_bags_cartons", "Bags / Cartons")}</label>
+            <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_bags_cartons", "Bags / Cartons")}</label>
             <input
               type="number"
               value={formData.goods_bags_cartons}
@@ -10595,7 +10595,7 @@ function Step2PickupGoodsTruck({
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_gross_weight", "Gross Weight")}</label>
+            <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_gross_weight", "Gross Weight")}</label>
             <input
               type="number"
               value={formData.goods_gross_weight}
@@ -10604,7 +10604,7 @@ function Step2PickupGoodsTruck({
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_empty_weight", "Empty Weight")}</label>
+            <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_empty_weight", "Empty Weight")}</label>
             <input
               type="number"
               value={formData.goods_empty_weight}
@@ -10613,7 +10613,7 @@ function Step2PickupGoodsTruck({
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_net_weight", "Net Weight")}</label>
+            <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.goods_net_weight", "Net Weight")}</label>
             <input
               type="number"
               value={formData.goods_net_weight}
@@ -10789,7 +10789,7 @@ function ShippingLegHandoffAction({
 
   return (
     <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-2.5 space-y-1.5 dark:border-indigo-900/40 dark:bg-indigo-950/10">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
         {t(lang, "comv.stage_handoff", "Stage Handoff")}
       </div>
       {currentUserName ? (
@@ -10814,7 +10814,7 @@ function ShippingLegHandoffAction({
           {t(lang, "comv.assign_send", "Assign")}
         </button>
       </div>
-      {message ? <p className="text-[10px] text-slate-500 dark:text-slate-400">{message}</p> : null}
+      {message ? <p className="text-[11px] text-slate-500 dark:text-slate-400">{message}</p> : null}
     </div>
   );
 }
@@ -11072,7 +11072,7 @@ function Step3RouteVesselCustoms({
                       key={mode}
                       type="button"
                       onClick={() => updateLeg(idx, { transportMode: mode })}
-                      className={`rounded-lg border px-2 py-1 text-[10px] font-bold ${
+                      className={`rounded-lg border px-2 py-1 text-[11px] font-bold ${
                         leg.transportMode === mode
                           ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
                           : "border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
@@ -11168,7 +11168,7 @@ function Step3RouteVesselCustoms({
                   <div className="space-y-3">
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                       <div>
-                        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">
+                        <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">
                           {tt("partner_type_label", "Partner Type *")}
                         </label>
                         <select
@@ -11187,7 +11187,7 @@ function Step3RouteVesselCustoms({
                       </div>
 
                       <div>
-                        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">
+                        <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">
                           {tt("partner_name_label", "Partner / Provider Name *")}
                         </label>
                         <input
@@ -11200,7 +11200,7 @@ function Step3RouteVesselCustoms({
                       </div>
 
                       <div>
-                        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">
+                        <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">
                           {tt("partner_country_label", "Country of Service")}
                         </label>
                         <select
@@ -11219,14 +11219,14 @@ function Step3RouteVesselCustoms({
                     {/* Account Master Ledger Selection & Warning */}
                     <div className="rounded-lg bg-indigo-50/40 p-2.5 border border-indigo-100 dark:bg-slate-850 dark:border-indigo-900/40 space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">
+                        <label className="text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">
                           {tt("provider_account_master", "Provider Account / Ledger (Account Master) *")}
                         </label>
                         <a
                           href="/dashboard/accounts/setup"
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:underline"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:underline"
                         >
                           <span>{tt("register_in_account_master", "Register / Open Account Master →")}</span>
                         </a>
@@ -11324,7 +11324,7 @@ function Step3RouteVesselCustoms({
                   onAssigned={(taskId: string, userId: string) => updateLeg(idx, { currentTaskId: taskId, responsibleUserId: userId })}
                 />
               ) : (
-                <p className="text-[10px] italic text-slate-400">
+                <p className="text-[11px] italic text-slate-400">
                   {t(lang, "comv.save_to_assign", "Save the order once to enable stage handoff/assignment for this leg.")}
                 </p>
               )}
@@ -11389,11 +11389,11 @@ function Step3RouteVesselCustoms({
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.etd", "ETD")}</label>
+                      <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.etd", "ETD")}</label>
                       <input type="date" value={leg.etd} onChange={(e) => updateLeg(idx, { etd: e.target.value })} className={inputClass} />
                     </div>
                     <div>
-                      <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.eta", "ETA")}</label>
+                      <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.eta", "ETA")}</label>
                       <input type="date" value={leg.eta} onChange={(e) => updateLeg(idx, { eta: e.target.value })} className={inputClass} />
                     </div>
                   </div>
@@ -11410,11 +11410,11 @@ function Step3RouteVesselCustoms({
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.etd", "ETD")}</label>
+                      <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.etd", "ETD")}</label>
                       <input type="date" value={leg.etd} onChange={(e) => updateLeg(idx, { etd: e.target.value })} className={inputClass} />
                     </div>
                     <div>
-                      <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.eta", "ETA")}</label>
+                      <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.eta", "ETA")}</label>
                       <input type="date" value={leg.eta} onChange={(e) => updateLeg(idx, { eta: e.target.value })} className={inputClass} />
                     </div>
                   </div>
@@ -11431,11 +11431,11 @@ function Step3RouteVesselCustoms({
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.etd", "ETD")}</label>
+                      <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.etd", "ETD")}</label>
                       <input type="date" value={leg.etd} onChange={(e) => updateLeg(idx, { etd: e.target.value })} className={inputClass} />
                     </div>
                     <div>
-                      <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.eta", "ETA")}</label>
+                      <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.eta", "ETA")}</label>
                       <input type="date" value={leg.eta} onChange={(e) => updateLeg(idx, { eta: e.target.value })} className={inputClass} />
                     </div>
                   </div>
@@ -11502,7 +11502,7 @@ function Step3RouteVesselCustoms({
 
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.customs_status", "Customs Status")}</label>
+                    <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.customs_status", "Customs Status")}</label>
                     <select value={leg.customsStatus} onChange={(e) => updateLeg(idx, { customsStatus: e.target.value as LegCustomsStatus })} className={selectClass}>
                       {(["not_applicable", "pending", "submitted", "cleared", "held", "rejected"] as const).map((s) => (
                         <option key={s} value={s}>{t(lang, ("comv.customsstatus_" + s) as never, s.replace(/_/g, " "))}</option>
@@ -11511,7 +11511,7 @@ function Step3RouteVesselCustoms({
                   </div>
                   {leg.id ? (
                     <div>
-                      <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.customs_documents", "Customs Documents")}</label>
+                      <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.customs_documents", "Customs Documents")}</label>
                       <DocumentAttachmentIcon entityType="clearing_customer_order_leg" entityId={leg.id} />
                     </div>
                   ) : null}
@@ -11546,40 +11546,40 @@ function Step3RouteVesselCustoms({
 
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <div>
-                  <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.planned_departure", "Planned Departure")}</label>
+                  <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.planned_departure", "Planned Departure")}</label>
                   <input type="date" value={leg.plannedDeparture} onChange={(e) => updateLeg(idx, { plannedDeparture: e.target.value })} className={inputClass} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.actual_departure", "Actual Departure")}</label>
+                  <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.actual_departure", "Actual Departure")}</label>
                   <input type="date" value={leg.actualDeparture} onChange={(e) => updateLeg(idx, { actualDeparture: e.target.value })} className={inputClass} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.planned_arrival", "Planned Arrival")}</label>
+                  <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.planned_arrival", "Planned Arrival")}</label>
                   <input type="date" value={leg.plannedArrival} onChange={(e) => updateLeg(idx, { plannedArrival: e.target.value })} className={inputClass} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.actual_arrival", "Actual Arrival")}</label>
+                  <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.actual_arrival", "Actual Arrival")}</label>
                   <input type="date" value={leg.actualArrival} onChange={(e) => updateLeg(idx, { actualArrival: e.target.value })} className={inputClass} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 rounded-lg border border-emerald-100 bg-emerald-50/40 p-2.5 dark:border-emerald-900/40 dark:bg-emerald-950/10">
                 <div>
-                  <label className="mb-1 block text-[10px] font-bold text-emerald-700 uppercase dark:text-emerald-400">{t(lang, "comv.estimated_expense", "Estimated Expense")}</label>
+                  <label className="mb-1 block text-[11px] font-bold text-emerald-700 uppercase dark:text-emerald-400">{t(lang, "comv.estimated_expense", "Estimated Expense")}</label>
                   <input type="number" value={leg.estimatedExpenseAmount} onChange={(e) => updateLeg(idx, { estimatedExpenseAmount: e.target.value })} className={inputClass} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] font-bold text-emerald-700 uppercase dark:text-emerald-400">{t(lang, "comv.actual_expense", "Actual Expense")}</label>
+                  <label className="mb-1 block text-[11px] font-bold text-emerald-700 uppercase dark:text-emerald-400">{t(lang, "comv.actual_expense", "Actual Expense")}</label>
                   <input type="number" value={leg.actualExpenseAmount} onChange={(e) => updateLeg(idx, { actualExpenseAmount: e.target.value })} className={inputClass} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] font-bold text-emerald-700 uppercase dark:text-emerald-400">{t(lang, "comv.expense_currency", "Currency")}</label>
+                  <label className="mb-1 block text-[11px] font-bold text-emerald-700 uppercase dark:text-emerald-400">{t(lang, "comv.expense_currency", "Currency")}</label>
                   <input type="text" value={leg.expenseCurrency} onChange={(e) => updateLeg(idx, { expenseCurrency: e.target.value })} className={inputClass} />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.leg_status", "Leg Status")}</label>
+                <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.leg_status", "Leg Status")}</label>
                 <select value={leg.status} onChange={(e) => updateLeg(idx, { status: e.target.value })} className={selectClass}>
                   {["pending", "pickup_assigned", "loaded", "in_transit", "arrived", "customs_pending", "cleared", "handed_over", "completed"].map((s) => (
                     <option key={s} value={s}>{t(lang, ("comv.legstatus_" + s) as never, s.replace(/_/g, " "))}</option>
@@ -11588,7 +11588,7 @@ function Step3RouteVesselCustoms({
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{t(lang, "comv.handover_reference", "Handover Reference")}</label>
+                <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{t(lang, "comv.handover_reference", "Handover Reference")}</label>
                 <input
                   type="text"
                   placeholder={t(lang, "comv.handover_reference_ph", "Link to an existing handover record (optional)")}
@@ -11600,7 +11600,7 @@ function Step3RouteVesselCustoms({
 
               <div>
                 <div className="mb-1 flex items-center justify-between">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">{tt("remarks", "Remarks")}</label>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase">{tt("remarks", "Remarks")}</label>
                   <VoiceDictateButton
                     context="clearing"
                     lang={lang}
@@ -11803,7 +11803,7 @@ function Step4ReviewConfirm({
             <div className="text-xs font-mono font-bold text-slate-900 dark:text-slate-100">
               {formData.order_no || formData.global_serial || "AUTO-GENERATED"}
             </div>
-            <div className="text-[10px] text-slate-400">
+            <div className="text-[11px] text-slate-400">
               {formData.order_date || new Date().toISOString().split("T")[0]} {formData.order_time || ""}
             </div>
           </div>
@@ -11811,25 +11811,25 @@ function Step4ReviewConfirm({
 
         {/* References & Serials Strip */}
         <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
             {t(lang, "comv.review_references", "System Serials & Timestamps")}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 text-xs">
             <div>
-              <span className="text-[10px] font-semibold text-slate-500 block">{tt("entry_serial", "Entry Serial")}</span>
+              <span className="text-[11px] font-semibold text-slate-500 block">{tt("entry_serial", "Entry Serial")}</span>
               <span className="font-mono font-bold text-blue-700 dark:text-blue-400 text-sm">
                 {formData.entry_serial || "-"}
               </span>
             </div>
             <div>
-              <span className="text-[10px] font-semibold text-slate-500 block">{tt("global_serial_bill", "Global Serial / Bill")}</span>
+              <span className="text-[11px] font-semibold text-slate-500 block">{tt("global_serial_bill", "Global Serial / Bill")}</span>
               <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm">
                 {formData.global_serial || formData.order_no || "-"}
               </span>
             </div>
             {canSeeSerial("country", ctx) && (
               <div>
-                <span className="text-[10px] font-semibold text-slate-500 block">{tt("country_serial", "Country Serial")}</span>
+                <span className="text-[11px] font-semibold text-slate-500 block">{tt("country_serial", "Country Serial")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm">
                   {formData.country_serial || "-"}
                 </span>
@@ -11837,7 +11837,7 @@ function Step4ReviewConfirm({
             )}
             {canSeeSerial("branch", ctx) && (
               <div>
-                <span className="text-[10px] font-semibold text-slate-500 block">{tt("branch_serial", "Branch Serial")}</span>
+                <span className="text-[11px] font-semibold text-slate-500 block">{tt("branch_serial", "Branch Serial")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm">
                   {formData.branch_serial || "-"}
                 </span>
@@ -11845,7 +11845,7 @@ function Step4ReviewConfirm({
             )}
             {canSeeSerial("super", ctx) && (
               <div>
-                <span className="text-[10px] font-semibold text-slate-500 block">{tt("super_admin_serial", "Super Admin Serial")}</span>
+                <span className="text-[11px] font-semibold text-slate-500 block">{tt("super_admin_serial", "Super Admin Serial")}</span>
                 <span className="font-mono font-bold text-purple-700 dark:text-purple-400 text-sm">
                   {formData.super_admin_serial || "-"}
                 </span>
@@ -11867,7 +11867,7 @@ function Step4ReviewConfirm({
                 <button
                   type="button"
                   onClick={() => onGoToSubStep("1A")}
-                  className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
                 >
                   {tt("edit_1a", "Edit 1A")}
                 </button>
@@ -11875,11 +11875,11 @@ function Step4ReviewConfirm({
               <div className="text-sm font-black text-slate-900 dark:text-white">{custName}</div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                 <div>
-                  <span className="text-[10px] text-slate-400 block">{tt("field_company", "Company")}</span>
+                  <span className="text-[11px] text-slate-400 block">{tt("field_company", "Company")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">{custCompany}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">{tt("account_ref", "Account Ref")}</span>
+                  <span className="text-[11px] text-slate-400 block">{tt("account_ref", "Account Ref")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">
                     {selectedAccountInfo?.name
                       ? `${selectedAccountInfo.name} (${selectedAccountInfo.code || ""})`
@@ -11887,15 +11887,15 @@ function Step4ReviewConfirm({
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">{tt("phone_mobile", "Phone / Mobile")}</span>
+                  <span className="text-[11px] text-slate-400 block">{tt("phone_mobile", "Phone / Mobile")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">{custPhone}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">{tt("field_email", "Email")}</span>
+                  <span className="text-[11px] text-slate-400 block">{tt("field_email", "Email")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">{custEmail}</span>
                 </div>
                 <div className="col-span-2">
-                  <span className="text-[10px] text-slate-400 block">{tt("registered_address", "Registered Address")}</span>
+                  <span className="text-[11px] text-slate-400 block">{tt("registered_address", "Registered Address")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">{custAddress}</span>
                 </div>
               </div>
@@ -11913,7 +11913,7 @@ function Step4ReviewConfirm({
                 <button
                   type="button"
                   onClick={() => onGoToSubStep("1C")}
-                  className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline print:hidden"
+                  className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline print:hidden"
                 >
                   {tt("edit_1c", "Edit 1C")}
                 </button>
@@ -11921,19 +11921,19 @@ function Step4ReviewConfirm({
               <div className="text-sm font-black text-slate-900 dark:text-white">{consigneeName}</div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                 <div>
-                  <span className="text-[10px] text-slate-400 block">{tt("movement_type_field", "Movement Type")}</span>
+                  <span className="text-[11px] text-slate-400 block">{tt("movement_type_field", "Movement Type")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
                     {movementTypeLabel(lang, formData.movement_type)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">{tt("transport_mode_field", "Transport Mode")}</span>
+                  <span className="text-[11px] text-slate-400 block">{tt("transport_mode_field", "Transport Mode")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
                     {transportModeLabel(lang, formData.transport_mode)}
                   </span>
                 </div>
                 <div className="col-span-2">
-                  <span className="text-[10px] text-slate-400 block">{tt("final_delivery_destination", "Final Delivery Destination")}</span>
+                  <span className="text-[11px] text-slate-400 block">{tt("final_delivery_destination", "Final Delivery Destination")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">
                     {formData.final_delivery_location ||
                       formData.destination_city ||
@@ -11942,13 +11942,13 @@ function Step4ReviewConfirm({
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">{tt("buyer_name", "Buyer Name")}</span>
+                  <span className="text-[11px] text-slate-400 block">{tt("buyer_name", "Buyer Name")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">
                     {partySelections.buyer.customerName || "-"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">{tt("notify_party_field", "Notify Party")}</span>
+                  <span className="text-[11px] text-slate-400 block">{tt("notify_party_field", "Notify Party")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">
                     {partySelections.notify_party.customerName || "-"}
                   </span>
@@ -11968,7 +11968,7 @@ function Step4ReviewConfirm({
             <button
               type="button"
               onClick={() => onGoToSubStep("1C")}
-              className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
+              className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
             >
               {tt("edit_1c", "Edit 1C")}
             </button>
@@ -11976,20 +11976,20 @@ function Step4ReviewConfirm({
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase font-semibold block">{tt("pickup_source_field", "Pickup Source")}</span>
+              <span className="text-[11px] text-slate-400 uppercase font-semibold block">{tt("pickup_source_field", "Pickup Source")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
                 {formData.loading_source_name || (formData.loading_source ? loadingSourceLabel(lang, formData.loading_source) : "-")}
               </span>
             </div>
             <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase font-semibold block">{tt("origin_loading_field", "Origin Loading")}</span>
+              <span className="text-[11px] text-slate-400 uppercase font-semibold block">{tt("origin_loading_field", "Origin Loading")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
                 {formData.loading_country_name || "-"}{" "}
                 {formData.loading_port_name ? `(${formData.loading_port_name})` : ""}
               </span>
             </div>
             <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase font-semibold block">
+              <span className="text-[11px] text-slate-400 uppercase font-semibold block">
                 {tt("destination_port_border", "Destination Port / Border")}
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
@@ -12000,7 +12000,7 @@ function Step4ReviewConfirm({
               </span>
             </div>
             <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase font-semibold block">
+              <span className="text-[11px] text-slate-400 uppercase font-semibold block">
                 {tt("final_destination_country_field", "Final Destination Country")}
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
@@ -12012,37 +12012,37 @@ function Step4ReviewConfirm({
           {/* Operational Milestones (Planned vs Actual) */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-1 text-xs">
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("planned_pickup_badge", "Planned Pickup")}</span>
+              <span className="text-[11px] text-slate-400 block uppercase">{tt("planned_pickup_badge", "Planned Pickup")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.planned_pickup_date || "-"}
               </span>
             </div>
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("actual_pickup_badge", "Actual Pickup")}</span>
+              <span className="text-[11px] text-slate-400 block uppercase">{tt("actual_pickup_badge", "Actual Pickup")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.actual_pickup_date || "-"}
               </span>
             </div>
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("planned_dispatch_badge", "Planned Dispatch")}</span>
+              <span className="text-[11px] text-slate-400 block uppercase">{tt("planned_dispatch_badge", "Planned Dispatch")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.planned_dispatch_date || "-"}
               </span>
             </div>
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("actual_dispatch_badge", "Actual Dispatch")}</span>
+              <span className="text-[11px] text-slate-400 block uppercase">{tt("actual_dispatch_badge", "Actual Dispatch")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.actual_dispatch_date || "-"}
               </span>
             </div>
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("planned_arrival_badge", "Planned Arrival")}</span>
+              <span className="text-[11px] text-slate-400 block uppercase">{tt("planned_arrival_badge", "Planned Arrival")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.planned_arrival_date || "-"}
               </span>
             </div>
             <div className="border border-slate-100 dark:border-slate-800 rounded-lg p-2 bg-slate-50/40 dark:bg-slate-800/30">
-              <span className="text-[9.5px] text-slate-400 block uppercase">{tt("actual_arrival_badge", "Actual Arrival")}</span>
+              <span className="text-[11px] text-slate-400 block uppercase">{tt("actual_arrival_badge", "Actual Arrival")}</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {formData.actual_arrival_date || "-"}
               </span>
@@ -12060,7 +12060,7 @@ function Step4ReviewConfirm({
             <button
               type="button"
               onClick={() => onGoToSubStep("1B")}
-              className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
+              className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
             >
               {tt("edit_1b", "Edit 1B")}
             </button>
@@ -12068,7 +12068,7 @@ function Step4ReviewConfirm({
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <span className="text-[10px] text-slate-400 block uppercase">{tt("assignment_mode_field", "Assignment Mode")}</span>
+              <span className="text-[11px] text-slate-400 block uppercase">{tt("assignment_mode_field", "Assignment Mode")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
                 {formData.truck_assignment_mode === "permanent"
                   ? tt("permanent_fleet_value", "Permanent Fleet")
@@ -12078,19 +12078,19 @@ function Step4ReviewConfirm({
               </span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 block uppercase">{tt("truck_vehicle_plate", "Truck / Vehicle Plate")}</span>
+              <span className="text-[11px] text-slate-400 block uppercase">{tt("truck_vehicle_plate", "Truck / Vehicle Plate")}</span>
               <span className="font-mono font-bold text-blue-700 dark:text-blue-400 text-sm">
                 {formData.truck_number || tt("not_assigned_value", "Not Assigned")}
               </span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 block uppercase">{tt("driver_name_field", "Driver Name")}</span>
+              <span className="text-[11px] text-slate-400 block uppercase">{tt("driver_name_field", "Driver Name")}</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200">
                 {formData.truck_driver_name || "-"}
               </span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 block uppercase">{tt("driver_mobile_field", "Driver Mobile")}</span>
+              <span className="text-[11px] text-slate-400 block uppercase">{tt("driver_mobile_field", "Driver Mobile")}</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200">
                 {formData.truck_driver_mobile || "-"}
               </span>
@@ -12108,7 +12108,7 @@ function Step4ReviewConfirm({
             <button
               type="button"
               onClick={() => onGoToSubStep("1B")}
-              className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
+              className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
             >
               {tt("edit_goods_1b", "Edit Goods (1B)")}
             </button>
@@ -12117,7 +12117,7 @@ function Step4ReviewConfirm({
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/50">
+                <tr className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/50">
                   <Th className="py-2.5 px-3">#</Th>
                   <Th className="py-2.5 px-3">{tt("goods_description_th", "Goods Description")}</Th>
                   <Th className="py-2.5 px-3">{tt("chs_code", "CHS Code")}</Th>
@@ -12153,7 +12153,7 @@ function Step4ReviewConfirm({
                             {item.goodsName}
                           </span>
                           {[(item as any).goodsVariationLabel, (item as any).lotName ? `${tt("goods_lot_name", "Lot Name")}: ${(item as any).lotName}` : ""].filter(Boolean).length ? (
-                            <span className="text-[10px] text-slate-400 block">{[(item as any).goodsVariationLabel, (item as any).lotName ? `${tt("goods_lot_name", "Lot Name")}: ${(item as any).lotName}` : ""].filter(Boolean).join(" • ")}</span>
+                            <span className="text-[11px] text-slate-400 block">{[(item as any).goodsVariationLabel, (item as any).lotName ? `${tt("goods_lot_name", "Lot Name")}: ${(item as any).lotName}` : ""].filter(Boolean).join(" • ")}</span>
                           ) : null}
                         </td>
                         <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400">
@@ -12223,7 +12223,7 @@ function Step4ReviewConfirm({
               <button
                 type="button"
                 onClick={() => onGoToSubStep("1C")}
-                className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline print:hidden"
               >
                 {tt("edit_legs_1c", "Edit Legs (1C)")}
               </button>
@@ -12265,7 +12265,7 @@ function Step4ReviewConfirm({
         <div className="pt-6 border-t-2 border-slate-900 dark:border-slate-100">
           <div className="grid grid-cols-3 gap-6 text-center text-xs">
             <div className="space-y-8">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
                 {tt("prepared_by_operator", "Prepared By (Operator / Agent)")}
               </span>
               <div className="border-b border-dashed border-slate-400 w-3/4 mx-auto" />
@@ -12275,7 +12275,7 @@ function Step4ReviewConfirm({
             </div>
 
             <div className="space-y-8">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
                 {tt("fleet_driver_acceptance", "Fleet / Driver Acceptance")}
               </span>
               <div className="border-b border-dashed border-slate-400 w-3/4 mx-auto" />
@@ -12285,7 +12285,7 @@ function Step4ReviewConfirm({
             </div>
 
             <div className="space-y-8">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
                 {tt("customer_authorized_consignee", "Customer / Authorized Consignee")}
               </span>
               <div className="border-b border-dashed border-slate-400 w-3/4 mx-auto" />

@@ -260,7 +260,7 @@ export function UaeTaxControlCenter({ lang: langProp }: { lang?: SupportedLangua
             {/* Net VAT headline */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-4 dark:border-blue-900 dark:bg-blue-950/30">
-                <p className="text-[10px] font-black uppercase tracking-wider text-blue-500">{s.t("cc_k_net_vat", "Net VAT Payable")}</p>
+                <p className="text-[11px] font-black uppercase tracking-wider text-blue-500">{s.t("cc_k_net_vat", "Net VAT Payable")}</p>
                 <p className="mt-1 text-xl font-black tabular-nums text-blue-700 dark:text-blue-300">
                   {fmtAed(k?.net_vat_aed ?? 0)} <span className="text-xs font-bold text-blue-400">AED</span>
                 </p>
@@ -281,9 +281,9 @@ export function UaeTaxControlCenter({ lang: langProp }: { lang?: SupportedLangua
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {sec.cards.map((c) => (
                       <div key={c.label} className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-800/40">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{c.label}</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{c.label}</p>
                         <p className="mt-1 text-sm font-black tabular-nums text-slate-800 dark:text-slate-100">
-                          {fmtAed(c.value)} <span className="text-[10px] font-bold text-slate-400">AED</span>
+                          {fmtAed(c.value)} <span className="text-[11px] font-bold text-slate-400">AED</span>
                         </p>
                       </div>
                     ))}
@@ -311,7 +311,7 @@ function MiniStat({
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">
+      <p className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-slate-400">
         <Icon className={`h-3.5 w-3.5 ${tone}`} />
         {label}
       </p>

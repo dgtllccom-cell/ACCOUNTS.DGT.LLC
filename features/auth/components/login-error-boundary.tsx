@@ -69,7 +69,7 @@ export class LoginErrorBoundary extends Component<Props, State> {
               <h3 className="font-black text-sm uppercase tracking-wider text-rose-700 dark:text-rose-300">
                 {t(lang, "loginerr.diagnostic_notice", "Login Component Diagnostic Notice")}
               </h3>
-              <p className="text-[10px] font-mono text-rose-500" dir="ltr">{t(lang, "loginerr.ref_id", "Ref ID:")} {this.state.refId}</p>
+              <p className="text-[11px] font-mono text-rose-500" dir="ltr">{t(lang, "loginerr.ref_id", "Ref ID:")} {this.state.refId}</p>
             </div>
           </div>
 
@@ -80,7 +80,7 @@ export class LoginErrorBoundary extends Component<Props, State> {
           <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-rose-200 dark:border-rose-900/60 font-mono text-[11px] text-rose-800 dark:text-rose-300 overflow-x-auto max-h-36" dir="ltr">
             <p className="font-bold">{this.state.error?.name}: {this.state.error?.message}</p>
             {this.state.error?.stack && (
-              <pre className="mt-2 text-[10px] opacity-80 whitespace-pre-wrap">{this.state.error.stack}</pre>
+              <pre className="mt-2 text-[11px] opacity-80 whitespace-pre-wrap">{this.state.error.stack}</pre>
             )}
           </div>
 

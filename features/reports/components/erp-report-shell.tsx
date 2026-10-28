@@ -47,7 +47,7 @@ function KpiCard({ label, value, subValue, colorClass, bgClass, borderClass, ico
           <div className={colorClass}>{icon}</div>
         </div>
       </div>
-      <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">{label}</p>
+      <p className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">{label}</p>
       <div className={cn("text-2xl font-black tabular-nums tracking-tight", valueColorClass ?? colorClass)}>
         {display}
       </div>
@@ -113,7 +113,7 @@ function BillSummaryCard({ data, title }: { data: BillSummaryKpi; title?: string
         <div className="rounded-lg p-1.5 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900">
           <ClipboardList className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{heading}</span>
+        <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{heading}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
         <span className="text-slate-600 dark:text-slate-400 font-medium">{tt("ers.total_bills", "Total Bills")}</span>
@@ -157,7 +157,7 @@ function AmountSummaryCard({ data }: { data: AmountSummaryKpi }) {
         <div className="rounded-lg p-1.5 bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900">
           <Wallet className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
           {tt("ers.total_amounts", "Total Amounts")} ({data.currency})
         </span>
       </div>
@@ -198,7 +198,7 @@ function BranchesCard({ data }: { data: BranchSummaryKpi }) {
         <div className="rounded-lg p-1.5 bg-violet-50 dark:bg-violet-950/50 border border-violet-100 dark:border-violet-900">
           <Building2 className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{tt("ers.branches", "Branches")}</span>
+        <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{tt("ers.branches", "Branches")}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
         <span className="text-slate-600 dark:text-slate-400 font-medium">{tt("ers.total_branches", "Total Branches")}</span>
@@ -227,7 +227,7 @@ function ThisMonthCard({ data }: { data: ThisMonthKpi }) {
         <div className="rounded-lg p-1.5 bg-orange-50 dark:bg-orange-950/50 border border-orange-100 dark:border-orange-900">
           <Calendar className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{tt("ers.this_month", "This Month")}</span>
+        <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{tt("ers.this_month", "This Month")}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
         <span className="text-slate-600 dark:text-slate-400 font-medium">{tt("ers.bills_created", "Bills Created")}</span>
@@ -266,7 +266,7 @@ function QuickInfoCard({ data }: { data: QuickInfoKpi }) {
         <div className="rounded-lg p-1.5 bg-teal-50 dark:bg-teal-950/50 border border-teal-100 dark:border-teal-900">
           <Info className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{tt("ers.quick_info", "Quick Info")}</span>
+        <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{tt("ers.quick_info", "Quick Info")}</span>
       </div>
       {data.currency && (
         <div className="flex items-center justify-between text-xs">

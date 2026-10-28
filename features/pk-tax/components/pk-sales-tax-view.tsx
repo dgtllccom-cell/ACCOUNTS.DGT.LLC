@@ -102,13 +102,13 @@ export function PkSalesTaxView({ lang }: { lang?: string }) {
                     return (
                       <tr key={r.id} data-testid="pkst-row" data-status={r.status} onClick={() => setOpenId(r.id)} className="cursor-pointer border-t border-slate-100 hover:bg-green-50/40 dark:border-slate-800 dark:hover:bg-green-950/20">
                         <td className="px-3 py-2 font-mono font-semibold">{r.return_no}</td>
-                        <td className="px-3 py-2">{r.company_name ?? r.legal_name}<div className="font-mono text-[10px] text-slate-400" dir="ltr">{r.strn}</div></td>
+                        <td className="px-3 py-2">{r.company_name ?? r.legal_name}<div className="font-mono text-[11px] text-slate-400" dir="ltr">{r.strn}</div></td>
                         <td className="px-3 py-2 font-mono" dir="ltr">{MONTHS[r.period_month]} {r.period_year}</td>
                         <td className="px-3 py-2">
                           <span className="font-mono" dir="ltr">{d10(r.filing_deadline)}</span>
-                          {open && <span className={`ms-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${days < 0 ? "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300" : days <= 15 ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{days < 0 ? s.t("overdue_by", "overdue") : `${days} ${s.t("days_left", "days left")}`}</span>}
+                          {open && <span className={`ms-2 rounded-full px-1.5 py-0.5 text-[11px] font-bold ${days < 0 ? "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300" : days <= 15 ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{days < 0 ? s.t("overdue_by", "overdue") : `${days} ${s.t("days_left", "days left")}`}</span>}
                         </td>
-                        <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status]}`}>{statusLabel(r.status)}</span></td>
+                        <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.status]}`}>{statusLabel(r.status)}</span></td>
                         <td className="px-3 py-2 font-semibold tabular-nums" dir="ltr">{PKR(r.net_payable)}</td>
                         <td className="px-3 py-2">{r.accountant_confirmed ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4 text-amber-500" />}</td>
                         <td className="px-3 py-2">{r.responsible_name ?? "—"}</td>
@@ -170,7 +170,7 @@ function ReturnDetail({ s, id, statusLabel, onClose, setError, setNotice }: Comm
 
   const field = (key: string, label: string, props: Row = {}) => (
     <div>
-      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
+      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
       <input data-testid={`pkst-w-${key}`} disabled={!editable} className={INP} value={w[key] ?? ""} onChange={(e) => setW({ ...w, [key]: e.target.value })} {...props} />
     </div>
   );
@@ -208,7 +208,7 @@ function ReturnDetail({ s, id, statusLabel, onClose, setError, setNotice }: Comm
           <div className="flex justify-between gap-2"><span>{s.t("input_tax", "Input tax")}</span><b className="tabular-nums" dir="ltr">{PKR(c.input_tax_amount)}</b></div>
           <div className="flex justify-between gap-2 border-t border-green-200 pt-2 text-sm dark:border-green-900/50"><span className="font-bold">{s.t("net_payable", "Net payable")}</span><b className="tabular-nums" dir="ltr" data-testid="pkst-net">{PKR(c.net_payable)}</b></div>
           {Number(c.net_payable) < 0 && <p className="text-[11px] font-semibold text-blue-700 dark:text-blue-300">{s.t("credit_note", "Negative value: this is a carry-forward input tax credit, not an amount payable.")}</p>}
-          {c.rate_source_note && <p className="text-[10px] text-slate-500">{s.t("source", "Source")}: {c.rate_source_note}</p>}
+          {c.rate_source_note && <p className="text-[11px] text-slate-500">{s.t("source", "Source")}: {c.rate_source_note}</p>}
           <div className="rounded-lg border p-2" data-testid="pkst-confirm-box" style={{ borderColor: c.accountant_confirmed ? undefined : "rgb(245 158 11)" }}>
             {c.accountant_confirmed ? (
               <p className="flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="h-4 w-4" />{s.t("rate_confirmed_by", "Rate confirmed by")} {m.responsible_name ?? c.accountant_confirmed_by} {s.t("on_date", "on")} {d10(c.accountant_confirmed_at)}</p>
@@ -317,5 +317,5 @@ function NewReturnModal({ s, onClose, onCreated }: { s: ReturnType<typeof useErp
 }
 
 function L({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
+  return <div><label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
 }

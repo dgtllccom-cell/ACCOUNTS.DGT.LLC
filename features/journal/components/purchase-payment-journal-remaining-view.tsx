@@ -589,7 +589,7 @@ export function PurchasePaymentJournalRemainingView({
             tone="bg-rose-600"
             title={tt("card_country_branch", "Country/Branch Report")}
             badge={
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800 text-[9px] font-black uppercase tracking-wider">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800 text-[11px] font-black uppercase tracking-wider">
                 {tt("super_admin_only", "Super Admin Only")}
               </span>
             }
@@ -740,7 +740,7 @@ export function PurchasePaymentJournalRemainingView({
                     <td className="px-2.5 py-2 text-end font-mono font-bold text-slate-900 dark:text-white">{money(p.amount)}</td>
                     <td className="px-2.5 py-2 text-slate-600 dark:text-slate-300 whitespace-nowrap">{p.payment_method_name || "—"}</td>
                     <td className="px-2.5 py-2">
-                      <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold border", statusBadgeClass(p.status))}>
+                      <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-extrabold border", statusBadgeClass(p.status))}>
                         {statusLabel(p.status, lang)}
                       </span>
                     </td>
@@ -781,7 +781,7 @@ export function PurchasePaymentJournalRemainingView({
       {/* Purchase Order Summary (Selected Payment) */}
       {checked && checkedOrder ? (
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5">
-          <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+          <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
             {tt("po_summary_selected", "Purchase Order Summary (Selected Payment)")}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
@@ -820,7 +820,7 @@ export function PurchasePaymentJournalRemainingView({
           subtitle={checked.super_admin_serial || checked.entry_serial || undefined}
           actions={
             <div className="flex items-center gap-1.5">
-              <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold border", statusBadgeClass(checked.status))}>
+              <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-extrabold border", statusBadgeClass(checked.status))}>
                 {statusLabel(checked.status, lang)}
               </span>
               <button

@@ -263,7 +263,7 @@ export function UserLiveReportPanel({
             )}
             <div>
               <h2 className="text-sm font-bold text-slate-900">{tt("ulrp.title", "User Journal Detailed Report")}</h2>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-500 mt-1 font-medium">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500 mt-1 font-medium">
                 <span><strong>{tt("ulrp.journal_id", "Journal ID")}:</strong> <span className="font-mono text-slate-700">{displayRegNo}</span></span>
                 <span><strong>{tt("ulrp.login_user_id", "Login User ID")}:</strong> <span className="text-[#1455ff] font-extrabold">{displayUserCode}</span></span>
                 <span><strong>{tt("ulrp.system_id", "System ID")}:</strong> <span className="font-mono text-slate-700">{displayRegNo}</span></span>
@@ -333,12 +333,12 @@ export function UserLiveReportPanel({
           </div>
           <div>
             <h1 className="text-base font-black tracking-tight leading-none text-slate-900">{fullName || "—"}</h1>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1.5 flex items-center gap-2">
+            <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mt-1.5 flex items-center gap-2">
               Role: <span className="text-blue-600 font-extrabold">{role ? role.replace(/_/g, " ") : "city_branch_admin"}</span>
             </p>
           </div>
         </div>
-        <span className="bg-emerald-50 border border-emerald-250 text-emerald-700 text-[9px] font-black tracking-widest px-3 py-1 rounded-md uppercase">
+        <span className="bg-emerald-50 border border-emerald-250 text-emerald-700 text-[11px] font-black tracking-widest px-3 py-1 rounded-md uppercase">
           {activeStatus}
         </span>
       </div>
@@ -351,20 +351,20 @@ export function UserLiveReportPanel({
 
           {/* Card 1: Basic Information */}
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
-            <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
-              <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">1</span>
+            <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[11px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[11px] flex items-center justify-center font-bold leading-none">1</span>
               {tt("ulrp.card1", "BASIC INFORMATION")}
             </div>
             <div className="p-4 space-y-3">
               <DetailRow label={tt("ulrp.user_name", "User Name")} value={fullName || "-"} />
               <DetailRow label={tt("ulrp.role", "Role")} value={role || "-"} />
-              <DetailRow label={tt("ulrp.status", "Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px] font-black uppercase tracking-wider">{activeStatus}</span>} />
+              <DetailRow label={tt("ulrp.status", "Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[11px] font-black uppercase tracking-wider">{activeStatus}</span>} />
               <DetailRow label={tt("ulrp.reg_date", "Registered Date")} value={displayRegDate} />
               <DetailRow label={tt("ulrp.last_login", "Last Login")} value={displayLastLogin} />
               <DetailRow
                 label={tt("ulrp.password_sec", "Password Security")}
                 value={
-                  <span className="inline-flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700">
+                  <span className="inline-flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700">
                     {tt("ulrp.reset_notice", "Reset via Super Admin action only")}
                   </span>
                 }
@@ -374,8 +374,8 @@ export function UserLiveReportPanel({
 
           {/* Card 2: Branch Information */}
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
-            <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
-              <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">2</span>
+            <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[11px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[11px] flex items-center justify-center font-bold leading-none">2</span>
               {tt("ulrp.card2", "BRANCH INFORMATION")}
             </div>
             <div className="p-4 space-y-3">
@@ -390,8 +390,8 @@ export function UserLiveReportPanel({
 
           {/* Card 3: User Employee Information */}
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
-            <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
-              <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">3</span>
+            <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[11px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[11px] flex items-center justify-center font-bold leading-none">3</span>
               {tt("ulrp.card3", "USER EMPLOYEE INFORMATION")}
             </div>
             <div className="p-4 space-y-3">
@@ -400,7 +400,7 @@ export function UserLiveReportPanel({
               <DetailRow label={tt("ulrp.designation", "Designation")} value={designation} />
               <DetailRow label={tt("ulrp.department", "Department")} value={department} />
               <DetailRow label={tt("ulrp.joining_date", "Joining Date")} value={displayRegDate.slice(0, 11)} />
-              <DetailRow label={tt("ulrp.emp_status", "Employment Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px] font-black uppercase tracking-wider">{activeStatus}</span>} />
+              <DetailRow label={tt("ulrp.emp_status", "Employment Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[11px] font-black uppercase tracking-wider">{activeStatus}</span>} />
             </div>
           </div>
 
@@ -411,8 +411,8 @@ export function UserLiveReportPanel({
 
           {/* Card 4: Contact details */}
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
-            <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
-              <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">4</span>
+            <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[11px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[11px] flex items-center justify-center font-bold leading-none">4</span>
               {tt("ulrp.card4", "EMPLOYEE CONTACT DETAILS")}
             </div>
             <div className="p-4 space-y-3">
@@ -428,8 +428,8 @@ export function UserLiveReportPanel({
           {/* Card 5: System Activity KPI Summary */}
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden flex flex-col justify-between">
             <div>
-              <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
-                <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">5</span>
+              <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[11px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
+                <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[11px] flex items-center justify-center font-bold leading-none">5</span>
                 {tt("ulrp.card5", "SYSTEM ACTIVITY SUMMARY")}
               </div>
               <div className="grid grid-cols-3 md:grid-cols-6 gap-2 p-4">
@@ -453,14 +453,14 @@ export function UserLiveReportPanel({
 
         {/* Row 3: Card 6: Assigned Permissions */}
         <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
-          <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
-            <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">6</span>
+          <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[11px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
+            <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[11px] flex items-center justify-center font-bold leading-none">6</span>
             {tt("ulrp.card6", "ASSIGNED PERMISSIONS")} ({selectedPermissions.length})
           </div>
           <div className="p-4 flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto">
             {selectedPermissions.length ? (
               selectedPermissions.map((p) => (
-                <span key={p} className="px-2.5 py-1 text-[9px] font-bold font-mono rounded bg-slate-50 border border-slate-200/80 text-slate-700">
+                <span key={p} className="px-2.5 py-1 text-[11px] font-bold font-mono rounded bg-slate-50 border border-slate-200/80 text-slate-700">
                   {p}
                 </span>
               ))
@@ -476,12 +476,12 @@ export function UserLiveReportPanel({
           {/* Card 7: Activity Log Table */}
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden lg:col-span-8 flex flex-col justify-between">
             <div>
-              <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
-                <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">7</span>
+              <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[11px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
+                <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[11px] flex items-center justify-center font-bold leading-none">7</span>
                 {tt("ulrp.card7", "JOURNAL ACTIVITY LOG")}
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left text-[10px] min-w-[500px]">
+                <table className="w-full border-collapse text-left text-[11px] min-w-[500px]">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-extrabold uppercase tracking-wider">
                       <Th className="px-3 py-2 border-r border-slate-100">#</Th>
@@ -499,7 +499,7 @@ export function UserLiveReportPanel({
                       <td className="px-3 py-1.5 border-r border-slate-100 font-medium">{tt("ulrp.evt_initial_creation", "Initial User Creation & Role Assignment")}</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500">SYS-REG</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono">192.168.1.100</td>
-                      <td className="px-3 py-1.5 text-[9px]">
+                      <td className="px-3 py-1.5 text-[11px]">
                         <span className="text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 font-bold uppercase">{tt("ulrp.st_created", "CREATED")}</span>
                       </td>
                     </tr>
@@ -509,7 +509,7 @@ export function UserLiveReportPanel({
                       <td className="px-3 py-1.5 border-r border-slate-100 font-medium">{tt("ulrp.evt_assigned_perms", "Assigned permissions / role defaults")}</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500">SYS-PERM</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono">192.168.1.100</td>
-                      <td className="px-3 py-1.5 text-[9px]">
+                      <td className="px-3 py-1.5 text-[11px]">
                         <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 font-bold uppercase">{tt("ulrp.st_assigned", "ASSIGNED")}</span>
                       </td>
                     </tr>
@@ -519,7 +519,7 @@ export function UserLiveReportPanel({
                       <td className="px-3 py-1.5 border-r border-slate-100 font-medium">{tt("ulrp.evt_login_auth", "User Login Session Authenticated")}</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500">AUTH-LOG</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono">192.168.1.100</td>
-                      <td className="px-3 py-1.5 text-[9px]">
+                      <td className="px-3 py-1.5 text-[11px]">
                         <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-250 font-bold uppercase">{tt("ulrp.st_online", "ONLINE")}</span>
                       </td>
                     </tr>
@@ -529,7 +529,7 @@ export function UserLiveReportPanel({
                       <td className="px-3 py-1.5 border-r border-slate-100 font-medium">{tt("ulrp.evt_activity_refresh", "System activity refresh")}</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500">ACT-REF</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono">192.168.1.100</td>
-                      <td className="px-3 py-1.5 text-[9px]">
+                      <td className="px-3 py-1.5 text-[11px]">
                         <span className="text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 font-bold uppercase">{tt("ulrp.st_active", "ACTIVE")}</span>
                       </td>
                     </tr>
@@ -539,7 +539,7 @@ export function UserLiveReportPanel({
                       <td className="px-3 py-1.5 border-r border-slate-100 font-medium">{tt("ulrp.evt_auditable_logged", "Auditable action logged")}</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500">AUD-LOG</td>
                       <td className="px-3 py-1.5 border-r border-slate-100 font-mono">192.168.1.100</td>
-                      <td className="px-3 py-1.5 text-[9px]">
+                      <td className="px-3 py-1.5 text-[11px]">
                         <span className="text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 font-bold uppercase">{tt("ulrp.st_active", "ACTIVE")}</span>
                       </td>
                     </tr>
@@ -552,8 +552,8 @@ export function UserLiveReportPanel({
           {/* Card 8: Audit Trail */}
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden lg:col-span-4 flex flex-col justify-between">
             <div>
-              <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
-                <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">8</span>
+              <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[11px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
+                <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[11px] flex items-center justify-center font-bold leading-none">8</span>
                 {tt("ulrp.card8", "AUDIT TRAIL")}
               </div>
               <div className="p-4 space-y-3">
@@ -562,7 +562,7 @@ export function UserLiveReportPanel({
                 <DetailRow label={tt("ulrp.updated_by", "Last Updated By")} value={updatedBy} />
                 <DetailRow label={tt("ulrp.updated_on", "Last Updated On")} value={displayLastLogin} />
                 <DetailRow label={tt("ulrp.total_updates", "Total Updates")} value={activityCounts.edits.toString()} />
-                <DetailRow label={tt("ulrp.record_status", "Record Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px] font-black uppercase tracking-wider">{activeStatus}</span>} />
+                <DetailRow label={tt("ulrp.record_status", "Record Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[11px] font-black uppercase tracking-wider">{activeStatus}</span>} />
               </div>
             </div>
           </div>
@@ -571,13 +571,13 @@ export function UserLiveReportPanel({
 
         {/* ── Signature & Stamp Block ───────────────────────────────────── */}
         <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="text-[10px] text-slate-400 max-w-md text-center sm:text-left leading-relaxed">
+          <div className="text-[11px] text-slate-400 max-w-md text-center sm:text-left leading-relaxed">
             <strong className="text-slate-800 font-bold block mb-1">{tt("ulrp.remarks_declarations", "Remarks & Declarations")}:</strong>
             {tt("ulrp.remarks_body", "This is the official user journal audit report summary. All activities, permission matrices, and security tokens are logged and tracked under global ERP identity governance frameworks.")}
           </div>
 
           {/* Gold Verified CSS Seal Badge */}
-          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 text-white font-black text-[9px] border-2 border-double border-yellow-100 shadow-md tracking-wider flex-shrink-0">
+          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 text-white font-black text-[11px] border-2 border-double border-yellow-100 shadow-md tracking-wider flex-shrink-0">
             <div className="flex flex-col items-center">
               <span>{tt("ulrp.verified", "VERIFIED")}</span>
               <span className="text-[5px] opacity-90 tracking-widest mt-0.5 font-bold">{tt("acct.brand_short", "Digital Dock ERP")}</span>
@@ -590,13 +590,13 @@ export function UserLiveReportPanel({
                 <path d="M10 28C25 24 35 12 45 10C55 8 68 18 60 25C52 32 30 38 42 22C54 6 78 5 90 12C102 19 110 32 122 25C134 18 140 10 145 15" stroke="#1e3b8b" stroke-width="1.8" stroke-linecap="round"/>
               </svg>
             </div>
-            <div className="text-[10px] font-bold text-slate-800">{tt("role.super_admin", "Super Admin")}</div>
-            <div className="text-[8px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">{tt("ulrp.role_enterprise_admin", "Enterprise Administrator")}</div>
+            <div className="text-[11px] font-bold text-slate-800">{tt("role.super_admin", "Super Admin")}</div>
+            <div className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">{tt("ulrp.role_enterprise_admin", "Enterprise Administrator")}</div>
           </div>
         </div>
 
         {/* ── Footer ────────────────────────────────────────────────────── */}
-        <div className="border-t border-slate-100 pt-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[8px] font-semibold text-slate-400 tracking-wider uppercase">
+        <div className="border-t border-slate-100 pt-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-semibold text-slate-400 tracking-wider uppercase">
           <span>{tt("ulrp.footer_directory", "Enterprise ERP User Directory")}</span>
           <span suppressHydrationWarning>{tt("ulrp.system_time", "System Time")}: {new Date().toLocaleString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</span>
           <span>{tt("ulrp.report_id", "Report ID")}: UJR-DTL-{displayUserCode}-{new Date().toISOString().slice(0,10).replace(/-/g,"")}</span>
@@ -620,7 +620,7 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
 function KpiTile({ label, val, color }: { label: string; val: number; color: string }) {
   return (
     <div className={`border rounded-lg p-2 text-center shadow-sm ${color}`}>
-      <div className="text-[8px] font-extrabold tracking-wider uppercase text-slate-500 truncate">{label}</div>
+      <div className="text-[11px] font-extrabold tracking-wider uppercase text-slate-500 truncate">{label}</div>
       <div className="text-base font-black mt-1 leading-none">{val}</div>
     </div>
   );

@@ -316,11 +316,11 @@ export function CustomerOrderInsurancePanel({ orderId, legs, ledgers, lang }: Pr
       {showCreateForm && (
         <form onSubmit={handleCreatePolicy} className="grid grid-cols-1 sm:grid-cols-3 gap-2 rounded-lg border border-teal-200 bg-white p-3 dark:border-teal-900/50 dark:bg-slate-900">
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("insurer_name_label", "Insurer / Underwriter Name")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("insurer_name_label", "Insurer / Underwriter Name")}</label>
             <input value={insurerName} onChange={(e) => setInsurerName(e.target.value)} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("insurer_account_label", "Insurer Account (Account Master)")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("insurer_account_label", "Insurer Account (Account Master)")}</label>
             <select value={insurerAccountId} onChange={(e) => setInsurerAccountId(e.target.value)} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
               <option value="">{tt("select_ledger", "Select ledger…")}</option>
               {ledgers.map((l) => (
@@ -329,45 +329,45 @@ export function CustomerOrderInsurancePanel({ orderId, legs, ledgers, lang }: Pr
             </select>
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("policy_no_label", "Policy Number")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("policy_no_label", "Policy Number")}</label>
             <input value={policyNo} onChange={(e) => setPolicyNo(e.target.value)} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("covered_cargo_label", "Covered Cargo / Goods Description")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("covered_cargo_label", "Covered Cargo / Goods Description")}</label>
             <input value={coveredCargo} onChange={(e) => setCoveredCargo(e.target.value)} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("territory_label", "Territory / Transit Route")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("territory_label", "Territory / Transit Route")}</label>
             <input value={territory} onChange={(e) => setTerritory(e.target.value)} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("insured_value_label", "Insured Value")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("insured_value_label", "Insured Value")}</label>
             <input type="number" min="0" step="0.01" value={insuredValue} onChange={(e) => setInsuredValue(e.target.value)} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("currency_label", "Currency")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("currency_label", "Currency")}</label>
             <input value={currency} onChange={(e) => setCurrency(e.target.value)} maxLength={3} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs uppercase dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("premium_amount_label", "Premium Amount (optional)")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("premium_amount_label", "Premium Amount (optional)")}</label>
             <input type="number" min="0" step="0.01" value={premiumAmount} onChange={(e) => setPremiumAmount(e.target.value)} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("coverage_from_label", "Coverage From")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("coverage_from_label", "Coverage From")}</label>
             <input type="date" value={coverageFrom} onChange={(e) => setCoverageFrom(e.target.value)} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("coverage_to_label", "Coverage To")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("coverage_to_label", "Coverage To")}</label>
             <input type="date" value={coverageTo} onChange={(e) => setCoverageTo(e.target.value)} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("from_leg_label", "Covers From Leg #")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("from_leg_label", "Covers From Leg #")}</label>
             <select value={fromLegNo} onChange={(e) => setFromLegNo(Number(e.target.value))} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
               {legs.map((l) => <option key={l.legNo} value={l.legNo}>#{l.legNo}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("to_leg_label", "Covers To Leg #")}</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("to_leg_label", "Covers To Leg #")}</label>
             <select value={toLegNo} onChange={(e) => setToLegNo(Number(e.target.value))} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
               {legs.map((l) => <option key={l.legNo} value={l.legNo}>#{l.legNo}</option>)}
             </select>
@@ -393,23 +393,23 @@ export function CustomerOrderInsurancePanel({ orderId, legs, ledgers, lang }: Pr
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-bold text-xs text-slate-800 dark:text-slate-100">{p.insurer_name}</span>
-                <span className="text-[10px] text-slate-500">{tt("policy_no_short", "Policy")} #{p.policy_no}</span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <span className="text-[11px] text-slate-500">{tt("policy_no_short", "Policy")} #{p.policy_no}</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                   <Layers className="h-3 w-3" />
                   {tt("legs_short", "Legs")} {p.from_leg_no === p.to_leg_no ? `#${p.from_leg_no}` : `#${p.from_leg_no}-#${p.to_leg_no}`}
                 </span>
                 {p.status === "cancelled" && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                     <Ban className="h-3 w-3" />{tt("status_cancelled", "Cancelled")}
                   </span>
                 )}
                 {isExpired(p) && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700 dark:bg-red-900/40 dark:text-red-300">
                     <ShieldAlert className="h-3 w-3" />{tt("status_expired", "Expired")}
                   </span>
                 )}
                 {!isExpired(p) && isExpiringSoon(p) && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
                     <Clock className="h-3 w-3" />{tt("status_expiring_soon", "Expiring Soon")}
                   </span>
                 )}
@@ -420,7 +420,7 @@ export function CustomerOrderInsurancePanel({ orderId, legs, ledgers, lang }: Pr
                   type="button"
                   onClick={() => handleCancelPolicy(p.id)}
                   disabled={busyPolicyId === p.id}
-                  className="text-[10px] font-bold text-red-600 hover:underline disabled:opacity-50"
+                  className="text-[11px] font-bold text-red-600 hover:underline disabled:opacity-50"
                 >
                   {tt("cancel_policy_btn", "Cancel Policy")}
                 </button>
@@ -444,7 +444,7 @@ export function CustomerOrderInsurancePanel({ orderId, legs, ledgers, lang }: Pr
                     type="button"
                     onClick={() => handleCreateBill(p.id)}
                     disabled={busyPolicyId === p.id}
-                    className="inline-flex items-center gap-1 rounded-lg border border-teal-300 bg-teal-50 px-2 py-1 text-[10px] font-bold text-teal-700 hover:bg-teal-100 disabled:opacity-50 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-300"
+                    className="inline-flex items-center gap-1 rounded-lg border border-teal-300 bg-teal-50 px-2 py-1 text-[11px] font-bold text-teal-700 hover:bg-teal-100 disabled:opacity-50 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-300"
                   >
                     <Plus className="h-3 w-3" />{tt("create_bill_btn", "Create Premium Bill")}
                   </button>
@@ -454,17 +454,17 @@ export function CustomerOrderInsurancePanel({ orderId, legs, ledgers, lang }: Pr
                     type="button"
                     onClick={() => handleApproveBill(p.bill_id as string, p.id)}
                     disabled={busyPolicyId === p.id}
-                    className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300"
+                    className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-indigo-50 px-2 py-1 text-[11px] font-bold text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300"
                   >
                     <CheckCircle2 className="h-3 w-3" />{tt("approve_post_btn", "Approve & Post")}
                   </button>
                 )}
                 {p.bill_id && p.posting_status === "posted" && (
                   <>
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${p.payment_status === "paid" ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"}`}>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${p.payment_status === "paid" ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"}`}>
                       {p.payment_status === "paid" ? tt("bill_status_paid", "Paid") : p.payment_status === "partially_paid" ? tt("bill_status_partial", "Partially Paid") : tt("bill_status_pending", "Payment Pending")}
                     </span>
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[11px] text-slate-500">
                       {tt("remaining_short", "Remaining:")} {p.currency} {Number(p.remaining_balance ?? 0).toLocaleString()}
                     </span>
                     {Number(p.remaining_balance ?? 0) > 0 && (
@@ -474,7 +474,7 @@ export function CustomerOrderInsurancePanel({ orderId, legs, ledgers, lang }: Pr
                           setPaymentPolicy(p);
                           setPaymentAmount(String(p.remaining_balance ?? ""));
                         }}
-                        className="inline-flex items-center gap-1 rounded-lg border border-green-300 bg-green-50 px-2 py-1 text-[10px] font-bold text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300"
+                        className="inline-flex items-center gap-1 rounded-lg border border-green-300 bg-green-50 px-2 py-1 text-[11px] font-bold text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300"
                       >
                         <CreditCard className="h-3 w-3" />{tt("record_payment_btn", "Record Payment")}
                       </button>
@@ -498,11 +498,11 @@ export function CustomerOrderInsurancePanel({ orderId, legs, ledgers, lang }: Pr
             <h3 className="mb-3 text-sm font-black text-slate-800 dark:text-slate-100">{tt("record_payment_title", "Record Premium Payment")}</h3>
             <div className="space-y-2">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("payment_amount_label", "Amount")}</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("payment_amount_label", "Amount")}</label>
                 <input type="number" min="0" step="0.01" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{tt("payment_source_ledger", "Pay From (Cash/Bank Account)")}</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{tt("payment_source_ledger", "Pay From (Cash/Bank Account)")}</label>
                 <select value={paymentAccountId} onChange={(e) => setPaymentAccountId(e.target.value)} className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
                   <option value="">{tt("select_ledger", "Select ledger…")}</option>
                   {ledgers.filter((l) => l.id !== paymentPolicy.insurer_account_id).map((l) => (

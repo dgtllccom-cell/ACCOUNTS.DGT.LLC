@@ -395,7 +395,7 @@ export function ShippingLineMasterSetup() {
                             href={line.website.startsWith("http") ? line.website : `https://${line.website}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-primary hover:underline"
+                            className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
                           >
                             <ExternalLink className="h-3 w-3" />
                             {line.website}
@@ -428,7 +428,7 @@ export function ShippingLineMasterSetup() {
                             linkedCountryNames.map((cName) => (
                               <span
                                 key={cName}
-                                className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
+                                className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
                               >
                                 🌐 {cName}
                               </span>
@@ -577,7 +577,7 @@ export function ShippingLineMasterSetup() {
                       variant="ghost"
                       size="sm"
                       onClick={selectAllLinkedCountries}
-                      className="h-6 px-2 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:text-blue-300"
+                      className="h-6 px-2 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:text-blue-300"
                     >
                       Select All
                     </Button>
@@ -586,7 +586,7 @@ export function ShippingLineMasterSetup() {
                       variant="ghost"
                       size="sm"
                       onClick={clearAllLinkedCountries}
-                      className="h-6 px-2 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:text-blue-300"
+                      className="h-6 px-2 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:text-blue-300"
                     >
                       Clear
                     </Button>

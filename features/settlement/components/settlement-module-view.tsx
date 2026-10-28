@@ -263,7 +263,7 @@ export function SettlementModuleView({
         <div className="lg:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col">
           <div className="overflow-x-auto flex-1">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[10px]">
+              <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[11px]">
                 <tr>
                   <Th className="py-3 px-3">{th("Date / Serial")}</Th>
                   <Th className="py-3 px-3">{th("Party & Narration")}</Th>
@@ -310,18 +310,18 @@ export function SettlementModuleView({
                           <div className="font-semibold text-slate-900 dark:text-white">
                             {txn.source_reference_no || txn.source_id.substring(0, 8)}
                           </div>
-                          <div className="text-[10px] text-slate-400">{txn.source_date}</div>
+                          <div className="text-[11px] text-slate-400">{txn.source_date}</div>
                         </td>
                         <td className="py-3 px-3 max-w-[180px]">
                           <div className="font-medium text-slate-900 dark:text-white truncate">
                             {txn.party_name || "—"}
                           </div>
-                          <div className="text-[10px] text-slate-400 truncate">
+                          <div className="text-[11px] text-slate-400 truncate">
                             {txn.narration || txn.party_account_no || "—"}
                           </div>
                         </td>
                         <td className="py-3 px-2 text-center">
-                          <span className={`font-black uppercase text-[9px] px-1.5 py-0.5 rounded ${
+                          <span className={`font-black uppercase text-[11px] px-1.5 py-0.5 rounded ${
                             isCr ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
                           }`}>
                             {txn.direction}
@@ -329,13 +329,13 @@ export function SettlementModuleView({
                         </td>
                         <td className="py-3 px-3 text-right">
                           <div className="font-medium">{txn.local_currency} {Number(txn.local_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                          <div className="text-[10px] text-slate-400">${Number(txn.original_usd_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                          <div className="text-[11px] text-slate-400">${Number(txn.original_usd_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                         </td>
                         <td className="py-3 px-3 text-right font-bold text-slate-900 dark:text-white">
                           {txn.local_currency} {Number(txn.remaining_local).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-3 px-2 text-center">
-                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          <span className="text-[11px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                             {txn.settlement_status.replace("_", " ")}
                           </span>
                         </td>
@@ -363,7 +363,7 @@ export function SettlementModuleView({
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-blue-600">{th("Selected Entry")}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold uppercase ${
                     selectedTxn.direction === "cr" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
                   }`}>
                     {selectedTxn.direction.toUpperCase()}
@@ -407,7 +407,7 @@ export function SettlementModuleView({
                       >
                         <div>
                           <div className="font-semibold">{link.dr_reference_no || th("DR Link")}</div>
-                          <div className="text-[10px] text-slate-400">
+                          <div className="text-[11px] text-slate-400">
                             {link.linked_local_amount.toLocaleString()} ({link.fx_direction.toUpperCase()} FX: ${link.fx_difference_usd})
                           </div>
                         </div>
@@ -432,7 +432,7 @@ export function SettlementModuleView({
                   </h4>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 uppercase">{th("Target DR Transaction")}</label>
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase">{th("Target DR Transaction")}</label>
                     <select
                       value={targetDrId}
                       onChange={(e) => setTargetDrId(e.target.value)}
@@ -449,7 +449,7 @@ export function SettlementModuleView({
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 uppercase">{th("Link Amount")} ({selectedTxn.local_currency})</label>
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase">{th("Link Amount")} ({selectedTxn.local_currency})</label>
                     <input
                       type="number"
                       step="any"
@@ -462,7 +462,7 @@ export function SettlementModuleView({
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 uppercase">{th("Settlement Remarks")}</label>
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase">{th("Settlement Remarks")}</label>
                     <input
                       type="text"
                       placeholder={th("Optional notes...")}

@@ -238,7 +238,7 @@ export function RouteTemplatesView({ lang: langProp }: { lang?: string }) {
                     </td>
                     <td className="px-3 py-2 text-end tabular-nums">{row.legs?.length || 0}</td>
                     <td className="px-3 py-2">
-                      <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-black uppercase text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                      <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-black uppercase text-slate-600 dark:border-slate-700 dark:text-slate-300">
                         {s.t(`status_${row.status}`, row.status)}
                       </span>
                     </td>
@@ -265,19 +265,19 @@ export function RouteTemplatesView({ lang: langProp }: { lang?: string }) {
               {error ? <div className="rounded-md border border-rose-300 bg-rose-50 p-2 text-xs text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300">{error}</div> : null}
 
               <label className="block space-y-1.5 text-xs">
-                <span className="text-[10px] font-black uppercase text-slate-500">{s.t("col_name", "Name")}</span>
+                <span className="text-[11px] font-black uppercase text-slate-500">{s.t("col_name", "Name")}</span>
                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder={s.t("name_placeholder", "e.g. Tajikistan → Afghanistan → Pakistan → Saudi Arabia")} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-950" />
               </label>
 
               <label className="block space-y-1.5 text-xs">
-                <span className="text-[10px] font-black uppercase text-slate-500">{s.t("col_description", "Description")} ({s.t("optional", "optional")})</span>
+                <span className="text-[11px] font-black uppercase text-slate-500">{s.t("col_description", "Description")} ({s.t("optional", "optional")})</span>
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950" />
               </label>
 
               <div className="space-y-2 rounded-xl border border-slate-200 p-2.5 dark:border-slate-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase text-slate-500">{s.t("legs", "Route Legs")}</span>
-                  <button type="button" onClick={addLeg} className="inline-flex items-center gap-1 rounded-lg border border-cyan-200 bg-cyan-50 px-2 py-1 text-[10px] font-black text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-300">
+                  <span className="text-[11px] font-black uppercase text-slate-500">{s.t("legs", "Route Legs")}</span>
+                  <button type="button" onClick={addLeg} className="inline-flex items-center gap-1 rounded-lg border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] font-black text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-300">
                     <Plus className="h-3 w-3" /> {s.t("add_leg", "Add Leg")}
                   </button>
                 </div>
@@ -285,7 +285,7 @@ export function RouteTemplatesView({ lang: langProp }: { lang?: string }) {
                 {legs.map((leg, idx) => (
                   <div key={leg.key} className="space-y-1.5 rounded-lg border border-slate-100 p-2 dark:border-slate-800">
                     <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-slate-500">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-black text-slate-500">
                         <GripVertical className="h-3 w-3" /> {s.t("leg_no", "Leg")} {idx + 1}
                       </span>
                       <div className="flex items-center gap-1">
@@ -303,7 +303,7 @@ export function RouteTemplatesView({ lang: langProp }: { lang?: string }) {
                     </div>
 
                     <label className="block space-y-1 text-[11px]">
-                      <span className="text-[10px] font-black uppercase text-slate-500">{s.t("leg_transport_mode", "Transport Mode")}</span>
+                      <span className="text-[11px] font-black uppercase text-slate-500">{s.t("leg_transport_mode", "Transport Mode")}</span>
                       <select
                         value={leg.transportMode}
                         onChange={(e) => updateLeg(leg.key, { transportMode: e.target.value as LegTransportMode, fromLocationId: "", toLocationId: "" })}
@@ -334,7 +334,7 @@ export function RouteTemplatesView({ lang: langProp }: { lang?: string }) {
                     </div>
 
                     <label className="block space-y-1 text-[11px]">
-                      <span className="text-[10px] font-black uppercase text-slate-500">{s.t("leg_clearance_type", "Import / Export / Transit")}</span>
+                      <span className="text-[11px] font-black uppercase text-slate-500">{s.t("leg_clearance_type", "Import / Export / Transit")}</span>
                       <select
                         value={leg.clearanceType}
                         onChange={(e) => updateLeg(leg.key, { clearanceType: e.target.value as any })}

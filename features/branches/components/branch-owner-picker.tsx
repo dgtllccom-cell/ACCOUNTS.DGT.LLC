@@ -422,7 +422,7 @@ export function BranchOwnerPicker({
               <div>
                 <h3 className="text-base font-black tracking-wide text-slate-900 dark:text-white">{viewOwner.customer_name}</h3>
                 {viewOwner.person_code ? (
-                  <p className="text-[10px] font-mono font-black text-blue-600 dark:text-blue-400 mt-0.5">{viewOwner.person_code}</p>
+                  <p className="text-[11px] font-mono font-black text-blue-600 dark:text-blue-400 mt-0.5">{viewOwner.person_code}</p>
                 ) : null}
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                   {t(lang as never, "hr.pp_company" as never, "Company")}: <span className="font-bold text-slate-700 dark:text-slate-300">{viewOwner.company_name || t(lang as never, "hr.pp_independent" as never, "Independent Account")}</span>
@@ -431,19 +431,19 @@ export function BranchOwnerPicker({
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-950">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang as never, "hr.pp_mobile_phone" as never, "Mobile Phone")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang as never, "hr.pp_mobile_phone" as never, "Mobile Phone")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-white text-sm" dir="ltr">{viewOwner.mobile || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang as never, "sed.f_whatsapp" as never, "WhatsApp")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang as never, "sed.f_whatsapp" as never, "WhatsApp")}</span>
                 <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm" dir="ltr">{viewOwner.whatsapp || viewOwner.mobile || "—"}</span>
               </div>
               <div className="sm:col-span-2">
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang as never, "hr.pp_email_address" as never, "Email Address")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang as never, "hr.pp_email_address" as never, "Email Address")}</span>
                 <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-xs" dir="ltr">{viewOwner.email || "—"}</span>
               </div>
               <div className="sm:col-span-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang as never, "hr.pp_address_location" as never, "Address / Location")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang as never, "hr.pp_address_location" as never, "Address / Location")}</span>
                 <span className="font-medium text-slate-800 dark:text-slate-200 text-xs">{viewOwner.address || "—"}</span>
               </div>
             </div>

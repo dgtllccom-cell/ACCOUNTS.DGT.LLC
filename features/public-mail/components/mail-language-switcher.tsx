@@ -63,7 +63,7 @@ export function MailLanguageSwitcher({ language }: { language: SupportedLanguage
               }`}
             >
               <span>{l.nativeName}</span>
-              {l.code !== "en" && <span className="text-[10px] text-slate-400">{l.englishName}</span>}
+              {l.code !== "en" && <span className="text-[11px] text-slate-400">{l.englishName}</span>}
             </button>
           ))}
         </div>

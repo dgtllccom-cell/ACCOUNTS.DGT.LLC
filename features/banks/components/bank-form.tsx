@@ -642,7 +642,7 @@ export function BankForm({
                   placeholder={tr("bank.short_name_placeholder", "e.g. SCB, HBL, UBL")}
                   maxLength={20}
                 />
-                <p className="text-[10px] text-muted-foreground">{tr("bank.short_code_hint", "Short code for bank")}</p>
+                <p className="text-[11px] text-muted-foreground">{tr("bank.short_code_hint", "Short code for bank")}</p>
               </div>
             </div>
 
@@ -655,7 +655,7 @@ export function BankForm({
                   onChange={(e) => set("accountTitle", e.target.value)}
                   placeholder={tr("bank.enter_account_title", "Enter account title / name")}
                 />
-                <p className="text-[10px] text-muted-foreground">{tr("bank.account_title_hint", "Account holder name (Personal or Company)")}</p>
+                <p className="text-[11px] text-muted-foreground">{tr("bank.account_title_hint", "Account holder name (Personal or Company)")}</p>
               </div>
 
               <div className="space-y-1.5">
@@ -701,7 +701,7 @@ export function BankForm({
                       <p className="text-xs font-bold text-primary">
                         {form.currency || tr("bank.not_selected", "Not selected")}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">{tr("bank.currency_selected", "Currency Selected")}</p>
+                      <p className="text-[11px] text-muted-foreground">{tr("bank.currency_selected", "Currency Selected")}</p>
                     </div>
                   </div>
                 </div>
@@ -878,12 +878,12 @@ export function BankForm({
             </div>
             <div>
               {savedBank ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   {tr("bank.saved_record", "Saved Record")}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 border border-amber-200">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                   {tr("bank.live_draft", "Live Draft")}
                 </span>
@@ -899,19 +899,19 @@ export function BankForm({
               </div>
             )}
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.bank_name", "Bank Name")}</p>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.bank_name", "Bank Name")}</p>
               <p className="font-bold text-sm mt-0.5 text-slate-900">{savedBank ? savedBank.bank_name : form.bankName || "-"}</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.account_title_label", "Account Title")}</p>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.account_title_label", "Account Title")}</p>
               <p className="font-semibold mt-0.5 text-slate-800">{savedBank ? savedBank.account_title : form.accountTitle || "-"}</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.account_number", "Account Number")}</p>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.account_number", "Account Number")}</p>
               <p className="font-mono font-bold mt-0.5 text-slate-900">{savedBank ? savedBank.account_number : form.accountNumber || "-"}</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.iban_label", "IBAN")}</p>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.iban_label", "IBAN")}</p>
               <p className="font-mono mt-0.5 break-all text-slate-700">{savedBank ? (savedBank.iban_number || "-") : form.ibanNumber || "-"}</p>
             </div>
             <div className="flex justify-between border-t pt-2">

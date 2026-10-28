@@ -52,7 +52,7 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
         <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-white/10 -translate-y-1/2 translate-x-1/2 blur-2xl" />
         <div className="relative flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full text-white/90">
+            <span className="text-[11px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full text-white/90">
               {syncData?.scope?.scopeLabel || tt("mbl.live_sync_active", "LIVE SYNC ACTIVE")}
             </span>
             <h2 className="text-xl font-black text-white mt-1">{user.fullName}</h2>
@@ -68,7 +68,7 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
             <ShieldCheck className="h-4 w-4 text-emerald-300" />
             <span>{tt("mobiledash.secure_encryption", "Secure Encryption Active")}</span>
           </div>
-          <span className="text-[10px] font-mono text-emerald-200">{tt("mobiledash.five_lang_ai_ready", "5-Lang AI Ready")}</span>
+          <span className="text-[11px] font-mono text-emerald-200">{tt("mobiledash.five_lang_ai_ready", "5-Lang AI Ready")}</span>
         </div>
       </div>
 
@@ -80,13 +80,13 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
           className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm cursor-pointer hover:border-emerald-500 transition-all"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-500">{tt("mbl.new_messages", "New Messages")}</span>
+            <span className="text-[11px] font-black uppercase text-slate-500">{tt("mbl.new_messages", "New Messages")}</span>
             <div className="rounded-xl bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/40">
               <MessageSquare className="h-4 w-4" />
             </div>
           </div>
           <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">{stats.newMessages}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+          <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
             {tt("mbl.tap_inbox", "Tap to open inbox")} <ChevronRight className="h-3 w-3" />
           </p>
         </div>
@@ -97,13 +97,13 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
           className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm cursor-pointer hover:border-amber-500 transition-all"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-500">{tt("mbl.ai_drafts", "AI Drafts Ready")}</span>
+            <span className="text-[11px] font-black uppercase text-slate-500">{tt("mbl.ai_drafts", "AI Drafts Ready")}</span>
             <div className="rounded-xl bg-amber-50 p-2 text-amber-600 dark:bg-amber-950/40">
               <Sparkles className="h-4 w-4" />
             </div>
           </div>
           <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-2">{stats.aiRepliesReady}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">{tt("mbl.live_db_verified", "Live ERP DB Verified")}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{tt("mbl.live_db_verified", "Live ERP DB Verified")}</p>
         </div>
 
         {/* Today's Payment Reminders */}
@@ -112,13 +112,13 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
           className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm cursor-pointer hover:border-purple-500 transition-all"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-500">{tt("mbl.reminders_today", "Reminders Today")}</span>
+            <span className="text-[11px] font-black uppercase text-slate-500">{tt("mbl.reminders_today", "Reminders Today")}</span>
             <div className="rounded-xl bg-purple-50 p-2 text-purple-600 dark:bg-purple-950/40">
               <Clock className="h-4 w-4" />
             </div>
           </div>
           <p className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-2">{stats.todayPaymentReminders}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">{tt("mbl.auto_halt_paid", "Auto-halt when paid")}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{tt("mbl.auto_halt_paid", "Auto-halt when paid")}</p>
         </div>
 
         {/* Active Contacts */}
@@ -127,13 +127,13 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
           className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm cursor-pointer hover:border-blue-500 transition-all"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-500">{tt("mbl.erp_contacts", "ERP Contacts")}</span>
+            <span className="text-[11px] font-black uppercase text-slate-500">{tt("mbl.erp_contacts", "ERP Contacts")}</span>
             <div className="rounded-xl bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/40">
               <Users className="h-4 w-4" />
             </div>
           </div>
           <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-2">{stats.activeCustomers}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">{tt("mbl.cust_suppliers", "Customers & Suppliers")}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{tt("mbl.cust_suppliers", "Customers & Suppliers")}</p>
         </div>
       </div>
 
@@ -143,7 +143,7 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
           <h3 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
             <Activity className="h-4 w-4 text-emerald-500" /> {tt("mobiledash.activity_title", "Live ERP Communication Activity")}
           </h3>
-          <span className="text-[10px] text-slate-400 font-mono">{tt("mobiledash.real_time", "Real-time")}</span>
+          <span className="text-[11px] text-slate-400 font-mono">{tt("mobiledash.real_time", "Real-time")}</span>
         </div>
 
         <div className="space-y-2.5 text-xs">
@@ -157,7 +157,7 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
                 )}
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200">{item.title}</p>
-                  <p className="text-[10px] text-slate-500">{item.detail}</p>
+                  <p className="text-[11px] text-slate-500">{item.detail}</p>
                 </div>
               </div>
             ))

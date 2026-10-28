@@ -354,7 +354,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                   </div>
                 </div>
 
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
                   {card.label}
                 </p>
 
@@ -369,7 +369,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                     {card.value}
                   </span>
                   <span
-                    className={`text-[10.5px] font-bold ${
+                    className={`text-[11px] font-bold ${
                       card.badgeType === "down"
                         ? "text-rose-600 dark:text-rose-400"
                         : "text-emerald-600 dark:text-emerald-400"
@@ -409,14 +409,14 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                   <h3 className="text-xs font-bold text-slate-900 dark:text-white">
                     {tt("dash.sales_overview", "Sales Overview")}
                   </h3>
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                     {tt("cdash.sales_by_branch", "SALES BY BRANCH")} • {currency}
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                className="h-7 px-2 text-[10.5px] font-semibold border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 inline-flex items-center gap-1 shadow-2xs"
+                className="h-7 px-2 text-[11px] font-semibold border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 inline-flex items-center gap-1 shadow-2xs"
               >
                 <span>Last 6 Months</span>
                 <ChevronDown className="h-3 w-3 text-slate-400" />
@@ -475,14 +475,14 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                   <h3 className="text-xs font-bold text-slate-900 dark:text-white">
                     {tt("cdash.purchase_overview", "Purchase Overview")}
                   </h3>
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                     {tt("cdash.purchases_by_branch", "PURCHASES BY BRANCH")} • {currency}
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                className="h-7 px-2 text-[10.5px] font-semibold border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 inline-flex items-center gap-1 shadow-2xs"
+                className="h-7 px-2 text-[11px] font-semibold border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 inline-flex items-center gap-1 shadow-2xs"
               >
                 <span>Last 6 Months</span>
                 <ChevronDown className="h-3 w-3 text-slate-400" />
@@ -548,14 +548,14 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                   <h3 className="text-xs font-bold text-slate-900 dark:text-white">
                     {tt("cdash.top_branches", "Top Branches by Sales")}
                   </h3>
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                     {tt("cdash.sales_distribution", "SALES DISTRIBUTION")} • {currency}
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                className="h-7 px-2 text-[10.5px] font-semibold border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 inline-flex items-center gap-1 shadow-2xs"
+                className="h-7 px-2 text-[11px] font-semibold border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 inline-flex items-center gap-1 shadow-2xs"
               >
                 <span>This Year</span>
                 <ChevronDown className="h-3 w-3 text-slate-400" />
@@ -589,7 +589,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                     <span className="text-sm font-black text-slate-900 dark:text-white leading-tight">
                       {formatMoney(data.salesTotal || 0, currency)}
                     </span>
-                    <span className="text-[9px] font-semibold text-slate-400 uppercase">
+                    <span className="text-[11px] font-semibold text-slate-400 uppercase">
                       Total Sales
                     </span>
                   </div>
@@ -646,7 +646,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse" dir={isRtl ? "rtl" : "ltr"}>
               <thead>
-                <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10.5px] tracking-wider">
+                <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 text-slate-500 dark:text-slate-400 font-bold uppercase text-[11px] tracking-wider">
                   <Th className="px-4 py-3.5 w-12 text-slate-400">#</Th>
                   <Th className="px-4 py-3.5 font-bold">{tt("cdash.col_branch_name", "BRANCH NAME")}</Th>
                   <Th className="px-4 py-3.5 font-bold">{tt("cdash.col_code", "CODE")}</Th>
@@ -704,7 +704,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                       {formatMoney(branch.balance, branch.branchCurrency)}
                     </td>
                     <td className="px-4 py-3.5 text-center">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         Active
                       </span>

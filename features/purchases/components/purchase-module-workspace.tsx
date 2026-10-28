@@ -497,7 +497,7 @@ export function PurchaseModuleWorkspace({
       {titleSlot && createPortal(
         <div className="flex min-w-0 items-center gap-2">
           <h1 className="truncate text-sm font-black text-foreground">{displayTitle || title}</h1>
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black uppercase text-primary">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-black uppercase text-primary">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
         </div>,
         titleSlot
       )}
@@ -567,7 +567,7 @@ export function PurchaseModuleWorkspace({
               size="sm"
               className="h-8 border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 font-extrabold shadow-sm"
             />
-            <span className="hidden h-8 items-center gap-1 rounded-lg border px-2 text-[10px] font-bold text-muted-foreground lg:inline-flex"><CalendarDays className="h-3.5 w-3.5" /> {reportNow ? `${reportNow.date}, ${reportNow.time}` : "-"}</span>
+            <span className="hidden h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-bold text-muted-foreground lg:inline-flex"><CalendarDays className="h-3.5 w-3.5" /> {reportNow ? `${reportNow.date}, ${reportNow.time}` : "-"}</span>
             <div className="relative">
               <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => setActionsOpen((value) => !value)} aria-label={t(lang, "common.actions", "Actions")}><MoreVertical className="h-4 w-4" /></Button>
               {actionsOpen ? (
@@ -669,7 +669,7 @@ export function PurchaseModuleWorkspace({
             <div key={countryCard.country} className="rounded-xl border bg-background p-4 shadow-sm">
               <div className="mb-3 flex items-center justify-between border-b pb-2">
                 <div className="font-black uppercase tracking-wide text-primary">{countryCard.country}</div>
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-black text-blue-700">{countryCard.totalOrders} POs</span>
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-black text-blue-700">{countryCard.totalOrders} POs</span>
               </div>
               
               <div className="space-y-4">
@@ -678,12 +678,12 @@ export function PurchaseModuleWorkspace({
                   return (
                     <div key={curr.currency} className="space-y-2">
                       <div className="text-[11px] font-black uppercase text-muted-foreground">{curr.currency} <span className="font-semibold lowercase text-slate-400">({curr.count} POs)</span></div>
-                      <div className="grid grid-cols-2 gap-2 text-[10px]">
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div className="rounded-lg bg-slate-50 p-2"><span className="block text-muted-foreground">{t(lang, "purchase.pmw_total_purchase", "Bill Total")}</span><b className="text-slate-800">{money(curr.invoice, curr.currency)}</b></div>
                         <div className="rounded-lg bg-emerald-50 p-2"><span className="block text-emerald-700">{t(lang, "purchase.pmw_advance", "Advance Paid")}</span><b className="text-emerald-800">{money(curr.advance, curr.currency)}</b></div>
                         <div className="rounded-lg bg-slate-100 p-2"><span className="block text-slate-600">{translateHeader(lang, "Total Paid")}</span><b className="text-slate-900">{money(curr.totalPaid, curr.currency)}</b></div>
                         <div className={cn("rounded-lg p-2 border", isPaid ? "bg-slate-900 text-white border-slate-950" : "bg-rose-50 text-rose-700 border-rose-200")}>
-                          <span className="block text-[9px] uppercase font-black">{isPaid ? "Fully Paid" : "Remaining Due"}</span>
+                          <span className="block text-[11px] uppercase font-black">{isPaid ? "Fully Paid" : "Remaining Due"}</span>
                           <b className="text-[11px]">{money(curr.remaining, curr.currency)}</b>
                         </div>
                       </div>
@@ -728,7 +728,7 @@ export function PurchaseModuleWorkspace({
         {error ? <div className="m-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">{error}</div> : null}
         <div className="overflow-auto">
           <table className="w-full min-w-[1440px] border-collapse text-xs">
-            <thead className="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase tracking-wide text-slate-600 dark:bg-slate-900/60 dark:text-slate-400">
+            <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] uppercase tracking-wide text-slate-600 dark:bg-slate-900/60 dark:text-slate-400">
               <tr>
                 {[
                   [t(lang, "purchase.pmw_col_po_number", "Booking No"), "Booking No"],
@@ -762,13 +762,13 @@ export function PurchaseModuleWorkspace({
                 return (
                   <tr key={row.id} className="border-b hover:bg-muted/40">
                     <td className="px-3 py-3 font-mono font-black text-primary">{poNumber(row)}</td>
-                    <td className="px-3 py-3 font-mono text-[9px] font-bold text-teal-600 dark:text-teal-400">{row.super_admin_serial_number || "-"}</td>
+                    <td className="px-3 py-3 font-mono text-[11px] font-bold text-teal-600 dark:text-teal-400">{row.super_admin_serial_number || "-"}</td>
                     <td className="px-3 py-3"><b>{soNumber(row)}</b><br /><span className="text-muted-foreground">{date(row.created_at)}</span></td>
                     <td className="px-3 py-3"><b>{branch(row)}</b><br /><span className="text-muted-foreground">{country(row)}</span></td>
                     <td className="px-3 py-3"><b>{form(row).purchaseAccountName || supplier(row)}</b><br /><span className="text-muted-foreground">{form(row).purchaseAccountNo || "-"}</span></td>
                     <td className="px-3 py-3"><b>{product(row)}</b><br /><span className="text-muted-foreground">{goods(row)[0]?.brand || "-"}</span></td>
                     <td className="px-3 py-3">{t(lang, "purchase.pmw_qty_label", "Qty:")} <b>{quantity(row).toLocaleString()}</b><br />{t(lang, "purchase.pmw_net_label", "Net:")} <b>{weight(row).toLocaleString()} KG</b></td>
-                    <td className="px-3 py-3 font-bold text-foreground"><b>{money(amount(row), curr)}</b><br /><span className="text-[10px] text-muted-foreground">{t(lang, "purchase.pmw_rate_label", "Rate:")} {Number(row.exchange_rate || form(row).exchangeRate || 1)}</span></td>
+                    <td className="px-3 py-3 font-bold text-foreground"><b>{money(amount(row), curr)}</b><br /><span className="text-[11px] text-muted-foreground">{t(lang, "purchase.pmw_rate_label", "Rate:")} {Number(row.exchange_rate || form(row).exchangeRate || 1)}</span></td>
                     <td className="px-3 py-3 font-semibold text-emerald-700 dark:text-emerald-400">{money(advance(row), curr)}</td>
                     <td className="px-3 py-3 font-bold text-slate-800 dark:text-slate-200">{money(totalPaid(row), curr)}</td>
                     <td className={cn("px-3 py-3 font-black", pi.isFullyPaid ? "text-slate-900 dark:text-white" : "text-rose-600 dark:text-rose-400")}>
@@ -776,12 +776,12 @@ export function PurchaseModuleWorkspace({
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex flex-col gap-0.5 items-start">
-                        <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider", ti.badgeClass)}>
+                        <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider", ti.badgeClass)}>
                           <span className={cn("h-1.5 w-1.5 rounded-full", ti.isTransferred ? "bg-white" : "bg-rose-500 animate-pulse")} />
                           {ti.statusText}
                         </span>
                         {ti.isTransferred && ti.transferDate && (
-                          <span className="text-[9px] text-muted-foreground font-mono">
+                          <span className="text-[11px] text-muted-foreground font-mono">
                             {date(ti.transferDate)}
                           </span>
                         )}
@@ -789,18 +789,18 @@ export function PurchaseModuleWorkspace({
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex flex-col gap-0.5 items-start">
-                        <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider", pi.badgeClass)}>
+                        <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider", pi.badgeClass)}>
                           <span className={cn("h-1.5 w-1.5 rounded-full", pi.isFullyPaid ? "bg-white" : "bg-rose-500 animate-pulse")} />
                           {pi.statusText}
                         </span>
                         {!pi.isFullyPaid && (
-                          <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400">
+                          <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
                             Due: {money(rem, curr)}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-3 py-3"><span className={cn("inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold", statusClass(status(row)))}>{status(row)}</span></td>
+                    <td className="px-3 py-3"><span className={cn("inline-flex rounded-full border px-2 py-0.5 text-[11px] font-bold", statusClass(status(row)))}>{status(row)}</span></td>
                     <td className="px-3 py-3"><Button type="button" variant="outline" size="icon" className="h-8 w-8" title={t(lang, "common.view", "View")}><Eye className="h-3.5 w-3.5" /></Button></td>
                   </tr>
                 );
@@ -821,7 +821,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
       <div className="flex items-center gap-2">
         <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary"><PackageCheck className="h-4 w-4" /></div>
         <div>
-          <div className="text-[10px] font-black uppercase text-muted-foreground">{label}</div>
+          <div className="text-[11px] font-black uppercase text-muted-foreground">{label}</div>
           <div className="text-sm font-black text-foreground">{value}</div>
         </div>
       </div>

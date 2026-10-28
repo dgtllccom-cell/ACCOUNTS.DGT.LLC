@@ -135,7 +135,7 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
           {addError && <div className="text-destructive text-[11px] mb-2">{addError}</div>}
           <div className="flex gap-3 items-end">
             <div className="flex-1">
-              <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
+              <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
               <select
                 value={addForm.originCountryId}
                 onChange={e => setAddForm(p => ({ ...p, originCountryId: e.target.value }))}
@@ -148,7 +148,7 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
               </select>
             </div>
             <div className="flex-1">
-              <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{t(lang, "goods.gvg_size_required", "Size *")}</label>
+              <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{t(lang, "goods.gvg_size_required", "Size *")}</label>
               <input
                 type="text"
                 placeholder={t(lang, "goods.gvg_size_placeholder_example", "e.g. W320")}
@@ -158,7 +158,7 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
               />
             </div>
             <div className="flex-1">
-              <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{t(lang, "goods.gvg_brand_required", "Brand *")}</label>
+              <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{t(lang, "goods.gvg_brand_required", "Brand *")}</label>
               <input
                 type="text"
                 placeholder={t(lang, "goods.gvg_brand_placeholder_example", "e.g. DGT")}

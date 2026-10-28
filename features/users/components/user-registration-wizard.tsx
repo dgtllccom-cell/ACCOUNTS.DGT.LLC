@@ -1495,7 +1495,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 {isDone ? <Check className="h-4 w-4" /> : s.number}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{centralT(activeLang, "urw2.step_label" as never, "Step")} {s.number}</div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{centralT(activeLang, "urw2.step_label" as never, "Step")} {s.number}</div>
                 <div className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">{s.label}</div>
               </div>
             </button>
@@ -1530,14 +1530,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               <Sparkles className="h-5 w-5 text-emerald-600" />
               <span>{centralT(activeLang, "urw2.ready_title" as never, "User Login Account Created & Verified")}</span>
             </div>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-600 text-white tracking-wide">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase bg-emerald-600 text-white tracking-wide">
               {savedUserData.status || "ACTIVE"}
             </span>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3 bg-white/80 dark:bg-slate-900/80 p-3 rounded-xl border border-emerald-200/80 dark:border-emerald-800/40">
             <div>
-              <span className="text-[10px] font-bold uppercase text-slate-500 block">
+              <span className="text-[11px] font-bold uppercase text-slate-500 block">
                 {centralT(activeLang, "urw2.login_email" as never, "Login Email Address")}
               </span>
               <strong className="text-sm font-mono font-black text-blue-700 dark:text-blue-400 select-all">
@@ -1545,7 +1545,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               </strong>
             </div>
             <div>
-              <span className="text-[10px] font-bold uppercase text-slate-500 block">
+              <span className="text-[11px] font-bold uppercase text-slate-500 block">
                 {centralT(activeLang, "urw2.user_code_lbl" as never, "System User ID / Code")}
               </span>
               <strong className="text-sm font-mono font-black text-emerald-700 dark:text-emerald-400 select-all">
@@ -1553,7 +1553,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               </strong>
             </div>
             <div>
-              <span className="text-[10px] font-bold uppercase text-slate-500 block">
+              <span className="text-[11px] font-bold uppercase text-slate-500 block">
                 {centralT(activeLang, "urw2.login_user_lbl" as never, "Username / Identifier")}
               </span>
               <strong className="text-sm font-mono font-bold text-slate-900 dark:text-slate-100 select-all">
@@ -1653,7 +1653,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   {centralT(activeLang, "urw2.authoritative_summary" as never, "Authoritative Employee Master")}
                 </span>
               </div>
-              <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+              <span className="rounded bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
                 {centralT(activeLang, "urw2.single_source_truth" as never, "Source of Truth")}
               </span>
             </div>
@@ -1676,7 +1676,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           {employeeProfile.fullName || fullName}
                         </span>
                         <span
-                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded border shrink-0 ${
+                          className={`text-[11px] font-bold px-1.5 py-0.2 rounded border shrink-0 ${
                             employeeProfile.gender?.toLowerCase().startsWith("f")
                               ? "bg-pink-50 text-pink-700 border-pink-200"
                               : "bg-blue-50 text-blue-700 border-blue-200"
@@ -1690,14 +1690,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         <span>•</span>
                         <span className="truncate">{employeeProfile.designation || designation}</span>
                       </div>
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-[11px] text-slate-400">
                         {employeeProfile.department || department}
                       </div>
                     </div>
                   </div>
 
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-bold border shrink-0 ${
                       kycStatus === "VERIFIED"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : "bg-amber-50 text-amber-700 border-amber-200"
@@ -1998,7 +1998,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             </p>
                           </div>
                         </div>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/80 dark:text-blue-200 font-bold">
+                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/80 dark:text-blue-200 font-bold">
                           EMP ID: {employeeCode || "EMP-LINKED"}
                         </span>
                       </div>
@@ -2026,7 +2026,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                                   <span className={`h-2.5 w-2.5 rounded-full ${registrationMode === "use_existing" ? "bg-blue-600" : "bg-slate-300"}`} />
                                   Use Existing User
                                 </span>
-                                <span className="text-[9.5px] uppercase font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 px-1.5 py-0.2 rounded">
+                                <span className="text-[11px] uppercase font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 px-1.5 py-0.2 rounded">
                                   Add Scope
                                 </span>
                               </div>
@@ -2034,7 +2034,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                                 Assign an additional permitted company/branch scope to the existing account without creating another login ID.
                               </p>
                             </div>
-                            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[10.5px] font-mono text-slate-700 dark:text-slate-300">
+                            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] font-mono text-slate-700 dark:text-slate-300">
                               Account: <strong className="text-blue-600 dark:text-blue-400">{existingLogins[0]?.username || existingLogins[0]?.userCode}</strong> ({existingLogins[0]?.userCode})
                             </div>
                           </button>
@@ -2058,7 +2058,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                                   <span className={`h-2.5 w-2.5 rounded-full ${registrationMode === "create_login" ? "bg-emerald-600" : "bg-slate-300"}`} />
                                   Create Additional Login
                                 </span>
-                                <span className="text-[9.5px] uppercase font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.2 rounded">
+                                <span className="text-[11px] uppercase font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.2 rounded">
                                   New Login
                                 </span>
                               </div>
@@ -2066,7 +2066,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                                 Create a separate login with its own unique User ID and login username linked to this same Employee ID.
                               </p>
                             </div>
-                            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[10.5px] font-mono text-emerald-600 dark:text-emerald-400">
+                            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
                               + New Unique User ID & Credentials
                             </div>
                           </button>
@@ -2255,7 +2255,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             <span className="text-lg">🏢</span>
                             <span>{centralT(activeLang, "urw2.domain_business" as never, "Business Section")}</span>
                           </div>
-                          <p className="text-[10.5px] mt-1 text-slate-500 dark:text-slate-400 font-normal">
+                          <p className="text-[11px] mt-1 text-slate-500 dark:text-slate-400 font-normal">
                             Commercial trading, general branches, sales, cashier & accounting operations.
                           </p>
                         </button>
@@ -2277,7 +2277,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             <span className="text-lg">🚢</span>
                             <span>{centralT(activeLang, "urw2.domain_shipping" as never, "Shipping Line Section")}</span>
                           </div>
-                          <p className="text-[10.5px] mt-1 text-slate-500 dark:text-slate-400 font-normal">
+                          <p className="text-[11px] mt-1 text-slate-500 dark:text-slate-400 font-normal">
                             Shipping lines, port clearance, customs clearing agents & container tracking.
                           </p>
                         </button>
@@ -2384,7 +2384,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             <ShieldCheck className="h-4 w-4 shrink-0" />
                             <span>{centralT(activeLang, "urw2.role_country_admin" as never, "Admin User")}</span>
                           </div>
-                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                          <p className={`text-[11px] mt-1 line-clamp-2 ${
                             role === "city_branch_admin" || role === "main_branch_admin" || role === "country_admin" || role === "super_admin"
                               ? "text-teal-100"
                               : "text-slate-500"
@@ -2411,7 +2411,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             <Users className="h-4 w-4 shrink-0" />
                             <span>{centralT(activeLang, "urw2.role_staff_user" as never, "Normal Staff User")}</span>
                           </div>
-                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                          <p className={`text-[11px] mt-1 line-clamp-2 ${
                             role === "staff_user" || role === "cashier" || role === "accountant" || role === "auditor_viewer" || role === "country_user"
                               ? "text-teal-100"
                               : "text-slate-500"
@@ -2437,7 +2437,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             <ShieldCheck className="h-4 w-4 shrink-0" />
                             <span>{centralT(activeLang, "urw2.role_main_branch_admin" as never, "Shipping Branch Admin")}</span>
                           </div>
-                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                          <p className={`text-[11px] mt-1 line-clamp-2 ${
                             role === "main_branch_admin" || role === "city_branch_admin"
                               ? "text-teal-100"
                               : "text-slate-500"
@@ -2460,7 +2460,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             <Globe2 className="h-4 w-4 shrink-0" />
                             <span>{centralT(activeLang, "urw2.role_staff_user" as never, "Normal Staff User")}</span>
                           </div>
-                          <p className={`text-[10px] mt-1 line-clamp-2 ${
+                          <p className={`text-[11px] mt-1 line-clamp-2 ${
                             role === "agent_user" || role === "staff_user"
                               ? "text-teal-100"
                               : "text-slate-500"
@@ -2559,19 +2559,19 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       </div>
                       <div className="grid grid-cols-2 gap-3 text-xs bg-white dark:bg-slate-900 p-3 rounded-lg border border-blue-100 dark:border-blue-900/40">
                         <div>
-                          <span className="text-slate-400 block text-[10.5px]">User ID / Code:</span>
+                          <span className="text-slate-400 block text-[11px]">User ID / Code:</span>
                           <strong className="font-mono text-blue-700 dark:text-blue-300">
                             {existingLogins.find((l) => l.userId === selectedExistingUserId)?.userCode || userCode}
                           </strong>
                         </div>
                         <div>
-                          <span className="text-slate-400 block text-[10.5px]">Login Username:</span>
+                          <span className="text-slate-400 block text-[11px]">Login Username:</span>
                           <strong className="font-mono text-emerald-600">
                             {existingLogins.find((l) => l.userId === selectedExistingUserId)?.username || loginUsername}
                           </strong>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-slate-400 block text-[10.5px]">Login Email:</span>
+                          <span className="text-slate-400 block text-[11px]">Login Email:</span>
                           <strong className="font-mono text-slate-800 dark:text-slate-200">
                             {existingLogins.find((l) => l.userId === selectedExistingUserId)?.email || personalEmail}
                           </strong>
@@ -2597,7 +2597,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                               const userClean = (loginUsername || firstName || fullName || "user").toLowerCase().replace(/[^a-z0-9]/g, "");
                               setPersonalEmail(`${userClean}.${codeClean}@dgt.llc`);
                             }}
-                            className="text-[10.5px] font-bold text-blue-700 hover:text-blue-900 dark:text-blue-300 hover:underline flex items-center gap-1 cursor-pointer"
+                            className="text-[11px] font-bold text-blue-700 hover:text-blue-900 dark:text-blue-300 hover:underline flex items-center gap-1 cursor-pointer"
                           >
                             <Sparkles className="h-3 w-3" />
                             <span>{centralT(activeLang, "urw2.autogen_email" as never, "+ Auto-Generate @dgt.llc Email")}</span>
@@ -2629,18 +2629,18 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                             <span>{tr("username")} *</span>
                             {isCheckingUsername ? (
-                              <span className="text-[10px] text-slate-400 font-normal">Checking...</span>
+                              <span className="text-[11px] text-slate-400 font-normal">Checking...</span>
                             ) : usernameAvailable === true ? (
-                              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200">
+                              <span className="text-[11px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200">
                                 ✓ Available
                               </span>
                             ) : usernameAvailable === false ? (
-                              <span className="text-[10px] text-rose-600 font-bold bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.2 rounded border border-rose-200">
+                              <span className="text-[11px] text-rose-600 font-bold bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.2 rounded border border-rose-200">
                                 ✗ Already in use
                               </span>
                             ) : null}
                           </Label>
-                          <span className="text-[10.5px] font-mono text-emerald-600 font-bold">User Code: {userCode}</span>
+                          <span className="text-[11px] font-mono text-emerald-600 font-bold">User Code: {userCode}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Input
@@ -2725,7 +2725,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       <div className="flex items-center justify-between">
                         <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{editUserId ? th("Confirm New Password") : th("Confirm Password *")}</Label>
                         {password && confirmPassword && (
-                          <span className={`text-[10px] font-bold ${password === confirmPassword ? "text-emerald-600" : "text-rose-600"}`}>
+                          <span className={`text-[11px] font-bold ${password === confirmPassword ? "text-emerald-600" : "text-rose-600"}`}>
                             {password === confirmPassword ? "✓ Match" : "✗ Mismatch"}
                           </span>
                         )}
@@ -2876,7 +2876,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     <div className="font-bold text-slate-900 dark:text-slate-100 border-b pb-1 flex items-center justify-between">
                       <span className="flex items-center gap-2">
                         <span>{centralT(activeLang, "urw2.summary_title" as never, "User & Master Profile Summary")}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                        <span className={`text-[11px] px-2 py-0.5 rounded font-bold ${
                           registrationMode === "create_login"
                             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
                             : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
@@ -2884,7 +2884,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           {registrationMode === "create_login" ? "Create Additional Login" : "Assign Scope to Existing User"}
                         </span>
                       </span>
-                      <span className="text-[10px] font-mono text-emerald-600 font-bold">{userCode}</span>
+                      <span className="text-[11px] font-mono text-emerald-600 font-bold">{userCode}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
                       <div>
@@ -2903,10 +2903,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           {loginUsername || userCode}
                         </strong>
                         {usernameConflict && (
-                          <span className="ml-1 text-[10px] text-red-600 font-bold">(In Use)</span>
+                          <span className="ml-1 text-[11px] text-red-600 font-bold">(In Use)</span>
                         )}
                         {usernameAvailable === true && (
-                          <span className="ml-1 text-[10px] text-emerald-600 font-semibold">(Verified)</span>
+                          <span className="ml-1 text-[11px] text-emerald-600 font-semibold">(Verified)</span>
                         )}
                       </div>
                       <div>
@@ -2950,7 +2950,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     <div className="space-y-0.5">
                       <div className="font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
                         <span>Approval & Authority Hierarchy (منظوری و سائن آف)</span>
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 font-bold dark:bg-blue-900 dark:text-blue-200">
+                        <span className="text-[11px] font-mono px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 font-bold dark:bg-blue-900 dark:text-blue-200">
                           {role.includes("admin") ? "Administrative Authority" : "Standard Operations"}
                         </span>
                       </div>
@@ -2972,10 +2972,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         <span>{centralT(activeLang, "urw2.perm_matrix_title" as never, "4-Tier Granular Permission Control (Module ➔ Section ➔ Form ➔ Actions)")}</span>
                       </Label>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800">
+                        <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800">
                           {allowedFormsCount} Forms Active
                         </span>
-                        <span className="text-[10px] font-mono text-blue-700 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded font-bold border border-blue-200 dark:border-blue-800">
+                        <span className="text-[11px] font-mono text-blue-700 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded font-bold border border-blue-200 dark:border-blue-800">
                           {totalActionsCount} Actions Granted
                         </span>
                       </div>
@@ -3019,7 +3019,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             ERP_PERMISSION_HIERARCHY.forEach(m => { next[m.key] = !allOpen; });
                             setExpandedModules(next);
                           }}
-                          className="px-2 py-1 text-[10px] font-bold rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300"
+                          className="px-2 py-1 text-[11px] font-bold rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300"
                         >
                           {Object.values(expandedModules).every(Boolean) ? centralT(activeLang, "urw2.collapse_all" as never, "Collapse All") : centralT(activeLang, "urw2.expand_all" as never, "Expand All")}
                         </button>
@@ -3050,26 +3050,26 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                               >
                                 <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isExpanded ? "" : "-rotate-90"}`} />
                                 <span>{mod.name}</span>
-                                <span className="text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                                <span className="text-[11px] px-2 py-0.5 rounded font-mono font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
                                   {mod.category}
                                 </span>
                               </button>
 
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-mono text-slate-500">
+                                <span className="text-[11px] font-mono text-slate-500">
                                   {modGrantedCount} granted
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => handleToggleHierarchyModule(mod.key, true)}
-                                  className="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
+                                  className="px-2 py-0.5 text-[11px] font-bold rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
                                 >
                                   Select All
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleToggleHierarchyModule(mod.key, false)}
-                                  className="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                                  className="px-2 py-0.5 text-[11px] font-bold rounded bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                                 >
                                   Clear
                                 </button>
@@ -3087,7 +3087,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                                         <Layers className="h-3 w-3 text-blue-600" />
                                         <span>{sec.name}</span>
                                       </span>
-                                      <div className="flex items-center gap-1.5 text-[10px]">
+                                      <div className="flex items-center gap-1.5 text-[11px]">
                                         <button
                                           type="button"
                                           onClick={() => handleToggleHierarchySection(sec.forms, true)}
@@ -3109,7 +3109,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                                     {/* Forms Table with 8-Action Toggles */}
                                     <div className="rounded-lg border border-slate-200/80 dark:border-slate-800 overflow-x-auto text-[11px]">
                                       <table className="w-full text-left border-collapse min-w-[680px]">
-                                        <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-[10px] uppercase font-bold text-slate-600 dark:text-slate-300">
+                                        <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-[11px] uppercase font-bold text-slate-600 dark:text-slate-300">
                                           <tr>
                                             <th className="p-2 pl-3 min-w-[200px]">Form / Bill Type</th>
                                             <th className="p-2 text-center w-14">View</th>
@@ -3140,13 +3140,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                                                     <button
                                                       type="button"
                                                       onClick={() => handleToggleHierarchyFormAll(form.key)}
-                                                      className="text-[9px] text-blue-600 hover:underline shrink-0"
+                                                      className="text-[11px] text-blue-600 hover:underline shrink-0"
                                                     >
                                                       All
                                                     </button>
                                                   </div>
                                                   {form.description && (
-                                                    <span className="block text-[9.5px] text-slate-400 dark:text-slate-500">
+                                                    <span className="block text-[11px] text-slate-400 dark:text-slate-500">
                                                       {form.description}
                                                     </span>
                                                   )}

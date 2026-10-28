@@ -815,7 +815,7 @@ function ScopeRegisterPanel({
 function ScopePill({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-lg border border-blue-300/20 bg-slate-950/40 px-3 py-2 text-right">
-      <div className="text-[10px] font-bold uppercase text-blue-200/70">{label}</div>
+      <div className="text-[11px] font-bold uppercase text-blue-200/70">{label}</div>
       <div className="text-sm font-black text-white">{value}</div>
     </div>
   );
@@ -969,7 +969,7 @@ function DailyFilterRow({
   return (
     <>
       <div className="min-w-[15rem]">
-        <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">{t(lang, "datepick.date_range", "Date Range")}</span>
+        <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-400">{t(lang, "datepick.date_range", "Date Range")}</span>
         <ErpDatePicker
           mode="range"
           lang={lang}
@@ -1272,7 +1272,7 @@ function SuperAdminPurchaseSummary({
             </div>
             <div className="flex justify-between items-center mt-auto">
               <span>{tt("f_status", "Status:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{tt("badge_active", "Active")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px]">{tt("badge_active", "Active")}</span>
             </div>
           </div>
         </div>
@@ -1382,15 +1382,15 @@ function SuperAdminPurchaseSummary({
 
             <div className="grid grid-cols-3 gap-1 mt-1 pb-1 border-b border-slate-100 dark:border-slate-800">
               <div className="flex flex-col">
-                 <span className="text-[9px] text-slate-400">{tt("st_pending", "Pending")}</span>
+                 <span className="text-[11px] text-slate-400">{tt("st_pending", "Pending")}</span>
                  <span className="font-black text-amber-600">{pendingTransactions}</span>
               </div>
               <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2">
-                 <span className="text-[9px] text-slate-400">{tt("st_completed", "Completed")}</span>
+                 <span className="text-[11px] text-slate-400">{tt("st_completed", "Completed")}</span>
                  <span className="font-black text-emerald-600">{completedTransactions}</span>
               </div>
               <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2">
-                 <span className="text-[9px] text-slate-400">{tt("st_cancelled", "Cancelled")}</span>
+                 <span className="text-[11px] text-slate-400">{tt("st_cancelled", "Cancelled")}</span>
                  <span className="font-black text-red-600">{cancelledTransactions}</span>
               </div>
             </div>
@@ -2211,7 +2211,7 @@ export function PurchaseBookingJournalReportView({
       {layout !== "approved" && titleSlot && createPortal(
         <div className="min-w-0">
           <h1 className="truncate text-sm font-black text-slate-900 dark:text-slate-100">{t(activeLang, "pb_register.title", "Purchase Booking Register")}</h1>
-          <p className="hidden text-[10px] font-semibold text-slate-400 sm:block">{t(activeLang, "pb_register.subtitle", "Wholesaler / Import Export / Container Trading")}</p>
+          <p className="hidden text-[11px] font-semibold text-slate-400 sm:block">{t(activeLang, "pb_register.subtitle", "Wholesaler / Import Export / Container Trading")}</p>
         </div>,
         titleSlot
       )}
@@ -2223,7 +2223,7 @@ export function PurchaseBookingJournalReportView({
             disabled={!!lockedCountryName}
             value={filters.country}
             onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
-            className="h-8 min-w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 disabled:opacity-50"
+            className="h-8 min-w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 disabled:opacity-50"
           >
             <option value="">{t(activeLang, "pb_register.select_country_all", "Select Country (All)")}</option>
             {countries.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -2234,7 +2234,7 @@ export function PurchaseBookingJournalReportView({
             disabled={!!lockedBranchName}
             value={filters.branch}
             onChange={(e) => setFilters(prev => ({ ...prev, branch: e.target.value }))}
-            className="h-8 min-w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 disabled:opacity-50"
+            className="h-8 min-w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 disabled:opacity-50"
           >
             <option value="">{t(activeLang, "pb_register.select_branch_all", "Select Branch (All)")}</option>
             {branches.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -2244,7 +2244,7 @@ export function PurchaseBookingJournalReportView({
           <select
             value={filters.status}
             onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-            className="h-8 min-w-[120px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+            className="h-8 min-w-[120px] rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
           >
             <option value="">{t(activeLang, "pb_register.select_status_all", "Select Status (All)")}</option>
             <option value="Draft">{t(activeLang, "pb_register.status_draft", "Draft")}</option>
@@ -2260,7 +2260,7 @@ export function PurchaseBookingJournalReportView({
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
               placeholder={t(activeLang, "pb_register.search_placeholder", "Search booking, supplier, branch...")}
-              className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[10px] font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+              className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[11px] font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
 
@@ -2287,7 +2287,7 @@ export function PurchaseBookingJournalReportView({
               }));
               void loadReport();
             }}
-            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
+            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
           >
             <RefreshCcw className={loading ? "h-3 w-3 animate-spin text-slate-500" : "h-3 w-3 text-slate-500"} />
             {t(activeLang, "pb_register.reset_refresh", "Reset & Refresh")}
@@ -2298,7 +2298,7 @@ export function PurchaseBookingJournalReportView({
             type="button"
             data-testid="print-action"
             onClick={() => void printPurchaseBookingRegister(registerRows, activeLang, { countryId: erpScope.lockedCountryId, countryBranchId: erpScope.lockedCountryBranchId, cityBranchId: erpScope.lockedCityBranchId, countryName: erpScope.countryName, branchName: erpScope.branchDisplayName, userName: erpScope.userName })}
-            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
           >
             <Printer className="h-3 w-3 text-slate-500" />
             {t(activeLang, "pbjr.print", "Print")}
@@ -2316,7 +2316,7 @@ export function PurchaseBookingJournalReportView({
                 router.push("/dashboard/purchase/new-purchase-booking-order");
               }
             }}
-            className="h-8 rounded-lg bg-blue-600 px-3 text-[10px] font-bold text-white hover:bg-blue-700 shadow-sm border-0 flex items-center gap-1.5 transition"
+            className="h-8 rounded-lg bg-blue-600 px-3 text-[11px] font-bold text-white hover:bg-blue-700 shadow-sm border-0 flex items-center gap-1.5 transition"
           >
             <Plus className="h-3 w-3" /> {t(activeLang, "pb_register.new_booking", "New Booking")}
           </button>
@@ -2434,7 +2434,7 @@ export function PurchaseBookingJournalReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <ClipboardList className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_bill_summary", "BILL SUMMARY")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_bill_summary", "BILL SUMMARY")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -2472,7 +2472,7 @@ export function PurchaseBookingJournalReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_total_amounts", "TOTAL AMOUNTS")} (AED)</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_total_amounts", "TOTAL AMOUNTS")} (AED)</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -2506,7 +2506,7 @@ export function PurchaseBookingJournalReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_branches", "BRANCHES")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_branches", "BRANCHES")}</span>
           </div>
           <div className="mt-2.5 space-y-1.5 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -2530,7 +2530,7 @@ export function PurchaseBookingJournalReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <CalendarDays className="h-4 w-4 text-blue-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_this_month", "THIS MONTH")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_this_month", "THIS MONTH")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -2564,7 +2564,7 @@ export function PurchaseBookingJournalReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Clock3 className="h-4 w-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_quick_info", "QUICK INFO")}</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_quick_info", "QUICK INFO")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
@@ -2606,7 +2606,7 @@ export function PurchaseBookingJournalReportView({
               <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
                 {t(activeLang, "pb_register.title", "Purchase Booking Register")}
               </h2>
-              <p className="text-[10px] text-slate-500">{t(activeLang, "pb_register.section_subtitle", "View, manage and track all purchase booking bills across branches")}</p>
+              <p className="text-[11px] text-slate-500">{t(activeLang, "pb_register.section_subtitle", "View, manage and track all purchase booking bills across branches")}</p>
             </div>
           </div>
 
@@ -2615,7 +2615,7 @@ export function PurchaseBookingJournalReportView({
               type="button"
               onClick={() => handleViewModeChange("standard")}
               className={cn(
-                "px-3 py-1.5 text-[10px] font-extrabold rounded-md transition",
+                "px-3 py-1.5 text-[11px] font-extrabold rounded-md transition",
                 tableViewMode === "standard"
                   ? "bg-blue-600 text-white shadow"
                   : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
@@ -2627,7 +2627,7 @@ export function PurchaseBookingJournalReportView({
               type="button"
               onClick={() => handleViewModeChange("detailed")}
               className={cn(
-                "px-3 py-1.5 text-[10px] font-extrabold rounded-md transition",
+                "px-3 py-1.5 text-[11px] font-extrabold rounded-md transition",
                 tableViewMode === "detailed"
                   ? "bg-blue-600 text-white shadow"
                   : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
@@ -2725,25 +2725,25 @@ export function PurchaseBookingJournalReportView({
                         rowBgClass
                       )}
                     >
-                      <Td center className={cn("font-bold text-[10px]", rowTextColor)}>{srNo}</Td>
-                      <Td center className={cn("font-mono font-bold text-[10px]", !isPosted ? "text-red-600 font-black" : "text-slate-900 dark:text-slate-100")}>{sysBillNo}</Td>
-                      <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{manualBillNo}</Td>
-                      <Td className={cn("text-[10px] whitespace-nowrap", rowTextColor)}>
+                      <Td center className={cn("font-bold text-[11px]", rowTextColor)}>{srNo}</Td>
+                      <Td center className={cn("font-mono font-bold text-[11px]", !isPosted ? "text-red-600 font-black" : "text-slate-900 dark:text-slate-100")}>{sysBillNo}</Td>
+                      <Td center className={cn("font-mono text-[11px]", rowTextColor)}>{manualBillNo}</Td>
+                      <Td className={cn("text-[11px] whitespace-nowrap", rowTextColor)}>
                         <span className="mr-1.5">{countryFlag}</span>
                         <span className="font-semibold">{trField(report, "countryName", countryName)}</span>
                       </Td>
-                      <Td className={cn("font-semibold text-[10px] whitespace-nowrap", rowTextColor)}>{trField(report, "branchName", branchName)}</Td>
-                      <Td className={cn("font-bold text-[10px] whitespace-nowrap", rowTextColor)}>{supplierName}</Td>
-                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{purchaseAcc}</Td>
-                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{salesAcc}</Td>
-                      <Td center className={cn("font-semibold whitespace-nowrap text-[10px]", rowTextColor)}>{bookingDateStr}</Td>
-                      <Td right className={cn("font-mono font-bold text-[10px]", !isPosted ? "text-red-600 font-black" : "text-slate-900 dark:text-slate-100")}>{formatMoney(totalAmountNum)}</Td>
+                      <Td className={cn("font-semibold text-[11px] whitespace-nowrap", rowTextColor)}>{trField(report, "branchName", branchName)}</Td>
+                      <Td className={cn("font-bold text-[11px] whitespace-nowrap", rowTextColor)}>{supplierName}</Td>
+                      <Td className={cn("font-mono text-[11px] whitespace-nowrap", rowTextColor)}>{purchaseAcc}</Td>
+                      <Td className={cn("font-mono text-[11px] whitespace-nowrap", rowTextColor)}>{salesAcc}</Td>
+                      <Td center className={cn("font-semibold whitespace-nowrap text-[11px]", rowTextColor)}>{bookingDateStr}</Td>
+                      <Td right className={cn("font-mono font-bold text-[11px]", !isPosted ? "text-red-600 font-black" : "text-slate-900 dark:text-slate-100")}>{formatMoney(totalAmountNum)}</Td>
                       <Td center>
-                        <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[9px] uppercase tracking-wider ${statusBadgeClass}`}>
+                        <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] uppercase tracking-wider ${statusBadgeClass}`}>
                           {statusLabel}
                         </span>
                       </Td>
-                      <Td center className={cn("font-bold text-[10px] uppercase", !isPosted ? "text-red-600 font-black" : "text-slate-700 dark:text-slate-300")}>{userName}</Td>
+                      <Td center className={cn("font-bold text-[11px] uppercase", !isPosted ? "text-red-600 font-black" : "text-slate-700 dark:text-slate-300")}>{userName}</Td>
                       <Td center onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center">
                           {/* Three Dots (: Actions) Menu with all print & inspection options */}
@@ -2975,44 +2975,44 @@ export function PurchaseBookingJournalReportView({
 
                 return (
                   <tr key={report.id} onClick={() => { setSelectedId(report.id); setIsDrawerOpen(true); }} className={cn("cursor-pointer border-b border-slate-200 transition-colors", rowBgClass)}>
-                    <Td center className={cn("font-bold text-[10px]", rowTextColor)}>{srNo}</Td>
-                    <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{superSerialNo}</Td>
-                    <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{countrySerialNo}</Td>
-                    <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{branchSerialNo}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{purchaseAccCode}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{salesAccCode}</Td>
-                    <Td className={cn("text-[10px] font-semibold whitespace-nowrap", rowTextColor)}>{trField(report, "countryName", ctyName)}</Td>
-                    <Td className={cn("text-[10px] font-semibold whitespace-nowrap", rowTextColor)}>{trField(report, "branchName", brName)}</Td>
-                    <Td center className={cn("text-[10px] whitespace-nowrap", rowTextColor)}>{dateStr}</Td>
-                    <Td className={cn("text-[10px] font-semibold whitespace-nowrap", rowTextColor)}>{report.audit?.userName || "—"}</Td>
-                    <Td className={cn("text-[10px] max-w-[200px] truncate", rowTextColor)} title={goodsName}>{goodsName}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{trField(report, "items.0.brand", g0?.brand || "Standard")}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{trField(report, "items.0.origin", g0?.origin || ctyName)}</Td>
-                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.quantity || 0)}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{translateValue(activeLang, report.unit || "KG")}</Td>
-                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.totalGrossWeight || 0)}</Td>
-                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.totalNetWeight || 0)}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{report.currency || "USD"}</Td>
-                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatMoney(report.purchaseRate || 0)}</Td>
-                    <Td right className={cn("font-mono font-bold text-[10px]", rowTextColor)}>{formatMoney(totalAmtFc)}</Td>
-                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatMoney(advFc)}</Td>
-                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatMoney(exRate)}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{finalCur}</Td>
-                    <Td right className={cn("font-mono font-bold text-[10px]", rowTextColor)}>{formatMoney(totalAmtLc)}</Td>
-                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatMoney(advLc)}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{invPercent}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{translateValue(activeLang, payCondition)}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{translateValue(activeLang, routeMode)}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "loadingCountry", loadCountry)}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{loadPort}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{loadDate}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "receivedCountry", rcvCountry)}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{rcvPort}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{rcvDate}</Td>
-                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-bold", !isPosted ? "bg-red-100 text-red-700 border border-red-300" : "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-black")}>{!isPosted ? t(activeLang, "pb_register.status_no_pending", "NO (PENDING)") : t(activeLang, "pb_register.status_yes_transferred", "YES (TRANSFERRED)")}</span></Td>
-                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-semibold", !isPosted ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-800 font-bold")}>{!isPosted ? t(activeLang, "pb_register.status_accepted", "Accepted (Not Transferred)") : t(activeLang, "pb_register.status_transferred", "Transferred")}</span></Td>
-                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{translateValue(activeLang, payStatus)}</span></Td>
-                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{translateValue(activeLang, loadStatus)}</span></Td>
+                    <Td center className={cn("font-bold text-[11px]", rowTextColor)}>{srNo}</Td>
+                    <Td center className={cn("font-mono text-[11px]", rowTextColor)}>{superSerialNo}</Td>
+                    <Td center className={cn("font-mono text-[11px]", rowTextColor)}>{countrySerialNo}</Td>
+                    <Td center className={cn("font-mono text-[11px]", rowTextColor)}>{branchSerialNo}</Td>
+                    <Td className={cn("text-[11px]", rowTextColor)}>{purchaseAccCode}</Td>
+                    <Td className={cn("text-[11px]", rowTextColor)}>{salesAccCode}</Td>
+                    <Td className={cn("text-[11px] font-semibold whitespace-nowrap", rowTextColor)}>{trField(report, "countryName", ctyName)}</Td>
+                    <Td className={cn("text-[11px] font-semibold whitespace-nowrap", rowTextColor)}>{trField(report, "branchName", brName)}</Td>
+                    <Td center className={cn("text-[11px] whitespace-nowrap", rowTextColor)}>{dateStr}</Td>
+                    <Td className={cn("text-[11px] font-semibold whitespace-nowrap", rowTextColor)}>{report.audit?.userName || "—"}</Td>
+                    <Td className={cn("text-[11px] max-w-[200px] truncate", rowTextColor)} title={goodsName}>{goodsName}</Td>
+                    <Td center className={cn("text-[11px]", rowTextColor)}>{trField(report, "items.0.brand", g0?.brand || "Standard")}</Td>
+                    <Td center className={cn("text-[11px]", rowTextColor)}>{trField(report, "items.0.origin", g0?.origin || ctyName)}</Td>
+                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatNumber(report.quantity || 0)}</Td>
+                    <Td center className={cn("text-[11px]", rowTextColor)}>{translateValue(activeLang, report.unit || "KG")}</Td>
+                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatNumber(report.totalGrossWeight || 0)}</Td>
+                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatNumber(report.totalNetWeight || 0)}</Td>
+                    <Td center className={cn("text-[11px]", rowTextColor)}>{report.currency || "USD"}</Td>
+                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatMoney(report.purchaseRate || 0)}</Td>
+                    <Td right className={cn("font-mono font-bold text-[11px]", rowTextColor)}>{formatMoney(totalAmtFc)}</Td>
+                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatMoney(advFc)}</Td>
+                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatMoney(exRate)}</Td>
+                    <Td center className={cn("text-[11px]", rowTextColor)}>{finalCur}</Td>
+                    <Td right className={cn("font-mono font-bold text-[11px]", rowTextColor)}>{formatMoney(totalAmtLc)}</Td>
+                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatMoney(advLc)}</Td>
+                    <Td center className={cn("text-[11px]", rowTextColor)}>{invPercent}</Td>
+                    <Td className={cn("text-[11px]", rowTextColor)}>{translateValue(activeLang, payCondition)}</Td>
+                    <Td center className={cn("text-[11px]", rowTextColor)}>{translateValue(activeLang, routeMode)}</Td>
+                    <Td className={cn("text-[11px]", rowTextColor)}>{trField(report, "loadingCountry", loadCountry)}</Td>
+                    <Td className={cn("text-[11px]", rowTextColor)}>{loadPort}</Td>
+                    <Td center className={cn("text-[11px]", rowTextColor)}>{loadDate}</Td>
+                    <Td className={cn("text-[11px]", rowTextColor)}>{trField(report, "receivedCountry", rcvCountry)}</Td>
+                    <Td className={cn("text-[11px]", rowTextColor)}>{rcvPort}</Td>
+                    <Td center className={cn("text-[11px]", rowTextColor)}>{rcvDate}</Td>
+                    <Td center><span className={cn("rounded px-2 py-0.5 text-[11px] font-bold", !isPosted ? "bg-red-100 text-red-700 border border-red-300" : "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-black")}>{!isPosted ? t(activeLang, "pb_register.status_no_pending", "NO (PENDING)") : t(activeLang, "pb_register.status_yes_transferred", "YES (TRANSFERRED)")}</span></Td>
+                    <Td center><span className={cn("rounded px-2 py-0.5 text-[11px] font-semibold", !isPosted ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-800 font-bold")}>{!isPosted ? t(activeLang, "pb_register.status_accepted", "Accepted (Not Transferred)") : t(activeLang, "pb_register.status_transferred", "Transferred")}</span></Td>
+                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[11px]">{translateValue(activeLang, payStatus)}</span></Td>
+                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[11px]">{translateValue(activeLang, loadStatus)}</span></Td>
                     <Td center onClick={(e) => e.stopPropagation()}>
                       <UnifiedActionMenu
                         align="right"
@@ -3201,7 +3201,7 @@ export function PurchaseBookingJournalReportView({
               <details className="relative">
                 <summary className="flex items-center gap-1.5 cursor-pointer list-none rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-2.5 py-1.5 transition-all h-8 [&::-webkit-details-marker]:hidden">
                   <span>{trUi("Print & Documents")}</span>
-                  <span className="text-[8px]">▼</span>
+                  <span className="text-[11px]">▼</span>
                 </summary>
                 <div className="absolute right-0 mt-1 w-56 rounded-xl bg-card border border-border shadow-2xl z-50 p-1 space-y-0.5 animate-in fade-in slide-in-from-top-2 duration-150 text-foreground">
                   <button
@@ -3219,7 +3219,7 @@ export function PurchaseBookingJournalReportView({
                     <span>👁️</span> {tt("pdf_preview", "PDF Preview")}
                   </button>
                   <div className="h-px bg-border my-1" />
-                  <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "tdoc.center_title", "Commercial Document Center")}</div>
+                  <div className="px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "tdoc.center_title", "Commercial Document Center")}</div>
                   <button
                     type="button"
                     onClick={() => { if (selected) { setTradeDocsInitialType("contract"); setTradeDocsOpen(true); } }}
@@ -3367,7 +3367,7 @@ export function PurchaseBookingJournalReportView({
             return (
               <div className="w-full bg-slate-100 dark:bg-slate-900/60 p-4 flex justify-center rounded-xl border border-border overflow-x-auto select-none">
                 {/* Simulated A4 Page */}
-                <div className="print-a4-content bg-white text-slate-800 border border-slate-300 w-[210mm] min-h-[297mm] p-[10mm] shadow-2xl text-[9px] font-sans flex flex-col gap-3 relative rounded-sm text-left leading-relaxed">
+                <div className="print-a4-content bg-white text-slate-800 border border-slate-300 w-[210mm] min-h-[297mm] p-[10mm] shadow-2xl text-[11px] font-sans flex flex-col gap-3 relative rounded-sm text-left leading-relaxed">
                   
                   {/* CSS print hack injection */}
                   <style dangerouslySetInnerHTML={{__html: `
@@ -3411,7 +3411,7 @@ export function PurchaseBookingJournalReportView({
                         
                       </div>
                     </div>
-                    <div className="text-right text-[8px] font-bold text-slate-650 uppercase">
+                    <div className="text-right text-[11px] font-bold text-slate-650 uppercase">
                       <div>BRANCH : {selected.branchName || "—"}</div>
                       <div>COUNTRY : {selected.countryName || "—"}</div>
                       <div>ADDRESS : {(selected as any).branchAddress || selected.form_data?.form?.branchAddress || "—"}</div>
@@ -3421,7 +3421,7 @@ export function PurchaseBookingJournalReportView({
                   </div>
 
                   {/* Document Title Bar */}
-                  <div className="bg-[#0f2942] text-white text-[8.5px] font-bold px-3 py-1 flex justify-between rounded-sm items-center">
+                  <div className="bg-[#0f2942] text-white text-[11px] font-bold px-3 py-1 flex justify-between rounded-sm items-center">
                     <span>{trUi("Report No")}: {reportNo}</span>
                     <span className="text-xs tracking-widest uppercase font-black">{trUi("Purchase Transfer Verification Report")}</span>
                     <div className="flex gap-4">
@@ -3433,12 +3433,12 @@ export function PurchaseBookingJournalReportView({
                   {/* Transfer Status Panel */}
                   <div className="flex gap-3">
                     <div className="w-[38%] bg-emerald-500/5 border border-emerald-500/10 rounded p-2.5 flex flex-col justify-center">
-                      <span className="text-[7.5px] text-emerald-600 uppercase font-black tracking-wider block">{trUi("Transfer Status")}</span>
+                      <span className="text-[11px] text-emerald-600 uppercase font-black tracking-wider block">{trUi("Transfer Status")}</span>
                       <span className="text-xs font-black text-emerald-700 block mt-1 mb-1.5">
                         ● {selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted" ? "Fully Transferred & Posted" : "Approved & Ready for Transfer"}
                       </span>
                       {(selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted") && selected.form_data?.form?.transferAudit && (
-                        <div className="text-[7.5px] text-emerald-800/80 bg-emerald-500/10 p-1.5 rounded-sm border border-emerald-500/20 leading-snug font-semibold mt-0.5">
+                        <div className="text-[11px] text-emerald-800/80 bg-emerald-500/10 p-1.5 rounded-sm border border-emerald-500/20 leading-snug font-semibold mt-0.5">
                           <div className="flex items-center gap-1 mb-0.5">
                             <span className="font-black uppercase tracking-wider text-emerald-700">{trUi("Transferred By:")}</span> {selected.form_data.form.transferAudit.userName}
                           </div>
@@ -3451,8 +3451,8 @@ export function PurchaseBookingJournalReportView({
                         </div>
                       )}
                     </div>
-                    <div className="w-[62%] bg-emerald-500/5 border border-emerald-500/10 rounded p-2.5 text-[8.5px] text-slate-655 leading-relaxed font-semibold">
-                      <span className="text-[7.5px] text-emerald-650 uppercase font-black tracking-wider block mb-1">{trUi("Transferred To (Destination Accounts)")}</span>
+                    <div className="w-[62%] bg-emerald-500/5 border border-emerald-500/10 rounded p-2.5 text-[11px] text-slate-655 leading-relaxed font-semibold">
+                      <span className="text-[11px] text-emerald-650 uppercase font-black tracking-wider block mb-1">{trUi("Transferred To (Destination Accounts)")}</span>
                       <ul className="list-disc pl-3.5 space-y-0.5">
                         <li>{trUi("General Ledger Debit Account:")} <strong className="text-slate-800 font-mono">{selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber} - {trField(selected, "purchaseAccountName", selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName)}</strong> {trUi("& Credit Account:")} <strong className="text-slate-800 font-mono">{selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber} - {trField(selected, "salesAccountName", selected.form_data?.form?.salesAccountName || selected.salesAccountName)}</strong></li>
                         <li>{trUi("Internal Voucher Entry No:")} <strong className="text-slate-800 font-mono">{selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted" ? `JV-${selected.purchaseBookingOrderNumber.slice(-6)}` : trUi("Pending Posting")}</strong></li>
@@ -3465,10 +3465,10 @@ export function PurchaseBookingJournalReportView({
                   <div className="grid grid-cols-3 gap-2.5">
                     {/* Booking Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
-                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
+                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[11px] font-black uppercase text-blue-900 flex items-center gap-1">
                         <span>👤</span> {tt("booking_information", "Booking Information")}
                       </div>
-                      <table className="w-full text-[8px] font-semibold text-slate-600">
+                      <table className="w-full text-[11px] font-semibold text-slate-600">
                         <tbody>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Booking Reference:")}</td><td className="px-2 py-1 font-bold text-slate-800 font-mono">{selected.purchaseBookingOrderNumber}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Purchase Date:")}</td><td className="px-2 py-1 text-slate-800">{date(selected.purchaseDate)}</td></tr>
@@ -3480,10 +3480,10 @@ export function PurchaseBookingJournalReportView({
 
                     {/* Supplier Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
-                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
+                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[11px] font-black uppercase text-blue-900 flex items-center gap-1">
                         <span>🏢</span> {tt("supplier_information", "Supplier Information")}
                       </div>
-                      <table className="w-full text-[8px] font-semibold text-slate-600">
+                      <table className="w-full text-[11px] font-semibold text-slate-600">
                         <tbody>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Supplier Name:")}</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{trField(selected, "supplierName", selected.supplierName)}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Contact Person:")}</td><td className="px-2 py-1 text-slate-800">{selected.form_data?.form?.purchaseContactPerson || selected.form_data?.form?.supplierContactPerson || "—"}</td></tr>
@@ -3496,10 +3496,10 @@ export function PurchaseBookingJournalReportView({
 
                     {/* Buyer Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
-                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
+                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[11px] font-black uppercase text-blue-900 flex items-center gap-1">
                         <span>👤</span> {tt("buyer_information", "Buyer Information")}
                       </div>
-                      <table className="w-full text-[8px] font-semibold text-slate-600">
+                      <table className="w-full text-[11px] font-semibold text-slate-600">
                         <tbody>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Buyer Name:")}</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{trField(selected, "buyerName", selected.buyerName)}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Contact Person:")}</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerContactPerson || "—"}</td></tr>
@@ -3512,10 +3512,10 @@ export function PurchaseBookingJournalReportView({
                   </div>
                   {/* Goods Details section */}
                   <div className="border border-slate-200 rounded overflow-hidden">
-                    <div className="bg-[#0f2942] text-white px-2.5 py-1 text-[8px] font-black uppercase tracking-wider">
+                    <div className="bg-[#0f2942] text-white px-2.5 py-1 text-[11px] font-black uppercase tracking-wider">
                       📦 {tt("goods_details", "Goods Details")}
                     </div>
-                    <table className="w-full text-[8px] text-left border-collapse">
+                    <table className="w-full text-[11px] text-left border-collapse">
                       <thead>
                         <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-black uppercase">
                           <Th className="p-1 border-r border-slate-200 text-center w-[3%]">SR.</Th>
@@ -3567,20 +3567,20 @@ export function PurchaseBookingJournalReportView({
                           );
                         })}
                       </tbody>
-                      <tfoot className="border-t-[1.5px] border-slate-350 bg-slate-50 font-bold text-[8px]">
+                      <tfoot className="border-t-[1.5px] border-slate-350 bg-slate-50 font-bold text-[11px]">
                         <tr className="text-slate-800">
-                          <td colSpan={5} className="p-1 text-right text-slate-500 font-extrabold uppercase text-[7.5px]">{trUi("Totals:")}</td>
+                          <td colSpan={5} className="p-1 text-right text-slate-500 font-extrabold uppercase text-[11px]">{trUi("Totals:")}</td>
                           <td className="p-1 text-right text-slate-900 font-black">{totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || "Units"}</td>
                           <td className="p-1"></td>
                           <td className="p-1 text-right text-slate-950 font-bold">{totalGross.toLocaleString()} kg</td>
                           <td className="p-1 text-right text-slate-950 font-bold">{totalNet.toLocaleString()} kg</td>
-                          <td className="p-1 text-right text-slate-550 text-[7px]">Avg: {purchaseCurrencySymbol}{avgRateKg.toFixed(2)}</td>
+                          <td className="p-1 text-right text-slate-550 text-[11px]">Avg: {purchaseCurrencySymbol}{avgRateKg.toFixed(2)}</td>
                           <td className="p-1 text-right text-blue-600 font-black">{totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {purchaseCurrencySymbol}</td>
                           <td className="p-1"></td>
                           <td className="p-1 text-right text-emerald-600 font-black">{totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {displayCurrencySymbol}</td>
                         </tr>
-                        <tr className="text-[7.5px] text-slate-550 border-t border-slate-200/60 font-semibold">
-                          <td colSpan={5} className="p-1 text-right uppercase text-[7px]">{trUi("Containers & Dues:")}</td>
+                        <tr className="text-[11px] text-slate-550 border-t border-slate-200/60 font-semibold">
+                          <td colSpan={5} className="p-1 text-right uppercase text-[11px]">{trUi("Containers & Dues:")}</td>
                           <td colSpan={3} className="p-1 text-left">FCL: <span className="font-bold text-slate-800">{containerCount}</span></td>
                           <td colSpan={5} className="p-1 text-left">{trUi("Avg Rate/Ton:")} <span className="font-bold text-slate-800">{purchaseCurrencySymbol}{avgRateTon.toFixed(2)}</span></td>
                         </tr>
@@ -3590,10 +3590,10 @@ export function PurchaseBookingJournalReportView({
 
                   {/* Loading & Transit Information */}
                   <div className="border border-slate-200 rounded overflow-hidden">
-                    <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
+                    <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[11px] font-black uppercase text-blue-900 flex items-center gap-1">
                       <span>🚢</span> {tt("loading_transit_information", "Loading & Transit Information")}
                     </div>
-                    <table className="w-full text-[8px] font-semibold text-slate-600">
+                    <table className="w-full text-[11px] font-semibold text-slate-600">
                       <tbody>
                         <tr className="border-b border-slate-100">
                           <td className="px-2 py-1 text-slate-400 w-[20%]">{trUi("Loading Country:")}</td>
@@ -3627,10 +3627,10 @@ export function PurchaseBookingJournalReportView({
                   <div className="grid grid-cols-2 gap-2.5">
                     {/* Payment Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
-                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
+                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[11px] font-black uppercase text-blue-900 flex items-center gap-1">
                         <span>💵</span> {tt("payment_information", "Payment Information")}
                       </div>
-                      <table className="w-full text-[8px] font-semibold text-slate-650">
+                      <table className="w-full text-[11px] font-semibold text-slate-650">
                         <tbody>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Payment Condition:")}</td><td className="px-2 py-1 text-slate-800 font-bold">{paymentConditionText}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Advance Percent / Due:")}</td><td className="px-2 py-1 text-slate-800">{advancePercent}% / <span className="font-bold text-blue-700">{advanceDueDateText}</span></td></tr>
@@ -3640,7 +3640,7 @@ export function PurchaseBookingJournalReportView({
                           <tr>
                             <td className="px-2 py-1 text-slate-400">{trUi("Payment Status:")}</td>
                             <td className="px-2 py-1">
-                              <span className={`inline-block px-1.5 py-0.5 rounded text-[7px] font-black uppercase text-white ${
+                              <span className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-black uppercase text-white ${
                                 paymentStatusLabel === "PAID" || paymentStatusLabel === "FULL PAYMENT" || paymentStatusLabel === "ADVANCE PAID" ? "bg-emerald-600" : "bg-rose-600"
                               }`}>
                                 {paymentStatusLabel}
@@ -3653,10 +3653,10 @@ export function PurchaseBookingJournalReportView({
 
                     {/* Accounting Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
-                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
+                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[11px] font-black uppercase text-blue-900 flex items-center gap-1">
                         <span>📊</span> {tt("accounting_information", "Accounting Information")}
                       </div>
-                      <table className="w-full text-[8px] font-semibold text-slate-600">
+                      <table className="w-full text-[11px] font-semibold text-slate-600">
                         <tbody>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Journal Entry Number:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{journalEntryNumberText}</td></tr>
                           <tr className="border-b border-slate-100">
@@ -3717,17 +3717,17 @@ export function PurchaseBookingJournalReportView({
                   {/* Document Remarks / Narration full-width block */}
                   {selected.form_data?.form?.showRemarksOnA4 !== false && (
                     <div className="border border-slate-200 rounded overflow-hidden mt-2.5">
-                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
+                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[11px] font-black uppercase text-blue-900 flex items-center gap-1">
                         <span>📝</span> {tt("remarks_narration", "Remarks / Narration")}
                       </div>
-                      <div className="p-2 bg-white text-[8px] font-semibold text-slate-800 italic leading-normal min-h-[30px] whitespace-pre-wrap break-words">
+                      <div className="p-2 bg-white text-[11px] font-semibold text-slate-800 italic leading-normal min-h-[30px] whitespace-pre-wrap break-words">
                         {remarksText}
                       </div>
                     </div>
                   )}
 
                   {/* Stamp & Signatures */}
-                  <div className="flex justify-between items-center pt-2 border-t border-slate-200 mt-auto text-[7.5px]">
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-200 mt-auto text-[11px]">
                     <div className="w-[45%] text-slate-400 font-medium leading-relaxed">
                       This is a system generated print sheet of Demi Trading Co. accounts ledger. Double-entry transaction postings have been validated.
                     </div>
@@ -3746,18 +3746,18 @@ export function PurchaseBookingJournalReportView({
                       </svg>
                     </div>
                     <div className="w-[18%] text-center border-t border-slate-300 pt-1">
-                      <div className="font-bold text-slate-800 text-[8px] italic leading-none">{selected.audit?.userName || "—"}</div>
-                      <div className="font-bold text-slate-400 text-[6.5px] mt-1">{trUi("PREPARED BY")}</div>
+                      <div className="font-bold text-slate-800 text-[11px] italic leading-none">{selected.audit?.userName || "—"}</div>
+                      <div className="font-bold text-slate-400 text-[11px] mt-1">{trUi("PREPARED BY")}</div>
                     </div>
                     <div className="w-[18%] text-center border-t border-slate-300 pt-1">
-                      <div className="font-bold text-slate-800 text-[8px] italic leading-none">{trUi("Branch Manager")}</div>
-                      <div className="font-bold text-slate-400 text-[6.5px] mt-1">{trUi("AUTHORIZED BY")}</div>
+                      <div className="font-bold text-slate-800 text-[11px] italic leading-none">{trUi("Branch Manager")}</div>
+                      <div className="font-bold text-slate-400 text-[11px] mt-1">{trUi("AUTHORIZED BY")}</div>
                     </div>
                   </div>
 
                   {/* Transfer Info */}
                   {selected.form_data?.form?.transferAudit && (
-                    <div className="text-right text-[8px] font-bold text-blue-600 mt-2 border-t border-slate-200 pt-1.5">
+                    <div className="text-right text-[11px] font-bold text-blue-600 mt-2 border-t border-slate-200 pt-1.5">
                       {tt("transferred_to_ptp_by", "Transferred to Purchase Transfer Payment by")} <span className="uppercase">{selected.form_data.form.transferAudit.userName}</span> on {new Date(selected.form_data.form.transferAudit.transferDate).toLocaleDateString()}
                     </div>
                   )}
@@ -3832,7 +3832,7 @@ function ReportSection({ number, title, filters, actions, children }: { number: 
 function DarkInput({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (value: string) => void; type?: string }) {
   return (
     <label className="block min-w-[130px]">
-      <span className="mb-1 block text-[10px] font-bold text-muted-foreground">{label}</span>
+      <span className="mb-1 block text-[11px] font-bold text-muted-foreground">{label}</span>
       <div className="relative">
         <input
           type={type}
@@ -3857,7 +3857,7 @@ function DarkSelect({ label, value, options, placeholder, onChange, disabled }: 
 
   return (
     <label className="block min-w-[130px] relative z-[45]">
-      <span className="mb-1 block text-[10px] font-bold text-muted-foreground">{label}</span>
+      <span className="mb-1 block text-[11px] font-bold text-muted-foreground">{label}</span>
       <SearchableSelect
         disabled={disabled}
         value={value}
@@ -3892,9 +3892,9 @@ function DashboardMetricCard({ icon, label, value, tone }: { icon: React.ReactNo
     <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
       <div className="flex items-center justify-between gap-3">
         <span className={`grid h-9 w-9 place-items-center rounded-lg border ${toneClass}`}>{icon}</span>
-        <span className="text-right text-[10px] font-black uppercase tracking-wide text-slate-400">KPI</span>
+        <span className="text-right text-[11px] font-black uppercase tracking-wide text-slate-400">KPI</span>
       </div>
-      <p className="mt-3 text-[10px] font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="mt-3 text-[11px] font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
       <p className="mt-1 truncate text-lg font-black tabular-nums text-slate-950 dark:text-slate-100" title={String(value)}>{value}</p>
     </div>
   );
@@ -3903,7 +3903,7 @@ function DashboardMetricCard({ icon, label, value, tone }: { icon: React.ReactNo
 function MiniStat({ label, value, danger = false }: { label: string; value: string | number; danger?: boolean }) {
   return (
     <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/40">
-      <p className="text-[9px] font-black uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{label}</p>
       <p className={`mt-1 truncate text-xs font-black tabular-nums ${danger ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-slate-100"}`} title={String(value)}>{value}</p>
     </div>
   );
@@ -3936,7 +3936,7 @@ function SummaryCard({ icon, label, value, accent }: { icon: React.ReactNode; la
     <div className="flex items-center gap-4 border-b border-r border-slate-700 p-4 last:border-r-0 md:border-b-0">
       <div className={`grid h-14 w-14 place-items-center rounded-xl border ${color}`}>{icon}</div>
       <div>
-        <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</div>
+        <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</div>
         <div className="mt-1 text-2xl font-black text-white">{value}</div>
       </div>
     </div>
@@ -3960,14 +3960,14 @@ function DarkTable({ lang, headers, tableGroups, children }: { lang: Parameters<
               <Th
                 key={group.label}
                 colSpan={group.span}
-                className={`${group.cls} px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-center border-r border-white/20 last:border-r-0`}
+                className={`${group.cls} px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-center border-r border-white/20 last:border-r-0`}
               >
                 {strictLabel(group.label)}
               </Th>
             ))}
           </tr>
           {/* Column header row */}
-          <tr className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-600">
+          <tr className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-600">
             {headers.map((header, idx) => (
               <Th key={`${header}-${idx}`} className="whitespace-nowrap border-r border-slate-200 px-3 py-2.5 text-left font-black last:border-r-0">{strictLabel(header)}</Th>
             ))}
@@ -3984,12 +3984,12 @@ function Td({ children, className = "", center = false, right = false, title, on
 }
 
 function StatusBadge({ status }: { status: string }) {
-  return <span className={`inline-flex rounded border px-2 py-0.5 text-[10px] font-black uppercase ${statusClass(status)}`}>{status || "Open"}</span>;
+  return <span className={`inline-flex rounded border px-2 py-0.5 text-[11px] font-black uppercase ${statusClass(status)}`}>{status || "Open"}</span>;
 }
 
 function ContainerStatus({ status }: { status: ContainerRow["status"] }) {
   const className = status === "Confirmed" ? "border-emerald-300 bg-emerald-50 text-emerald-700" : status === "Cancelled" ? "border-red-300 bg-red-50 text-red-700" : "border-amber-300 bg-amber-50 text-amber-700";
-  return <span className={`inline-flex rounded border px-2 py-0.5 text-[10px] font-black uppercase ${className}`}>{status}</span>;
+  return <span className={`inline-flex rounded border px-2 py-0.5 text-[11px] font-black uppercase ${className}`}>{status}</span>;
 }
 
 function InfoRow({ label, value, highlight = false }: { label: string; value: string | number; highlight?: boolean }) {
@@ -4010,7 +4010,7 @@ function MiniFinancial({ label, value, tone }: { label: string; value: string; t
   }[tone];
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-3">
-      <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">{label}</div>
+      <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">{label}</div>
       <div className={`mt-1 text-lg font-black ${className}`}>{value}</div>
     </div>
   );

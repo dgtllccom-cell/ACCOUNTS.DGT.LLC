@@ -322,37 +322,37 @@ export default function AiAssistantPage() {
                       {isAi && (
                         <div className="flex flex-wrap items-center gap-2 mb-2 pb-2 border-b border-slate-800/80">
                           {m.answerType === "erp_record" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-bold text-emerald-400">
                               <CheckCircle2 className="h-3 w-3" />
                               ERP Record (Verified)
                             </span>
                           )}
                           {m.answerType === "public_external" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 border border-blue-500/30 px-2 py-0.5 text-[10px] font-bold text-blue-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 border border-blue-500/30 px-2 py-0.5 text-[11px] font-bold text-blue-400">
                               <Globe className="h-3 w-3" />
                               Public / External Information
                             </span>
                           )}
                           {m.answerType === "permission_denied" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-[10px] font-bold text-rose-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-[11px] font-bold text-rose-400">
                               <Lock className="h-3 w-3" />
                               Permission Denied (Logged)
                             </span>
                           )}
                           {m.answerType === "write_refused" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[11px] font-bold text-amber-400">
                               <ShieldAlert className="h-3 w-3" />
                               Read-Only Guard
                             </span>
                           )}
                           {m.answerType === "no_record" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-700 border border-slate-600 px-2 py-0.5 text-[10px] font-bold text-slate-300">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-700 border border-slate-600 px-2 py-0.5 text-[11px] font-bold text-slate-300">
                               <Search className="h-3 w-3" />
                               No Record Found
                             </span>
                           )}
                           {m.scope && (
-                            <span className="text-[10px] text-slate-400 font-mono">
+                            <span className="text-[11px] text-slate-400 font-mono">
                               • {m.scope}
                             </span>
                           )}
@@ -372,7 +372,7 @@ export default function AiAssistantPage() {
                               <Database className="h-3.5 w-3.5" />
                               Source Table: {m.sourceRecord.table}
                             </span>
-                            <span className="font-mono text-[10px] text-slate-400">
+                            <span className="font-mono text-[11px] text-slate-400">
                               ID: {m.sourceRecord.id.slice(0, 8)}...
                             </span>
                           </div>
@@ -417,7 +417,7 @@ export default function AiAssistantPage() {
                         </div>
                       )}
 
-                      <div className="mt-2 text-[10px] text-slate-400 flex justify-end">
+                      <div className="mt-2 text-[11px] text-slate-400 flex justify-end">
                         {m.timestamp}
                       </div>
                     </div>
@@ -648,7 +648,7 @@ export default function AiAssistantPage() {
 
             <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950 flex-1 overflow-x-auto">
               <table className="w-full text-xs text-left">
-                <thead className="bg-slate-900 border-b border-slate-800 text-slate-400 uppercase font-mono text-[10px]">
+                <thead className="bg-slate-900 border-b border-slate-800 text-slate-400 uppercase font-mono text-[11px]">
                   <tr>
                     <Th className="px-4 py-3">Timestamp</Th>
                     <Th className="px-4 py-3">User</Th>
@@ -675,11 +675,11 @@ export default function AiAssistantPage() {
                         <td className="px-4 py-2.5 font-medium text-white whitespace-nowrap">
                           {log.user_name}
                         </td>
-                        <td className="px-4 py-2.5 uppercase font-mono text-[10px]">
+                        <td className="px-4 py-2.5 uppercase font-mono text-[11px]">
                           {log.detected_language}
                         </td>
                         <td className="px-4 py-2.5 whitespace-nowrap">
-                          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-mono border border-slate-700">
+                          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-mono border border-slate-700">
                             {log.query_type}
                           </span>
                         </td>

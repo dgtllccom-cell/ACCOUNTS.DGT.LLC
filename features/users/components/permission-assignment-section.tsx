@@ -161,7 +161,7 @@ export function PermissionAssignmentSection({
       <div className="flex flex-wrap items-start justify-between gap-3">
         {/* Template picker */}
         <div className="min-w-[220px] flex-1">
-          <label className="mb-1 block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+          <label className="mb-1 block text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
             {t(lang, "urf.permission_template", "Permission Template")} {required ? <span className="text-rose-500">*</span> : null}
           </label>
           <select
@@ -204,21 +204,21 @@ export function PermissionAssignmentSection({
           {selectedDomainSummary.map((summary) => (
             <div key={summary.domain} className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-950/40">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   {translateHeader(lang, summary.label)}
                 </span>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                   {summary.count}
                 </span>
               </div>
               <div className="mt-1.5 flex flex-wrap gap-1">
                 {summary.permissions.slice(0, 4).map((perm) => (
-                  <span key={perm} className="rounded-full bg-indigo-50 px-2 py-0.5 text-[9px] font-semibold text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300">
+                  <span key={perm} className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300">
                     {perm}
                   </span>
                 ))}
                 {summary.permissions.length > 4 && (
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                     +{summary.permissions.length - 4}
                   </span>
                 )}
@@ -274,7 +274,7 @@ export function PermissionAssignmentSection({
                     <span className={cn("text-[11px] font-black uppercase tracking-wider", meta.color)}>
                       {translateHeader(lang, meta.label)}
                     </span>
-                    <span className="ml-2 text-[10px] text-slate-400 dark:text-slate-500">
+                    <span className="ml-2 text-[11px] text-slate-400 dark:text-slate-500">
                       {selCount}/{allowed.length}
                     </span>
                     {someSel && (
@@ -291,7 +291,7 @@ export function PermissionAssignmentSection({
                   <button
                     type="button"
                     className={cn(
-                      "rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider border transition-colors",
+                      "rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider border transition-colors",
                       allSel
                         ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300"
                         : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
@@ -356,7 +356,7 @@ export function PermissionAssignmentSection({
                           )}>
                             {translateHeader(lang, perm.label)}
                           </span>
-                          <span className="mt-0.5 block text-[9px] leading-tight text-slate-400 dark:text-slate-500 line-clamp-2">
+                          <span className="mt-0.5 block text-[11px] leading-tight text-slate-400 dark:text-slate-500 line-clamp-2">
                             {perm.description}
                           </span>
                         </div>
@@ -380,13 +380,13 @@ export function PermissionAssignmentSection({
       {totalSelected > 0 && (
         <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 dark:border-indigo-900/40 dark:bg-indigo-950/20">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400">
+            <span className="text-[11px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400">
               ✓ {totalSelected} {t(lang, "urf.selected_permissions", "Selected Permissions")}
             </span>
             <button
               type="button"
               onClick={clearAllSelected}
-              className="text-[9px] font-semibold text-rose-500 hover:text-rose-700 dark:text-rose-400"
+              className="text-[11px] font-semibold text-rose-500 hover:text-rose-700 dark:text-rose-400"
             >
               {t(lang, "urf.clear_all", "Clear All")}
             </button>
@@ -397,14 +397,14 @@ export function PermissionAssignmentSection({
                 key={key}
                 type="button"
                 onClick={() => togglePermission(key)}
-                className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-100 px-2 py-0.5 text-[9px] font-semibold text-indigo-800 hover:bg-rose-100 hover:border-rose-200 hover:text-rose-700 transition-colors dark:border-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300"
+                className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-100 px-2 py-0.5 text-[11px] font-semibold text-indigo-800 hover:bg-rose-100 hover:border-rose-200 hover:text-rose-700 transition-colors dark:border-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300"
               >
                 {key}
                 <span className="opacity-60">×</span>
               </button>
             ))}
             {selected.length > 20 && (
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[9px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                 +{selected.length - 20} more
               </span>
             )}

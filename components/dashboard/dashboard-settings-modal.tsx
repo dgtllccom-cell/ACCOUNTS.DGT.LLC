@@ -210,7 +210,7 @@ export function DashboardSettingsModal({
                       {item.label}
                     </p>
                     {item.category && (
-                      <span className="text-[10px] text-slate-400 font-medium">
+                      <span className="text-[11px] text-slate-400 font-medium">
                         {item.category}
                       </span>
                     )}

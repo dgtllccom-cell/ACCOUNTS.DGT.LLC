@@ -176,19 +176,19 @@ export function CountryPurchaseTimelineView({ purchaseOrderId }: { purchaseOrder
         <p className="text-xs text-slate-500 dark:text-slate-400">{data.referenceNo}</p>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div>
-            <div className="text-[10px] font-black uppercase text-slate-500">{tt("ctimeline.goods", "Goods")}</div>
+            <div className="text-[11px] font-black uppercase text-slate-500">{tt("ctimeline.goods", "Goods")}</div>
             <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{data.goodsName || "-"}</div>
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase text-slate-500">{tt("ctimeline.supplier", "Supplier")}</div>
+            <div className="text-[11px] font-black uppercase text-slate-500">{tt("ctimeline.supplier", "Supplier")}</div>
             <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{data.supplierName || "-"}</div>
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase text-slate-500">{tt("ctimeline.qty_progress", "Qty (Purchased / Loaded / Received)")}</div>
+            <div className="text-[11px] font-black uppercase text-slate-500">{tt("ctimeline.qty_progress", "Qty (Purchased / Loaded / Received)")}</div>
             <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{data.purchasedQty} / {data.loadedQty} / {data.receivedQty}</div>
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase text-slate-500">{tt("ctimeline.balance", "Remaining Balance")}</div>
+            <div className="text-[11px] font-black uppercase text-slate-500">{tt("ctimeline.balance", "Remaining Balance")}</div>
             <div className="text-sm font-bold text-amber-600">{money(data.remainingDue, data.currency)}</div>
           </div>
         </div>
@@ -202,7 +202,7 @@ export function CountryPurchaseTimelineView({ purchaseOrderId }: { purchaseOrder
       <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
         <table className="w-full min-w-[1100px] text-xs">
           <thead className="bg-slate-50 dark:bg-slate-900">
-            <tr className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+            <tr className="text-[11px] font-black uppercase tracking-wider text-slate-500">
               <Th className="px-3 py-2 text-start">{tt("ctimeline.stage", "Stage")}</Th>
               <Th className="px-3 py-2 text-start">{tt("ctimeline.action", "Action")}</Th>
               <Th className="px-3 py-2 text-start">{tt("ctimeline.user", "User")}</Th>
@@ -236,7 +236,7 @@ export function CountryPurchaseTimelineView({ purchaseOrderId }: { purchaseOrder
                   <td className="px-3 py-2 text-end font-mono">{e.quantity ?? "-"}</td>
                   <td className="px-3 py-2 text-end font-mono">{e.amount !== null ? money(e.amount, e.currency) : "-"}</td>
                   <td className="px-3 py-2">
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                       {renderStatus(tt, e.status)}
                     </span>
                   </td>

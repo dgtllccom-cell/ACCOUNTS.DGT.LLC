@@ -324,7 +324,7 @@ export function ShippingLineStagePage({
         <div>
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
-            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">{displayEyebrow}</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">{displayEyebrow}</p>
           </div>
           <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground mt-1.5">{displayTitle}</h1>
           <p className="text-xs text-muted-foreground mt-1 max-w-2xl">{displayDescription}</p>
@@ -380,7 +380,7 @@ export function ShippingLineStagePage({
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-blue-500" />
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.total_shipments", "Total Shipments")}</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.total_shipments", "Total Shipments")}</span>
               <span className="text-2xl font-black text-foreground mt-1 block">{stats.total}</span>
             </div>
             <div className="h-10 w-10 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
@@ -393,7 +393,7 @@ export function ShippingLineStagePage({
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.in_transit", "In Transit")}</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.in_transit", "In Transit")}</span>
               <span className="text-2xl font-black text-foreground mt-1 block">{stats.inTransit}</span>
             </div>
             <div className="h-10 w-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -406,7 +406,7 @@ export function ShippingLineStagePage({
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.arrived", "Arrived at Port")}</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.arrived", "Arrived at Port")}</span>
               <span className="text-2xl font-black text-foreground mt-1 block">{stats.arrived}</span>
             </div>
             <div className="h-10 w-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
@@ -419,7 +419,7 @@ export function ShippingLineStagePage({
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.delivered", "Delivered")}</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.delivered", "Delivered")}</span>
               <span className="text-2xl font-black text-foreground mt-1 block">{stats.delivered}</span>
             </div>
             <div className="h-10 w-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -469,8 +469,8 @@ export function ShippingLineStagePage({
 
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tt("slstage.available_registry", "Available Registry")}</span>
-                  <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tt("slstage.available_registry", "Available Registry")}</span>
+                  <span className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400">
                     {filteredRecords.length} {filteredRecords.length === records.length ? tt("slstage.records", "records") : `${tt("slstage.of", "of")} ${records.length} ${tt("slstage.matches", "matches")}`}
                   </span>
                 </div>
@@ -500,13 +500,13 @@ export function ShippingLineStagePage({
                           <div className="flex items-center justify-between">
                             <span className="font-mono font-bold text-foreground text-xs">{r.bl_number}</span>
                             <span className={cn(
-                              "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border",
+                              "px-2 py-0.5 rounded-full text-[11px] font-bold uppercase border",
                               shipmentStatuses.find(st => st.value === r.shipment_status)?.color
                             )}>
                               {r.shipment_status.replace(/_/g, " ")}
                             </span>
                           </div>
-                          <div className="text-[10px] text-muted-foreground mt-1.5 flex items-center justify-between">
+                          <div className="text-[11px] text-muted-foreground mt-1.5 flex items-center justify-between">
                             <span className="truncate max-w-[190px]">{r.shipping_line_name}</span>
                             {r.vessel_name && <span className="font-medium text-foreground/80 shrink-0">{r.vessel_name}</span>}
                           </div>
@@ -552,7 +552,7 @@ export function ShippingLineStagePage({
 
                   {/* Section 1: Carrier & Document */}
                   <div className="space-y-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
                       1. {tt("slstage.carrier_identification", "Carrier & Identification")}
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -592,7 +592,7 @@ export function ShippingLineStagePage({
 
                   {/* Section 2: Vessel & Container */}
                   <div className="space-y-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
                       2. {tt("slstage.sec_vessel_equipment", "Vessel & Equipment Details")}
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -628,7 +628,7 @@ export function ShippingLineStagePage({
 
                   {/* Section 3: Ports & Dates */}
                   <div className="space-y-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
                       3. {tt("slstage.sec_route_schedule", "Route & Schedule Matrix")}
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -745,7 +745,7 @@ export function ShippingLineStagePage({
         <Card className="bg-card text-card-foreground border-border/60 shadow-sm rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full text-xs text-left text-foreground">
-              <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border/60">
+              <thead className="bg-muted/40 text-muted-foreground uppercase text-[11px] font-bold tracking-wider border-b border-border/60">
                 <tr>
                   <Th className="px-5 py-4">B/L Number</Th>
                   <Th className="px-5 py-4">Shipping Line</Th>
@@ -778,7 +778,7 @@ export function ShippingLineStagePage({
                         <td className="px-5 py-3.5 font-medium text-foreground">{r.shipping_line_name}</td>
                         <td className="px-5 py-3.5">
                           <div className="font-semibold text-foreground">{r.vessel_name ?? "-"}</div>
-                          <div className="text-[10px] text-muted-foreground">{r.voyage_number ? `Voyage: ${r.voyage_number}` : ""}</div>
+                          <div className="text-[11px] text-muted-foreground">{r.voyage_number ? `Voyage: ${r.voyage_number}` : ""}</div>
                         </td>
                         <td className="px-5 py-3.5 font-mono text-muted-foreground">{r.container_number ?? "-"}</td>
                         <td className="px-5 py-3.5 text-muted-foreground">{r.loading_port ?? "-"}</td>
@@ -786,7 +786,7 @@ export function ShippingLineStagePage({
                         <td className="px-5 py-3.5 text-muted-foreground">{r.etd ?? "-"}</td>
                         <td className="px-5 py-3.5 text-muted-foreground">{r.eta ?? "-"}</td>
                         <td className="px-5 py-3.5">
-                          <span className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold border", statusObj?.color)}>
+                          <span className={cn("px-2.5 py-0.5 rounded-full text-[11px] font-bold border", statusObj?.color)}>
                             {statusObj ? tt(`slstage.status_${statusObj.value}`, statusObj.fallbackEn) : r.shipment_status}
                           </span>
                         </td>

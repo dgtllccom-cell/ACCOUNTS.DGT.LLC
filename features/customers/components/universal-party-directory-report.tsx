@@ -333,7 +333,7 @@ export function UniversalPartyDirectoryReport({
                         <div className="flex items-center gap-2">
                           <SavedText value={urduName} lang={lang} kind="name" />
                           {party.partyType === "Owner" && (
-                            <span className="rounded-full bg-amber-100 text-amber-800 px-1.5 py-0.2 text-[10px] font-bold">
+                            <span className="rounded-full bg-amber-100 text-amber-800 px-1.5 py-0.2 text-[11px] font-bold">
                               👑 {t(lang, "upd.owner_badge", "Owner")}
                             </span>
                           )}

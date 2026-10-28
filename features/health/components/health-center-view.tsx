@@ -178,7 +178,7 @@ export function HealthCenterView({ lang: langProp }: { lang?: string }) {
               >
                 {st(tb.label, tb.fallback)}
                 {tb.key !== "overview" && catRow(tb.key as HealthCategory) ? (
-                  <span className="ms-1 rounded bg-muted px-1 text-[10px]">{catRow(tb.key as HealthCategory)!.total}</span>
+                  <span className="ms-1 rounded bg-muted px-1 text-[11px]">{catRow(tb.key as HealthCategory)!.total}</span>
                 ) : null}
               </button>
             ))}
@@ -201,7 +201,7 @@ export function HealthCenterView({ lang: langProp }: { lang?: string }) {
                 </MiniCard>
                 <MiniCard title={st("gates", "Gates")}>
                   <KV k={st("i18n_guard", "i18n guard")} v={statusLabel(report.gates.i18nGuard === "pass" ? "healthy" : report.gates.i18nGuard === "fail" ? "failed" : "not_tested")} />
-                  <div className="text-[10px] text-muted-foreground">{report.gates.i18nGuardDetail}</div>
+                  <div className="text-[11px] text-muted-foreground">{report.gates.i18nGuardDetail}</div>
                   <KV k={st("typecheck", "TypeScript")} v={st("not_tested_short", "not run per-scan")} />
                 </MiniCard>
                 <MiniCard title={st("scan_scope", "Scan scope")}>
@@ -288,11 +288,11 @@ export function HealthCenterView({ lang: langProp }: { lang?: string }) {
                         <td className={`px-2.5 py-1.5 font-mono ${s.textStart}`}>{f.target}</td>
                         <td className={`px-2.5 py-1.5 ${s.textStart}`}>{fTitle(f)}</td>
                         <td className="px-2.5 py-1.5 text-center">
-                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${TONE[f.status]}`}>{statusLabel(f.status)}</span>
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[f.status]}`}>{statusLabel(f.status)}</span>
                         </td>
                         <td className="px-2.5 py-1.5 text-center">
                           {f.language ? Object.entries(f.language).map(([l, v]) => (
-                            <span key={l} className={`mx-0.5 text-[9px] font-bold ${v === "pass" ? "text-emerald-600" : v === "fail" ? "text-rose-600" : "text-slate-400"}`}>{l.toUpperCase()}</span>
+                            <span key={l} className={`mx-0.5 text-[11px] font-bold ${v === "pass" ? "text-emerald-600" : v === "fail" ? "text-rose-600" : "text-slate-400"}`}>{l.toUpperCase()}</span>
                           )) : "—"}
                         </td>
                         <td className="px-2.5 py-1.5 text-center">
@@ -321,7 +321,7 @@ export function HealthCenterView({ lang: langProp }: { lang?: string }) {
                 <div className="text-xs font-bold text-muted-foreground">{st("language_result", "Language result")}</div>
                 <div className="mt-1 flex gap-2">
                   {Object.entries(detail.language).map(([l, v]) => (
-                    <span key={l} className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${v === "pass" ? "bg-emerald-500/15 text-emerald-600" : v === "fail" ? "bg-rose-500/15 text-rose-600" : "bg-slate-500/15 text-slate-500"}`}>{l.toUpperCase()} {v}</span>
+                    <span key={l} className={`rounded px-1.5 py-0.5 text-[11px] font-bold ${v === "pass" ? "bg-emerald-500/15 text-emerald-600" : v === "fail" ? "bg-rose-500/15 text-rose-600" : "bg-slate-500/15 text-slate-500"}`}>{l.toUpperCase()} {v}</span>
                   ))}
                 </div>
               </div>
@@ -349,7 +349,7 @@ function Big({ label, value, tone }: { label: string; value: string; tone: "good
   const c = tone === "good" ? "border-s-emerald-500" : tone === "warn" ? "border-s-amber-500" : "border-s-rose-500";
   return (
     <div className={`rounded-lg border border-border bg-card px-3 py-2 border-s-4 ${c}`}>
-      <div className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="text-lg font-black text-foreground">{value}</div>
     </div>
   );

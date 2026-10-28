@@ -1006,9 +1006,9 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       <h3 className="text-xs font-black uppercase tracking-widest text-emerald-800 dark:text-emerald-100">
                         {formStep === 1 ? tt("plr.step1", "New Loading (Step 1 of 2)") : tt("plr.step2", "New Loading (Step 2 of 2)")}
                       </h3>
-                      <span className="rounded-full bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-100 dark:ring-emerald-500/30">{tt("plr.live", "Live")}</span>
+                      <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-black uppercase tracking-widest text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-100 dark:ring-emerald-500/30">{tt("plr.live", "Live")}</span>
                     </div>
-                    <p className="text-[10px] font-semibold text-emerald-700/80 dark:text-emerald-200/80">
+                    <p className="text-[11px] font-semibold text-emerald-700/80 dark:text-emerald-200/80">
                       {formStep === 1 ? tt("plr.step1_desc", "Enter shipping and routing details.") : tt("plr.step2_desc_op", "Enter goods, container, seal and weight details.")}
                     </p>
                   </div>
@@ -1019,34 +1019,34 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       <div className="mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
                           <div className="flex items-center gap-2">
-                            <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-black text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                            <span className="rounded bg-indigo-100 px-2 py-0.5 text-[11px] font-black text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
                               {poRow.purchase_order_no || record.purchase_order_no || "PO"}
                             </span>
                             <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate max-w-[180px]">
                               {form.supplierName || poRow.supplier_name || tt("plr.unknown_supplier", "Supplier")}
                             </span>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500">
+                          <span className="text-[11px] font-bold text-slate-500">
                             {goodsName || goods?.[0]?.itemName || goods?.[0]?.goodsName || "-"}
                           </span>
                         </div>
-                        <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[10px]">
+                        <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[11px]">
                           <div>
-                            <div className="text-[9px] font-bold text-slate-400 uppercase">{tt("plr.contract_qty", "Contract")}</div>
+                            <div className="text-[11px] font-bold text-slate-400 uppercase">{tt("plr.contract_qty", "Contract")}</div>
                             <div className="font-mono font-black text-slate-800 dark:text-slate-200">{totalQuantity.toLocaleString()}</div>
                           </div>
                           <div>
-                            <div className="text-[9px] font-bold text-emerald-600 uppercase">{tt("plr.loaded_qty", "Loaded")}</div>
+                            <div className="text-[11px] font-bold text-emerald-600 uppercase">{tt("plr.loaded_qty", "Loaded")}</div>
                             <div className="font-mono font-black text-emerald-600">{totalLoadedQuantity.toLocaleString()}</div>
                           </div>
                           <div>
-                            <div className="text-[9px] font-bold text-amber-600 uppercase">{tt("plr.remaining_qty", "Remaining")}</div>
+                            <div className="text-[11px] font-bold text-amber-600 uppercase">{tt("plr.remaining_qty", "Remaining")}</div>
                             <div className="font-mono font-black text-amber-600">{remainingToLoadQuantity.toLocaleString()}</div>
                           </div>
                         </div>
                         {/* Progress Bar */}
                         <div className="mt-2.5 space-y-1">
-                          <div className="flex justify-between text-[9px] font-bold text-slate-500">
+                          <div className="flex justify-between text-[11px] font-bold text-slate-500">
                             <span>{tt("plr.loading_progress", "Loading Progress")}</span>
                             <span className="font-mono">{loadingProgress.toFixed(1)}%</span>
                           </div>
@@ -1064,17 +1064,17 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-200">
                           <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                           <span>{tt("plr.entry_counter", "Entry")} <strong>#{(history.length || 0) + 1}</strong></span>
-                          <span className="text-[10px] text-emerald-600/80 dark:text-emerald-300/80">
+                          <span className="text-[11px] text-emerald-600/80 dark:text-emerald-300/80">
                             ({history.length} {tt("plr.completed", "completed")}, {remainingToLoadQuantity.toLocaleString()} {unitLabel} {tt("plr.remaining", "remaining")})
                           </span>
                         </div>
-                        <span className="rounded bg-emerald-600 px-2 py-0.5 text-[9px] font-black uppercase text-white tracking-wider">
+                        <span className="rounded bg-emerald-600 px-2 py-0.5 text-[11px] font-black uppercase text-white tracking-wider">
                           {tt("plr.step_1_of_2", "Step 1/2")}
                         </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 pr-1 pb-2">
-                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 col-span-2">
+                        <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 col-span-2">
                           {tt("plr.entry_count", "Entry Count")}
                           <select
                             value={containerCount}
@@ -1087,7 +1087,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           </select>
                         </label>
 
-                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                        <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                           {tt("plr.loading_country", "Loading Country")}
                           <SearchableSelect
                             value={loadingCountryState}
@@ -1104,7 +1104,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             addOptionLabel={tt("plr.add_country", "Add New Country")}
                           />
                         </label>
-                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                        <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                           {tt("plr.loading_port", "Loading Port / Border")}
                           <SearchableSelect
                             value={loadingPortState}
@@ -1122,7 +1122,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           />
                         </label>
 
-                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                        <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                           {tt("plr.receiving_country", "Receiving Country")}
                           <SearchableSelect
                             value={receivingCountryState}
@@ -1139,7 +1139,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             addOptionLabel={tt("plr.add_country", "Add New Country")}
                           />
                         </label>
-                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                        <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                           {tt("plr.receiving_port", "Receiving Port / Border")}
                           <SearchableSelect
                             value={receivingPortState}
@@ -1157,7 +1157,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           />
                         </label>
                         
-                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                        <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                           {tt("plr.loading_date", "Loading Date")}
                           <input
                             type="date"
@@ -1166,7 +1166,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
                           />
                         </label>
-                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                        <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                           {tt("plr.receiving_date", "Receiving Date")}
                           <input
                             type="date"
@@ -1182,17 +1182,17 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         <div className="mb-3 flex items-center justify-between border-b border-indigo-100 pb-2 dark:border-indigo-900/40">
                           <div className="flex items-center gap-2">
                             <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
-                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                            <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
                               {tt("plr.transport_title", "Transportation Details")}
                             </h5>
                           </div>
-                          <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">
+                          <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">
                             {translateOptionLabel(activeLang, transportMode)}
                           </span>
                         </div>
 
                         <div className="grid gap-3 sm:grid-cols-2">
-                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
+                          <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
                             {tt("plr.transport_mode", "Transport Mode")}
                             <select
                               value={transportMode}
@@ -1212,7 +1212,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           {/* Sea Mode Layout */}
                           {transportMode === "By Sea" && (
                             <>
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                              <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                                 {tt("plr.bl_number", "B/L Reference No.")}
                                 <input
                                   value={blNumber}
@@ -1225,7 +1225,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 />
                               </label>
 
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                              <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                                 {tt("plr.vessel_name", "Vessel Name")}
                                 <input
                                   value={vesselName}
@@ -1235,7 +1235,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 />
                               </label>
 
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                              <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                                 {tt("plr.voyage_no", "Voyage No.")}
                                 <input
                                   value={voyageNo}
@@ -1267,7 +1267,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           {/* Road Mode Layout */}
                           {transportMode === "By Road" && (
                             <>
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                              <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                                 {tt("plr.bilty_ref", "Bilty / Waybill No.")}
                                 <input
                                   value={transportReference || blNumber}
@@ -1280,7 +1280,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 />
                               </label>
 
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                              <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                                 {tt("plr.vehicle_no", "Truck / Vehicle No.")}
                                 <input
                                   value={vehicleNo}
@@ -1291,7 +1291,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                               </label>
 
                               {truckOptions.length > 0 && (
-                                <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
+                                <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
                                   {tt("plr.registered_truck", "Select From Registered Trucks")}
                                   <select
                                     value={truckId}
@@ -1316,7 +1316,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 </label>
                               )}
 
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                              <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                                 {tt("plr.driver_name", "Driver Name")}
                                 <input
                                   value={driverName}
@@ -1326,7 +1326,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 />
                               </label>
 
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                              <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                                 {tt("plr.driver_mobile", "Driver Contact / Mobile")}
                                 <input
                                   value={driverMobile}
@@ -1357,7 +1357,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           {/* Air Mode Layout */}
                           {transportMode === "By Air" && (
                             <>
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                              <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                                 {tt("plr.awb_no", "AWB Number / Ref")}
                                 <input
                                   value={transportReference || blNumber}
@@ -1370,7 +1370,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 />
                               </label>
 
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                              <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                                 {tt("plr.flight_carrier", "Flight No. / Carrier")}
                                 <input
                                   value={vesselName}
@@ -1400,7 +1400,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
                           {/* Rail Mode Layout */}
                           {transportMode === "By Rail" && (
-                            <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
+                            <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
                               {tt("plr.rail_ref", "Rail / Wagon Reference")}
                               <input
                                 value={railReference}
@@ -1413,7 +1413,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           )}
 
                           {/* Common Dates */}
-                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                          <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                             {tt("plr.departure_date", "Departure Date")}
                             <input
                               type="date"
@@ -1423,7 +1423,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             />
                           </label>
 
-                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                          <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                             {tt("plr.expected_arrival_date", "Expected Arrival Date")}
                             <input
                               type="date"
@@ -1433,7 +1433,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             />
                           </label>
 
-                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
+                          <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
                             {tt("plr.transport_remarks", "Transport Remarks")}
                             <input
                               value={transportRemarksInput}
@@ -1463,58 +1463,58 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
                       <div className="mb-3 flex items-center justify-between rounded-lg bg-blue-50 p-2.5 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-800">
                         <div className="flex items-center gap-2">
-                          <span className="rounded bg-blue-600 px-2 py-0.5 text-[10px] font-black uppercase text-white">
+                          <span className="rounded bg-blue-600 px-2 py-0.5 text-[11px] font-black uppercase text-white">
                             B/L {blNumber || record.purchase_order_no || "ENTRY"}
                           </span>
                           <span className="text-xs font-black text-blue-900 dark:text-blue-100">
                             Container {currentContainerIndex} of {Math.max(1, Number(containerCount) || 1)}
                           </span>
                         </div>
-                        <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300">
+                        <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300">
                           {Number(containerCount) > 1 ? `Container #${currentContainerIndex} Entry` : "Single Container Entry"}
                         </span>
                       </div>
 
-                      <div className="rounded-lg border border-slate-200 bg-slate-50/90 p-2.5 mb-4 text-[10px] space-y-2 dark:border-slate-800 dark:bg-slate-900/60 shadow-xs">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50/90 p-2.5 mb-4 text-[11px] space-y-2 dark:border-slate-800 dark:bg-slate-900/60 shadow-xs">
                         <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-1.5 font-bold">
-                          <span className="text-slate-500 uppercase tracking-wider text-[9px] flex items-center gap-1">
+                          <span className="text-slate-500 uppercase tracking-wider text-[11px] flex items-center gap-1">
                             <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                             PO SUMMARY ({history.length} {history.length === 1 ? 'Entry' : 'Entries'})
                           </span>
-                          <span className="font-mono text-[9px] text-slate-600 dark:text-slate-300">
+                          <span className="font-mono text-[11px] text-slate-600 dark:text-slate-300">
                             Total: <strong className="font-black text-slate-900 dark:text-white">{totalQuantity.toLocaleString()}</strong> {unitLabel}
                           </span>
                         </div>
 
                         <div className="grid grid-cols-3 gap-1.5 text-center">
                           <div className="bg-white p-1.5 rounded border border-slate-100 dark:border-slate-800 dark:bg-slate-950">
-                            <div className="text-[8px] font-extrabold uppercase text-slate-400">{tt("plr.word_total", "Total")}</div>
-                            <div className="font-mono font-black text-slate-800 dark:text-slate-200 text-[10px] leading-tight">
-                              {totalQuantity.toLocaleString()} <span className="text-[8px] font-medium text-slate-400">{unitLabel}</span>
+                            <div className="text-[11px] font-extrabold uppercase text-slate-400">{tt("plr.word_total", "Total")}</div>
+                            <div className="font-mono font-black text-slate-800 dark:text-slate-200 text-[11px] leading-tight">
+                              {totalQuantity.toLocaleString()} <span className="text-[11px] font-medium text-slate-400">{unitLabel}</span>
                             </div>
-                            <div className="text-[8px] text-slate-500 mt-0.5 font-mono leading-tight">
+                            <div className="text-[11px] text-slate-500 mt-0.5 font-mono leading-tight">
                               <div><span className="text-slate-400">{tt("plr.f_net", "Net:")}</span> {contractNetWeight.toLocaleString()} kg</div>
                               <div><span className="text-slate-400">{tt("plr.f_gross", "Gross:")}</span> {contractGrossWeight.toLocaleString()} kg</div>
                             </div>
                           </div>
 
                           <div className="bg-emerald-50/70 p-1.5 rounded border border-emerald-200/60 dark:border-emerald-900/50 dark:bg-emerald-950/30">
-                            <div className="text-[8px] font-extrabold uppercase text-emerald-700 dark:text-emerald-400">Loaded ({history.length})</div>
-                            <div className="font-mono font-black text-emerald-700 dark:text-emerald-300 text-[10px] leading-tight">
-                              {totalLoadedQuantity.toLocaleString()} <span className="text-[8px] font-medium text-emerald-600/70">{unitLabel}</span>
+                            <div className="text-[11px] font-extrabold uppercase text-emerald-700 dark:text-emerald-400">Loaded ({history.length})</div>
+                            <div className="font-mono font-black text-emerald-700 dark:text-emerald-300 text-[11px] leading-tight">
+                              {totalLoadedQuantity.toLocaleString()} <span className="text-[11px] font-medium text-emerald-600/70">{unitLabel}</span>
                             </div>
-                            <div className="text-[8px] text-emerald-700/80 dark:text-emerald-400 mt-0.5 font-mono leading-tight">
+                            <div className="text-[11px] text-emerald-700/80 dark:text-emerald-400 mt-0.5 font-mono leading-tight">
                               <div><span className="text-emerald-600/60">{tt("plr.f_net", "Net:")}</span> {loadedNetWeight.toLocaleString()} kg</div>
                               <div><span className="text-emerald-600/60">{tt("plr.f_gross", "Gross:")}</span> {loadedGrossWeight.toLocaleString()} kg</div>
                             </div>
                           </div>
 
                           <div className="bg-rose-50/70 p-1.5 rounded border border-rose-200/60 dark:border-rose-900/50 dark:bg-rose-950/30">
-                            <div className="text-[8px] font-extrabold uppercase text-rose-600 dark:text-rose-400">{tt("plr.word_remaining", "Remaining")}</div>
-                            <div className="font-mono font-black text-rose-600 dark:text-rose-400 text-[10px] leading-tight">
-                              {remainingToLoadQuantity.toLocaleString()} <span className="text-[8px] font-medium text-rose-500/70">{unitLabel}</span>
+                            <div className="text-[11px] font-extrabold uppercase text-rose-600 dark:text-rose-400">{tt("plr.word_remaining", "Remaining")}</div>
+                            <div className="font-mono font-black text-rose-600 dark:text-rose-400 text-[11px] leading-tight">
+                              {remainingToLoadQuantity.toLocaleString()} <span className="text-[11px] font-medium text-rose-500/70">{unitLabel}</span>
                             </div>
-                            <div className="text-[8px] text-rose-600/80 dark:text-rose-400 mt-0.5 font-mono leading-tight">
+                            <div className="text-[11px] text-rose-600/80 dark:text-rose-400 mt-0.5 font-mono leading-tight">
                               <div><span className="text-rose-500/60">{tt("plr.f_net", "Net:")}</span> {remainingNetWeight.toLocaleString()} kg</div>
                               <div><span className="text-rose-500/60">{tt("plr.f_gross", "Gross:")}</span> {remainingGrossWeight.toLocaleString()} kg</div>
                             </div>
@@ -1522,7 +1522,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         </div>
 
                         {currentInputNetKgs > 0 && (
-                          <div className="flex items-center justify-between bg-cyan-50 p-1 rounded border border-cyan-200 text-[9.5px] dark:bg-cyan-950/40 dark:border-cyan-800">
+                          <div className="flex items-center justify-between bg-cyan-50 p-1 rounded border border-cyan-200 text-[11px] dark:bg-cyan-950/40 dark:border-cyan-800">
                             <span className="font-bold text-cyan-800 dark:text-cyan-300">{tt("plr.current_entry_weight", "Current Entry Weight")}:</span>
                             <span className="font-mono font-black text-cyan-900 dark:text-cyan-200">
                               Net: {currentInputNetKgs.toLocaleString()} kg | Gross: {currentInputGrossKgs.toLocaleString()} kg
@@ -1532,12 +1532,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 mb-4">
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 col-span-2">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 col-span-2">
                           {tt("plr.origin_country", "Origin Country")}
                           <input value={originCountry} onChange={(e) => setOriginCountry(e.target.value)} placeholder={tt("plr.ph_india", "India")} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 col-span-2">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 col-span-2">
                           {tt("plr.goods_name", "Goods Name")}
                           <select
                             value={goodsName}
@@ -1569,32 +1569,32 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           </select>
                         </label>
 
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.hs_code", "HS Code")}
                           <input value={hsCode} onChange={(e) => setHsCode(e.target.value)} placeholder="0000" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.allot_name", "Allot Name / ID")}
                           <input value={allotName} onChange={(e) => setAllotName(e.target.value)} placeholder="ALT-4733" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.brand_label", "Brand")}
                           <input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder={tt("plr.select_brand", "Select Brand")} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.size_spec", "Size Specification")}
                           <input value={sizeSpec} onChange={(e) => setSizeSpec(e.target.value)} placeholder={tt("plr.select_size", "Select Size")} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.qty_name", "Qty Name")}
                           <input value={qtyName} onChange={(e) => setQtyName(e.target.value)} placeholder="BAGS" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.qty_number", "Quantity No")}
                           <input data-testid="ld-qty" value={quantityNo} onChange={(e) => {
                             setQuantityNo(e.target.value);
@@ -1602,81 +1602,81 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           }} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.gross_per_unit", "Gross Wt / Unit (KGS)")}
                           <input value={oneQtyKgs} onChange={(e) => setOneQtyKgs(e.target.value)} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.empty_per_unit", "Empty Wt / Unit (KGS)")}
                           <input value={oneEmptyKgs} onChange={(e) => setOneEmptyKgs(e.target.value)} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.divide_type", "Divide Type")}
                           <input value={divideType} onChange={(e) => setDivideType(e.target.value)} placeholder="D/KGs" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.divide_weight", "Divide Wt / Value")}
                           <input value={divideWeightValue} onChange={(e) => setDivideWeightValue(e.target.value)} placeholder="1" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 col-span-2">
+                        <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 col-span-2">
                           {tt("plr.quality_ref", "Quality Report Ref")}
                           <input value={qualityReportRef} onChange={(e) => setQualityReportRef(e.target.value)} placeholder={tt("plr.ph_passed", "Passed")} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                       </div>
 
                       <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 mb-6 dark:border-emerald-900/30 dark:bg-emerald-950/20" data-testid="loading-container-panel">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-400 mb-3">{tt("plr.container_section", "Container, Seal & Weights")}</h4>
+                        <h4 className="text-[11px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-400 mb-3">{tt("plr.container_section", "Container, Seal & Weights")}</h4>
 
                         <div className="flex flex-col gap-3">
-                          <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
+                          <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                             {tt("plr.container_no", "Container No.")}
                             <input value={containerNumberInput} onChange={(e) => setContainerNumberInput(e.target.value)} data-testid="ld-container-no" placeholder={tt("plr.ph_e_g__mscu1234567", "e.g. MSCU1234567")} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                           </label>
-                          <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
+                          <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                             {tt("plr.container_size", "Container Size / Type")}
                             <select value={containerTypeInput} onChange={(e) => setContainerTypeInput(e.target.value)} data-testid="ld-container-type" className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200">
                               {containerTypes.map((c) => (<option key={c} value={c}>{c}</option>))}
                             </select>
                           </label>
-                          <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
+                          <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                             {tt("plr.seal_no", "Seal No.")}
                             <input value={sealNumberInput} onChange={(e) => setSealNumberInput(e.target.value)} data-testid="ld-seal" placeholder={tt("plr.ph_e_g__sl998877", "e.g. SL998877")} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                           </label>
                           <div className="grid grid-cols-3 gap-2">
-                            <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
+                            <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                               {tt("plr.gross_weight_kg", "Gross (kg)")}
                               <input type="number" min="0" step="0.01" value={grossWeightInput} onChange={(e) => setGrossWeightInput(e.target.value)} data-testid="ld-gross" placeholder={currentInputGrossKgs > 0 ? String(currentInputGrossKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                             </label>
-                            <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
+                            <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                               {tt("plr.tare_weight_kg", "Tare (kg)")}
                               <input type="number" min="0" step="0.01" value={tareWeightInput} onChange={(e) => setTareWeightInput(e.target.value)} data-testid="ld-tare" placeholder={currentInputGrossKgs > currentInputNetKgs ? String(currentInputGrossKgs - currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                             </label>
-                            <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
+                            <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                               {tt("plr.net_weight_kg", "Net (kg)")}
                               <input type="number" min="0" step="0.01" value={netWeightInput} onChange={(e) => setNetWeightInput(e.target.value)} data-testid="ld-net" placeholder={currentInputNetKgs > 0 ? String(currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                             </label>
                           </div>
-                          <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
+                          <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                             {tt("plr.loading_note", "Loading Note")}
                             <input value={newLoadingNote} onChange={(e) => setNewLoadingNote(e.target.value)} data-testid="ld-note" placeholder={tt("plr.ph_e_g__checking___brand_remarks", "e.g. Checking / brand remarks")} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                           </label>
-                          <div className="rounded-md border border-dashed border-emerald-300 bg-white/70 px-3 py-2 text-[10px] font-semibold text-slate-600 dark:border-emerald-800 dark:bg-slate-900/60 dark:text-slate-300" data-testid="loading-booking-readonly">
+                          <div className="rounded-md border border-dashed border-emerald-300 bg-white/70 px-3 py-2 text-[11px] font-semibold text-slate-600 dark:border-emerald-800 dark:bg-slate-900/60 dark:text-slate-300" data-testid="loading-booking-readonly">
                             <span className="uppercase tracking-wider text-slate-400">{tt("plr.booking_amount_ro", "Booking amount (read-only)")}: </span>
                             <span className="font-mono font-black">{contractPurchaseAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contractPurchaseCurrency}</span>
-                            <div className="mt-0.5 text-[9px] font-medium text-slate-400">{tt("plr.booking_amount_note", "Currency, rate and amounts belong to the Purchase Booking and Payment Journal — not to Loading.")}</div>
+                            <div className="mt-0.5 text-[11px] font-medium text-slate-400">{tt("plr.booking_amount_note", "Currency, rate and amounts belong to the Purchase Booking and Payment Journal — not to Loading.")}</div>
                           </div>
                         </div>
                       </div>
 
                       {/* PO Items Status Summary Table */}
                       <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 mb-4 dark:border-slate-800 dark:bg-slate-900/30">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">{tt("plr.po_items_status", "PO Items Status")}</h4>
+                        <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-3">{tt("plr.po_items_status", "PO Items Status")}</h4>
                         <div className="overflow-x-auto">
-                          <table className="w-full text-left text-[9px] border-collapse bg-white dark:bg-slate-950 rounded-lg overflow-hidden border dark:border-slate-850">
+                          <table className="w-full text-left text-[11px] border-collapse bg-white dark:bg-slate-950 rounded-lg overflow-hidden border dark:border-slate-850">
                             <thead>
                               <tr className="border-b text-slate-400 font-bold uppercase tracking-wider bg-slate-50/80 dark:bg-slate-900/50">
                                 <Th className="px-2 py-1.5">{tt("plr.col_item", "Item")}</Th>
@@ -1728,17 +1728,17 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                 <div className="rounded-md bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
                   <Building2 className="h-4 w-4" />
                 </div>
-                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">{tt("plr.branch_bill_details", "Branch & Bill Details")}</h3>
+                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[11px]">{tt("plr.branch_bill_details", "Branch & Bill Details")}</h3>
               </div>
               <div className="space-y-3">
                 <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{tt("plr.branch_bill_no", "Branch / Bill No.")}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">{tt("plr.branch_bill_no", "Branch / Bill No.")}</div>
                   <div className="text-sm font-bold text-blue-600 dark:text-blue-400">{branchLabel}</div>
                 </div>
                 <div className="space-y-2 pt-2">
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("plr.user_admin", "User Admin")}:</span>
-                    <span className="font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-0.5 rounded text-[10px] dark:bg-emerald-950/50">{adminLabel}</span>
+                    <span className="font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-0.5 rounded text-[11px] dark:bg-emerald-950/50">{adminLabel}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("common.user", "User")} ID:</span>
@@ -1758,7 +1758,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("common.status", "Status")}:</span>
-                    <span className="font-bold text-amber-600 uppercase text-[10px]">{record.loading_status === "loaded" ? tt("plr.status_loaded", "Loaded") : (record.loading_status || "PENDING")}</span>
+                    <span className="font-bold text-amber-600 uppercase text-[11px]">{record.loading_status === "loaded" ? tt("plr.status_loaded", "Loaded") : (record.loading_status || "PENDING")}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("plr.system_serial", "System Serial")}:</span>
@@ -1790,7 +1790,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                 <div className="rounded-md bg-purple-50 p-2 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
                   <ArrowDownLeft className="h-4 w-4" />
                 </div>
-                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">{tt("plr.purchase_account_details", "Purchase Account Details")}</h3>
+                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[11px]">{tt("plr.purchase_account_details", "Purchase Account Details")}</h3>
               </div>
               <div className="space-y-2 pt-1">
                   <div className="flex justify-between items-center text-[11px]">
@@ -1798,7 +1798,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                     <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{form.purchaseAccountNumber || form.purchaseAccountNo || "-"}</span>
                   </div>
                   <div className="pt-2 pb-1">
-                    <div className="text-[10px] text-slate-400 mb-0.5">{tt("plr.account_name", "Account Name")}:</div>
+                    <div className="text-[11px] text-slate-400 mb-0.5">{tt("plr.account_name", "Account Name")}:</div>
                     <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.purchaseAccountName || "-"}</div>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
@@ -1818,7 +1818,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                 <div className="rounded-md bg-blue-50 p-2 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                   <ArrowUpRight className="h-4 w-4" />
                 </div>
-                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">{tt("plr.sales_account_cr", "Sales Account (CR)")}</h3>
+                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[11px]">{tt("plr.sales_account_cr", "Sales Account (CR)")}</h3>
               </div>
               <div className="space-y-2 pt-1">
                   <div className="flex justify-between items-center text-[11px]">
@@ -1826,7 +1826,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                     <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{form.salesAccountNumber || form.salesAccountNo || "-"}</span>
                   </div>
                   <div className="pt-2 pb-1">
-                    <div className="text-[10px] text-slate-400 mb-0.5">{tt("plr.account_name", "Account Name")}:</div>
+                    <div className="text-[11px] text-slate-400 mb-0.5">{tt("plr.account_name", "Account Name")}:</div>
                     <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.salesAccountName || "-"}</div>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
@@ -1847,52 +1847,52 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <div className="rounded-md bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
                     <Ship className="h-4 w-4" />
                   </div>
-                  <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">{tt("plr.loading_summary_report", "Loading Summary Report")}</h3>
+                  <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[11px]">{tt("plr.loading_summary_report", "Loading Summary Report")}</h3>
                 </div>
-                <span className="text-[10px] font-mono font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900">
+                <span className="text-[11px] font-mono font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900">
                   {loadingProgress.toFixed(1)}% {tt("plr.status_loaded", "Loaded")}
                 </span>
               </div>
               <div className="space-y-2 text-xs font-semibold">
                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.total_contract_qty", "Total Contract Qty")}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.total_contract_qty", "Total Contract Qty")}</span>
                   <span className="font-mono font-black text-slate-800 dark:text-slate-100">{totalQuantity.toLocaleString()} {unitLabel}</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.contract_gross_weight", "Contract Gross Weight")}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.contract_gross_weight", "Contract Gross Weight")}</span>
                   <span className="font-mono font-black text-slate-800 dark:text-slate-100">{contractGrossWeight.toLocaleString()} kg</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.contract_net_weight", "Contract Net Weight")}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.contract_net_weight", "Contract Net Weight")}</span>
                   <span className="font-mono font-black text-slate-800 dark:text-slate-100">{contractNetWeight.toLocaleString()} kg</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.contract_purchase_amount", "Contract Purchase Amt")}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.contract_purchase_amount", "Contract Purchase Amt")}</span>
                   <span className="font-mono font-black text-slate-800 dark:text-slate-100">{contractPurchaseAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contractPurchaseCurrency}</span>
                 </div>
                 <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">{tt("plr.previously_loaded", "Previously Loaded")}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">{tt("plr.previously_loaded", "Previously Loaded")}</span>
                   <span className="font-mono font-black text-emerald-700 dark:text-emerald-400">{previousLoadedQuantity.toLocaleString()} {unitLabel}</span>
                 </div>
                 <div className="bg-blue-50/60 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">{tt("plr.current_loading_qty", "Current Loading")}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">{tt("plr.current_loading_qty", "Current Loading")}</span>
                   <span className="font-mono font-black text-blue-700 dark:text-blue-400">{currentLoadingQuantity.toLocaleString()} {unitLabel}</span>
                 </div>
                 <div className="bg-teal-50/60 dark:bg-teal-900/10 p-3 rounded-lg border border-teal-100 dark:border-teal-900/30 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400">{tt("plr.total_loaded", "Total Loaded")}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400">{tt("plr.total_loaded", "Total Loaded")}</span>
                   <span className="font-mono font-black text-teal-700 dark:text-teal-400">{totalLoadedQuantity.toLocaleString()} {unitLabel}</span>
                 </div>
                 <div className="bg-rose-50/50 dark:bg-rose-900/10 p-3 rounded-lg border border-rose-100 dark:border-rose-900/30 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600">{tt("plr.remaining_to_load", "Remaining to Load")}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600">{tt("plr.remaining_to_load", "Remaining to Load")}</span>
                   <span className="font-mono font-black text-rose-600">{remainingToLoadQuantity.toLocaleString()} {unitLabel}</span>
                 </div>
 
-                <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-[10px] font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300" data-testid="loading-payment-note">
+                <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300" data-testid="loading-payment-note">
                   <p>{tt("plr.payment_note", "Payment is separate from loading. An outstanding Credit or Final Payment balance stays in Accounts Payable; it never blocks loading and is not part of Remaining to Load.")}</p>
                   {payableRemaining > 0.005 && (
                     <a
                       href={`/dashboard/journal/purchase-order-payment/remaining?purchaseOrderNo=${encodeURIComponent(record.purchase_order_no || poRow.purchase_order_no || "")}`}
-                      className="mt-2 inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300"
+                      className="mt-2 inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-black uppercase text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300"
                       data-testid="open-payment-journal"
                     >
                       <Link2 className="h-3 w-3" /> {tt("plr.open_payment_journal", "Open Payment Journal")}
@@ -1907,16 +1907,16 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-900">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">{tt("plr.title_current_bill_loading", "Current Bill Loading Report")}</h3>
-                    <p className="mt-1 text-[10px] font-semibold text-slate-500">{tt("plr.bill_loading_note", "Physical quantity and weight: contract, loaded and still to load.")}</p>
+                    <p className="mt-1 text-[11px] font-semibold text-slate-500">{tt("plr.bill_loading_note", "Physical quantity and weight: contract, loaded and still to load.")}</p>
                   </div>
-                  <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
+                  <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
                     {tt("plr.bill_summary", "Bill Summary")}
                   </span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[980px] text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
+                      <tr className="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
                         <Th className="px-4 py-3">{tt("common.sr_no", "SR#")}</Th>
                         <Th className="px-4 py-3">{tt("plr.col_goods", "Goods")}</Th>
                         <Th className="px-4 py-3 text-end">{tt("plr.col_contract_qty", "Contract Qty")}</Th>
@@ -1941,7 +1941,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             <td className="px-4 py-3 font-mono font-bold text-slate-500">01</td>
                             <td className="px-4 py-3">
                               <div className="font-black text-slate-800 dark:text-slate-100">{gName}</div>
-                              <div className="mt-1 text-[10px] font-semibold text-slate-500">{[brandName, sizeName].filter(Boolean).join(" / ") || "-"}</div>
+                              <div className="mt-1 text-[11px] font-semibold text-slate-500">{[brandName, sizeName].filter(Boolean).join(" / ") || "-"}</div>
                             </td>
                             <td className="px-4 py-3 text-end font-mono font-black text-slate-700 dark:text-slate-200">{totalQuantity.toLocaleString()} {unitLabel}</td>
                             <td className="px-4 py-3 text-end font-mono font-black text-emerald-600" data-testid="bill-loaded-qty">{totalLoadedQuantity.toLocaleString()} {unitLabel}</td>
@@ -1951,7 +1951,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             <td className="px-4 py-3 text-end font-mono text-slate-700 dark:text-slate-200">{contractPurchaseAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contractPurchaseCurrency}</td>
                             <td className="px-4 py-3">
                               <div className="font-semibold text-slate-700 dark:text-slate-200">{route}</div>
-                              <div className="mt-1 text-[10px] font-semibold text-slate-500">{displayLoadDate} &rarr; {displayRecDate}</div>
+                              <div className="mt-1 text-[11px] font-semibold text-slate-500">{displayLoadDate} &rarr; {displayRecDate}</div>
                             </td>
                           </tr>
                         );
@@ -1966,9 +1966,9 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-900">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">{tt("plr.history_title", "Loading History")}</h3>
-                <p className="mt-1 text-[10px] font-semibold text-slate-500">{tt("plr.history_desc", "All BL/container loading records for this purchase bill.")}</p>
+                <p className="mt-1 text-[11px] font-semibold text-slate-500">{tt("plr.history_desc", "All BL/container loading records for this purchase bill.")}</p>
               </div>
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300" data-testid="history-count">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300" data-testid="history-count">
                 {history.length} {tt("plr.saved_loading", "Saved Loading")}
               </span>
             </div>
@@ -2004,7 +2004,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1500px] text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
+                  <tr className="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
                     <Th className="px-3 py-3 w-8" />
                     <Th className="px-3 py-3">{tt("common.sr_no", "SR#")}</Th>
                     <Th className="px-3 py-3">{tt("plr.col_booking_no", "Purchase Booking No.")}</Th>
@@ -2063,7 +2063,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         <td className="px-3 py-3 font-mono font-black text-blue-700 dark:text-blue-300" data-testid="row-bl">{h.bl_number || h.report_payload?.blNumber || "-"}</td>
                         <td className="px-3 py-3 font-mono font-semibold text-slate-700 dark:text-slate-200">
                           <div data-testid="row-container">{h.container_number || h.report_payload?.containerNumber || "-"}</div>
-                          <div className="mt-0.5 text-[10px] font-medium text-slate-400">{[h.container_type, h.seal_number || h.report_payload?.sealNumber].filter(Boolean).join(" · ")}</div>
+                          <div className="mt-0.5 text-[11px] font-medium text-slate-400">{[h.container_type, h.seal_number || h.report_payload?.sealNumber].filter(Boolean).join(" · ")}</div>
                         </td>
                         <td className="px-3 py-3 text-end font-mono font-black text-slate-800 dark:text-slate-100">{loadedQty.toLocaleString()} {unitLabel}</td>
                         <td className="px-3 py-3 text-end font-mono text-slate-600 dark:text-slate-300">{gross > 0 ? gross.toLocaleString() : "-"}</td>
@@ -2071,12 +2071,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         <td className="px-3 py-3 font-semibold text-slate-700 dark:text-slate-200">{h.vessel_name || h.report_payload?.vesselName || h.carrier_name || h.vehicle_no || "-"}</td>
                         <td className="px-3 py-3">
                           <div className="font-semibold text-slate-700 dark:text-slate-200">{h.report_payload?.loadingPort || h.loading_location || "-"} &rarr; {h.report_payload?.receivingPort || h.receiving_location || "-"}</div>
-                          <div className="mt-1 text-[10px] font-semibold text-slate-500">{h.report_payload?.loadingDate || h.loaded_at?.slice(0, 10) || "-"} &rarr; {h.report_payload?.receivingDate || tt("plr.pending", "Pending")}</div>
+                          <div className="mt-1 text-[11px] font-semibold text-slate-500">{h.report_payload?.loadingDate || h.loaded_at?.slice(0, 10) || "-"} &rarr; {h.report_payload?.receivingDate || tt("plr.pending", "Pending")}</div>
                         </td>
                         <td className="px-3 py-3" data-testid="row-lane-status">
                           {ls
-                            ? <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-[10px] font-black uppercase text-sky-700">{tt(`plane.${stKey}`, stEn)}</span>
-                            : <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black uppercase text-slate-500">{tt("plr.not_in_lane", "Not in lane")}</span>}
+                            ? <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-[11px] font-black uppercase text-sky-700">{tt(`plane.${stKey}`, stEn)}</span>
+                            : <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-black uppercase text-slate-500">{tt("plr.not_in_lane", "Not in lane")}</span>}
                         </td>
                         <td className="px-3 py-3 font-semibold text-slate-700 dark:text-slate-200" data-testid="row-location">{ls?.current_location || h.report_payload?.loadingPort || h.loading_location || "-"}</td>
                         <td className="px-3 py-3 font-semibold text-slate-700 dark:text-slate-200" data-testid="row-assigned">{ls?.assigned_to || "-"}</td>
@@ -2089,13 +2089,13 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                               onClick={() => void onRowLaneAction(h, act.kind)}
                               data-testid="row-lane-action"
                               data-kind={act.kind}
-                              className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-indigo-300 bg-indigo-50 px-2.5 py-1 text-[10px] font-black uppercase text-indigo-700 shadow-sm transition hover:bg-indigo-100 disabled:opacity-50 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300"
+                              className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-indigo-300 bg-indigo-50 px-2.5 py-1 text-[11px] font-black uppercase text-indigo-700 shadow-sm transition hover:bg-indigo-100 disabled:opacity-50 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300"
                             >
                               <ArrowRightLeft className="h-3 w-3" />
                               {tt(`plane.${act.labelKey}`, act.label)}
                             </button>
                             {ls && (
-                              <a href={laneHref({ focus: ls.id })} data-testid="row-open-lane" className="whitespace-nowrap rounded-md border border-slate-200 px-2 py-1 text-[10px] font-bold text-blue-700 hover:bg-blue-50" title={tt("plane.act_open_lane", "Open in Purchase Lane")}>
+                              <a href={laneHref({ focus: ls.id })} data-testid="row-open-lane" className="whitespace-nowrap rounded-md border border-slate-200 px-2 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-50" title={tt("plane.act_open_lane", "Open in Purchase Lane")}>
                                 <Route className="inline h-3 w-3" /> {tt("plane.act_open_lane", "Open in Purchase Lane")}
                               </a>
                             )}
@@ -2274,21 +2274,21 @@ function ReceivingModal({ record, onClose, onReceived }: { record: LoadingRecord
 
         <div className="mb-4 grid grid-cols-3 gap-2 rounded-lg bg-slate-50 p-3 text-center dark:bg-slate-950">
           <div>
-            <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{tt("plr.loaded_quantity", "Loaded")}</div>
+            <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">{tt("plr.loaded_quantity", "Loaded")}</div>
             <div className="text-sm font-black text-slate-800 dark:text-slate-100">{loadedQuantity.toLocaleString()}</div>
           </div>
           <div>
-            <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{tt("plr.already_received", "Received")}</div>
+            <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">{tt("plr.already_received", "Received")}</div>
             <div className="text-sm font-black text-emerald-600">{alreadyReceived.toLocaleString()}</div>
           </div>
           <div>
-            <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{tt("plr.remaining_to_receive", "Remaining")}</div>
+            <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">{tt("plr.remaining_to_receive", "Remaining")}</div>
             <div className="text-sm font-black text-amber-600">{remainingToReceive.toLocaleString()}</div>
           </div>
         </div>
 
         <div className="space-y-3">
-          <label className="block space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+          <label className="block space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
             {tt("plr.receiving_warehouse", "Destination Warehouse")}
             <select value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950">
               <option value="">{tt("plr.select_warehouse", "Select Warehouse...")}</option>
@@ -2297,15 +2297,15 @@ function ReceivingModal({ record, onClose, onReceived }: { record: LoadingRecord
               ))}
             </select>
           </label>
-          <label className="block space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+          <label className="block space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
             {tt("plr.received_quantity", "Received Quantity")}
             <input type="number" min="0" max={remainingToReceive} step="0.01" value={receivedQuantity} onChange={(e) => setReceivedQuantity(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950" />
           </label>
-          <label className="block space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+          <label className="block space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
             {tt("plr.unit_cost", "Unit Cost (optional)")}
             <input type="number" min="0" step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950" />
           </label>
-          <label className="block space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+          <label className="block space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
             {tt("plr.receiving_remarks", "Remarks")}
             <input value={remarks} onChange={(e) => setRemarks(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950" />
           </label>
@@ -2935,22 +2935,22 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                 <span className="rounded font-mono font-black text-xs bg-blue-600 text-white px-2.5 py-0.5">{tt("plr.sel_po", "SELECTED PO:")} {activeInvoiceRecord.purchase_order_no}</span>
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{tt("plr.approved_invoice", "Approved Invoice & Contract Details (Read-Only Source of Truth)")}</span>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => setSelectedInvoicePoNo("")} className="h-6 text-[10px] font-bold text-blue-600 hover:text-blue-800">{tt("plr.clear_selection", "Clear Selection")}</Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedInvoicePoNo("")} className="h-6 text-[11px] font-bold text-blue-600 hover:text-blue-800">{tt("plr.clear_selection", "Clear Selection")}</Button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 text-[11px] font-semibold">
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.purchase_code", "Purchase Code")}</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.purchaseAccountNumber || form.purchaseAccountNo || "-"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.sales_code", "Sales Code")}</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.salesAccountNumber || form.salesAccountNo || "-"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("common.supplier", "Supplier")}</span><span className="font-bold text-slate-800 dark:text-slate-100 truncate block">{form.supplierName || form.purchaseAccountName || "Purchase Account"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.company_branch", "Company & Branch")}</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.branchName || "-"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.goods_brand", "Goods & Brand")}</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.goodsName || form.itemName || "-"} ({form.brand || "-"})</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.contract_qty", "Contract Qty (Bags)")}</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{totalPOQty.toLocaleString()}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[11px] uppercase">{tt("plr.purchase_code", "Purchase Code")}</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.purchaseAccountNumber || form.purchaseAccountNo || "-"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[11px] uppercase">{tt("plr.sales_code", "Sales Code")}</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.salesAccountNumber || form.salesAccountNo || "-"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[11px] uppercase">{tt("common.supplier", "Supplier")}</span><span className="font-bold text-slate-800 dark:text-slate-100 truncate block">{form.supplierName || form.purchaseAccountName || "Purchase Account"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[11px] uppercase">{tt("plr.company_branch", "Company & Branch")}</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.branchName || "-"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[11px] uppercase">{tt("plr.goods_brand", "Goods & Brand")}</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.goodsName || form.itemName || "-"} ({form.brand || "-"})</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[11px] uppercase">{tt("plr.contract_qty", "Contract Qty (Bags)")}</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{totalPOQty.toLocaleString()}</span></div>
               
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.col_purchase_rate", "Purchase Rate")}</span><span className="font-mono font-bold text-blue-600">{finance.priceRate > 0 ? `${finance.priceRate.toLocaleString()} ${finance.currency}` : "-"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.col_exchange_rate", "Exchange Rate")}</span><span className="font-mono font-bold text-blue-600">{finance.exRate}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.total_purchase", "Total Purchase Amount")}</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{poOrderTotalFC.toLocaleString(undefined, {minimumFractionDigits: 2})} {finance.currency}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.total_advance", "Total Advance Paid")}</span><span className="font-mono font-black text-emerald-600">{poAdvancePaidLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {localCur}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800 col-span-2"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.total_remaining", "Total Remaining Balance")}</span><span className="font-mono font-black text-rose-600">{poRemainingDueLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {localCur}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[11px] uppercase">{tt("plr.col_purchase_rate", "Purchase Rate")}</span><span className="font-mono font-bold text-blue-600">{finance.priceRate > 0 ? `${finance.priceRate.toLocaleString()} ${finance.currency}` : "-"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[11px] uppercase">{tt("plr.col_exchange_rate", "Exchange Rate")}</span><span className="font-mono font-bold text-blue-600">{finance.exRate}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[11px] uppercase">{tt("plr.total_purchase", "Total Purchase Amount")}</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{poOrderTotalFC.toLocaleString(undefined, {minimumFractionDigits: 2})} {finance.currency}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[11px] uppercase">{tt("plr.total_advance", "Total Advance Paid")}</span><span className="font-mono font-black text-emerald-600">{poAdvancePaidLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {localCur}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800 col-span-2"><span className="text-slate-400 block text-[11px] uppercase">{tt("plr.total_remaining", "Total Remaining Balance")}</span><span className="font-mono font-black text-rose-600">{poRemainingDueLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {localCur}</span></div>
             </div>
           </div>
         );
@@ -3045,7 +3045,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                   </span>
                   {scopeReportTitle}
                 </div>
-                <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 uppercase">
+                <span className="text-[11px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 uppercase">
                   {scopeBadge}
                 </span>
               </summary>
@@ -3067,7 +3067,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                               </span>
                               {getFlag(r.country)} {r.country}
                             </span>
-                            <span className="rounded bg-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider backdrop-blur-sm">
+                            <span className="rounded bg-white/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider backdrop-blur-sm">
                               {r.branches.length} Branches
                             </span>
                           </div>
@@ -3075,36 +3075,36 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                         <div className="p-4">
                           <div className="mb-4 flex flex-col gap-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
                             <div className="flex justify-between items-center">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("lpjr.col_cur", "Currency")}</span>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("lpjr.col_cur", "Currency")}</span>
                               <span className="font-black text-slate-800 dark:text-slate-200 text-xs">{r.currency}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.col_total_qty", "Total Qty")}</span>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.col_total_qty", "Total Qty")}</span>
                               <span className="font-black text-slate-800 dark:text-slate-200 font-mono text-[11px]">{totalQty.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.loaded_qty", "Loaded Qty")}</span>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.loaded_qty", "Loaded Qty")}</span>
                               <span className="font-black text-emerald-600 font-mono text-[11px]">{loadedQty.toLocaleString()}</span>
                             </div>
                             <div className="mt-1 flex justify-between items-center border-t border-slate-200 pt-2 dark:border-slate-800">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.col_remaining_bal_qty", "Remaining Bal. Qty")}</span>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.col_remaining_bal_qty", "Remaining Bal. Qty")}</span>
                               <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-sm">{balQty.toLocaleString()}</span>
                             </div>
                           </div>
                           
                           <div className="space-y-3">
-                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex justify-between items-center">
+                            <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-400 flex justify-between items-center">
                               <span>{tt("report.branch_breakdown", "Branch Breakdown")}</span>
-                              <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[8px] dark:bg-slate-800">All</span>
+                              <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[11px] dark:bg-slate-800">All</span>
                             </h5>
                             {r.branches.map((b, bIdx) => {
                               const bBalQty = Math.max(0, b.totalQuantity - b.loadedQuantity);
                               return (
                                 <div key={bIdx} className="flex flex-col gap-1.5 rounded-lg border border-slate-100 p-2.5 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                   <div className="flex justify-between items-center">
-                                    <span className="font-black text-[10px] uppercase text-slate-700 dark:text-slate-300 truncate pr-2" title={b.branch}>{b.branch}</span>
+                                    <span className="font-black text-[11px] uppercase text-slate-700 dark:text-slate-300 truncate pr-2" title={b.branch}>{b.branch}</span>
                                   </div>
-                                  <div className="grid grid-cols-2 gap-1 text-[9px]">
+                                  <div className="grid grid-cols-2 gap-1 text-[11px]">
                                     <div className="flex justify-between items-center">
                                       <span className="text-slate-400">{tt("plr.col_total_qty", "Total Qty")}</span>
                                       <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{b.totalQuantity.toLocaleString()}</span>
@@ -3152,7 +3152,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
               <Ship className="h-4 w-4 text-blue-600" />
               <div>
                 <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{tt("plr.title_loading_records", "Loading Records Report")}</h2>
-                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tracking-wide mt-0.5">{tt("plr.independent_note", "Independent from Purchase Booking Order unless explicitly linked.")}</p>
+                <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 tracking-wide mt-0.5">{tt("plr.independent_note", "Independent from Purchase Booking Order unless explicitly linked.")}</p>
               </div>
             </div>
           </div>
@@ -3160,7 +3160,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
           <div className="overflow-x-auto">
             <table className="w-max min-w-full border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50/80 text-left text-[10px] font-black uppercase tracking-wider text-slate-500 dark:bg-slate-900/40 dark:text-slate-400">
+                <tr className="bg-slate-50/80 text-left text-[11px] font-black uppercase tracking-wider text-slate-500 dark:bg-slate-900/40 dark:text-slate-400">
                     {[
                       "Expand",
                       "SR#",
@@ -3256,7 +3256,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                 {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-blue-600" /> : <ChevronRight className="h-3.5 w-3.5 text-slate-500" />}
                               </button>
                             </td>
-                            <td className="whitespace-nowrap px-4 py-3 text-[10px] font-bold text-slate-400">{String(groupIdx + 1).padStart(2, "0")}</td>
+                            <td className="whitespace-nowrap px-4 py-3 text-[11px] font-bold text-slate-400">{String(groupIdx + 1).padStart(2, "0")}</td>
                             <td className="whitespace-nowrap px-4 py-3 font-semibold">{countryLabel}</td>
                             <td className="whitespace-nowrap px-4 py-3 text-slate-500">{branchLabel}</td>
                             <td className="whitespace-nowrap px-4 py-3 leading-tight">
@@ -3264,17 +3264,17 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                 <Link2 className="h-3.5 w-3.5 text-blue-500" />
                                 {poNo}
                               </div>
-                              <div className="mt-1 text-[9px] font-semibold uppercase tracking-wider text-slate-400">
+                              <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                                 {primaryLoadingRecord?.loading_record_no || "Loading source pending"}
                               </div>
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 leading-tight">
-                              <div className="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300">{salesAccountNo}</div>
-                              <div className="text-slate-400 text-[9px] uppercase tracking-wider">{salesAccountName}</div>
+                              <div className="font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300">{salesAccountNo}</div>
+                              <div className="text-slate-400 text-[11px] uppercase tracking-wider">{salesAccountName}</div>
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 leading-tight">
-                              <div className="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300">{purchaseAccountNo}</div>
-                              <div className="text-slate-400 text-[9px] uppercase tracking-wider">{purchaseAccountName}</div>
+                              <div className="font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300">{purchaseAccountNo}</div>
+                              <div className="text-slate-400 text-[11px] uppercase tracking-wider">{purchaseAccountName}</div>
                             </td>
                             <td className="min-w-[150px] px-4 py-3 text-[11px] text-slate-700 dark:text-slate-200">{combinedGoods}</td>
                             <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-slate-900 dark:text-slate-100">{totalContractQty.toLocaleString()} Bags</td>
@@ -3295,25 +3295,25 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                             <td className="whitespace-nowrap px-4 py-3">
                               <div className="flex flex-col gap-1.5">
                                 {isFullyLoaded ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-black uppercase text-white shadow-sm dark:bg-black">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-black uppercase text-white shadow-sm dark:bg-black">
                                     {tt("plr.fully_loaded_100", "100% Fully Loaded")}
                                   </span>
                                 ) : isPartiallyLoaded ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-black uppercase text-amber-950 shadow-sm">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-black uppercase text-amber-950 shadow-sm">
                                     {((totalLoadedQty / totalContractQty) * 100).toFixed(0)}% Partially Loaded
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2.5 py-1 text-[10px] font-black uppercase text-white shadow-sm animate-pulse">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2.5 py-1 text-[11px] font-black uppercase text-white shadow-sm animate-pulse">
                                     0% Loaded (Pending)
                                   </span>
                                 )}
-                                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
                                   Payment: <span className="text-slate-800 dark:text-slate-200">{paymentStatus.replace(/_/g, " ")}</span>
                                 </span>
-                                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
                                   Next: <span className="text-blue-600 dark:text-blue-400">{nextDestination}</span>
                                 </span>
-                                <span className="text-[10px] font-mono font-black text-rose-600" data-testid="payable-balance">
+                                <span className="text-[11px] font-mono font-black text-rose-600" data-testid="payable-balance">
                                   {tt("plr.payable_balance", "Payable")}: {purchaseRemainingUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
                                 </span>
                               </div>
@@ -3328,7 +3328,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                   disabled={isFullyLoaded}
                                   data-testid={`add-loading-${poNo}`}
                                   title={isFullyLoaded ? tt("plr.new_loading_disabled", "Everything is already loaded. Edit an existing entry to correct it.") : undefined}
-                                  className="h-7 px-2 text-[10px] font-bold uppercase text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 gap-1 shadow-sm disabled:opacity-50"
+                                  className="h-7 px-2 text-[11px] font-bold uppercase text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 gap-1 shadow-sm disabled:opacity-50"
                                 >
                                   <Plus className="h-3 w-3 text-emerald-600" />
                                   {tt("plr.add_loading", "Add Loading")}
@@ -3338,7 +3338,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                   size="sm"
                                   variant="outline"
                                   onClick={() => togglePoExpand(poNo)}
-                                  className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider gap-1"
+                                  className="h-7 px-2 text-[11px] font-bold uppercase tracking-wider gap-1"
                                 >
                                   <Ship className="h-3 w-3 text-blue-600" />
                                   {isExpanded ? "Hide" : `View (${displayRecords.length})`}
@@ -3361,7 +3361,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                         {tt("plr.container_breakdown_for", "Container Shipment Loading Breakdown for")} <span className="text-blue-600">{poNo}</span>
                                       </h4>
                                     </div>
-                                    <span className="text-[10px] font-bold text-slate-500 font-mono">
+                                    <span className="text-[11px] font-bold text-slate-500 font-mono">
                                       Loaded: {totalLoadedQty.toLocaleString()} / {totalContractQty.toLocaleString()} Bags
                                     </span>
                                   </div>
@@ -3370,7 +3370,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                     <div className="overflow-x-auto">
                                       <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                                         <thead>
-                                          <tr className="bg-slate-50 text-[9px] font-black uppercase tracking-wider text-slate-500 border-b dark:bg-slate-950">
+                                          <tr className="bg-slate-50 text-[11px] font-black uppercase tracking-wider text-slate-500 border-b dark:bg-slate-950">
                                             <Th className="px-3 py-2">{tt("plr.col_loading_no", "Loading #")}</Th>
                                             <Th className="px-3 py-2">{tt("plr.col_bl", "BL Number")}</Th>
                                             <Th className="px-3 py-2">{tt("plr.col_container", "Container")}</Th>
@@ -3411,12 +3411,12 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                                 <td className="px-3 py-2 text-end font-mono text-slate-600 dark:text-slate-400">{gross > 0 ? `${gross.toLocaleString()} kg` : "-"}</td>
                                                 <td className="px-3 py-2" data-testid="list-lane-status">
                                                   {ls
-                                                    ? <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[9px] font-black uppercase text-sky-700">{tt(`plane.${LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.key ?? ls.lane_status}`, LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.en ?? ls.lane_status)}</span>
-                                                    : <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[9px] font-black uppercase text-slate-500">{tt("plr.not_in_lane", "Not in lane")}</span>}
+                                                    ? <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-black uppercase text-sky-700">{tt(`plane.${LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.key ?? ls.lane_status}`, LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.en ?? ls.lane_status)}</span>
+                                                    : <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-black uppercase text-slate-500">{tt("plr.not_in_lane", "Not in lane")}</span>}
                                                 </td>
                                                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{ls?.current_location || payload.loadingPort || r.loading_location || "-"}</td>
                                                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{ls?.assigned_to || "-"}</td>
-                                                <td className="px-3 py-2 text-[10px]">
+                                                <td className="px-3 py-2 text-[11px]">
                                                   <div className="font-semibold text-slate-700 dark:text-slate-300">{route}</div>
                                                   <div className="text-slate-400 font-mono">{loadingDateStr}</div>
                                                 </td>
@@ -3429,7 +3429,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                                       onClick={() => void onListLaneAction(r, act.kind, poRow.id ?? r.purchase_order_id ?? null)}
                                                       data-testid="list-lane-action"
                                                       data-kind={act.kind}
-                                                      className="h-6 gap-1 rounded bg-indigo-600 px-2 text-[9px] font-bold uppercase text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
+                                                      className="h-6 gap-1 rounded bg-indigo-600 px-2 text-[11px] font-bold uppercase text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
                                                     >
                                                       <ArrowRightLeft className="h-3 w-3" />
                                                       {tt(`plane.${act.labelKey}`, act.label)}
@@ -3486,7 +3486,7 @@ function Metric({ label, value, tone }: { label: string; value: number; tone?: "
   
   return (
     <div className={cn("rounded-xl border p-4 shadow-sm", bg)}>
-      <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</div>
+      <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</div>
       <div className={cn("mt-1 text-2xl font-black font-mono tracking-tight", color)}>{value}</div>
     </div>
   );

@@ -1581,10 +1581,10 @@ function CityBranchSetupContent() {
           </Button>
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
           <div className="flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
               {t(lang, "cbs.new_entry")}
             </span>
-            <span className="text-[10px] font-bold text-slate-500 mt-0.5">
+            <span className="text-[11px] font-bold text-slate-500 mt-0.5">
               {t(lang, "cbs.step_word")} {activeStep} {t(lang, "cbs.of_9")}
             </span>
           </div>
@@ -1611,7 +1611,7 @@ function CityBranchSetupContent() {
                 onClick={() => setActiveStep(n)}
                 title={`${n}. ${label}`}
                 className={cn(
-                  "relative flex h-7 w-7 items-center justify-center rounded-md text-[10px] font-black transition-all",
+                  "relative flex h-7 w-7 items-center justify-center rounded-md text-[11px] font-black transition-all",
                   active
                     ? "bg-indigo-600 text-white shadow-sm scale-105"
                     : done
@@ -1753,11 +1753,11 @@ function CityBranchSetupContent() {
                       </p>
                     </div>
                     {operationalDomain ? (
-                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
                         ✓ Selected: {operationalDomain === "shipping" ? "Shipping Line & Clearing Agent" : "Business & Trading"}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
                         ⚠️ Mandatory Selection Required
                       </span>
                     )}
@@ -1875,7 +1875,7 @@ function CityBranchSetupContent() {
                       className={compactInputClass(formTouched && !zip)}
                     />
                     {!manualZip && autoZip && (
-                      <p className="text-[10px] text-slate-400 leading-tight">
+                      <p className="text-[11px] text-slate-400 leading-tight">
                         {t(lang, "cbs.zip_auto_hint")}
                       </p>
                     )}
@@ -1883,7 +1883,7 @@ function CityBranchSetupContent() {
                       <button
                         type="button"
                         onClick={() => setManualZip("")}
-                        className="text-[10px] text-indigo-500 hover:text-indigo-700 underline leading-tight"
+                        className="text-[11px] text-indigo-500 hover:text-indigo-700 underline leading-tight"
                       >
                         {t(lang, "cbs.zip_clear_manual").replace("{0}", autoZip || t(lang, "cbs.zip_none"))}
                       </button>
@@ -2068,10 +2068,10 @@ function CityBranchSetupContent() {
                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">7</span>
                     <div>
                       <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step7_title2")}</h2>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">{t(lang, "cbs.step7_subtitle")}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{t(lang, "cbs.step7_subtitle")}</p>
                     </div>
                   </div>
-                  <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[10px] font-bold text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-300">
+                  <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-bold text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-300">
                     🔐 {t(lang, "cbs.permissions_active").replace("{0}", String(permissionGrants.length))}
                   </span>
                 </div>
@@ -2161,7 +2161,7 @@ function CityBranchSetupContent() {
                         </Button>
                       </div>
                       {generatedEmail && (
-                        <p className="text-[10px] text-green-600 font-semibold mt-1">
+                        <p className="text-[11px] text-green-600 font-semibold mt-1">
                           {t(lang, "cbs.generated_email_label")} {generatedEmail}
                         </p>
                       )}
@@ -2183,27 +2183,27 @@ function CityBranchSetupContent() {
                     {emailServerName.includes("Local IP") && (
                       <div className="grid gap-2 grid-cols-2 pt-2 border-t text-[11px] space-y-1">
                         <div className="col-span-2 space-y-1">
-                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.local_ip_address")}</Label>
+                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.local_ip_address")}</Label>
                           <Input value={localIp} onChange={(e) => setLocalIp(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="col-span-2 space-y-1">
-                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.public_ip_address")}</Label>
+                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.public_ip_address")}</Label>
                           <Input value={publicIp} onChange={(e) => setPublicIp(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.smtp_host")}</Label>
+                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.smtp_host")}</Label>
                           <Input value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.smtp_port")}</Label>
+                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.smtp_port")}</Label>
                           <Input value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.imap_host")}</Label>
+                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.imap_host")}</Label>
                           <Input value={imapHost} onChange={(e) => setImapHost(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.imap_port")}</Label>
+                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.imap_port")}</Label>
                           <Input value={imapPort} onChange={(e) => setImapPort(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="col-span-2 flex items-center gap-2 pt-1.5">
@@ -2215,17 +2215,17 @@ function CityBranchSetupContent() {
 
                     <div className="grid gap-2 grid-cols-2 pt-2 border-t">
                       <div className="space-y-1">
-                        <Label className="text-[10px] text-slate-500">{t(lang, "cbs.smtp_username")}</Label>
+                        <Label className="text-[11px] text-slate-500">{t(lang, "cbs.smtp_username")}</Label>
                         <Input value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} placeholder={generatedEmail} className="h-8 text-xs" />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[10px] text-slate-500">{t(lang, "cbs.app_password")}</Label>
+                        <Label className="text-[11px] text-slate-500">{t(lang, "cbs.app_password")}</Label>
                         <Input type="password" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)} placeholder="••••••••••••" className="h-8 text-xs" />
                       </div>
                     </div>
 
                     <div className="pt-2 border-t flex items-center justify-between">
-                      <div className="text-[10px] font-bold text-slate-500">
+                      <div className="text-[11px] font-bold text-slate-500">
                         {t(lang, "cbs.email_status_label")}{" "}
                         <span className={cn(
                           "px-1.5 py-0.5 rounded",
@@ -2238,7 +2238,7 @@ function CityBranchSetupContent() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-7 text-[10px]"
+                        className="h-7 text-[11px]"
                         disabled={testingEmail || !emailPrefix}
                         onClick={async () => {
                           try {
@@ -2317,7 +2317,7 @@ function CityBranchSetupContent() {
                     </div>
 
                     <div className="pt-2 border-t flex items-center justify-between">
-                      <div className="text-[10px] font-bold text-slate-500">
+                      <div className="text-[11px] font-bold text-slate-500">
                         {t(lang, "cbs.whatsapp_status_label")}{" "}
                         <span className={cn(
                           "px-1.5 py-0.5 rounded",
@@ -2332,7 +2332,7 @@ function CityBranchSetupContent() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-7 text-[10px]"
+                        className="h-7 text-[11px]"
                         disabled={testingWhatsapp || !whatsappNumber || !phoneNumberId || !accessToken}
                         onClick={() => {
                           setTestingWhatsapp(true);
@@ -2362,7 +2362,7 @@ function CityBranchSetupContent() {
                         <span className="text-lg font-black">D</span>
                       </div>
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">DGT LLC · {t(lang, "cbs.erp_system_label", "ERP System")}</p>
+                        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">DGT LLC · {t(lang, "cbs.erp_system_label", "ERP System")}</p>
                         <h1 className="text-lg font-black text-slate-900 dark:text-slate-100 leading-tight">{t(lang, "cbs.step9_title")}</h1>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">{t(lang, "cbs.step9_subtitle")}</p>
                       </div>
@@ -2382,12 +2382,12 @@ function CityBranchSetupContent() {
                       { n: 9, label: t(lang, "cbs.pb_final_approval"), done: false, active: true },
                     ].map(({ n, label, done, active }) => (
                       <button key={n} type="button" onClick={() => setActiveStep(n < 9 ? n : 9)} className={`relative flex min-w-[80px] flex-1 flex-col items-center justify-center px-2 py-2.5 transition-colors ${active ? "bg-indigo-50 dark:bg-indigo-950/20" : "hover:bg-slate-100 dark:hover:bg-slate-800/40"}` }>
-                        <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-black border-2 ${
+                        <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-black border-2 ${
                           active ? "border-indigo-600 bg-indigo-600 text-white"
                           : done ? "border-emerald-500 bg-emerald-500 text-white"
                           : "border-slate-300 bg-white text-slate-400 dark:border-slate-600 dark:bg-slate-800"
                         }`}>{done && !active ? "✓" : n}</div>
-                        <span className={`mt-1 text-center text-[8px] font-semibold leading-tight ${
+                        <span className={`mt-1 text-center text-[11px] font-semibold leading-tight ${
                           active ? "text-indigo-700 dark:text-indigo-400"
                           : done ? "text-emerald-700 dark:text-emerald-400"
                           : "text-slate-400"
@@ -2399,7 +2399,7 @@ function CityBranchSetupContent() {
 
                 {/* ══ REVIEW SUMMARY BANNER ══ */}
                 <div className="border-x border-slate-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-950">
-                  <p className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">⑤ {t(lang, "cbs.review_summary_label")}</p>
+                  <p className="mb-3 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">⑤ {t(lang, "cbs.review_summary_label")}</p>
                   {(() => {
                     const resolvedBranchName = branchName.trim() || effectiveBranchName;
                     const missing: string[] = [];
@@ -2419,7 +2419,7 @@ function CityBranchSetupContent() {
                     );
                     return (
                       <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-[10px]">✓</span>
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-[11px]">✓</span>
                         {t(lang, "cbs.all_saved_ready")}
                       </div>
                     );
@@ -2468,14 +2468,14 @@ function CityBranchSetupContent() {
                   ].map(({ num, title, icon, color, rows }, ci) => (
                     <div key={num} className={`p-5 ${ci > 0 ? "border-l border-slate-100 dark:border-slate-800" : ""} ${ci >= 2 ? "border-t border-slate-100 dark:border-slate-800 xl:border-t-0" : ""}` }>
                       <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
-                        <span className={`flex h-5 w-5 items-center justify-center rounded-full border border-current text-[8px] font-black ${color}`}>{num}</span>
+                        <span className={`flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px] font-black ${color}`}>{num}</span>
                         <span className="text-sm">{icon}</span>
-                        <span className={`text-[10px] font-black uppercase tracking-wider ${color}`}>{title}</span>
+                        <span className={`text-[11px] font-black uppercase tracking-wider ${color}`}>{title}</span>
                       </div>
                       <div className="space-y-2">
                         {rows.map(({ label, value }) => (
                           <div key={label} className="flex items-start justify-between gap-2">
-                            <span className="shrink-0 w-24 text-[10px] text-slate-400 dark:text-slate-500 leading-5">{label}</span>
+                            <span className="shrink-0 w-24 text-[11px] text-slate-400 dark:text-slate-500 leading-5">{label}</span>
                             <span className={`text-right text-xs font-semibold leading-5 truncate max-w-[130px] ${!value ? "italic text-slate-300 dark:text-slate-600" : "text-slate-800 dark:text-slate-100"}`}>{value || "—"}</span>
                           </div>
                         ))}
@@ -2487,8 +2487,8 @@ function CityBranchSetupContent() {
                 {/* ══ DOCUMENTS SECTION ══ */}
                 <div className="border-x border-t border-slate-200 bg-white px-6 py-5 dark:border-slate-700 dark:bg-slate-950">
                   <div className="mb-4 flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[8px] font-black text-white">6</span>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-700 dark:text-amber-400">📄 {t(lang, "cbs.uploaded_documents_label")}</p>
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[11px] font-black text-white">6</span>
+                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-amber-700 dark:text-amber-400">📄 {t(lang, "cbs.uploaded_documents_label")}</p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {[
@@ -2499,20 +2499,20 @@ function CityBranchSetupContent() {
                     ].map((doc) => (
                       <div key={doc.name} className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/40">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${doc.color} text-white text-[9px] font-black flex-shrink-0`}>{doc.type}</div>
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${doc.color} text-white text-[11px] font-black flex-shrink-0`}>{doc.type}</div>
                           <div className="min-w-0">
                             <p className="text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-tight truncate">{doc.name}</p>
-                            <p className="text-[9px] text-slate-400 mt-0.5">{doc.size} · {t(lang, "cbs.uploaded_on_label")} 25 Jul 2025</p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">{doc.size} · {t(lang, "cbs.uploaded_on_label")} 25 Jul 2025</p>
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button type="button" className="flex-1 rounded-md border border-slate-200 bg-white py-1 text-[9px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">👁 {t(lang, "cbs.preview_word")}</button>
-                          <button type="button" className="flex-1 rounded-md border border-slate-200 bg-white py-1 text-[9px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">⬇ {t(lang, "cbs.download_word")}</button>
+                          <button type="button" className="flex-1 rounded-md border border-slate-200 bg-white py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">👁 {t(lang, "cbs.preview_word")}</button>
+                          <button type="button" className="flex-1 rounded-md border border-slate-200 bg-white py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">⬇ {t(lang, "cbs.download_word")}</button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <button type="button" className="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">📂 {t(lang, "cbs.view_all_documents").replace("{0}", "4")}</button>
+                  <button type="button" className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">📂 {t(lang, "cbs.view_all_documents").replace("{0}", "4")}</button>
                 </div>
 
                 {/* ══ THREE COLUMN LOWER SECTIONS ══ */}
@@ -2520,62 +2520,62 @@ function CityBranchSetupContent() {
                   {/* Roles & Permissions */}
                   <div className="p-5">
                     <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-indigo-400 text-[8px] font-black text-indigo-600 dark:text-indigo-400">6</span>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400">🔐 {t(lang, "cbs.pb_roles_permissions")}</span>
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-indigo-400 text-[11px] font-black text-indigo-600 dark:text-indigo-400">6</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400">🔐 {t(lang, "cbs.pb_roles_permissions")}</span>
                     </div>
                     <div className="mb-1.5 grid grid-cols-3 gap-1 border-b border-slate-100 pb-1 dark:border-slate-800">
-                      <span className="text-[8px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.role_word")}</span>
-                      <span className="text-[8px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.users_word")}</span>
-                      <span className="text-[8px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.access_word")}</span>
+                      <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.role_word")}</span>
+                      <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.users_word")}</span>
+                      <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.access_word")}</span>
                     </div>
                     {[{ role: t(lang, "cbs.role_branch_admin"), users: 2, access: t(lang, "cbs.access_full") }, { role: t(lang, "cbs.role_accountant"), users: 3, access: t(lang, "cbs.access_finance_only") }, { role: t(lang, "cbs.role_store_manager"), users: 1, access: t(lang, "cbs.access_inventory") }, { role: t(lang, "cbs.role_sales_executive"), users: 4, access: t(lang, "cbs.access_sales") }, { role: t(lang, "cbs.role_viewer"), users: 2, access: t(lang, "cbs.access_view_only") }].map(({ role, users, access }) => (
                       <div key={role} className="grid grid-cols-3 gap-1 border-b border-dashed border-slate-100 py-1.5 dark:border-slate-800">
-                        <span className="text-[10px] font-semibold text-slate-800 dark:text-slate-100">{role}</span>
-                        <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300">{users}</span>
-                        <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{access}</span>
+                        <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-100">{role}</span>
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{users}</span>
+                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{access}</span>
                       </div>
                     ))}
-                    <p className="mt-2 text-[9px] text-indigo-600 dark:text-indigo-400">{t(lang, "cbs.template_word")}: <strong>{permissionTemplate || "city-standard"}</strong> · {permissionGrants.length} {t(lang, "cbs.total_word")}</p>
-                    <button type="button" className="mt-2 text-[9px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">↗ {t(lang, "cbs.view_all_roles_permissions")}</button>
+                    <p className="mt-2 text-[11px] text-indigo-600 dark:text-indigo-400">{t(lang, "cbs.template_word")}: <strong>{permissionTemplate || "city-standard"}</strong> · {permissionGrants.length} {t(lang, "cbs.total_word")}</p>
+                    <button type="button" className="mt-2 text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">↗ {t(lang, "cbs.view_all_roles_permissions")}</button>
                   </div>
 
                   {/* Accounting Setup */}
                   <div className="border-l border-slate-100 p-5 dark:border-slate-800">
                     <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-[8px] font-black text-emerald-600 dark:text-emerald-400">7</span>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">📒 {t(lang, "cbs.pb_accounting_setup")}</span>
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-[11px] font-black text-emerald-600 dark:text-emerald-400">7</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">📒 {t(lang, "cbs.pb_accounting_setup")}</span>
                     </div>
                     {/* this form does not set the branch's accounts: show them as not set, never sample account names */}
                     {[{ label: t(lang, "cbs.default_purchase_account"), value: "—" }, { label: t(lang, "cbs.default_sales_account"), value: "—" }, { label: t(lang, "cbs.cash_account"), value: "—" }, { label: t(lang, "cbs.bank_account_word"), value: "—" }, { label: t(lang, "cbs.tax_account"), value: "—" }, { label: t(lang, "cbs.current_year_start"), value: "—" }, { label: t(lang, "cbs.accounting_method"), value: "—" }].map(({ label, value }) => (
                       <div key={label} className="flex items-start justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 dark:border-slate-800">
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 leading-4 w-28 shrink-0">{label}</span>
-                        <span className="text-right text-[10px] font-semibold text-slate-800 dark:text-slate-100 leading-4">{value}</span>
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 leading-4 w-28 shrink-0">{label}</span>
+                        <span className="text-right text-[11px] font-semibold text-slate-800 dark:text-slate-100 leading-4">{value}</span>
                       </div>
                     ))}
-                    <button type="button" className="mt-2 text-[9px] font-semibold text-emerald-600 hover:underline dark:text-emerald-400">↗ {t(lang, "cbs.view_chart_of_accounts")}</button>
+                    <button type="button" className="mt-2 text-[11px] font-semibold text-emerald-600 hover:underline dark:text-emerald-400">↗ {t(lang, "cbs.view_chart_of_accounts")}</button>
                   </div>
 
                   {/* Communication Setup */}
                   <div className="border-l border-slate-100 p-5 dark:border-slate-800">
                     <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-cyan-400 text-[8px] font-black text-cyan-600 dark:text-cyan-400">8</span>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">📡 {t(lang, "cbs.communication_setup_label")}</span>
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-cyan-400 text-[11px] font-black text-cyan-600 dark:text-cyan-400">8</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">📡 {t(lang, "cbs.communication_setup_label")}</span>
                     </div>
                     {[{ label: t(lang, "cbs.email_documents_row"), value: generatedEmail || "—" }, { label: t(lang, "cbs.email_notif_addr_row"), value: generatedEmail ? `notify@${generatedEmail.split("@")[1]}` : "—" }, { label: t(lang, "cbs.whatsapp_number_row"), value: whatsappNumber || "—" }, { label: t(lang, "cbs.sms_notifications_row"), value: whatsappNumber ? t(lang, "cbs.enabled_word") : t(lang, "cbs.disabled_word") }, { label: t(lang, "cbs.email_notifications_row"), value: generatedEmail ? t(lang, "cbs.enabled_word") : t(lang, "cbs.disabled_word") }, { label: t(lang, "cbs.smtp_server_row"), value: emailServerName === "Local IP Server (UPS Linked)" ? t(lang, "cbs.email_server_local") : emailServerName === "Google Workspace Cloud Server" ? t(lang, "cbs.email_server_google") : emailServerName === "Microsoft Office 365 Cloud Server" ? t(lang, "cbs.email_server_o365") : emailServerName || t(lang, "cbs.not_configured_word") }, { label: t(lang, "cbs.language_row"), value: t(lang, "cbs.lang_english_word") }, { label: t(lang, "cbs.timezone_row"), value: "(GMT+05:00) PKT" }].map(({ label, value }) => (
                       <div key={label} className="flex items-start justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 dark:border-slate-800">
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 leading-4 w-28 shrink-0">{label}</span>
-                        <span className={`text-right text-[10px] font-semibold leading-4 ${ value === t(lang, "cbs.enabled_word") ? "text-emerald-600 dark:text-emerald-400" : value === t(lang, "cbs.disabled_word") ? "text-rose-500 dark:text-rose-400" : value === "—" ? "text-slate-300 dark:text-slate-600" : "text-slate-800 dark:text-slate-100"}`}>{value}</span>
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 leading-4 w-28 shrink-0">{label}</span>
+                        <span className={`text-right text-[11px] font-semibold leading-4 ${ value === t(lang, "cbs.enabled_word") ? "text-emerald-600 dark:text-emerald-400" : value === t(lang, "cbs.disabled_word") ? "text-rose-500 dark:text-rose-400" : value === "—" ? "text-slate-300 dark:text-slate-600" : "text-slate-800 dark:text-slate-100"}`}>{value}</span>
                       </div>
                     ))}
-                    <button type="button" className="mt-2 text-[9px] font-semibold text-cyan-600 hover:underline dark:text-cyan-400">↗ {t(lang, "cbs.test_communication_settings")}</button>
+                    <button type="button" className="mt-2 text-[11px] font-semibold text-cyan-600 hover:underline dark:text-cyan-400">↗ {t(lang, "cbs.test_communication_settings")}</button>
                   </div>
                 </div>
 
                 {/* ══ FINAL APPROVAL ACTIONS ══ */}
                 <div className="border-x border-t border-slate-200 bg-white px-6 py-5 dark:border-slate-700 dark:bg-slate-950">
                   <div className="mb-4 flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-[8px] font-black text-white dark:bg-slate-300 dark:text-slate-800">9</span>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 dark:text-slate-300">⚡ {t(lang, "cbs.final_approval_actions_label")}</p>
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-[11px] font-black text-white dark:bg-slate-300 dark:text-slate-800">9</span>
+                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-700 dark:text-slate-300">⚡ {t(lang, "cbs.final_approval_actions_label")}</p>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-3">
                     {/* Approve */}
@@ -2614,7 +2614,7 @@ function CityBranchSetupContent() {
                   </div>
                   <div className="mt-4 flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-900/40 dark:bg-blue-950/20">
                     <span className="text-blue-500 text-base flex-shrink-0">ℹ</span>
-                    <p className="text-[10px] text-blue-800 dark:text-blue-300">{t(lang, "cbs.review_notice")}</p>
+                    <p className="text-[11px] text-blue-800 dark:text-blue-300">{t(lang, "cbs.review_notice")}</p>
                   </div>
                 </div>
 
@@ -2660,10 +2660,10 @@ function CityBranchSetupContent() {
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/60">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{t(lang, "cbs.live_summary")}</span>
+                <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{t(lang, "cbs.live_summary")}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${hasAny ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${hasAny ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
                   {hasAny ? t(lang, "status.draft") : t(lang, "branch.status_empty")}
                 </span>
                 <BranchReportActionsMenu
@@ -2687,7 +2687,7 @@ function CityBranchSetupContent() {
                 { label: t(lang, "cbs.permissions_word"), value: String(permissionGrants.length) },
               ].map(({ label, value }) => (
                 <div key={label} className="px-3 py-2 text-center">
-                  <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
                   <div className="mt-0.5 truncate text-xs font-black text-slate-800 dark:text-slate-100">{value}</div>
                 </div>
               ))}
@@ -2699,9 +2699,9 @@ function CityBranchSetupContent() {
               {/* Step 1 — Branch Info */}
               <details open className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-600 text-[8px] font-bold text-white leading-none px-1">1</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.branch_information")}</span>
-                  <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white leading-none px-1">1</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.branch_information")}</span>
+                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-1 space-y-0">
                   {[
@@ -2716,7 +2716,7 @@ function CityBranchSetupContent() {
                     { label: t(lang, "cbs.address_word"), value: fullAddress },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
-                      <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
+                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
                       <span className={`text-right text-[11px] font-semibold truncate max-w-[150px] ${!value || value === "-" ? "text-rose-400 italic" : "text-slate-800 dark:text-slate-100"}`}>
                         {value || "—"}
                       </span>
@@ -2728,9 +2728,9 @@ function CityBranchSetupContent() {
               {/* Step 2 — Access Scope */}
               <details className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex items-center justify-center rounded-full bg-sky-600 text-[8px] font-bold text-white leading-none px-1">2</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.access_scope_word")}</span>
-                  <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+                  <span className="flex items-center justify-center rounded-full bg-sky-600 text-[11px] font-bold text-white leading-none px-1">2</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.access_scope_word")}</span>
+                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-1 space-y-0">
                   {[
@@ -2739,7 +2739,7 @@ function CityBranchSetupContent() {
                     { label: t(lang, "cbs.parent_limit_word", "Parent Limit"), value: parentPermissionGrants?.length ? t(lang, "cbs.yes_with_count", "Yes ({count})").replace("{count}", String(parentPermissionGrants.length)) : t(lang, "cbs.none_word", "None") },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
-                      <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
+                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
                       <span className="text-right text-[11px] font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[150px]">{value}</span>
                     </div>
                   ))}
@@ -2749,9 +2749,9 @@ function CityBranchSetupContent() {
               {/* Step 3 — User Account */}
               <details className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex items-center justify-center rounded-full bg-violet-600 text-[8px] font-bold text-white leading-none px-1">3</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.user_account_word")}</span>
-                  <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+                  <span className="flex items-center justify-center rounded-full bg-violet-600 text-[11px] font-bold text-white leading-none px-1">3</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.user_account_word")}</span>
+                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-1">
                   {[
@@ -2762,7 +2762,7 @@ function CityBranchSetupContent() {
                     { label: t(lang, "cbs.owner_role_word", "Owner Role"), value: ownerPreview?.role },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
-                      <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
+                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
                       <span className={`text-right text-[11px] font-semibold truncate max-w-[150px] ${!value ? "text-rose-400 italic" : "text-slate-800 dark:text-slate-100"}`}>
                         {value || "—"}
                       </span>
@@ -2774,20 +2774,20 @@ function CityBranchSetupContent() {
               {/* Step 4 — Contacts */}
               <details className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex items-center justify-center rounded-full bg-teal-600 text-[8px] font-bold text-white leading-none px-1">4</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.contact_info_word")}</span>
-                  <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+                  <span className="flex items-center justify-center rounded-full bg-teal-600 text-[11px] font-bold text-white leading-none px-1">4</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.contact_info_word")}</span>
+                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-1">
                   {contacts.filter(c => c.type || c.value).length > 0 ? (
                     contacts.filter(c => c.type || c.value).map((c, i) => (
                       <div key={i} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
-                        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-slate-400">{c.type || "—"}</span>
+                        <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{c.type || "—"}</span>
                         <span className="text-right text-[11px] font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[150px]">{c.value}</span>
                       </div>
                     ))
                   ) : (
-                    <p className="py-2 text-[10px] italic text-rose-400">{t(lang, "cbs.no_contacts_entered", "No contacts entered.")}</p>
+                    <p className="py-2 text-[11px] italic text-rose-400">{t(lang, "cbs.no_contacts_entered", "No contacts entered.")}</p>
                   )}
                 </div>
               </details>
@@ -2795,18 +2795,18 @@ function CityBranchSetupContent() {
               {/* Step 7 — Permissions */}
               <details className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex items-center justify-center rounded-full bg-indigo-600 text-[8px] font-bold text-white leading-none px-1">7</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.roles_permissions_word")}</span>
-                  <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+                  <span className="flex items-center justify-center rounded-full bg-indigo-600 text-[11px] font-bold text-white leading-none px-1">7</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.roles_permissions_word")}</span>
+                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-2">
                   <div className="flex flex-wrap gap-1">
                     {permissionGrants.length > 0 ? permissionGrants.map(key => (
-                      <span key={key} className="rounded-full border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[8px] font-semibold text-indigo-700 dark:border-indigo-900/40 dark:bg-indigo-950/30 dark:text-indigo-300">
+                      <span key={key} className="rounded-full border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[11px] font-semibold text-indigo-700 dark:border-indigo-900/40 dark:bg-indigo-950/30 dark:text-indigo-300">
                         {key}
                       </span>
                     )) : (
-                      <span className="text-[10px] italic text-rose-400">{t(lang, "cbs.no_permissions_assigned", "No permissions assigned.")}</span>
+                      <span className="text-[11px] italic text-rose-400">{t(lang, "cbs.no_permissions_assigned", "No permissions assigned.")}</span>
                     )}
                   </div>
                 </div>
@@ -2815,9 +2815,9 @@ function CityBranchSetupContent() {
               {/* Step 8 — AI Communication */}
               <details className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex items-center justify-center rounded-full bg-cyan-600 text-[8px] font-bold text-white leading-none px-1">8</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.communication_word")}</span>
-                  <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+                  <span className="flex items-center justify-center rounded-full bg-cyan-600 text-[11px] font-bold text-white leading-none px-1">8</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.communication_word")}</span>
+                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-1">
                   {[
@@ -2826,7 +2826,7 @@ function CityBranchSetupContent() {
                     { label: t(lang, "cbs.whatsapp_word", "WhatsApp"), value: whatsappNumber || (whatsappStatus === "Ready" ? t(lang, "cbs.ready", "Ready") : whatsappStatus === "Not Configured" ? t(lang, "cbs.not_configured", "Not Configured") : whatsappStatus) },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
-                      <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
+                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
                       <span className={`text-right text-[11px] font-semibold truncate max-w-[150px] ${
                         !value || value === "Not Configured" || value === t(lang, "cbs.not_configured", "Not Configured") ? "text-rose-400 italic"
                         : value === "Ready" || value === t(lang, "cbs.ready", "Ready") ? "text-emerald-600 dark:text-emerald-400"
@@ -2852,10 +2852,10 @@ function CityBranchSetupContent() {
               if (!missing.length) return null;
               return (
                 <div className="border-t border-rose-100 bg-rose-50 px-4 py-3 dark:border-rose-900/40 dark:bg-rose-950/20">
-                  <p className="mb-1.5 text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">⚠ {t(lang, "cbs.incomplete_fields")}</p>
+                  <p className="mb-1.5 text-[11px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">⚠ {t(lang, "cbs.incomplete_fields")}</p>
                   <div className="flex flex-wrap gap-1">
                     {missing.map(m => (
-                      <span key={m} className="rounded border border-rose-200 bg-rose-100 px-1.5 py-0.5 text-[9px] font-semibold text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">{m}</span>
+                      <span key={m} className="rounded border border-rose-200 bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">{m}</span>
                     ))}
                   </div>
                 </div>
@@ -2865,8 +2865,8 @@ function CityBranchSetupContent() {
             {/* Existing Branch Conflict */}
             {branchConflict && (
               <div className="border-t border-amber-100 bg-amber-50 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/20">
-                <p className="text-[9px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">⚠ {t(lang, "cbs.duplicate_code_name_detected")}</p>
-                <div className="mt-1 text-[10px] text-amber-800 dark:text-amber-300 space-y-1">
+                <p className="text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">⚠ {t(lang, "cbs.duplicate_code_name_detected")}</p>
+                <div className="mt-1 text-[11px] text-amber-800 dark:text-amber-300 space-y-1">
                   {codeAlreadyExists && (
                     <p>{t(lang, "cbs.branch_code_word")} <b>{branchCode}</b> {t(lang, "cbs.already_in_use_short")}</p>
                   )}
@@ -2880,7 +2880,7 @@ function CityBranchSetupContent() {
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="h-6 text-[9px] bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                      className="h-6 text-[11px] bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50"
                       onClick={() => setBranchCode(suggestBranchCode(locationMeta, existingCityBranches))}
                     >
                       ⚡ {t(lang, "cbs.auto_fix_code")}
@@ -2891,7 +2891,7 @@ function CityBranchSetupContent() {
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="h-6 text-[9px]"
+                      className="h-6 text-[11px]"
                       onClick={() => beginEditCityBranch(activeExistingCityBranch)}
                     >
                       <Pencil className="h-3 w-3 mr-1" aria-hidden /> {t(lang, "cbs.edit_existing_btn")}
@@ -2904,7 +2904,7 @@ function CityBranchSetupContent() {
             {/* Existing Branches List */}
             {hasAny && existingCityBranches.length > 0 && (
               <details className="border-t border-slate-100 dark:border-slate-800">
-                <summary className="cursor-pointer px-4 py-2 text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                <summary className="cursor-pointer px-4 py-2 text-[11px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
                   {existingCityBranches.length} existing city branch{existingCityBranches.length !== 1 ? "es" : ""} in this main branch
                 </summary>
                 <div className="px-3 pb-3 pt-1 space-y-1.5">
@@ -2917,21 +2917,21 @@ function CityBranchSetupContent() {
                   {filteredExistingCityBranches.slice(0, 5).map((b) => (
                     <div key={b.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-2.5 py-1.5 dark:border-slate-800 dark:bg-slate-900/40">
                       <div>
-                        <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">{b.code}</span>
-                        <span className="text-[9px] text-slate-400"> — {b.name}</span>
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">{b.code}</span>
+                        <span className="text-[11px] text-slate-400"> — {b.name}</span>
                       </div>
                       <div className="flex gap-1">
-                        <Button type="button" size="sm" variant="outline" className="h-5 px-1.5 text-[8px]" onClick={() => viewSavedBranch(b)}>
+                        <Button type="button" size="sm" variant="outline" className="h-5 px-1.5 text-[11px]" onClick={() => viewSavedBranch(b)}>
                           <Eye className="h-2.5 w-2.5" aria-hidden />
                         </Button>
-                        <Button type="button" size="sm" variant="outline" className="h-5 px-1.5 text-[8px]" onClick={() => beginEditCityBranch(b)}>
+                        <Button type="button" size="sm" variant="outline" className="h-5 px-1.5 text-[11px]" onClick={() => beginEditCityBranch(b)}>
                           <Pencil className="h-2.5 w-2.5" aria-hidden />
                         </Button>
                       </div>
                     </div>
                   ))}
                   {filteredExistingCityBranches.length > 5 && (
-                    <p className="text-[9px] text-slate-400 px-1">+{filteredExistingCityBranches.length - 5} more…</p>
+                    <p className="text-[11px] text-slate-400 px-1">+{filteredExistingCityBranches.length - 5} more…</p>
                   )}
                 </div>
               </details>
@@ -2940,8 +2940,8 @@ function CityBranchSetupContent() {
             {/* Edit Mode Banner */}
             {editingCityBranchId && (
               <div className="border-t border-sky-100 bg-sky-50 px-4 py-3 dark:border-sky-900/40 dark:bg-sky-950/20">
-                <p className="text-[9px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">✏ {t(lang, "cbs.editing_existing_branch", "Editing Existing Branch")}</p>
-                <p className="mt-0.5 text-[10px] text-sky-800 dark:text-sky-300">
+                <p className="text-[11px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">✏ {t(lang, "cbs.editing_existing_branch", "Editing Existing Branch")}</p>
+                <p className="mt-0.5 text-[11px] text-sky-800 dark:text-sky-300">
                   {activeExistingCityBranch?.name} · {activeExistingCityBranch?.code}
                 </p>
               </div>

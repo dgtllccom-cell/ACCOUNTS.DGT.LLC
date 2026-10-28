@@ -282,7 +282,7 @@ export function LocalGoodsReceivedView({
           <Package className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           <h1 className="text-sm font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             {t(lang, "purchase.lgr_page_title", "Receiving Country Workflow (Goods Received)")}
-            <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">{t(lang, "purchase.lgr_new_badge", "NEW")}</span>
+            <span className="bg-amber-400 text-amber-950 text-[11px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">{t(lang, "purchase.lgr_new_badge", "NEW")}</span>
           </h1>
         </div>,
         titleSlot
@@ -382,7 +382,7 @@ export function LocalGoodsReceivedView({
               <Package className="h-4 w-4 text-emerald-600" />
               {t(lang, "purchase.lgr_title", "LOCAL GOODS RECEIVED")}
             </CardTitle>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               {t(lang, "purchase.lgr_subtitle", "Accepted / transferred local purchase bills are routed by shipment type into one receiving process only.")}
             </p>
           </div>
@@ -465,7 +465,7 @@ export function LocalGoodsReceivedView({
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                  <tr className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-black uppercase text-[11px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
                     <Th className="py-2.5 px-3">{t(lang, "cpb.po_no", "Purchase Bill")}</Th>
                     <Th className="py-2.5 px-3">{t(lang, "common.supplier", "Supplier")}</Th>
                     <Th className="py-2.5 px-3">{t(lang, "purchase.lgr_general_goods", "Goods / Item")}</Th>
@@ -498,11 +498,11 @@ export function LocalGoodsReceivedView({
                         <td className="py-2.5 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
                           {money(row.totalAmount || row.total_amount, row.currency || localCurrency)}
                         </td>
-                        <td className="py-2.5 px-3 font-mono text-[10px] text-slate-500">
+                        <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500">
                           {row.truckNo || row.truck_no ? `${t(lang, "purchase.lgr_truck_hash", "Truck #")}${row.truckNo || row.truck_no}` : (row.shippingMode || row.shipping_mode || t(lang, "purchase.lgr_direct", "Direct"))}
                         </td>
                         <td className="py-2.5 px-3 text-center">
-                          <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${
+                          <span className={`inline-flex items-center gap-1 text-[11px] font-black uppercase px-2 py-0.5 rounded-md border ${
                             isDone
                               ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
                               : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800"
@@ -516,7 +516,7 @@ export function LocalGoodsReceivedView({
                             size="sm"
                             onClick={() => setActiveGoodsReceipt({ type: goodsReceivedTab, row })}
                             disabled={isDone}
-                            className={`h-7 px-3 text-[10px] font-black uppercase rounded-lg shadow-xs ${
+                            className={`h-7 px-3 text-[11px] font-black uppercase rounded-lg shadow-xs ${
                               isDone
                                 ? "bg-slate-100 text-slate-400 dark:bg-slate-800"
                                 : "bg-emerald-600 hover:bg-emerald-700 text-white"

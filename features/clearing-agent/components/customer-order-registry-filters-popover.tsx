@@ -93,7 +93,7 @@ export function CustomerOrderRegistryFiltersPopover({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 text-xs">
         {/* Order Status */}
         <div>
-          <label className="block text-[10.5px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
             {tt("order_status", "Order Status")}
           </label>
           <select
@@ -112,7 +112,7 @@ export function CustomerOrderRegistryFiltersPopover({
 
         {/* Movement Type */}
         <div>
-          <label className="block text-[10.5px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
             {tt("movement_type", "Movement Type")}
           </label>
           <select
@@ -130,7 +130,7 @@ export function CustomerOrderRegistryFiltersPopover({
 
         {/* Country */}
         <div>
-          <label className="block text-[10.5px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
             {tt("country", "Country")}
           </label>
           <select
@@ -149,7 +149,7 @@ export function CustomerOrderRegistryFiltersPopover({
 
         {/* Branch */}
         <div>
-          <label className="block text-[10.5px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
             {tt("branch", "Branch")}
           </label>
           <select
@@ -168,7 +168,7 @@ export function CustomerOrderRegistryFiltersPopover({
 
         {/* From Date */}
         <div>
-          <label className="block text-[10.5px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
             {tt("from_date", "From Date")}
           </label>
           <input
@@ -181,7 +181,7 @@ export function CustomerOrderRegistryFiltersPopover({
 
         {/* To Date */}
         <div>
-          <label className="block text-[10.5px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-[11px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">
             {tt("to_date", "To Date")}
           </label>
           <input

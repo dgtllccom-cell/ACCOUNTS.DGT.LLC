@@ -147,7 +147,7 @@ export function MobileTasksView({ langProp }: { langProp?: SupportedLanguage }) 
                     {t.task_no || "TASK"}
                   </span>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                       t.status === "completed" || t.status === "verified"
                         ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
                         : t.status === "in_progress"

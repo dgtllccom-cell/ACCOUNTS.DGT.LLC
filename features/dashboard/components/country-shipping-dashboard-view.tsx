@@ -105,7 +105,7 @@ function StatusBadge({ status }: { status: string }) {
   }
 
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${tone}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider ${tone}`}>
       {status || "Pending"}
     </span>
   );
@@ -186,11 +186,11 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
                 {localizeCountryName(data.countryName, lang)}
               </h1>
-              <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-[10px] font-black uppercase text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300">
                 <Ship className="h-3 w-3" />
                 {tr("Shipping Line Dashboard")}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[9px] font-black uppercase text-purple-700 dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-black uppercase text-purple-700 dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-300">
                 <ShieldCheck className="h-3 w-3" />
                 {tr("Country Admin")}
               </span>
@@ -254,15 +254,15 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[100px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{tr("Country")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-300">{tr("Country")}</p>
               <p className="text-sm font-black text-white">{data.countryCode || "PK"}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[100px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{tr("Currency")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-300">{tr("Currency")}</p>
               <p className="text-sm font-black text-white">{data.currency || "PKR"}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[100px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{tr("Branches")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-300">{tr("Branches")}</p>
               <p className="text-sm font-black text-white">{data.totalBranches}</p>
             </div>
           </div>
@@ -274,7 +274,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
         {/* Total Branches */}
         <div className="bg-card text-card-foreground border border-border/80 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               {tr("Total Branches")}
             </p>
             <p className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-foreground">
@@ -292,7 +292,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
         {/* Total Shipments */}
         <div className="bg-card text-card-foreground border border-border/80 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               {tr("Total Shipments")}
             </p>
             <p className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-foreground">
@@ -310,7 +310,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
         {/* In Transit */}
         <div className="bg-card text-card-foreground border border-border/80 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               {tr("In Transit")}
             </p>
             <p className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-blue-600 dark:text-blue-400">
@@ -328,7 +328,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
         {/* Arrived */}
         <div className="bg-card text-card-foreground border border-border/80 p-4 sm:p-5 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               {tr("Arrived")}
             </p>
             <p className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-emerald-600 dark:text-emerald-400">
@@ -353,7 +353,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
               <Building2 className="h-4 w-4 text-blue-600" />
               {tr("Branch Wise Shipments")}
             </CardTitle>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase">
               {tr("Shipments count across city branches")}
             </p>
           </CardHeader>
@@ -394,7 +394,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
               <Activity className="h-4 w-4 text-emerald-500" />
               {tr("Shipment Status")}
             </CardTitle>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase">
               {tr("National delivery distribution")}
             </p>
           </CardHeader>
@@ -431,7 +431,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
                   </ResponsiveContainer>
                 ) : null}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{tr("Total")}</span>
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase">{tr("Total")}</span>
                   <span className="text-lg font-black text-foreground">{data.totalShipments}</span>
                 </div>
               </div>
@@ -483,7 +483,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
           </div>
           <div>
             <p className="font-black text-xs leading-snug">{tr("Shipping Tracking")}</p>
-            <p className="text-[10px] text-muted-foreground">{tr("National tracking hub")}</p>
+            <p className="text-[11px] text-muted-foreground">{tr("National tracking hub")}</p>
           </div>
         </Link>
 
@@ -496,7 +496,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
           </div>
           <div>
             <p className="font-black text-xs leading-snug">{tr("Manage Branches")}</p>
-            <p className="text-[10px] text-muted-foreground">{tr("Shipping branch network")}</p>
+            <p className="text-[11px] text-muted-foreground">{tr("Shipping branch network")}</p>
           </div>
         </Link>
 
@@ -509,7 +509,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
           </div>
           <div>
             <p className="font-black text-xs leading-snug">{tr("New User")}</p>
-            <p className="text-[10px] text-muted-foreground">{tr("Branch staff onboarding")}</p>
+            <p className="text-[11px] text-muted-foreground">{tr("Branch staff onboarding")}</p>
           </div>
         </Link>
 
@@ -522,7 +522,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
           </div>
           <div>
             <p className="font-black text-xs leading-snug">{tr("Country Reports")}</p>
-            <p className="text-[10px] text-muted-foreground">{tr("National reports center")}</p>
+            <p className="text-[11px] text-muted-foreground">{tr("National reports center")}</p>
           </div>
         </Link>
       </section>
@@ -535,7 +535,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
               <Building2 className="h-4 w-4 text-blue-600" />
               {tr("Shipping Line Branch Network")} ({data.branches.length})
             </CardTitle>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase">
               {tr("Operational status, branch admins, and active volume per branch")}
             </p>
           </div>
@@ -554,7 +554,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-muted/50 border-y border-border/80 text-[10px] font-black uppercase text-muted-foreground">
+              <thead className="bg-muted/50 border-y border-border/80 text-[11px] font-black uppercase text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">{tr("Branch Name")}</th>
                   <th className="px-3 py-3">{tr("City")}</th>

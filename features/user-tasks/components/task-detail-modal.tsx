@@ -305,7 +305,7 @@ export function TaskDetailModal({
                     >
                       {a.name}
                     </a>
-                    <span className="shrink-0 text-[10px] text-slate-400">
+                    <span className="shrink-0 text-[11px] text-slate-400">
                       {a.kind === "instruction" ? s.t("f_instructions", "Instructions") : s.t("evidence", "Work Evidence")}
                       {a.size_bytes ? ` · ${Math.max(1, Math.round(a.size_bytes / 1024))} KB` : ""}
                     </span>
@@ -398,7 +398,7 @@ export function TaskDetailModal({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="min-w-0">
-      <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{label}</div>
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</div>
       <div className="text-sm text-slate-800">{children}</div>
     </div>
   );

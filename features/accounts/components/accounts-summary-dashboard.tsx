@@ -69,7 +69,7 @@ function StatCard({
   return (
     <div className={`relative overflow-hidden rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition-all group`}>
       <div className={`absolute inset-0 bg-gradient-to-br ${color}/5 to-transparent pointer-events-none`} />
-      <p className={`text-[10px] font-bold uppercase tracking-widest ${color.replace("/5", "")} mb-1`}>{label}</p>
+      <p className={`text-[11px] font-bold uppercase tracking-widest ${color.replace("/5", "")} mb-1`}>{label}</p>
       <p className="text-3xl font-extrabold text-slate-900 tabular-nums leading-none mt-1">
         {loading ? (
           <span className="inline-block h-8 w-14 animate-pulse rounded bg-slate-200" />
@@ -212,7 +212,7 @@ export function AccountsSummaryDashboard() {
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{t(lang, "nav.accounts", "Accounts")}</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary">{t(lang, "nav.accounts", "Accounts")}</p>
           <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-slate-900">{t(lang, "acct.asd_title", "Accounts Summary Dashboard")}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {t(lang, "acct.asd_subtitle", "Complete overview of all accounts — historical and current records.")}
@@ -248,7 +248,7 @@ export function AccountsSummaryDashboard() {
             <h2 className="text-sm font-bold text-white">{t(lang, "acct.asd_all_accounts_register", "All Accounts Register")}</h2>
             <p className="text-[11px] text-white/60">{t(lang, "acct.asd_historical_current_records", "Historical + Current records —")} {filtered.length} {t(lang, "acct.asd_shown_word", "shown")}</p>
           </div>
-          <span className="text-[10px] text-white/50">
+          <span className="text-[11px] text-white/50">
             {t(lang, "purchase.generated_label", "Generated:")} <span suppressHydrationWarning>{new Date().toISOString().slice(0, 10)}</span>
           </span>
         </div>
@@ -256,7 +256,7 @@ export function AccountsSummaryDashboard() {
         {/* Filters */}
         <div className="bg-slate-50 border-b px-4 py-3 flex flex-wrap items-end gap-3">
           <div className="space-y-1">
-            <Label className="text-[10px] text-slate-500 font-semibold uppercase">{t(lang, "common.search", "Search")}</Label>
+            <Label className="text-[11px] text-slate-500 font-semibold uppercase">{t(lang, "common.search", "Search")}</Label>
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <Input
@@ -269,7 +269,7 @@ export function AccountsSummaryDashboard() {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-[10px] text-slate-500 font-semibold uppercase">{t(lang, "bank.account_type", "Account Type")}</Label>
+            <Label className="text-[11px] text-slate-500 font-semibold uppercase">{t(lang, "bank.account_type", "Account Type")}</Label>
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
@@ -281,7 +281,7 @@ export function AccountsSummaryDashboard() {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-[10px] text-slate-500 font-semibold uppercase">{t(lang, "log.tbl_status", "Status")}</Label>
+            <Label className="text-[11px] text-slate-500 font-semibold uppercase">{t(lang, "log.tbl_status", "Status")}</Label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -293,7 +293,7 @@ export function AccountsSummaryDashboard() {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-[10px] text-slate-500 font-semibold uppercase">{t(lang, "report.country", "Country")}</Label>
+            <Label className="text-[11px] text-slate-500 font-semibold uppercase">{t(lang, "report.country", "Country")}</Label>
             <select
               value={filterCountry}
               onChange={(e) => setFilterCountry(e.target.value)}
@@ -344,7 +344,7 @@ export function AccountsSummaryDashboard() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-100 border-b text-slate-500 uppercase tracking-wider text-[10px]">
+              <tr className="bg-slate-100 border-b text-slate-500 uppercase tracking-wider text-[11px]">
                 <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Sr#</Th>
                 <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Account No.</Th>
                 <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Account Name</Th>
@@ -390,7 +390,7 @@ export function AccountsSummaryDashboard() {
                       <td className="px-3 py-2 border-r border-slate-200 text-slate-600">{row.accountCategory}</td>
                       <td className="px-3 py-2 border-r border-slate-200 text-slate-500">{row.subType || "-"}</td>
                       <td className="px-3 py-2 border-r border-slate-200">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${statusColor}`}>
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${statusColor}`}>
                           {row.status || t(lang, "god.active", "Active")}
                         </span>
                       </td>
@@ -403,14 +403,14 @@ export function AccountsSummaryDashboard() {
                       }`}>
                         {fmtNum(row.currentBalance)}
                       </td>
-                      <td className="px-3 py-2 border-r border-slate-200 text-slate-500 text-[10px]">
+                      <td className="px-3 py-2 border-r border-slate-200 text-slate-500 text-[11px]">
                         {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-"}
                       </td>
                       <td className="px-3 py-2 text-center">
                         <button
                           type="button"
                           onClick={() => router.push(`/dashboard/accounts/view?accountId=${row.accountId}`)}
-                          className="inline-flex items-center gap-1 rounded border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+                          className="inline-flex items-center gap-1 rounded border border-blue-200 bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
                         >
                           <Eye className="h-3 w-3" />
                           {t(lang, "branch.view", "View")}

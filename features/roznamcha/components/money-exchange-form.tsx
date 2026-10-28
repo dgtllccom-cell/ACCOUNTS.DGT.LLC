@@ -129,7 +129,7 @@ function AccountSelect({
 
   return (
     <div className="space-y-1">
-      <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</Label>
+      <Label className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{label}</Label>
       <SearchSelect
         value={value?.id || ""}
         onValueChange={(val) => {
@@ -520,13 +520,13 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
       {/* Filter row: Branch / Date Range / Transaction Type */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="space-y-1">
-          <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{tr("money_exchange.branch_label", "Branch")}</Label>
+          <Label className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{tr("money_exchange.branch_label", "Branch")}</Label>
           <select className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs font-bold" value={selectedBranch} onChange={e => handleBranchChange(e.target.value)}>
             {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
           </select>
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{tr("money_exchange.dash_date_range", "Date Range")}</Label>
+          <Label className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{tr("money_exchange.dash_date_range", "Date Range")}</Label>
           <ErpDatePicker
             mode="range"
             size="sm"
@@ -540,7 +540,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{tr("money_exchange.dash_transaction_type", "Transaction Type")}</Label>
+          <Label className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{tr("money_exchange.dash_transaction_type", "Transaction Type")}</Label>
           <select className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs font-bold" value={dashTxnType} onChange={e => setDashTxnType(e.target.value)}>
             <option value="all">{tr("money_exchange.all_types", "All Types")}</option>
             <option value="Purchase">{tr("money_exchange.opt_purchase", "Purchase")}</option>
@@ -574,7 +574,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
           <div className="text-lg font-black text-emerald-800 dark:text-emerald-300">
             {branchCurrency} {fmtNum(stockValueInBranchCurrency)}
           </div>
-          <div className="text-[10px] text-slate-500">{tr("money_exchange.dash_approx_value", "(Approx. value, weighted by purchase rate)")}</div>
+          <div className="text-[11px] text-slate-500">{tr("money_exchange.dash_approx_value", "(Approx. value, weighted by purchase rate)")}</div>
         </div>
 
         <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3.5 shadow-sm dark:border-blue-950 dark:bg-blue-950/20">
@@ -584,7 +584,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
             </span>
           </div>
           <div className="text-lg font-black text-blue-800 dark:text-blue-300">{branchCurrency} {fmtNum(kpis.todaysPurchases)}</div>
-          <div className="text-[10px] text-slate-500">{kpis.todaysPurchasesCount} {tr("money_exchange.dash_transactions", "Transactions")}</div>
+          <div className="text-[11px] text-slate-500">{kpis.todaysPurchasesCount} {tr("money_exchange.dash_transactions", "Transactions")}</div>
         </div>
 
         <div className="rounded-xl border border-purple-100 bg-purple-50/40 p-3.5 shadow-sm dark:border-purple-950 dark:bg-purple-950/20">
@@ -594,7 +594,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
             </span>
           </div>
           <div className="text-lg font-black text-purple-800 dark:text-purple-300">{branchCurrency} {fmtNum(kpis.todaysSales)}</div>
-          <div className="text-[10px] text-slate-500">{kpis.todaysSalesCount} {tr("money_exchange.dash_transactions", "Transactions")}</div>
+          <div className="text-[11px] text-slate-500">{kpis.todaysSalesCount} {tr("money_exchange.dash_transactions", "Transactions")}</div>
         </div>
       </div>
 
@@ -640,7 +640,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                         <td className="p-2.5 text-right font-mono text-slate-400">0.00</td>
                         <td className="p-2.5 text-right font-mono">{fmtNum(s.avgRate)}</td>
                         <td className="p-2.5 text-center">
-                          <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black",
+                          <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-black",
                             status === "in" && "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300",
                             status === "low" && "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300",
                             status === "out" && "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300"
@@ -741,7 +741,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                         <td className="p-2.5 font-mono text-slate-500">{idx + 1}</td>
                         <td className="p-2.5 text-slate-600 dark:text-slate-400">{b.entry_date ? String(b.entry_date).slice(0, 10) : "—"}</td>
                         <td className="p-2.5 text-center">
-                          <span className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-black uppercase",
+                          <span className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-black uppercase",
                             isPurchase ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300")}>
                             {isPurchase ? tr("money_exchange.badge_purchase", "Purchase") : tr("money_exchange.badge_sale", "Sale")}
                           </span>
@@ -754,13 +754,13 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                         <td className="p-2.5 text-[11px] text-slate-600 dark:text-slate-400">{acct}</td>
                         <td className="p-2.5 font-semibold text-slate-800 dark:text-slate-200">{b.receipt_name || b.received_from || "—"}</td>
                         <td className="p-2.5 text-center">
-                          <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black",
+                          <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-black",
                             isPosted ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300")}>
                             {isPosted ? tr("money_exchange.dash_completed", "Completed") : tr("money_exchange.dash_pending", "Pending")}
                           </span>
                         </td>
                         <td className="p-2.5 text-center">
-                          <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-blue-600" onClick={() => setViewEntry(b)}>
+                          <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-[11px] font-bold text-blue-600" onClick={() => setViewEntry(b)}>
                             <Eye className="h-3.5 w-3.5 mr-1" />{tr("money_exchange.view_btn", "View")}
                           </Button>
                         </td>
@@ -785,7 +785,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
               <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                 <Radio className="h-3.5 w-3.5 text-emerald-500" /> {tr("money_exchange.dash_live_branch_report", "Live Branch Report")}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-black text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {tr("money_exchange.dash_live", "Live")}
               </span>
             </div>
@@ -823,7 +823,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                 <span className="text-xs font-black text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
                   <AlertTriangle className="h-3.5 w-3.5" /> {tr("money_exchange.dash_low_stock_alert", "Low Stock Alert")}
                 </span>
-                <span className="rounded-full bg-amber-600 px-1.5 text-[10px] font-black text-white">{lowStockRows.length}</span>
+                <span className="rounded-full bg-amber-600 px-1.5 text-[11px] font-black text-white">{lowStockRows.length}</span>
               </div>
               <div className="mt-1 text-[11px] text-amber-800 dark:text-amber-300">
                 {lowStockRows.map(r => `${r.currency} (${fmtNum(r.available)})`).join(", ")} {tr("money_exchange.dash_running_low", "running low")}
@@ -854,28 +854,28 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                   <span className="text-xs uppercase font-black text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
                     <Building2 className="w-3.5 h-3.5 text-indigo-600" /> {tr("money_exchange.section1_title", "1. Branch, User & Account Mapping")}
                   </span>
-                  <span className="bg-white dark:bg-slate-950 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-300">
+                  <span className="bg-white dark:bg-slate-950 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 text-[11px] font-mono font-bold text-indigo-700 dark:text-indigo-300">
                     {entrySerial || tr("money_exchange.pending", "Pending...")}
                   </span>
                 </div>
                 <div className="p-3.5 space-y-3">
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-bold uppercase text-slate-500">{tr("money_exchange.branch_label", "Branch")}</Label>
+                      <Label className="text-[11px] font-bold uppercase text-slate-500">{tr("money_exchange.branch_label", "Branch")}</Label>
                       <select className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs font-bold" value={selectedBranch} onChange={e => handleBranchChange(e.target.value)}>
                         {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-bold uppercase text-slate-500">{tr("money_exchange.dash_country", "Country")}</Label>
+                      <Label className="text-[11px] font-bold uppercase text-slate-500">{tr("money_exchange.dash_country", "Country")}</Label>
                       <div className="h-9 flex items-center rounded-md border border-input bg-slate-50 dark:bg-slate-900 px-2 text-xs font-bold text-slate-700 dark:text-slate-300">{selectedCountryLabel}</div>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-bold uppercase text-slate-500">{tr("money_exchange.dash_user", "User")}</Label>
+                      <Label className="text-[11px] font-bold uppercase text-slate-500">{tr("money_exchange.dash_user", "User")}</Label>
                       <div className="h-9 flex items-center rounded-md border border-input bg-slate-50 dark:bg-slate-900 px-2 text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{sessionInfo?.user?.fullName || "—"}</div>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-bold uppercase text-slate-500">{tr("money_exchange.date_label", "Date")}</Label>
+                      <Label className="text-[11px] font-bold uppercase text-slate-500">{tr("money_exchange.date_label", "Date")}</Label>
                       <ErpDatePicker
                         mode="single"
                         size="sm"
@@ -905,7 +905,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                       placeholder={tr("money_exchange.dash_search_account", "Search Account Master…")}
                     />
                   </div>
-                  <p className="text-[10.5px] text-slate-500">{tr("money_exchange.dash_erp_account_note", "ERP accounts are branch-specific and required before transaction.")}</p>
+                  <p className="text-[11px] text-slate-500">{tr("money_exchange.dash_erp_account_note", "ERP accounts are branch-specific and required before transaction.")}</p>
                 </div>
               </div>
 
@@ -940,7 +940,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
 
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-bold text-slate-600 dark:text-slate-400">
+                      <Label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
                         {transactionType === "Purchase" ? tr("money_exchange.dash_purchase_currency", "Purchase Currency") : tr("money_exchange.dash_sale_currency", "Sale Currency")}
                       </Label>
                       <select className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-bold" value={qtyCurrency} onChange={e => setQtyCurrency(e.target.value)}>
@@ -949,7 +949,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-bold text-slate-600 dark:text-slate-400">
+                      <Label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
                         {transactionType === "Purchase" ? tr("money_exchange.dash_pay_currency", "Pay Currency") : tr("money_exchange.dash_receive_currency", "Receive Currency")}
                       </Label>
                       <select className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-bold" value={exCurrency} onChange={e => setExCurrency(e.target.value)}>
@@ -958,30 +958,30 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{tr("money_exchange.op_label", "Op")}</Label>
+                      <Label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">{tr("money_exchange.op_label", "Op")}</Label>
                       <select className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-bold" value={operation} onChange={e => setOperation(e.target.value as any)}>
                         <option value="multiply">×</option>
                         <option value="divide">÷</option>
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{tr("money_exchange.rate_label", "Rate")}</Label>
+                      <Label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">{tr("money_exchange.rate_label", "Rate")}</Label>
                       <Input type="number" step="0.000001" className="h-8 text-xs font-mono font-bold" value={rate} onChange={e => setRate(e.target.value ? Number(e.target.value) : "")} />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{tr("money_exchange.quantity_label", "Quantity")}</Label>
+                      <Label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">{tr("money_exchange.quantity_label", "Quantity")}</Label>
                       <Input type="number" step="0.01" className="h-8 text-xs font-mono font-bold" value={quantity} onChange={e => setQuantity(e.target.value ? Number(e.target.value) : "")} />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     <div className="space-y-1 sm:col-span-1">
-                      <Label className="text-[10px] font-black text-indigo-600 dark:text-indigo-400">{tr("money_exchange.final_amount_label", "Final Amount")}</Label>
+                      <Label className="text-[11px] font-black text-indigo-600 dark:text-indigo-400">{tr("money_exchange.final_amount_label", "Final Amount")}</Label>
                       <Input readOnly value={finalAmount > 0 ? finalAmount.toFixed(2) : ""} className="h-8 text-xs font-mono font-black bg-indigo-50/50 text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800" />
                     </div>
                     {transactionType === "Sale" && (
                       <div className="space-y-1 sm:col-span-2">
-                        <Label className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">{tr("money_exchange.dash_available_stock", "Available Stock")}</Label>
+                        <Label className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">{tr("money_exchange.dash_available_stock", "Available Stock")}</Label>
                         <div className="h-8 flex items-center rounded-md border border-emerald-200 bg-emerald-50/60 px-2 text-xs font-black text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300">
                           {qtyCurrency || "—"} {fmtNum(availableStockForSale)}
                         </div>
@@ -995,13 +995,13 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                         className={cn("rounded-lg border px-3 py-2 text-left text-[11px] font-bold",
                           saleOption === "stock" ? "border-emerald-400 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300" : "border-slate-200 text-slate-600 dark:border-slate-700")}>
                         {tr("money_exchange.dash_sell_from_stock", "Sell from Stock")}
-                        <div className="text-[10px] font-medium text-slate-500">{tr("money_exchange.dash_sufficient_stock", "Sufficient stock required")}</div>
+                        <div className="text-[11px] font-medium text-slate-500">{tr("money_exchange.dash_sufficient_stock", "Sufficient stock required")}</div>
                       </button>
                       <button type="button" onClick={() => setSaleOption("credit")}
                         className={cn("rounded-lg border px-3 py-2 text-left text-[11px] font-bold",
                           saleOption === "credit" ? "border-amber-400 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300" : "border-slate-200 text-slate-600 dark:border-slate-700")}>
                         {tr("money_exchange.dash_invoice_credit_sale", "Invoice / Credit Sale")}
-                        <div className="text-[10px] font-medium text-slate-500">{tr("money_exchange.dash_bypass_stock_check", "Bypasses the stock check")}</div>
+                        <div className="text-[11px] font-medium text-slate-500">{tr("money_exchange.dash_bypass_stock_check", "Bypasses the stock check")}</div>
                       </button>
                     </div>
                   )}
@@ -1012,7 +1012,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                       <div className="space-y-1">
-                        <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.dash_party_type", "Party Type")}</Label>
+                        <Label className="text-[11px] uppercase font-bold text-slate-500">{tr("money_exchange.dash_party_type", "Party Type")}</Label>
                         <select className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-bold" value={receivedType}
                           onChange={e => { setReceivedType(e.target.value); setReceiptPersonId(""); setReceiptBankId(""); setReceiptName(""); }}>
                           <option value="Name">{tr("money_exchange.opt_name", "Customer")}</option>
@@ -1038,18 +1038,18 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                             }} />
                         ) : (
                           <>
-                            <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.name_label", "Name")}</Label>
+                            <Label className="text-[11px] uppercase font-bold text-slate-500">{tr("money_exchange.name_label", "Name")}</Label>
                             <Input className="h-8 text-xs font-semibold" value={receiptName} onChange={e => setReceiptName(e.target.value)} />
                           </>
                         )}
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.mobile_whatsapp_label", "Mobile/WhatsApp")}</Label>
+                        <Label className="text-[11px] uppercase font-bold text-slate-500">{tr("money_exchange.mobile_whatsapp_label", "Mobile/WhatsApp")}</Label>
                         <Input className="h-8 text-xs font-semibold" value={mobile} onChange={e => setMobile(e.target.value)} />
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.details_label", "Details / Reference")}</Label>
+                          <Label className="text-[11px] uppercase font-bold text-slate-500">{tr("money_exchange.details_label", "Details / Reference")}</Label>
                           <VoiceDictateButton context="roznamcha" lang={lang} value={details} onChange={setDetails} />
                         </div>
                         <Input className="h-8 text-xs font-semibold" value={details} onChange={e => setDetails(e.target.value)} />
@@ -1066,7 +1066,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                 <div className="text-xs font-black text-slate-800 dark:text-slate-100 mb-0.5 flex items-center gap-1.5">
                   <Radio className="h-3.5 w-3.5 text-emerald-500" /> {tr("money_exchange.dash_live_stock_posting_preview", "Live Stock & Posting Preview")}
                 </div>
-                <p className="text-[10px] text-slate-500 mb-2">{tr("money_exchange.dash_posting_preview_subtitle", "Current branch currency stock and estimated accounting impact")}</p>
+                <p className="text-[11px] text-slate-500 mb-2">{tr("money_exchange.dash_posting_preview_subtitle", "Current branch currency stock and estimated accounting impact")}</p>
                 <div className="space-y-1.5">
                   {stock.slice(0, 5).map(s => (
                     <div key={s.currency} className="flex items-center justify-between text-[11px]">
@@ -1078,7 +1078,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <div className="text-xs font-black text-slate-800 dark:text-slate-100 mb-2">{tr("money_exchange.dash_posting_preview", "Posting Preview")} <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 dark:bg-slate-800">{tr("money_exchange.dash_informational_only", "informational only")}</span></div>
+                <div className="text-xs font-black text-slate-800 dark:text-slate-100 mb-2">{tr("money_exchange.dash_posting_preview", "Posting Preview")} <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:bg-slate-800">{tr("money_exchange.dash_informational_only", "informational only")}</span></div>
                 {finalAmount > 0 && (purchaseAccount || salesAccount) ? (
                   <div className="space-y-1 text-[11px]">
                     <div className="flex justify-between">
@@ -1096,7 +1096,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <div className="text-xs font-black text-slate-800 dark:text-slate-100 mb-2">{tr("money_exchange.dash_balance_after_entry", "Branch Balance After Entry")} <span className="text-[10px] font-normal text-slate-400">({tr("money_exchange.dash_estimate", "Estimate")})</span></div>
+                <div className="text-xs font-black text-slate-800 dark:text-slate-100 mb-2">{tr("money_exchange.dash_balance_after_entry", "Branch Balance After Entry")} <span className="text-[11px] font-normal text-slate-400">({tr("money_exchange.dash_estimate", "Estimate")})</span></div>
                 {qtyCurrency ? (
                   <div className="flex items-center justify-between text-[11px]">
                     <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{qtyCurrency}</span>
@@ -1110,7 +1110,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                 ) : (
                   <div className="text-[11px] text-slate-400 italic">—</div>
                 )}
-                <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-slate-50 px-2 py-1.5 text-[10px] text-slate-500 dark:bg-slate-900">
+                <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-slate-50 px-2 py-1.5 text-[11px] text-slate-500 dark:bg-slate-900">
                   <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
                   {tr("money_exchange.dash_preview_only_note", "Preview only — no ledger posting is created by this screen.")}
                 </div>

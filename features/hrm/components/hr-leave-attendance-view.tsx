@@ -367,7 +367,7 @@ export function HrLeaveAttendanceView({ lang }: { lang?: string }) {
                         <td className="px-3 py-2 tabular-nums">{r.hours == null ? "—" : NUM(r.hours)}</td>
                         <td className="px-3 py-2 tabular-nums">{r.late == null ? "—" : r.late}</td>
                         <td className="px-3 py-2 tabular-nums">{r.overtime == null ? "—" : NUM(r.overtime)}</td>
-                        <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status]}`}>{statusLabel(r.status)}</span></td>
+                        <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.status]}`}>{statusLabel(r.status)}</span></td>
                         <td className="px-3 py-2">{r.source === "device" || r.source === "import" ? <span className="inline-flex items-center gap-1 text-purple-700 dark:text-purple-300"><Fingerprint className="h-3.5 w-3.5" />{sourceLabel(r.source)}</span> : sourceLabel(r.source)}</td>
                       </tr>
                     ))
@@ -404,7 +404,7 @@ export function HrLeaveAttendanceView({ lang }: { lang?: string }) {
                               </>
                             )}
                             {tab === "balances" && (
-                              <button type="button" onClick={() => void adjustBalance(r)} className="rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-bold dark:border-slate-700">{s.t("adjust", "Adjust")}</button>
+                              <button type="button" onClick={() => void adjustBalance(r)} className="rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold dark:border-slate-700">{s.t("adjust", "Adjust")}</button>
                             )}
                             {tab === "corrections" && r.status === "pending" && (
                               <>
@@ -413,7 +413,7 @@ export function HrLeaveAttendanceView({ lang }: { lang?: string }) {
                               </>
                             )}
                             {tab === "corrections" && r.status === "approved" && (
-                              <button type="button" disabled={busy} onClick={() => void correctionAction(r.id, "apply")} className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-[10px] font-bold text-white disabled:opacity-50"><Play className="h-3 w-3" />{s.t("apply", "Apply")}</button>
+                              <button type="button" disabled={busy} onClick={() => void correctionAction(r.id, "apply")} className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50"><Play className="h-3 w-3" />{s.t("apply", "Apply")}</button>
                             )}
                           </div>
                         </td>
@@ -485,7 +485,7 @@ function columnsFor(tab: Tab, s: ReturnType<typeof useErpScreen>): { key: string
     } },
     { key: "reason", label: s.t("reason", "Reason") },
     { key: "status", label: s.t("status_label", "Status"), render: (r) => (
-      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${CORR_TONE[r.status] || CORR_TONE.pending}`}>{s.t(`lc_status_${r.status}`, r.status)}</span>
+      <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${CORR_TONE[r.status] || CORR_TONE.pending}`}>{s.t(`lc_status_${r.status}`, r.status)}</span>
     ) },
   ];
 }
@@ -634,7 +634,7 @@ function camel(s: string) { return s.replace(/_([a-z])/g, (_, c) => c.toUpperCas
 function F({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
+      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
       {children}
     </div>
   );

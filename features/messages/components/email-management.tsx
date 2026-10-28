@@ -771,7 +771,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 dark:text-blue-300">{tt("email_mgmt.smtp_email", "SMTP / Email")}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-700 dark:text-blue-300">{tt("email_mgmt.smtp_email", "SMTP / Email")}</p>
                 <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">{tt("email_mgmt.outbound_mail_control", "Outbound Mail Control")}</h3>
                 <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">{tt("email_mgmt.outbound_mail_desc", "Messages are saved to ERP audit and email tables; SMTP provider can be connected per country/branch.")}</p>
               </div>
@@ -786,7 +786,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">WhatsApp</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">WhatsApp</p>
                 <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">{tt("email_mgmt.message_templates", "Message Templates")}</h3>
                 <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">{tt("email_mgmt.whatsapp_desc", "WhatsApp communication uses the same ERP history and branch visibility rules.")}</p>
               </div>
@@ -801,7 +801,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700 dark:text-orange-300">{tt("email_mgmt.templates", "Templates")}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-orange-700 dark:text-orange-300">{tt("email_mgmt.templates", "Templates")}</p>
                 <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">{tt("email_mgmt.professional_replies", "Professional Replies")}</h3>
                 <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">{tt("email_mgmt.templates_desc", "Purchase, payment, stock alert, approval, and customer follow-up templates are ready for compose.")}</p>
               </div>
@@ -816,7 +816,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-700 dark:text-purple-300">{tt("email_mgmt.audit_trail", "Audit Trail")}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-purple-700 dark:text-purple-300">{tt("email_mgmt.audit_trail", "Audit Trail")}</p>
                 <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">{tt("email_mgmt.comm_history", "Communication History")}</h3>
                 <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">{tt("email_mgmt.audit_desc", "Every sent/draft message stays linked with country, branch, user, module, and document history.")}</p>
               </div>
@@ -879,7 +879,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   <Globe2 className="h-4 w-4 shrink-0" aria-hidden />
                   <span className="truncate">{tt("email_mgmt.branch_settings", "Branch Settings")}</span>
                 </span>
-                <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold text-foreground uppercase tracking-wider">{tt("email_mgmt.dashboard_label", "Dashboard")}</span>
+                <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[11px] font-bold text-foreground uppercase tracking-wider">{tt("email_mgmt.dashboard_label", "Dashboard")}</span>
               </button>
             </div>
 
@@ -917,7 +917,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
               
               <div className="rounded-lg border bg-background overflow-hidden shadow-sm">
                 <table className="w-full text-xs text-left border-collapse">
-                  <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] tracking-wider border-b">
+                  <thead className="bg-muted/50 text-muted-foreground uppercase text-[11px] tracking-wider border-b">
                     <tr>
                       <Th className="p-3 font-semibold">Country</Th>
                       <Th className="p-3 font-semibold">Branch</Th>
@@ -937,7 +937,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                           <td className="p-3 text-muted-foreground font-mono">{row.officialEmail}</td>
                           <td className="p-3">
                             <span className={cn(
-                              "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[10px]",
+                              "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[11px]",
                               row.smtpStatus.includes("Connected") ? "text-green-700 bg-green-50 dark:text-green-400 dark:bg-green-950/20" :
                               row.smtpStatus.includes("Incomplete") ? "text-amber-700 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/20" :
                               row.smtpStatus.includes("Failed") ? "text-red-700 bg-red-50 dark:text-red-400 dark:bg-red-950/20" :
@@ -954,7 +954,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                           </td>
                           <td className="p-3">
                             <span className={cn(
-                              "px-2.5 py-0.5 rounded font-bold text-[10px] inline-flex items-center",
+                              "px-2.5 py-0.5 rounded font-bold text-[11px] inline-flex items-center",
                               isReady ? "text-green-700 bg-green-50 dark:text-green-400 dark:bg-green-950/20" : "text-red-700 bg-red-50 dark:text-red-400 dark:bg-red-950/20"
                             )}>
                               {row.emailStatus}
@@ -965,7 +965,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                               type="button"
                               size="sm"
                               variant="outline"
-                              className="h-7 text-[10px]"
+                              className="h-7 text-[11px]"
                               onClick={async () => {
                                 try {
                                   await apiPost<{ success: boolean; message: string }>("/api/erp/messages/test-connection", {

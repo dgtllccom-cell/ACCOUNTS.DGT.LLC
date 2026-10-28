@@ -116,7 +116,7 @@ export function CrossLanguageReviewer({
 
       {/* ORIGINAL — verbatim, never altered */}
       <div className="mt-2 rounded-lg bg-white p-2 dark:bg-slate-900">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
           {s.t("original", "Original (unchanged)")}
         </p>
         <p
@@ -167,7 +167,7 @@ export function CrossLanguageReviewer({
               {translation}
             </p>
             {engine ? (
-              <p className="mt-1 text-[10px] text-slate-400">
+              <p className="mt-1 text-[11px] text-slate-400">
                 {s.t("engine", "Reading source")}: {engine}
               </p>
             ) : null}
@@ -196,7 +196,7 @@ export function CrossLanguageReviewer({
         </div>
       )}
 
-      <p className="mt-2 text-[10px] text-slate-400">
+      <p className="mt-2 text-[11px] text-slate-400">
         {s.t("one_entry_note", "This is one business entry. The translated reading is for understanding only — it does not create a separate record and nothing is posted from here.")}
       </p>
     </div>

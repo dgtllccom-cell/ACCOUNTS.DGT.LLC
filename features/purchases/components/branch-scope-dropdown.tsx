@@ -139,7 +139,7 @@ export function BranchScopeDropdown({
 
   return (
     <div ref={rootRef} className={`relative flex flex-col gap-1 ${className}`}>
-      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
         <Globe2 className="h-3 w-3 text-blue-500" aria-hidden /> {t(lang, "lp.branch_scope_label", "Country / Branch / City")}
       </span>
       <button

@@ -35,7 +35,7 @@ function ScopeTag({ scope, tt }: { scope: string; tt: (k: string, f: string) => 
     city_branch: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
   };
   return (
-    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${colors[scope] ?? ""}`}>
+    <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${colors[scope] ?? ""}`}>
       {tt(SCOPE_KEY[scope] ?? scope, SCOPE_FALLBACK[scope] ?? scope)}
     </span>
   );
@@ -126,23 +126,23 @@ export function AccountSetup({ accounts, onRefresh, onAdd, onEdit }: Props) {
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold text-foreground">{account.displayName}</p>
                     {account.isDefault && (
-                      <span className="rounded-full bg-[#25D366]/10 px-1.5 py-px text-[9px] font-medium text-[#25D366]">{tt("wa.default_badge", "Default")}</span>
+                      <span className="rounded-full bg-[#25D366]/10 px-1.5 py-px text-[11px] font-medium text-[#25D366]">{tt("wa.default_badge", "Default")}</span>
                     )}
                     {!account.isActive && (
-                      <span className="rounded-full bg-muted px-1.5 py-px text-[9px] font-medium text-muted-foreground">{tt("common.inactive", "Inactive")}</span>
+                      <span className="rounded-full bg-muted px-1.5 py-px text-[11px] font-medium text-muted-foreground">{tt("common.inactive", "Inactive")}</span>
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">{account.phoneNumber}</p>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     <ScopeTag scope={account.scope} tt={tt} />
                     {account.country && (
-                      <span className="text-[10px] text-muted-foreground">{account.country.name}</span>
+                      <span className="text-[11px] text-muted-foreground">{account.country.name}</span>
                     )}
                     {account.cityBranch && (
-                      <span className="text-[10px] text-muted-foreground">{account.cityBranch.cityName} — {account.cityBranch.name}</span>
+                      <span className="text-[11px] text-muted-foreground">{account.cityBranch.cityName} — {account.cityBranch.name}</span>
                     )}
                   </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground/60">
+                  <p className="mt-1 text-[11px] text-muted-foreground/60">
                     Phone ID: {account.phoneNumberId}
                     {account.webhookRegistered && " · Webhook ✓"}
                   </p>

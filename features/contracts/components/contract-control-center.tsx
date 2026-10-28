@@ -253,7 +253,7 @@ export function ContractControlCenter({ lang: langProp }: { lang?: string }) {
 
         {/* Contract Intelligence — portfolio risk summary */}
         <div className={s.textStart}>
-          <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">
+          <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-slate-400">
             <Sparkles className="h-3 w-3" /> {s.t("intel_portfolio_title", "Contract Intelligence — Portfolio Risk")}
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -335,7 +335,7 @@ export function ContractControlCenter({ lang: langProp }: { lang?: string }) {
                     <td className="px-3 py-2 text-right font-semibold tabular-nums text-slate-700 dark:text-slate-200">{r.original_currency} {fmt(r.original_amount)}</td>
                     <td className="px-3 py-2 text-right font-bold tabular-nums text-slate-800 dark:text-slate-100">{fmt(r.remaining_balance)}</td>
                     <td className="px-3 py-2">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.contract_status] || STATUS_TONE.Draft}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.contract_status] || STATUS_TONE.Draft}`}>
                         {s.t(`status_${r.contract_status.replace(/\s+/g, "_").toLowerCase()}`, r.contract_status)}
                       </span>
                     </td>
@@ -376,7 +376,7 @@ function Kpi({ label, value, icon: Icon, tone }: { label: string; value: number 
     <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center gap-1.5">
         {Icon ? <Icon className={`h-3.5 w-3.5 ${tone || "text-slate-400"}`} /> : null}
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</span>
+        <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{label}</span>
       </div>
       <div className="mt-1 text-xl font-black text-slate-900 dark:text-slate-50">{value}</div>
     </div>
@@ -528,7 +528,7 @@ function ContractDrawer({
                 <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">{s.t("audit_trail", "Audit Trail")}</p>
                 <ul className="mt-1 space-y-1">
                   {c.audit.map((a: any) => (
-                    <li key={a.id} className="text-[10px] text-slate-500">
+                    <li key={a.id} className="text-[11px] text-slate-500">
                       {new Date(a.created_at).toLocaleString()} — <span className="font-bold">{s.t(`audit_${a.action}`, a.action)}</span>{a.actor_name ? ` · ${a.actor_name}` : ""}
                     </li>
                   ))}
@@ -552,7 +552,7 @@ const RISK_TONE: Record<string, string> = {
 function RiskPill({ level, s }: { level: string | null | undefined; s: ReturnType<typeof useErpScreen> }) {
   const lvl = level || "unknown";
   return (
-    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${RISK_TONE[lvl] || RISK_TONE.unknown}`}>
+    <span className={`rounded-full border px-2 py-0.5 text-[11px] font-black uppercase ${RISK_TONE[lvl] || RISK_TONE.unknown}`}>
       {s.t(`intel_risk_${lvl}`, lvl)}
     </span>
   );
@@ -619,7 +619,7 @@ function ContractIntelligencePanel({ s, module, id }: { s: ReturnType<typeof use
       ) : (
         <div className="mt-2 space-y-3">
           {analysis.deterministicOnly ? (
-            <p className="rounded-lg bg-slate-50 px-2 py-1.5 text-[10px] font-semibold text-slate-500 dark:bg-slate-800/60">
+            <p className="rounded-lg bg-slate-50 px-2 py-1.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800/60">
               {s.t("intel_deterministic_only", "AI enrichment is not configured — showing deterministic (rule-based) analysis only.")}
             </p>
           ) : null}
@@ -634,7 +634,7 @@ function ContractIntelligencePanel({ s, module, id }: { s: ReturnType<typeof use
 
           {(analysis.clauses?.length ?? 0) > 0 ? (
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_clauses", "Clauses Found")}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_clauses", "Clauses Found")}</p>
               <ul className="mt-1 space-y-1">
                 {analysis.clauses.map((c: any) => (
                   <li key={c.clauseKey} className="flex items-start gap-2 text-[11px]">
@@ -651,7 +651,7 @@ function ContractIntelligencePanel({ s, module, id }: { s: ReturnType<typeof use
 
           {(analysis.missingClauses?.length ?? 0) > 0 ? (
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_missing_clauses", "Missing Clauses")}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_missing_clauses", "Missing Clauses")}</p>
               <ul className="mt-1 space-y-1">
                 {analysis.missingClauses.map((m: any) => (
                   <li key={m.clauseKey} className="flex items-start gap-2 text-[11px]">
@@ -665,7 +665,7 @@ function ContractIntelligencePanel({ s, module, id }: { s: ReturnType<typeof use
 
           {(analysis.obligations?.length ?? 0) > 0 ? (
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_obligations", "Obligations")}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_obligations", "Obligations")}</p>
               <ul className="mt-1 space-y-1">
                 {analysis.obligations.map((o: any, i: number) => (
                   <li key={i} className="text-[11px] text-slate-600 dark:text-slate-300">
@@ -678,7 +678,7 @@ function ContractIntelligencePanel({ s, module, id }: { s: ReturnType<typeof use
 
           {analysis.renewal ? (
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_renewal", "Renewal")}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_renewal", "Renewal")}</p>
               <p className="mt-1 flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300">
                 <RiskPill level={analysis.renewal.riskLevel} s={s} /> {analysis.renewal.explanation}
               </p>
@@ -687,7 +687,7 @@ function ContractIntelligencePanel({ s, module, id }: { s: ReturnType<typeof use
 
           {analysis.termination ? (
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_termination", "Termination")}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_termination", "Termination")}</p>
               <p className="mt-1 flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300">
                 <RiskPill level={analysis.termination.riskLevel} s={s} /> {analysis.termination.explanation}
               </p>
@@ -696,7 +696,7 @@ function ContractIntelligencePanel({ s, module, id }: { s: ReturnType<typeof use
 
           {(analysis.paymentWarnings?.length ?? 0) > 0 ? (
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_payment_warnings", "Payment Warnings")}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_payment_warnings", "Payment Warnings")}</p>
               <ul className="mt-1 space-y-1">
                 {analysis.paymentWarnings.map((w: any, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-[11px]">
@@ -709,7 +709,7 @@ function ContractIntelligencePanel({ s, module, id }: { s: ReturnType<typeof use
 
           {(analysis.keyDates?.length ?? 0) > 0 ? (
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_key_dates", "Key Dates")}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_key_dates", "Key Dates")}</p>
               <ul className="mt-1 space-y-1">
                 {analysis.keyDates.map((d: any, i: number) => (
                   <li key={i} className="text-[11px] text-slate-600 dark:text-slate-300">{d.label}: <span className="font-mono font-bold">{d.date}</span></li>
@@ -740,7 +740,7 @@ function ContractIntelligencePanel({ s, module, id }: { s: ReturnType<typeof use
 function Field({ s, k, label, v }: { s: ReturnType<typeof useErpScreen>; k: string; label: string; v: any }) {
   return (
     <div>
-      <dt className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t(k, label)}</dt>
+      <dt className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t(k, label)}</dt>
       <dd className="font-semibold text-slate-700 dark:text-slate-200">{v === null || v === undefined || v === "" ? "—" : String(v)}</dd>
     </div>
   );

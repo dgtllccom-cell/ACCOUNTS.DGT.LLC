@@ -133,8 +133,8 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
       <div className="mb-4 flex items-center gap-2">
         <h2 className="text-sm font-black">{tt(card.titleKey, card.titleLabel)}</h2>
         {card.linked
-          ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">{card.viaKey ? tt(card.viaKey, card.viaLabel || "Linked via") : ""} {card.via}</span>
-          : <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500 dark:bg-slate-800">{tt("sed.state_not_linked", "Not linked")}</span>}
+          ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">{card.viaKey ? tt(card.viaKey, card.viaLabel || "Linked via") : ""} {card.via}</span>
+          : <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500 dark:bg-slate-800">{tt("sed.state_not_linked", "Not linked")}</span>}
       </div>
       {card.linked
         ? <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">{card.fields.map((x, i) => <Field key={i} label={tf(x)} value={x.value} />)}</div>
@@ -165,8 +165,8 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
               <div className="text-[11px] font-semibold text-slate-400">{tt("sae.title", "All Release Entries")} / {tt("sed.entry_details", "Entry Details")}</div>
               <h1 className="mt-0.5 text-xl font-black">{tt("sed.entry_details", "Entry Details")} — #{d.header.entryNo}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                {d.header.status && <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusClass(d.header.status)}`}>{d.header.status}</span>}
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{d.moduleLabel}</span>
+                {d.header.status && <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${statusClass(d.header.status)}`}>{d.header.status}</span>}
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{d.moduleLabel}</span>
                 {d.origin.country && <span>📍 {d.origin.country}{d.origin.branch ? " · " + d.origin.branch : ""}</span>}
                 <span className="text-slate-400">{tt("sed.source_module", "Source Module")}: {d.origin.sourceModule}</span>
               </div>
@@ -205,7 +205,7 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {d.amounts.map((x, i) => (
               <div key={i} className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/40">
-                <div className="text-[10px] font-bold uppercase text-slate-500">{tf(x)}</div>
+                <div className="text-[11px] font-bold uppercase text-slate-500">{tf(x)}</div>
                 <div className={`mt-1 text-base font-black ${x.tone === "debit" ? "text-rose-600" : x.tone === "credit" ? "text-emerald-600" : ""}`}>{x.value}</div>
               </div>
             ))}
@@ -219,7 +219,7 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
           <h2 className="mb-4 text-sm font-black">{tt("sed.debit_credit_details", "Debit / Credit Details")}</h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-xs">
-              <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 dark:bg-slate-950/50">
+              <thead className="bg-slate-50 text-[11px] uppercase text-slate-500 dark:bg-slate-950/50">
                 <tr>
                   <Th className="p-2 text-start">#</Th>
                   {d.lines.columns.map((c) => <Th key={c.key} className={`p-2 ${c.num ? "text-end" : "text-start"}`}>{tfc(c)}</Th>)}
@@ -251,7 +251,7 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
         <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
           <div className="mb-4 flex items-center gap-2">
             <h2 className="text-sm font-black">{tt("sed.sec_workflow", "Workflow / Status")}</h2>
-            {d.workflow.status && <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusClass(d.workflow.status)}`}>{d.workflow.status}</span>}
+            {d.workflow.status && <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${statusClass(d.workflow.status)}`}>{d.workflow.status}</span>}
           </div>
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
             {d.workflow.steps.map((s, i) => <Field key={i} label={tf(s)} value={s.value} strong={s.strong} />)}
@@ -270,7 +270,7 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
                 <div className="flex flex-1 flex-wrap items-center justify-between gap-2">
                   <div className="text-xs">
                     <span className="font-bold">{ev.actor || "-"}</span>
-                    <span className="ms-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{ev.action}</span>
+                    <span className="ms-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{ev.action}</span>
                   </div>
                   <span className="text-[11px] text-slate-400">{fmtDate(ev.at)}</span>
                 </div>
@@ -288,7 +288,7 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
           : <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{d.attachments.map((fdoc, i) => (
               <div key={i} className="rounded-lg border border-slate-200 p-3 text-xs dark:border-slate-800">
                 <div className="truncate font-semibold" title={fdoc.name}>{fdoc.name}</div>
-                <div className="mt-1 text-[10px] text-slate-400">{fdoc.mime} · {(fdoc.size / 1024).toFixed(0)} KB</div>
+                <div className="mt-1 text-[11px] text-slate-400">{fdoc.mime} · {(fdoc.size / 1024).toFixed(0)} KB</div>
               </div>
             ))}</div>}
       </section>

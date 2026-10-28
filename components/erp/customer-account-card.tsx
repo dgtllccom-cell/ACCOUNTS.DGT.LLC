@@ -94,7 +94,7 @@ export function CustomerAccountCard({
           <div className="flex items-center gap-1.5 shrink-0">
             <span
               className={cn(
-                "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide",
+                "inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide",
                 isActive
                   ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60"
                   : "bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60"

@@ -156,7 +156,7 @@ export function GoodsPicker({
       />
       {variations.length > 1 && (
         <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">
+          <label className="block text-[11px] font-black uppercase tracking-wider text-slate-400">
             {t(lang, "gm.variation", "Variation")}
           </label>
           <select

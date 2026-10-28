@@ -54,7 +54,7 @@ export function CashEntryStyleScope({ lang, children }: { lang?: string | null; 
             </button>
           ))}
         </div>
-        <span className="text-[10px] text-muted-foreground">{s.t("hint", "Appearance only — your entries and data are not affected.")}</span>
+        <span className="text-[11px] text-muted-foreground">{s.t("hint", "Appearance only — your entries and data are not affected.")}</span>
       </div>
       {children}
     </div>

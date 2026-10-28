@@ -122,7 +122,7 @@ function GenerateTab({ s, setError, setNotice, onGenerated, statusLabel }: TabPr
     <div className="space-y-4">
       <section className="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:grid-cols-3">
         <div>
-          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("payroll_run", "Approved payroll run (UAE)")}</label>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("payroll_run", "Approved payroll run (UAE)")}</label>
           <select data-testid="wps-run" className={INP} value={runId} onChange={(e) => { setRunId(e.target.value); setResult(null); }}>
             <option value="">{s.t("select", "Select…")}</option>
             {runs.map((r) => <option key={r.id} value={r.id}>{r.run_no} · {r.period_month} · {r.city_branch_name ?? ""} · {statusLabel(r.status)}{r.sif_status ? ` · SIF ${statusLabel(r.sif_status)}` : ""}</option>)}
@@ -130,7 +130,7 @@ function GenerateTab({ s, setError, setNotice, onGenerated, statusLabel }: TabPr
           {runs.length === 0 && <p className="mt-1 text-[11px] text-slate-500">{s.t("no_runs", "No approved UAE payroll runs in your scope. Approve a run in Payroll Runs first.")}</p>}
         </div>
         <div>
-          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("establishment", "MOHRE establishment")}</label>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("establishment", "MOHRE establishment")}</label>
           <select data-testid="wps-est" className={INP} value={estId} onChange={(e) => { setEstId(e.target.value); setResult(null); }}>
             <option value="">{s.t("select", "Select…")}</option>
             {ests.map((e) => <option key={e.id} value={e.id}>{e.company_name} · {e.establishment_id}</option>)}
@@ -257,25 +257,25 @@ function RegisterTab({ s, setError, setNotice, statusLabel }: TabProps & { statu
                   <td className="px-3 py-2 font-mono font-semibold">{f.file_no}</td>
                   <td className="px-3 py-2 font-mono" dir="ltr">{f.file_name}</td>
                   <td className="px-3 py-2">{f.run_no}</td>
-                  <td className="px-3 py-2">{f.company_name}<div className="font-mono text-[10px] text-slate-400" dir="ltr">{f.mohre_id}</div></td>
+                  <td className="px-3 py-2">{f.company_name}<div className="font-mono text-[11px] text-slate-400" dir="ltr">{f.mohre_id}</div></td>
                   <td className="px-3 py-2 font-mono">{f.salary_month}</td>
                   <td className="px-3 py-2 tabular-nums">{f.edr_count}</td>
                   <td className="px-3 py-2 tabular-nums" dir="ltr">{AMT(f.total_amount)}</td>
-                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[f.status] ?? STATUS_TONE.generated}`}>{statusLabel(f.status)}</span></td>
-                  <td className="px-3 py-2">{f.submission_reference ?? "—"}{f.agent_response ? <div className="text-[10px] text-slate-500">{f.agent_response}</div> : null}</td>
+                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[f.status] ?? STATUS_TONE.generated}`}>{statusLabel(f.status)}</span></td>
+                  <td className="px-3 py-2">{f.submission_reference ?? "—"}{f.agent_response ? <div className="text-[11px] text-slate-500">{f.agent_response}</div> : null}</td>
                   <td className="px-3 py-2">
                     <div className="flex flex-wrap gap-1">
-                      <button type="button" data-testid="wps-download" onClick={() => void download(f)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-bold hover:bg-slate-50 dark:border-slate-700"><Download className="h-3 w-3" />{s.t("download", "Download SIF")}</button>
-                      <button type="button" onClick={() => void openDetail(f.id)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-bold hover:bg-slate-50 dark:border-slate-700"><History className="h-3 w-3" />{s.t("details", "Lines & history")}</button>
+                      <button type="button" data-testid="wps-download" onClick={() => void download(f)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold hover:bg-slate-50 dark:border-slate-700"><Download className="h-3 w-3" />{s.t("download", "Download SIF")}</button>
+                      <button type="button" onClick={() => void openDetail(f.id)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold hover:bg-slate-50 dark:border-slate-700"><History className="h-3 w-3" />{s.t("details", "Lines & history")}</button>
                       {(NEXT_ACTIONS[f.status] ?? []).map((a) => (
                         <button key={a} type="button" data-testid={`wps-act-${a}`} disabled={busy} onClick={() => (needsText(a) ? (setPending({ id: f.id, action: a }), setText("")) : void run(f.id, a))}
-                          className={`rounded-lg px-2 py-1 text-[10px] font-bold disabled:opacity-50 ${a === "reject" || a === "cancel" ? "border border-rose-200 text-rose-700 dark:border-rose-900 dark:text-rose-300" : "bg-teal-700 text-white"}`}>{actionLabel(a)}</button>
+                          className={`rounded-lg px-2 py-1 text-[11px] font-bold disabled:opacity-50 ${a === "reject" || a === "cancel" ? "border border-rose-200 text-rose-700 dark:border-rose-900 dark:text-rose-300" : "bg-teal-700 text-white"}`}>{actionLabel(a)}</button>
                       ))}
                     </div>
                     {pending && pending.id === f.id && (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <input data-testid="wps-act-text" className={`${INP} w-56`} value={text} onChange={(e) => setText(e.target.value)} placeholder={pending.action === "submit" ? s.t("ref_placeholder", "Agent submission reference") : s.t("resp_placeholder", "Agent response / reason")} />
-                        <button type="button" data-testid="wps-act-confirm" disabled={!text.trim() || busy} onClick={() => void run(f.id, pending.action, text.trim())} className="rounded-lg bg-teal-700 px-2 py-1 text-[10px] font-bold text-white disabled:opacity-50">{s.t("confirm", "Confirm")}</button>
+                        <button type="button" data-testid="wps-act-confirm" disabled={!text.trim() || busy} onClick={() => void run(f.id, pending.action, text.trim())} className="rounded-lg bg-teal-700 px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50">{s.t("confirm", "Confirm")}</button>
                         <button type="button" aria-label={s.t("close", "Close")} onClick={() => setPending(null)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-3.5 w-3.5" /></button>
                       </div>
                     )}
@@ -302,7 +302,7 @@ function RegisterTab({ s, setError, setNotice, statusLabel }: TabProps & { statu
                 {(detail.lines as Row[]).map((l) => (
                   <tr key={l.id} data-testid="wps-line" className="border-t border-slate-100 dark:border-slate-800">
                     <td className="px-3 py-1.5 tabular-nums">{l.line_no}</td>
-                    <td className="px-3 py-1.5">{l.employee_name}<div className="font-mono text-[10px] text-slate-400">{l.employee_code}</div></td>
+                    <td className="px-3 py-1.5">{l.employee_name}<div className="font-mono text-[11px] text-slate-400">{l.employee_code}</div></td>
                     <td className="px-3 py-1.5 font-mono" dir="ltr">{l.person_id}</td>
                     <td className="px-3 py-1.5 font-mono" dir="ltr">{l.routing_code}</td>
                     <td className="px-3 py-1.5 font-mono" dir="ltr">{l.account}</td>
@@ -407,14 +407,14 @@ function PaymentResultsSection({ s, detail, onReconciled }: { s: ReturnType<type
       {notice && <p data-testid="wps-pay-notice" className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">{notice}</p>}
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
         <div>
-          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("pay_ledger", "Payment ledger (cash / bank)")}</label>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("pay_ledger", "Payment ledger (cash / bank)")}</label>
           <select data-testid="wps-pay-ledger" className={INP} value={paymentLedgerId} onChange={(e) => setPaymentLedgerId(e.target.value)}>
             <option value="">{s.t("select", "Select…")}</option>
             {ledgers.map((l) => <option key={l.id} value={l.id}>{l.code} — {l.name}</option>)}
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("pay_date", "Payment date")}</label>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("pay_date", "Payment date")}</label>
           <input data-testid="wps-pay-date" type="date" className={INP} value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
         </div>
       </div>
@@ -429,12 +429,12 @@ function PaymentResultsSection({ s, detail, onReconciled }: { s: ReturnType<type
               if (ex) {
                 return (
                   <tr key={l.id} data-testid="wps-pay-row" data-status="recorded" className="border-t border-slate-100 dark:border-slate-800">
-                    <td className="px-3 py-1.5">{l.employee_name}<div className="font-mono text-[10px] text-slate-400">{l.employee_code}</div></td>
+                    <td className="px-3 py-1.5">{l.employee_name}<div className="font-mono text-[11px] text-slate-400">{l.employee_code}</div></td>
                     <td className="px-3 py-1.5">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${ex.result_status === "paid" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300"}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${ex.result_status === "paid" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300"}`}>
                         {ex.result_status === "paid" ? s.t("st_paid", "Paid") : s.t("pay_rejected", "Rejected")}
                       </span>
-                      <div className="mt-0.5 text-[10px] text-slate-400">{s.t("pay_already_badge", "Already recorded")}</div>
+                      <div className="mt-0.5 text-[11px] text-slate-400">{s.t("pay_already_badge", "Already recorded")}</div>
                     </td>
                     <td className="px-3 py-1.5 text-slate-500">{ex.result_reason ?? "—"}</td>
                     <td className="px-3 py-1.5 font-mono text-slate-500" dir="ltr">{ex.bank_reference ?? "—"}</td>
@@ -445,7 +445,7 @@ function PaymentResultsSection({ s, detail, onReconciled }: { s: ReturnType<type
               const r = rows[l.employee_id] ?? defaultFor(l);
               return (
                 <tr key={l.id} data-testid="wps-pay-row" data-status="pending" className="border-t border-slate-100 dark:border-slate-800">
-                  <td className="px-3 py-1.5">{l.employee_name}<div className="font-mono text-[10px] text-slate-400">{l.employee_code}</div></td>
+                  <td className="px-3 py-1.5">{l.employee_name}<div className="font-mono text-[11px] text-slate-400">{l.employee_code}</div></td>
                   <td className="px-3 py-1.5">
                     <select data-testid="wps-pay-status" className={`${INP} w-32`} value={r.status} onChange={(e) => set(l, { status: e.target.value as PayRowState["status"] })}>
                       <option value="">{s.t("pay_unset", "— not reported —")}</option>
@@ -588,7 +588,7 @@ function SetupTab({ s, setError, setNotice }: TabProps) {
                 const set = (k: string, val: string) => setEdit((p) => ({ ...p, [e.id]: { ...(p[e.id] ?? e), [k]: val } }));
                 return (
                   <tr key={e.id} data-testid="wps-emp-row" data-code={e.employee_code} className="border-t border-slate-100 dark:border-slate-800">
-                    <td className="px-3 py-1.5">{e.name}<div className="font-mono text-[10px] text-slate-400">{e.employee_code}</div></td>
+                    <td className="px-3 py-1.5">{e.name}<div className="font-mono text-[11px] text-slate-400">{e.employee_code}</div></td>
                     <td className="px-3 py-1.5"><input data-testid="wps-e-person" className={`${INP} w-36 font-mono`} dir="ltr" maxLength={14} value={v.wps_person_id ?? ""} onChange={(x) => set("wps_person_id", x.target.value.replace(/\D/g, ""))} /></td>
                     <td className="px-3 py-1.5"><input data-testid="wps-e-routing" className={`${INP} w-28 font-mono`} dir="ltr" maxLength={9} value={v.wps_routing_code ?? ""} onChange={(x) => set("wps_routing_code", x.target.value.replace(/\D/g, ""))} /></td>
                     <td className="px-3 py-1.5"><input data-testid="wps-e-iban" className={`${INP} w-56 font-mono`} dir="ltr" maxLength={34} value={v.wps_iban ?? ""} onChange={(x) => set("wps_iban", x.target.value.toUpperCase())} /></td>
@@ -599,7 +599,7 @@ function SetupTab({ s, setError, setNotice }: TabProps) {
                       </select>
                     </td>
                     <td className="px-3 py-1.5">{(e.issues ?? []).length ? <span className="text-amber-700 dark:text-amber-300">{(e.issues as string[]).map((k) => missingLabel[k] ?? k).join(", ")}</span> : <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="h-3.5 w-3.5" />{s.t("complete", "Complete")}</span>}</td>
-                    <td className="px-3 py-1.5">{edit[e.id] && <button type="button" data-testid="wps-e-save" disabled={busy} onClick={() => void saveEmp(e.id)} className="rounded-lg bg-teal-700 px-2.5 py-1 text-[10px] font-bold text-white disabled:opacity-50">{s.t("save", "Save")}</button>}</td>
+                    <td className="px-3 py-1.5">{edit[e.id] && <button type="button" data-testid="wps-e-save" disabled={busy} onClick={() => void saveEmp(e.id)} className="rounded-lg bg-teal-700 px-2.5 py-1 text-[11px] font-bold text-white disabled:opacity-50">{s.t("save", "Save")}</button>}</td>
                   </tr>
                 );
               })}

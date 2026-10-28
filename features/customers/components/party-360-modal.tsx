@@ -208,7 +208,7 @@ export function Party360Modal({
                   }`}
                 >
                   <div className="flex items-center justify-between text-sky-600 dark:text-sky-400 mb-1">
-                    <span className="text-[10px] font-black uppercase">
+                    <span className="text-[11px] font-black uppercase">
                       {t(lang, "p360.accounts_title", "Accounts")}
                     </span>
                     <BookOpen className="h-3.5 w-3.5" />
@@ -216,7 +216,7 @@ export function Party360Modal({
                   <p className="text-lg font-black text-slate-900 dark:text-white">
                     {(summary.accounts || []).length}
                   </p>
-                  <p className="text-[9.5px] text-slate-500 truncate">
+                  <p className="text-[11px] text-slate-500 truncate">
                     {t(lang, "p360.chart_of_accounts", "Chart of Accounts")}
                   </p>
                 </div>
@@ -238,7 +238,7 @@ export function Party360Modal({
                   <p className="text-xl font-black text-slate-900 dark:text-white">
                     {summary.companies.length}
                   </p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-[11px] text-slate-500">
                     {t(lang, "p360.companies_kpi_sub", "As Owner / Director")}
                   </p>
                 </div>
@@ -261,7 +261,7 @@ export function Party360Modal({
                   <p className="text-xl font-black text-slate-900 dark:text-white">
                     {summary.employees.length}
                   </p>
-                  <p className="text-[10px] text-slate-500 truncate">
+                  <p className="text-[11px] text-slate-500 truncate">
                     {summary.employees[0]?.employeeCode || t(lang, "p360.employment_not_staff", "Not Staff")}
                   </p>
                 </div>
@@ -284,7 +284,7 @@ export function Party360Modal({
                   <p className="text-xl font-black text-slate-900 dark:text-white">
                     {summary.banks.length}
                   </p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-[11px] text-slate-500">
                     {t(lang, "p360.banks_kpi_sub", "Active Master Banks")}
                   </p>
                 </div>
@@ -303,7 +303,7 @@ export function Party360Modal({
                     <Warehouse className="h-4 w-4" />
                   </div>
                   <p className="text-xl font-black text-slate-900 dark:text-white">{summary.warehouses.length}</p>
-                  <p className="text-[10px] text-slate-500">{t(lang, "p360.warehouses_kpi_sub", "Owner / Responsible")}</p>
+                  <p className="text-[11px] text-slate-500">{t(lang, "p360.warehouses_kpi_sub", "Owner / Responsible")}</p>
                 </div>
 
                 {/* Trucks */}
@@ -320,7 +320,7 @@ export function Party360Modal({
                     <Truck className="h-4 w-4" />
                   </div>
                   <p className="text-xl font-black text-slate-900 dark:text-white">{summary.trucks.length}</p>
-                  <p className="text-[10px] text-slate-500">{t(lang, "p360.trucks_kpi_sub", "Owner / Driver")}</p>
+                  <p className="text-[11px] text-slate-500">{t(lang, "p360.trucks_kpi_sub", "Owner / Driver")}</p>
                 </div>
 
                 {/* Clearing Agents */}
@@ -337,7 +337,7 @@ export function Party360Modal({
                     <ShieldCheck className="h-4 w-4" />
                   </div>
                   <p className="text-xl font-black text-slate-900 dark:text-white">{summary.clearingAgents.length}</p>
-                  <p className="text-[10px] text-slate-500">{t(lang, "p360.clearing_agents_kpi_sub", "Linked Agent Records")}</p>
+                  <p className="text-[11px] text-slate-500">{t(lang, "p360.clearing_agents_kpi_sub", "Linked Agent Records")}</p>
                 </div>
 
                 {/* Customer Account */}
@@ -354,7 +354,7 @@ export function Party360Modal({
                   <p className="text-sm font-black text-slate-900 dark:text-white truncate">
                     {summary.partyType || "Customer"}
                   </p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-[11px] text-slate-500">
                     {summary.cityName || summary.countryName || "-"}
                   </p>
                 </div>
@@ -411,11 +411,11 @@ export function Party360Modal({
                                 <span className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
                                   {ac.name}
                                 </span>
-                                <span className="rounded bg-sky-50 dark:bg-sky-950 px-1.5 py-0.5 font-mono text-[10px] font-bold text-sky-700 dark:text-sky-300">
+                                <span className="rounded bg-sky-50 dark:bg-sky-950 px-1.5 py-0.5 font-mono text-[11px] font-bold text-sky-700 dark:text-sky-300">
                                   {ac.code}
                                 </span>
                               </div>
-                              <p className="text-[10px] text-slate-500 truncate">
+                              <p className="text-[11px] text-slate-500 truncate">
                                 {[ac.domain?.toUpperCase(), ac.currency, ac.branchName || ac.countryName].filter(Boolean).join(" • ")}
                               </p>
                             </div>
@@ -424,7 +424,7 @@ export function Party360Modal({
                             <span className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200">
                               {Number(ac.currentBalance || 0).toLocaleString()} {ac.currency}
                             </span>
-                            <p className="text-[9.5px] font-bold text-emerald-600 capitalize">
+                            <p className="text-[11px] font-bold text-emerald-600 capitalize">
                               {ac.status ? translateValue(lang, ac.status) : t(lang, "p360.status_active", "Active")}
                             </p>
                           </div>
@@ -477,7 +477,7 @@ export function Party360Modal({
                               <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
                                 {localizeName(co.name, lang)}
                               </p>
-                              <p className="text-[10px] text-slate-500 truncate">
+                              <p className="text-[11px] text-slate-500 truncate">
                                 {[co.businessType, co.cityName, co.countryName].filter(Boolean).join(" • ")}
                               </p>
                             </div>
@@ -531,17 +531,17 @@ export function Party360Modal({
                                 <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
                                   {emp.fullName}
                                 </span>
-                                <span className="rounded bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.2 font-mono text-[10px] font-bold text-emerald-700">
+                                <span className="rounded bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.2 font-mono text-[11px] font-bold text-emerald-700">
                                   {emp.employeeCode}
                                 </span>
                               </div>
-                              <p className="text-[10px] text-slate-500 truncate">
+                              <p className="text-[11px] text-slate-500 truncate">
                                 {[emp.jobTitle, emp.department, emp.branchName].filter(Boolean).join(" • ")}
                               </p>
                             </div>
                           </div>
                           <div className="shrink-0 flex items-center gap-2">
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
                               {emp.status || "Active"}
                             </span>
                             <button
@@ -598,7 +598,7 @@ export function Party360Modal({
                               </p>
                             </div>
                           </div>
-                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+                          <span className="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
                             {bnk.accountStatus || "Active"}
                           </span>
                         </div>
@@ -637,12 +637,12 @@ export function Party360Modal({
                               <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
                                 {localizeName(w.warehouseName, lang)}
                               </p>
-                              <p className="text-[10px] text-slate-500 truncate">
+                              <p className="text-[11px] text-slate-500 truncate">
                                 {[w.warehouseCode, w.warehouseType].filter(Boolean).join(" • ")}
                               </p>
                             </div>
                           </div>
-                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-50 text-teal-800 border border-teal-200">
+                          <span className="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-50 text-teal-800 border border-teal-200">
                             {w.role}
                           </span>
                         </div>
@@ -682,11 +682,11 @@ export function Party360Modal({
                                 {tr.truckNumber}
                               </p>
                               {tr.truckSerial && (
-                                <p className="text-[10px] text-slate-500 truncate">{tr.truckSerial}</p>
+                                <p className="text-[11px] text-slate-500 truncate">{tr.truckSerial}</p>
                               )}
                             </div>
                           </div>
-                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-50 text-orange-800 border border-orange-200">
+                          <span className="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-md bg-orange-50 text-orange-800 border border-orange-200">
                             {tr.role}
                           </span>
                         </div>
@@ -726,7 +726,7 @@ export function Party360Modal({
                                 {localizeName(ca.name, lang)}
                               </p>
                               {ca.clearingAgentCode && (
-                                <p className="text-[10px] text-slate-500 truncate font-mono">{ca.clearingAgentCode}</p>
+                                <p className="text-[11px] text-slate-500 truncate font-mono">{ca.clearingAgentCode}</p>
                               )}
                             </div>
                           </div>

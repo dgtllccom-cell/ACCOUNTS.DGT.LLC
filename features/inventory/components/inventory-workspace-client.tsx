@@ -492,7 +492,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             <div>
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("Incoming Quantity")}</p>
               <h3 className="text-2xl font-bold">{Number(summary.incoming_quantity).toLocaleString()}</h3>
-              <p className="text-[10px] text-muted-foreground">{tr("From")} {summary.incoming_po_count} {tr("posted purchase order(s)")}</p>
+              <p className="text-[11px] text-muted-foreground">{tr("From")} {summary.incoming_po_count} {tr("posted purchase order(s)")}</p>
             </div>
           </CardContent>
         </Card>
@@ -504,7 +504,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             <div>
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("In Transit Quantity")}</p>
               <h3 className="text-2xl font-bold">{Number(summary.in_transit_quantity).toLocaleString()}</h3>
-              <p className="text-[10px] text-muted-foreground">{tr("Based on real shipment tracking")}</p>
+              <p className="text-[11px] text-muted-foreground">{tr("Based on real shipment tracking")}</p>
             </div>
           </CardContent>
         </Card>
@@ -516,7 +516,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             <div>
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("Outgoing (Pending Sales Orders)")}</p>
               <h3 className="text-2xl font-bold">{summary.outgoing_order_count}</h3>
-              <p className="text-[10px] text-muted-foreground">{tr("Order-level total, not per item")}</p>
+              <p className="text-[11px] text-muted-foreground">{tr("Order-level total, not per item")}</p>
             </div>
           </CardContent>
         </Card>

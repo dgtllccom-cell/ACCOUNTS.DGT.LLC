@@ -118,7 +118,7 @@ export function VerificationChecksPanel({ jobId, lang }: { jobId: string | null;
         { key: "records", title: s.t("g_records", "Against existing documents and records"), rows: recordChecks },
       ].filter((g) => g.rows.length).map((g) => (
         <div key={g.key} className="mt-2" data-testid={`check-group-${g.key}`}>
-          <p className="mb-1 text-[10px] font-black uppercase tracking-wide text-slate-400">{g.title}</p>
+          <p className="mb-1 text-[11px] font-black uppercase tracking-wide text-slate-400">{g.title}</p>
           <ul className="divide-y divide-slate-100 text-xs dark:divide-slate-800">
             {g.rows.map((c) => {
               const Icon = ICON[k(c.status)];

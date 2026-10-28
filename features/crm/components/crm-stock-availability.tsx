@@ -78,7 +78,7 @@ export function CrmStockAvailability({ lang }: { lang?: string }) {
               <tr><td colSpan={4} className="px-3 py-8 text-center text-slate-400">{s.t("empty", "No matching stock found.")}</td></tr>
             ) : rows.map((r) => (
               <tr key={r.id} className="border-t border-slate-100 dark:border-slate-800">
-                <td className="px-3 py-2 font-semibold text-slate-800 dark:text-slate-200">{r.goods_name || "—"}<span className="ms-1 font-mono text-[10px] text-slate-400">{r.chs_code}</span></td>
+                <td className="px-3 py-2 font-semibold text-slate-800 dark:text-slate-200">{r.goods_name || "—"}<span className="ms-1 font-mono text-[11px] text-slate-400">{r.chs_code}</span></td>
                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{r.warehouse_name || "—"}</td>
                 <td className="px-3 py-2 text-slate-500">{r.country_name || "—"}</td>
                 <td className="px-3 py-2 text-right font-bold text-emerald-700 dark:text-emerald-300">{Number(r.quantity_available || 0).toLocaleString()}</td>

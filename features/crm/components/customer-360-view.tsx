@@ -521,7 +521,7 @@ export function Customer360View() {
                     <FileSpreadsheet className="h-4 w-4 mr-2.5 text-emerald-600 shrink-0" />
                     <div>
                       <div className="font-bold text-emerald-700 dark:text-emerald-400">{ct("exportDetailedCsv", "Export Detailed Excel (.csv)")}</div>
-                      <div className="text-[10px] text-slate-400">All columns, full commercial data</div>
+                      <div className="text-[11px] text-slate-400">All columns, full commercial data</div>
                     </div>
                   </button>
 
@@ -536,7 +536,7 @@ export function Customer360View() {
                     <Download className="h-4 w-4 mr-2.5 text-blue-600 shrink-0" />
                     <div>
                       <div className="font-semibold">{ct("exportCsv", "Export CSV")} (Current View)</div>
-                      <div className="text-[10px] text-slate-400">Current page records only</div>
+                      <div className="text-[11px] text-slate-400">Current page records only</div>
                     </div>
                   </button>
 
@@ -553,7 +553,7 @@ export function Customer360View() {
                     <Printer className="h-4 w-4 mr-2.5 text-amber-500 shrink-0" />
                     <div>
                       <div className="font-semibold">{ct("printReport", "Print")}</div>
-                      <div className="text-[10px] text-slate-400">Print or save as PDF</div>
+                      <div className="text-[11px] text-slate-400">Print or save as PDF</div>
                     </div>
                   </button>
                 </div>
@@ -630,7 +630,7 @@ export function Customer360View() {
               {kpis.followUpsToday}
             </span>
           </div>
-          <p className="text-[10.5px] text-slate-500 font-semibold mt-1.5 truncate">
+          <p className="text-[11px] text-slate-500 font-semibold mt-1.5 truncate">
             {kpis.followUpsCalls} {ct("calls", "calls")} • {kpis.followUpsMeetings} {ct("meetings", "meetings")} • {kpis.followUpsOthers} {ct("others", "others")}
           </p>
         </div>
@@ -648,7 +648,7 @@ export function Customer360View() {
               {kpis.receivableDueCurrency} {Number(kpis.receivableDue).toLocaleString()}
             </span>
           </div>
-          <span className="text-[10.5px] font-bold text-rose-600 mt-1 block">
+          <span className="text-[11px] font-bold text-rose-600 mt-1 block">
             {kpis.receivableDueTrend}
           </span>
         </div>
@@ -688,7 +688,7 @@ export function Customer360View() {
           <div>
             <h3 className="text-sm font-black flex items-center gap-2">
               <span>{tUi(lang, "paytrack.crm_payables_receivables", "Purchase Payables & Sales Receivables")}</span>
-              <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-200 text-[10px] font-mono border border-blue-400/30">
+              <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-200 text-[11px] font-mono border border-blue-400/30">
                 {tUi(lang, "paytrack.five_day_forecast", "5-Day Forecast")}
               </span>
             </h3>
@@ -735,7 +735,7 @@ export function Customer360View() {
         {/* Data Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-50/70 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10.5px] tracking-wider border-b border-slate-200/80 dark:border-slate-800">
+            <thead className="bg-slate-50/70 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200/80 dark:border-slate-800">
               <tr>
                 <Th className="p-3.5 w-10 text-center">
                   <input
@@ -821,7 +821,7 @@ export function Customer360View() {
                       {/* Company & Name */}
                       <td className="p-3.5">
                         <div className="flex items-center gap-2.5">
-                          <div className={`h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${c.avatarColor}`}>
+                          <div className={`h-7 w-7 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0 ${c.avatarColor}`}>
                             {c.avatarInitials}
                           </div>
                           <div className="min-w-0">
@@ -829,7 +829,7 @@ export function Customer360View() {
                               {c.companyName}
                             </span>
                             {c.companyName !== c.customerName && (
-                              <span className="text-[10px] text-slate-400 truncate block">
+                              <span className="text-[11px] text-slate-400 truncate block">
                                 {c.customerName}
                               </span>
                             )}
@@ -853,7 +853,7 @@ export function Customer360View() {
                       {/* Assigned User */}
                       <td className="p-3.5">
                         <div className="flex items-center gap-1.5">
-                          <div className="h-6 w-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[9px] font-black shrink-0">
+                          <div className="h-6 w-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[11px] font-black shrink-0">
                             {c.assignedUserInitials}
                           </div>
                           <span className="text-slate-700 dark:text-slate-300 font-medium">
@@ -879,14 +879,14 @@ export function Customer360View() {
                           )}
                           <div className="min-w-0 leading-tight">
                             <div className="font-bold text-[11px] truncate">{c.nextActionType}</div>
-                            <div className="text-[10px] text-slate-400">{c.nextActionDate}</div>
+                            <div className="text-[11px] text-slate-400">{c.nextActionDate}</div>
                           </div>
                         </div>
                       </td>
 
                       {/* Health */}
                       <td className="p-3.5 text-center">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${healthBadgeClass}`}>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-bold border ${healthBadgeClass}`}>
                           {c.health}
                         </span>
                       </td>
@@ -894,7 +894,7 @@ export function Customer360View() {
                       {/* Status */}
                       <td className="p-3.5 text-center">
                         <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
                             c.status === "Active"
                               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                               : "bg-rose-50 text-rose-700 border-rose-200"
@@ -1012,7 +1012,7 @@ export function Customer360View() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
+              <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200/80">
                 <tr>
                   <Th className="p-2.5">#</Th>
                   <Th className="p-2.5">Customer</Th>
@@ -1055,7 +1055,7 @@ export function Customer360View() {
                       </td>
                       <td className="p-2.5">
                         <div className="flex items-center gap-1">
-                          <span className="h-5 w-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[9px] font-black">
+                          <span className="h-5 w-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[11px] font-black">
                             {fu.assignedToInitials}
                           </span>
                           <span className="truncate max-w-[100px]">{fu.assignedTo}</span>
@@ -1066,7 +1066,7 @@ export function Customer360View() {
                       </td>
                       <td className="p-2.5 text-center">
                         <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-bold ${
                             fu.status === "Due Now"
                               ? "bg-rose-100 text-rose-700"
                               : "bg-amber-100 text-amber-700"
@@ -1117,7 +1117,7 @@ export function Customer360View() {
                 <Phone className="h-5 w-5" />
               </div>
               <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{ct("logCall", "Call")}</span>
-              <span className="text-[10px] text-slate-400 mt-0.5">{ct("logCallDesc", "Log a call")}</span>
+              <span className="text-[11px] text-slate-400 mt-0.5">{ct("logCallDesc", "Log a call")}</span>
             </button>
 
             {/* Quick Action 2: Message */}
@@ -1133,7 +1133,7 @@ export function Customer360View() {
                 <MessageSquare className="h-5 w-5" />
               </div>
               <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{ct("message", "Message")}</span>
-              <span className="text-[10px] text-slate-400 mt-0.5">{ct("messageDesc", "WhatsApp / Email")}</span>
+              <span className="text-[11px] text-slate-400 mt-0.5">{ct("messageDesc", "WhatsApp / Email")}</span>
             </button>
 
             {/* Quick Action 3: Meeting */}
@@ -1149,7 +1149,7 @@ export function Customer360View() {
                 <Calendar className="h-5 w-5" />
               </div>
               <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{ct("scheduleMeeting", "Meeting")}</span>
-              <span className="text-[10px] text-slate-400 mt-0.5">{ct("meetingDesc", "Schedule meeting")}</span>
+              <span className="text-[11px] text-slate-400 mt-0.5">{ct("meetingDesc", "Schedule meeting")}</span>
             </button>
 
             {/* Quick Action 4: Add Note */}
@@ -1165,7 +1165,7 @@ export function Customer360View() {
                 <FileText className="h-5 w-5" />
               </div>
               <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{ct("addNote", "Add Note")}</span>
-              <span className="text-[10px] text-slate-400 mt-0.5">{ct("noteDesc", "Add activity note")}</span>
+              <span className="text-[11px] text-slate-400 mt-0.5">{ct("noteDesc", "Add activity note")}</span>
             </button>
           </div>
         </div>

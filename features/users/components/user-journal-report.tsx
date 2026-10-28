@@ -681,7 +681,7 @@ export function UserJournalReport() {
             <Users className="h-3.5 w-3.5" />
           </div>
           <div>
-            <div className="text-[8px] font-black uppercase tracking-wider text-slate-400 leading-none">{thL("Users")}</div>
+            <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 leading-none">{thL("Users")}</div>
             <h1 className="text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 leading-none mt-0.5">{thL("User Journal Report")}</h1>
           </div>
         </div>,
@@ -704,45 +704,45 @@ export function UserJournalReport() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Admin Name")}</div>
+              <div className="text-[11px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Admin Name")}</div>
               <div className="text-sm font-black text-[var(--ujr-title)] flex items-center gap-2">
-                <div className="grid h-6 w-6 place-items-center rounded-full bg-blue-600 text-white font-black text-[9px] shadow-sm">
+                <div className="grid h-6 w-6 place-items-center rounded-full bg-blue-600 text-white font-black text-[11px] shadow-sm">
                   {initials(sessionInfo?.user?.fullName ?? superAdminRow?.fullName ?? "Super Admin")}
                 </div>
                 <span>{sessionInfo?.user?.fullName ?? superAdminRow?.fullName ?? "Super Admin"}</span>
               </div>
-              <div className="text-[9px] text-[var(--ujr-muted)] font-mono">
+              <div className="text-[11px] text-[var(--ujr-muted)] font-mono">
                 ID: {sessionInfo?.user?.id?.slice(0, 8).toUpperCase() ?? superAdminRow?.userCode ?? "SUPERADMIN"}
               </div>
             </div>
 
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Branch Name")}</div>
+              <div className="text-[11px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Branch Name")}</div>
               <div className="text-sm font-black text-[var(--ujr-title)]">{superAdminRow?.branchName || "Global"}</div>
-              <div className="text-[9px] text-[var(--ujr-muted)] font-semibold">{superAdminRow?.branchType || "Global"}</div>
+              <div className="text-[11px] text-[var(--ujr-muted)] font-semibold">{superAdminRow?.branchType || "Global"}</div>
             </div>
 
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Branch Code")}</div>
+              <div className="text-[11px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Branch Code")}</div>
               <div className="text-sm font-black text-[#1455ff] font-mono">{superAdminRow?.branchCode || "-"}</div>
             </div>
 
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("ERP Team / Role")}</div>
+              <div className="text-[11px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("ERP Team / Role")}</div>
               <div>
-                <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-wider">
+                <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-wider">
                   {sessionInfo?.roles[0]?.replace(/_/g, " ") ?? superAdminRow?.role?.replace(/_/g, " ") ?? "Super Admin"}
                 </span>
               </div>
             </div>
 
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Last Login")}</div>
+              <div className="text-[11px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Last Login")}</div>
               <div className="text-xs font-black text-[var(--ujr-title)] font-mono">{formatDateTime(superAdminRow?.lastActivity ?? "")}</div>
             </div>
 
             <div className="space-y-1">
-              <div className="text-[9px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Current Session Time")}</div>
+              <div className="text-[11px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("Current Session Time")}</div>
               <div className="text-xs font-black text-[var(--ujr-title)] font-mono">{clientGeneratedAt || "-"}</div>
             </div>
           </div>
@@ -780,17 +780,17 @@ export function UserJournalReport() {
                       <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 font-black whitespace-nowrap">{row.countryName || "Global"}</td>
                       <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 whitespace-nowrap">
                         <div className="font-bold text-left">{row.branchName || "-"}</div>
-                        <div className="text-[10px] font-semibold text-[var(--ujr-muted)] text-left">{row.branchType}</div>
+                        <div className="text-[11px] font-semibold text-[var(--ujr-muted)] text-left">{row.branchType}</div>
                       </td>
                       {/* Branch Code */}
-                      <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 font-mono font-bold text-[10px] text-[#1455ff] whitespace-nowrap">
+                      <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 font-mono font-bold text-[11px] text-[#1455ff] whitespace-nowrap">
                         {row.branchCode || "-"}
                       </td>
                       <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 font-black whitespace-nowrap text-left">
                         {row.fullName}
                       </td>
                       {/* User ID (System) */}
-                      <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 font-mono font-bold text-[10px] text-[var(--ujr-muted)] whitespace-nowrap">
+                      <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 font-mono font-bold text-[11px] text-[var(--ujr-muted)] whitespace-nowrap">
                         {row.userId.slice(0, 8).toUpperCase()}
                       </td>
                       {/* Login User ID */}
@@ -816,7 +816,7 @@ export function UserJournalReport() {
                           >
                             <span className="ujr-toggle-thumb" />
                           </button>
-                          <span className={cn("text-[10px] font-bold uppercase tracking-wider", row.status === "active" ? "text-emerald-600" : "text-slate-400")}>
+                          <span className={cn("text-[11px] font-bold uppercase tracking-wider", row.status === "active" ? "text-emerald-600" : "text-slate-400")}>
                             {updatingUserId === row.userId ? "..." : row.status}
                           </span>
                         </div>
@@ -1556,7 +1556,7 @@ function TopToolbar({
             <MenuActionButton icon={Share2} label={t(lang, "ujr.share", "Share")} onClick={shareReport} />
 
             <div className="mt-2 border-t border-[var(--ujr-line)] pt-2">
-              <div className="mb-1.5 flex items-center gap-2 text-[10px] font-black uppercase tracking-wide text-[var(--ujr-muted)]">
+              <div className="mb-1.5 flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-[var(--ujr-muted)]">
                 <Bookmark className="h-4 w-4" /> {t(lang, "ujr.saved_filters", "Saved Filters")}
               </div>
               <button className="ujr-saved-filter" type="button" onClick={applyFilters}>
@@ -2000,11 +2000,11 @@ function JournalMetric({
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[9px] font-black uppercase tracking-wider text-[var(--ujr-muted)] truncate">{label}</div>
+        <div className="text-[11px] font-black uppercase tracking-wider text-[var(--ujr-muted)] truncate">{label}</div>
         <div className="flex items-baseline gap-1.5 mt-0.5">
           <span className="text-base font-black leading-none text-[var(--ujr-title)]">{value.toLocaleString()}</span>
           {percentage !== undefined && (
-            <span className="text-[9px] font-bold text-emerald-600">({percentage}%)</span>
+            <span className="text-[11px] font-bold text-emerald-600">({percentage}%)</span>
           )}
         </div>
       </div>
@@ -2015,7 +2015,7 @@ function JournalMetric({
 function AdminInfo({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-[var(--ujr-line)] bg-[var(--ujr-soft)] px-2.5 py-2">
-      <div className="text-[9px] font-black uppercase tracking-wide text-[var(--ujr-muted)]">{label}</div>
+      <div className="text-[11px] font-black uppercase tracking-wide text-[var(--ujr-muted)]">{label}</div>
       <div className="mt-0.5 truncate text-[12px] font-black text-[var(--ujr-title)]" title={value}>{value || "-"}</div>
     </div>
   );
@@ -2056,7 +2056,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 function ActivityCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border bg-muted/20 px-3 py-2 text-center">
-      <div className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-1 text-base font-black text-foreground">{value.toLocaleString()}</div>
     </div>
   );

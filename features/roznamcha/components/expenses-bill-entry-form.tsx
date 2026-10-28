@@ -57,7 +57,7 @@ const ExpensesBillRow = ({ b, total, countryName, currencyCode, branchName, user
       <td className="px-4 py-3 text-slate-600 font-medium">{countryName}</td>
       <td className="px-4 py-3 text-slate-600">{branchName}</td>
       <td className="px-4 py-3 text-slate-600">
-        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${b.bill_mode === 'attached' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+        <span className={`px-2 py-0.5 rounded text-[11px] uppercase font-bold ${b.bill_mode === 'attached' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
           {b.bill_mode} - {b.bill_title}
         </span>
       </td>
@@ -70,12 +70,12 @@ const ExpensesBillRow = ({ b, total, countryName, currencyCode, branchName, user
         {b.transferred_to_roznamcha ? (
           <div className="flex flex-col items-center justify-center text-emerald-600 font-medium">
             <span className="flex items-center gap-1 text-xs"><CheckCircle2 className="w-3.5 h-3.5"/> {tt("exp.transferred", "Transferred")}</span>
-            <span className="text-[9px] text-slate-400 mt-0.5">{new Date(b.updated_at || b.created_at || Date.now()).toLocaleString("en-GB", { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">{new Date(b.updated_at || b.created_at || Date.now()).toLocaleString("en-GB", { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center">
-            <span className="text-[10px] text-slate-500 mb-1">{tt("exp.no_transfer", "No Transfer")}</span>
-            <Button size="sm" className="h-6 px-3 text-[10px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200" onClick={onTransfer}>
+            <span className="text-[11px] text-slate-500 mb-1">{tt("exp.no_transfer", "No Transfer")}</span>
+            <Button size="sm" className="h-6 px-3 text-[11px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200" onClick={onTransfer}>
               {tt("exp.transfer_btn", "Transfer")}
             </Button>
           </div>
@@ -150,7 +150,7 @@ const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger:
   return (
     <div className={`bg-white border ${borderColorClass} rounded p-2 text-xs relative shadow-sm mb-2 group flex flex-col gap-1.5`}>
        <p className="font-bold text-slate-800 break-words border-b pb-1 border-slate-100">{displayName}</p>
-       <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-[10px]">
+       <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-[11px]">
          {displayId && (
            <>
              <span className="text-slate-500">{tt("exp.id_label", "ID:")}</span>
@@ -191,12 +191,12 @@ const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger:
        {contacts && Array.isArray(contacts) && contacts.length > 0 && (
          <div className="mt-1 pt-1 border-t border-slate-100 space-y-1">
            {contacts.map((c: any, i: number) => {
-             if (typeof c === 'string') return <div key={i} className="text-[10px] text-right text-slate-700">{c}</div>;
+             if (typeof c === 'string') return <div key={i} className="text-[11px] text-right text-slate-700">{c}</div>;
              if (typeof c === 'object' && c !== null) {
                const type = c.type || c.contact_type || Object.keys(c)[0] || "Detail";
                const val = c.value || c.contact_value || Object.values(c)[0] || "";
                return (
-                 <div key={i} className="flex justify-between text-[10px] items-start">
+                 <div key={i} className="flex justify-between text-[11px] items-start">
                    <span className="text-slate-500 capitalize">{String(type)}:</span>
                    <span className="text-slate-700 text-right break-all ml-2">{String(val)}</span>
                  </div>
@@ -1038,7 +1038,7 @@ export function ExpensesBillEntryForm({
               : initialBillCategory === "other_expenses"
               ? tt("exp.other_bill_title", "Other Expenses Bill")
               : tt("exp.office_bill_title", "Office / Home Expenses Bill")}
-            <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">NEW</span>
+            <span className="bg-amber-400 text-amber-950 text-[11px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">NEW</span>
           </h1>
           {viewMode === "list" ? (
             <Button size="sm" onClick={() => setViewMode("form")} className="h-7 text-xs bg-primary hover:bg-primary/90 text-white shadow-sm">
@@ -1097,7 +1097,7 @@ export function ExpensesBillEntryForm({
                   <span className="text-slate-500 font-medium">{tt("common.user", "User")}</span>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-700">{sessionInfo?.user?.fullName || "superadmin"}</span>
-                    <span className="font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-[10px]">
+                    <span className="font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-[11px]">
                       {sessionInfo?.roles?.[0] ? sessionInfo.roles[0].replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) : "Super Admin"}
                     </span>
                   </div>
@@ -1223,7 +1223,7 @@ export function ExpensesBillEntryForm({
                   </select>
                   <Input placeholder={tt("exp.search_bill_no", "Search Bill No...")} className="h-6 text-xs w-[130px] border-slate-200" disabled={headerLocked || billMode === 'new'} />
                 </div>
-                <div className="text-[10px] bg-slate-50 p-1.5 rounded border border-slate-100 text-slate-600 italic">
+                <div className="text-[11px] bg-slate-50 p-1.5 rounded border border-slate-100 text-slate-600 italic">
                   {tt("exp.bill_type_hint", "Select bill type to attach references.")}
                 </div>
 
@@ -1288,7 +1288,7 @@ export function ExpensesBillEntryForm({
                     </Button>
                   )}
 
-                  <div className="text-[10px] text-slate-500 bg-blue-50 p-1.5 rounded border border-blue-100 mt-auto">
+                  <div className="text-[11px] text-slate-500 bg-blue-50 p-1.5 rounded border border-blue-100 mt-auto">
                     {tt("exp.debit_account_hint", "This account will be debited for the expense amount.")}
                   </div>
                 </div>
@@ -1336,7 +1336,7 @@ export function ExpensesBillEntryForm({
                     </Button>
                   )}
 
-                  <div className="text-[10px] text-slate-500 bg-emerald-50 p-1.5 rounded border border-emerald-100 mt-auto">
+                  <div className="text-[11px] text-slate-500 bg-emerald-50 p-1.5 rounded border border-emerald-100 mt-auto">
                     {tt("exp.credit_account_hint", "This account will be credited (e.g. Cash or Bank).")}
                   </div>
                 </div>
@@ -1348,7 +1348,7 @@ export function ExpensesBillEntryForm({
               <CardHeader className="py-2 px-3 bg-slate-50 border-b border-slate-100">
                 <CardTitle className="text-xs uppercase font-bold text-slate-600 flex justify-between items-center">
                   <span className="flex items-center gap-1.5"><Settings2 className="w-3.5 h-3.5" /> {tt("exp.summary_card", "5. Summary")}</span>
-                  <span className="text-[10px] font-mono text-amber-600 bg-amber-50 px-1 rounded border border-amber-200">{billSerial.split("-")[2] || billSerial}</span>
+                  <span className="text-[11px] font-mono text-amber-600 bg-amber-50 px-1 rounded border border-amber-200">{billSerial.split("-")[2] || billSerial}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 flex flex-col h-full">
@@ -1591,7 +1591,7 @@ export function ExpensesBillEntryForm({
                     <td className="px-3 py-2 text-right font-mono">{Number(r.exchangeRate || 0) > 0 ? Number(r.exchangeRate || 0).toFixed(4) : "-"}</td>
                     <td className="px-3 py-2 text-right font-mono font-medium">{Number(r.finalAmount || 0).toFixed(2)}</td>
                     <td className="px-3 py-2 text-right font-mono">
-                      {r.taxOn ? <span className="inline-flex items-center text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded text-[10px]"><BadgePercent className="w-3 h-3 mr-0.5"/> {r.taxPct}%</span> : "-"}
+                      {r.taxOn ? <span className="inline-flex items-center text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded text-[11px]"><BadgePercent className="w-3 h-3 mr-0.5"/> {r.taxPct}%</span> : "-"}
                     </td>
                     <td className="px-3 py-2 text-right font-mono text-amber-600">{r.taxOn ? r.taxAmt.toFixed(2) : "-"}</td>
                     <td className="px-3 py-2 text-right font-mono font-bold bg-slate-50/50">{r.grandAmount.toFixed(2)}</td>
@@ -1839,7 +1839,7 @@ export function ExpensesBillEntryForm({
                     placeholder={tt("exp.search_debit_ph", "Search & Select Debit Ledger...")}
                     className="w-full"
                   />
-                  <p className="text-[10px] text-blue-600/80 font-medium">{tt("exp.debit_dr_hint", "This account will be debited (DR) for the expense.")}</p>
+                  <p className="text-[11px] text-blue-600/80 font-medium">{tt("exp.debit_dr_hint", "This account will be debited (DR) for the expense.")}</p>
                 </div>
 
                 <div className="space-y-2 p-4 border border-emerald-100 bg-emerald-50/50 rounded-lg relative shadow-sm">
@@ -1854,7 +1854,7 @@ export function ExpensesBillEntryForm({
                     placeholder={tt("exp.search_credit_ph", "Search & Select Credit Ledger...")}
                     className="w-full"
                   />
-                  <p className="text-[10px] text-emerald-600/80 font-medium">{tt("exp.credit_cr_hint", "This account will be credited (CR) (e.g. Cash, Bank).")}</p>
+                  <p className="text-[11px] text-emerald-600/80 font-medium">{tt("exp.credit_cr_hint", "This account will be credited (CR) (e.g. Cash, Bank).")}</p>
                 </div>
 
                 <div className="mt-4 p-4 border border-slate-200 bg-white rounded-lg shadow-sm text-[11px] leading-relaxed relative overflow-hidden">

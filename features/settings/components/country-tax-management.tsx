@@ -320,7 +320,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
             <p className="text-xs sm:text-sm font-serif italic text-slate-200">
               &ldquo;Compliant today. A stronger tomorrow.&rdquo;
             </p>
-            <p className="text-[10px] font-black uppercase tracking-wider text-sky-300 mt-1">
+            <p className="text-[11px] font-black uppercase tracking-wider text-sky-300 mt-1">
               United Arab Emirates
             </p>
           </div>
@@ -485,7 +485,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                 <span className="text-base leading-none">🇦🇪</span>
                 <span className="text-xs font-black text-slate-900 dark:text-slate-100">United Arab Emirates</span>
               </div>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
               </span>
             </div>
@@ -494,15 +494,15 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
             </p>
             <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
               <div>
-                <span className="text-slate-400 block text-[9.5px]">VAT Rate</span>
+                <span className="text-slate-400 block text-[11px]">VAT Rate</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">5%</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[9.5px]">TRN</span>
+                <span className="text-slate-400 block text-[11px]">TRN</span>
                 <span className="font-bold text-emerald-600">Configured</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[9.5px]">Default</span>
+                <span className="text-slate-400 block text-[11px]">Default</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">Yes</span>
               </div>
               <div className="h-6 w-6 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center cursor-pointer">
@@ -518,7 +518,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                 <span className="text-base leading-none">🇵🇰</span>
                 <span className="text-xs font-black text-slate-900 dark:text-slate-100">Pakistan</span>
               </div>
-              <span className="text-[10px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                 Planned
               </span>
             </div>
@@ -527,15 +527,15 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
             </p>
             <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
               <div>
-                <span className="text-slate-400 block text-[9.5px]">Sales Tax</span>
+                <span className="text-slate-400 block text-[11px]">Sales Tax</span>
                 <span className="font-bold text-slate-400">—</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[9.5px]">NTN</span>
+                <span className="text-slate-400 block text-[11px]">NTN</span>
                 <span className="font-bold text-slate-400">—</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[9.5px]">Default</span>
+                <span className="text-slate-400 block text-[11px]">Default</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">No</span>
               </div>
               <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer">
@@ -551,7 +551,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                 <span className="text-base leading-none">🇦🇫</span>
                 <span className="text-xs font-black text-slate-900 dark:text-slate-100">Afghanistan</span>
               </div>
-              <span className="text-[10px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                 Planned
               </span>
             </div>
@@ -560,15 +560,15 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
             </p>
             <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
               <div>
-                <span className="text-slate-400 block text-[9.5px]">Sales Tax</span>
+                <span className="text-slate-400 block text-[11px]">Sales Tax</span>
                 <span className="font-bold text-slate-400">—</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[9.5px]">TIN</span>
+                <span className="text-slate-400 block text-[11px]">TIN</span>
                 <span className="font-bold text-slate-400">—</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[9.5px]">Default</span>
+                <span className="text-slate-400 block text-[11px]">Default</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">No</span>
               </div>
               <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer">
@@ -584,7 +584,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                 <span className="text-base leading-none">🇮🇳</span>
                 <span className="text-xs font-black text-slate-900 dark:text-slate-100">India</span>
               </div>
-              <span className="text-[10px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                 Planned
               </span>
             </div>
@@ -593,15 +593,15 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
             </p>
             <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
               <div>
-                <span className="text-slate-400 block text-[9.5px]">GST</span>
+                <span className="text-slate-400 block text-[11px]">GST</span>
                 <span className="font-bold text-slate-400">—</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[9.5px]">GSTIN</span>
+                <span className="text-slate-400 block text-[11px]">GSTIN</span>
                 <span className="font-bold text-slate-400">—</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[9.5px]">Default</span>
+                <span className="text-slate-400 block text-[11px]">Default</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">No</span>
               </div>
               <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer">
@@ -617,7 +617,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                 <Globe2 className="h-4 w-4 text-blue-500" />
                 <span className="text-xs font-black text-slate-900 dark:text-slate-100">Other Countries</span>
               </div>
-              <span className="text-[10px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                 Planned
               </span>
             </div>
@@ -626,15 +626,15 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
             </p>
             <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
               <div>
-                <span className="text-slate-400 block text-[9.5px]">Tax</span>
+                <span className="text-slate-400 block text-[11px]">Tax</span>
                 <span className="font-bold text-slate-400">—</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[9.5px]">Registration</span>
+                <span className="text-slate-400 block text-[11px]">Registration</span>
                 <span className="font-bold text-slate-400">—</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[9.5px]">Default</span>
+                <span className="text-slate-400 block text-[11px]">Default</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">No</span>
               </div>
               <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer">
@@ -765,7 +765,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                     {tax.taxName}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="font-mono text-[10px] font-black rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-700 dark:text-slate-300">
+                    <span className="font-mono text-[11px] font-black rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-700 dark:text-slate-300">
                       {tax.taxCode}
                     </span>
                   </td>
@@ -776,13 +776,13 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                     {tax.trnNumber || "—"}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="text-[10px] font-bold uppercase rounded-full px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400">
+                    <span className="text-[11px] font-bold uppercase rounded-full px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400">
                       {tax.appliesTo === "both" ? _("tax.both", "Both") : tax.appliesTo === "purchase" ? _("tax.purchase", "Purchase") : tax.appliesTo === "sales" ? _("tax.sales", "Sales") : _("tax.expense", "Expense")}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
                     {tax.isDefault ? (
-                      <span className="text-[10px] font-black rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+                      <span className="text-[11px] font-black rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
                         {_("ctm.default_col", "Default")}
                       </span>
                     ) : (
@@ -792,7 +792,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                   <td className="px-4 py-3 text-center">
                     <span
                       className={cn(
-                        "text-[10px] font-black rounded-full px-2 py-0.5 uppercase",
+                        "text-[11px] font-black rounded-full px-2 py-0.5 uppercase",
                         tax.isActive
                           ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
                           : "bg-slate-100 text-slate-500 dark:bg-slate-800"

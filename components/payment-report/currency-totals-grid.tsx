@@ -44,11 +44,11 @@ export function CurrencyTotalsGrid({
       <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-amber-50/50 dark:bg-amber-900/10 border-b border-amber-100 dark:border-amber-900/30">
         <div className="flex items-center gap-1.5 min-w-0">
           <Coins className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-          <h3 className="text-[10.5px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-400 truncate">
+          <h3 className="text-[11px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-400 truncate">
             {title}
           </h3>
         </div>
-        <span className="shrink-0 text-[9px] font-semibold text-slate-400 dark:text-slate-500">{noteLabel}</span>
+        <span className="shrink-0 text-[11px] font-semibold text-slate-400 dark:text-slate-500">{noteLabel}</span>
       </div>
       <div className="p-2.5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
         {rows.map((r) => (
@@ -56,21 +56,21 @@ export function CurrencyTotalsGrid({
             key={r.currency}
             className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 px-2.5 py-2"
           >
-            <div className="text-[9.5px] font-extrabold text-slate-500 dark:text-slate-400 mb-1">{r.currency}</div>
+            <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 mb-1">{r.currency}</div>
             <div className="space-y-0.5">
-              <div className="flex items-center justify-between text-[10.5px]">
+              <div className="flex items-center justify-between text-[11px]">
                 <span className="text-slate-400 dark:text-slate-500">{colLabels.total}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 tabular-nums">
                   {formatMoney(r.totalPurchase, r.currency)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-[10.5px]">
+              <div className="flex items-center justify-between text-[11px]">
                 <span className="text-slate-400 dark:text-slate-500">{colLabels.advance}</span>
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
                   {formatMoney(r.advancePaid, r.currency)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-[10.5px]">
+              <div className="flex items-center justify-between text-[11px]">
                 <span className="text-slate-400 dark:text-slate-500">{colLabels.remaining}</span>
                 <span className="font-semibold text-orange-600 dark:text-orange-400 tabular-nums">
                   {formatMoney(r.remainingBalance, r.currency)}
@@ -80,21 +80,21 @@ export function CurrencyTotalsGrid({
           </div>
         ))}
         <div className="rounded-lg border border-blue-200 dark:border-blue-900/40 bg-blue-50/60 dark:bg-blue-900/10 px-2.5 py-2">
-          <div className="text-[9.5px] font-extrabold text-blue-600 dark:text-blue-400 mb-1">{localCurrency}</div>
+          <div className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 mb-1">{localCurrency}</div>
           <div className="space-y-0.5">
-            <div className="flex items-center justify-between text-[10.5px]">
+            <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-400 dark:text-slate-500">{colLabels.total}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 tabular-nums">
                 {formatMoney(totalLC.totalPurchase, localCurrency)}
               </span>
             </div>
-            <div className="flex items-center justify-between text-[10.5px]">
+            <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-400 dark:text-slate-500">{colLabels.advance}</span>
               <span className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
                 {formatMoney(totalLC.advancePaid, localCurrency)}
               </span>
             </div>
-            <div className="flex items-center justify-between text-[10.5px]">
+            <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-400 dark:text-slate-500">{colLabels.remaining}</span>
               <span className="font-semibold text-orange-600 dark:text-orange-400 tabular-nums">
                 {formatMoney(totalLC.remainingBalance, localCurrency)}

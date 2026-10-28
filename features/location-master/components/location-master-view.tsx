@@ -415,7 +415,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
               <h1 className="text-base font-black uppercase tracking-tight text-slate-900 dark:text-slate-100">
                 {s.t("title", "Central Location Master")}
               </h1>
-              <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300">
+              <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[11px] font-bold text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300">
                 {s.t("tab_locations", "Location Master")}
               </span>
             </div>
@@ -617,7 +617,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                         <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{row.country?.name || "—"}</td>
                         <td className="px-3 py-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">{row.code || "—"}</td>
                         <td className="px-3 py-2">
-                          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${statusBadge(row.status)}`}>
+                          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-black uppercase ${statusBadge(row.status)}`}>
                             {s.t(`status_${row.status}`, row.status)}
                           </span>
                         </td>
@@ -629,7 +629,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                                   type="button"
                                   disabled={actingOn === row.id}
                                   onClick={() => void handleApproval(row.id, "approve")}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-black text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-black text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
                                 >
                                   <Check className="h-3 w-3" /> {s.t("approve", "Approve")}
                                 </button>
@@ -637,7 +637,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                                   type="button"
                                   disabled={actingOn === row.id}
                                   onClick={() => void handleApproval(row.id, "reject")}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-[10px] font-black text-rose-700 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-black text-rose-700 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300"
                                 >
                                   <XIcon className="h-3 w-3" /> {s.t("reject", "Reject")}
                                 </button>
@@ -647,7 +647,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                                 type="button"
                                 disabled={actingOn === row.id}
                                 onClick={() => void handleToggleLocationStatus(row)}
-                                className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-black transition ${
+                                className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-black transition ${
                                   row.status === "active"
                                     ? "border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
                                     : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
@@ -675,7 +675,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                   </div>
 
                   <label className="block space-y-1.5 text-xs">
-                    <span className="text-[10px] font-black uppercase text-slate-500">{s.t("col_type", "Type")}</span>
+                    <span className="text-[11px] font-black uppercase text-slate-500">{s.t("col_type", "Type")}</span>
                     <select
                       value={newLocType}
                       onChange={(e) => setNewLocType(e.target.value as LocationType)}
@@ -695,7 +695,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                   />
 
                   <label className="block space-y-1.5 text-xs">
-                    <span className="text-[10px] font-black uppercase text-slate-500">{s.t("col_name", "Name")}</span>
+                    <span className="text-[11px] font-black uppercase text-slate-500">{s.t("col_name", "Name")}</span>
                     <input
                       value={newLocName}
                       onChange={(e) => setNewLocName(e.target.value)}
@@ -705,7 +705,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                   </label>
 
                   <label className="block space-y-1.5 text-xs">
-                    <span className="text-[10px] font-black uppercase text-slate-500">{s.t("col_code", "Code")} ({s.t("optional", "optional")})</span>
+                    <span className="text-[11px] font-black uppercase text-slate-500">{s.t("col_code", "Code")} ({s.t("optional", "optional")})</span>
                     <input
                       value={newLocCode}
                       onChange={(e) => setNewLocCode(e.target.value)}
@@ -714,7 +714,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                     />
                   </label>
 
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">{s.t("approval_note", "A new location becomes usable across the ERP only after Super Admin or Country Admin approval.")}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{s.t("approval_note", "A new location becomes usable across the ERP only after Super Admin or Country Admin approval.")}</p>
 
                   <div className="flex justify-end gap-2 pt-1">
                     <button type="button" onClick={() => setCreatingLoc(false)} className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300">
@@ -786,13 +786,13 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                       <tr key={row.id} className="border-t border-slate-100 hover:bg-slate-50/50 dark:border-slate-800 dark:hover:bg-slate-850/40">
                         <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200">{row.name}</td>
                         <td className="px-3 py-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">{row.code || "—"}</td>
-                        <td className="px-3 py-2 text-slate-600 dark:text-slate-400 uppercase font-semibold text-[10px]">{row.terminal_type}</td>
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-400 uppercase font-semibold text-[11px]">{row.terminal_type}</td>
                         <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                           {row.location?.name || "—"}
                           {row.location?.country?.iso2 ? ` (${row.location.country.iso2})` : ""}
                         </td>
                         <td className="px-3 py-2">
-                          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${statusBadge(row.status)}`}>
+                          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-black uppercase ${statusBadge(row.status)}`}>
                             {s.t(`status_${row.status}`, row.status)}
                           </span>
                         </td>
@@ -801,7 +801,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                             type="button"
                             disabled={actingOn === row.id}
                             onClick={() => void handleToggleTerminalStatus(row)}
-                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-black transition ${
+                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-black transition ${
                               row.status === "active"
                                 ? "border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
                                 : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
@@ -834,7 +834,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                   />
 
                   <label className="block space-y-1.5 text-xs">
-                    <span className="text-[10px] font-black uppercase text-slate-500">{s.t("col_name", "Name")}</span>
+                    <span className="text-[11px] font-black uppercase text-slate-500">{s.t("col_name", "Name")}</span>
                     <input
                       value={newTermName}
                       onChange={(e) => setNewTermName(e.target.value)}
@@ -844,7 +844,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                   </label>
 
                   <label className="block space-y-1.5 text-xs">
-                    <span className="text-[10px] font-black uppercase text-slate-500">{s.t("col_code", "Code")} ({s.t("optional", "optional")})</span>
+                    <span className="text-[11px] font-black uppercase text-slate-500">{s.t("col_code", "Code")} ({s.t("optional", "optional")})</span>
                     <input
                       value={newTermCode}
                       onChange={(e) => setNewTermCode(e.target.value)}
@@ -854,7 +854,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                   </label>
 
                   <label className="block space-y-1.5 text-xs">
-                    <span className="text-[10px] font-black uppercase text-slate-500">{s.t("col_type", "Type")}</span>
+                    <span className="text-[11px] font-black uppercase text-slate-500">{s.t("col_type", "Type")}</span>
                     <select
                       value={newTermType}
                       onChange={(e) => setNewTermType(e.target.value)}
@@ -941,7 +941,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                           {row.office_name}
                           <div className="mt-1 flex flex-wrap gap-1">
                             {(row.allowed_movements || []).map((m) => (
-                              <span key={m} className="rounded-sm bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                              <span key={m} className="rounded-sm bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                                 {m}
                               </span>
                             ))}
@@ -954,7 +954,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                           {row.gate?.name ? ` • ${row.gate.name}` : ""}
                         </td>
                         <td className="px-3 py-2">
-                          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${statusBadge(row.status)}`}>
+                          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-black uppercase ${statusBadge(row.status)}`}>
                             {s.t(`status_${row.status}`, row.status)}
                           </span>
                         </td>
@@ -963,7 +963,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                             type="button"
                             disabled={actingOn === row.id}
                             onClick={() => void handleToggleCustomsStatus(row)}
-                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-black transition ${
+                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-black transition ${
                               row.status === "active"
                                 ? "border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
                                 : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
@@ -1003,7 +1003,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                   />
 
                   <label className="block space-y-1.5 text-xs">
-                    <span className="text-[10px] font-black uppercase text-slate-500">{s.t("col_name", "Name")}</span>
+                    <span className="text-[11px] font-black uppercase text-slate-500">{s.t("col_name", "Name")}</span>
                     <input
                       value={newCustName}
                       onChange={(e) => setNewCustName(e.target.value)}
@@ -1013,7 +1013,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                   </label>
 
                   <label className="block space-y-1.5 text-xs">
-                    <span className="text-[10px] font-black uppercase text-slate-500">{s.t("col_code", "Code")} ({s.t("optional", "optional")})</span>
+                    <span className="text-[11px] font-black uppercase text-slate-500">{s.t("col_code", "Code")} ({s.t("optional", "optional")})</span>
                     <input
                       value={newCustCode}
                       onChange={(e) => setNewCustCode(e.target.value)}
@@ -1105,7 +1105,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                       <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{c.currency_code || "—"}</td>
                       <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{c.phone_code || "—"}</td>
                       <td className="px-3 py-2">
-                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${statusBadge(c.is_active ? "active" : "inactive")}`}>
+                        <span className={`rounded-full border px-2 py-0.5 text-[11px] font-black uppercase ${statusBadge(c.is_active ? "active" : "inactive")}`}>
                           {s.t(c.is_active ? "status_active" : "status_inactive", c.is_active ? "Active" : "Inactive")}
                         </span>
                       </td>

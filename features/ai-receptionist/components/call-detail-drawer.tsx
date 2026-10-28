@@ -35,7 +35,7 @@ const RISK_TONE: Record<string, string> = {
 function RiskPill({ level, s }: { level: string | null | undefined; s: ReturnType<typeof useErpScreen> }) {
   const lvl = level || "unknown";
   return (
-    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${RISK_TONE[lvl] || "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"}`}>
+    <span className={`rounded-full border px-2 py-0.5 text-[11px] font-black uppercase ${RISK_TONE[lvl] || "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"}`}>
       {s.t(`intel_risk_${lvl}`, lvl)}
     </span>
   );
@@ -108,12 +108,12 @@ export function CallDetailDrawer({ callId, onClose, lang }: { callId: string; on
         ) : (
           <div className="mt-4 space-y-4">
             <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-              <div><dt className="text-[10px] font-bold uppercase text-slate-400">{s.t("col_direction", "Direction")}</dt><dd className="font-semibold text-slate-700 dark:text-slate-200">{s.t(call.direction === "inbound" ? "dir_inbound" : "dir_outbound", call.direction)}</dd></div>
-              <div><dt className="text-[10px] font-bold uppercase text-slate-400">{s.t("col_status", "Status")}</dt><dd className="font-semibold text-slate-700 dark:text-slate-200">{s.t(`st_${call.status}`, call.status)}</dd></div>
-              <div><dt className="text-[10px] font-bold uppercase text-slate-400">{s.t("col_from", "From")}</dt><dd className="font-mono font-semibold text-slate-700 dark:text-slate-200">{call.direction === "inbound" ? call.from_e164 : call.to_e164 || "—"}</dd></div>
-              <div><dt className="text-[10px] font-bold uppercase text-slate-400">{s.t("col_duration", "Duration")}</dt><dd className="font-semibold text-slate-700 dark:text-slate-200">{fmtDur(call.duration_seconds)}</dd></div>
-              <div><dt className="text-[10px] font-bold uppercase text-slate-400">{s.t("col_intent", "Intent")}</dt><dd className="font-semibold text-slate-700 dark:text-slate-200">{call.intent ? s.t(`intent_${call.intent}`, call.intent) : "—"}</dd></div>
-              <div><dt className="text-[10px] font-bold uppercase text-slate-400">{s.t("started_at", "Started")}</dt><dd className="font-semibold text-slate-700 dark:text-slate-200">{new Date(call.started_at).toLocaleString()}</dd></div>
+              <div><dt className="text-[11px] font-bold uppercase text-slate-400">{s.t("col_direction", "Direction")}</dt><dd className="font-semibold text-slate-700 dark:text-slate-200">{s.t(call.direction === "inbound" ? "dir_inbound" : "dir_outbound", call.direction)}</dd></div>
+              <div><dt className="text-[11px] font-bold uppercase text-slate-400">{s.t("col_status", "Status")}</dt><dd className="font-semibold text-slate-700 dark:text-slate-200">{s.t(`st_${call.status}`, call.status)}</dd></div>
+              <div><dt className="text-[11px] font-bold uppercase text-slate-400">{s.t("col_from", "From")}</dt><dd className="font-mono font-semibold text-slate-700 dark:text-slate-200">{call.direction === "inbound" ? call.from_e164 : call.to_e164 || "—"}</dd></div>
+              <div><dt className="text-[11px] font-bold uppercase text-slate-400">{s.t("col_duration", "Duration")}</dt><dd className="font-semibold text-slate-700 dark:text-slate-200">{fmtDur(call.duration_seconds)}</dd></div>
+              <div><dt className="text-[11px] font-bold uppercase text-slate-400">{s.t("col_intent", "Intent")}</dt><dd className="font-semibold text-slate-700 dark:text-slate-200">{call.intent ? s.t(`intent_${call.intent}`, call.intent) : "—"}</dd></div>
+              <div><dt className="text-[11px] font-bold uppercase text-slate-400">{s.t("started_at", "Started")}</dt><dd className="font-semibold text-slate-700 dark:text-slate-200">{new Date(call.started_at).toLocaleString()}</dd></div>
             </dl>
 
             {call.recording_url ? (
@@ -122,7 +122,7 @@ export function CallDetailDrawer({ callId, onClose, lang }: { callId: string; on
 
             {call.transcript ? (
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("transcript", "Transcript")}</p>
+                <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("transcript", "Transcript")}</p>
                 <p dir={s.dir} className="mt-1 whitespace-pre-wrap rounded-xl bg-slate-50 p-3 text-[12px] leading-relaxed text-slate-700 dark:bg-slate-800/60 dark:text-slate-300">{call.transcript}</p>
               </div>
             ) : (
@@ -131,10 +131,10 @@ export function CallDetailDrawer({ callId, onClose, lang }: { callId: string; on
 
             {events.length ? (
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("events", "Call Timeline")}</p>
+                <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("events", "Call Timeline")}</p>
                 <ul className="mt-1 space-y-1">
                   {events.map((e) => (
-                    <li key={e.id} className="text-[10px] text-slate-500">
+                    <li key={e.id} className="text-[11px] text-slate-500">
                       {new Date(e.at).toLocaleTimeString()} — <span className="font-bold">{e.kind}</span>
                     </li>
                   ))}
@@ -167,7 +167,7 @@ export function CallDetailDrawer({ callId, onClose, lang }: { callId: string; on
               {status === "completed" ? (
                 <div className="mt-2 space-y-3">
                   {analysis.deterministicOnly ? (
-                    <p className="rounded-lg bg-slate-50 px-2 py-1.5 text-[10px] font-semibold text-slate-500 dark:bg-slate-800/60">
+                    <p className="rounded-lg bg-slate-50 px-2 py-1.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800/60">
                       {s.t("intel_deterministic_only", "AI enrichment is not configured — showing deterministic (rule-based) analysis only.")}
                       {call.language_code !== "en" ? ` ${s.t("intel_coverage_note", "Non-English deterministic signal detection is keyword-based and less complete; configure AI enrichment for full coverage.")}` : ""}
                     </p>
@@ -182,14 +182,14 @@ export function CallDetailDrawer({ callId, onClose, lang }: { callId: string; on
                   {analysis.summary ? <p className="text-[11px] text-slate-600 dark:text-slate-300">{analysis.summary}</p> : null}
                   {analysis.nextBestAction ? (
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_next_best_action", "Next Best Action")}</p>
+                      <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_next_best_action", "Next Best Action")}</p>
                       <p className="mt-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200">{analysis.nextBestAction}</p>
                     </div>
                   ) : null}
 
                   {(analysis.signals || []).filter((sig: any) => sig.present).length ? (
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_signals", "Signals Detected")}</p>
+                      <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_signals", "Signals Detected")}</p>
                       <ul className="mt-1 space-y-1">
                         {analysis.signals.filter((sig: any) => sig.present).map((sig: any) => (
                           <li key={sig.type} className="text-[11px] text-slate-600 dark:text-slate-300">
@@ -204,7 +204,7 @@ export function CallDetailDrawer({ callId, onClose, lang }: { callId: string; on
 
                   {analysis.paymentPromise ? (
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_payment_promise", "Payment Promise")}</p>
+                      <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_payment_promise", "Payment Promise")}</p>
                       <p className="mt-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200">
                         {analysis.paymentPromise.currency} {Number(analysis.paymentPromise.amount).toLocaleString()}
                         {analysis.paymentPromise.date ? ` — ${s.t("intel_by_date", "by")} ${analysis.paymentPromise.date}` : ""}
@@ -216,7 +216,7 @@ export function CallDetailDrawer({ callId, onClose, lang }: { callId: string; on
 
                   {(analysis.commitments || []).length ? (
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_commitments", "Commitments")}</p>
+                      <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_commitments", "Commitments")}</p>
                       <ul className="mt-1 space-y-1">
                         {analysis.commitments.map((c: any, i: number) => (
                           <li key={i} className="text-[11px] text-slate-600 dark:text-slate-300">{c.description}{c.due_date ? ` (${c.due_date})` : ""}</li>
@@ -226,7 +226,7 @@ export function CallDetailDrawer({ callId, onClose, lang }: { callId: string; on
                   ) : null}
 
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_financial_context", "Financial Context")}</p>
+                    <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{s.t("intel_financial_context", "Financial Context")}</p>
                     {analysis.financialContext?.available ? (
                       <p className="mt-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200">
                         {analysis.financialContext.currency} {Number(analysis.financialContext.closingBalance).toLocaleString()} {analysis.financialContext.closingDcType}

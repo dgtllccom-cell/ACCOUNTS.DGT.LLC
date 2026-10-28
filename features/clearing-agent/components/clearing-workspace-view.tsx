@@ -133,7 +133,7 @@ export function ClearingWorkspaceView({
                   <td className="p-2 text-xs">{leg.customs_country_name || "—"}</td>
                   <td className="p-2 text-xs">{leg.clearance_type ? s.t(`clearance_${leg.clearance_type}`, leg.clearance_type) : "—"}</td>
                   <td className="p-2 text-xs">{leg.bill_of_entry_no || leg.pgm_number || leg.declaration_reference || leg.customs_receipt_ref || "—"}</td>
-                  <td className="p-2"><Badge variant={statusVariant(leg.customs_status)} className="text-[10px]">{s.t(`status_${leg.customs_status}`, leg.customs_status)}</Badge></td>
+                  <td className="p-2"><Badge variant={statusVariant(leg.customs_status)} className="text-[11px]">{s.t(`status_${leg.customs_status}`, leg.customs_status)}</Badge></td>
                   <td className="p-2">
                     <a href={`/dashboard/clearing-agent/customer-order/${leg.order_id}/workflow`} className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
                       {s.t("open", "Open")} <ExternalLink className="h-3 w-3" />

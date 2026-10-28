@@ -56,7 +56,7 @@ export function GoodsMasterWizard({
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
             <h3 className="text-sm font-bold tracking-tight text-foreground">{tr("goods_wizard.title", "Add Goods Master")}</h3>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{tr("goods_wizard.subtitle", "Creates a new master item")}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">{tr("goods_wizard.subtitle", "Creates a new master item")}</p>
           </div>
           <button
             type="button"
@@ -85,7 +85,7 @@ export function GoodsMasterWizard({
           />
           <div className="grid gap-3">
             <div>
-              <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{tr("goods_wizard.goods_name", "Goods Name")} *</label>
+              <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{tr("goods_wizard.goods_name", "Goods Name")} *</label>
               <input
                 type="text"
                 value={form.goodsName}
@@ -95,7 +95,7 @@ export function GoodsMasterWizard({
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{tr("goods_wizard.hs_code", "HS Code")} *</label>
+              <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{tr("goods_wizard.hs_code", "HS Code")} *</label>
               <input
                 type="text"
                 value={form.chsCode}

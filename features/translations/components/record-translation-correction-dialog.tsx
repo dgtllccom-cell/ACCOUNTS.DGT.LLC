@@ -141,14 +141,14 @@ export function RecordTranslationCorrectionDialog({
             <div className="space-y-4">{rows.map((row, rowIndex) => <section key={row.field_name} className="rounded-lg border p-3">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div><div className="font-mono text-xs font-bold">{row.field_name}</div><div className="text-xs text-slate-500">{t(lang, "correction.original_label", "Original")} ({row.original_language_code}): {row.original_text}</div></div>
-                <span className={`rounded-full px-2 py-1 text-[10px] font-black uppercase ${row.translation_status === "complete" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{row.translation_status}</span>
+                <span className={`rounded-full px-2 py-1 text-[11px] font-black uppercase ${row.translation_status === "complete" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{row.translation_status}</span>
               </div>
               <div className="grid gap-2 md:grid-cols-5">{languages.map((language) => {
                 const isOriginal = language.code === row.original_language_code;
                 const copied = !isOriginal && row.values[language.code].trim() && row.values[language.code].trim().localeCompare(row.original_text.trim(), undefined, { sensitivity: "base" }) === 0;
                 return <label key={language.code} className="text-xs font-bold">{language.label}{isOriginal ? t(lang, "correction.source_suffix", " · source") : ""}
                   <textarea dir={language.dir} value={row.values[language.code]} placeholder={row.suggestions[language.code] || ""} disabled={isOriginal} onChange={(event) => setRows((current) => current.map((item, index) => index === rowIndex ? { ...item, values: { ...item.values, [language.code]: event.target.value } } : item))} className={`mt-1 min-h-24 w-full rounded-md border bg-white p-2 text-sm font-normal dark:bg-slate-900 ${copied ? "border-red-500" : "border-slate-300 dark:border-slate-700"}`} />
-                  {copied && <span className="text-[10px] text-red-600">{t(lang, "correction.copied_not_verified", "Copied source is not verified.")}</span>}
+                  {copied && <span className="text-[11px] text-red-600">{t(lang, "correction.copied_not_verified", "Copied source is not verified.")}</span>}
                 </label>;
               })}</div>
             </section>)}</div>}

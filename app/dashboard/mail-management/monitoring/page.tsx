@@ -229,15 +229,15 @@ export default function DgtMailMonitoringPage() {
           <div className="space-y-1">
             <div className="flex items-center justify-between text-[11px]">
               <span className="font-semibold text-slate-600 dark:text-slate-300">SPF</span>
-              <span className="font-bold text-emerald-600 text-[10px]">PASS</span>
+              <span className="font-bold text-emerald-600 text-[11px]">PASS</span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="font-semibold text-slate-600 dark:text-slate-300">DKIM</span>
-              <span className="font-bold text-blue-600 text-[10px]">READY</span>
+              <span className="font-bold text-blue-600 text-[11px]">READY</span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="font-semibold text-slate-600 dark:text-slate-300">DMARC</span>
-              <span className="font-bold text-blue-600 text-[10px]">READY</span>
+              <span className="font-bold text-blue-600 text-[11px]">READY</span>
             </div>
           </div>
         </div>
@@ -258,7 +258,7 @@ export default function DgtMailMonitoringPage() {
                 style={{ width: `${Math.max(serverStats.storagePercent, 4)}%` }}
               />
             </div>
-            <p className="text-[10px] text-slate-400 mt-1">{serverStats.storagePercent}% Quota Utilized</p>
+            <p className="text-[11px] text-slate-400 mt-1">{serverStats.storagePercent}% Quota Utilized</p>
           </div>
         </div>
 
@@ -287,11 +287,11 @@ export default function DgtMailMonitoringPage() {
           <div className="space-y-1 text-[11px]">
             <div className="flex items-center justify-between">
               <span className="text-amber-800 dark:text-amber-200 font-semibold">PTR Record</span>
-              <span className="font-bold text-amber-600 text-[10px]">Required</span>
+              <span className="font-bold text-amber-600 text-[11px]">Required</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-amber-800 dark:text-amber-200 font-semibold">MX Cutover</span>
-              <span className="font-bold text-amber-600 text-[10px]">Pending</span>
+              <span className="font-bold text-amber-600 text-[11px]">Pending</span>
             </div>
           </div>
         </div>
@@ -318,7 +318,7 @@ export default function DgtMailMonitoringPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+            <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
               <tr>
                 <Th className="px-5 py-3">Port</Th>
                 <Th className="px-5 py-3">Service</Th>
@@ -371,7 +371,7 @@ export default function DgtMailMonitoringPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+            <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
               <tr>
                 <Th className="px-5 py-3">DNS Record</Th>
                 <Th className="px-5 py-3">Status</Th>
@@ -422,7 +422,7 @@ export default function DgtMailMonitoringPage() {
                         </button>
                       )}
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
+                    <div className="text-[11px] text-slate-400 mt-0.5">
                       {item.recommendation}
                     </div>
                   </td>

@@ -108,7 +108,7 @@ export function AccountsHeaderScopeBar({
             <button
               type="button"
               onClick={onNewAccount}
-              className="flex h-7 items-center gap-1 rounded-lg bg-indigo-600 px-2.5 text-[10px] font-black text-white shadow-2xs transition-colors hover:bg-indigo-700 shrink-0"
+              className="flex h-7 items-center gap-1 rounded-lg bg-indigo-600 px-2.5 text-[11px] font-black text-white shadow-2xs transition-colors hover:bg-indigo-700 shrink-0"
               title={s.t("new_account_btn", "Create New Account Entry")}
             >
               <Plus className="h-3 w-3" />
@@ -119,7 +119,7 @@ export function AccountsHeaderScopeBar({
             <button
               type="button"
               onClick={onBulkImport}
-              className="flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shrink-0"
+              className="flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-bold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shrink-0"
               title={s.t("bulk_import_btn", "Bulk Document Scan / Upload")}
             >
               <FileText className="h-3 w-3 text-indigo-500" />
@@ -132,7 +132,7 @@ export function AccountsHeaderScopeBar({
           <button
             type="button"
             onClick={onBackToTable}
-            className="flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2.5 text-[10px] font-bold text-slate-800 shadow-2xs transition-colors hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 shrink-0"
+            className="flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2.5 text-[11px] font-bold text-slate-800 shadow-2xs transition-colors hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 shrink-0"
             title={s.t("back_to_table", "Back to Accounts Table")}
           >
             <LayoutList className="h-3 w-3 text-indigo-600" />
@@ -148,7 +148,7 @@ export function AccountsHeaderScopeBar({
         <select
           value={scopeLevel}
           onChange={(e) => onScopeLevelChange(e.target.value as ScopeLevel)}
-          className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
+          className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
           title={s.t("scope_level", "Scope Level")}
         >
           {isSuperAdmin && <option value="super_admin">{s.t("scope_super", "Global")}</option>}
@@ -164,7 +164,7 @@ export function AccountsHeaderScopeBar({
           <select
             value={countryId}
             onChange={(e) => onCountryChange(e.target.value)}
-            className="h-7 max-w-[130px] truncate rounded-lg border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
+            className="h-7 max-w-[130px] truncate rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
             title={s.t("country", "Country")}
           >
             <option value="">{s.t("choose_country", "— Country —")}</option>
@@ -183,7 +183,7 @@ export function AccountsHeaderScopeBar({
           <select
             value={branchKind}
             onChange={(e) => onBranchKindChange(e.target.value as BranchKind)}
-            className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
+            className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
             title={s.t("branch_kind", "Branch Category")}
           >
             <option value="business">🏢 {s.t("business_branch", "Business Branch")}</option>
@@ -199,7 +199,7 @@ export function AccountsHeaderScopeBar({
             value={branchId}
             onChange={(e) => onBranchChange(e.target.value)}
             disabled={!countryId || loadingBranches || cityBranches.length === 0}
-            className="h-7 max-w-[155px] truncate rounded-lg border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer disabled:opacity-40"
+            className="h-7 max-w-[155px] truncate rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer disabled:opacity-40"
             title={s.t("branch", "Branch")}
           >
             {!countryId ? (

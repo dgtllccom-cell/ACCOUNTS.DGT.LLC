@@ -368,7 +368,7 @@ export function CustomerReceiptsManagementView({ lang: langProp }: { lang: Suppo
                     <td className="px-4 py-3 capitalize">{tt(`alloc_${r.allocation_type}`, r.allocation_type)}</td>
                     <td className="px-4 py-3">
                       <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase ${
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full uppercase ${
                           r.status === "posted"
                             ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                             : r.status === "void"

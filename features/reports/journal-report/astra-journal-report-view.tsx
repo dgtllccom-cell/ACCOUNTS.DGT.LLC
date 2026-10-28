@@ -447,7 +447,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
             variant="outline"
             size="sm"
             onClick={() => router.back()}
-            className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             <ChevronLeft className="h-3 w-3" />
             {_("common.back", "Back")}
@@ -458,7 +458,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
             type="button"
             variant={filtersOpen ? "default" : "outline"}
             size="sm"
-            className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+            className="h-7 gap-1 rounded-lg px-2 text-[11px] font-bold"
             onClick={() => setFiltersOpen((v) => !v)}
           >
             <SlidersHorizontal className="h-3 w-3" aria-hidden />
@@ -497,7 +497,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+            className="h-7 gap-1 rounded-lg px-2 text-[11px] font-bold"
             onClick={() => void loadReport(fromDate, toDate, search)}
             disabled={loading}
             title={_("ajr.reload_data", "Reload data")}
@@ -514,7 +514,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 gap-1 rounded-lg px-2.5 text-[10px] font-bold bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
+              className="h-7 gap-1 rounded-lg px-2.5 text-[11px] font-bold bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
               onClick={() => setActionsMenuOpen((v) => !v)}
             >
               <MoreVertical className="h-3 w-3" />
@@ -583,7 +583,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
               {brandCompany || t(lang, "acct.brand_short", "Digital Dock ERP")}
               <div className="w-2 h-2 rounded-full bg-emerald-500 ml-1 mb-2.5"></div>
             </div>
-            <div className="text-[8px] font-bold tracking-widest text-slate-500 uppercase -mt-1">
+            <div className="text-[11px] font-bold tracking-widest text-slate-500 uppercase -mt-1">
               {_("ajr.erp_system", "ERP System")}
             </div>
           </div>
@@ -603,7 +603,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
         </div>
 
         <div className="text-right">
-          <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">{_("ajr.report_date_time", "Report Date & Time")}</p>
+          <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase">{_("ajr.report_date_time", "Report Date & Time")}</p>
           <p className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase">
             {generatedAt ? new Date(generatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
           </p>
@@ -620,7 +620,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
           {scope === "construction" ? <Select label={_("ajr.site", "Site")} value={site} options={options.sites} onChange={setSite} /> : null}
           {scope === "construction" ? <Select label={_("ajr.contractor", "Contractor")} value={contractor} options={options.contractors} onChange={setContractor} /> : null}
           <label className="block">
-            <span className="mb-1 block text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">
+            <span className="mb-1 block text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground">
               {_("datepick.date_range", "Date Range")}
             </span>
             <ErpDatePicker
@@ -720,7 +720,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
             <ClipboardList className="h-4.5 w-4.5 text-rose-600 dark:text-rose-400" />
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_debit", "Total Debit (Base Curr)")}</p>
+            <p className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_debit", "Total Debit (Base Curr)")}</p>
             <p className="text-base font-black text-rose-600 dark:text-rose-400 tracking-tight">{fmt(summary.debit)}</p>
           </div>
         </div>
@@ -729,7 +729,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
             <ClipboardList className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_credit", "Total Credit (Base Curr)")}</p>
+            <p className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_credit", "Total Credit (Base Curr)")}</p>
             <p className="text-base font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{fmt(summary.credit)}</p>
           </div>
         </div>
@@ -738,7 +738,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
             <span className="text-blue-600 dark:text-blue-400 font-bold text-base">⚖</span>
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_balance", "Total Balance (Base Curr)")}</p>
+            <p className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_balance", "Total Balance (Base Curr)")}</p>
             <p className="text-base font-black text-blue-600 dark:text-blue-400 tracking-tight">{fmt(summary.balance)}</p>
           </div>
         </div>
@@ -747,7 +747,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
             <span className="text-amber-600 dark:text-amber-400 font-bold text-base">≡</span>
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_transactions", "Total Transactions")}</p>
+            <p className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_transactions", "Total Transactions")}</p>
             <p className="text-base font-black text-amber-600 dark:text-amber-400 tracking-tight">{filtered.length}</p>
           </div>
         </div>
@@ -756,7 +756,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
             <span className="text-purple-600 dark:text-purple-400 font-bold text-base">🪙</span>
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.exchange_rate", "Exchange Rate")}</p>
+            <p className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.exchange_rate", "Exchange Rate")}</p>
             <p className="text-xs font-black text-purple-700 dark:text-purple-400 tracking-tight">1 Base = 1 Base Currency</p>
           </div>
         </div>
@@ -772,7 +772,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
             </h2>
           </div>
           {scope === "country" && (
-            <p className="text-[10px] font-bold text-slate-500">{_("ajr.all_amounts_base", "All amounts are in Base Currency")}</p>
+            <p className="text-[11px] font-bold text-slate-500">{_("ajr.all_amounts_base", "All amounts are in Base Currency")}</p>
           )}
         </div>
         <div className="overflow-x-auto">
@@ -780,31 +780,31 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
             <thead className="bg-[#0f2942] text-white">
               {scope === "country" ? (
                 <tr>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-12 border-r border-white/10">{_("ajr.sr_no", "Sr. No.")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.branch_name", "Branch Name")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.branch_code", "Branch Code")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.branch_type", "Branch Type")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.start_date", "Start Date (First Entry)")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.last_entry_date", "Last Entry Date")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.total_transactions", "Total Transactions")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.total_debit", "Total Debit (Base Curr)")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.total_credit", "Total Credit (Base Curr)")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.balance_col", "Balance (Base Curr)")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center">{_("common.status", "Status")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center w-12 border-r border-white/10">{_("ajr.sr_no", "Sr. No.")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.branch_name", "Branch Name")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.branch_code", "Branch Code")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.branch_type", "Branch Type")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.start_date", "Start Date (First Entry)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.last_entry_date", "Last Entry Date")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.total_transactions", "Total Transactions")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.total_debit", "Total Debit (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.total_credit", "Total Credit (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.balance_col", "Balance (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center">{_("common.status", "Status")}</Th>
                 </tr>
               ) : (
                 <tr>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-12 border-r border-white/10">{_("ajr.sr_no", "Sr. No.")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.date", "Date")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.voucher_no", "Voucher No.")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.voucher_type", "Voucher Type")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider border-r border-white/10">{_("ajr.account_party", "Account / Party")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider border-r border-white/10">{_("ajr.details_narration", "Details / Narration")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.curr_col", "Curr.")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.debit_col", "Debit (Base Curr)")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.credit_col", "Credit (Base Curr)")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.balance_col", "Balance (Base Curr)")}</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center">{_("ajr.dr_cr", "DR / CR")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center w-12 border-r border-white/10">{_("ajr.sr_no", "Sr. No.")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.date", "Date")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.voucher_no", "Voucher No.")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.voucher_type", "Voucher Type")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider border-r border-white/10">{_("ajr.account_party", "Account / Party")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider border-r border-white/10">{_("ajr.details_narration", "Details / Narration")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.curr_col", "Curr.")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.debit_col", "Debit (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.credit_col", "Credit (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.balance_col", "Balance (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center">{_("ajr.dr_cr", "DR / CR")}</Th>
                 </tr>
               )}
             </thead>
@@ -882,7 +882,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
                       {fmt(branch.balance)}
                     </td>
                     <td className="px-3 py-3.5 text-center">
-                      <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border", normalize(branch.status) === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-700 border-slate-200")}>
+                      <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-bold border", normalize(branch.status) === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-700 border-slate-200")}>
                         {branch.status || _("common.active", "Active")}
                       </span>
                     </td>
@@ -966,7 +966,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
         {/* Pagination & Footer note */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2 text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-md">
-            <div className="h-4 w-4 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[9px]">i</div>
+            <div className="h-4 w-4 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[11px] leading-none">i</div>
             {_("ajr.base_curr_note", "All amounts are in Base Currency. This report is system generated and does not require any signature.")}
           </div>
           {scope !== "country" && (
@@ -988,7 +988,7 @@ function DetailBox({ title, icon, items }: { title: string, icon: React.ReactNod
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
       <div className="px-3.5 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-800/30">
         {icon}
-        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">{title}</h3>
+        <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">{title}</h3>
       </div>
       <div className="px-3.5 py-2.5 space-y-2">
         {items.map((item, i) => (
@@ -1012,7 +1012,7 @@ function Select({ label, value, options, onChange }: { label: string; value: str
   const lang = useActiveLanguage() || "en";
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">{label}</span>
+      <span className="mb-1 block text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground">{label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs font-bold text-foreground outline-none transition focus:border-primary">
         <option value="">{t(lang, "common.all", "All")}</option>
         {options.map((option) => <option key={option} value={option}>{option}</option>)}

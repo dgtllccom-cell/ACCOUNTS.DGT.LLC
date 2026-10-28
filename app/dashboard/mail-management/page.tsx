@@ -178,8 +178,8 @@ export default function DgtMailManagementOverviewPage() {
             </div>
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">SPF: PASS</span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300">DKIM: READY</span>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">SPF: PASS</span>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300">DKIM: READY</span>
           </div>
           <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2">
             <span>DMARC: Quarantine</span>

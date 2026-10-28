@@ -278,35 +278,35 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
           <CardContent className="pt-4">
             <div className="grid grid-cols-2 gap-y-4 gap-x-6">
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.branch_serial", "Loading Record No")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.branch_serial", "Loading Record No")}</p>
                 <p className="text-sm font-bold text-primary">{record.loading_record_no}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("common.status", "Status")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("common.status", "Status")}</p>
                 <p className="text-sm font-bold capitalize">{record.loading_status || "-"}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.container_no", "Container Number")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.container_no", "Container Number")}</p>
                 <p className="text-sm font-bold">{record.container_number || "-"}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.divide_type", "Container Type")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.divide_type", "Container Type")}</p>
                 <p className="text-sm font-bold">{record.container_type || "-"}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.origin_country", "Loading Port / Country")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.origin_country", "Loading Port / Country")}</p>
                 <p className="text-sm font-bold">{record.loading_location || form.loadingPort || "-"} / {form.loadingCountry || "-"}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.receiving_country", "Receiving Port / Country")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.receiving_country", "Receiving Port / Country")}</p>
                 <p className="text-sm font-bold">{record.receiving_location || form.receivedPort || "-"} / {form.receivedCountry || "-"}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.loading_date", "Loading Date")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.loading_date", "Loading Date")}</p>
                 <p className="text-sm font-bold">{record.loaded_at ? new Date(record.loaded_at).toLocaleDateString() : (form.loadingDate || "-")}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.allot_name", "Carrier Name")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.allot_name", "Carrier Name")}</p>
                 <p className="text-sm font-bold">{record.carrier_name || "-"}</p>
               </div>
             </div>
@@ -324,23 +324,23 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
           <CardContent className="pt-4">
             <div className="grid grid-cols-2 gap-y-4 gap-x-6">
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.contract_purchase_amount", "Total Purchase Amount")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.contract_purchase_amount", "Total Purchase Amount")}</p>
                 <p className="text-sm font-bold">{form.totalAmount || form.finalAmount || "-"} {currency}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.price_type", "Advance Percent")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.price_type", "Advance Percent")}</p>
                 <p className="text-sm font-bold">{form.advancePercent || "0"}%</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.previously_loaded", "Advance Amount Paid")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.previously_loaded", "Advance Amount Paid")}</p>
                 <p className="text-sm font-bold text-emerald-600">{form.advanceAmount || "0"} {currency}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("cpb.remaining_balance", "Remaining Balance")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("cpb.remaining_balance", "Remaining Balance")}</p>
                 <p className="text-sm font-bold text-amber-600">{Number(form.totalAmount || form.finalAmount || 0) - Number(form.advanceAmount || 0)} {currency}</p>
               </div>
               <div className="col-span-2 pt-2 border-t border-dashed mt-2">
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("common.status", "Payment / Clearing Status")}</p>
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase mb-1">{tt("common.status", "Payment / Clearing Status")}</p>
                 <p className="text-sm font-semibold text-emerald-700">{tt("plr.po_items_status", "Advance Cleared / Payment Nil Completed")}</p>
               </div>
             </div>

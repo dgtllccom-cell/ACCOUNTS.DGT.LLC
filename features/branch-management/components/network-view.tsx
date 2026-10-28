@@ -148,9 +148,9 @@ function UsersTable({ s, users }: { s: Screen; users: any[] }) {
                   </summary>
                   <div className="mt-1 flex max-w-sm flex-wrap gap-1" dir="ltr">
                     {u.permissions.slice(0, 40).map((p: string) => (
-                      <span key={p} className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] dark:bg-slate-800">{p}</span>
+                      <span key={p} className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] dark:bg-slate-800">{p}</span>
                     ))}
-                    {u.permissions.length > 40 && <span className="text-[10px] text-slate-500">+{u.permissions.length - 40}</span>}
+                    {u.permissions.length > 40 && <span className="text-[11px] text-slate-500">+{u.permissions.length - 40}</span>}
                   </div>
                 </details>
               </td>
@@ -514,7 +514,7 @@ export function BranchDetailView({ branchId, lang }: { branchId: string; lang?: 
                       <td className="py-1.5">{l.name}</td>
                       <td className={`py-1.5 tabular-nums ${s.textEnd}`} dir="ltr">{fmt(l.debit)}</td>
                       <td className={`py-1.5 tabular-nums ${s.textEnd}`} dir="ltr">{fmt(l.credit)}</td>
-                      <td className={`py-1.5 tabular-nums ${s.textEnd}`} dir="ltr">{fmt(l.balance)} <span className="text-[10px] text-slate-400">{l.currency}</span></td>
+                      <td className={`py-1.5 tabular-nums ${s.textEnd}`} dir="ltr">{fmt(l.balance)} <span className="text-[11px] text-slate-400">{l.currency}</span></td>
                     </tr>
                   ))}
                 </tbody>

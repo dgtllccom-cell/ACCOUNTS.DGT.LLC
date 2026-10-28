@@ -147,7 +147,7 @@ export function OfficeHrModule({ config, lang, dateRange, employees, canWrite }:
             ) : rows.map((r, i) => (
               <tr key={r.id}>
                 <td className="px-3 py-2.5 text-muted-foreground">{i + 1}</td>
-                <td className="px-3 py-2.5 font-semibold">{r.employee_name || r.assigned_name || "-"}<div className="text-[10px] font-mono text-muted-foreground">{r.employee_code || r.assigned_code || ""}</div></td>
+                <td className="px-3 py-2.5 font-semibold">{r.employee_name || r.assigned_name || "-"}<div className="text-[11px] font-mono text-muted-foreground">{r.employee_code || r.assigned_code || ""}</div></td>
                 {tableFields.map((f) => (
                   <td key={f.key} className="px-3 py-2.5">
                     {f.key === "status"
@@ -219,7 +219,7 @@ function colName(key: string): string {
 }
 function statusClass(s: string) {
   const v = s.toLowerCase();
-  const base = "rounded-full px-2 py-0.5 text-[10px] font-bold ";
+  const base = "rounded-full px-2 py-0.5 text-[11px] font-bold ";
   if (/present|approved|active|in use|available/.test(v)) return base + "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300";
   if (/pending|late|half|repair/.test(v)) return base + "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300";
   if (/absent|rejected|retired/.test(v)) return base + "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300";

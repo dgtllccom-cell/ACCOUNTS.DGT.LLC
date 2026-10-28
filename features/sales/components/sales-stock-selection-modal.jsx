@@ -118,7 +118,7 @@ export function SalesStockSelectionModal({
               <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider">
                 {tUi(lang, "sales.select_stock_title", "Select Stock")} - {currentTabObj.label}
               </h3>
-              <p className="text-[10px] text-slate-500 font-medium">
+              <p className="text-[11px] text-slate-500 font-medium">
                 {tUi(lang, "sales.select_stock_subtitle", "Choose stock lot to auto-fill goods and prevent selling above available quantity.")}
               </p>
             </div>
@@ -168,7 +168,7 @@ export function SalesStockSelectionModal({
                 <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide">
                   Available Stock - {currentTabObj.label}
                 </h4>
-                <span className="text-[10px] text-slate-500 font-semibold">
+                <span className="text-[11px] text-slate-500 font-semibold">
                   Total Records: {filteredLots.length}
                 </span>
               </div>
@@ -187,7 +187,7 @@ export function SalesStockSelectionModal({
             {/* Table Area */}
             <div className="flex-1 overflow-auto border border-slate-200 dark:border-slate-800 rounded-xl">
               <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider sticky top-0 border-b border-slate-200 dark:border-slate-800">
+                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider sticky top-0 border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="p-2.5 w-10 text-center"></th>
                     <th className="p-2.5 w-10 text-center">#</th>
@@ -221,7 +221,7 @@ export function SalesStockSelectionModal({
                             className="cursor-pointer text-blue-600 focus:ring-blue-500"
                           />
                         </td>
-                        <td className="p-2.5 text-center font-mono text-[10px] text-slate-400">{idx + 1}</td>
+                        <td className="p-2.5 text-center font-mono text-[11px] text-slate-400">{idx + 1}</td>
                         <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">{lot.productName}</td>
                         <td className="p-2.5 font-mono text-[11px] text-slate-500">{lot.hsCode}</td>
                         <td className="p-2.5 truncate max-w-[120px]">{lot.warehouse}</td>

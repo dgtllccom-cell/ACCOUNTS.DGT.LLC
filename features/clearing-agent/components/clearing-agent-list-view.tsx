@@ -34,7 +34,7 @@ export function ClearingAgentListView({ initialAgents }: { initialAgents: Cleari
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-600 dark:border-blue-900/50 dark:bg-blue-950/50 dark:text-blue-400 uppercase tracking-wider">
+          <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-600 dark:border-blue-900/50 dark:bg-blue-950/50 dark:text-blue-400 uppercase tracking-wider">
             Directory & Roster
           </span>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{translateHeader(lang, "Clearing Agent List")}</h1>
@@ -87,7 +87,7 @@ export function ClearingAgentListView({ initialAgents }: { initialAgents: Cleari
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase text-slate-500 tracking-wider">
+              <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[11px] font-black uppercase text-slate-500 tracking-wider">
                 <Th className="px-4 py-3">#</Th>
                 <Th className="px-4 py-3">Agent Code</Th>
                 <Th className="px-4 py-3">Agent Name</Th>
@@ -112,7 +112,7 @@ export function ClearingAgentListView({ initialAgents }: { initialAgents: Cleari
                         </span>
                         <div>
                           <p className="font-bold text-slate-900 dark:text-white">{agent.name}</p>
-                          {agent.notes && <p className="text-[10px] text-slate-400 truncate max-w-[200px]">{agent.notes}</p>}
+                          {agent.notes && <p className="text-[11px] text-slate-400 truncate max-w-[200px]">{agent.notes}</p>}
                         </div>
                       </div>
                     </td>
@@ -137,7 +137,7 @@ export function ClearingAgentListView({ initialAgents }: { initialAgents: Cleari
                       </div>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-black uppercase tracking-wider ${
                         (agent.status || "active") === "active"
                           ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
                           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700"

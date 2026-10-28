@@ -319,7 +319,7 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
           variant="outline"
           size="sm"
           onClick={goBack}
-          className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           aria-label={t(lang, "pa.back_to_previous_page", "Back to previous page")}
           title={t(lang, "pa.back", "Back")}
         >
@@ -331,9 +331,9 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
         <div className="flex min-w-0 flex-col justify-center leading-tight default-title">
           <h1 className="truncate text-xs font-black leading-tight tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">{title}</h1>
           {subtitleOverride ? (
-            <p className="mt-0.5 hidden truncate text-[9.5px] font-medium leading-tight text-slate-400 sm:block">{subtitle}</p>
+            <p className="mt-0.5 hidden truncate text-[11px] font-medium leading-tight text-slate-400 sm:block">{subtitle}</p>
           ) : (
-            <nav aria-label={t(lang, "pa.breadcrumb", "Breadcrumb")} data-testid="erp-breadcrumb" className="mt-0.5 hidden min-w-0 items-center gap-0.5 truncate text-[10px] font-medium leading-tight text-slate-400 sm:flex">
+            <nav aria-label={t(lang, "pa.breadcrumb", "Breadcrumb")} data-testid="erp-breadcrumb" className="mt-0.5 hidden min-w-0 items-center gap-0.5 truncate text-[11px] font-medium leading-tight text-slate-400 sm:flex">
               {crumbs.map((c, i) => (
                 <span key={i} className="flex min-w-0 items-center gap-0.5">
                   {i > 0 && <ChevronRight className="h-2.5 w-2.5 shrink-0 rtl:rotate-180" aria-hidden />}
@@ -359,7 +359,7 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
               variant="outline"
               size="sm"
               onClick={() => setOpen((current) => !current)}
-              className="h-7 gap-1 rounded-lg border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="h-7 gap-1 rounded-lg border-slate-200 bg-white px-2.5 text-[11px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
               aria-label={t(lang, "pa.open_actions_menu", "Open page actions menu")}
               title={t(lang, "pa.page_actions", "Page actions")}
             >

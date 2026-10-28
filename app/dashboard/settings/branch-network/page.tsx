@@ -100,12 +100,12 @@ export default async function BranchNetworkPage() {
                   <div key={country.id} className="rounded-xl border border-slate-100 bg-slate-50/40 p-4 dark:border-slate-800 dark:bg-slate-900/20">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
                       <div className="flex items-center gap-2">
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br ${p.gradient} text-[10px] font-black text-white`}>
+                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br ${p.gradient} text-[11px] font-black text-white`}>
                           {country.code}
                         </div>
                         <span className="font-bold text-sm text-slate-800 dark:text-slate-100">{country.name}</span>
                       </div>
-                      <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                      <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                         {country.currency || "USD"}
                       </span>
                     </div>
@@ -116,19 +116,19 @@ export default async function BranchNetworkPage() {
                             <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
                               <Building className="h-3 w-3 text-indigo-500" />
                               {mb.name}
-                              <span className="font-mono text-[9px] text-slate-400">({mb.code})</span>
+                              <span className="font-mono text-[11px] text-slate-400">({mb.code})</span>
                             </p>
                             {mb.cityBranches.length ? (
                               <div className="mt-2 space-y-1 border-l-2 border-dashed border-slate-200 pl-4 dark:border-slate-700">
                                 {mb.cityBranches.map((cb) => (
                                   <div key={cb.id} className="flex items-center justify-between text-[11px]">
                                     <span className="text-slate-500">{cb.cityName} - {cb.name}</span>
-                                    <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[8px] font-bold dark:bg-slate-800">{cb.code}</span>
+                                    <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold dark:bg-slate-800">{cb.code}</span>
                                   </div>
                                 ))}
                               </div>
                             ) : (
-                              <p className="mt-1 pl-4 text-[10px] italic text-slate-400">{th("No city branches")}</p>
+                              <p className="mt-1 pl-4 text-[11px] italic text-slate-400">{th("No city branches")}</p>
                             )}
                           </div>
                         ))

@@ -66,7 +66,7 @@ export function MobileAppContainer({ lang }: Props) {
             <h1 className="text-xs font-black tracking-tight text-white leading-tight">
               {tt("mac.title", "AI Mobile – Return WhatsApp Reply")}
             </h1>
-            <p className="text-[9px] text-emerald-300 font-mono">
+            <p className="text-[11px] text-emerald-300 font-mono">
               {tt("mac.subtitle", "Digital Dock ERP Live Extension")}
             </p>
           </div>
@@ -110,7 +110,7 @@ export function MobileAppContainer({ lang }: Props) {
         <button
           onClick={() => setActiveTab("dashboard")}
           className={cn(
-            "flex flex-col items-center gap-1 text-[10px] font-black transition-all",
+            "flex flex-col items-center gap-1 text-[11px] font-black transition-all",
             activeTab === "dashboard" ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"
           )}
         >
@@ -121,14 +121,14 @@ export function MobileAppContainer({ lang }: Props) {
         <button
           onClick={() => setActiveTab("inbox")}
           className={cn(
-            "flex flex-col items-center gap-1 text-[10px] font-black transition-all relative",
+            "flex flex-col items-center gap-1 text-[11px] font-black transition-all relative",
             activeTab === "inbox" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"
           )}
         >
           <MessageSquare className="h-5 w-5" />
           {tt("mbl.nav_inbox", "Inbox")}
           {(syncData?.stats.newMessages || 0) > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-black text-white">
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-black text-white leading-none">
               {syncData?.stats.newMessages}
             </span>
           )}
@@ -137,7 +137,7 @@ export function MobileAppContainer({ lang }: Props) {
         <button
           onClick={() => setActiveTab("reminders")}
           className={cn(
-            "flex flex-col items-center gap-1 text-[10px] font-black transition-all",
+            "flex flex-col items-center gap-1 text-[11px] font-black transition-all",
             activeTab === "reminders" ? "text-purple-600 dark:text-purple-400" : "text-slate-400"
           )}
         >
@@ -148,7 +148,7 @@ export function MobileAppContainer({ lang }: Props) {
         <button
           onClick={() => setActiveTab("contacts")}
           className={cn(
-            "flex flex-col items-center gap-1 text-[10px] font-black transition-all",
+            "flex flex-col items-center gap-1 text-[11px] font-black transition-all",
             activeTab === "contacts" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"
           )}
         >
@@ -159,7 +159,7 @@ export function MobileAppContainer({ lang }: Props) {
         <button
           onClick={() => setActiveTab("settings")}
           className={cn(
-            "flex flex-col items-center gap-1 text-[10px] font-black transition-all",
+            "flex flex-col items-center gap-1 text-[11px] font-black transition-all",
             activeTab === "settings" ? "text-slate-900 dark:text-white" : "text-slate-400"
           )}
         >

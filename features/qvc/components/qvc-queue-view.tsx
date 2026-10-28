@@ -25,7 +25,7 @@ const FILTERS = [
 function LangChip({ lang, status }: { lang: string; status: string }) {
   const ok = status === "translated" || status === "present";
   return (
-    <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${ok ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`} title={`${lang}: ${status}`}>
+    <span className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${ok ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`} title={`${lang}: ${status}`}>
       {lang.toUpperCase()}
     </span>
   );
@@ -124,11 +124,11 @@ export function QvcQueueView() {
                 <td className="px-3 py-2.5">{r.email || "-"}</td>
                 <td className="px-3 py-2.5"><div className="flex gap-1"><LangChip lang="en" status={r.translations.en} /><LangChip lang="ur" status={r.translations.ur} /><LangChip lang="ps" status={r.translations.ps} /><LangChip lang="fa" status={r.translations.fa} /><LangChip lang="ar" status={r.translations.ar} /></div></td>
                 <td className="px-3 py-2.5">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${r.qvcStatus === "qvc_approved" ? "bg-emerald-100 text-emerald-700" : r.qvcStatus === "error" ? "bg-rose-100 text-rose-700" : r.qvcStatus === "needs_review" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-700"}`}>{r.qvcStatus}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${r.qvcStatus === "qvc_approved" ? "bg-emerald-100 text-emerald-700" : r.qvcStatus === "error" ? "bg-rose-100 text-rose-700" : r.qvcStatus === "needs_review" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-700"}`}>{r.qvcStatus}</span>
                 </td>
                 <td className="px-3 py-2.5 text-center whitespace-nowrap">
-                  <button onClick={() => setStatus(r.id, "qvc_approved")} className="inline-flex items-center gap-1 rounded bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-500 mr-1" title={tt("qvc.approve", "Approve")}><CheckCircle2 className="h-3 w-3" /> {tt("qvc.approve", "Approve")}</button>
-                  <button onClick={() => setStatus(r.id, "error")} className="inline-flex items-center gap-1 rounded bg-rose-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-rose-500" title={tt("qvc.error_flag", "Flag error")}><AlertTriangle className="h-3 w-3" /> {tt("qvc.error_flag", "Error")}</button>
+                  <button onClick={() => setStatus(r.id, "qvc_approved")} className="inline-flex items-center gap-1 rounded bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-emerald-500 mr-1" title={tt("qvc.approve", "Approve")}><CheckCircle2 className="h-3 w-3" /> {tt("qvc.approve", "Approve")}</button>
+                  <button onClick={() => setStatus(r.id, "error")} className="inline-flex items-center gap-1 rounded bg-rose-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-rose-500" title={tt("qvc.error_flag", "Flag error")}><AlertTriangle className="h-3 w-3" /> {tt("qvc.error_flag", "Error")}</button>
                 </td>
               </tr>
             ))}

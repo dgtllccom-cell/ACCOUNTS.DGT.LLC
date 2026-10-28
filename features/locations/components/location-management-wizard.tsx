@@ -2328,14 +2328,14 @@ function LocationTreeNodeView({
             {typeIcon}
             <span className="font-semibold text-slate-800">{node.name}</span>
             {node.code && <span className="font-mono text-xs text-slate-500 font-semibold">({node.code})</span>}
-            <span className={cn("rounded-md px-2 py-0.5 text-[10px] font-bold border uppercase tracking-wider", typeBg)}>
+            <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-bold border uppercase tracking-wider", typeBg)}>
               {node.type}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className={cn("text-[10px] font-semibold rounded-full px-2 py-0.5", node.isActive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700")}>
+          <span className={cn("text-[11px] font-semibold rounded-full px-2 py-0.5", node.isActive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700")}>
             {node.isActive ? tt("common.active", "Active") : tt("common.inactive", "Inactive")}
           </span>
           <Button variant="ghost" size="sm" onClick={() => onEdit(node.item, tabTypeMap[node.type])} className="h-7 w-7 p-0">

@@ -71,7 +71,7 @@ export function GoodsMasterPageClient() {
                   <p className={`font-semibold ${selectedGoodsId === item.id ? "text-primary" : "text-slate-700"}`}>
                     {item.goods_name || item.goodsName}
                   </p>
-                  <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{t(lang, "goods.gmp_hs_code_colon", "HS Code:")} {item.chs_code || item.chsCode}</p>
+                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{t(lang, "goods.gmp_hs_code_colon", "HS Code:")} {item.chs_code || item.chsCode}</p>
                 </div>
                 <ChevronRight className={`w-4 h-4 transition-colors ${selectedGoodsId === item.id ? "text-primary" : "text-slate-300 group-hover:text-slate-500"}`} />
               </button>

@@ -154,11 +154,11 @@ export function SalesBookingStep1({
                 {tUi(lang, "voice.speak_to_fill", "Speak to fill this form")}
               </span>
             </div>
-            <span className="px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            <span className="px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
               MIC READY
             </span>
           </div>
-          <p className="text-[9.5px] text-slate-400 mb-2">
+          <p className="text-[11px] text-slate-400 mb-2">
             {tUi(lang, "voice.speak_desc", "Speak amounts, parties, accounts, and references in 5 languages.")}
           </p>
           <VoiceFormFill
@@ -177,7 +177,7 @@ export function SalesBookingStep1({
 
         {/* Customer Account (DR) * */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+          <label className="block text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
             {tUi(lang, "sales.customer_account_dr", "Customer Account (DR)")} <span className="text-red-500">*</span>
           </label>
@@ -231,7 +231,7 @@ export function SalesBookingStep1({
 
         {/* Sales Account (CR) * */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+          <label className="block text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             {tUi(lang, "sales.sales_account_cr", "Sales Account (CR)")} <span className="text-red-500">*</span>
           </label>
@@ -285,7 +285,7 @@ export function SalesBookingStep1({
 
         {/* Contract No */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
             {tUi(lang, "sales.contract_no", "Contract No")}
           </label>
           <input
@@ -299,7 +299,7 @@ export function SalesBookingStep1({
 
         {/* Contract / Booking Date */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
             {tUi(lang, "sales.contract_booking_date", "Contract / Booking Date")}
           </label>
           <div className="relative">
@@ -315,7 +315,7 @@ export function SalesBookingStep1({
         {/* Invoice / Payment Select & Ship Option (2 inline) */}
         <div className="grid grid-cols-2 gap-2.5">
           <div className="space-y-1">
-            <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
+            <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
               {tUi(lang, "sales.invoice_payment_select", "Invoice / Payment Select")}
             </label>
             <select
@@ -333,7 +333,7 @@ export function SalesBookingStep1({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
+            <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
               {tUi(lang, "sales.ship_option", "Ship Option")}
             </label>
             <select
@@ -352,7 +352,7 @@ export function SalesBookingStep1({
 
         {/* Status */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
             {tUi(lang, "sales.status", "Status")}
           </label>
           <select
@@ -370,7 +370,7 @@ export function SalesBookingStep1({
 
         {/* Booking Remarks / Terms */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
             {tUi(lang, "sales.booking_remarks_terms", "Booking Remarks / Terms")}
           </label>
           <textarea
@@ -413,14 +413,14 @@ export function SalesBookingStep1({
               <Package className="w-4 h-4 text-blue-600" />
               {tUi(lang, "sales.goods_items", "GOODS ITEMS")}
             </h3>
-            <span className="text-[10px] font-bold text-slate-500 font-mono">
+            <span className="text-[11px] font-bold text-slate-500 font-mono">
               {goodsEntries.length} Items
             </span>
           </div>
 
           <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
             <table className="w-full text-xs text-left border-collapse">
-              <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="p-2.5 w-10 text-center">#</th>
                   <th className="p-2.5">Product Name</th>
@@ -435,7 +435,7 @@ export function SalesBookingStep1({
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {goodsEntries.map((item, idx) => (
                   <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="p-2.5 text-center font-mono text-[10px] text-slate-400">{idx + 1}</td>
+                    <td className="p-2.5 text-center font-mono text-[11px] text-slate-400">{idx + 1}</td>
                     <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">{item.goodsName || item.productName}</td>
                     <td className="p-2.5 font-mono text-slate-500">{item.hsCode}</td>
                     <td className="p-2.5 text-center font-semibold text-slate-600 dark:text-slate-400">{item.qtyName || item.unit}</td>

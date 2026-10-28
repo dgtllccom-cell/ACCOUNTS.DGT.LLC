@@ -117,7 +117,7 @@ export function MailSidebar({
 
                 {f.count && f.count > 0 ? (
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
                       isActive
                         ? "bg-white text-blue-600"
                         : "bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300"

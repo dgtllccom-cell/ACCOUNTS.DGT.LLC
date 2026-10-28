@@ -304,7 +304,7 @@ export function EntryMethodSelector({
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 transition-transform duration-300 group-hover:scale-110">
                   <FilePlus2 className="h-6 w-6" />
                 </div>
-                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
+                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
                   {s.t("em_manual_badge", "Instant Form")}
                 </span>
               </div>
@@ -339,7 +339,7 @@ export function EntryMethodSelector({
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 transition-transform duration-300 group-hover:scale-110">
                   <ScanLine className="h-6 w-6" />
                 </div>
-                <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 flex items-center gap-1">
+                <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 flex items-center gap-1">
                   <Sparkles className="h-2.5 w-2.5" />
                   {s.t("em_ai_badge", "AI Powered")}
                 </span>
@@ -375,7 +375,7 @@ export function EntryMethodSelector({
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25 transition-transform duration-300 group-hover:scale-110">
                   <FileClock className="h-6 w-6" />
                 </div>
-                <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50">
+                <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50">
                   {s.t("em_draft_badge", "Queue")}
                 </span>
               </div>
@@ -410,7 +410,7 @@ export function EntryMethodSelector({
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-lg shadow-cyan-500/25 transition-transform duration-300 group-hover:scale-110">
                   <Mic className="h-6 w-6" />
                 </div>
-                <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/50 flex items-center gap-1">
+                <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/50 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse" />
                   {s.t("em_voice_badge", "5 Languages")}
                 </span>

@@ -56,7 +56,7 @@ function Field({
   const shown = isUuid ? `…${raw.slice(-12)}` : raw || "—";
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{label}</p>
+      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">{label}</p>
       <p
         className={
           isUuid

@@ -126,7 +126,7 @@ export function UnifiedErpRegisterBar({
         {title}
       </h1>
       {subtitle && (
-        <p className="hidden truncate text-[9.5px] font-medium text-slate-400 sm:block">
+        <p className="hidden truncate text-[11px] font-medium text-slate-400 sm:block">
           {subtitle}
         </p>
       )}
@@ -147,7 +147,7 @@ export function UnifiedErpRegisterBar({
         disabled={!!lockedCountry}
         value={selectedCountry}
         onChange={(e) => onCountryChange(e.target.value)}
-        className="h-8 min-w-[125px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+        className="h-8 min-w-[125px] rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-700 outline-none focus:border-blue-500 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
       >
         <option value="">{t(activeLang, "pb_register.select_country_all", "Select Country (All)")}</option>
         {countryList.map((c) => (
@@ -160,7 +160,7 @@ export function UnifiedErpRegisterBar({
         disabled={!!lockedBranch}
         value={selectedBranch}
         onChange={(e) => onBranchChange(e.target.value)}
-        className="h-8 min-w-[125px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+        className="h-8 min-w-[125px] rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-700 outline-none focus:border-blue-500 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
       >
         <option value="">{t(activeLang, "pb_register.select_branch_all", "Select Branch (All)")}</option>
         {branchList.map((b) => (
@@ -172,7 +172,7 @@ export function UnifiedErpRegisterBar({
       <select
         value={selectedStatus}
         onChange={(e) => onStatusChange(e.target.value)}
-        className="h-8 min-w-[115px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+        className="h-8 min-w-[115px] rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
       >
         <option value="">{t(activeLang, "pb_register.select_status_all", "Select Status (All)")}</option>
         <option value="Draft">{t(activeLang, "pb_register.status_draft", "Draft")}</option>
@@ -188,7 +188,7 @@ export function UnifiedErpRegisterBar({
           value={searchText}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={searchPlaceholder || t(activeLang, "pb_register.search_placeholder", "Search booking, supplier, branch...")}
-          className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[10px] font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+          className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[11px] font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
         />
       </div>
 
@@ -198,7 +198,7 @@ export function UnifiedErpRegisterBar({
           type="button"
           onClick={onPrint}
           data-testid="print-action"
-          className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+          className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
         >
           <Printer className="h-3.5 w-3.5 text-slate-500" />
           <span>{t(activeLang, "common.print", "Print")}</span>
@@ -210,7 +210,7 @@ export function UnifiedErpRegisterBar({
         <button
           type="button"
           onClick={onResetRefresh}
-          className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+          className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
         >
           <RotateCcw className="h-3.5 w-3.5 text-slate-500" />
           <span>{t(activeLang, "pb_register.reset_refresh", "Reset & Refresh")}</span>
@@ -252,7 +252,7 @@ export function UnifiedErpRegisterBar({
         <button
           type="button"
           onClick={primaryAction.onClick}
-          className="flex h-8 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-[10px] font-bold text-white shadow-sm hover:bg-blue-700 transition"
+          className="flex h-8 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-[11px] font-bold text-white shadow-sm hover:bg-blue-700 transition"
         >
           {primaryAction.icon || <Plus className="h-3.5 w-3.5" />}
           <span>{primaryAction.label}</span>
@@ -280,7 +280,7 @@ export function UnifiedErpRegisterBar({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <ClipboardList className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
               {t(activeLang, "pb_register.card_bill_summary", "BILL SUMMARY")}
             </span>
           </div>
@@ -312,7 +312,7 @@ export function UnifiedErpRegisterBar({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
               {t(activeLang, "pb_register.card_total_amounts", "TOTAL AMOUNTS")} ({kpiSummary.currency || "AED"})
             </span>
           </div>
@@ -348,7 +348,7 @@ export function UnifiedErpRegisterBar({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
               {t(activeLang, "pb_register.card_branches", "BRANCHES")}
             </span>
           </div>
@@ -372,7 +372,7 @@ export function UnifiedErpRegisterBar({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Calendar className="h-4 w-4 text-orange-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
               {t(activeLang, "pb_register.card_this_month", "THIS MONTH")}
             </span>
           </div>
@@ -402,7 +402,7 @@ export function UnifiedErpRegisterBar({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Info className="h-4 w-4 text-amber-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
               {t(activeLang, "pb_register.card_quick_info", "QUICK INFO")}
             </span>
           </div>

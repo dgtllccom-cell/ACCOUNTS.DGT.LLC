@@ -501,7 +501,7 @@ export function SmartCrmControlCenter() {
                 </div>
                 <span className="text-xs font-bold text-blue-950 dark:text-blue-200">{t(lang, "crm.country_branch_due_report", "Country / Branch Due Report")}</span>
               </div>
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider">
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider">
                 {t(lang, "crm.super_admin_only", "Super Admin Only")}
               </span>
             </div>
@@ -550,7 +550,7 @@ export function SmartCrmControlCenter() {
                 }`}
               >
                 <span>{t(lang, tabDef.labelKey as any, tabDef.labelFallback)}</span>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-black ${
                   isActive ? "bg-white/20 text-white" : "bg-black/5 dark:bg-white/10"
                 }`}>
                   {tabCounts[tabDef.id] ?? "—"}
@@ -803,15 +803,15 @@ export function SmartCrmControlCenter() {
                       </td>
                       <td className="px-3 py-2.5">
                         {r.priority === "High" ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] font-black text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-black text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300">
                             {t(lang, "crm.priority_high", "High")}
                           </span>
                         ) : r.priority === "Medium" ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-black text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-black text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300">
                             {t(lang, "crm.priority_medium", "Medium")}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-black text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-black text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300">
                             {t(lang, "crm.priority_low", "Low")}
                           </span>
                         )}

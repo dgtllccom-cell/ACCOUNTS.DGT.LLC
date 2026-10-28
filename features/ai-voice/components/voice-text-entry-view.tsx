@@ -434,11 +434,11 @@ export function VoiceTextEntryView({ lang: langProp }: { lang?: SupportedLanguag
             <div key={h.id} className="px-3 py-2.5 text-sm">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">{h.job_no}</span>
-                <span className="text-[10px] rounded px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 font-semibold">
+                <span className="text-[11px] rounded px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 font-semibold">
                   {h.source_type === "voice" ? "🎤" : "⌨️"} {LANG_LABEL[h.original_language] || h.original_language}
                 </span>
-                <span className="text-[10px] rounded px-1.5 py-0.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold">{h.status}</span>
-                <span className="text-[10px] text-slate-400">{new Date(h.created_at).toLocaleString(s.lang)}</span>
+                <span className="text-[11px] rounded px-1.5 py-0.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold">{h.status}</span>
+                <span className="text-[11px] text-slate-400">{new Date(h.created_at).toLocaleString(s.lang)}</span>
               </div>
               <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 line-clamp-2" dir={isRtlLang(h.original_language) ? "rtl" : "ltr"}>
                 {h.transcript}

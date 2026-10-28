@@ -876,7 +876,7 @@ export function GoodsMasterRegistry() {
                                         <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                                         <span>{t("COMMERCIAL SPECIFICATION & REPORT")}</span>
                                       </div>
-                                      <span className="text-[10px] text-slate-400 font-mono font-bold">
+                                      <span className="text-[11px] text-slate-400 font-mono font-bold">
                                         {g.chs_code || ""}
                                       </span>
                                     </div>
@@ -1127,7 +1127,7 @@ export function GoodsMasterRegistry() {
                   {t.step === 1 && masterSection1Saved ? (
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   ) : (
-                    <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] flex items-center justify-center font-mono">
+                    <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 text-[11px] flex items-center justify-center font-mono leading-none">
                       {t.step}
                     </span>
                   )}
@@ -1754,7 +1754,7 @@ export function GoodsMasterRegistry() {
                           type="button"
                           onClick={() => setCombinationForm({ ...combinationForm, variety: p.param_value })}
                           className={cn(
-                            "text-[10px] px-2 py-0.5 rounded border transition-colors",
+                            "text-[11px] px-2 py-0.5 rounded border transition-colors",
                             combinationForm.variety === p.param_value
                               ? "bg-amber-600 text-white border-amber-600 font-bold"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
@@ -1789,7 +1789,7 @@ export function GoodsMasterRegistry() {
                           type="button"
                           onClick={() => setCombinationForm({ ...combinationForm, size: p.param_value })}
                           className={cn(
-                            "text-[10px] px-2 py-0.5 rounded border transition-colors",
+                            "text-[11px] px-2 py-0.5 rounded border transition-colors",
                             combinationForm.size === p.param_value
                               ? "bg-indigo-600 text-white border-indigo-600 font-bold"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
@@ -1824,7 +1824,7 @@ export function GoodsMasterRegistry() {
                           type="button"
                           onClick={() => setCombinationForm({ ...combinationForm, brand: p.param_value })}
                           className={cn(
-                            "text-[10px] px-2 py-0.5 rounded border transition-colors",
+                            "text-[11px] px-2 py-0.5 rounded border transition-colors",
                             combinationForm.brand === p.param_value
                               ? "bg-emerald-600 text-white border-emerald-600 font-bold"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
@@ -1858,7 +1858,7 @@ export function GoodsMasterRegistry() {
                           type="button"
                           onClick={() => setCombinationForm({ ...combinationForm, extraDetails: p.param_value })}
                           className={cn(
-                            "text-[10px] px-2 py-0.5 rounded border transition-colors",
+                            "text-[11px] px-2 py-0.5 rounded border transition-colors",
                             combinationForm.extraDetails === p.param_value
                               ? "bg-purple-600 text-white border-purple-600 font-bold"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
@@ -2030,7 +2030,7 @@ export function GoodsMasterRegistry() {
                               )}
                             </td>
                             <td className="p-2.5 text-center">
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
                                 Active
                               </span>
                             </td>
@@ -2134,7 +2134,7 @@ export function GoodsMasterRegistry() {
               {/* Top Overview Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                  <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider block">
                     {t("GOODS NAME")}
                   </span>
                   <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
@@ -2143,7 +2143,7 @@ export function GoodsMasterRegistry() {
                 </div>
 
                 <div className="p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60">
-                  <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider block">
+                  <span className="text-[11px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider block">
                     {t("HS / PCT CODE")}
                   </span>
                   <span className="text-sm font-mono font-bold text-blue-700 dark:text-blue-300 mt-0.5 block">
@@ -2152,7 +2152,7 @@ export function GoodsMasterRegistry() {
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                  <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider block">
                     {t("CATEGORY")}
                   </span>
                   <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block">
@@ -2167,7 +2167,7 @@ export function GoodsMasterRegistry() {
                   );
                   return (
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                      <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider block">
                         {t("VARIANTS COUNT")}
                       </span>
                       <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 block truncate">
@@ -2304,7 +2304,7 @@ export function GoodsMasterRegistry() {
                                 <td className="p-2.5 text-center">
                                   <span
                                     className={cn(
-                                      "px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider",
+                                      "px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wider",
                                       v.is_active
                                         ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                                         : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"

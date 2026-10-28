@@ -124,13 +124,13 @@ export function PerformanceAppraisalView({ lang }: { lang?: string }) {
                 ) : rows.map((r) => (
                   <tr key={r.id} data-testid="perf-row" data-status={r.status} onClick={() => setOpenId(r.id)} className="cursor-pointer border-t border-slate-100 hover:bg-indigo-50/40 dark:border-slate-800 dark:hover:bg-indigo-950/20">
                     <td className="px-3 py-2 font-mono font-semibold">{r.appraisal_no}</td>
-                    <td className="px-3 py-2">{r.employee_name}<div className="font-mono text-[10px] text-slate-400">{r.employee_code}</div></td>
+                    <td className="px-3 py-2">{r.employee_name}<div className="font-mono text-[11px] text-slate-400">{r.employee_code}</div></td>
                     <td className="px-3 py-2">{r.department ?? "—"}</td>
                     <td className="px-3 py-2 font-mono">{r.period_label}</td>
                     <td className="px-3 py-2">{r.reviewer_name ?? "—"}</td>
                     <td className="px-3 py-2 tabular-nums">{r.goal_count}</td>
                     <td className="px-3 py-2">{r.overall_rating != null ? <span className={`font-bold ${BAND_TONE[r.rating_band] ?? ""}`}><span className="tabular-nums">{Number(r.overall_rating).toFixed(2)}</span> · {bandLabel(r.rating_band)}</span> : "—"}</td>
-                    <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status]}`}>{statusLabel(r.status)}</span></td>
+                    <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.status]}`}>{statusLabel(r.status)}</span></td>
                   </tr>
                 ))}
               </tbody>
@@ -202,7 +202,7 @@ function AppraisalDetail({ s, id, onClose, statusLabel, bandLabel, setError, set
 
   const ta = (key: string, label: string, testid: string) => (
     <div>
-      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
+      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
       <textarea data-testid={testid} disabled={!can.edit} rows={3} className={INP} value={form[key] ?? ""} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
     </div>
   );
@@ -291,7 +291,7 @@ function AppraisalDetail({ s, id, onClose, statusLabel, bandLabel, setError, set
         {ta("strengths", s.t("strengths", "Strengths"), "perf-strengths")}
         {ta("improvementPlan", s.t("improvement_plan", "Improvement plan"), "perf-plan")}
         <div>
-          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("improvement_due", "Improvement review date")}</label>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("improvement_due", "Improvement review date")}</label>
           <input data-testid="perf-plan-due" disabled={!can.edit} type="date" className={INP} value={form.improvementDue ?? ""} onChange={(e) => setForm({ ...form, improvementDue: e.target.value })} />
           {a.employee_comments && <div className="mt-3 rounded-lg bg-blue-50 p-2 text-xs dark:bg-blue-950/30" data-testid="perf-emp-comments"><b>{s.t("employee_comments", "Employee comments")}:</b> {a.employee_comments}</div>}
         </div>
@@ -460,5 +460,5 @@ function ReportTab({ s, bandLabel, statusLabel, setError }: Common & { bandLabel
 
 /** Label + control. Module-level so inputs keep focus while typing. */
 function L({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
+  return <div><label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
 }

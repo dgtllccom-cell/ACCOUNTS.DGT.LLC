@@ -264,7 +264,7 @@ export function DocumentManagerModal({
                             </div>
                             <div className="flex items-center gap-3">
                               <span className="text-muted-foreground">{formatSize(v.sizeBytes)}</span>
-                              <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px]" onClick={() => handleDownload(doc.id, v.id)}>
+                              <Button variant="ghost" size="sm" className="h-6 px-2 text-[11px]" onClick={() => handleDownload(doc.id, v.id)}>
                                 {tt("download", "Download")}
                               </Button>
                             </div>

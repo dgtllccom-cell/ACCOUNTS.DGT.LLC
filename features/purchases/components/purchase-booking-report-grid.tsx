@@ -166,27 +166,27 @@ export function PurchaseBookingReportGrid({
             {/* Branch Details */}
             <div className="space-y-1.5 text-xs pt-2">
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_name", "Branch Name")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_name", "Branch Name")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100 text-right text-[11px] truncate max-w-[65%]">{branchName}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_code", "Branch Code")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_code", "Branch Code")}</span>
                 <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{branchCode}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_type", "Branch Type")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_type", "Branch Type")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{branchType}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.parent_branch", "Parent Branch")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.parent_branch", "Parent Branch")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{parentBranch}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country", "Country")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country", "Country")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{branchCountry}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.city", "City")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.city", "City")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{branchCity}</span>
               </div>
             </div>
@@ -195,21 +195,21 @@ export function PurchaseBookingReportGrid({
           {/* User Details (Bottom strip) */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
             <div className="flex justify-between items-center gap-2 py-0.5">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1 uppercase tracking-wide">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1 uppercase tracking-wide">
                 <User className="h-3 w-3 text-blue-500" />
                 {t(lang, "pbr.user_name", "User Name")}
               </span>
               <span className="font-bold uppercase text-slate-900 dark:text-slate-100 text-right text-[11px]">{userName}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1 uppercase tracking-wide">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1 uppercase tracking-wide">
                 <ShieldCheck className="h-3 w-3 text-blue-500" />
                 {t(lang, "pbr.role", "Role")}
               </span>
               <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{userRole}</span>
             </div>
             <div className="flex justify-end pt-1">
-              <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
                 {userStatus}
               </span>
             </div>
@@ -228,7 +228,7 @@ export function PurchaseBookingReportGrid({
                 {t(lang, "pbr.bill_details", "Bill Details")}
               </h3>
             </div>
-            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+            <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
               {status}
             </span>
           </div>
@@ -236,51 +236,51 @@ export function PurchaseBookingReportGrid({
           {/* Key-Values */}
           <div className="space-y-1.5 text-xs pt-2">
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.booking_date", "Booking Date")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.booking_date", "Booking Date")}</span>
               <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-right text-[11px]">{bookingDate}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.fiscal_year", "Fiscal Year")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.fiscal_year", "Fiscal Year")}</span>
               <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-right text-[11px]">{fiscalYear}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.booking_branch", "Booking Branch")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.booking_branch", "Booking Branch")}</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{bookingBranch}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.system_serial_no", "System Serial No.")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.system_serial_no", "System Serial No.")}</span>
               <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-right text-[11px]">{systemSerialNo}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country_serial_no", "Country Serial No.")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country_serial_no", "Country Serial No.")}</span>
               <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{countrySerialNo}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.super_admin_serial_no", "Super Admin Serial No.")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.super_admin_serial_no", "Super Admin Serial No.")}</span>
               <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{superAdminSerialNo}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_serial_no", "Branch Serial No.")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_serial_no", "Branch Serial No.")}</span>
               <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{branchSerialNo}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.bill_contract_no", "Bill / Contract No.")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.bill_contract_no", "Bill / Contract No.")}</span>
               <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{billContractNo}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.payment_type", "Payment Type")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.payment_type", "Payment Type")}</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{paymentType}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.ship_type", "Ship Type")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.ship_type", "Ship Type")}</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{shipType}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.loading_mode", "Loading Mode")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.loading_mode", "Loading Mode")}</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{loadingMode}</span>
             </div>
             <div className="flex justify-between items-center gap-2 pt-0.5">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.origin_country", "Origin Country")}</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.origin_country", "Origin Country")}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 text-right text-[11px]">{originCountry}</span>
             </div>
           </div>
@@ -304,37 +304,37 @@ export function PurchaseBookingReportGrid({
             {/* Key Info */}
             <div className="space-y-1.5 text-xs pt-2">
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.account_name", "Account Name")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.account_name", "Account Name")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100 leading-snug block text-right text-[11px]">
                   {purchaseAccountName}
                 </span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.account_code", "Account Code")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.account_code", "Account Code")}</span>
                 <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{purchaseAccountCode}</span>
               </div>
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.company", "Company")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.company", "Company")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-right text-[11px]">
                   {purchaseCompanyName}
                 </span>
               </div>
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.business_name", "Business Name")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.business_name", "Business Name")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-right text-[11px]">
                   {purchaseBusinessName}
                 </span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country", "Country")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country", "Country")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{purchaseCountry}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.city", "City")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.city", "City")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{purchaseCity}</span>
               </div>
               <div className="flex justify-between items-center gap-2 pt-0.5">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch", "Branch")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch", "Branch")}</span>
                 <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{purchaseBranch}</span>
               </div>
             </div>
@@ -371,37 +371,37 @@ export function PurchaseBookingReportGrid({
             {/* Key Info */}
             <div className="space-y-1.5 text-xs pt-2">
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.account_name", "Account Name")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.account_name", "Account Name")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100 leading-snug block text-right text-[11px]">
                   {salesAccountName}
                 </span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.account_code", "Account Code")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.account_code", "Account Code")}</span>
                 <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-right text-[11px]">{salesAccountCode}</span>
               </div>
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.company", "Company")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.company", "Company")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-right text-[11px]">
                   {salesCompanyName}
                 </span>
               </div>
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.business_name", "Business Name")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.business_name", "Business Name")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-right text-[11px]">
                   {salesBusinessName}
                 </span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country", "Country")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country", "Country")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{salesCountry}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.city", "City")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.city", "City")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{salesCity}</span>
               </div>
               <div className="flex justify-between items-center gap-2 pt-0.5">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch", "Branch")}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch", "Branch")}</span>
                 <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{salesBranch}</span>
               </div>
             </div>

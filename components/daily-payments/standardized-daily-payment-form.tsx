@@ -547,11 +547,11 @@ export function StandardizedDailyPaymentForm({
           <div>
             <h3 className="font-black text-sm tracking-tight flex items-center gap-2">
               <span>{scope === "purchase" ? th("Purchase Payment Voucher") : th("Sales Receipt Voucher")}</span>
-              <span className="bg-white/20 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+              <span className="bg-white/20 text-white text-[11px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                 {condition.toUpperCase()}
               </span>
               <span className={cn(
-                "text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider border",
+                "text-[11px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider border",
                 orderType.includes("local")
                   ? "bg-emerald-500/20 text-emerald-200 border-emerald-400/40"
                   : "bg-blue-400/20 text-blue-100 border-blue-300/40"
@@ -567,7 +567,7 @@ export function StandardizedDailyPaymentForm({
 
         <div className="flex items-center gap-2 text-xs">
           <div className="bg-white/10 rounded-lg px-3 py-1 border border-white/15">
-            <span className="text-[10px] uppercase text-blue-200 block font-bold">{th("Remaining Balance")}</span>
+            <span className="text-[11px] uppercase text-blue-200 block font-bold">{th("Remaining Balance")}</span>
             <span className="font-mono font-black text-xs text-white">
               {remainingDue.toLocaleString(undefined, { minimumFractionDigits: 2 })} {baseCurrency}
             </span>
@@ -598,7 +598,7 @@ export function StandardizedDailyPaymentForm({
                 {th("Step 1 — Invoice & Settlement Account (Auto-Resolved & Locked)")}
               </span>
             </div>
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded">
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded">
               <Lock className="h-3 w-3" /> {th("Read-Only & Locked")}
             </span>
           </div>
@@ -606,7 +606,7 @@ export function StandardizedDailyPaymentForm({
           {/* Row 1: Source & Original Reference Details */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">
+              <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
                 Source Type
               </label>
               <Input
@@ -617,7 +617,7 @@ export function StandardizedDailyPaymentForm({
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">
+              <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
                 Original Order / Invoice
               </label>
               <Input
@@ -628,7 +628,7 @@ export function StandardizedDailyPaymentForm({
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">
+              <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
                 Original Posting Ref
               </label>
               <Input
@@ -639,7 +639,7 @@ export function StandardizedDailyPaymentForm({
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">
+              <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
                 Payment Condition & Due Date
               </label>
               <Input
@@ -653,7 +653,7 @@ export function StandardizedDailyPaymentForm({
           {/* Row 2: Account & Balance Details */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs pt-1">
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">
+              <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
                 {scope === "purchase" ? `${th("Supplier / Party")} (DR)` : `${th("Customer Account")} (CR)`}
               </label>
               <Input
@@ -664,7 +664,7 @@ export function StandardizedDailyPaymentForm({
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">
+              <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
                 {th("Country & Branch")}
               </label>
               <Input
@@ -675,7 +675,7 @@ export function StandardizedDailyPaymentForm({
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">
+              <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
                 {th("Account Currency")}
               </label>
               <Input
@@ -686,7 +686,7 @@ export function StandardizedDailyPaymentForm({
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">
+              <label className="text-[11px] font-black uppercase text-slate-500 block mb-1">
                 {th("Invoice Total / Remaining")}
               </label>
               <Input
@@ -723,7 +723,7 @@ export function StandardizedDailyPaymentForm({
               }
               className="h-9 text-xs"
             />
-            <p className="text-[10px] text-slate-500">
+            <p className="text-[11px] text-slate-500">
               {scope === "purchase"
                 ? "Disbursement account where funds leave. Scoped strictly to active country and branch. Direction: CREDIT (CR)."
                 : "Collection account where funds are deposited. Scoped strictly to active country and branch. Direction: DEBIT (DR)."}
@@ -740,7 +740,7 @@ export function StandardizedDailyPaymentForm({
                 {th("Step 3 — Select Payment Method & Channel Details")}
               </span>
             </div>
-            <span className="text-[10px] font-bold text-slate-400">Dynamic Fields Engine</span>
+            <span className="text-[11px] font-bold text-slate-400">Dynamic Fields Engine</span>
           </div>
 
           {!paymentSourceLedgerId ? (
@@ -803,7 +803,7 @@ export function StandardizedDailyPaymentForm({
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Select Bank Name")} <span className="text-red-500">*</span>
                       </label>
                       <BankPicker
@@ -815,7 +815,7 @@ export function StandardizedDailyPaymentForm({
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Linked Bank Account")}
                       </label>
                       <Input
@@ -830,7 +830,7 @@ export function StandardizedDailyPaymentForm({
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Transfer Type")}
                       </label>
                       <select
@@ -854,14 +854,14 @@ export function StandardizedDailyPaymentForm({
                     <span className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" /> {th("TT / SWIFT Wire Details")}
                     </span>
-                    <span className="text-[10px] text-indigo-700 dark:text-indigo-300 font-bold bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 rounded">
+                    <span className="text-[11px] text-indigo-700 dark:text-indigo-300 font-bold bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 rounded">
                       Manual Reference Mandatory
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Bank Name")} <span className="text-red-500">*</span>
                       </label>
                       <BankPicker
@@ -873,7 +873,7 @@ export function StandardizedDailyPaymentForm({
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("TT / SWIFT Reference Number")} <span className="text-red-500">*</span>
                       </label>
                       <Input
@@ -886,7 +886,7 @@ export function StandardizedDailyPaymentForm({
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Value Date")}
                       </label>
                       <Input
@@ -899,7 +899,7 @@ export function StandardizedDailyPaymentForm({
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                    <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                       {th("Sender / Beneficiary Reference")}
                     </label>
                     <Input
@@ -921,7 +921,7 @@ export function StandardizedDailyPaymentForm({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Wallet Provider")} <span className="text-red-500">*</span>
                       </label>
                       <select
@@ -938,7 +938,7 @@ export function StandardizedDailyPaymentForm({
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Mobile / Wallet Account Number")} <span className="text-red-500">*</span>
                       </label>
                       <Input
@@ -950,7 +950,7 @@ export function StandardizedDailyPaymentForm({
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Transaction ID (TxID)")}
                       </label>
                       <Input
@@ -971,14 +971,14 @@ export function StandardizedDailyPaymentForm({
                     <span className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" /> {th("Cheque Details")}
                     </span>
-                    <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded">
+                    <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded">
                       Notice: Pending cheque is not treated as cleared cash
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Cheque Number")} <span className="text-red-500">*</span>
                       </label>
                       <Input
@@ -991,7 +991,7 @@ export function StandardizedDailyPaymentForm({
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Cheque Date")} <span className="text-red-500">*</span>
                       </label>
                       <Input
@@ -1003,7 +1003,7 @@ export function StandardizedDailyPaymentForm({
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Payee Name")}
                       </label>
                       <Input
@@ -1015,7 +1015,7 @@ export function StandardizedDailyPaymentForm({
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("Cheque Status")}
                       </label>
                       <select
@@ -1043,7 +1043,7 @@ export function StandardizedDailyPaymentForm({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("From Source Account")} (CR)
                       </label>
                       <Input
@@ -1053,7 +1053,7 @@ export function StandardizedDailyPaymentForm({
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                      <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                         {th("To Destination Account")} (DR)
                       </label>
                       <Input
@@ -1094,7 +1094,7 @@ export function StandardizedDailyPaymentForm({
 
                 <div>
                   <label className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-1">
-                    {th("Exchange Rate")} {isSameCurrency && <span className="text-slate-400 text-[10px]">(Rate 1.0)</span>}
+                    {th("Exchange Rate")} {isSameCurrency && <span className="text-slate-400 text-[11px]">(Rate 1.0)</span>}
                   </label>
                   <Input
                     type="number"
@@ -1157,7 +1157,7 @@ export function StandardizedDailyPaymentForm({
                   <Input
                     type="file"
                     onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
-                    className="h-9 text-xs bg-white dark:bg-slate-900 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-blue-50 file:text-blue-700"
+                    className="h-9 text-xs bg-white dark:bg-slate-900 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700"
                   />
                 </div>
 
@@ -1183,7 +1183,7 @@ export function StandardizedDailyPaymentForm({
             <span className="text-xs font-black uppercase tracking-wider text-indigo-950 dark:text-indigo-300">
               Double-Entry Ledger Balancing Status
             </span>
-            <span className="bg-emerald-600 text-white font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+            <span className="bg-emerald-600 text-white font-black text-[11px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
               Balanced
             </span>
           </div>
@@ -1191,7 +1191,7 @@ export function StandardizedDailyPaymentForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold">
             {/* DEBIT (DR) SIDE */}
             <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
-              <span className="text-[10px] uppercase font-black text-blue-600 block">
+              <span className="text-[11px] uppercase font-black text-blue-600 block">
                 {scope === "purchase" ? "DEBIT (DR) — SUPPLIER SETTLEMENT" : "DEBIT (DR) — RECEIVING ACCOUNT"}
               </span>
               <div className="font-extrabold text-slate-900 dark:text-white text-sm">
@@ -1204,7 +1204,7 @@ export function StandardizedDailyPaymentForm({
 
             {/* CREDIT (CR) SIDE */}
             <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
-              <span className="text-[10px] uppercase font-black text-rose-600 block">
+              <span className="text-[11px] uppercase font-black text-rose-600 block">
                 {scope === "purchase" ? "CREDIT (CR) — SOURCE ACCOUNT" : "CREDIT (CR) — CUSTOMER SETTLEMENT"}
               </span>
               <div className="font-extrabold text-slate-900 dark:text-white text-sm">

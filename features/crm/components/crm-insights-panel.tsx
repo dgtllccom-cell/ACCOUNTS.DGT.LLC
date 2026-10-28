@@ -94,7 +94,7 @@ export function CrmInsightsPanel({ lang }: { lang?: string }) {
                         <div className="mt-1 font-semibold">→ {r.nextBestAction}</div>
                       </Link>
                     ))}
-                    {g.rows.length > 8 && <p className="text-center text-[10px] opacity-60">+{g.rows.length - 8} {s.t("more", "more")}</p>}
+                    {g.rows.length > 8 && <p className="text-center text-[11px] opacity-60">+{g.rows.length - 8} {s.t("more", "more")}</p>}
                   </div>
                 )}
               </div>

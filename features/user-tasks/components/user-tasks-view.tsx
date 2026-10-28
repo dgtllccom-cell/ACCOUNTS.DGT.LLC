@@ -143,7 +143,7 @@ export function UserTasksView({ scope, lang: langProp, autoAssign = false }: { s
             >
               <Bell className="h-3.5 w-3.5" />
               {(summary?.unread ?? 0) > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-bold text-white leading-none">
                   {summary.unread > 99 ? "99+" : summary.unread}
                 </span>
               )}
@@ -176,7 +176,7 @@ export function UserTasksView({ scope, lang: langProp, autoAssign = false }: { s
               <Card key={tile.key} className={`border-t-4 ${tile.accent} shadow-sm`}>
                 <CardContent className="flex items-center justify-between p-3">
                   <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{s.t(tile.key, tile.fallback)}</div>
+                    <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{s.t(tile.key, tile.fallback)}</div>
                     <div className={`text-xl font-bold ${tile.tone}`}>{tile.value}</div>
                   </div>
                   <Icon className={`h-5 w-5 opacity-30 ${tile.tone}`} />
@@ -267,7 +267,7 @@ export function UserTasksView({ scope, lang: langProp, autoAssign = false }: { s
                     </td>
                     <td className="px-3 py-2 text-slate-600">{r.assignee_name || "—"}</td>
                     <td className="px-3 py-2 text-center">
-                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${priorityTone(r.priority)}`}>
+                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${priorityTone(r.priority)}`}>
                         {s.t(`pr_${r.priority}`, r.priority)}
                       </span>
                     </td>
@@ -275,7 +275,7 @@ export function UserTasksView({ scope, lang: langProp, autoAssign = false }: { s
                       {fmtDate(r.due_at)}
                     </td>
                     <td className="px-3 py-2 text-center">
-                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${statusTone(r.status)}`}>
+                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${statusTone(r.status)}`}>
                         {s.t(`st_${r.status}`, r.status)}
                       </span>
                     </td>
@@ -344,7 +344,7 @@ function NotificationsPanel({
                 <div className="flex items-center gap-1.5">
                   {!n.is_read && <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />}
                   <span className="text-xs font-semibold text-slate-700">{s.t(`ev_${n.kind}`, n.kind)}</span>
-                  <span className="ms-auto text-[10px] text-slate-400">{fmtDateTime(n.created_at)}</span>
+                  <span className="ms-auto text-[11px] text-slate-400">{fmtDateTime(n.created_at)}</span>
                 </div>
                 <p className="truncate text-xs text-slate-500">{n.title} · {n.task_no}</p>
               </button>

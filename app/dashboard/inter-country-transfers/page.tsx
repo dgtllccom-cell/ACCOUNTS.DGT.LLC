@@ -566,7 +566,7 @@ export default function InterCountryTransfersPage() {
                 <span className="flex items-center gap-1.5">
                   <span className="text-base">{item.flag}</span> {item.name}
                 </span>
-                <span className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono font-bold">
+                <span className="px-1.5 py-0.5 rounded bg-muted text-[11px] font-mono font-bold">
                   {liveAcct?.currency || item.currency}
                 </span>
               </div>
@@ -607,7 +607,7 @@ export default function InterCountryTransfersPage() {
                 <span>{t(tItem.label.toUpperCase())}</span>
                 {typeof tItem.count === "number" && tItem.count > 0 && (
                   <span
-                    className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    className={`ml-1 px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
                       isSelected ? "bg-white text-primary" : tItem.badgeColor || "bg-amber-100 text-amber-800"
                     }`}
                   >
@@ -748,31 +748,31 @@ export default function InterCountryTransfersPage() {
                           <div className="space-y-0.5 text-xs">
                             {tr.bill_number && (
                               <div className="flex items-center gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground">Bill:</span>
+                                <span className="text-[11px] uppercase font-bold text-muted-foreground">Bill:</span>
                                 <span className="font-mono font-medium">{tr.bill_number}</span>
                               </div>
                             )}
                             {tr.container_number && (
                               <div className="flex items-center gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground">Cont:</span>
+                                <span className="text-[11px] uppercase font-bold text-muted-foreground">Cont:</span>
                                 <span className="font-mono font-medium text-blue-600 dark:text-blue-400">{tr.container_number}</span>
                               </div>
                             )}
                             {tr.bl_number && (
                               <div className="flex items-center gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground">BL:</span>
+                                <span className="text-[11px] uppercase font-bold text-muted-foreground">BL:</span>
                                 <span className="font-mono font-medium text-emerald-600 dark:text-emerald-400">{tr.bl_number}</span>
                               </div>
                             )}
                             {tr.job_number && (
                               <div className="flex items-center gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground">Job:</span>
+                                <span className="text-[11px] uppercase font-bold text-muted-foreground">Job:</span>
                                 <span className="font-mono font-medium">{tr.job_number}</span>
                               </div>
                             )}
                             {tr.order_reference && (
                               <div className="flex items-center gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground">Ord:</span>
+                                <span className="text-[11px] uppercase font-bold text-muted-foreground">Ord:</span>
                                 <span className="font-mono font-medium">{tr.order_reference}</span>
                               </div>
                             )}
@@ -1440,7 +1440,7 @@ export default function InterCountryTransfersPage() {
 
               {/* All References */}
               <div className="p-3 rounded-lg border border-border space-y-1.5">
-                <div className="font-semibold text-muted-foreground uppercase text-[10px]">Reference Audit</div>
+                <div className="font-semibold text-muted-foreground uppercase text-[11px]">Reference Audit</div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                   {selectedTransfer.bill_number && (
                     <div><span className="text-muted-foreground">Bill No:</span> <span className="font-mono font-medium">{selectedTransfer.bill_number}</span></div>
@@ -1466,7 +1466,7 @@ export default function InterCountryTransfersPage() {
               {/* Roznamcha Vouchers */}
               {(selectedTransfer.sender_roznamcha_entry_id || selectedTransfer.receiver_roznamcha_entry_id) && (
                 <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-1">
-                  <div className="font-semibold text-[10px] text-primary uppercase">Roznamcha Posting Audit</div>
+                  <div className="font-semibold text-[11px] text-primary uppercase">Roznamcha Posting Audit</div>
                   {selectedTransfer.sender_roznamcha_entry_id && (
                     <div className="text-[11px] font-mono">
                       Sender Voucher ID: <span className="font-bold">{selectedTransfer.sender_roznamcha_entry_id}</span>

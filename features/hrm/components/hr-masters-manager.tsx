@@ -374,7 +374,7 @@ export function HrMastersManager({ kind, lang }: { kind: Kind; lang?: string }) 
             <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/70 via-white to-amber-50/20 p-4 shadow-sm dark:border-amber-950/60 dark:from-amber-950/30 dark:via-slate-900 dark:to-slate-900">
               <div className="flex items-center justify-between pb-3 border-b border-amber-100/70 dark:border-amber-900/40">
                 <span className="text-xs font-bold text-amber-950 dark:text-amber-200">{s.t("all_countries_report", "All Countries Report")}</span>
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 uppercase tracking-wider">
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-black text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 uppercase tracking-wider">
                   {s.t("super_admin_only", "Super Admin Only")}
                 </span>
               </div>
@@ -777,7 +777,7 @@ function MasterForm({
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">
         {label}{required ? " *" : ""}
       </label>
       {children}

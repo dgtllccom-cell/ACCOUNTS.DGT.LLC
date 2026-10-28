@@ -65,7 +65,7 @@ export function MailNavbar({
             <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">
               DGT<span className="text-blue-600">.LLC</span>
             </span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400">
+            <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400">
               MAIL
             </span>
           </div>

@@ -156,12 +156,12 @@ export function BiometricDevicesPanel({ lang, employees }: { lang?: string; empl
                   <td className="px-3 py-2 font-mono" dir="ltr">…{d.api_key_hint ?? "—"}</td>
                   <td className="px-3 py-2 tabular-nums">{d.last_seen_at ? new Date(d.last_seen_at).toLocaleString() : s.t("dev_never", "Never")}</td>
                   <td className="px-3 py-2 tabular-nums">{d.event_count}{d.unmatched_count ? <span className="ms-1 text-amber-600">({d.unmatched_count} {s.t("dev_unmatched", "unmatched")})</span> : null}</td>
-                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${d.is_active ? EVENT_TONE.applied : EVENT_TONE.ignored_manual}`}>{d.is_active ? s.t("active", "Active") : s.t("inactive", "Inactive")}</span></td>
+                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${d.is_active ? EVENT_TONE.applied : EVENT_TONE.ignored_manual}`}>{d.is_active ? s.t("active", "Active") : s.t("inactive", "Inactive")}</span></td>
                   <td className="px-3 py-2">
                     <div className="flex flex-wrap gap-1">
-                      <button type="button" disabled={busy} onClick={() => rotate(d)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-bold hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700"><KeyRound className="h-3 w-3" />{s.t("dev_rotate", "New key")}</button>
-                      <button type="button" disabled={busy} onClick={() => toggle(d)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-bold hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700"><Power className="h-3 w-3" />{d.is_active ? s.t("dev_disable", "Disable") : s.t("dev_enable", "Enable")}</button>
-                      <label className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-bold hover:bg-slate-50 dark:border-slate-700">
+                      <button type="button" disabled={busy} onClick={() => rotate(d)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700"><KeyRound className="h-3 w-3" />{s.t("dev_rotate", "New key")}</button>
+                      <button type="button" disabled={busy} onClick={() => toggle(d)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700"><Power className="h-3 w-3" />{d.is_active ? s.t("dev_disable", "Disable") : s.t("dev_enable", "Enable")}</button>
+                      <label className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold hover:bg-slate-50 dark:border-slate-700">
                         <Upload className="h-3 w-3" />{s.t("dev_import", "Import log (CSV)")}
                         <input type="file" accept=".csv,.txt" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) importLog(d, f); e.target.value = ""; }} />
                       </label>
@@ -225,7 +225,7 @@ export function BiometricDevicesPanel({ lang, employees }: { lang?: string; empl
                   <td className="px-3 py-2 font-mono">{e.employee_code ?? "—"}</td>
                   <td className="px-3 py-2">{e.direction === "in" ? s.t("dir_in", "In") : e.direction === "out" ? s.t("dir_out", "Out") : "—"}</td>
                   <td className="px-3 py-2">{e.source === "import" ? s.t("src_import", "Device log import") : s.t("src_device", "Face-ID / device")}</td>
-                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${EVENT_TONE[e.status] ?? EVENT_TONE.pending}`}>{eventStatus(e.status)}</span></td>
+                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${EVENT_TONE[e.status] ?? EVENT_TONE.pending}`}>{eventStatus(e.status)}</span></td>
                 </tr>
               ))}
             </tbody>
@@ -326,5 +326,5 @@ function RegisterDeviceModal({ s, onClose, onRegistered }: { s: ReturnType<typeo
 
 /** Label + control. Module-level so inputs keep focus while typing. */
 function L({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
+  return <div><label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
 }

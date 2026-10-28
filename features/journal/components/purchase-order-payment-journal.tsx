@@ -1047,7 +1047,7 @@ function getInitialPurchaseOrderNo(): string {
 function FieldBlock({ label, required, children, className, action }: { label: string; required?: boolean; children: ReactNode; className?: string; action?: ReactNode }) {
   return (
     <label className={cn("block min-w-0", className)}>
-      <span className="mb-1 flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+      <span className="mb-1 flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
         <span>
           {label}
           {required ? <span className="text-red-500"> *</span> : null}
@@ -1257,7 +1257,7 @@ function NestedPaymentHistory({
           {/* Mode Badge */}
           <span
             className={cn(
-              "rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
+              "rounded px-2 py-0.5 text-[11px] font-black uppercase tracking-wider",
               isCreditMode
                 ? "border border-amber-500/30 bg-amber-500/20 text-amber-300"
                 : isRemainingMode
@@ -1274,12 +1274,12 @@ function NestedPaymentHistory({
           </span>
 
           {/* Posted Entries Count */}
-          <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-300">
+          <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[11px] font-bold text-slate-300">
             {historyWithBalance.length} {historyWithBalance.length === 1 ? "Entry" : "Entries"}
           </span>
 
           {/* Currency Bridge Pill */}
-          <span className="hidden items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-bold text-blue-200 sm:inline-flex">
+          <span className="hidden items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-[11px] font-bold text-blue-200 sm:inline-flex">
             {purchaseCurrency} ➔ {calcs.finalCurr} @ {statementRate.toFixed(4)}
           </span>
         </div>
@@ -1290,7 +1290,7 @@ function NestedPaymentHistory({
           <button
             type="button"
             onClick={() => setShowFxFlow(!showFxFlow)}
-            className="inline-flex h-6 items-center gap-1 rounded bg-white/10 px-2 text-[10px] font-bold text-slate-200 transition hover:bg-white/20"
+            className="inline-flex h-6 items-center gap-1 rounded bg-white/10 px-2 text-[11px] font-bold text-slate-200 transition hover:bg-white/20"
             title={translateHeader(currentLanguage, showFxFlow ? "HIDE FX FLOW" : "FX FLOW")}
           >
             <span>{translateHeader(currentLanguage, showFxFlow ? "HIDE FX FLOW" : "FX FLOW")}</span>
@@ -1302,7 +1302,7 @@ function NestedPaymentHistory({
             <button
               type="button"
               onClick={onOpenFullBill}
-              className="inline-flex h-6 items-center gap-1 rounded bg-blue-600 px-2 text-[10px] font-bold text-white transition hover:bg-blue-500"
+              className="inline-flex h-6 items-center gap-1 rounded bg-blue-600 px-2 text-[11px] font-bold text-white transition hover:bg-blue-500"
             >
               <Eye className="h-3 w-3" />
               <span>{translateHeader(currentLanguage, "FULL BILL")}</span>
@@ -1325,46 +1325,46 @@ function NestedPaymentHistory({
       <div className="grid grid-cols-2 divide-y divide-slate-200 border-b border-slate-200 bg-slate-50/90 text-[11px] sm:grid-cols-3 sm:divide-y-0 sm:divide-x lg:grid-cols-5 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-950/60">
         {/* Metric 1: Total Order */}
         <div className="p-2 sm:p-2.5">
-          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+          <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">
             {translateHeader(currentLanguage, "Total Purchase")}
           </div>
           <div className="mt-0.5 font-mono text-xs font-black text-slate-900 dark:text-white">
             {money(totalPrice, purchaseCurrency)}
           </div>
-          <div className="text-[10px] font-semibold text-slate-500">
+          <div className="text-[11px] font-semibold text-slate-500">
             Local: {money(totalPurchaseLocal, calcs.finalCurr)}
           </div>
         </div>
 
         {/* Metric 2: Stage Target Due */}
         <div className="p-2 sm:p-2.5">
-          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+          <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">
             {stageTargetLabel}
           </div>
           <div className="mt-0.5 font-mono text-xs font-black text-slate-900 dark:text-white">
             {money(stageRequiredForeign, purchaseCurrency)}
           </div>
-          <div className="text-[10px] font-semibold text-slate-500">
+          <div className="text-[11px] font-semibold text-slate-500">
             Local: {money(stageRequiredLocal, calcs.finalCurr)}
           </div>
         </div>
 
         {/* Metric 3: Paid / Settled */}
         <div className="p-2 sm:p-2.5">
-          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+          <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">
             {translateHeader(currentLanguage, "Total Received / Paid")}
           </div>
           <div className="mt-0.5 font-mono text-xs font-black text-emerald-600 dark:text-emerald-400">
             {money(totalPaidForeign, purchaseCurrency)}
           </div>
-          <div className="text-[10px] font-semibold text-slate-500">
+          <div className="text-[11px] font-semibold text-slate-500">
             Local: {money(totalPaidLocal, calcs.finalCurr)}
           </div>
         </div>
 
         {/* Metric 4: Stage Balance */}
         <div className="p-2 sm:p-2.5">
-          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+          <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">
             {translateHeader(currentLanguage, "Remaining Balance")}
           </div>
           <div
@@ -1375,20 +1375,20 @@ function NestedPaymentHistory({
           >
             {stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
           </div>
-          <div className="text-[10px] font-semibold text-slate-500">
+          <div className="text-[11px] font-semibold text-slate-500">
             Local: {stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
           </div>
         </div>
 
         {/* Metric 5: Ledger Route */}
         <div className="col-span-2 p-2 sm:col-span-1 sm:p-2.5">
-          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+          <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">
             {translateHeader(currentLanguage, "Ledger Route")}
           </div>
-          <div className="mt-0.5 truncate text-[10px] font-bold text-blue-700 dark:text-blue-300" title={form.purchaseAccountName || "Debit Ledger"}>
+          <div className="mt-0.5 truncate text-[11px] font-bold text-blue-700 dark:text-blue-300" title={form.purchaseAccountName || "Debit Ledger"}>
             DR: {form.purchaseAccountName || "Debit Ledger"}
           </div>
-          <div className="truncate text-[10px] font-bold text-rose-700 dark:text-rose-300" title={form.salesAccountName || "Credit Ledger"}>
+          <div className="truncate text-[11px] font-bold text-rose-700 dark:text-rose-300" title={form.salesAccountName || "Credit Ledger"}>
             CR: {form.salesAccountName || "Credit Ledger"}
           </div>
         </div>
@@ -1400,7 +1400,7 @@ function NestedPaymentHistory({
           <div className="grid grid-cols-1 gap-2 text-[11px] md:grid-cols-3">
             {/* Box 1: Original FC */}
             <div className="rounded border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
-              <div className="mb-1.5 border-b pb-1 text-[9px] font-black uppercase text-indigo-700 dark:text-indigo-400">
+              <div className="mb-1.5 border-b pb-1 text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-400">
                 Original Currency Flow ({calcs.purchCurr})
               </div>
               <div className="space-y-1">
@@ -1427,18 +1427,18 @@ function NestedPaymentHistory({
 
             {/* Box 2: Rate Bridge */}
             <div className="flex flex-col items-center justify-center rounded border border-slate-200 bg-white p-2 text-center dark:border-slate-800 dark:bg-slate-950">
-              <div className="text-[9px] font-black uppercase text-slate-400">FX Conversion Bridge</div>
+              <div className="text-[11px] font-black uppercase text-slate-400">FX Conversion Bridge</div>
               <div className="my-0.5 font-mono text-lg font-black text-indigo-600 dark:text-indigo-400">
                 {calcs.exRate.toFixed(4)}
               </div>
-              <div className="text-[10px] font-bold text-slate-500">
+              <div className="text-[11px] font-bold text-slate-500">
                 1 {calcs.purchCurr} = {calcs.exRate.toFixed(2)} {calcs.finalCurr}
               </div>
             </div>
 
             {/* Box 3: Converted LC */}
             <div className="rounded border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
-              <div className="mb-1.5 border-b pb-1 text-[9px] font-black uppercase text-indigo-700 dark:text-indigo-400">
+              <div className="mb-1.5 border-b pb-1 text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-400">
                 Converted Currency Flow ({calcs.finalCurr})
               </div>
               <div className="space-y-1">
@@ -1493,7 +1493,7 @@ function NestedPaymentHistory({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1100px] border-collapse text-left text-[11px]">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-100/90 text-[9px] font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-400">
+              <tr className="border-b border-slate-200 bg-slate-100/90 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-400">
                 <Th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "General Serial / Date")}</Th>
                 <Th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Reference / User")}</Th>
                 <Th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Debit & Credit Ledger Account")}</Th>
@@ -1528,29 +1528,29 @@ function NestedPaymentHistory({
 
                 return (
                   <tr key={p.id} className="transition hover:bg-blue-50/40 dark:hover:bg-slate-800/40">
-                    <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 font-mono text-[10px] align-top dark:border-slate-800">
+                    <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 font-mono text-[11px] align-top dark:border-slate-800">
                       <div className="flex items-center gap-1">
                         <span className="font-semibold text-slate-400">{translateHeader(currentLanguage, "Gen:")}</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">{journalSerial}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-[9px] text-slate-400">
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
                         <span>{countrySerial} / {branchSerial}</span>
                       </div>
-                      <div className="text-[9px] text-slate-400">{date(p.entry_date || p.created_at)}</div>
+                      <div className="text-[11px] text-slate-400">{date(p.entry_date || p.created_at)}</div>
                     </td>
                     <td className="min-w-[140px] border-r border-slate-200 px-2.5 py-1.5 align-top dark:border-slate-800">
-                      <div className="font-mono text-[9px] text-slate-400">Ref: {p.reference_no || p.roznamcha_number || "-"}</div>
+                      <div className="font-mono text-[11px] text-slate-400">Ref: {p.reference_no || p.roznamcha_number || "-"}</div>
                       <div className="truncate text-[11px] font-bold text-slate-800 dark:text-slate-200">{p.users?.full_name || row.form_data?.form?.userName || "Admin"}</div>
-                      <div className="text-[9px] uppercase tracking-wider text-slate-400">{p.kind === "advance" ? "Advance" : p.kind || "Payment"}</div>
+                      <div className="text-[11px] uppercase tracking-wider text-slate-400">{p.kind === "advance" ? "Advance" : p.kind || "Payment"}</div>
                     </td>
                     <td className="min-w-[180px] border-r border-slate-200 px-2.5 py-1.5 align-top dark:border-slate-800">
                       <div className="flex items-center gap-1 truncate" title={drLabel}>
-                        <span className="rounded bg-blue-50 px-1 py-0.5 text-[8px] font-black text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">DR</span>
-                        <span className="truncate text-[10px] font-medium text-slate-700 dark:text-slate-300">{drLabel}</span>
+                        <span className="rounded bg-blue-50 px-1 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">DR</span>
+                        <span className="truncate text-[11px] font-medium text-slate-700 dark:text-slate-300">{drLabel}</span>
                       </div>
                       <div className="mt-0.5 flex items-center gap-1 truncate" title={crLabel}>
-                        <span className="rounded bg-violet-50 px-1 py-0.5 text-[8px] font-black text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">CR</span>
-                        <span className="truncate text-[10px] font-medium text-slate-700 dark:text-slate-300">{crLabel}</span>
+                        <span className="rounded bg-violet-50 px-1 py-0.5 text-[11px] font-black text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">CR</span>
+                        <span className="truncate text-[11px] font-medium text-slate-700 dark:text-slate-300">{crLabel}</span>
                       </div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
@@ -1558,7 +1558,7 @@ function NestedPaymentHistory({
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
                       <div className="font-bold text-emerald-600 dark:text-emerald-400">{money(p.runningPaidForeign, p.purchaseCurrency)}</div>
-                      <div className="text-[9px] text-slate-400">Entry: {money(p.amtForeign, p.purchaseCurrency)}</div>
+                      <div className="text-[11px] text-slate-400">Entry: {money(p.amtForeign, p.purchaseCurrency)}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
                       <div className={cn("font-bold", remainingTargetForeign <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
@@ -1566,7 +1566,7 @@ function NestedPaymentHistory({
                       </div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-center font-mono text-slate-600 align-top dark:border-slate-800">
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold dark:bg-slate-800">
+                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold dark:bg-slate-800">
                         {Number(p.exchangeRateUsed || 1).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                       </span>
                     </td>
@@ -1575,7 +1575,7 @@ function NestedPaymentHistory({
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
                       <div className="font-bold text-emerald-600 dark:text-emerald-400">{money(p.runningPaidLocal, p.localCurrency)}</div>
-                      <div className="text-[9px] text-slate-400">Entry: {money(p.amtLocal, p.localCurrency)}</div>
+                      <div className="text-[11px] text-slate-400">Entry: {money(p.amtLocal, p.localCurrency)}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
                       <div className={cn("font-bold", remainingTargetLocal <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
@@ -1590,7 +1590,7 @@ function NestedPaymentHistory({
               })}
             </tbody>
             {/* Direct Compact Table Footer */}
-            <tfoot className="border-t border-slate-200 bg-slate-50 font-mono text-[10px] font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
+            <tfoot className="border-t border-slate-200 bg-slate-50 font-mono text-[11px] font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
               <tr>
                 <td colSpan={4} className="px-2.5 py-1.5 text-right uppercase tracking-wider text-slate-400">
                   Total Settled to Date:
@@ -1651,13 +1651,19 @@ const renderCountryBadge = (countryName: string) => {
   };
   const colorClass = colorMap[code] || "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800";
   return (
-    <span className={cn("px-1.5 py-0.5 text-[9px] font-black rounded border tracking-wider select-none", colorClass)}>
+    <span className={cn("px-1.5 py-0.5 text-[11px] font-black rounded border tracking-wider select-none", colorClass)}>
       {code}
     </span>
   );
 };
 
-function DashboardSummaryHeader({ 
+function DashboardSummaryHeader(props: Parameters<typeof DashboardSummaryHeaderBody>[0]) {
+  // Guard before any hook: the body below may only mount when there is something to show.
+  if (!props.summary) return null;
+  return <DashboardSummaryHeaderBody {...props} />;
+}
+
+function DashboardSummaryHeaderBody({ 
   summary, 
   mode, 
   isGroupSummary,
@@ -1687,7 +1693,6 @@ function DashboardSummaryHeader({
   const [expandedSummaryCountries, setExpandedSummaryCountries] = useState<Record<string, boolean>>({});
   const [showAllCountries, setShowAllCountries] = useState(false);
 
-  if (!summary) return null;
 
   const notTransferredPercentLC = summary.totalPurchaseLC > 0 ? (summary.remainingBalanceLC / summary.totalPurchaseLC) * 100 : 0;
   const numCurrencies = Object.keys(summary.foreignCurrencies).length;
@@ -1855,9 +1860,9 @@ function DashboardSummaryHeader({
 
     return (
       <div dir={dir} className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm w-full">
-        <table className={cn("w-full text-[10.5px] border-collapse bg-white dark:bg-slate-900", dir === "rtl" ? "text-right" : "text-left")}>
+        <table className={cn("w-full text-[11px] border-collapse bg-white dark:bg-slate-900", dir === "rtl" ? "text-right" : "text-left")}>
             <thead>
-              <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-[9.5px] text-slate-700 dark:text-slate-350 font-bold uppercase tracking-wider">
+              <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-[11px] text-slate-700 dark:text-slate-350 font-bold uppercase tracking-wider">
                 <Th className={cn("px-2.5 py-2.5 font-extrabold", dir === "rtl" ? "text-right" : "text-left")}>{t("country", lang)}</Th>
                 <Th className={cn("px-2.5 py-2.5 font-extrabold", dir === "rtl" ? "text-right" : "text-left")}>{t("col_currency", lang)}</Th>
                 <Th className={cn("px-2.5 py-2.5 font-extrabold", dir === "rtl" ? "text-left" : "text-right")}>{t("col_total_value", lang)}</Th>
@@ -1900,17 +1905,17 @@ function DashboardSummaryHeader({
                       <tr className="bg-slate-50/40 dark:bg-slate-950/20 border-b border-slate-200 dark:border-slate-800">
                         <td colSpan={3} className="p-3">
                           <div className="rounded-xl border border-slate-100 bg-white p-3.5 shadow-inner dark:border-slate-850 dark:bg-slate-950 space-y-3">
-                            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
+                            <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
                               <span>{tData(r.country, lang)} Branches Report Details</span>
-                              <span className="text-[9px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-mono font-bold dark:bg-blue-950/40 dark:text-blue-400">
+                              <span className="text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-mono font-bold dark:bg-blue-950/40 dark:text-blue-400">
                                 {r.branches.length} Branches
                               </span>
                             </div>
                             
                             <div className="overflow-x-auto">
-                              <table className="w-full text-left text-[10px] border-collapse">
+                              <table className="w-full text-left text-[11px] border-collapse">
                                 <thead>
-                                  <tr className="border-b text-slate-450 font-bold uppercase text-[9px] tracking-wider bg-slate-50/80 dark:bg-slate-900/50">
+                                  <tr className="border-b text-slate-450 font-bold uppercase text-[11px] tracking-wider bg-slate-50/80 dark:bg-slate-900/50">
                                     <Th className="px-2 py-1.5">{t("branch", lang)}</Th>
                                     <Th className="px-2 py-1.5 text-right">{translateHeader(lang, "Total Purchase")}</Th>
                                     <Th className="px-2 py-1.5 text-right">{translateHeader(lang, "Required Adv")}</Th>
@@ -1946,7 +1951,7 @@ function DashboardSummaryHeader({
               })}
               {/* Grand Totals */}
               <tr className="bg-blue-50/40 dark:bg-blue-950/20 font-black text-slate-900 dark:text-slate-100 border-t-2 border-slate-200 dark:border-slate-700 text-[11px]">
-                <td colSpan={2} className={cn("px-2.5 py-3 uppercase tracking-wider text-[9.5px] text-slate-500 dark:text-slate-400", dir === "rtl" ? "text-left" : "text-right")}>{t("total_summary", lang)} ({summary.localCurrency})</td>
+                <td colSpan={2} className={cn("px-2.5 py-3 uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400", dir === "rtl" ? "text-left" : "text-right")}>{t("total_summary", lang)} ({summary.localCurrency})</td>
                 <td className={cn("px-2.5 py-3 font-sans tabular-nums text-slate-900 dark:text-slate-100", dir === "rtl" ? "text-left" : "text-right")}>{grandTotals.finalTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
               </tr>
             </tbody>
@@ -1957,7 +1962,7 @@ function DashboardSummaryHeader({
 
   const renderDetailItem = (icon: React.ReactNode, label: string, value: React.ReactNode, textClass = "text-slate-800 dark:text-slate-200") => (
     <div className="flex justify-between items-center gap-2 border-b border-slate-100/50 dark:border-slate-850/20 pb-2 last:border-0 last:pb-0">
-      <span className="flex items-center gap-2 text-[10.5px] text-slate-450 dark:text-slate-500 font-bold uppercase tracking-wider">
+      <span className="flex items-center gap-2 text-[11px] text-slate-450 dark:text-slate-500 font-bold uppercase tracking-wider">
         {icon}
         {translateHeader(lang, label)}:
       </span>
@@ -1973,7 +1978,7 @@ function DashboardSummaryHeader({
         </div>
         <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. {translateHeader(lang, "BRANCH & USER DETAILS")}</h4>
       </div>
-      <div className="p-4 flex flex-col gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+      <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
         {renderDetailItem(<Globe className="h-3.5 w-3.5 text-slate-400" />, "Country", (
           <div className="flex items-center gap-1.5 font-extrabold text-[11.5px]">
             {renderCountryBadge(summary.country)}
@@ -1984,13 +1989,13 @@ function DashboardSummaryHeader({
         {renderDetailItem(<Fingerprint className="h-3.5 w-3.5 text-slate-400" />, "User ID", summary.userId)}
         {renderDetailItem(<User className="h-3.5 w-3.5 text-slate-400" />, "Name", summary.userName)}
         {renderDetailItem(<Shield className="h-3.5 w-3.5 text-slate-400" />, "Role", summary.role)}
-        {renderDetailItem(<CalendarDays className="h-3.5 w-3.5 text-slate-400" />, "Date/Time", `${dateStr} ${timeStr}`, "text-[10px] text-slate-700 dark:text-slate-350")}
+        {renderDetailItem(<CalendarDays className="h-3.5 w-3.5 text-slate-400" />, "Date/Time", `${dateStr} ${timeStr}`, "text-[11px] text-slate-700 dark:text-slate-350")}
         <div className="flex justify-between items-center gap-2">
-          <span className="flex items-center gap-2 text-[10.5px] text-slate-400 font-bold uppercase tracking-wider">
+          <span className="flex items-center gap-2 text-[11px] text-slate-400 font-bold uppercase tracking-wider">
             <CheckCircle2 className="h-3.5 w-3.5 text-slate-400" />
             {translateHeader(lang, "Status")}:
           </span>
-          <span className="font-extrabold text-emerald-600 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[10px] uppercase font-black tracking-wider">{translateHeader(lang, "Active")}</span>
+          <span className="font-extrabold text-emerald-600 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px] uppercase font-black tracking-wider">{translateHeader(lang, "Active")}</span>
         </div>
       </div>
     </div>
@@ -2140,11 +2145,11 @@ function DashboardSummaryHeader({
 
     const dir = ["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr";
     return (
-      <div dir={dir} className={cn("flex flex-col gap-3 text-[10px]", dir === "rtl" ? "text-right" : "text-left")}>
+      <div dir={dir} className={cn("flex flex-col gap-3 text-[11px]", dir === "rtl" ? "text-right" : "text-left")}>
         {/* Block P1: Purchase Summary */}
         <div className="border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/30 dark:bg-slate-900/30 p-2.5">
           <div className="flex items-center gap-1.5 font-black uppercase text-purple-700 dark:text-purple-400 mb-2 border-b border-slate-100 dark:border-slate-850/60 pb-1 flex-wrap">
-            <span className="text-[7.5px] bg-purple-600 text-white font-extrabold px-1 rounded">P1</span>
+            <span className="text-[11px] bg-purple-600 text-white font-extrabold px-1 rounded">P1</span>
             <span>{t("purchase_summary", lang)}</span>
           </div>
           <div className="space-y-1 text-slate-500 dark:text-slate-400 font-semibold">
@@ -2170,7 +2175,7 @@ function DashboardSummaryHeader({
         {/* Block P2: Advance Summary */}
         <div className="border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/30 dark:bg-slate-900/30 p-2.5">
           <div className="flex items-center gap-1.5 font-black uppercase text-blue-700 dark:text-blue-400 mb-2 border-b border-slate-100 dark:border-slate-850/60 pb-1 flex-wrap">
-            <span className="text-[7.5px] bg-blue-600 text-white font-extrabold px-1 rounded">P2</span>
+            <span className="text-[11px] bg-blue-600 text-white font-extrabold px-1 rounded">P2</span>
             <span>{t("advance_summary", lang)}</span>
           </div>
           <div className="space-y-1 text-slate-500 dark:text-slate-400 font-semibold">
@@ -2192,7 +2197,7 @@ function DashboardSummaryHeader({
         {/* Block P3: Paid Advance */}
         <div className="border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/30 dark:bg-slate-900/30 p-2.5">
           <div className="flex items-center gap-1.5 font-black uppercase text-emerald-700 dark:text-emerald-455 mb-2 border-b border-slate-100 dark:border-slate-850/60 pb-1 flex-wrap">
-            <span className="text-[7.5px] bg-emerald-600 text-white font-extrabold px-1 rounded">P3</span>
+            <span className="text-[11px] bg-emerald-600 text-white font-extrabold px-1 rounded">P3</span>
             <span>{t("paid_advance", lang)}</span>
           </div>
           <div className="space-y-1 text-slate-500 dark:text-slate-400 font-semibold">
@@ -2214,7 +2219,7 @@ function DashboardSummaryHeader({
         {/* Block P4: Remaining Advance */}
         <div className="border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/30 dark:bg-slate-900/30 p-2.5">
           <div className="flex items-center gap-1.5 font-black uppercase text-rose-700 dark:text-rose-400 mb-2 border-b border-slate-100 dark:border-slate-850/60 pb-1 flex-wrap">
-            <span className="text-[7.5px] bg-rose-600 text-white font-extrabold px-1 rounded">P4</span>
+            <span className="text-[11px] bg-rose-600 text-white font-extrabold px-1 rounded">P4</span>
             <span>{t("remaining_advance", lang)}</span>
           </div>
           <div className="space-y-1 text-slate-500 dark:text-slate-400 font-semibold">
@@ -2250,6 +2255,37 @@ function DashboardSummaryHeader({
     </div>
   );
 
+  // Branch & Country Breakdown for Row 2 Right Panel
+  const branchSummaries = useMemo(() => {
+    const map: Record<string, { branchCode: string; countryCode: string; finalCurrency: string; totalEntries: number; finalAmount: number; finalAdvanceAmount: number }> = {};
+
+    (rows || []).forEach((r) => {
+      const bName = rowBranchName(r) || "â";
+      const cName = rowCountryName(r) || "â";
+      const bCode = (r.audit?.branchCode || r.form_data?.form?.branchCode || (bName || "â")).toUpperCase();
+      const cCode = getCountryCode(cName) || cName.toUpperCase();
+      const fCur = rowOfficeCurrency(r) || "";
+      const calcs = resolvePurchaseCalculations(r);
+
+      const key = `${bCode}::${cCode}::${fCur}`;
+      if (!map[key]) {
+        map[key] = {
+          branchCode: bCode,
+          countryCode: cCode,
+          finalCurrency: fCur,
+          totalEntries: 0,
+          finalAmount: 0,
+          finalAdvanceAmount: 0
+        };
+      }
+      map[key].totalEntries += 1;
+      map[key].finalAmount += calcs.totalPurchaseLC;
+      map[key].finalAdvanceAmount += calcs.advanceAmountLC;
+    });
+
+    return Object.values(map);
+  }, [rows]);
+
   // Group summary for display under table collapse row
   if (isGroupSummary) {
     return (
@@ -2264,7 +2300,7 @@ function DashboardSummaryHeader({
   }
 
   const renderHorizontalDetails = () => (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/20 p-3.5 rounded-xl border border-slate-150 dark:border-slate-800/50 mb-4 shadow-sm">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/20 p-3.5 rounded-xl border border-slate-150 dark:border-slate-800/50 mb-4 shadow-sm">
       <div className="flex justify-between items-center gap-2 border-b border-slate-100 dark:border-slate-800/40 md:border-b-0 pb-1.5 md:pb-0">
         <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-450">
           <Globe className="h-3.5 w-3.5 text-slate-450" /> {t("country", lang)}:
@@ -2294,7 +2330,7 @@ function DashboardSummaryHeader({
               <button 
                 type="button" 
                 onClick={() => setSelectedCountryForSummary(null)} 
-                className="text-[9px] font-black text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 underline ml-1 cursor-pointer"
+                className="text-[11px] font-black text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 underline ml-1 cursor-pointer"
               >
                 (Reset)
               </button>
@@ -2330,14 +2366,14 @@ function DashboardSummaryHeader({
         <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-455">
           <CalendarDays className="h-3.5 w-3.5 text-slate-400" /> {t("time", lang)}:
         </span>
-        <span className="font-extrabold text-[10px] text-slate-700 dark:text-slate-350">{dateStr} {timeStr}</span>
+        <span className="font-extrabold text-[11px] text-slate-700 dark:text-slate-350">{dateStr} {timeStr}</span>
       </div>
 
       <div className="flex justify-between items-center gap-2 pb-0">
         <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-455">
           <CheckCircle2 className="h-3.5 w-3.5 text-slate-400" /> {t("status", lang)}:
         </span>
-        <span className="font-extrabold text-emerald-600 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[9px] uppercase font-black tracking-wider">{t("active", lang)}</span>
+        <span className="font-extrabold text-emerald-600 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px] uppercase font-black tracking-wider">{t("active", lang)}</span>
       </div>
     </div>
   );
@@ -2408,36 +2444,6 @@ function DashboardSummaryHeader({
     else currencyTotals.OTHERS += amt;
   });
 
-  // Branch & Country Breakdown for Row 2 Right Panel
-  const branchSummaries = useMemo(() => {
-    const map: Record<string, { branchCode: string; countryCode: string; finalCurrency: string; totalEntries: number; finalAmount: number; finalAdvanceAmount: number }> = {};
-
-    (rows || []).forEach((r) => {
-      const bName = rowBranchName(r) || "â";
-      const cName = rowCountryName(r) || "â";
-      const bCode = (r.audit?.branchCode || r.form_data?.form?.branchCode || (bName || "â")).toUpperCase();
-      const cCode = getCountryCode(cName) || cName.toUpperCase();
-      const fCur = rowOfficeCurrency(r) || "";
-      const calcs = resolvePurchaseCalculations(r);
-
-      const key = `${bCode}::${cCode}::${fCur}`;
-      if (!map[key]) {
-        map[key] = {
-          branchCode: bCode,
-          countryCode: cCode,
-          finalCurrency: fCur,
-          totalEntries: 0,
-          finalAmount: 0,
-          finalAdvanceAmount: 0
-        };
-      }
-      map[key].totalEntries += 1;
-      map[key].finalAmount += calcs.totalPurchaseLC;
-      map[key].finalAdvanceAmount += calcs.advanceAmountLC;
-    });
-
-    return Object.values(map);
-  }, [rows]);
 
   const totalBranchEntries = branchSummaries.reduce((sum, b) => sum + b.totalEntries, 0);
   const totalBranchAmount = branchSummaries.reduce((sum, b) => sum + b.finalAmount, 0);
@@ -2485,7 +2491,7 @@ function DashboardSummaryHeader({
           </div>
 
           <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[10px] font-black uppercase tracking-wider">
+            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[11px] font-black uppercase tracking-wider">
               {th("Active")}
             </span>
           </div>
@@ -2505,19 +2511,19 @@ function DashboardSummaryHeader({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <span className="block text-[9.5px] font-bold uppercase text-slate-500 dark:text-slate-400">{th("TOTAL ENTRIES")}</span>
+                <span className="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400">{th("TOTAL ENTRIES")}</span>
                 <div className="text-2xl font-black font-mono text-slate-900 dark:text-white mt-0.5">
                   {totalGlobalEntries || 6}
                 </div>
-                <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">{th("All Countries Entry")}</span>
+                <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-medium">{th("All Countries Entry")}</span>
               </div>
 
               <div>
-                <span className="block text-[9.5px] font-bold uppercase text-slate-500 dark:text-slate-400">{th("Date Range")}</span>
+                <span className="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400">{th("Date Range")}</span>
                 <div className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">
                   {minDateStr}
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{th("To")}</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{th("To")}</div>
                 <div className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">
                   {maxDateStr}
                   <Calendar className="h-3 w-3 text-slate-400 inline" />
@@ -2567,7 +2573,7 @@ function DashboardSummaryHeader({
 
           <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800/80 flex justify-between items-center text-xs">
             <span className="text-slate-500 dark:text-slate-400">{th("System Status")}</span>
-            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[10px] font-black uppercase tracking-wider">
+            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[11px] font-black uppercase tracking-wider">
               {th("All Completed")}
             </span>
           </div>
@@ -2625,14 +2631,14 @@ function DashboardSummaryHeader({
                 <Coins className="h-3.5 w-3.5" />
               </div>
               <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                {th("Currency Wise Purchase Total")} <span className="text-slate-500 font-normal text-[10px]">({th("Original Currency")})</span>
+                {th("Currency Wise Purchase Total")} <span className="text-slate-500 font-normal text-[11px]">({th("Original Currency")})</span>
               </h4>
             </div>
 
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
               {["USD", "EUR", "PKR", "GBP", "CNY", "OTHERS"].map((curKey) => (
                 <div key={curKey} className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                  <span className="block text-[9.5px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-0.5">{curKey === "OTHERS" ? th("Others") : curKey}</span>
+                  <span className="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-0.5">{curKey === "OTHERS" ? th("Others") : curKey}</span>
                   <span className="block font-mono font-black text-xs text-slate-900 dark:text-white">
                     {(currencyTotals[curKey] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
@@ -2641,7 +2647,7 @@ function DashboardSummaryHeader({
             </div>
           </div>
 
-          <div className="mt-3 pt-2 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+          <div className="mt-3 pt-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
             {th("Note: Purchase amounts are shown in original currencies. Do not mix different currencies.")}
           </div>
         </div>
@@ -2654,14 +2660,14 @@ function DashboardSummaryHeader({
                 <Building2 className="h-3.5 w-3.5" />
               </div>
               <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                {th("Branch / Country Wise Summary")} <span className="text-slate-500 font-normal text-[10px]">({th("Final Currency")})</span>
+                {th("Branch / Country Wise Summary")} <span className="text-slate-500 font-normal text-[11px]">({th("Final Currency")})</span>
               </h4>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-[10.5px] border-collapse font-sans">
+              <table className="w-full text-left text-[11px] border-collapse font-sans">
                 <thead>
-                  <tr className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                  <tr className="text-slate-500 dark:text-slate-400 text-[11px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
                     <Th className="py-1 px-1.5">{th("Branch Code")}</Th>
                     <Th className="py-1 px-1.5">{th("Country Code")}</Th>
                     <Th className="py-1 px-1.5">{th("Final Currency")}</Th>
@@ -2700,7 +2706,7 @@ function DashboardSummaryHeader({
             </div>
           </div>
 
-          <div className="mt-2 pt-2 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+          <div className="mt-2 pt-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
             {th("Note: Final amounts are converted into branch final currency")} ({summary.localCurrency || "AED"}).
           </div>
         </div>
@@ -2716,7 +2722,7 @@ function DashboardSummaryHeader({
                   <span className="font-black text-[11px] uppercase text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     {getFlag(r.country)} {tData(r.country, lang)}
                   </span>
-                  <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                  <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     {r.branches.length} {th("Branches")}
                   </span>
                 </div>
@@ -4595,16 +4601,16 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
               </button>
               <div className="flex items-center gap-1 mt-0.5">
                 {(row as any).order_type === "local_purchase" ? (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                     Local Purchase
                   </span>
                 ) : (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
                     Purchase Booking
                   </span>
                 )}
               </div>
-              <span className="text-[10.5px] font-mono font-bold text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400">
                 {row.super_admin_serial_number || `PAY-${String(index + 1).padStart(4, "0")}`}
               </span>
             </div>
@@ -4640,7 +4646,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 if (isCreditBill) {
                   if (rowActualPaid > 0 && rowRemainingDue <= 0.01) {
                     return (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         Paid
                       </span>
@@ -4648,14 +4654,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   }
                   if (rowActualPaid > 0 && rowRemainingDue > 0.01) {
                     return (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                         Partial
                       </span>
                     );
                   }
                   return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-400 shrink-0">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-400 shrink-0">
                       <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
                       Transferred / Credit Due
                     </span>
@@ -4664,7 +4670,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
                 if (isPosted || (calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC <= 0.01)) {
                   return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                       Paid
                     </span>
@@ -4672,14 +4678,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 }
                 if (calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC > 0) {
                   return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                       Partial
                     </span>
                   );
                 }
                 return (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200/80 dark:bg-sky-950/40 dark:text-sky-400 shrink-0">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200/80 dark:bg-sky-950/40 dark:text-sky-400 shrink-0">
                     <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
                     Pending
                   </span>
@@ -4712,7 +4718,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           {/* 11. TOTAL PURCHASE AMOUNT (ORIGINAL CURRENCY) */}
           <td className="py-3.5 px-3 text-right font-mono font-bold whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800 text-[12.5px]">
             {calcs.totalPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-            <span className="inline-block px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-[10px] uppercase">{calcs.purchCurr}</span>
+            <span className="inline-block px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-[11px] uppercase">{calcs.purchCurr}</span>
           </td>
 
           {/* 12. ADVANCE % */}
@@ -4723,13 +4729,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           {/* 13. PURCHASE ADVANCE AMOUNT (ORIGINAL CURRENCY) */}
           <td className="py-3.5 px-3 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800 text-[12.5px]">
             {calcs.advanceAmountFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-            <span className="inline-block px-1 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold text-[10px] uppercase">{calcs.purchCurr}</span>
+            <span className="inline-block px-1 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold text-[11px] uppercase">{calcs.purchCurr}</span>
           </td>
 
           {/* 14. REMAINING PURCHASE AMOUNT (ORIGINAL CURRENCY) */}
           <td className="py-3.5 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800 text-[12.5px]">
             {calcs.remainingPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-            <span className="inline-block px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-[10px] uppercase">{calcs.purchCurr}</span>
+            <span className="inline-block px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-[11px] uppercase">{calcs.purchCurr}</span>
           </td>
 
           {/* 15. PAYMENT DUE TRACKING & DUE DATE */}
@@ -4741,21 +4747,21 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
               </span>
               <div className="flex items-center gap-1 flex-wrap mt-0.5">
                 {dueTracking.isDueToday ? (
-                  <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                  <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
                     {tGlobal(currentLanguage, "paytrack.due_today", "Due Today")}
                   </span>
                 ) : dueTracking.isOverdue ? (
-                  <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
+                  <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
                     {dueTracking.overdueDays}d {tGlobal(currentLanguage, "paytrack.overdue", "Overdue")}
                   </span>
                 ) : dueTracking.isUpcoming ? (
-                  <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                  <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
                     {dueTracking.daysRemaining}d {tGlobal(currentLanguage, "paytrack.days_remaining", "Remaining")}
                   </span>
                 ) : null}
 
                 <span className={cn(
-                  "px-1.5 py-0.5 rounded text-[9.5px] font-bold",
+                  "px-1.5 py-0.5 rounded text-[11px] font-bold",
                   dueTracking.statusBadgeVariant === "emerald" && "bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300",
                   dueTracking.statusBadgeVariant === "amber" && "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300",
                   dueTracking.statusBadgeVariant === "rose" && "bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300",
@@ -5183,7 +5189,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   >
                     <span className="inline-flex items-center gap-1">
                       {translateHeader(currentLanguage, col.label)}
-                      <span className="text-slate-400 text-[9px]">↕</span>
+                      <span className="text-slate-400 text-[11px]">↕</span>
                     </span>
                   </Th>
                 ))}
@@ -5206,7 +5212,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                           <span className="text-[11px] text-amber-500 font-bold block">
                             {tGlobal(currentLanguage, "pay.remaining_workflow_warning", "Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.")}
                           </span>
-                          <span className="text-[10px] text-slate-400 block mt-1">
+                          <span className="text-[11px] text-slate-400 block mt-1">
                             {tGlobal(currentLanguage, "pay.remaining_workflow_steps", "Orders only appear here after: Booking â Advance Payment â Transfer to Loading â Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.")}
                           </span>
                         </div>
@@ -5438,26 +5444,26 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 <div className="shrink-0 flex items-center justify-between gap-3 bg-white dark:bg-[#0c1427] border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 shadow-xs">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                     <div>
-                      <span className="block text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Purchase No.")}</span>
+                      <span className="block text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Purchase No.")}</span>
                       <span className="font-mono font-black text-sm text-blue-600 dark:text-blue-400">PURCHASE #{selected.purchase_order_no || selected.id}</span>
                     </div>
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
                     <div>
-                      <span className="block text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Party / Supplier")}</span>
+                      <span className="block text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Party / Supplier")}</span>
                       <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[180px] block" title={supplierHeader}>{supplierHeader}</span>
                     </div>
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
                     <div>
-                      <span className="block text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Branch / Country")}</span>
+                      <span className="block text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Branch / Country")}</span>
                       <span className="font-semibold text-slate-700 dark:text-slate-300">{branchName} ({countryName})</span>
                     </div>
                     <div>
                       {(selected as any).order_type === "local_purchase" ? (
-                        <span className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+                        <span className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider">
                           LOCAL PURCHASE
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-400 border border-blue-300 dark:border-blue-700/60 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+                        <span className="inline-flex items-center rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-400 border border-blue-300 dark:border-blue-700/60 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider">
                           {translateHeader(currentLanguage, "BOOKING")}
                         </span>
                       )}
@@ -5479,35 +5485,35 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 {/* ── 4 COMPACT FINANCIAL KPI HIGHLIGHT STRIP ── */}
                 <div className="shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-2 px-4 pt-3 pb-2 bg-slate-50 dark:bg-[#070e20]">
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-2.5 shadow-xs">
-                    <span className="block text-[9.5px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Total Purchase")}</span>
+                    <span className="block text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Total Purchase")}</span>
                     <div className="font-mono font-black text-sm text-slate-900 dark:text-white mt-0.5">
-                      {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{poCurrencyHeader}</span>
+                      {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[11px] text-slate-400">{poCurrencyHeader}</span>
                     </div>
-                    <div className="font-mono text-[10.5px] text-slate-500">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
+                    <div className="font-mono text-[11px] text-slate-500">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
                   </div>
 
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-2.5 shadow-xs">
-                    <span className="block text-[9.5px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Condition / Stage")}</span>
+                    <span className="block text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Condition / Stage")}</span>
                     <div className="font-bold text-xs text-blue-600 dark:text-blue-400 mt-1 truncate">
                       {isCredit ? "Credit Liability" : `${paymentCondition || "Advance"} (${advancePercent}%)`}
                     </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5 truncate">{date(selected.created_at)} • {userName}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5 truncate">{date(selected.created_at)} • {userName}</div>
                   </div>
 
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-2.5 shadow-xs">
-                    <span className="block text-[9.5px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Total Paid")}</span>
+                    <span className="block text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Total Paid")}</span>
                     <div className="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400 mt-0.5">
-                      {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[10px] text-emerald-500/70">{poCurrencyHeader}</span>
+                      {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[11px] text-emerald-500/70">{poCurrencyHeader}</span>
                     </div>
-                    <div className="font-mono text-[10.5px] text-emerald-600/80">{statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
+                    <div className="font-mono text-[11px] text-emerald-600/80">{statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
                   </div>
 
                   <div className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 p-2.5 shadow-xs">
-                    <span className="block text-[9.5px] font-bold uppercase text-rose-500">{translateHeader(currentLanguage, "Remaining Balance")}</span>
+                    <span className="block text-[11px] font-bold uppercase text-rose-500">{translateHeader(currentLanguage, "Remaining Balance")}</span>
                     <div className="font-mono font-black text-sm text-rose-600 dark:text-rose-400 mt-0.5">
-                      {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[10px] text-rose-400">{poCurrencyHeader}</span>
+                      {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[11px] text-rose-400">{poCurrencyHeader}</span>
                     </div>
-                    <div className="font-mono text-[10.5px] text-rose-500/80">{statRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
+                    <div className="font-mono text-[11px] text-rose-500/80">{statRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
                   </div>
                 </div>
 
@@ -5540,7 +5546,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     >
                       <ClipboardList className="h-3.5 w-3.5" />
                       <span className="truncate">{translateHeader(currentLanguage, "Goods Manifest")}</span>
-                      <span className={cn("text-[10px] font-mono px-1.5 py-0.2 rounded-full", modalTab === "goods" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400")}>
+                      <span className={cn("text-[11px] font-mono px-1.5 py-0.2 rounded-full", modalTab === "goods" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400")}>
                         {displayGoods.length}
                       </span>
                     </button>
@@ -5557,7 +5563,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     >
                       <WalletCards className="h-3.5 w-3.5" />
                       <span className="truncate">{translateHeader(currentLanguage, "Payments & Ledger")}</span>
-                      <span className={cn("text-[10px] font-mono px-1.5 py-0.2 rounded-full", modalTab === "payments" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400")}>
+                      <span className={cn("text-[11px] font-mono px-1.5 py-0.2 rounded-full", modalTab === "payments" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400")}>
                         {displayEndorsement.length}
                       </span>
                     </button>
@@ -5643,7 +5649,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     </div>
                     <div className="space-y-2 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Sales Payment Amount (Final Currency) :")}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Sales Payment Amount (Final Currency) :")}</span>
                         <span className="font-mono text-slate-900 dark:text-slate-200 font-bold">
                           {(() => {
                             const sf = Number((selected as any)?.linked_sales_total || (selected as any)?.form_data?.linkedSalesForeign || 0);
@@ -5655,11 +5661,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Purchase Payment Amount (Final Currency) :")}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Purchase Payment Amount (Final Currency) :")}</span>
                         <span className="font-mono text-slate-900 dark:text-slate-200 font-bold">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                       </div>
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Total Paid Payment (Final Currency) :")}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Total Paid Payment (Final Currency) :")}</span>
                         <span className="font-mono text-emerald-600 dark:text-emerald-400 font-black">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                       </div>
                     </div>
@@ -5688,17 +5694,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     </div>
                     <div className="space-y-2 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Total Credit Amount :" : "Total Payment :")}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Total Credit Amount :" : "Total Payment :")}</span>
                         <span className="font-mono font-black text-sm text-slate-900 dark:text-white">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300">AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                       </div>
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Total Paid Credit (Cash/Bank) :" : "Total Paid Payment :")}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Total Paid Credit (Cash/Bank) :" : "Total Paid Payment :")}</span>
                         <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         <div className="font-mono text-[11px] text-emerald-600/90 dark:text-emerald-400/80">AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                       </div>
                       <div>
-                        <span className="text-[9.5px] text-rose-600 dark:text-rose-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Remaining Credit Balance :" : "Remaining Payment Balance :")}</span>
+                        <span className="text-[11px] text-rose-600 dark:text-rose-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Remaining Credit Balance :" : "Remaining Payment Balance :")}</span>
                         <span className="font-mono font-black text-sm text-rose-600 dark:text-rose-400">USD {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         <div className="font-mono text-[11px] text-rose-600/90 dark:text-rose-400/90">AED {statRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                       </div>
@@ -5734,7 +5740,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse font-sans">
                       <thead>
-                        <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                        <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[11px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
                           <Th className="px-3 py-2 text-center w-10">#</Th>
                           <Th className="px-3 py-2">{translateHeader(currentLanguage, "GOODS / SIZE / BRAND / ORIGIN")}</Th>
                           <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "QTY")}</Th>
@@ -5793,10 +5799,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       </div>
                       <div className="space-y-2 mt-2 text-[11px]">
                         <div>
-                          <span className="text-[9.5px] font-bold uppercase text-purple-600 dark:text-purple-400 block">
+                          <span className="text-[11px] font-bold uppercase text-purple-600 dark:text-purple-400 block">
                             {translateHeader(currentLanguage, "Credit Liability Summary (0% Advance)")}
                           </span>
-                          <div className="space-y-1 text-slate-700 dark:text-slate-300 text-[10.5px] mt-1 font-semibold">
+                          <div className="space-y-1 text-slate-700 dark:text-slate-300 text-[11px] mt-1 font-semibold">
                             <div className="flex justify-between">
                               <span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Original Bill / Credit Amount:")}</span>
                               <span className="font-mono font-bold text-slate-900 dark:text-white">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
@@ -5815,7 +5821,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                             </div>
                           </div>
                         </div>
-                        <div className="border-t border-slate-200 dark:border-slate-800/80 pt-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                        <div className="border-t border-slate-200 dark:border-slate-800/80 pt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
                           <span className="inline-flex items-center gap-1 font-bold text-purple-600 dark:text-purple-400">
                             ✓ {translateHeader(currentLanguage, "Credit Liability Transferred. Actual payments will appear below only after money is paid.")}
                           </span>
@@ -5830,16 +5836,16 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       </div>
                       <div className="space-y-2 mt-2 text-[11px]">
                         <div>
-                          <span className="text-[9.5px] font-bold uppercase text-blue-600 dark:text-blue-400 block">
+                          <span className="text-[11px] font-bold uppercase text-blue-600 dark:text-blue-400 block">
                             {fromLoading ? `Batch: ${selectedLoadingRecord?.loading_record_no || "Active Container"}` : "Overall Contract Remaining"}
                           </span>
-                          <div className="space-y-0.5 text-slate-700 dark:text-slate-300 text-[10.5px]">
+                          <div className="space-y-0.5 text-slate-700 dark:text-slate-300 text-[11px]">
                             <div><span className="text-slate-500 dark:text-slate-400">Portion Value: </span><span className="font-mono font-bold">{poCurrencyHeader} {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
                             <div><span className="text-slate-500 dark:text-slate-400">Allocated Advance: </span><span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{poCurrencyHeader} {(fromLoading ? loadingAdvancePaid : paidAdvanceBC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
                             <div><span className="text-slate-500 dark:text-slate-400">Remaining for Batch: </span><span className="font-mono text-rose-600 dark:text-rose-400 font-bold">{poCurrencyHeader} {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
                           </div>
                         </div>
-                        <div className="border-t border-slate-200 dark:border-slate-800/80 pt-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                        <div className="border-t border-slate-200 dark:border-slate-800/80 pt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
                           <span className="inline-flex items-center gap-1 font-bold text-blue-600 dark:text-blue-400">
                             ✓ Proportional financial obligation for loaded portion
                           </span>
@@ -5854,8 +5860,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       </div>
                       <div className="space-y-2 mt-2 text-[11px]">
                         <div>
-                          <span className="text-[9.5px] font-bold uppercase text-emerald-600 dark:text-emerald-400 block">Advance Payment Summary ({advancePercent}%)</span>
-                          <div className="space-y-0.5 text-slate-700 dark:text-slate-300 text-[10.5px]">
+                          <span className="text-[11px] font-bold uppercase text-emerald-600 dark:text-emerald-400 block">Advance Payment Summary ({advancePercent}%)</span>
+                          <div className="space-y-0.5 text-slate-700 dark:text-slate-300 text-[11px]">
                             <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Required:")} </span><span className="font-mono font-bold">USD {requiredAdvanceBC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {(requiredAdvanceBC * exRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
                             <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Paid:")} </span><span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
                             <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Pending:")} </span><span className="font-mono text-rose-600 dark:text-rose-400 font-bold">USD {Math.max(0, requiredAdvanceBC - statTotalPaidFC).toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {(Math.max(0, requiredAdvanceBC - statTotalPaidFC) * exRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
@@ -5863,8 +5869,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                         </div>
 
                         <div className="border-t border-slate-200 dark:border-slate-800/80 pt-1.5">
-                          <span className="text-[9.5px] font-bold uppercase text-cyan-600 dark:text-cyan-400 block mb-1">{translateHeader(currentLanguage, "Payment Schedule & Installment Plan")}</span>
-                          <table className="w-full text-left text-[9px] border-collapse">
+                          <span className="text-[11px] font-bold uppercase text-cyan-600 dark:text-cyan-400 block mb-1">{translateHeader(currentLanguage, "Payment Schedule & Installment Plan")}</span>
+                          <table className="w-full text-left text-[11px] border-collapse">
                             <thead>
                               <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                                 <Th className="py-0.5 font-bold">{translateHeader(currentLanguage, "Installment")}</Th>
@@ -5905,12 +5911,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     <div className="rounded-xl border border-purple-200 dark:border-purple-800/80 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
                       <div className="px-4 py-2 bg-purple-50/70 dark:bg-purple-950/30 border-b border-purple-200 dark:border-purple-800/80 text-xs font-black uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center justify-between">
                         <span>{translateHeader(currentLanguage, "Transfer Record — Credit Liability (Bill Transfer)")}</span>
-                        <span className="text-[10px] font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded-full">1 Record</span>
+                        <span className="text-[11px] font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded-full">1 Record</span>
                       </div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[11px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
                               <Th className="px-3 py-2 text-center w-10">S.#</Th>
                               <Th className="px-3 py-2">{translateHeader(currentLanguage, "Transfer Date")}</Th>
                               <Th className="px-3 py-2">{translateHeader(currentLanguage, "Bill No.")}</Th>
@@ -5951,7 +5957,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                 {selected.super_admin_serial_number || _sel.super_admin_serial_number || `TRF-${String(selected.purchase_order_no || "").replace(/[^0-9]/g, "").slice(-4)}`}
                               </td>
                               <td className="px-3 py-2 text-center">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
                                   {translateHeader(currentLanguage, "Transferred")}
                                 </span>
                               </td>
@@ -5965,7 +5971,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
                       <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center justify-between">
                         <span>{translateHeader(currentLanguage, "Actual Payment Transactions")}</span>
-                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                        <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full ${
                           historyWithBalance.length === 0
                             ? "text-slate-500 bg-slate-100 dark:bg-slate-800"
                             : "text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/50"
@@ -5976,7 +5982,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[11px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
                               <Th className="px-3 py-2 text-center w-10">#</Th>
                               <Th className="px-3 py-2">{translateHeader(currentLanguage, "Payment Date")}</Th>
                               <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Payment Serial")}</Th>
@@ -6042,7 +6048,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                         e.stopPropagation();
                                         setEditingPayment({ payment: tx, row: selected });
                                       }}
-                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[10px] font-bold shadow-xs transition cursor-pointer"
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[11px] font-bold shadow-xs transition cursor-pointer"
                                       title={t("edit_payment_entry_tt", currentLanguage)}
                                     >
                                       <Edit3 className="h-3 w-3" />
@@ -6067,7 +6073,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[11px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
                               <Th className="px-3 py-2 text-center w-10">S.#</Th>
                               <Th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</Th>
                               <Th className="px-3 py-2">{translateHeader(currentLanguage, "User")}</Th>
@@ -6118,7 +6124,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[11px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
                               <Th className="px-3 py-2 text-center w-10">#</Th>
                               <Th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</Th>
                               <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</Th>
@@ -6154,7 +6160,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                       e.stopPropagation();
                                       setEditingPayment({ payment: tx, row: selected });
                                     }}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[10px] font-bold shadow-xs transition cursor-pointer"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[11px] font-bold shadow-xs transition cursor-pointer"
                                     title={t("edit_payment_entry_tt", currentLanguage)}
                                   >
                                     <Edit3 className="h-3 w-3" />
@@ -6176,7 +6182,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                            <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[11px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
                               <Th className="px-3 py-2 text-center w-10">#</Th>
                               <Th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</Th>
                               <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</Th>
@@ -6212,7 +6218,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                       e.stopPropagation();
                                       setEditingPayment({ payment: tx, row: selected });
                                     }}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[10px] font-bold shadow-xs transition cursor-pointer"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[11px] font-bold shadow-xs transition cursor-pointer"
                                     title={t("edit_payment_entry_tt", currentLanguage)}
                                   >
                                     <Edit3 className="h-3 w-3" />
@@ -6259,7 +6265,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                               className="h-8 bg-white/80 dark:bg-slate-900/90 border-slate-300 dark:border-slate-700 font-bold text-xs text-blue-800 dark:text-blue-300 pl-3 pr-24 shadow-xs"
                               value={`${doubleEntry.debitName} (${doubleEntry.debitCode})`}
                             />
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 pointer-events-none">
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 pointer-events-none">
                               {translateHeader(currentLanguage, "Auto Party")}
                             </span>
                           </div>
@@ -6443,26 +6449,26 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                 <Receipt className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                 <span>{tGlobal(currentLanguage, "paytrack.payment_status", "Payment Due Tracking & Settlement Details")}</span>
                               </span>
-                              <Badge variant="outline" className="font-mono text-[10.5px]">
+                              <Badge variant="outline" className="font-mono text-[11px]">
                                 {selected.purchase_order_no ? `P#${selected.purchase_order_no}` : "PO"}
                               </Badge>
                             </div>
 
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                               <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                                <span className="text-[10px] text-slate-500 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.supplier_or_customer", "Supplier")}</span>
+                                <span className="text-[11px] text-slate-500 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.supplier_or_customer", "Supplier")}</span>
                                 <span className="font-bold truncate block">{sTrack.supplierOrCustomerName}</span>
                               </div>
                               <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                                <span className="text-[10px] text-slate-500 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.total_payment_amount", "Total Payment Amount")}</span>
+                                <span className="text-[11px] text-slate-500 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.total_payment_amount", "Total Payment Amount")}</span>
                                 <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{sTrack.currency} {sTrack.totalPaymentAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                               </div>
                               <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                                <span className="text-[10px] text-slate-500 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.amount_paid_received", "Amount Paid")}</span>
+                                <span className="text-[11px] text-slate-500 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.amount_paid_received", "Amount Paid")}</span>
                                 <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{sTrack.currency} {sTrack.amountPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                               </div>
                               <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                                <span className="text-[10px] text-rose-600 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.outstanding_balance", "Outstanding Balance")}</span>
+                                <span className="text-[11px] text-rose-600 font-bold block uppercase">{tGlobal(currentLanguage, "paytrack.outstanding_balance", "Outstanding Balance")}</span>
                                 <span className="font-mono font-black text-rose-600 dark:text-rose-400">{sTrack.currency} {sTrack.outstandingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                               </div>
                             </div>
@@ -6477,21 +6483,21 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                               </div>
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 {sTrack.isDueToday ? (
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
                                     {tGlobal(currentLanguage, "paytrack.due_today", "Due Today")}
                                   </span>
                                 ) : sTrack.isOverdue ? (
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
+                                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
                                     {sTrack.overdueDays}d {tGlobal(currentLanguage, "paytrack.overdue", "Overdue")}
                                   </span>
                                 ) : sTrack.isUpcoming ? (
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
                                     {sTrack.daysRemaining}d {tGlobal(currentLanguage, "paytrack.days_remaining", "Days Remaining")}
                                   </span>
                                 ) : null}
 
                                 <span className={cn(
-                                  "px-2 py-0.5 rounded text-[10px] font-bold",
+                                  "px-2 py-0.5 rounded text-[11px] font-bold",
                                   sTrack.statusBadgeVariant === "emerald" && "bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300",
                                   sTrack.statusBadgeVariant === "amber" && "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300",
                                   sTrack.statusBadgeVariant === "rose" && "bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300",
@@ -6631,17 +6637,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                           <div className="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-[#091022] p-3.5 shadow-sm">
                             <div className="flex items-center justify-between pb-2 border-b border-blue-200 dark:border-blue-900/40">
                               <div className="flex items-center gap-1.5">
-                                <span className="inline-flex rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-black text-white">{translateHeader(currentLanguage, "DR")}</span>
+                                <span className="inline-flex rounded bg-blue-600 px-1.5 py-0.5 text-[11px] font-black text-white">{translateHeader(currentLanguage, "DR")}</span>
                                 <span className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
                                   {translateHeader(currentLanguage, "DR ACCOUNTS")}
                                 </span>
                               </div>
-                              <span className="text-[9.5px] font-bold text-blue-700 dark:text-blue-400 bg-white dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-300 dark:border-blue-800">
+                              <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 bg-white dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-300 dark:border-blue-800">
                                 {translateHeader(currentLanguage, "Settlement Target")}
                               </span>
                             </div>
                             <div className="mt-2.5 space-y-1 text-xs">
-                              <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Account Name")}</div>
+                              <div className="text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Account Name")}</div>
                               <div className="font-extrabold text-slate-900 dark:text-white text-sm">{doubleEntry.debitName}</div>
                               <div className="flex justify-between text-[11px] pt-1">
                                 <span className="text-slate-600 dark:text-slate-400">{translateHeader(currentLanguage, "Account No")}: {doubleEntry.debitCode}</span>
@@ -6654,17 +6660,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                           <div className="rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-[#091022] p-3.5 shadow-sm">
                             <div className="flex items-center justify-between pb-2 border-b border-rose-200 dark:border-rose-900/40">
                               <div className="flex items-center gap-1.5">
-                                <span className="inline-flex rounded bg-rose-600 px-1.5 py-0.5 text-[9px] font-black text-white">{translateHeader(currentLanguage, "CR")}</span>
+                                <span className="inline-flex rounded bg-rose-600 px-1.5 py-0.5 text-[11px] font-black text-white">{translateHeader(currentLanguage, "CR")}</span>
                                 <span className="text-xs font-black uppercase tracking-wider text-rose-800 dark:text-rose-400">
                                   {translateHeader(currentLanguage, "CR ACCOUNT'S")}
                                 </span>
                               </div>
-                              <span className="text-[9.5px] font-bold text-rose-700 dark:text-rose-400 bg-white dark:bg-rose-950 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800">
+                              <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400 bg-white dark:bg-rose-950 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800">
                                 {translateHeader(currentLanguage, "Payment Source")}
                               </span>
                             </div>
                             <div className="mt-2.5 space-y-1 text-xs">
-                              <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Selected Source Account")}</div>
+                              <div className="text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Selected Source Account")}</div>
                               <div className="font-extrabold text-slate-900 dark:text-white text-sm">{doubleEntry.creditName}</div>
                               <div className="flex justify-between text-[11px] pt-1">
                                 <span className="text-slate-600 dark:text-slate-400">{translateHeader(currentLanguage, "Account No")}: {doubleEntry.creditCode}</span>
@@ -6677,9 +6683,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                           <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/40 bg-indigo-50/60 dark:bg-indigo-950/30 p-3 text-indigo-900 dark:text-indigo-200 text-xs">
                             <div className="font-bold flex items-center justify-between">
                               <span>{translateHeader(currentLanguage, "Double-Entry Live Status")}</span>
-                              <span className="font-black text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full">{translateHeader(currentLanguage, "BALANCED")}</span>
+                              <span className="font-black text-[11px] bg-indigo-600 text-white px-2 py-0.5 rounded-full">{translateHeader(currentLanguage, "BALANCED")}</span>
                             </div>
-                            <div className="text-[10.5px] mt-1 font-semibold text-indigo-700 dark:text-indigo-300 truncate">
+                            <div className="text-[11px] mt-1 font-semibold text-indigo-700 dark:text-indigo-300 truncate">
                               DR: {doubleEntry.debitCode} ➔ CR: {doubleEntry.creditCode}
                             </div>
                           </div>
@@ -6745,7 +6751,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       <div>
                         <div className="text-xs font-black text-blue-900 dark:text-blue-200 flex items-center gap-2">
                           <span>Active Container: {selectedLoadingRecord?.loading_record_no || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("loadingRecordId") : "") || "Loaded Batch"}</span>
-                          <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-extrabold px-2 py-0.5 rounded-full">Proportional Batch</span>
+                          <span className="text-[11px] bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-extrabold px-2 py-0.5 rounded-full">Proportional Batch</span>
                         </div>
                         <div className="text-[11px] text-blue-700 dark:text-blue-300 mt-0.5">
                           Loaded Value: <strong className="font-mono">{money(loadingPurchaseAmount, poCurrency)}</strong> | Allocated Advance: <strong className="font-mono text-emerald-600 dark:text-emerald-400">{money(loadingAdvancePaid, poCurrency)}</strong> | Remaining Batch Due: <strong className="font-mono text-rose-600 dark:text-rose-400">{money(outstandingBalance, poCurrency)}</strong>
@@ -6809,11 +6815,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                 <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                                   Container #{lr.loading_record_no || lr.container_number || lr.report_payload?.containerNumber || "-"}
                                 </span>
-                                <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400 px-2 py-0.5 rounded-full">
+                                <span className="text-[11px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400 px-2 py-0.5 rounded-full">
                                   {Number(loadedQty).toLocaleString()} {lr.report_payload?.unit || "Bags"}
                                 </span>
                               </div>
-                              <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-400 w-full">
+                              <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-400 w-full">
                                 <div>Net: <span className="font-semibold text-slate-700 dark:text-slate-300">{Number(finance.netWeight || 0).toLocaleString()} KG</span></div>
                                 <div>Gross: <span className="font-semibold text-slate-700 dark:text-slate-300">{Number(finance.grossWeight || 0).toLocaleString()} KG</span></div>
                                 <div className="col-span-2 border-t border-slate-100 dark:border-slate-800 pt-1 mt-0.5 flex justify-between items-center w-full">
@@ -6828,7 +6834,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     ) : (
                       <div className="text-xs text-slate-400 italic py-4 bg-slate-50 dark:bg-slate-900/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
                         No loaded containers found for this purchase order.
-                        <div className="text-[10px] text-slate-400 mt-0.5 font-normal">Please make sure the containers are added and loaded in the Loading module first.</div>
+                        <div className="text-[11px] text-slate-400 mt-0.5 font-normal">Please make sure the containers are added and loaded in the Loading module first.</div>
                       </div>
                     )}
                   </div>
@@ -6854,7 +6860,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 </div>
 
                 {/* ── COMPACT FOOTER ── */}
-                <div className="shrink-0 flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 px-4 py-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427]">
+                <div className="shrink-0 flex justify-between items-center text-[11px] text-slate-500 dark:text-slate-400 px-4 py-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427]">
                   <div>
                     <span>{translateHeader(currentLanguage, "Created By:")} </span>
                     <strong className="text-slate-800 dark:text-slate-200 font-bold">{userName}</strong>
@@ -7058,9 +7064,9 @@ function Metric({ label, value, sublabel, icon, tone }: KpiCard) {
         {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { className: "h-5 w-5" }) : icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">{label}</p>
+        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">{label}</p>
         <p className={cn("mt-0.5 text-lg font-extrabold tracking-tight", colorClasses.text)}>{value}</p>
-        <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500">{sublabel}</p>
+        <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500">{sublabel}</p>
       </div>
     </div>
   );
@@ -7214,7 +7220,7 @@ function MenuAction({ icon, label, onClick }: { icon: React.ReactNode; label: st
 function InfoRow({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-border pb-1.5 last:border-b-0 dark:border-slate-800">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
       <span className={cn("text-xs font-semibold text-foreground text-right truncate max-w-[200px]", highlight && "text-primary font-black")}>{value}</span>
     </div>
   );
@@ -7223,7 +7229,7 @@ function InfoRow({ label, value, highlight = false }: { label: string; value: st
 function getStatusBadge(status: string | null | undefined) {
   const badgeStyle = statusClass(status);
   return (
-    <span className={cn("inline-flex rounded border px-2 py-0.5 text-[9px] font-bold uppercase whitespace-nowrap shadow-sm tracking-wider", badgeStyle)}>
+    <span className={cn("inline-flex rounded border px-2 py-0.5 text-[11px] font-bold uppercase whitespace-nowrap shadow-sm tracking-wider", badgeStyle)}>
       {status || "Pending"}
     </span>
   );

@@ -86,14 +86,19 @@ const RECENT_EXTERNAL_TRUCKS = [
   }
 ];
 
-export function CustomerOrderExternalTruckDialog({
+export function CustomerOrderExternalTruckDialog(props: Parameters<typeof CustomerOrderExternalTruckDialogBody>[0]) {
+  // Guard before any hook: the body below may only mount when there is something to show.
+  if (!props.open) return null;
+  return <CustomerOrderExternalTruckDialogBody {...props} />;
+}
+
+function CustomerOrderExternalTruckDialogBody({
   open,
   onClose,
   lang,
   initialValues,
   onApply
 }: Props) {
-  if (!open) return null;
 
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tt = (key: string, fb: string) => t(lang, ("com." + key) as never, fb);
@@ -245,7 +250,7 @@ export function CustomerOrderExternalTruckDialog({
                 <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                   {tt("add_new_external_truck", "Add New External Truck")}
                 </h4>
-                <p className="text-[10.5px] text-slate-500">
+                <p className="text-[11px] text-slate-500">
                   {tt("external_truck_note", "Details stored for this order only. Does not write to Fleet Master.")}
                 </p>
               </div>
@@ -253,7 +258,7 @@ export function CustomerOrderExternalTruckDialog({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
               <div className="sm:col-span-2">
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("transporter_contractor", "Transporter / Contractor")} *
                 </label>
                 <div className="flex gap-1.5">
@@ -268,7 +273,7 @@ export function CustomerOrderExternalTruckDialog({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("truck_number", "Truck Number")} *
                 </label>
                 <input
@@ -279,14 +284,14 @@ export function CustomerOrderExternalTruckDialog({
                   className={inputClass(hasErr("truck_number"))}
                 />
                 {hasErr("truck_number") && (
-                  <p className="mt-0.5 text-[10px] font-semibold text-rose-600">
+                  <p className="mt-0.5 text-[11px] font-semibold text-rose-600">
                     {tt("tt_err_number", "Truck number is required.")}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("vehicle_plate_no", "Vehicle Plate No")} *
                 </label>
                 <input
@@ -299,7 +304,7 @@ export function CustomerOrderExternalTruckDialog({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("driver_name", "Driver Name")} *
                 </label>
                 <input
@@ -310,14 +315,14 @@ export function CustomerOrderExternalTruckDialog({
                   className={inputClass(hasErr("driver_name"))}
                 />
                 {hasErr("driver_name") && (
-                  <p className="mt-0.5 text-[10px] font-semibold text-rose-600">
+                  <p className="mt-0.5 text-[11px] font-semibold text-rose-600">
                     {tt("tt_err_driver", "Driver name is required.")}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("driver_mobile", "Driver Mobile")} *
                 </label>
                 <input
@@ -329,14 +334,14 @@ export function CustomerOrderExternalTruckDialog({
                   className={inputClass(hasErr("driver_mobile") || hasErr("driver_mobile_invalid"))}
                 />
                 {(hasErr("driver_mobile") || hasErr("driver_mobile_invalid")) && (
-                  <p className="mt-0.5 text-[10px] font-semibold text-rose-600">
+                  <p className="mt-0.5 text-[11px] font-semibold text-rose-600">
                     {tt("tt_err_mobile", "Valid mobile number with country code is required.")}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("vehicle_type", "Vehicle Type")} *
                 </label>
                 <select
@@ -352,7 +357,7 @@ export function CustomerOrderExternalTruckDialog({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("container_size", "Container Size")} *
                 </label>
                 <select
@@ -368,7 +373,7 @@ export function CustomerOrderExternalTruckDialog({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("loading_location", "Loading Location / Terminal")} *
                 </label>
                 <input
@@ -381,7 +386,7 @@ export function CustomerOrderExternalTruckDialog({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("arrival_date_time", "Arrival Date & Time")} *
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -401,7 +406,7 @@ export function CustomerOrderExternalTruckDialog({
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("truck_operational_status", "Truck Operational Status")} *
                 </label>
                 <select
@@ -416,7 +421,7 @@ export function CustomerOrderExternalTruckDialog({
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("remarks", "Remarks")}
                 </label>
                 <textarea
@@ -440,7 +445,7 @@ export function CustomerOrderExternalTruckDialog({
                 <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                   {tt("recently_used_external_trucks", "Recently Used External Trucks")}
                 </h4>
-                <p className="text-[10.5px] text-slate-500">
+                <p className="text-[11px] text-slate-500">
                   {tt("quick_select_contractor_trucks", "Quickly select from previously used contractor trucks.")}
                 </p>
               </div>
@@ -478,7 +483,7 @@ export function CustomerOrderExternalTruckDialog({
                             ({trk.plateNo})
                           </span>
                         </div>
-                        <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-300 shrink-0">
+                        <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 shrink-0">
                           {trk.usedAgo}
                         </span>
                       </div>

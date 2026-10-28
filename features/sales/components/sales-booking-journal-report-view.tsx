@@ -417,7 +417,7 @@ export function SalesBookingJournalReportView({ onNewBooking }: { onNewBooking?:
                   <td className="px-6 py-4 font-mono font-bold text-primary">{r.containerCount}</td>
                   <td className="px-6 py-4 font-extrabold text-foreground">{r.totalSalesAmount?.toLocaleString()} {r.currency}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                       r.status === "Finalized" || r.status === "Confirmed"
                         ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"
                         : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20"

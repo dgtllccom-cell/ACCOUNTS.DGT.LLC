@@ -180,18 +180,18 @@ export function SalesBookingUpperCards({
       {/* Header */}
       <div className="bg-blue-600 dark:bg-blue-700 text-white px-3 py-2 flex items-center gap-2">
         {showBadges && (
-          <span className="w-4 h-4 rounded bg-white text-blue-700 text-[10px] font-black flex items-center justify-center shrink-0">
+          <span className="w-4 h-4 rounded bg-white text-blue-700 text-[11px] font-black flex items-center justify-center shrink-0 leading-none">
             1
           </span>
         )}
         <Building2 className="w-3.5 h-3.5 shrink-0" />
-        <h4 className="text-[10px] font-black uppercase tracking-wider truncate">
+        <h4 className="text-[11px] font-black uppercase tracking-wider truncate">
           {tUi(lang, "sales.booking_details_branch", "BOOKING DETAILS & BRANCH INFORMATION")}
         </h4>
       </div>
 
       {/* Content */}
-      <div className="p-3 text-[10px] space-y-1.5 leading-tight text-slate-700 dark:text-slate-300">
+      <div className="p-3 text-[11px] space-y-1.5 leading-tight text-slate-700 dark:text-slate-300">
         <div className="grid grid-cols-[90px_1fr] items-center gap-1">
           <span className="text-slate-500 font-semibold flex items-center gap-1">
             <Calendar className="w-3 h-3 text-slate-400" />
@@ -222,7 +222,7 @@ export function SalesBookingUpperCards({
             {tUi(lang, "sales.payment_type_lbl", "Payment Type")}
           </span>
           <span className="font-bold flex items-center gap-1">
-            : <span className="inline-block px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 font-bold text-[9px]">{paymentType}</span>
+            : <span className="inline-block px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 font-bold text-[11px]">{paymentType}</span>
           </span>
         </div>
 
@@ -232,7 +232,7 @@ export function SalesBookingUpperCards({
             {tUi(lang, "sales.shipping_type_lbl", "Shipping Type")}
           </span>
           <span className="font-bold flex items-center gap-1">
-            : <span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold text-[9px]">{shippingType}</span>
+            : <span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold text-[11px]">{shippingType}</span>
           </span>
         </div>
 
@@ -276,18 +276,18 @@ export function SalesBookingUpperCards({
       {/* Header */}
       <div className="bg-emerald-600 dark:bg-emerald-700 text-white px-3 py-2 flex items-center gap-2">
         {showBadges && (
-          <span className="w-4 h-4 rounded bg-white text-emerald-700 text-[10px] font-black flex items-center justify-center shrink-0">
+          <span className="w-4 h-4 rounded bg-white text-emerald-700 text-[11px] font-black flex items-center justify-center shrink-0 leading-none">
             2
           </span>
         )}
         <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
-        <h4 className="text-[10px] font-black uppercase tracking-wider truncate">
+        <h4 className="text-[11px] font-black uppercase tracking-wider truncate">
           {tUi(lang, "sales.sales_account_cr", "SALES ACCOUNT (CR)")}
         </h4>
       </div>
 
       {/* Account Info */}
-      <div className="p-3 text-[10px] space-y-1.5 leading-tight text-slate-700 dark:text-slate-300">
+      <div className="p-3 text-[11px] space-y-1.5 leading-tight text-slate-700 dark:text-slate-300">
         <div className="grid grid-cols-[90px_1fr] items-center gap-1">
           <span className="text-slate-500 font-semibold">{tUi(lang, "sales.account_code_lbl", "Account Code")}</span>
           <div className="flex items-center justify-between gap-1">
@@ -295,7 +295,7 @@ export function SalesBookingUpperCards({
             <button
               type="button"
               onClick={() => handleOpenAccountModal("sales")}
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 transition-colors shadow-2xs cursor-pointer ml-auto"
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 transition-colors shadow-2xs cursor-pointer ml-auto"
               title="View Sales Account Details"
             >
               <Eye className="w-2.5 h-2.5" />
@@ -328,7 +328,7 @@ export function SalesBookingUpperCards({
               <select
                 value={salesCurrency}
                 onChange={(e) => handleCurrencyChange(e.target.value)}
-                className="ms-1 bg-transparent border-none text-[9px] font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer outline-none"
+                className="ms-1 bg-transparent border-none text-[11px] font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer outline-none"
               >
                 {currencyOptions.map((c) => (
                   <option key={c} value={c}>
@@ -342,9 +342,9 @@ export function SalesBookingUpperCards({
       </div>
 
       {/* Subcard: Company Details */}
-      <div className="mx-2 mb-2 p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40 text-[9.5px]">
+      <div className="mx-2 mb-2 p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40 text-[11px]">
         <div className="flex items-center justify-between border-b border-emerald-200/60 dark:border-emerald-800/40 pb-1 mb-1">
-          <span className="font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wider text-[8.5px] flex items-center gap-1">
+          <span className="font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wider text-[11px] flex items-center gap-1">
             <Building2 className="w-2.5 h-2.5" />
             {tUi(lang, "sales.company_details", "COMPANY DETAILS")}
           </span>
@@ -353,7 +353,7 @@ export function SalesBookingUpperCards({
               type="button"
               disabled={readOnly}
               onClick={() => setSalesCompOpen(!salesCompOpen)}
-              className="text-[8.5px] font-bold text-emerald-700 dark:text-emerald-300 hover:underline flex items-center gap-0.5 truncate max-w-[120px]"
+              className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 hover:underline flex items-center gap-0.5 truncate max-w-[120px]"
             >
               <span className="truncate">{salesCompany}</span>
               {!readOnly && <ChevronDown className="w-2.5 h-2.5 shrink-0" />}
@@ -365,7 +365,7 @@ export function SalesBookingUpperCards({
                     key={c.id}
                     type="button"
                     onClick={() => handleCompanySelect("sales", c)}
-                    className="w-full text-left px-2 py-1 rounded text-[8.5px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 truncate"
+                    className="w-full text-left px-2 py-1 rounded text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 truncate"
                   >
                     {c.name}
                   </button>
@@ -394,10 +394,10 @@ export function SalesBookingUpperCards({
               {salesAddress}
             </span>
           </div>
-          <div className="flex justify-between font-mono text-[9px]">
+          <div className="flex justify-between font-mono text-[11px]">
             <span>License No. : {salesLicense}</span>
           </div>
-          <div className="font-mono text-[9px] text-emerald-800 dark:text-emerald-300 font-bold">
+          <div className="font-mono text-[11px] text-emerald-800 dark:text-emerald-300 font-bold">
             GST / TRN : {salesGst}
           </div>
         </div>
@@ -411,18 +411,18 @@ export function SalesBookingUpperCards({
       {/* Header */}
       <div className="bg-amber-600 dark:bg-amber-700 text-white px-3 py-2 flex items-center gap-2">
         {showBadges && (
-          <span className="w-4 h-4 rounded bg-white text-amber-700 text-[10px] font-black flex items-center justify-center shrink-0">
+          <span className="w-4 h-4 rounded bg-white text-amber-700 text-[11px] font-black flex items-center justify-center shrink-0 leading-none">
             3
           </span>
         )}
         <ArrowDownLeft className="w-3.5 h-3.5 shrink-0" />
-        <h4 className="text-[10px] font-black uppercase tracking-wider truncate">
+        <h4 className="text-[11px] font-black uppercase tracking-wider truncate">
           {tUi(lang, "sales.customer_account_dr", "CUSTOMER ACCOUNT (DR)")}
         </h4>
       </div>
 
       {/* Account Info */}
-      <div className="p-3 text-[10px] space-y-1.5 leading-tight text-slate-700 dark:text-slate-300">
+      <div className="p-3 text-[11px] space-y-1.5 leading-tight text-slate-700 dark:text-slate-300">
         <div className="grid grid-cols-[90px_1fr] items-center gap-1">
           <span className="text-slate-500 font-semibold">{tUi(lang, "sales.account_code_lbl", "Account Code")}</span>
           <div className="flex items-center justify-between gap-1">
@@ -430,7 +430,7 @@ export function SalesBookingUpperCards({
             <button
               type="button"
               onClick={() => handleOpenAccountModal("customer")}
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 dark:hover:bg-amber-900 border border-amber-300 dark:border-amber-700 transition-colors shadow-2xs cursor-pointer ml-auto"
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 dark:hover:bg-amber-900 border border-amber-300 dark:border-amber-700 transition-colors shadow-2xs cursor-pointer ml-auto"
               title="View Customer Account Details"
             >
               <Eye className="w-2.5 h-2.5" />
@@ -463,7 +463,7 @@ export function SalesBookingUpperCards({
               <select
                 value={customerCurrency}
                 onChange={(e) => handleCurrencyChange(e.target.value)}
-                className="ms-1 bg-transparent border-none text-[9px] font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer outline-none"
+                className="ms-1 bg-transparent border-none text-[11px] font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer outline-none"
               >
                 {currencyOptions.map((c) => (
                   <option key={c} value={c}>
@@ -477,9 +477,9 @@ export function SalesBookingUpperCards({
       </div>
 
       {/* Subcard: Company Details */}
-      <div className="mx-2 mb-2 p-2 rounded-lg bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-800/40 text-[9.5px]">
+      <div className="mx-2 mb-2 p-2 rounded-lg bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-800/40 text-[11px]">
         <div className="flex items-center justify-between border-b border-amber-200/60 dark:border-amber-800/40 pb-1 mb-1">
-          <span className="font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider text-[8.5px] flex items-center gap-1">
+          <span className="font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider text-[11px] flex items-center gap-1">
             <Building2 className="w-2.5 h-2.5" />
             {tUi(lang, "sales.company_details", "COMPANY DETAILS")}
           </span>
@@ -488,7 +488,7 @@ export function SalesBookingUpperCards({
               type="button"
               disabled={readOnly}
               onClick={() => setCustomerCompOpen(!customerCompOpen)}
-              className="text-[8.5px] font-bold text-amber-700 dark:text-amber-300 hover:underline flex items-center gap-0.5 truncate max-w-[120px]"
+              className="text-[11px] font-bold text-amber-700 dark:text-amber-300 hover:underline flex items-center gap-0.5 truncate max-w-[120px]"
             >
               <span className="truncate">{customerCompany}</span>
               {!readOnly && <ChevronDown className="w-2.5 h-2.5 shrink-0" />}
@@ -500,7 +500,7 @@ export function SalesBookingUpperCards({
                     key={c.id}
                     type="button"
                     onClick={() => handleCompanySelect("customer", c)}
-                    className="w-full text-left px-2 py-1 rounded text-[8.5px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 truncate"
+                    className="w-full text-left px-2 py-1 rounded text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 truncate"
                   >
                     {c.name}
                   </button>
@@ -529,10 +529,10 @@ export function SalesBookingUpperCards({
               {customerAddress}
             </span>
           </div>
-          <div className="flex justify-between font-mono text-[9px]">
+          <div className="flex justify-between font-mono text-[11px]">
             <span>License No. : {customerLicense}</span>
           </div>
-          <div className="font-mono text-[9px] text-amber-800 dark:text-amber-300 font-bold">
+          <div className="font-mono text-[11px] text-amber-800 dark:text-amber-300 font-bold">
             GST / TRN : {customerGst}
           </div>
         </div>

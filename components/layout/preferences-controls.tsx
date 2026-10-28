@@ -23,31 +23,6 @@ function getInitialLanguage(): SupportedLanguage {
   return supportedLanguages.some((l) => l.code === lang) ? lang : "en";
 }
 
-// Dynamically inject custom web fonts into document head.
-function injectWebFonts(lang: SupportedLanguage) {
-  if (typeof document === "undefined") return;
-  const id = "google-fonts-rtl-injector";
-  let link = document.getElementById(id) as HTMLLinkElement;
-  if (!link) {
-    link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
-  }
-
-  if (lang === "ar" || lang === "ps") {
-    link.href = "https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap";
-    document.documentElement.style.setProperty("--font-family-override", "'Cairo', sans-serif");
-  } else if (lang === "fa") {
-    link.href = "https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap";
-    document.documentElement.style.setProperty("--font-family-override", "'Vazirmatn', sans-serif");
-  } else if (lang === "ur") {
-    link.href = "https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700;800&family=Cairo:wght@400;600;700&display=swap";
-    document.documentElement.style.setProperty("--font-family-override", "'Noto Naskh Arabic', 'Cairo', 'Segoe UI', Tahoma, sans-serif");
-  } else {
-    document.documentElement.style.removeProperty("--font-family-override");
-  }
-}
 
 export function PreferencesControls() {
   const router = useRouter();
@@ -58,12 +33,6 @@ export function PreferencesControls() {
   const [keyboardMapperActive, setKeyboardMapperActive] = useState(true);
 
   // Run font injection on load and whenever language state updates.
-  useEffect(() => {
-    if (mounted) {
-      injectWebFonts(language);
-    }
-  }, [language, mounted]);
-
   // Handle global key events for virtual layout mapping.
   useEffect(() => {
     if (!keyboardMapperActive || !rtlLanguages.includes(language)) return;
@@ -125,7 +94,6 @@ export function PreferencesControls() {
     setLanguage(initialLang);
     document.documentElement.lang = getHtmlLanguage(initialLang);
     document.documentElement.dir = rtlLanguages.includes(initialLang) ? "rtl" : "ltr";
-    injectWebFonts(initialLang);
 
     const onStorage = (event: StorageEvent) => {
       if (event.key === "erp_theme_mode") {
@@ -144,7 +112,6 @@ export function PreferencesControls() {
             if (prev === next) return prev;
             document.documentElement.lang = getHtmlLanguage(next);
             document.documentElement.dir = rtlLanguages.includes(next) ? "rtl" : "ltr";
-            injectWebFonts(next); // same-tab switches from in-page language chips (and other tabs) load the script's web font too
             return next;
           });
         }
@@ -165,7 +132,6 @@ export function PreferencesControls() {
     document.cookie = "googtrans=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
 
     setLanguage(next);
-    injectWebFonts(next);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("erp_language_changed"));
     }
@@ -196,16 +162,6 @@ export function PreferencesControls() {
 
   return (
     <div className="flex items-center gap-2">
-      {/* Dynamic font styles applied based on override CSS variable */}
-      {mounted && (
-        <style dangerouslySetInnerHTML={{
-          __html: `
-            body, input, select, textarea, button, select option {
-              font-family: var(--font-family-override, inherit) !important;
-            }
-          `
-        }} />
-      )}
 
       <QuickPreferencesPopover
         language={language}

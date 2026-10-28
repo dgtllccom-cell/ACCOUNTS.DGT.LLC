@@ -104,7 +104,7 @@ export function FxSettlementView() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[10px]">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[11px]">
               <tr>
                 <Th className="py-3 px-4">{T("Date")}</Th>
                 <Th className="py-3 px-4">{T("CR Side (Source)")}</Th>
@@ -138,7 +138,7 @@ export function FxSettlementView() {
                       {r.fx_direction === "gain" ? "+" : ""}${Number(r.fx_difference_usd).toFixed(2)}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-black uppercase ${
                         r.fx_direction === "gain" ? "bg-emerald-100 text-emerald-800" : r.fx_direction === "loss" ? "bg-rose-100 text-rose-800" : "bg-slate-100 text-slate-700"
                       }`}>
                         {r.fx_direction}

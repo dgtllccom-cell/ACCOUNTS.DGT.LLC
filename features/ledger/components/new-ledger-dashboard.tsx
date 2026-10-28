@@ -711,7 +711,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
               />
               {isSuperAdmin && <InfoRow label="1 USD" value="Rate stored per posting" />}
               {account && totals.entries === 0 && (
-                <div className="mt-2 rounded-md bg-amber-50 dark:bg-amber-950/40 p-1.5 text-[10px] text-amber-800 dark:text-amber-300 font-medium text-center">
+                <div className="mt-2 rounded-md bg-amber-50 dark:bg-amber-950/40 p-1.5 text-[11px] text-amber-800 dark:text-amber-300 font-medium text-center">
                   {t(activeLang, "ledger.nld_no_entries", "No ledger entries available for this account.")}
                 </div>
               )}

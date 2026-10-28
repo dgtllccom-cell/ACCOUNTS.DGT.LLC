@@ -1058,11 +1058,11 @@ export function BlEntryView({
           <h1 className="text-xl font-black uppercase tracking-wider text-slate-100">
             {_("ble.title", "Bill of Lading (B/L)")}
           </h1>
-          <span className="rounded bg-cyan-950/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-400 border border-cyan-800/60">
+          <span className="rounded bg-cyan-950/80 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-cyan-400 border border-cyan-800/60">
             {blTypeLabel(form.blType)}
           </span>
           {form.id ? (
-            <span className="rounded bg-amber-950/80 px-2 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-800/60">
+            <span className="rounded bg-amber-950/80 px-2 py-0.5 text-[11px] font-bold text-amber-400 border border-amber-800/60">
               Editing: {form.blNumber}
             </span>
           ) : null}
@@ -1133,7 +1133,7 @@ export function BlEntryView({
                 type="button"
                 onClick={() => setActiveStep(Number(step))}
                 className={cn(
-                  "h-8 rounded border text-[10px] font-bold transition",
+                  "h-8 rounded border text-[11px] font-bold transition",
                   activeStep === step
                     ? "border-blue-500 bg-blue-600 text-white shadow-sm"
                     : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-slate-200"
@@ -1147,7 +1147,7 @@ export function BlEntryView({
           {/* STEP 1: Parties & Booking */}
           {activeStep === 1 ? (
             <div className="space-y-2.5 rounded-lg border border-slate-800 bg-slate-900/50 p-2.5">
-              <div className="text-[10px] font-black uppercase tracking-wider text-amber-400">
+              <div className="text-[11px] font-black uppercase tracking-wider text-amber-400">
                 {_("ble.step1_heading", "SR#: 1 - Parties & Booking")}
               </div>
               <Field
@@ -1279,7 +1279,7 @@ export function BlEntryView({
                   onChange={(v) => updateField("voyageNumber", v)}
                 />
               </div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-amber-400">
+              <div className="text-[11px] font-black uppercase tracking-wider text-amber-400">
                 {_("ble.section_route", "Transport / Route Details")}
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -1358,7 +1358,7 @@ export function BlEntryView({
           {/* STEP 3: Goods Entry (Approved Reference Design) */}
           {activeStep === 3 ? (
             <div className="space-y-2 rounded-lg border border-slate-800 bg-[#0a1120] p-2.5">
-              <div className="text-[10px] font-black uppercase tracking-wider text-amber-400">
+              <div className="text-[11px] font-black uppercase tracking-wider text-amber-400">
                 {editingIdx !== null ? `${_("ble.act_edit", "Edit")} - ${_("ble.lbl_goods", "Goods")}` : _("ble.step3_label", "3) Goods Entry")}
               </div>
 
@@ -1420,7 +1420,7 @@ export function BlEntryView({
                   onChange={(v) => updateDraftGoods("allotName", v)}
                 />
                 <div className="space-y-0.5">
-                  <Label className="text-[9px] font-bold uppercase text-slate-400">
+                  <Label className="text-[11px] font-bold uppercase text-slate-400">
                     {_("ble.lbl_w_acc", "W.Acc")}
                   </Label>
                   <select
@@ -1448,7 +1448,7 @@ export function BlEntryView({
 
               {/* Warehouse Dropdown */}
               <div className="space-y-0.5">
-                <Label className="text-[9px] font-bold uppercase text-slate-400">
+                <Label className="text-[11px] font-bold uppercase text-slate-400">
                   {_("ble.lbl_warehouse", "Warehouse")}
                 </Label>
                 <select
@@ -1476,7 +1476,7 @@ export function BlEntryView({
               {/* Qty Name & Quantity No */}
               <div className="grid grid-cols-2 gap-1.5">
                 <div className="space-y-0.5">
-                  <Label className="text-[9px] font-bold uppercase text-slate-400">
+                  <Label className="text-[11px] font-bold uppercase text-slate-400">
                     {_("ble.lbl_qty_name", "Qty Name")}
                   </Label>
                   <select
@@ -1518,7 +1518,7 @@ export function BlEntryView({
               {/* Price Type & Divide Type */}
               <div className="grid grid-cols-2 gap-1.5">
                 <div className="space-y-0.5">
-                  <Label className="text-[9px] font-bold uppercase text-slate-400">
+                  <Label className="text-[11px] font-bold uppercase text-slate-400">
                     {_("ble.lbl_price_type", "Price Type")}
                   </Label>
                   <select
@@ -1532,7 +1532,7 @@ export function BlEntryView({
                   </select>
                 </div>
                 <div className="space-y-0.5">
-                  <Label className="text-[9px] font-bold uppercase text-slate-400">
+                  <Label className="text-[11px] font-bold uppercase text-slate-400">
                     {_("ble.lbl_divide_type", "Divide Type")}
                   </Label>
                   <select
@@ -1549,7 +1549,7 @@ export function BlEntryView({
               {/* Currency 1, Rate 1, OP */}
               <div className="grid grid-cols-[1fr_1fr_48px] gap-1.5">
                 <div className="space-y-0.5">
-                  <Label className="text-[9px] font-bold uppercase text-slate-400">
+                  <Label className="text-[11px] font-bold uppercase text-slate-400">
                     {_("ble.lbl_currency_1", "Currency 1")}
                   </Label>
                   <select
@@ -1573,7 +1573,7 @@ export function BlEntryView({
                   onChange={(v) => updateDraftGoods("rate1", v)}
                 />
                 <div className="space-y-0.5">
-                  <Label className="text-[9px] font-bold uppercase text-slate-400">
+                  <Label className="text-[11px] font-bold uppercase text-slate-400">
                     {_("ble.lbl_op", "OP")}
                   </Label>
                   <select
@@ -1590,7 +1590,7 @@ export function BlEntryView({
               {/* Currency 2 & Rate 2 */}
               <div className="grid grid-cols-2 gap-1.5">
                 <div className="space-y-0.5">
-                  <Label className="text-[9px] font-bold uppercase text-slate-400">
+                  <Label className="text-[11px] font-bold uppercase text-slate-400">
                     {_("ble.lbl_currency_2", "Currency 2")}
                   </Label>
                   <select
@@ -1615,7 +1615,7 @@ export function BlEntryView({
               </div>
 
               {/* Live Calculation Summary Box (Matching reference screenshot) */}
-              <div className="rounded border border-slate-800 bg-[#070d18] p-2 text-[10px] space-y-1">
+              <div className="rounded border border-slate-800 bg-[#070d18] p-2 text-[11px] space-y-1">
                 <div className="flex justify-between border-b border-slate-800/80 pb-0.5">
                   <span className="text-slate-400">Total KGS: <b className="text-slate-200">{money(liveDraftCalc.totalGrossWeight)}</b></span>
                   <span className="text-slate-400">Total Qty KGS: <b className="text-slate-200">{money(liveDraftCalc.totalGrossWeight)}</b></span>
@@ -1631,7 +1631,7 @@ export function BlEntryView({
               </div>
 
               {errorMessage ? (
-                <div className="rounded bg-rose-950/70 border border-rose-800 p-1.5 text-[10px] text-rose-200">
+                <div className="rounded bg-rose-950/70 border border-rose-800 p-1.5 text-[11px] text-rose-200">
                   {errorMessage}
                 </div>
               ) : null}
@@ -1697,7 +1697,7 @@ export function BlEntryView({
                 <span className="text-xs font-black uppercase tracking-wider text-slate-100">
                   {_("ble.lbl_live_bl_report", "Live BL Report")}
                 </span>
-                <span className="text-[10px] text-slate-400 font-semibold tracking-wide">
+                <span className="text-[11px] text-slate-400 font-semibold tracking-wide">
                   {_("ble.lbl_tracking_doc", "Tracking & Documentation")}
                 </span>
               </div>
@@ -1705,7 +1705,7 @@ export function BlEntryView({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-7 border-blue-600/70 bg-blue-950/40 text-[10px] font-extrabold text-blue-400 hover:bg-blue-900/60 hover:text-white"
+                className="h-7 border-blue-600/70 bg-blue-950/40 text-[11px] font-extrabold text-blue-400 hover:bg-blue-900/60 hover:text-white"
                 onClick={handleClearBl}
               >
                 {_("ble.btn_clear_bl", "Clear BL")}
@@ -1715,62 +1715,62 @@ export function BlEntryView({
             {/* 6 Summary Cards (2 Rows of 3) matching approved reference */}
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {/* Card 1: MODE & DATES */}
-              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[10px]">
+              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[11px]">
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.ml_mode", "Mode")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500">{_("ble.ml_mode", "Mode")}</span>
                   <span className="font-extrabold text-blue-400">{form.blType ? blTypeLabel(form.blType) : "—"}</span>
                 </div>
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("plrf.issue_date", "Issue Date")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500">{_("plrf.issue_date", "Issue Date")}</span>
                   <span className="font-bold text-slate-200">{form.issueDate || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.ml_issue_serial", "Issue Serial")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500">{_("ble.ml_issue_serial", "Issue Serial")}</span>
                   <span className="font-bold text-slate-300">{form.issueSerial || "—"}</span>
                 </div>
               </div>
 
               {/* Card 2: BL DETAILS */}
-              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[10px]">
-                <div className="text-[9px] font-black uppercase tracking-wider text-cyan-400 border-b border-slate-800 pb-0.5">
+              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[11px]">
+                <div className="text-[11px] font-black uppercase tracking-wider text-cyan-400 border-b border-slate-800 pb-0.5">
                   {_("ble.lbl_bl_details", "BL Details")}
                 </div>
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.ml_bl_no", "BL No")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500">{_("ble.ml_bl_no", "BL No")}</span>
                   <span className="font-extrabold text-blue-400">{form.blNumber || "—"}</span>
                 </div>
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.ml_vessel", "Vessel")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500">{_("ble.ml_vessel", "Vessel")}</span>
                   <span className="font-bold text-slate-300">{form.vesselName || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.ml_route", "Route")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500">{_("ble.ml_route", "Route")}</span>
                   <span className="font-bold text-slate-300">{form.routeCountry || "—"}</span>
                 </div>
               </div>
 
               {/* Card 3: TRUCK DETAILS */}
-              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[10px]">
-                <div className="text-[9px] font-black uppercase tracking-wider text-amber-400 border-b border-slate-800 pb-0.5">
+              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[11px]">
+                <div className="text-[11px] font-black uppercase tracking-wider text-amber-400 border-b border-slate-800 pb-0.5">
                   {_("ble.lbl_truck_details", "Truck Details")}
                 </div>
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("purchase.lgr_truck_no", "Truck No")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500">{_("purchase.lgr_truck_no", "Truck No")}</span>
                   <span className="font-bold text-slate-200">{form.containerNumber || "—"}</span>
                 </div>
                 <div className="flex justify-between border-b border-dotted border-slate-800 pb-0.5">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.gt_seal_no", "Seal No")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500">{_("ble.gt_seal_no", "Seal No")}</span>
                   <span className="font-bold text-slate-300">{form.sealNumber || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[9px] font-bold uppercase text-slate-500">{_("ble.lbl_size", "Size")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500">{_("ble.lbl_size", "Size")}</span>
                   <span className="font-bold text-slate-300">{form.containerType || "—"}</span>
                 </div>
               </div>
 
               {/* Card 4: NOTIFY PARTY */}
-              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[10px]">
-                <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-0.5">
+              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[11px]">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-0.5">
                   {plain("ble.lbl_notify_party", "Notify Party")}
                 </div>
                 <div className="pt-0.5 text-slate-300 font-semibold truncate">
@@ -1779,8 +1779,8 @@ export function BlEntryView({
               </div>
 
               {/* Card 5: IMPORTER */}
-              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[10px]">
-                <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-0.5">
+              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[11px]">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-0.5">
                   {plain("ble.lbl_importer", "Importer")}
                 </div>
                 <div className="pt-0.5 text-slate-300 font-semibold truncate">
@@ -1789,8 +1789,8 @@ export function BlEntryView({
               </div>
 
               {/* Card 6: EXPORTER */}
-              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[10px]">
-                <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-0.5">
+              <div className="rounded border border-slate-800 bg-[#080e1a] p-2 space-y-1 text-[11px]">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-0.5">
                   {plain("ble.lbl_exporter", "Exporter")}
                 </div>
                 <div className="pt-0.5 text-slate-300 font-semibold truncate">
@@ -1808,7 +1808,7 @@ export function BlEntryView({
                 <span className="text-xs font-black uppercase tracking-wider text-slate-100">
                   {_("ble.lbl_goods_container_report", "Goods Container Report")}
                 </span>
-                <span className="rounded bg-cyan-950/80 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-400 border border-cyan-800/60">
+                <span className="rounded bg-cyan-950/80 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-cyan-400 border border-cyan-800/60">
                   {_("ble.live_inventory", "Live Inventory")}
                 </span>
               </div>
@@ -1816,7 +1816,7 @@ export function BlEntryView({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-7 border-rose-800/80 bg-rose-950/40 text-[10px] font-extrabold text-rose-400 hover:bg-rose-900/60 hover:text-white"
+                className="h-7 border-rose-800/80 bg-rose-950/40 text-[11px] font-extrabold text-rose-400 hover:bg-rose-900/60 hover:text-white"
                 onClick={handleClearAllGoods}
               >
                 {_("ble.btn_clear_all", "Clear All Data")}
@@ -1828,26 +1828,26 @@ export function BlEntryView({
               <table className="w-full min-w-[1360px] border-separate border-spacing-0 text-[11px]">
                 <thead className="bg-[#0b1322] text-slate-300">
                   <tr className="border-b border-slate-800">
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">#</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.gt_good_name", "Good Name")}</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_size", "Size")}</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_brand", "Brand")}</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_origin", "Origin")}</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_hs_code", "HS Code")}</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_allot_name", "Allot Name")}</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_warehouse", "Warehouse")}</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_qty_name", "Qty Name")}</Th>
-                    <Th className="px-2.5 py-2 text-right text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.gt_qty_no", "Qty No")}</Th>
-                    <Th className="px-2.5 py-2 text-right text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.gt_total_gross_kg", "Qty KGS")}</Th>
-                    <Th className="px-2.5 py-2 text-right text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_empty_per_bag", "Empty KGS")}</Th>
-                    <Th className="px-2.5 py-2 text-right text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.gt_net_weight_kg", "Net Weight")}</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_price_type", "Price Type")}</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_divide_type", "Divide Type")}</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_primary_cur", "Primary Cur")}</Th>
-                    <Th className="px-2 py-2 text-center text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_op", "OP")}</Th>
-                    <Th className="px-2.5 py-2 text-left text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_secondary_cur", "Secondary Cur")}</Th>
-                    <Th className="px-2.5 py-2 text-right text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_final_amount", "Final Amount")}</Th>
-                    <Th className="px-2 py-2 text-center text-[9px] font-black uppercase text-slate-400 border-b border-slate-800">···</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">#</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.gt_good_name", "Good Name")}</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_size", "Size")}</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_brand", "Brand")}</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_origin", "Origin")}</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_hs_code", "HS Code")}</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_allot_name", "Allot Name")}</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_warehouse", "Warehouse")}</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_qty_name", "Qty Name")}</Th>
+                    <Th className="px-2.5 py-2 text-right text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.gt_qty_no", "Qty No")}</Th>
+                    <Th className="px-2.5 py-2 text-right text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.gt_total_gross_kg", "Qty KGS")}</Th>
+                    <Th className="px-2.5 py-2 text-right text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_empty_per_bag", "Empty KGS")}</Th>
+                    <Th className="px-2.5 py-2 text-right text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.gt_net_weight_kg", "Net Weight")}</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_price_type", "Price Type")}</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_divide_type", "Divide Type")}</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_primary_cur", "Primary Cur")}</Th>
+                    <Th className="px-2 py-2 text-center text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_op", "OP")}</Th>
+                    <Th className="px-2.5 py-2 text-left text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_secondary_cur", "Secondary Cur")}</Th>
+                    <Th className="px-2.5 py-2 text-right text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">{_("ble.lbl_final_amount", "Final Amount")}</Th>
+                    <Th className="px-2 py-2 text-center text-[11px] font-black uppercase text-slate-400 border-b border-slate-800">···</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800 bg-[#080e19]">
@@ -1873,11 +1873,11 @@ export function BlEntryView({
                         <td className="px-2.5 py-2 text-right font-mono text-slate-200">{money(item.totalGrossWeight)}</td>
                         <td className="px-2.5 py-2 text-right font-mono font-semibold text-rose-400">{money(item.totalEmptyWeight)}</td>
                         <td className="px-2.5 py-2 text-right font-mono font-black text-amber-400">{money(item.netWeight)}</td>
-                        <td className="px-2.5 py-2 text-slate-300 text-[10px]">{item.priceType}</td>
-                        <td className="px-2.5 py-2 text-slate-300 text-[10px]">{item.divideType}</td>
-                        <td className="px-2.5 py-2 text-slate-300 font-mono text-[10px]">{item.currency1} - ${money(item.rate1)}</td>
+                        <td className="px-2.5 py-2 text-slate-300 text-[11px]">{item.priceType}</td>
+                        <td className="px-2.5 py-2 text-slate-300 text-[11px]">{item.divideType}</td>
+                        <td className="px-2.5 py-2 text-slate-300 font-mono text-[11px]">{item.currency1} - ${money(item.rate1)}</td>
                         <td className="px-2 py-2 text-center font-black text-cyan-400">{item.op}</td>
-                        <td className="px-2.5 py-2 text-slate-300 font-mono text-[10px]">{item.currency2} - {money(item.rate2)}</td>
+                        <td className="px-2.5 py-2 text-slate-300 font-mono text-[11px]">{item.currency2} - {money(item.rate2)}</td>
                         <td className="px-2.5 py-2 text-right font-mono font-black text-cyan-400">{money(item.finalAmount)}</td>
                         <td className="px-2 py-2 text-center relative">
                           <button
@@ -1929,19 +1929,19 @@ export function BlEntryView({
             {/* Bottom Summary Bar: Matching approved reference screenshot */}
             <div className="flex flex-wrap items-center justify-end gap-6 rounded border border-slate-800 bg-[#09101c] p-2.5 text-right">
               <div>
-                <span className="block text-[9px] font-black uppercase text-slate-500">
+                <span className="block text-[11px] font-black uppercase text-slate-500">
                   {_("ble.total_kgs", "TOTAL KGS")}
                 </span>
                 <b className="text-sm font-black text-slate-100">{money(grandTotals.totalKgs)}</b>
               </div>
               <div>
-                <span className="block text-[9px] font-black uppercase text-slate-500">
+                <span className="block text-[11px] font-black uppercase text-slate-500">
                   {_("ble.net_weight", "NET WEIGHT")}
                 </span>
                 <b className="text-sm font-black text-amber-400">{money(grandTotals.netWeight)}</b>
               </div>
               <div className="pl-4">
-                <span className="block text-[9px] font-black uppercase text-cyan-500">
+                <span className="block text-[11px] font-black uppercase text-cyan-500">
                   {_("ble.lbl_grand_final_amount", "GRAND FINAL AMOUNT")}
                 </span>
                 <b className="text-lg md:text-xl font-black text-cyan-400">
@@ -1996,12 +1996,12 @@ export function BlEntryView({
                   ["ble.q_defect", "Defect Tolerance"]
                 ] as const).map(([key, fallback]) => (
                   <div key={key} className="rounded border border-slate-800 bg-[#080e1a] p-2">
-                    <div className="text-[9px] uppercase text-slate-500">{_(key, fallback)}</div>
+                    <div className="text-[11px] uppercase text-slate-500">{_(key, fallback)}</div>
                     <div className="text-sm font-black text-slate-400">{_("ble.q_not_recorded", "Not recorded")}</div>
                   </div>
                 ))}
                 <div className="rounded border border-slate-800 bg-[#080e1a] p-2">
-                  <div className="text-[9px] uppercase text-slate-500">{_("ble.q_inspection_status", "Inspection Status")}</div>
+                  <div className="text-[11px] uppercase text-slate-500">{_("ble.q_inspection_status", "Inspection Status")}</div>
                   {/* "Passed" on older lines was written automatically (the form never had an inspection input), so it is not a result */}
                   {qualityModalItem.qualityReportStatus && qualityModalItem.qualityReportStatus !== "Passed" ? (
                     <div className="text-sm font-black text-emerald-400 flex items-center gap-1">
@@ -2044,40 +2044,40 @@ export function BlEntryView({
             <div className="space-y-2 py-3 text-xs">
               <div className="grid grid-cols-2 gap-2">
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">{_("ble.gt_good_name", "Good Name")}</span>
+                  <span className="text-slate-400 text-[11px] block">{_("ble.gt_good_name", "Good Name")}</span>
                   <b className="text-cyan-400">{viewDetailsItem.goodsName}</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">{_("ble.lbl_warehouse", "Warehouse")}</span>
+                  <span className="text-slate-400 text-[11px] block">{_("ble.lbl_warehouse", "Warehouse")}</span>
                   <b className="text-blue-400">{viewDetailsItem.warehouse || "—"}</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">{_("ble.lbl_size", "Size")} / {_("ble.lbl_brand", "Brand")}</span>
+                  <span className="text-slate-400 text-[11px] block">{_("ble.lbl_size", "Size")} / {_("ble.lbl_brand", "Brand")}</span>
                   <b>{viewDetailsItem.goodsSize || "—"} / {viewDetailsItem.goodsBrand || "—"}</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">{_("ble.lbl_origin", "Origin")} / {_("ble.lbl_hs_code", "HS Code")}</span>
+                  <span className="text-slate-400 text-[11px] block">{_("ble.lbl_origin", "Origin")} / {_("ble.lbl_hs_code", "HS Code")}</span>
                   <b>{viewDetailsItem.goodsOrigin || "—"} / {viewDetailsItem.hsCode || "—"}</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">{_("ble.lbl_qty_no", "Quantity No")} / {_("ble.total_kgs", "Total KGS")}</span>
+                  <span className="text-slate-400 text-[11px] block">{_("ble.lbl_qty_no", "Quantity No")} / {_("ble.total_kgs", "Total KGS")}</span>
                   <b>{viewDetailsItem.qtyNo} {viewDetailsItem.qtyName} ({money(viewDetailsItem.totalGrossWeight)} KG)</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">{_("ble.gt_total_empty_kg", "Total Empty KG")} / {_("ble.net_weight", "Net Weight")}</span>
+                  <span className="text-slate-400 text-[11px] block">{_("ble.gt_total_empty_kg", "Total Empty KG")} / {_("ble.net_weight", "Net Weight")}</span>
                   <b><span className="text-rose-400">{money(viewDetailsItem.totalEmptyWeight)}</span> / <span className="text-amber-400">{money(viewDetailsItem.netWeight)} KG</span></b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">{_("ble.d_price_divide", "Price & Divide Basis")}</span>
+                  <span className="text-slate-400 text-[11px] block">{_("ble.d_price_divide", "Price & Divide Basis")}</span>
                   <b>{viewDetailsItem.priceType} | {viewDetailsItem.divideType}</b>
                 </div>
                 <div className="p-2 bg-slate-900 border border-slate-800 rounded">
-                  <span className="text-slate-400 text-[9px] block">{_("ble.d_rates_conversion", "Rates & Conversion")}</span>
+                  <span className="text-slate-400 text-[11px] block">{_("ble.d_rates_conversion", "Rates & Conversion")}</span>
                   <b dir="ltr">{viewDetailsItem.currency1} {money(viewDetailsItem.rate1)} {viewDetailsItem.op} {viewDetailsItem.currency2} {money(viewDetailsItem.rate2)}</b>
                 </div>
               </div>
               <div className="p-3 bg-cyan-950/40 border border-cyan-800 rounded text-end">
-                <span className="text-[10px] text-cyan-300 font-bold uppercase block">{_("form.final_amount", "Final Amount")}</span>
+                <span className="text-[11px] text-cyan-300 font-bold uppercase block">{_("form.final_amount", "Final Amount")}</span>
                 <span className="text-lg font-black text-cyan-400">{money(viewDetailsItem.finalAmount)} {viewDetailsItem.currency2}</span>
               </div>
             </div>
@@ -2108,7 +2108,7 @@ function CompactField({
 }) {
   return (
     <div className="space-y-0.5">
-      <Label className="text-[9px] font-bold uppercase text-slate-400">{label}</Label>
+      <Label className="text-[11px] font-bold uppercase text-slate-400">{label}</Label>
       <Input
         type={type}
         value={value}
@@ -2139,7 +2139,7 @@ function Field({
 }) {
   return (
     <div className="space-y-0.5">
-      <Label className="text-[9px] font-bold uppercase text-slate-400">{label}</Label>
+      <Label className="text-[11px] font-bold uppercase text-slate-400">{label}</Label>
       {asSelect ? (
         <select
           value={value}

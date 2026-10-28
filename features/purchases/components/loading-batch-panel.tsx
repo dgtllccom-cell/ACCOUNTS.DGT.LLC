@@ -96,11 +96,11 @@ export function LoadingBatchPanel({
                   <div key={b.id} className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900">
                     <div className="flex flex-wrap items-center justify-between gap-1.5">
                       <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-200">{b.batch_no}</span>
-                      <span className="text-[10px] font-bold text-slate-400">
+                      <span className="text-[11px] font-bold text-slate-400">
                         {s.t(`lp_bs_${b.status}`, b.status)} · {(b.container_numbers ?? []).length} {s.t("lp_containers", "containers")}
                       </span>
                       {b.status === "proposed" ? (
-                        <button type="button" disabled={busy} onClick={() => void confirmBatch(b.id)} className="rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
+                        <button type="button" disabled={busy} onClick={() => void confirmBatch(b.id)} className="rounded bg-emerald-600 px-2 py-0.5 text-[11px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
                           {s.t("lp_confirm", "Confirm Batch")}
                         </button>
                       ) : null}
@@ -119,7 +119,7 @@ export function LoadingBatchPanel({
                         ))}
                       </div>
                     ) : (
-                      <p className="mt-1 text-[10px] text-emerald-600">{s.t("lp_all_loaded", "All containers in this batch are loaded.")}</p>
+                      <p className="mt-1 text-[11px] text-emerald-600">{s.t("lp_all_loaded", "All containers in this batch are loaded.")}</p>
                     )}
                   </div>
                 );
@@ -137,7 +137,7 @@ export function LoadingBatchPanel({
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
     <div className="rounded-lg bg-white p-2 dark:bg-slate-900">
-      <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</div>
+      <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">{label}</div>
       <div className={`text-base font-black ${tone || "text-slate-800 dark:text-slate-100"}`}>{value}</div>
     </div>
   );

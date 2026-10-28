@@ -267,7 +267,7 @@ export function BlRecordsRegister({
                         {r.eta || "-"} / {r.etd || "-"}
                       </td>
                       <td className="px-3 py-2">
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                           {r.shipment_status || "-"}
                         </span>
                       </td>

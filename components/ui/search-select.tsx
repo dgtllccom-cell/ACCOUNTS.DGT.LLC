@@ -400,7 +400,7 @@ export function SearchSelect({
                               <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                                 <span
                                   className={cn(
-                                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide",
+                                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide",
                                     isActive
                                       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60"
                                       : "bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60"
@@ -487,7 +487,7 @@ export function SearchSelect({
                           <div className="flex min-w-0 flex-1 items-center gap-2.5">
                             <span
                               className={cn(
-                                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white",
+                                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white",
                                 opt.avatarColor || avatarColorFor(opt.primaryText || opt.label)
                               )}
                             >
@@ -498,21 +498,21 @@ export function SearchSelect({
                                 {opt.primaryText || opt.label}
                               </div>
                               {opt.secondaryText && (
-                                <div className="truncate text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400">{opt.secondaryText}</div>
+                                <div className="truncate text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{opt.secondaryText}</div>
                               )}
                             </div>
                             {opt.code && (
-                              <span className="hidden shrink-0 font-mono text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 sm:inline">
+                              <span className="hidden shrink-0 font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 sm:inline">
                                 {opt.code}
                               </span>
                             )}
                             {opt.branch && (
-                              <span className="hidden shrink-0 text-[10.5px] font-medium text-slate-500 dark:text-slate-400 md:inline">
+                              <span className="hidden shrink-0 text-[11px] font-medium text-slate-500 dark:text-slate-400 md:inline">
                                 {opt.branch}
                               </span>
                             )}
                             {opt.country && (
-                              <span className="hidden shrink-0 text-[10.5px] font-medium text-slate-500 dark:text-slate-400 lg:inline">
+                              <span className="hidden shrink-0 text-[11px] font-medium text-slate-500 dark:text-slate-400 lg:inline">
                                 {opt.country}
                               </span>
                             )}
@@ -573,7 +573,7 @@ export function SearchSelect({
                 </div>
               )}
               {richList && matchingOptions.length > 0 && matchingOptions.length <= displayOptions.length && (
-                <div className="border-t border-slate-100 dark:border-slate-800 px-3 py-1.5 text-center text-[10.5px] font-semibold text-slate-400">
+                <div className="border-t border-slate-100 dark:border-slate-800 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-400">
                   {uiText(language, "common.showing_of_results", "Showing {shown} of {total} results")
                     .replace("{shown}", String(displayOptions.length))
                     .replace("{total}", String(matchingOptions.length))}
