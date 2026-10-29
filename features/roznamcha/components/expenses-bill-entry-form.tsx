@@ -1038,7 +1038,7 @@ export function ExpensesBillEntryForm({
               : initialBillCategory === "other_expenses"
               ? tt("exp.other_bill_title", "Other Expenses Bill")
               : tt("exp.office_bill_title", "Office / Home Expenses Bill")}
-            <span className="bg-amber-400 text-amber-950 text-[11px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">NEW</span>
+            <span className="bg-amber-400 text-amber-950 text-[11px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider whitespace-nowrap">NEW</span>
           </h1>
           {viewMode === "list" ? (
             <Button size="sm" onClick={() => setViewMode("form")} className="h-7 text-xs bg-primary hover:bg-primary/90 text-white shadow-sm">
@@ -1097,7 +1097,7 @@ export function ExpensesBillEntryForm({
                   <span className="text-slate-500 font-medium">{tt("common.user", "User")}</span>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-700">{sessionInfo?.user?.fullName || "superadmin"}</span>
-                    <span className="font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-[11px]">
+                    <span className="font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap">
                       {sessionInfo?.roles?.[0] ? sessionInfo.roles[0].replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) : "Super Admin"}
                     </span>
                   </div>
@@ -1828,7 +1828,7 @@ export function ExpensesBillEntryForm({
 
               <div className="space-y-6 flex-1">
                 <div className="space-y-2 p-4 border border-blue-100 bg-blue-50/50 rounded-lg relative shadow-sm">
-                  <div className="absolute -top-3 left-4 bg-blue-100 text-blue-700 font-black text-xs px-2 py-0.5 rounded shadow-sm border border-blue-200">DR</div>
+                  <div className="absolute -top-3 left-4 bg-blue-100 text-blue-700 font-black text-xs px-2 py-0.5 rounded shadow-sm border border-blue-200 whitespace-nowrap">DR</div>
                   <Label className="text-sm font-bold text-slate-700 flex items-center justify-between">
                     <span>{tt("exp.debit_acct_expense", "Debit Account (Expense)")}</span>
                   </Label>
@@ -1843,7 +1843,7 @@ export function ExpensesBillEntryForm({
                 </div>
 
                 <div className="space-y-2 p-4 border border-emerald-100 bg-emerald-50/50 rounded-lg relative shadow-sm">
-                  <div className="absolute -top-3 left-4 bg-emerald-100 text-emerald-700 font-black text-xs px-2 py-0.5 rounded shadow-sm border border-emerald-200">CR</div>
+                  <div className="absolute -top-3 left-4 bg-emerald-100 text-emerald-700 font-black text-xs px-2 py-0.5 rounded shadow-sm border border-emerald-200 whitespace-nowrap">CR</div>
                   <Label className="text-sm font-bold text-slate-700 flex items-center justify-between">
                     <span>{tt("exp.credit_acct_payment", "Credit Account (Payment Source)")}</span>
                   </Label>

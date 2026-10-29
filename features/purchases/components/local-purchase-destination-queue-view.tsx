@@ -615,7 +615,7 @@ export function LocalPurchaseDestinationQueueView({
                     {cg.countryName}
                   </span>
                 </div>
-                <span className="text-[11px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                <span className="text-[11px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                   {cg.branches.length} {th("BRANCHES")}
                 </span>
               </CardHeader>
@@ -1022,12 +1022,12 @@ export function LocalPurchaseDestinationQueueView({
                               {/* Status Badge */}
                               <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
                                 {isCompleted ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                                     <CheckCircle2 className="h-2.5 w-2.5" />{" "}
                                     {th(config.completedLabel.toUpperCase())}
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-black uppercase text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-black uppercase text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 whitespace-nowrap">
                                     <Clock className="h-2.5 w-2.5" />{" "}
                                     {th(config.pendingLabel.toUpperCase())}
                                   </span>
@@ -1042,7 +1042,7 @@ export function LocalPurchaseDestinationQueueView({
                                       size="sm"
                                       disabled={actingId === row.id}
                                       onClick={() => void markComplete(row.id)}
-                                      className="h-6 px-2 text-[11px] font-bold bg-slate-800 hover:bg-slate-900 text-white rounded-md flex items-center gap-1 shadow-xs"
+                                      className="h-6 px-2 text-[11px] font-bold bg-slate-800 hover:bg-slate-900 text-white rounded-md flex items-center gap-1 shadow-xs whitespace-nowrap"
                                     >
                                       {actingId === row.id ? (
                                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -1067,7 +1067,7 @@ export function LocalPurchaseDestinationQueueView({
                                     size="sm"
                                     variant="outline"
                                     onClick={() => setSelectedRowForVoucher(row)}
-                                    className="h-6 px-2 text-[11px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-900 dark:hover:bg-blue-950 rounded-md"
+                                    className="h-6 px-2 text-[11px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-900 dark:hover:bg-blue-950 rounded-md whitespace-nowrap"
                                   >
                                     <Eye className="h-3 w-3 mr-1" />
                                     {th("View Voucher")}

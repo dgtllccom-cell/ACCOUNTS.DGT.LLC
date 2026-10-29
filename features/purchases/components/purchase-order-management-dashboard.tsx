@@ -917,7 +917,7 @@ function DashboardSummaryHeaderBody({
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">{r.currency}</span>
+                  <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded whitespace-nowrap">{r.currency}</span>
                   <span className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-0.5">
                     {tr(isExpanded ? "Hide Branches" : "View Branches")} {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                   </span>
@@ -1378,7 +1378,7 @@ function DashboardSummaryHeaderBody({
               </div>
               <div className="flex justify-between items-center mt-auto">
                 <span>{tr("STATUS")}:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px]">{tr("ACTIVE")}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">{tr("ACTIVE")}</span>
               </div>
             </div>
           </div>
@@ -1460,7 +1460,7 @@ function DashboardSummaryHeaderBody({
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </div>
                 <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400 flex-1">4. {tr("ALL COUNTRIES REPORT")}</h4>
-                <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded text-slate-500 font-bold">{showAllCountries ? tr("HIDE DETAILS") : tr("SHOW DETAILS")}</span>
+                <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded text-slate-500 font-bold whitespace-nowrap">{showAllCountries ? tr("HIDE DETAILS") : tr("SHOW DETAILS")}</span>
               </div>
               <div className="p-3 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full overflow-y-auto max-h-[160px] scrollbar-thin">
                 {summaryRows.map((r, idx) => (
@@ -1486,7 +1486,7 @@ function DashboardSummaryHeaderBody({
                     <span className="font-black text-[11px] uppercase text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                       {getFlag(r.country)} {r.country}
                     </span>
-                    <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {r.branches.length} {tr("BRANCHES")}
                     </span>
                   </div>
@@ -1585,7 +1585,7 @@ function DashboardSummaryHeaderBody({
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("STATUS")}:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-450 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px]">{tr("ACTIVE")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-450 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">{tr("ACTIVE")}</span>
             </div>
           </div>
         </div>
@@ -2417,7 +2417,7 @@ export function PurchaseOrderManagementDashboard() {
                         </td>
                         <td className="px-2 py-2 border-r border-slate-100 dark:border-slate-850">
                           {invoicePercent ? (
-                            <span className="inline-flex items-center rounded bg-blue-50 border border-blue-200 text-blue-700 px-1.5 py-0.5 text-[11px] font-black">{invoicePercent}%</span>
+                            <span className="inline-flex items-center rounded bg-blue-50 border border-blue-200 text-blue-700 px-1.5 py-0.5 text-[11px] font-black whitespace-nowrap">{invoicePercent}%</span>
                           ) : <span className={getRowColor()}>-</span>}
                         </td>
                         <td className={`px-2 py-2 ${getRowColor()} border-r border-slate-100 dark:border-slate-850 text-left whitespace-nowrap`}>{payCondition}</td>

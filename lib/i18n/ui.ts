@@ -12577,6 +12577,9 @@ export type UiKey =
   | "cotr.badge_audit_trail"
   | "cotr.unit_kg"
   | "cotr.unit_pkgs"
+  | "nav.tab_customers"
+  | "nav.tab_shipments"
+  | "nav.tab_menu"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -38126,6 +38129,9 @@ const en: Dict = {
   "cotr.badge_audit_trail": "Audit Trail",
   "cotr.unit_kg": "kg",
   "cotr.unit_pkgs": "pkgs",
+  "nav.tab_customers": "Customers",
+  "nav.tab_shipments": "Shipments",
+  "nav.tab_menu": "Menu",
 };
 
 const ur: Dict = {
@@ -63643,6 +63649,9 @@ const ur: Dict = {
   "cotr.badge_audit_trail": "آڈٹ ٹریل",
   "cotr.unit_kg": "کلو",
   "cotr.unit_pkgs": "پیکج",
+  "nav.tab_customers": "کسٹمرز",
+  "nav.tab_shipments": "شپمنٹس",
+  "nav.tab_menu": "مینیو",
 };
 
 const ar: Dict = {
@@ -89161,6 +89170,9 @@ const ar: Dict = {
   "cotr.badge_audit_trail": "سجل التدقيق",
   "cotr.unit_kg": "كغ",
   "cotr.unit_pkgs": "طرود",
+  "nav.tab_customers": "العملاء",
+  "nav.tab_shipments": "الشحنات",
+  "nav.tab_menu": "القائمة",
 };
 
 const fa: Dict = {
@@ -114678,6 +114690,9 @@ const fa: Dict = {
   "cotr.badge_audit_trail": "ردپای ممیزی",
   "cotr.unit_kg": "کیلوگرم",
   "cotr.unit_pkgs": "بسته",
+  "nav.tab_customers": "مشتریان",
+  "nav.tab_shipments": "محموله‌ها",
+  "nav.tab_menu": "منو",
 };
 
 const ps: Dict = {
@@ -140202,6 +140217,9 @@ const ps: Dict = {
   "cotr.badge_audit_trail": "د پلټنې لړۍ",
   "cotr.unit_kg": "کیلو",
   "cotr.unit_pkgs": "بستې",
+  "nav.tab_customers": "پېرودونکي",
+  "nav.tab_shipments": "بارونه",
+  "nav.tab_menu": "مېنو",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

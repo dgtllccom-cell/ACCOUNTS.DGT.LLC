@@ -381,7 +381,7 @@ export function ShippingLineMasterSetup() {
                   return (
                     <tr key={line.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                       <td className="px-4 py-3.5">
-                        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-bold text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-bold text-slate-800 dark:bg-slate-800 dark:text-slate-200 whitespace-nowrap">
                           {line.shipping_line_code || "SHL-NEW"}
                         </span>
                       </td>
@@ -428,7 +428,7 @@ export function ShippingLineMasterSetup() {
                             linkedCountryNames.map((cName) => (
                               <span
                                 key={cName}
-                                className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
+                                className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 whitespace-nowrap"
                               >
                                 🌐 {cName}
                               </span>

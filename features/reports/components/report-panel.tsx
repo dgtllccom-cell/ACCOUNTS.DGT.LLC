@@ -724,7 +724,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                     <button
                       type="button"
                       onClick={resetColumnsToDefault}
-                      className="rounded-md border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      className="rounded-md border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap"
                     >
                       {_("report.reset_default", "Reset to Default")}
                     </button>
@@ -912,7 +912,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               </div>
               <div className="flex justify-between items-center mt-auto pt-1">
               <span>{th("STATUS")}:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px]">{th("ACTIVE")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">{th("ACTIVE")}</span>
               </div>
             </div>
           </div>
@@ -1030,7 +1030,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               <span className="text-[11px] font-bold text-orange-600 group-hover:underline">
                 {showAllCountries ? _("report.hide_details", "Hide Details") : _("report.show_details", "Show Details")}
               </span>
-              <span className="text-[11px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded">
+              <span className="text-[11px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded whitespace-nowrap">
                 {th("EXPLORE")} →
               </span>
             </div>
@@ -1110,7 +1110,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
       {reportResult && (
         <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 px-3 py-1.5 dark:border-slate-800 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase">
+            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase whitespace-nowrap">
               {reportResult?.scope?.label ?? "GLOBAL"}
             </span>
             <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
@@ -1124,7 +1124,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
               {reportData.length} {_("report.records_loaded", "Records Loaded")}
             </span>
           </div>

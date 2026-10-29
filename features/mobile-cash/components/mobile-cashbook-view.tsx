@@ -53,7 +53,7 @@ export function MobileCashbookView({
         </label>
       </div>
 
-      <span className="mt-3 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500 dark:bg-slate-800">
+      <span className="mt-3 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500 dark:bg-slate-800 whitespace-nowrap">
         {s.t("view_only", "View only")}
       </span>
 

@@ -306,7 +306,7 @@ function CustomerOrderRouteStopModalBody({
                     ? `${tt("edit_route_stop_title", "Edit Route Stop")} #${stopIndex + 1}`
                     : tt("add_route_stop_title", "Add Route Stop / Border Crossing")}
                 </h3>
-                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300 whitespace-nowrap">
                   {tt("step_waypoint_badge", "Corridor Waypoint")}
                 </span>
               </div>

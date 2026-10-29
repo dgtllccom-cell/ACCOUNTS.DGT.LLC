@@ -107,7 +107,7 @@ export function MasterCombo({
           className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs outline-none"
         />
         {linkedId && (
-          <span title={t(lang, "cns.linked_master", "Linked to master record")} className="shrink-0 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold text-emerald-600">
+          <span title={t(lang, "cns.linked_master", "Linked to master record")} className="shrink-0 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold text-emerald-600 whitespace-nowrap">
             ✓
           </span>
         )}

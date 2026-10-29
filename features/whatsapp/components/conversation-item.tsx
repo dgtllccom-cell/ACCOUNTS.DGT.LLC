@@ -102,7 +102,7 @@ export function ConversationItem({ conversation: conv, isActive, onClick }: Prop
 
             <div className="flex flex-shrink-0 items-center gap-1">
               {hasUnread && (
-                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#25D366] px-1 text-[11px] font-bold text-white leading-none">
+                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#25D366] px-1 text-[11px] font-bold text-white leading-none whitespace-nowrap">
                   {conv.unreadCount > 99 ? "99+" : conv.unreadCount}
                 </span>
               )}

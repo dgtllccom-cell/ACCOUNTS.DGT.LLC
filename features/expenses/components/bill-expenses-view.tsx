@@ -445,7 +445,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
                         <td className="px-3 py-2 text-right font-mono font-bold">{b.currency || ""} {money(b.grandTotal)}</td>
                         <td className="px-3 py-2 text-center">
                           {b.transferredToRoznamcha ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 whitespace-nowrap">
                               <CheckCircle2 className="h-3 w-3" /> {s.t("posting_posted", "Posted")}
                             </span>
                           ) : (
@@ -500,7 +500,7 @@ function BillExpenseRow({
   return (
     <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40">
       <td className="px-4 py-3">
-        <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+        <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
           {moduleLabel(r.sourceModule)}
         </span>
       </td>
@@ -524,11 +524,11 @@ function BillExpenseRow({
       </td>
       <td className="px-4 py-3 text-center">
         {r.eligibility === "withdrawn" ? (
-          <span className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-bold uppercase text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+          <span className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-bold uppercase text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300 whitespace-nowrap">
             {s.t("eligibility_withdrawn", "Withdrawn")}
           </span>
         ) : (
-          <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
             {statusLabel(r.status)}
           </span>
         )}
@@ -934,7 +934,7 @@ function BillExpenseDetailModal({
                             <td className="px-3 py-2 text-center">
                               {l.postingStatus === "posted" ? (
                                 <span className="inline-flex flex-col items-center gap-1">
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 whitespace-nowrap">
                                     <CheckCircle2 className="h-3 w-3" /> {s.t("posting_posted", "Posted")}
                                   </span>
                                   {l.roznamchaEntryId && (

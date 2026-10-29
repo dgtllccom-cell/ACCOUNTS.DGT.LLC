@@ -345,7 +345,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                   setSelectedCountry(null);
                   setIsCountryModalOpen(true);
                 }}
-                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 cursor-pointer flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-lg border border-blue-200/50 dark:border-blue-900/50 transition-colors"
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 cursor-pointer flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-lg border border-blue-200/50 dark:border-blue-900/50 transition-colors whitespace-nowrap"
               >
                 <span>{translateHeader(lang, "VIEW ALL")}</span>
                 <span className="text-[11px] bg-blue-600 text-white rounded-full px-1.5 py-0.2">
@@ -647,7 +647,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                     <h3 className="font-bold text-base text-foreground">
                       {t(lang, "dash.country_performance", "Country Performance")}
                     </h3>
-                    <span className="rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs px-2.5 py-0.5 font-bold">
+                    <span className="rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs px-2.5 py-0.5 font-bold whitespace-nowrap">
                       {countrySummaries.length || 6} {translateHeader(lang, "COUNTRY")}
                     </span>
                   </div>

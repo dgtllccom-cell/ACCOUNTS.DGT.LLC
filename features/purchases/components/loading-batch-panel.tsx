@@ -100,7 +100,7 @@ export function LoadingBatchPanel({
                         {s.t(`lp_bs_${b.status}`, b.status)} · {(b.container_numbers ?? []).length} {s.t("lp_containers", "containers")}
                       </span>
                       {b.status === "proposed" ? (
-                        <button type="button" disabled={busy} onClick={() => void confirmBatch(b.id)} className="rounded bg-emerald-600 px-2 py-0.5 text-[11px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
+                        <button type="button" disabled={busy} onClick={() => void confirmBatch(b.id)} className="rounded bg-emerald-600 px-2 py-0.5 text-[11px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50 whitespace-nowrap">
                           {s.t("lp_confirm", "Confirm Batch")}
                         </button>
                       ) : null}
@@ -112,7 +112,7 @@ export function LoadingBatchPanel({
                             key={c}
                             type="button"
                             onClick={() => onPickContainer?.(c)}
-                            className="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 font-mono text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300"
+                            className="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 font-mono text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300 whitespace-nowrap"
                           >
                             {c}
                           </button>

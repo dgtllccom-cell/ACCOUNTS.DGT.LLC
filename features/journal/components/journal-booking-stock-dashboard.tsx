@@ -1122,7 +1122,7 @@ export function JournalBookingStockDashboard({
               key={chip.id}
               type="button"
               onClick={chip.onRemove}
-              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300"
+              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 whitespace-nowrap"
             >
               <span>{chip.label}</span>
               <X className="h-3 w-3" />
@@ -1131,7 +1131,7 @@ export function JournalBookingStockDashboard({
           <button
             type="button"
             onClick={clearAllFilters}
-            className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300"
+            className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 whitespace-nowrap"
           >
             Clear all
           </button>
@@ -1297,7 +1297,7 @@ export function JournalBookingStockDashboard({
                       <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${st.dotClass}`} />
                       <span className="truncate">{st.label}</span>
                     </span>
-                    <span className="ms-1.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-slate-700 dark:bg-slate-700 dark:text-slate-200" dir="ltr">
+                    <span className="ms-1.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-slate-700 dark:bg-slate-700 dark:text-slate-200 whitespace-nowrap" dir="ltr">
                       {count}
                     </span>
                   </button>
@@ -1731,7 +1731,7 @@ export function JournalBookingStockDashboard({
                     }[metricFilter]
                   : tabLabel(tab)}
               </h2>
-              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                 {displayRows.length} {s.t("records", "records")}
               </span>
             </div>

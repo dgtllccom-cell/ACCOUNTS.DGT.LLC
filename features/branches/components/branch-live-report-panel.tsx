@@ -21,7 +21,7 @@ export type BranchLiveReportStep = {
 function renderValue(value: string | null | undefined, prefix: string = "", notConfiguredLabel: string = "[Not Configured]") {
   const isBlank = !value || value.trim() === "" || value.trim() === "-" || value.trim().toLowerCase() === "undefined";
   if (isBlank) {
-    return <span className="inline-flex max-w-full items-center rounded-md border border-rose-200/60 bg-rose-50 px-2 py-0.5 text-[11px] font-bold leading-4 text-rose-600 dark:border-rose-900/30 dark:bg-rose-950/20 dark:text-rose-400">{notConfiguredLabel}</span>;
+    return <span className="inline-flex max-w-full items-center rounded-md border border-rose-200/60 bg-rose-50 px-2 py-0.5 text-[11px] font-bold leading-4 text-rose-600 dark:border-rose-900/30 dark:bg-rose-950/20 dark:text-rose-400 whitespace-nowrap">{notConfiguredLabel}</span>;
   }
   return <span className="block max-w-full break-words text-slate-900 dark:text-slate-100 font-semibold leading-5">{prefix}{value}</span>;
 }
@@ -147,7 +147,7 @@ export function BranchLiveReportPanel({
               <h1 className="text-sm font-black text-blue-900 dark:text-blue-400 tracking-wide uppercase leading-tight">
                 {b.branchType === "MAIN" ? t(lang, "branch.report_country_main_branch", "Country Main Branch") : b.branchType === "CITY" ? t(lang, "branch.report_city_branch", "City Branch Report") : t(lang, "branch.report_super_admin_branch", "Super Admin Branch")}
               </h1>
-              <span className="mt-1 text-[11px] font-extrabold text-blue-600 dark:text-blue-400 border border-blue-600/30 rounded-full px-2 py-0.5 uppercase bg-blue-50/50 dark:bg-blue-950/30">
+              <span className="mt-1 text-[11px] font-extrabold text-blue-600 dark:text-blue-400 border border-blue-600/30 rounded-full px-2 py-0.5 uppercase bg-blue-50/50 dark:bg-blue-950/30 whitespace-nowrap">
                 {b.branchStatus || status || t(lang, "branch.status_draft", "Draft")}
               </span>
             </div>

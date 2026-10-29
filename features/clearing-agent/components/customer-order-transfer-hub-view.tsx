@@ -650,7 +650,7 @@ export function CustomerOrderTransferHubView({
                   </div>
                   <div className="py-1.5 flex justify-between items-center gap-2">
                     <span className="text-slate-400 font-semibold">{tg("common.status", "Status")}</span>
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500 text-white">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500 text-white whitespace-nowrap">
                       {coStatusLabel(L, data.status)}
                     </span>
                   </div>

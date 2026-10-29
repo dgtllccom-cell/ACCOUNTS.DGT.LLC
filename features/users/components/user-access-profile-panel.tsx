@@ -124,7 +124,7 @@ export function AccessProfilePanel({
         <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-violet-900 dark:text-violet-200">
           <ShieldCheck className="h-3.5 w-3.5" /> {s.t("title", "Access Profile & Assignments")}
         </span>
-        <span className="rounded bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-800 dark:bg-violet-900 dark:text-violet-200" data-testid="effective-role">
+        <span className="rounded bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-800 dark:bg-violet-900 dark:text-violet-200 whitespace-nowrap" data-testid="effective-role">
           {s.t("effective_role", "Effective role")}: {centralT(s.lang, `role.${effectiveRole}` as never, effectiveRole)}
         </span>
       </div>

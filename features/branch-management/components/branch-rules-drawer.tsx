@@ -246,7 +246,7 @@ export function BranchRulesDrawer({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 whitespace-nowrap">
                   {scopeTypeLabel} Rules
                 </span>
                 <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">

@@ -469,7 +469,7 @@ export function DailyExchangeRateManager() {
               <Globe className="w-4 h-4 text-blue-600" />
               {th("EXCHANGE RATE ENTRY FORM")}
             </h3>
-            <span className="text-[11px] font-black uppercase bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
+            <span className="text-[11px] font-black uppercase bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800 whitespace-nowrap">
               {th("INTRA-DAY LIVE ENTRY")}
             </span>
           </div>
@@ -816,7 +816,7 @@ export function DailyExchangeRateManager() {
                                     {r.user_name || "-"}
                                   </td>
                                   <td className="py-2.5 px-3 text-center">
-                                    <span className="font-mono font-black bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px]">
+                                    <span className="font-mono font-black bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">
                                       {currencyCode}
                                     </span>
                                   </td>

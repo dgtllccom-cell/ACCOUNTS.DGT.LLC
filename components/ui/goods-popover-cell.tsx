@@ -264,7 +264,7 @@ export function GoodsPopoverCell({
                 <span className="font-extrabold text-[12px]">
                   {gt("goods_cargo_details", "Goods & Cargo Details")}
                 </span>
-                <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800 shrink-0">
+                <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800 shrink-0 whitespace-nowrap">
                   {goodsList.length} {goodsList.length === 1 ? gt("item", "Item") : gt("items", "Items")}
                 </span>
               </div>
@@ -311,17 +311,17 @@ export function GoodsPopoverCell({
                       </span>
                       <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
                         {grade && (
-                          <span className="text-[11px] bg-blue-950 text-blue-300 border border-blue-800 px-1.5 py-0.5 rounded font-bold">
+                          <span className="text-[11px] bg-blue-950 text-blue-300 border border-blue-800 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">
                             {grade}
                           </span>
                         )}
                         {brand && (
-                          <span className="text-[11px] bg-purple-950 text-purple-300 border border-purple-800 px-1.5 py-0.5 rounded font-bold">
+                          <span className="text-[11px] bg-purple-950 text-purple-300 border border-purple-800 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">
                             {brand}
                           </span>
                         )}
                         {origin && (
-                          <span className="text-[11px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-1.5 py-0.5 rounded font-bold">
+                          <span className="text-[11px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">
                             {origin}
                           </span>
                         )}

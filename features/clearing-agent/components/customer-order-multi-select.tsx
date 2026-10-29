@@ -341,12 +341,12 @@ export function CustomerOrderMultiSelect({
                           {ord.order_no}
                         </span>
                         {ord.transport_mode && (
-                          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                             {ord.transport_mode.replace("_", " ")}
                           </span>
                         )}
                         {ord.movement_type && (
-                          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded uppercase bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50">
+                          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded uppercase bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 whitespace-nowrap">
                             {ord.movement_type}
                           </span>
                         )}

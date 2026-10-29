@@ -1065,7 +1065,7 @@ export function BranchUserPermissionManagementView({
                   <Shield className="h-3.5 w-3.5 text-slate-400" />
                   {tr("Role")}
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
+                <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">
                   <Ship className="h-3 w-3" />
                   {roleText(selectedUser?.role)}
                 </span>
@@ -1092,7 +1092,7 @@ export function BranchUserPermissionManagementView({
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
                   {tr("Status")}
                 </span>
-                <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-black text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-black text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 whitespace-nowrap">
                   {selectedUser?.isActive ? tr("Active") : tr("Inactive")}
                 </span>
               </div>

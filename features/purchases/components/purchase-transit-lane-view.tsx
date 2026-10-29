@@ -490,7 +490,7 @@ function DetailDrawer({ T, s, stLabel, detail, busy, onClose, onAct, onTransfer,
                 <li key={e.id} className="rounded-lg border border-slate-200 p-2 text-[11px] dark:border-slate-700" data-testid={`expense-${e.status}`}>
                   <div className="flex flex-wrap items-center justify-between gap-1">
                     <span className="font-bold">{T("ex_" + e.expense_type, e.expense_type)} · <span dir="ltr">{Number(e.amount).toLocaleString()} {e.currency}</span></span>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold dark:bg-slate-800">{T("exs_" + e.status, e.status)}</span>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">{T("exs_" + e.status, e.status)}</span>
                   </div>
                   <div className="text-slate-500" dir="auto">{e.payee_name || e.payee_type} · {e.settlement === "inter_branch" ? T("settle_inter", "inter-branch settlement") : e.settlement === "agent_payable" ? T("settle_agent", "agent payable") : T("settle_none", "no settlement")}{e.bill_expense_line_id ? ` · ${T("bill_line", "bill line created (unposted)")}` : ""}</div>
                   {detail.canAct && (

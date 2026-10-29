@@ -468,11 +468,11 @@ export function CustomerOrderMovementSpecs({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-white border border-sky-200 dark:bg-slate-900 dark:border-sky-900 text-sky-800 dark:text-sky-300">
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-white border border-sky-200 dark:bg-slate-900 dark:border-sky-900 text-sky-800 dark:text-sky-300 whitespace-nowrap">
               {modeIcon()}
               <span>{locLabel("entry")}</span>
             </span>
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-sky-600 text-white shadow-2xs">
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-sky-600 text-white shadow-2xs whitespace-nowrap">
               {tt("import_clearance_badge", "Import Clearance")}
             </span>
           </div>
@@ -509,7 +509,7 @@ export function CustomerOrderMovementSpecs({
               <MapPin className="h-3.5 w-3.5 text-sky-600" />
               <span>{tt("bracket_origin_loading", "1. Origin & Loading Specifications (نکاسی اور لوڈنگ کی تفصیلات)")}</span>
             </div>
-            <span className="text-[11px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded border border-sky-200/60 dark:border-sky-800/60">
+            <span className="text-[11px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded border border-sky-200/60 dark:border-sky-800/60 whitespace-nowrap">
               {tt("origin_stage", "Origin Phase")}
             </span>
           </div>
@@ -576,7 +576,7 @@ export function CustomerOrderMovementSpecs({
               <Navigation className="h-3.5 w-3.5 text-emerald-600" />
               <span>{tt("bracket_receiving_destination", "2. Receiving & Destination Specifications (وصولی اور منزل کی تفصیلات)")}</span>
             </div>
-            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60">
+            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60 whitespace-nowrap">
               {tt("destination_stage", "Destination Phase")}
             </span>
           </div>
@@ -698,7 +698,7 @@ export function CustomerOrderMovementSpecs({
               </p>
             </div>
           </div>
-          <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-600 text-white shadow-2xs">
+          <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-600 text-white shadow-2xs whitespace-nowrap">
             {tt("reexport_clearance_badge", "Re-Export / Cross-Trade")}
           </span>
         </div>
@@ -925,7 +925,7 @@ export function CustomerOrderMovementSpecs({
               </p>
             </div>
           </div>
-          <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-purple-600 text-white shadow-2xs uppercase">
+          <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-purple-600 text-white shadow-2xs uppercase whitespace-nowrap">
             {formData.movement_type.replace("_", " ")}
           </span>
         </div>
@@ -1148,7 +1148,7 @@ export function CustomerOrderMovementSpecs({
             </p>
           </div>
         </div>
-        <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white shadow-2xs">
+        <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white shadow-2xs whitespace-nowrap">
           {tt("export_clearance_badge", "Export Clearance")}
         </span>
       </div>
@@ -1160,7 +1160,7 @@ export function CustomerOrderMovementSpecs({
             <MapPin className="h-3.5 w-3.5 text-emerald-600" />
             <span>{tt("bracket_local_origin", "1. Local Origin & Loading (مقامی لوڈنگ اور نکاسی)")}</span>
           </div>
-          <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60">
+          <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60 whitespace-nowrap">
             {tt("origin_stage", "Origin Phase")}
           </span>
         </div>
@@ -1218,7 +1218,7 @@ export function CustomerOrderMovementSpecs({
             <Navigation className="h-3.5 w-3.5 text-sky-600" />
             <span>{tt("bracket_export_destination", "2. Departure Gateway & Destination (روانگی اور غیر ملکی منزل)")}</span>
           </div>
-          <span className="text-[11px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded border border-sky-200/60 dark:border-sky-800/60">
+          <span className="text-[11px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded border border-sky-200/60 dark:border-sky-800/60 whitespace-nowrap">
             {tt("destination_stage", "Destination Phase")}
           </span>
         </div>

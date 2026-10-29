@@ -1274,12 +1274,12 @@ function NestedPaymentHistory({
           </span>
 
           {/* Posted Entries Count */}
-          <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[11px] font-bold text-slate-300">
+          <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[11px] font-bold text-slate-300 whitespace-nowrap">
             {historyWithBalance.length} {historyWithBalance.length === 1 ? "Entry" : "Entries"}
           </span>
 
           {/* Currency Bridge Pill */}
-          <span className="hidden items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-[11px] font-bold text-blue-200 sm:inline-flex">
+          <span className="hidden items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-[11px] font-bold text-blue-200 sm:inline-flex whitespace-nowrap">
             {purchaseCurrency} ➔ {calcs.finalCurr} @ {statementRate.toFixed(4)}
           </span>
         </div>
@@ -1290,7 +1290,7 @@ function NestedPaymentHistory({
           <button
             type="button"
             onClick={() => setShowFxFlow(!showFxFlow)}
-            className="inline-flex h-6 items-center gap-1 rounded bg-white/10 px-2 text-[11px] font-bold text-slate-200 transition hover:bg-white/20"
+            className="inline-flex h-6 items-center gap-1 rounded bg-white/10 px-2 text-[11px] font-bold text-slate-200 transition hover:bg-white/20 whitespace-nowrap"
             title={translateHeader(currentLanguage, showFxFlow ? "HIDE FX FLOW" : "FX FLOW")}
           >
             <span>{translateHeader(currentLanguage, showFxFlow ? "HIDE FX FLOW" : "FX FLOW")}</span>
@@ -1302,7 +1302,7 @@ function NestedPaymentHistory({
             <button
               type="button"
               onClick={onOpenFullBill}
-              className="inline-flex h-6 items-center gap-1 rounded bg-blue-600 px-2 text-[11px] font-bold text-white transition hover:bg-blue-500"
+              className="inline-flex h-6 items-center gap-1 rounded bg-blue-600 px-2 text-[11px] font-bold text-white transition hover:bg-blue-500 whitespace-nowrap"
             >
               <Eye className="h-3 w-3" />
               <span>{translateHeader(currentLanguage, "FULL BILL")}</span>
@@ -1545,11 +1545,11 @@ function NestedPaymentHistory({
                     </td>
                     <td className="min-w-[180px] border-r border-slate-200 px-2.5 py-1.5 align-top dark:border-slate-800">
                       <div className="flex items-center gap-1 truncate" title={drLabel}>
-                        <span className="rounded bg-blue-50 px-1 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">DR</span>
+                        <span className="rounded bg-blue-50 px-1 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">DR</span>
                         <span className="truncate text-[11px] font-medium text-slate-700 dark:text-slate-300">{drLabel}</span>
                       </div>
                       <div className="mt-0.5 flex items-center gap-1 truncate" title={crLabel}>
-                        <span className="rounded bg-violet-50 px-1 py-0.5 text-[11px] font-black text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">CR</span>
+                        <span className="rounded bg-violet-50 px-1 py-0.5 text-[11px] font-black text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 whitespace-nowrap">CR</span>
                         <span className="truncate text-[11px] font-medium text-slate-700 dark:text-slate-300">{crLabel}</span>
                       </div>
                     </td>
@@ -1566,7 +1566,7 @@ function NestedPaymentHistory({
                       </div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-center font-mono text-slate-600 align-top dark:border-slate-800">
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold dark:bg-slate-800">
+                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">
                         {Number(p.exchangeRateUsed || 1).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                       </span>
                     </td>
@@ -1907,7 +1907,7 @@ function DashboardSummaryHeaderBody({
                           <div className="rounded-xl border border-slate-100 bg-white p-3.5 shadow-inner dark:border-slate-850 dark:bg-slate-950 space-y-3">
                             <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
                               <span>{tData(r.country, lang)} Branches Report Details</span>
-                              <span className="text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-mono font-bold dark:bg-blue-950/40 dark:text-blue-400">
+                              <span className="text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-mono font-bold dark:bg-blue-950/40 dark:text-blue-400 whitespace-nowrap">
                                 {r.branches.length} Branches
                               </span>
                             </div>
@@ -1995,7 +1995,7 @@ function DashboardSummaryHeaderBody({
             <CheckCircle2 className="h-3.5 w-3.5 text-slate-400" />
             {translateHeader(lang, "Status")}:
           </span>
-          <span className="font-extrabold text-emerald-600 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px] uppercase font-black tracking-wider">{translateHeader(lang, "Active")}</span>
+          <span className="font-extrabold text-emerald-600 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px] uppercase font-black tracking-wider whitespace-nowrap">{translateHeader(lang, "Active")}</span>
         </div>
       </div>
     </div>
@@ -2373,7 +2373,7 @@ function DashboardSummaryHeaderBody({
         <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-455">
           <CheckCircle2 className="h-3.5 w-3.5 text-slate-400" /> {t("status", lang)}:
         </span>
-        <span className="font-extrabold text-emerald-600 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px] uppercase font-black tracking-wider">{t("active", lang)}</span>
+        <span className="font-extrabold text-emerald-600 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px] uppercase font-black tracking-wider whitespace-nowrap">{t("active", lang)}</span>
       </div>
     </div>
   );
@@ -2477,7 +2477,7 @@ function DashboardSummaryHeaderBody({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500 dark:text-slate-400">{th("Branch Code")}</span>
-                <span className="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-mono font-bold text-[11px]">
+                <span className="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-mono font-bold text-[11px] whitespace-nowrap">
                   {tData(adminBranch, lang)}
                 </span>
               </div>
@@ -2491,7 +2491,7 @@ function DashboardSummaryHeaderBody({
           </div>
 
           <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[11px] font-black uppercase tracking-wider">
+            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[11px] font-black uppercase tracking-wider whitespace-nowrap">
               {th("Active")}
             </span>
           </div>
@@ -2573,7 +2573,7 @@ function DashboardSummaryHeaderBody({
 
           <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800/80 flex justify-between items-center text-xs">
             <span className="text-slate-500 dark:text-slate-400">{th("System Status")}</span>
-            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[11px] font-black uppercase tracking-wider">
+            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[11px] font-black uppercase tracking-wider whitespace-nowrap">
               {th("All Completed")}
             </span>
           </div>
@@ -2722,7 +2722,7 @@ function DashboardSummaryHeaderBody({
                   <span className="font-black text-[11px] uppercase text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     {getFlag(r.country)} {tData(r.country, lang)}
                   </span>
-                  <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     {r.branches.length} {th("Branches")}
                   </span>
                 </div>
@@ -4601,11 +4601,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
               </button>
               <div className="flex items-center gap-1 mt-0.5">
                 {(row as any).order_type === "local_purchase" ? (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 whitespace-nowrap">
                     Local Purchase
                   </span>
                 ) : (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-800 whitespace-nowrap">
                     Purchase Booking
                   </span>
                 )}
@@ -4646,7 +4646,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 if (isCreditBill) {
                   if (rowActualPaid > 0 && rowRemainingDue <= 0.01) {
                     return (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0 whitespace-nowrap">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         Paid
                       </span>
@@ -4654,14 +4654,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   }
                   if (rowActualPaid > 0 && rowRemainingDue > 0.01) {
                     return (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0 whitespace-nowrap">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                         Partial
                       </span>
                     );
                   }
                   return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-400 shrink-0">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-400 shrink-0 whitespace-nowrap">
                       <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
                       Transferred / Credit Due
                     </span>
@@ -4670,7 +4670,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
                 if (isPosted || (calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC <= 0.01)) {
                   return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0 whitespace-nowrap">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                       Paid
                     </span>
@@ -4678,14 +4678,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 }
                 if (calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC > 0) {
                   return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0 whitespace-nowrap">
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                       Partial
                     </span>
                   );
                 }
                 return (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200/80 dark:bg-sky-950/40 dark:text-sky-400 shrink-0">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200/80 dark:bg-sky-950/40 dark:text-sky-400 shrink-0 whitespace-nowrap">
                     <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
                     Pending
                   </span>
@@ -4747,15 +4747,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
               </span>
               <div className="flex items-center gap-1 flex-wrap mt-0.5">
                 {dueTracking.isDueToday ? (
-                  <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                  <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 whitespace-nowrap">
                     {tGlobal(currentLanguage, "paytrack.due_today", "Due Today")}
                   </span>
                 ) : dueTracking.isOverdue ? (
-                  <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
+                  <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 whitespace-nowrap">
                     {dueTracking.overdueDays}d {tGlobal(currentLanguage, "paytrack.overdue", "Overdue")}
                   </span>
                 ) : dueTracking.isUpcoming ? (
-                  <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                  <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 whitespace-nowrap">
                     {dueTracking.daysRemaining}d {tGlobal(currentLanguage, "paytrack.days_remaining", "Remaining")}
                   </span>
                 ) : null}
@@ -5132,7 +5132,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
               </button>
             </div>
             {activeFiltersCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-[#2563eb] border border-blue-200/80 dark:bg-blue-950/50 dark:text-blue-400">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-[#2563eb] border border-blue-200/80 dark:bg-blue-950/50 dark:text-blue-400 whitespace-nowrap">
                 {activeFiltersCount} Active
               </span>
             )}
@@ -5459,11 +5459,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     </div>
                     <div>
                       {(selected as any).order_type === "local_purchase" ? (
-                        <span className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider">
+                        <span className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider whitespace-nowrap">
                           LOCAL PURCHASE
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-400 border border-blue-300 dark:border-blue-700/60 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider">
+                        <span className="inline-flex items-center rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-400 border border-blue-300 dark:border-blue-700/60 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider whitespace-nowrap">
                           {translateHeader(currentLanguage, "BOOKING")}
                         </span>
                       )}
@@ -5911,7 +5911,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     <div className="rounded-xl border border-purple-200 dark:border-purple-800/80 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
                       <div className="px-4 py-2 bg-purple-50/70 dark:bg-purple-950/30 border-b border-purple-200 dark:border-purple-800/80 text-xs font-black uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center justify-between">
                         <span>{translateHeader(currentLanguage, "Transfer Record — Credit Liability (Bill Transfer)")}</span>
-                        <span className="text-[11px] font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded-full">1 Record</span>
+                        <span className="text-[11px] font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded-full whitespace-nowrap">1 Record</span>
                       </div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs border-collapse">
@@ -5957,7 +5957,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                 {selected.super_admin_serial_number || _sel.super_admin_serial_number || `TRF-${String(selected.purchase_order_no || "").replace(/[^0-9]/g, "").slice(-4)}`}
                               </td>
                               <td className="px-3 py-2 text-center">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 whitespace-nowrap">
                                   {translateHeader(currentLanguage, "Transferred")}
                                 </span>
                               </td>
@@ -6265,7 +6265,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                               className="h-8 bg-white/80 dark:bg-slate-900/90 border-slate-300 dark:border-slate-700 font-bold text-xs text-blue-800 dark:text-blue-300 pl-3 pr-24 shadow-xs"
                               value={`${doubleEntry.debitName} (${doubleEntry.debitCode})`}
                             />
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 pointer-events-none">
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 pointer-events-none whitespace-nowrap">
                               {translateHeader(currentLanguage, "Auto Party")}
                             </span>
                           </div>
@@ -6483,15 +6483,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                               </div>
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 {sTrack.isDueToday ? (
-                                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 whitespace-nowrap">
                                     {tGlobal(currentLanguage, "paytrack.due_today", "Due Today")}
                                   </span>
                                 ) : sTrack.isOverdue ? (
-                                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
+                                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 whitespace-nowrap">
                                     {sTrack.overdueDays}d {tGlobal(currentLanguage, "paytrack.overdue", "Overdue")}
                                   </span>
                                 ) : sTrack.isUpcoming ? (
-                                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 whitespace-nowrap">
                                     {sTrack.daysRemaining}d {tGlobal(currentLanguage, "paytrack.days_remaining", "Days Remaining")}
                                   </span>
                                 ) : null}
@@ -6637,12 +6637,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                           <div className="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-[#091022] p-3.5 shadow-sm">
                             <div className="flex items-center justify-between pb-2 border-b border-blue-200 dark:border-blue-900/40">
                               <div className="flex items-center gap-1.5">
-                                <span className="inline-flex rounded bg-blue-600 px-1.5 py-0.5 text-[11px] font-black text-white">{translateHeader(currentLanguage, "DR")}</span>
+                                <span className="inline-flex rounded bg-blue-600 px-1.5 py-0.5 text-[11px] font-black text-white whitespace-nowrap">{translateHeader(currentLanguage, "DR")}</span>
                                 <span className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
                                   {translateHeader(currentLanguage, "DR ACCOUNTS")}
                                 </span>
                               </div>
-                              <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 bg-white dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-300 dark:border-blue-800">
+                              <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 bg-white dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-300 dark:border-blue-800 whitespace-nowrap">
                                 {translateHeader(currentLanguage, "Settlement Target")}
                               </span>
                             </div>
@@ -6660,12 +6660,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                           <div className="rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-[#091022] p-3.5 shadow-sm">
                             <div className="flex items-center justify-between pb-2 border-b border-rose-200 dark:border-rose-900/40">
                               <div className="flex items-center gap-1.5">
-                                <span className="inline-flex rounded bg-rose-600 px-1.5 py-0.5 text-[11px] font-black text-white">{translateHeader(currentLanguage, "CR")}</span>
+                                <span className="inline-flex rounded bg-rose-600 px-1.5 py-0.5 text-[11px] font-black text-white whitespace-nowrap">{translateHeader(currentLanguage, "CR")}</span>
                                 <span className="text-xs font-black uppercase tracking-wider text-rose-800 dark:text-rose-400">
                                   {translateHeader(currentLanguage, "CR ACCOUNT'S")}
                                 </span>
                               </div>
-                              <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400 bg-white dark:bg-rose-950 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800">
+                              <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400 bg-white dark:bg-rose-950 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800 whitespace-nowrap">
                                 {translateHeader(currentLanguage, "Payment Source")}
                               </span>
                             </div>
@@ -6683,7 +6683,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                           <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/40 bg-indigo-50/60 dark:bg-indigo-950/30 p-3 text-indigo-900 dark:text-indigo-200 text-xs">
                             <div className="font-bold flex items-center justify-between">
                               <span>{translateHeader(currentLanguage, "Double-Entry Live Status")}</span>
-                              <span className="font-black text-[11px] bg-indigo-600 text-white px-2 py-0.5 rounded-full">{translateHeader(currentLanguage, "BALANCED")}</span>
+                              <span className="font-black text-[11px] bg-indigo-600 text-white px-2 py-0.5 rounded-full whitespace-nowrap">{translateHeader(currentLanguage, "BALANCED")}</span>
                             </div>
                             <div className="text-[11px] mt-1 font-semibold text-indigo-700 dark:text-indigo-300 truncate">
                               DR: {doubleEntry.debitCode} ➔ CR: {doubleEntry.creditCode}
@@ -6751,7 +6751,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       <div>
                         <div className="text-xs font-black text-blue-900 dark:text-blue-200 flex items-center gap-2">
                           <span>Active Container: {selectedLoadingRecord?.loading_record_no || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("loadingRecordId") : "") || "Loaded Batch"}</span>
-                          <span className="text-[11px] bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-extrabold px-2 py-0.5 rounded-full">Proportional Batch</span>
+                          <span className="text-[11px] bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-extrabold px-2 py-0.5 rounded-full whitespace-nowrap">Proportional Batch</span>
                         </div>
                         <div className="text-[11px] text-blue-700 dark:text-blue-300 mt-0.5">
                           Loaded Value: <strong className="font-mono">{money(loadingPurchaseAmount, poCurrency)}</strong> | Allocated Advance: <strong className="font-mono text-emerald-600 dark:text-emerald-400">{money(loadingAdvancePaid, poCurrency)}</strong> | Remaining Batch Due: <strong className="font-mono text-rose-600 dark:text-rose-400">{money(outstandingBalance, poCurrency)}</strong>
@@ -6815,7 +6815,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                 <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                                   Container #{lr.loading_record_no || lr.container_number || lr.report_payload?.containerNumber || "-"}
                                 </span>
-                                <span className="text-[11px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400 px-2 py-0.5 rounded-full">
+                                <span className="text-[11px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400 px-2 py-0.5 rounded-full whitespace-nowrap">
                                   {Number(loadedQty).toLocaleString()} {lr.report_payload?.unit || "Bags"}
                                 </span>
                               </div>

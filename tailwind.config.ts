@@ -18,6 +18,10 @@ const config: Config = {
       }
     },
     extend: {
+      // Laptop screens (1024–1440px) use a 13.5px root, which made text-xs 10.1px. Never below 11px; unchanged where 0.75rem is larger.
+      fontSize: {
+        xs: ["max(11px, 0.75rem)", { lineHeight: "1rem" }]
+      },
       fontFamily: {
         sans: [
           "Inter",

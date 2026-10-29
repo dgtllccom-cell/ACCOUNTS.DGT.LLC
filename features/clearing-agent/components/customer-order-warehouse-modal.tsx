@@ -438,7 +438,7 @@ export function CustomerOrderWarehouseModal({
                         </p>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
                       <ShieldCheck className="h-3 w-3" />
                       <span>{selectedCompanyRecord.status || tt("active", "Active")}</span>
                     </span>

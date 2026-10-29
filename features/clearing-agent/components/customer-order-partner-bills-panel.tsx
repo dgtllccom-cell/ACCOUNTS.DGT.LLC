@@ -679,7 +679,7 @@ export function CustomerOrderPartnerBillsPanel({
                     </span>
                   )}
                   {bill.expense_category && (
-                    <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                    <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 whitespace-nowrap">
                       {bill.expense_category.replace(/_/g, " ")}
                     </span>
                   )}

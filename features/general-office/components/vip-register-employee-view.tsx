@@ -463,7 +463,7 @@ export function VipRegisterEmployeeView() {
                 {T("empdir.all_countries_report", "All Countries Employee Report")}
               </h3>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-[#6366f1] text-white">
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-[#6366f1] text-white whitespace-nowrap">
               {T("hrm.super_admin_only", "Super Admin Only")}
             </span>
           </div>

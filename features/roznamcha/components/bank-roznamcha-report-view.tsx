@@ -1009,7 +1009,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
                       {/* 4. Country */}
                       <td className="py-2.5 px-2.5 text-center border-r whitespace-nowrap">
-                        <span className="inline-block rounded px-2 py-0.5 text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        <span className="inline-block rounded px-2 py-0.5 text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                           {row.country?.name || "Global"}
                         </span>
                       </td>
@@ -1095,31 +1095,31 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                       {/* 15. Status */}
                       <td className="py-2.5 px-2.5 text-center border-r whitespace-nowrap">
                         {row.effective_status === "cleared" && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                             <CheckCircle2 className="h-3 w-3" />
                             <span>{tt("bankroz.cleared", "Cleared")}</span>
                           </span>
                         )}
                         {row.effective_status === "pending" && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 whitespace-nowrap">
                             <Clock className="h-3 w-3" />
                             <span>{tt("bankroz.pending", "Pending")}</span>
                           </span>
                         )}
                         {row.effective_status === "post_dated" && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">
                             <Calendar className="h-3 w-3" />
                             <span>{tt("bankroz.post_dated", "Post Dated")}</span>
                           </span>
                         )}
                         {row.effective_status === "overdue" && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 whitespace-nowrap">
                             <AlertTriangle className="h-3 w-3" />
                             <span>{tt("bankroz.overdue", "Overdue")}</span>
                           </span>
                         )}
                         {row.effective_status === "dishonored" && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 whitespace-nowrap">
                             <XCircle className="h-3 w-3" />
                             <span>{tt("bankroz.dishonored", "Dishonored")}</span>
                           </span>

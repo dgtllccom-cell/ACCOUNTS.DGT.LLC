@@ -209,7 +209,7 @@ export function PurchaseBookingReportGrid({
               <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{userRole}</span>
             </div>
             <div className="flex justify-end pt-1">
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 whitespace-nowrap">
                 {userStatus}
               </span>
             </div>
@@ -228,7 +228,7 @@ export function PurchaseBookingReportGrid({
                 {t(lang, "pbr.bill_details", "Bill Details")}
               </h3>
             </div>
-            <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+            <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 whitespace-nowrap">
               {status}
             </span>
           </div>

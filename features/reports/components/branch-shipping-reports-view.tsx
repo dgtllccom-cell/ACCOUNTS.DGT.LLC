@@ -273,7 +273,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
                 {tr("Shipping Line Branch Reports")}
               </h1>
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300 whitespace-nowrap">
                 <Ship className="h-3 w-3" />
                 {branch.name}
               </span>
@@ -505,7 +505,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
                         <td className="p-3.5 text-muted-foreground">{trk.port || "-"}</td>
                         <td className="p-3.5 text-muted-foreground">{trk.eta || "-"}</td>
                         <td className="p-3.5 text-end">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 whitespace-nowrap">
                             <Compass className="h-3 w-3" />
                             {trk.status}
                           </span>
@@ -551,7 +551,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
                           {r.credit > 0 ? `${branch.currency} ${r.credit.toLocaleString()}` : "-"}
                         </td>
                         <td className="p-3.5 text-end">
-                          <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                          <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 whitespace-nowrap">
                             {r.status || "Posted"}
                           </span>
                         </td>

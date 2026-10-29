@@ -1590,7 +1590,7 @@ export function DigitalDockPremiumSidebar({
             <span className="text-[11.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
               {tUi(lang, "crm360.crmReportCenter", "CRM REPORT CENTER")}
             </span>
-            <span className="text-[11px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded">
+            <span className="text-[11px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded whitespace-nowrap">
               8 Reports
             </span>
           </div>

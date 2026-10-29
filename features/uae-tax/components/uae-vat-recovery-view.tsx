@@ -152,7 +152,7 @@ export function UaeVatRecoveryView({ lang: langProp }: { lang?: SupportedLanguag
                       <select
                         value={r.status}
                         onChange={(e) => void save(r.id, e.target.value)}
-                        className="rounded-lg border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-bold dark:border-slate-700 dark:bg-slate-800"
+                        className="rounded-lg border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-bold dark:border-slate-700 dark:bg-slate-800 whitespace-nowrap"
                       >
                         {STATUSES.map((v) => <option key={v} value={v}>{s.t(`rc_status_${v}`, v)}</option>)}
                       </select>

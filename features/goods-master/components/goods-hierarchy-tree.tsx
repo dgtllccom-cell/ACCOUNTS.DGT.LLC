@@ -407,17 +407,17 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
             </span>
 
             {/* HS Code Badge */}
-            <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#e0f2fe] text-[#0284c7] dark:bg-sky-950/70 dark:text-sky-300 font-bold border border-sky-200/70 dark:border-sky-800">
+            <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#e0f2fe] text-[#0284c7] dark:bg-sky-950/70 dark:text-sky-300 font-bold border border-sky-200/70 dark:border-sky-800 whitespace-nowrap">
               HS: {goods.chs_code || "N/A"}
             </span>
 
             {/* Varieties • Sizes • Brands Badge */}
-            <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-[#ecfdf5] text-[#059669] dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800">
+            <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-[#ecfdf5] text-[#059669] dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800 whitespace-nowrap">
               {stats.totalVarieties} Varieties • {stats.totalSizes} Sizes • {stats.totalBrands} Brands
             </span>
 
             {/* Commercial Specs Badge */}
-            <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-[#f3e8ff] text-[#7c3aed] dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800">
+            <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-[#f3e8ff] text-[#7c3aed] dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800 whitespace-nowrap">
               {stats.totalSpecs} Commercial Specs
             </span>
           </div>

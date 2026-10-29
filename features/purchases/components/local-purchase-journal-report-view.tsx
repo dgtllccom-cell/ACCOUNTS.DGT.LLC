@@ -429,7 +429,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                 <Globe className="h-4 w-4 text-blue-600" />
                 <span className="font-black text-xs uppercase text-slate-800 dark:text-slate-100">{cg.countryName}</span>
               </div>
-              <span className="text-[11px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+              <span className="text-[11px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                 {cg.branches.length} {th("BRANCHES")}
               </span>
             </CardHeader>
@@ -599,7 +599,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                  size="sm"
                                  variant="outline"
                                  onClick={() => setSelectedRowForVoucher(row)}
-                                 className="h-6 px-2 text-[11px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md"
+                                 className="h-6 px-2 text-[11px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md whitespace-nowrap"
                                >
                                  {th("View Voucher")}
                                </Button>

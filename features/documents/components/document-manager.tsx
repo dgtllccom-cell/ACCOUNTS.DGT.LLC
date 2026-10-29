@@ -2341,7 +2341,7 @@ export function DocumentManager() {
                 <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
                   {t("inherited_metadata", "INHERITED HIERARCHY & CONTEXT")}
                 </span>
-                <span className="rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 text-[11px] font-bold">
+                <span className="rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 text-[11px] font-bold whitespace-nowrap">
                   Auto-Prefilled
                 </span>
               </div>

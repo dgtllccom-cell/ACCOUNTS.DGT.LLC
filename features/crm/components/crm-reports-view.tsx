@@ -156,7 +156,7 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
               <h1 className="text-xl md:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
                 {t(lang, "crm.menu_reports", "CRM Universal Reports & Due Center")}
               </h1>
-              <span className="bg-emerald-100 text-emerald-800 text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="bg-emerald-100 text-emerald-800 text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap">
                 {t(lang, "crmr.enterprise_live", "Enterprise Live")}
               </span>
             </div>
@@ -317,7 +317,7 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
                       <div className="text-[11px] text-slate-400">{r.globalSerial}</div>
                     </td>
                     <td className="px-3 py-2.5">
-                      <span className="px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 rounded font-bold text-[11px]">
+                      <span className="px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 rounded font-bold text-[11px] whitespace-nowrap">
                         {r.itemType}
                       </span>
                     </td>

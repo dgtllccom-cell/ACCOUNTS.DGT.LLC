@@ -1393,7 +1393,7 @@ export function GeneralOfficeDashboardView() {
                         )}
                       </td>
                       <td className="p-3.5 text-muted-foreground font-sans">
-                        <span className="inline-flex items-center px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md font-bold text-[11px] uppercase">
+                        <span className="inline-flex items-center px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md font-bold text-[11px] uppercase whitespace-nowrap">
                           {tr(emp.category || "Staff")}
                         </span>
                       </td>

@@ -166,7 +166,7 @@ export function ConsignmentRegisterView({ lang: langProp }: { lang?: string }) {
                         {money(receivable, r.base_currency)}
                       </td>
                       <td className="px-3 py-2 text-center">
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold whitespace-nowrap">
                           {s.t(statusKey(r.status), r.status)}
                         </span>
                       </td>

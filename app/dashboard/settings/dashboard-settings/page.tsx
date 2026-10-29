@@ -289,7 +289,7 @@ export default function DashboardSettingsPage() {
                 <div className={cn("p-2 rounded-xl border border-border/50 bg-muted/30", isSelected ? "text-cyan-600 dark:text-cyan-400" : "text-muted-foreground")}>
                   <Icon className="h-5 w-5" />
                 </div>
-                <span className="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-full border border-border/60 bg-muted/40 text-muted-foreground">
+                <span className="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-full border border-border/60 bg-muted/40 text-muted-foreground whitespace-nowrap">
                   {translateHeader(lang, scope.badge)}
                 </span>
               </div>

@@ -1272,7 +1272,7 @@ function SuperAdminPurchaseSummary({
             </div>
             <div className="flex justify-between items-center mt-auto">
               <span>{tt("f_status", "Status:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px]">{tt("badge_active", "Active")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">{tt("badge_active", "Active")}</span>
             </div>
           </div>
         </div>

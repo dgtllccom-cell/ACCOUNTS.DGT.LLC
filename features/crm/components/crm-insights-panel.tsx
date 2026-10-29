@@ -81,7 +81,7 @@ export function CrmInsightsPanel({ lang }: { lang?: string }) {
               <div key={g.category} className={`rounded-2xl border p-3 ${meta.tone}`} data-testid={`cinsight-${g.category}`}>
                 <button type="button" onClick={() => setOpen(isOpen ? null : g.category)} className="flex w-full items-center justify-between text-left">
                   <span className="flex items-center gap-2 text-xs font-bold"><Icon className="h-4 w-4" />{categoryLabel(g.category)}</span>
-                  <span className="rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-black dark:bg-slate-900/50">{g.count}</span>
+                  <span className="rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-black dark:bg-slate-900/50 whitespace-nowrap">{g.count}</span>
                 </button>
                 {isOpen && (
                   <div className="mt-2 space-y-2 border-t border-black/10 pt-2 dark:border-white/10">

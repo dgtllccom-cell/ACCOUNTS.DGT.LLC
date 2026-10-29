@@ -490,7 +490,7 @@ export function SmartSearchFilter({
                 <h3 className="text-sm font-black text-slate-900 dark:text-white">
                   {tx("headerTitle", lang)}
                 </h3>
-                <span className="rounded-full border border-blue-200 bg-blue-50/80 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300">
+                <span className="rounded-full border border-blue-200 bg-blue-50/80 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300 whitespace-nowrap">
                   {tx("badgeCompact", lang)}
                 </span>
               </div>
@@ -502,7 +502,7 @@ export function SmartSearchFilter({
 
           <div className="flex items-center gap-2 self-end sm:self-auto">
             {activeCount > 0 && (
-              <span className="rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 px-2.5 py-0.5 text-[11px] font-bold">
+              <span className="rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 px-2.5 py-0.5 text-[11px] font-bold whitespace-nowrap">
                 {activeCount} {tx("activeFiltersCount", lang)}
               </span>
             )}

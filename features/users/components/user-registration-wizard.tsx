@@ -1530,7 +1530,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               <Sparkles className="h-5 w-5 text-emerald-600" />
               <span>{centralT(activeLang, "urw2.ready_title" as never, "User Login Account Created & Verified")}</span>
             </div>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase bg-emerald-600 text-white tracking-wide">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase bg-emerald-600 text-white tracking-wide whitespace-nowrap">
               {savedUserData.status || "ACTIVE"}
             </span>
           </div>
@@ -1653,7 +1653,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   {centralT(activeLang, "urw2.authoritative_summary" as never, "Authoritative Employee Master")}
                 </span>
               </div>
-              <span className="rounded bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+              <span className="rounded bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 whitespace-nowrap">
                 {centralT(activeLang, "urw2.single_source_truth" as never, "Source of Truth")}
               </span>
             </div>
@@ -1998,7 +1998,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             </p>
                           </div>
                         </div>
-                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/80 dark:text-blue-200 font-bold">
+                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/80 dark:text-blue-200 font-bold whitespace-nowrap">
                           EMP ID: {employeeCode || "EMP-LINKED"}
                         </span>
                       </div>
@@ -2687,7 +2687,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                                     const codeClean = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
                                     setPersonalEmail(`${sug.replace(/[^a-z0-9.]/g, "")}.${codeClean}@dgt.llc`);
                                   }}
-                                  className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 dark:bg-slate-900 dark:text-emerald-300 dark:border-emerald-700 shadow-2xs cursor-pointer"
+                                  className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 dark:bg-slate-900 dark:text-emerald-300 dark:border-emerald-700 shadow-2xs cursor-pointer whitespace-nowrap"
                                 >
                                   + {sug}
                                 </button>
@@ -2972,10 +2972,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         <span>{centralT(activeLang, "urw2.perm_matrix_title" as never, "4-Tier Granular Permission Control (Module ➔ Section ➔ Form ➔ Actions)")}</span>
                       </Label>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800">
+                        <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                           {allowedFormsCount} Forms Active
                         </span>
-                        <span className="text-[11px] font-mono text-blue-700 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded font-bold border border-blue-200 dark:border-blue-800">
+                        <span className="text-[11px] font-mono text-blue-700 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded font-bold border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                           {totalActionsCount} Actions Granted
                         </span>
                       </div>
@@ -3050,7 +3050,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                               >
                                 <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isExpanded ? "" : "-rotate-90"}`} />
                                 <span>{mod.name}</span>
-                                <span className="text-[11px] px-2 py-0.5 rounded font-mono font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                                <span className="text-[11px] px-2 py-0.5 rounded font-mono font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 whitespace-nowrap">
                                   {mod.category}
                                 </span>
                               </button>
@@ -3062,14 +3062,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                                 <button
                                   type="button"
                                   onClick={() => handleToggleHierarchyModule(mod.key, true)}
-                                  className="px-2 py-0.5 text-[11px] font-bold rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
+                                  className="px-2 py-0.5 text-[11px] font-bold rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800 whitespace-nowrap"
                                 >
                                   Select All
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleToggleHierarchyModule(mod.key, false)}
-                                  className="px-2 py-0.5 text-[11px] font-bold rounded bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                                  className="px-2 py-0.5 text-[11px] font-bold rounded bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 whitespace-nowrap"
                                 >
                                   Clear
                                 </button>
@@ -3516,7 +3516,7 @@ export function EmployeeDetailModal({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-bold text-white">{empName}</h3>
-                <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap">
                   {status}
                 </span>
               </div>

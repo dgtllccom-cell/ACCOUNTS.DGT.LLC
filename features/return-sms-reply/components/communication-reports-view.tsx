@@ -171,7 +171,7 @@ export function CommunicationReportsView({ lang }: Props) {
                 <td className="px-4 py-3 text-center uppercase font-bold">{log.channel}</td>
                 <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-400">{log.recipient}</td>
                 <td className="px-4 py-3 text-center">
-                  <span className="text-[11px] font-black rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+                  <span className="text-[11px] font-black rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 whitespace-nowrap">
                     {log.status}
                   </span>
                 </td>

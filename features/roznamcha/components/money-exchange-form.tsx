@@ -785,7 +785,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
               <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                 <Radio className="h-3.5 w-3.5 text-emerald-500" /> {tr("money_exchange.dash_live_branch_report", "Live Branch Report")}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-black text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-black text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {tr("money_exchange.dash_live", "Live")}
               </span>
             </div>
@@ -854,7 +854,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                   <span className="text-xs uppercase font-black text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
                     <Building2 className="w-3.5 h-3.5 text-indigo-600" /> {tr("money_exchange.section1_title", "1. Branch, User & Account Mapping")}
                   </span>
-                  <span className="bg-white dark:bg-slate-950 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 text-[11px] font-mono font-bold text-indigo-700 dark:text-indigo-300">
+                  <span className="bg-white dark:bg-slate-950 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 text-[11px] font-mono font-bold text-indigo-700 dark:text-indigo-300 whitespace-nowrap">
                     {entrySerial || tr("money_exchange.pending", "Pending...")}
                   </span>
                 </div>
@@ -1078,7 +1078,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <div className="text-xs font-black text-slate-800 dark:text-slate-100 mb-2">{tr("money_exchange.dash_posting_preview", "Posting Preview")} <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:bg-slate-800">{tr("money_exchange.dash_informational_only", "informational only")}</span></div>
+                <div className="text-xs font-black text-slate-800 dark:text-slate-100 mb-2">{tr("money_exchange.dash_posting_preview", "Posting Preview")} <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:bg-slate-800 whitespace-nowrap">{tr("money_exchange.dash_informational_only", "informational only")}</span></div>
                 {finalAmount > 0 && (purchaseAccount || salesAccount) ? (
                   <div className="space-y-1 text-[11px]">
                     <div className="flex justify-between">

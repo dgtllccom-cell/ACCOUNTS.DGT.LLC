@@ -904,7 +904,7 @@ export function CustomerForm({
                                       }
                                       setContacts(updated);
                                     }}
-                                    className="text-[11px] px-1 py-0.5 rounded bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 font-mono font-bold border border-slate-200"
+                                    className="text-[11px] px-1 py-0.5 rounded bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 font-mono font-bold border border-slate-200 whitespace-nowrap"
                                   >
                                     {cc}
                                   </button>
@@ -1246,7 +1246,7 @@ export function CustomerForm({
               <Eye className="h-4.5 w-4.5 text-blue-600" />
               <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{getLabel("livePreview", lang)}</h2>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 whitespace-nowrap">
               <Eye className="h-3 w-3" />
               <span>{getLabel("draftPreview", lang)}</span>
             </span>

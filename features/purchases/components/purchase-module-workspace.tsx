@@ -497,7 +497,7 @@ export function PurchaseModuleWorkspace({
       {titleSlot && createPortal(
         <div className="flex min-w-0 items-center gap-2">
           <h1 className="truncate text-sm font-black text-foreground">{displayTitle || title}</h1>
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-black uppercase text-primary">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-black uppercase text-primary whitespace-nowrap">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
         </div>,
         titleSlot
       )}
@@ -669,7 +669,7 @@ export function PurchaseModuleWorkspace({
             <div key={countryCard.country} className="rounded-xl border bg-background p-4 shadow-sm">
               <div className="mb-3 flex items-center justify-between border-b pb-2">
                 <div className="font-black uppercase tracking-wide text-primary">{countryCard.country}</div>
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-black text-blue-700">{countryCard.totalOrders} POs</span>
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-black text-blue-700 whitespace-nowrap">{countryCard.totalOrders} POs</span>
               </div>
               
               <div className="space-y-4">

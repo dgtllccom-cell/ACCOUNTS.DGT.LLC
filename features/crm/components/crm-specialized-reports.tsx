@@ -330,7 +330,7 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
                           <td className="p-3">{c.branchName}</td>
                           <td className="p-3">{c.assignedUserName}</td>
                           <td className="p-3 text-right">
-                            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                               {c.health}
                             </span>
                           </td>

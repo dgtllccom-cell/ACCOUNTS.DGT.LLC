@@ -639,11 +639,11 @@ export function CustomerOrderRouteBuilder({
                       {directBranchName || tt("company_branch_office", "Company Branch Office")}
                     </span>
                     {directBranchCountryName && (
-                      <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-900/50 px-2 py-0.5 rounded-md">
+                      <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-900/50 px-2 py-0.5 rounded-md whitespace-nowrap">
                         {directBranchCountryName}
                       </span>
                     )}
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800 whitespace-nowrap">
                       <UserCheck className="h-3 w-3 text-emerald-600" />
                       <span>{tt("assigned_operator_user", "Assigned Operator:")} {directAssignedUserName || tt("unassigned", "Unassigned")}</span>
                     </span>
@@ -676,15 +676,15 @@ export function CustomerOrderRouteBuilder({
                     <span className="text-xs font-black text-indigo-900 dark:text-indigo-200">
                       {directPartnerName || tt("partner_name_label", "External Partner")}
                     </span>
-                    <span className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-100/70 dark:bg-indigo-900/50 px-2 py-0.5 rounded-md capitalize">
+                    <span className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-100/70 dark:bg-indigo-900/50 px-2 py-0.5 rounded-md capitalize whitespace-nowrap">
                       {directPartnerType ? directPartnerType.replace("_", " ") : "Customs Agent"}
                     </span>
                     {directPartnerAccountId ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800 whitespace-nowrap">
                         {tt("account_master_ledger", "Ledger:")} {activeLedgers.find((l) => l.id === directPartnerAccountId)?.name || "Linked"}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200/80 dark:border-amber-800">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200/80 dark:border-amber-800 whitespace-nowrap">
                         <AlertTriangle className="h-3 w-3 text-amber-500" />
                         <span>{tt("ledger_pending", "Ledger Pending")}</span>
                       </span>
@@ -1067,7 +1067,7 @@ export function CustomerOrderRouteBuilder({
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
             <span>{tt("intermediate_stops_list", "Intermediate Transit Waypoints / Crossings:")}</span>
-            <span className="text-[11px] text-sky-700 dark:text-sky-300 font-bold bg-sky-50 dark:bg-sky-950 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
+            <span className="text-[11px] text-sky-700 dark:text-sky-300 font-bold bg-sky-50 dark:bg-sky-950 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800 whitespace-nowrap">
               {stops.length} {stops.length === 1 ? tt("stop_single", "Stop") : tt("stops_plural", "Stops")}
             </span>
           </div>
@@ -1099,13 +1099,13 @@ export function CustomerOrderRouteBuilder({
                       )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                         {getModeIcon(st.mode)}
                         <span>{getModeLabel(st.mode)}</span>
                       </span>
 
                       {st.handlerType === "external_partner" ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100 dark:bg-indigo-950/60 px-2 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100 dark:bg-indigo-950/60 px-2 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 whitespace-nowrap">
                           <Users className="h-3 w-3" />
                           <span>Ext: {st.partnerName || "Partner"}</span>
                           {st.partnerAccountNumber && (
@@ -1113,14 +1113,14 @@ export function CustomerOrderRouteBuilder({
                           )}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-blue-100 dark:bg-blue-950/60 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:text-blue-300">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-blue-100 dark:bg-blue-950/60 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:text-blue-300 whitespace-nowrap">
                           <Building2 className="h-3 w-3" />
                           <span>{tt("handler_our_branch", "Our Branch")}</span>
                         </span>
                       )}
 
                       {st.insuranceRequired && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-teal-100 dark:bg-teal-950/60 px-2 py-0.5 text-[11px] font-bold text-teal-700 dark:text-teal-300">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-teal-100 dark:bg-teal-950/60 px-2 py-0.5 text-[11px] font-bold text-teal-700 dark:text-teal-300 whitespace-nowrap">
                           <ShieldCheck className="h-3 w-3" />
                           <span>{tt("insurance_short", "Insured")}</span>
                         </span>

@@ -148,7 +148,7 @@ export function CashEntryRegister({ lang }: { lang: SupportedLanguage }) {
                         <td className="px-3 py-2 text-right tabular-nums">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                         <td className="px-3 py-2">
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase text-slate-700 dark:bg-slate-800 dark:text-slate-200 whitespace-nowrap">
                             {r.status}
                           </span>
                         </td>

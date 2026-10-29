@@ -171,7 +171,7 @@ export function DgtConnectWidget({ currentUserId }: { currentUserId: string }) {
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
         {!open && c.unreadTotal > 0 && (
-          <span className="absolute -top-1 -end-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-black text-white">
+          <span className="absolute -top-1 -end-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-black text-white whitespace-nowrap">
             {c.unreadTotal > 99 ? "99+" : c.unreadTotal}
           </span>
         )}
@@ -238,7 +238,7 @@ function ConversationListView({
                     {typing.length ? <em className="text-emerald-600">{tt("dgtc.typing", "typing…")}</em> : (conv.lastMessagePreview || "")}
                   </span>
                   {unread > 0 && (
-                    <span className="flex h-4 min-w-[16px] shrink-0 items-center justify-center rounded-full bg-blue-600 px-1 text-[11px] font-black text-white leading-none">{unread}</span>
+                    <span className="flex h-4 min-w-[16px] shrink-0 items-center justify-center rounded-full bg-blue-600 px-1 text-[11px] font-black text-white leading-none whitespace-nowrap">{unread}</span>
                   )}
                 </div>
               </div>

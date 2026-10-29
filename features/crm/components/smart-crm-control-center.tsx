@@ -408,7 +408,7 @@ export function SmartCrmControlCenter() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.lbl_role", "Role:")}</span>
-                <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
+                <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 whitespace-nowrap">
                   {roleLabel(userContext?.role)}
                 </span>
               </div>
@@ -501,7 +501,7 @@ export function SmartCrmControlCenter() {
                 </div>
                 <span className="text-xs font-bold text-blue-950 dark:text-blue-200">{t(lang, "crm.country_branch_due_report", "Country / Branch Due Report")}</span>
               </div>
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider">
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider whitespace-nowrap">
                 {t(lang, "crm.super_admin_only", "Super Admin Only")}
               </span>
             </div>
@@ -767,7 +767,7 @@ export function SmartCrmControlCenter() {
                         {idx + 1}
                       </td>
                       <td className="px-3 py-2.5">
-                        <span className="inline-flex items-center rounded-lg bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                        <span className="inline-flex items-center rounded-lg bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                           {r.item_type}
                         </span>
                       </td>
@@ -803,38 +803,38 @@ export function SmartCrmControlCenter() {
                       </td>
                       <td className="px-3 py-2.5">
                         {r.priority === "High" ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-black text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-black text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300 whitespace-nowrap">
                             {t(lang, "crm.priority_high", "High")}
                           </span>
                         ) : r.priority === "Medium" ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-black text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-black text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300 whitespace-nowrap">
                             {t(lang, "crm.priority_medium", "Medium")}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-black text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-black text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300 whitespace-nowrap">
                             {t(lang, "crm.priority_low", "Low")}
                           </span>
                         )}
                       </td>
                       <td className="px-3 py-2.5">
                         {r.status === "Overdue" ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300 whitespace-nowrap">
                             {t(lang, "crm.tab_overdue", "Overdue")}
                           </span>
                         ) : r.status === "Today" ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300 whitespace-nowrap">
                             {t(lang, "crm.due_today", "Due Today")}
                           </span>
                         ) : r.status === "Tomorrow" ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300 whitespace-nowrap">
                             {t(lang, "crm.tab_tomorrow", "Tomorrow")}
                           </span>
                         ) : r.status === "Completed" ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300 whitespace-nowrap">
                             {t(lang, "crm.tab_completed", "Completed")}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-0.5 text-[11px] font-bold text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:border-purple-900 dark:text-purple-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-0.5 text-[11px] font-bold text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:border-purple-900 dark:text-purple-300 whitespace-nowrap">
                             {t(lang, "crm.tab_upcoming", "Upcoming")}
                           </span>
                         )}

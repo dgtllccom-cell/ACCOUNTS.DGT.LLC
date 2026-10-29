@@ -222,7 +222,7 @@ export function SalesBookingUpperCards({
             {tUi(lang, "sales.payment_type_lbl", "Payment Type")}
           </span>
           <span className="font-bold flex items-center gap-1">
-            : <span className="inline-block px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 font-bold text-[11px]">{paymentType}</span>
+            : <span className="inline-block px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 font-bold text-[11px] whitespace-nowrap">{paymentType}</span>
           </span>
         </div>
 
@@ -232,7 +232,7 @@ export function SalesBookingUpperCards({
             {tUi(lang, "sales.shipping_type_lbl", "Shipping Type")}
           </span>
           <span className="font-bold flex items-center gap-1">
-            : <span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold text-[11px]">{shippingType}</span>
+            : <span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold text-[11px] whitespace-nowrap">{shippingType}</span>
           </span>
         </div>
 
@@ -295,7 +295,7 @@ export function SalesBookingUpperCards({
             <button
               type="button"
               onClick={() => handleOpenAccountModal("sales")}
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 transition-colors shadow-2xs cursor-pointer ml-auto"
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 transition-colors shadow-2xs cursor-pointer ml-auto whitespace-nowrap"
               title="View Sales Account Details"
             >
               <Eye className="w-2.5 h-2.5" />
@@ -430,7 +430,7 @@ export function SalesBookingUpperCards({
             <button
               type="button"
               onClick={() => handleOpenAccountModal("customer")}
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 dark:hover:bg-amber-900 border border-amber-300 dark:border-amber-700 transition-colors shadow-2xs cursor-pointer ml-auto"
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 dark:hover:bg-amber-900 border border-amber-300 dark:border-amber-700 transition-colors shadow-2xs cursor-pointer ml-auto whitespace-nowrap"
               title="View Customer Account Details"
             >
               <Eye className="w-2.5 h-2.5" />

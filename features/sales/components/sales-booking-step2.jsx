@@ -182,7 +182,7 @@ export function SalesBookingStep2({
             {tUi(lang, "sales.goods_entry_details", "GOODS ENTRY DETAILS")}
           </h3>
           {selectedLotRef && (
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-mono">
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-mono whitespace-nowrap">
               Lot: {selectedLotRef}
             </span>
           )}

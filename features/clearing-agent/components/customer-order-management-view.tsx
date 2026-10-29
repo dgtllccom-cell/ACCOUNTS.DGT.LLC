@@ -1109,7 +1109,7 @@ function PartyRolePanel({
           {required ? <span className="text-rose-500 font-bold">*</span> : null}
         </div>
         {selection.customerId ? (
-          <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
+          <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 whitespace-nowrap">
             ✓ {selection.customerName}
           </span>
         ) : null}
@@ -4241,7 +4241,7 @@ export function CustomerOrderManagementView() {
                 ]}
                 orientation="landscape"
               />
-              <span className="text-[11px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+              <span className="text-[11px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                 {visibleOrders.length} / {orders.length} {tt("visible", "visible")}
               </span>
               </div>
@@ -4995,7 +4995,7 @@ export function CustomerOrderManagementView() {
                     <h1 className="text-sm sm:text-base font-black tracking-tight text-slate-900 dark:text-white truncate">
                       {editingOrderId ? `${tt("edit_order_heading", "Edit Customer Order")} • ${formData.order_no || formData.customer_name}` : tt("new_order_heading", "New Customer Order")}
                     </h1>
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 shrink-0">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 shrink-0 whitespace-nowrap">
                       {tt("order_voucher", "ORDER VOUCHER")}
                     </span>
                   </div>
@@ -5387,7 +5387,7 @@ export function CustomerOrderManagementView() {
                         <button
                           type="button"
                           onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition whitespace-nowrap"
                           title={tt("edit", "Edit")}
                         >
                           <Pencil className="h-2.5 w-2.5" />
@@ -5445,7 +5445,7 @@ export function CustomerOrderManagementView() {
                         <button
                           type="button"
                           onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition whitespace-nowrap"
                           title={tt("edit", "Edit")}
                         >
                           <Pencil className="h-2.5 w-2.5" />
@@ -5513,7 +5513,7 @@ export function CustomerOrderManagementView() {
                         <button
                           type="button"
                           onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition whitespace-nowrap"
                           title={tt("edit", "Edit")}
                         >
                           <Pencil className="h-2.5 w-2.5" />
@@ -5873,7 +5873,7 @@ export function CustomerOrderManagementView() {
                           <Flag className="h-4 w-4 text-emerald-600 shrink-0" />
                           <span className="truncate">{tt("final_destination_title", "Final Destination")}</span>
                         </div>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 whitespace-nowrap">
                           {tt("delivery_location", "Delivery Spot")}
                         </span>
                       </div>
@@ -6007,7 +6007,7 @@ export function CustomerOrderManagementView() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("gps_tracking", "GPS Tracking")}</span>
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
                             ● {tt("status_active", "Active")}
                           </span>
                         </div>
@@ -7366,7 +7366,7 @@ function Step1BookingCustomer({
                     <span>{tt("select_customer_label", "Customer ID / Account")} *</span>
                   </label>
                   {selectedAccount && (
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-bold">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-bold whitespace-nowrap">
                       {selectedAccount.code || "ACC"}
                     </span>
                   )}
@@ -7466,7 +7466,7 @@ function Step1BookingCustomer({
                           {tt("loading_country_title", "Loading Country (Origin)")} *
                         </span>
                         {formData.loading_country_name && (
-                          <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 font-semibold text-[11px]">
+                          <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 font-semibold text-[11px] whitespace-nowrap">
                             {formData.loading_country_name}
                           </span>
                         )}
@@ -7610,7 +7610,7 @@ function Step1BookingCustomer({
                           {tt("receiving_country_title", "Receiving Country (Destination)")} *
                         </span>
                         {formData.receiving_country_name && (
-                          <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 font-semibold text-[11px]">
+                          <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 font-semibold text-[11px] whitespace-nowrap">
                             {formData.receiving_country_name}
                           </span>
                         )}
@@ -8281,7 +8281,7 @@ function Step1BookingCustomer({
                           <User className="h-4 w-4 text-purple-600" />
                           <span className="text-xs font-bold text-purple-950 dark:text-purple-200">{agentAcc.name}</span>
                         </div>
-                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 whitespace-nowrap">
                           {agentAcc.code || "ACC"}
                         </span>
                       </div>
@@ -8517,7 +8517,7 @@ function Step1BookingCustomer({
                           <User className="h-4 w-4 text-purple-600" />
                           <span className="text-xs font-bold text-purple-950 dark:text-purple-200">{agentAcc.name}</span>
                         </div>
-                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 whitespace-nowrap">
                           {agentAcc.code || "ACC"}
                         </span>
                       </div>
@@ -9286,7 +9286,7 @@ function Step1BookingCustomer({
           <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50/70 via-white to-blue-50/40 p-4 space-y-3 dark:border-blue-900/70 dark:bg-slate-900/90 shadow-2xs">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-200/70 pb-2 dark:border-blue-900/60">
               <div className="flex items-center gap-2">
-                <span className="rounded-md bg-blue-600 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-white shadow-xs">
+                <span className="rounded-md bg-blue-600 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-white shadow-xs whitespace-nowrap">
                   {tt("stage_1a_summary", "Stage 1A Summary (Read-Only)")}
                 </span>
                 <span className="text-xs font-bold text-slate-500">
@@ -9294,7 +9294,7 @@ function Step1BookingCustomer({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 px-2.5 py-0.5 text-[11px] font-bold">
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 px-2.5 py-0.5 text-[11px] font-bold whitespace-nowrap">
                   <Clock className="h-3 w-3" />
                   <span>{tt("truck_confirmation_required", "Truck Confirmation Required")}</span>
                 </span>
@@ -9545,7 +9545,7 @@ function Step1BookingCustomer({
                   <Clock className="h-4 w-4 text-slate-500" />
                   <span>{tt("assign_later_active_msg", "Dispatch vehicle assignment deferred. Booking is unblocked to proceed.")}</span>
                 </div>
-                <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-[11px] font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-[11px] font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200 whitespace-nowrap">
                   {tt("status_pending", "Pending Assignment")}
                 </span>
               </div>
@@ -9653,7 +9653,7 @@ function Step1BookingCustomer({
                   <span className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
                     🚚 {tt("stage_1c_banner_title", "Truck Confirmed — Goods Entry Assigned to You")}
                   </span>
-                  <span className="rounded-full bg-emerald-200/80 px-2 py-0.5 text-[11px] font-black text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
+                  <span className="rounded-full bg-emerald-200/80 px-2 py-0.5 text-[11px] font-black text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 whitespace-nowrap">
                     {tt("stage_1c_active", "Stage 1C Active")}
                   </span>
                 </div>
@@ -11769,7 +11769,7 @@ function Step4ReviewConfirm({
         <div className="flex flex-wrap items-start justify-between gap-4 border-b-2 border-slate-900 dark:border-slate-100 pb-5">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-[11px] font-black uppercase tracking-wider text-white">
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-[11px] font-black uppercase tracking-wider text-white whitespace-nowrap">
                 ACCOUNTS.DGT.LLC
               </span>
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">

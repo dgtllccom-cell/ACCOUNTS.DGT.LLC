@@ -489,7 +489,7 @@ export function CustomerOrderFullDetailsView({
                     <button
                       type="button"
                       onClick={() => order && onEdit(order)}
-                      className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition"
+                      className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition whitespace-nowrap"
                     >
                       <Edit3 className="h-3 w-3" />
                       <span>{tg("common.edit", "Edit")}</span>
@@ -520,7 +520,7 @@ export function CustomerOrderFullDetailsView({
                   </div>
                   <div className="py-1.5 flex justify-between items-center">
                     <span className="text-slate-500 font-medium">{tg("common.status", "Status")}</span>
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap">
                       {coStatusLabel(L, status || "completed")}
                     </span>
                   </div>
@@ -543,7 +543,7 @@ export function CustomerOrderFullDetailsView({
                     <button
                       type="button"
                       onClick={() => order && onEdit(order)}
-                      className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition"
+                      className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition whitespace-nowrap"
                     >
                       <Edit3 className="h-3 w-3" />
                       <span>{tg("common.edit", "Edit")}</span>

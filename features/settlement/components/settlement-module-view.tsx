@@ -335,7 +335,7 @@ export function SettlementModuleView({
                           {txn.local_currency} {Number(txn.remaining_local).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-3 px-2 text-center">
-                          <span className="text-[11px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          <span className="text-[11px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                             {txn.settlement_status.replace("_", " ")}
                           </span>
                         </td>

@@ -167,7 +167,7 @@ export function ConversationIntelligenceView({ lang }: { lang?: string }) {
                               {assignees.map((u) => <option key={u.userId} value={u.userId}>{u.name ?? u.userId}</option>)}
                             </select>
                           </td>
-                          <td className="py-1.5">{t.priority === "high" && <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">{s.t("urgent", "Urgent")}</span>}</td>
+                          <td className="py-1.5">{t.priority === "high" && <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 whitespace-nowrap">{s.t("urgent", "Urgent")}</span>}</td>
                         </tr>
                       ))}
                     </tbody>

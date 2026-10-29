@@ -2030,7 +2030,7 @@ export function GoodsMasterRegistry() {
                               )}
                             </td>
                             <td className="p-2.5 text-center">
-                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap">
                                 Active
                               </span>
                             </td>
@@ -2091,7 +2091,7 @@ export function GoodsMasterRegistry() {
                     <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                       {viewingGoods.name}
                     </h3>
-                    <span className="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800 whitespace-nowrap">
                       HS: {viewingGoods.chs_code || "—"}
                     </span>
                     <span
@@ -2237,7 +2237,7 @@ export function GoodsMasterRegistry() {
                         <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide">
                           {t("CONFIGURED SIZES & BRANDS")}
                         </h4>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800 whitespace-nowrap">
                           {effectiveVars.length} {t(isCustom ? "VARIANTS" : "TRADE SPECIFICATIONS")}
                         </span>
                       </div>
@@ -2286,7 +2286,7 @@ export function GoodsMasterRegistry() {
                                   {vIdx + 1}
                                 </td>
                                 <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 font-semibold text-xs border border-blue-100 dark:border-blue-900">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 font-semibold text-xs border border-blue-100 dark:border-blue-900 whitespace-nowrap">
                                     {v.brand || "—"}
                                   </span>
                                 </td>
@@ -2294,7 +2294,7 @@ export function GoodsMasterRegistry() {
                                   {v.variety || "—"}
                                 </td>
                                 <td className="p-2.5">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[11px]">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[11px] whitespace-nowrap">
                                     {v.size || "—"}
                                   </span>
                                 </td>

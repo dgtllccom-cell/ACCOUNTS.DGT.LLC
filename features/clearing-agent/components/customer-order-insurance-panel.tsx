@@ -394,22 +394,22 @@ export function CustomerOrderInsurancePanel({ orderId, legs, ledgers, lang }: Pr
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-bold text-xs text-slate-800 dark:text-slate-100">{p.insurer_name}</span>
                 <span className="text-[11px] text-slate-500">{tt("policy_no_short", "Policy")} #{p.policy_no}</span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                   <Layers className="h-3 w-3" />
                   {tt("legs_short", "Legs")} {p.from_leg_no === p.to_leg_no ? `#${p.from_leg_no}` : `#${p.from_leg_no}-#${p.to_leg_no}`}
                 </span>
                 {p.status === "cancelled" && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300 whitespace-nowrap">
                     <Ban className="h-3 w-3" />{tt("status_cancelled", "Cancelled")}
                   </span>
                 )}
                 {isExpired(p) && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700 dark:bg-red-900/40 dark:text-red-300 whitespace-nowrap">
                     <ShieldAlert className="h-3 w-3" />{tt("status_expired", "Expired")}
                   </span>
                 )}
                 {!isExpired(p) && isExpiringSoon(p) && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 whitespace-nowrap">
                     <Clock className="h-3 w-3" />{tt("status_expiring_soon", "Expiring Soon")}
                   </span>
                 )}

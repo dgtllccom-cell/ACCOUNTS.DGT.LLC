@@ -160,11 +160,11 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
                 {tr("Global Shipping Line")}
               </h1>
-              <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">
                 <Anchor className="h-3 w-3" />
                 {tr("Executive Shipping Dashboard")}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300 whitespace-nowrap">
                 <ShieldCheck className="h-3 w-3" />
                 {tr("Super Management")}
               </span>

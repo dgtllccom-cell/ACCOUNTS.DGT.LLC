@@ -172,7 +172,7 @@ export function SettlementReportsView() {
                     <td className="py-3 px-4 text-right font-medium">{r.local_currency} {num(r.local_amount)}</td>
                     <td className="py-3 px-4 text-right font-bold">{r.local_currency} {num(r.remaining_local)}</td>
                     <td className="py-3 px-4 text-center">
-                      <span className="px-2 py-0.5 rounded text-[11px] uppercase font-bold bg-slate-100 dark:bg-slate-800">
+                      <span className="px-2 py-0.5 rounded text-[11px] uppercase font-bold bg-slate-100 dark:bg-slate-800 whitespace-nowrap">
                         {r.settlement_status}
                       </span>
                     </td>

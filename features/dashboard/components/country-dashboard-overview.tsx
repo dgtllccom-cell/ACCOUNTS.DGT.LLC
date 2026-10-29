@@ -704,7 +704,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                       {formatMoney(branch.balance, branch.branchCurrency)}
                     </td>
                     <td className="px-4 py-3.5 text-center">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         Active
                       </span>

@@ -1681,7 +1681,7 @@ export function TruckRecreationWizard({
   };
 
   const Option1ActiveBadge = ({ status = "Active" }: { status?: string }) => (
-    <span className="inline-flex items-center rounded-full bg-emerald-500 text-white px-3 py-0.5 text-[11px] font-bold shadow-2xs">
+    <span className="inline-flex items-center rounded-full bg-emerald-500 text-white px-3 py-0.5 text-[11px] font-bold shadow-2xs whitespace-nowrap">
       {status || "Active"}
     </span>
   );
@@ -2067,7 +2067,7 @@ export function TruckRecreationWizard({
                 </svg>
               )}
             </div>
-            <span className="mt-1.5 inline-block rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-black tracking-wide text-white uppercase shadow-2xs">
+            <span className="mt-1.5 inline-block rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-black tracking-wide text-white uppercase shadow-2xs whitespace-nowrap">
               {trkStr(TRK_TEXT.permanentBadge[activeLang])}
             </span>
           </div>
@@ -2545,7 +2545,7 @@ export function TruckRecreationWizard({
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   {countryBreakdown[0]?.name || "United Arab Emirates"}
                 </span>
-                <span className="rounded-lg bg-orange-50 px-2 py-0.5 text-xs font-bold text-orange-700 dark:bg-orange-950/50 dark:text-orange-300">
+                <span className="rounded-lg bg-orange-50 px-2 py-0.5 text-xs font-bold text-orange-700 dark:bg-orange-950/50 dark:text-orange-300 whitespace-nowrap">
                   {countryBreakdown[0]?.count || 1} {tt("trk.trucks_count_suffix", "trucks")}
                 </span>
               </div>

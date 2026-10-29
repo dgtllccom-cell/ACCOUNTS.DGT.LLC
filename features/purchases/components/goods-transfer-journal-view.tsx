@@ -296,7 +296,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
               {lot.stock.map((row: Json) => (
                 <li key={row.id} className="flex items-start justify-between gap-3 p-3 text-xs">
                   <div className="min-w-0">
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold dark:bg-slate-800">{stateLabel(row.state)}</span>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">{stateLabel(row.state)}</span>
                     <div className="mt-1 break-words font-semibold">{placeLabel(row)}</div>
                     <div className="font-mono text-[11px] text-slate-500">{s.t("col_rack", "Rack / Bin")}: {row.rack_bin || "—"}</div>
                   </div>
@@ -325,7 +325,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {lot.stock.map((row: Json) => (
                     <tr key={row.id}>
-                      <td className="p-2"><span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold dark:bg-slate-800">{stateLabel(row.state)}</span></td>
+                      <td className="p-2"><span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">{stateLabel(row.state)}</span></td>
                       <td className="p-2">{placeLabel(row)}</td>
                       <td className="p-2 font-mono">{row.rack_bin || "—"}</td>
                       <td className={`p-2 font-bold tabular-nums ${s.textEnd}`}>{qtyFmt(row.qty)}</td>

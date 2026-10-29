@@ -485,7 +485,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                 <span className="text-base leading-none">🇦🇪</span>
                 <span className="text-xs font-black text-slate-900 dark:text-slate-100">United Arab Emirates</span>
               </div>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
               </span>
             </div>
@@ -518,7 +518,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                 <span className="text-base leading-none">🇵🇰</span>
                 <span className="text-xs font-black text-slate-900 dark:text-slate-100">Pakistan</span>
               </div>
-              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full whitespace-nowrap">
                 Planned
               </span>
             </div>
@@ -551,7 +551,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                 <span className="text-base leading-none">🇦🇫</span>
                 <span className="text-xs font-black text-slate-900 dark:text-slate-100">Afghanistan</span>
               </div>
-              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full whitespace-nowrap">
                 Planned
               </span>
             </div>
@@ -584,7 +584,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                 <span className="text-base leading-none">🇮🇳</span>
                 <span className="text-xs font-black text-slate-900 dark:text-slate-100">India</span>
               </div>
-              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full whitespace-nowrap">
                 Planned
               </span>
             </div>
@@ -617,7 +617,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                 <Globe2 className="h-4 w-4 text-blue-500" />
                 <span className="text-xs font-black text-slate-900 dark:text-slate-100">Other Countries</span>
               </div>
-              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full whitespace-nowrap">
                 Planned
               </span>
             </div>
@@ -673,7 +673,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
               </div>
               {/* Static resolved-scope label — also the only scope indicator that
                   survives into the print/PDF (form controls are stripped there). */}
-              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                 {currentCountryName}
               </span>
             </div>
@@ -765,7 +765,7 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                     {tax.taxName}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="font-mono text-[11px] font-black rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-700 dark:text-slate-300">
+                    <span className="font-mono text-[11px] font-black rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       {tax.taxCode}
                     </span>
                   </td>
@@ -776,13 +776,13 @@ export function CountryTaxManagementView({ lang: langProp, initialCountryId }: P
                     {tax.trnNumber || "—"}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="text-[11px] font-bold uppercase rounded-full px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400">
+                    <span className="text-[11px] font-bold uppercase rounded-full px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 whitespace-nowrap">
                       {tax.appliesTo === "both" ? _("tax.both", "Both") : tax.appliesTo === "purchase" ? _("tax.purchase", "Purchase") : tax.appliesTo === "sales" ? _("tax.sales", "Sales") : _("tax.expense", "Expense")}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
                     {tax.isDefault ? (
-                      <span className="text-[11px] font-black rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+                      <span className="text-[11px] font-black rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 whitespace-nowrap">
                         {_("ctm.default_col", "Default")}
                       </span>
                     ) : (

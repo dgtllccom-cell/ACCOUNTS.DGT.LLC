@@ -105,7 +105,7 @@ export default async function BranchNetworkPage() {
                         </div>
                         <span className="font-bold text-sm text-slate-800 dark:text-slate-100">{country.name}</span>
                       </div>
-                      <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                      <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400 whitespace-nowrap">
                         {country.currency || "USD"}
                       </span>
                     </div>
@@ -123,7 +123,7 @@ export default async function BranchNetworkPage() {
                                 {mb.cityBranches.map((cb) => (
                                   <div key={cb.id} className="flex items-center justify-between text-[11px]">
                                     <span className="text-slate-500">{cb.cityName} - {cb.name}</span>
-                                    <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold dark:bg-slate-800">{cb.code}</span>
+                                    <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">{cb.code}</span>
                                   </div>
                                 ))}
                               </div>

@@ -308,7 +308,7 @@ export function PaymentJournalV2Header({
           </div>
 
           <div className="pt-3 mt-2 border-t border-slate-100 dark:border-slate-800/80 flex justify-end">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800 text-[11px] font-black uppercase tracking-wider">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800 text-[11px] font-black uppercase tracking-wider whitespace-nowrap">
               {translateHeader(lang, "ALL BRANCHES")}
             </span>
           </div>

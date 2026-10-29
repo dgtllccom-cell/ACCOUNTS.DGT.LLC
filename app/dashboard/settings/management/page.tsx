@@ -275,7 +275,7 @@ export default function ManagementSettingsPage() {
                           <td className="px-5 py-3.5 font-mono font-bold text-foreground">{c.currency_code}</td>
                           <td className="px-5 py-3.5 text-muted-foreground font-mono">{c.official_email || c.admin_email || "-"}</td>
                           <td className="px-5 py-3.5">
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                               {t(lang, "mgmt.active_node", "Active Node")}
                             </span>
                           </td>

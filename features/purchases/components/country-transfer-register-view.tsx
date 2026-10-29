@@ -190,7 +190,7 @@ export function CountryTransferRegisterView() {
                 <td className="px-3 py-2 text-end font-mono text-emerald-700 dark:text-emerald-300">{money(o.advance_paid, o.currency_code)}</td>
                 <td className="px-3 py-2 text-end font-mono text-amber-700 dark:text-amber-300">{money(o.remaining_due, o.currency_code)}</td>
                 <td className="px-3 py-2">
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                     {renderStatus(tt, o.payment_status)}
                   </span>
                 </td>

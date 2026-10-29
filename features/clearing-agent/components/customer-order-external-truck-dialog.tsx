@@ -483,7 +483,7 @@ function CustomerOrderExternalTruckDialogBody({
                             ({trk.plateNo})
                           </span>
                         </div>
-                        <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 shrink-0">
+                        <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 shrink-0 whitespace-nowrap">
                           {trk.usedAgo}
                         </span>
                       </div>

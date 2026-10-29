@@ -52,7 +52,7 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
         <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-white/10 -translate-y-1/2 translate-x-1/2 blur-2xl" />
         <div className="relative flex items-center justify-between">
           <div>
-            <span className="text-[11px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full text-white/90">
+            <span className="text-[11px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full text-white/90 whitespace-nowrap">
               {syncData?.scope?.scopeLabel || tt("mbl.live_sync_active", "LIVE SYNC ACTIVE")}
             </span>
             <h2 className="text-xl font-black text-white mt-1">{user.fullName}</h2>

@@ -292,12 +292,12 @@ function CustomerOrderFleetPickerModalBody({
                       <td className="py-2.5 px-3 text-slate-700 dark:text-slate-200">{transporter}</td>
                       <td className="py-2.5 px-3 text-slate-800 dark:text-slate-100 font-semibold">{driver}</td>
                       <td className="py-2.5 px-3">
-                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 whitespace-nowrap">
                           {status}
                         </span>
                       </td>
                       <td className="py-2.5 px-3">
-                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 whitespace-nowrap">
                           {avail}
                         </span>
                       </td>

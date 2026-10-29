@@ -1027,7 +1027,7 @@ export function AccountSetupReport({
                   <Landmark className="h-3.5 w-3.5 text-amber-600" />
                   {t(lang, "asr.all_countries_report", "All Countries Account Report")}
                 </span>
-                <span className="px-1.5 py-0.5 text-[11px] font-black uppercase rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                <span className="px-1.5 py-0.5 text-[11px] font-black uppercase rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 whitespace-nowrap">
                   {t(lang, "asr.super_admin_only", "Super Admin Only")}
                 </span>
               </div>
@@ -1050,7 +1050,7 @@ export function AccountSetupReport({
             {tr("Active Filters")}:
           </span>
           {country !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs whitespace-nowrap">
               <span>{translateCountry(country, lang)}</span>
               <button type="button" onClick={() => setCountry("all")} className="hover:text-blue-900 cursor-pointer">
                 <X className="h-3 w-3" />
@@ -1058,7 +1058,7 @@ export function AccountSetupReport({
             </span>
           )}
           {branch !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs whitespace-nowrap">
               <span>{branch}</span>
               <button type="button" onClick={() => setBranch("all")} className="hover:text-blue-900 cursor-pointer">
                 <X className="h-3 w-3" />
@@ -1066,7 +1066,7 @@ export function AccountSetupReport({
             </span>
           )}
           {accType !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs whitespace-nowrap">
               <span>{tv(accType)}</span>
               <button type="button" onClick={() => setAccType("all")} className="hover:text-blue-900 cursor-pointer">
                 <X className="h-3 w-3" />
@@ -1074,7 +1074,7 @@ export function AccountSetupReport({
             </span>
           )}
           {currencyFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs whitespace-nowrap">
               <span>{currencyFilter}</span>
               <button type="button" onClick={() => setCurrencyFilter("all")} className="hover:text-blue-900 cursor-pointer">
                 <X className="h-3 w-3" />
@@ -1082,7 +1082,7 @@ export function AccountSetupReport({
             </span>
           )}
           {statusFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs whitespace-nowrap">
               <span>{statusFilter}</span>
               <button type="button" onClick={() => setStatusFilter("all")} className="hover:text-blue-900 cursor-pointer">
                 <X className="h-3 w-3" />
@@ -1107,7 +1107,7 @@ export function AccountSetupReport({
             <h2 className="text-sm font-black text-slate-900 dark:text-white">
               {t(lang, "asr.register_title", "Chart of Accounts Register")}
             </h2>
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
               {filtered.length} {t(lang, "asr.records", "records")}
             </span>
           </div>
@@ -1224,7 +1224,7 @@ export function AccountSetupReport({
                         <span className="font-bold text-slate-900 dark:text-white">{row.accountName}</span>
                       </td>
                       <td className="p-3">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                           {tv(row.subType || row.accountCategory)}
                         </span>
                       </td>

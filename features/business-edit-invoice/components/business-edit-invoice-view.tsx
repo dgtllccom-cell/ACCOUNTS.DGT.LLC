@@ -257,7 +257,7 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500 dark:text-slate-400">{s.t("role", "Role")}</span>
-                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 whitespace-nowrap">
                   {isSuperAdmin ? s.t("super_admin", "Super Admin") : (session?.scopes?.summary?.scopeLabel || "—")}
                 </span>
               </div>
@@ -329,7 +329,7 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
             <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/70 via-white to-amber-50/20 p-4 shadow-sm dark:border-amber-950/60 dark:from-amber-950/30 dark:via-slate-900 dark:to-slate-900">
               <div className="flex items-center justify-between pb-3 border-b border-amber-100/70 dark:border-amber-900/40">
                 <span className="text-xs font-bold text-amber-950 dark:text-amber-200">{s.t("all_countries_report", "All Countries Edit Invoice Report")}</span>
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-black text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 uppercase tracking-wider">
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-black text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 uppercase tracking-wider whitespace-nowrap">
                   {s.t("super_admin_only", "Super Admin Only")}
                 </span>
               </div>
@@ -547,15 +547,15 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
                       </td>
                       <td className="px-3 py-2.5">
                         {r.status === "finalized" ? (
-                          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300">
+                          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300 whitespace-nowrap">
                             {s.t("finalized", "Finalized")}
                           </span>
                         ) : r.status === "draft" ? (
-                          <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300">
+                          <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300 whitespace-nowrap">
                             {s.t("draft", "Draft")}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300">
+                          <span className="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300 whitespace-nowrap">
                             {s.t("void", "Void")}
                           </span>
                         )}

@@ -111,17 +111,17 @@ export function VoiceFormFill({
           <div className="rounded-xl bg-[#070f21] border border-blue-900/40 p-3">
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               {s.t("original_transcript", "Original transcript")} ·
-              <span className="ml-1 rounded bg-blue-950 border border-blue-800/40 px-1.5 py-0.5 text-[11px] font-mono text-cyan-300 uppercase">{s.lang}</span>
+              <span className="ml-1 rounded bg-blue-950 border border-blue-800/40 px-1.5 py-0.5 text-[11px] font-mono text-cyan-300 uppercase whitespace-nowrap">{s.lang}</span>
             </p>
             <p className="mt-1 text-xs text-slate-100 font-medium">{result.originalTranscript}</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
             <span className="font-bold text-slate-300">{s.t("understood_as", "Understood as")}:</span>
-            <span className="rounded-md bg-cyan-500/10 border border-cyan-400/20 px-2 py-0.5 font-mono text-[11px] font-black text-cyan-300">
+            <span className="rounded-md bg-cyan-500/10 border border-cyan-400/20 px-2 py-0.5 font-mono text-[11px] font-black text-cyan-300 whitespace-nowrap">
               {result.interpretedAction}
             </span>
-            <span className="rounded-md bg-indigo-500/15 border border-indigo-400/30 px-2 py-0.5 font-mono text-[11px] font-black text-indigo-300 uppercase">
+            <span className="rounded-md bg-indigo-500/15 border border-indigo-400/30 px-2 py-0.5 font-mono text-[11px] font-black text-indigo-300 uppercase whitespace-nowrap">
               SCHEMA: {context}
             </span>
             <span>· {s.t("confidence", "Confidence")} {(result.confidence * 100).toFixed(0)}%</span>

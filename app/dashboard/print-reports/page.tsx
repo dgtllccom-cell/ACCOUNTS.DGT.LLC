@@ -1240,7 +1240,7 @@ export default function PrintReportsHubPage() {
 
                         {/* Active Users Count */}
                         <td className="px-3 py-3 text-center">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-200 dark:border-emerald-800">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                             <UserCheck className="h-3 w-3" /> {card.activeUsersCount} {tp("common.active", "Active")}
                           </span>
                         </td>
@@ -1341,7 +1341,7 @@ export default function PrintReportsHubPage() {
                                           <td className="px-3 py-2 font-bold text-slate-900 dark:text-white">{sub.name}</td>
                                           <td className="px-3 py-2 font-mono text-blue-600 dark:text-blue-400 font-bold">{sub.code}</td>
                                           <td className="px-3 py-2 text-center">
-                                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
                                               {sub.status}
                                             </span>
                                           </td>

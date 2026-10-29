@@ -2457,7 +2457,7 @@ export function LocalPurchaseView({
                   <h1 className="truncate text-xs font-black text-slate-900 dark:text-slate-100 sm:text-sm">
                     {t(lang, "lp.voucher_title", "Local Purchase Booking Voucher")}
                   </h1>
-                  <span className="px-1.5 py-0.5 rounded text-[11px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800">
+                  <span className="px-1.5 py-0.5 rounded text-[11px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800 whitespace-nowrap">
                     {editingPurchaseId ? t(lang, "lp.editing_draft", "EDITING DRAFT") : t(lang, "purchase.draft_badge", "DRAFT")}
                   </span>
                 </div>
@@ -2661,7 +2661,7 @@ export function LocalPurchaseView({
                   {currentStep === 4 && <><CheckCircle2 className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.step4_header", "STEP 4: VERIFY & POST")}</>}
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700">
+                  <span className="text-[11px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 whitespace-nowrap">
                     {t(lang, "purchase.draft_badge", "DRAFT")}
                   </span>
                   <button
@@ -3312,7 +3312,7 @@ export function LocalPurchaseView({
                       <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                         <CreditCard className="h-3.5 w-3.5 text-blue-600" /> {t(lang, "lp.card_payment_details", "PAYMENT DETAILS")}
                       </span>
-                      <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300">
+                      <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">
                         {paymentMode}
                       </span>
                     </div>
@@ -3458,7 +3458,7 @@ export function LocalPurchaseView({
                       <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                         <Truck className="h-3.5 w-3.5 text-emerald-600" /> {t(lang, "lp.card_loading_details", "LOADING & TRANSPORT DETAILS")}
                       </span>
-                      <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
+                      <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                         {shipmentType}
                       </span>
                     </div>
@@ -3929,7 +3929,7 @@ export function LocalPurchaseView({
                   <CardTitle className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
                     <Package className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.goods_table_title", "GOODS TABLE")}
                   </CardTitle>
-                  <span className="text-[11px] font-mono font-bold bg-blue-600 text-white px-2.5 py-0.5 rounded-full">
+                  <span className="text-[11px] font-mono font-bold bg-blue-600 text-white px-2.5 py-0.5 rounded-full whitespace-nowrap">
                     {draftItems.length} {t(lang, "lp.goods_entered_badge", "Goods Entered")}
                   </span>
                 </CardHeader>
@@ -3979,11 +3979,11 @@ export function LocalPurchaseView({
                               </td>
                               <td className="p-2 text-center">
                                 {item.applyTax === "Yes" && Number(item.taxAmount || 0) > 0 ? (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
                                     {item.taxPercentage}% ({Number(item.taxAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap">
                                     {t(lang, "common.no", "No")}
                                   </span>
                                 )}
@@ -4102,11 +4102,11 @@ export function LocalPurchaseView({
                               </td>
                               <td className="p-2 text-center">
                                 {item.applyTax === "Yes" && Number(item.taxAmount || 0) > 0 ? (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
                                     {item.taxPercentage}% ({Number(item.taxAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap">
                                     {t(lang, "common.no", "No")}
                                   </span>
                                 )}
@@ -4308,7 +4308,7 @@ export function LocalPurchaseView({
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 mb-1">
+                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 mb-1 whitespace-nowrap">
                         READY FOR GL & ROZNAMCHA POSTING
                       </span>
                       <div className="text-xs font-mono font-bold text-slate-600 dark:text-slate-300">
@@ -4607,7 +4607,7 @@ export function LocalPurchaseView({
                           : t(lang, "lp.reg_all_countries_list", "All Countries Local Purchase List")}
                       </h3>
                       {activeCountryObj && (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                           <span>{getCountryFlag(activeCountryObj.name)}</span>
                           <span>{activeCountryObj.name}</span>
                           <span className="opacity-75 font-mono">({filteredPurchases.length} {filteredPurchases.length === 1 ? t(lang, "lp.reg_bill", "Bill") : t(lang, "lp.reg_bills", "Bills")})</span>
@@ -4845,18 +4845,18 @@ export function LocalPurchaseView({
                                 {(() => {
                                   const st = (row.status || "").toLowerCase();
                                   if (st === "posted") {
-                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">{t(lang, "lp.reg_status_posted", "Posted")}</span>;
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">{t(lang, "lp.reg_status_posted", "Posted")}</span>;
                                   }
                                   if (st === "draft") {
-                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200">{t(lang, "lp.reg_status_draft", "Draft")}</span>;
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200 whitespace-nowrap">{t(lang, "lp.reg_status_draft", "Draft")}</span>;
                                   }
                                   if (st === "pending") {
-                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">{t(lang, "lp.reg_status_pending", "Pending")}</span>;
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200 whitespace-nowrap">{t(lang, "lp.reg_status_pending", "Pending")}</span>;
                                   }
                                   if (st === "accepted") {
-                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200">{t(lang, "lp.reg_status_accepted", "Accepted")}</span>;
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200 whitespace-nowrap">{t(lang, "lp.reg_status_accepted", "Accepted")}</span>;
                                   }
-                                  return <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">{row.status}</span>;
+                                  return <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 whitespace-nowrap">{row.status}</span>;
                                 })()}
                               </td>
                               <td className="px-3 py-2 text-center" onClick={(e) => e.stopPropagation()}>
@@ -5205,18 +5205,18 @@ export function LocalPurchaseView({
                               {(() => {
                                 const st = (row.status || "").toLowerCase();
                                 if (st === "posted") {
-                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">{t(lang, "lp.reg_status_posted", "Posted")}</span>;
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">{t(lang, "lp.reg_status_posted", "Posted")}</span>;
                                 }
                                 if (st === "draft") {
-                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200">{t(lang, "lp.reg_status_draft", "Draft")}</span>;
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200 whitespace-nowrap">{t(lang, "lp.reg_status_draft", "Draft")}</span>;
                                 }
                                 if (st === "pending") {
-                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">{t(lang, "lp.reg_status_pending", "Pending")}</span>;
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200 whitespace-nowrap">{t(lang, "lp.reg_status_pending", "Pending")}</span>;
                                 }
                                 if (st === "accepted") {
-                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200">{t(lang, "lp.reg_status_accepted", "Accepted")}</span>;
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200 whitespace-nowrap">{t(lang, "lp.reg_status_accepted", "Accepted")}</span>;
                                 }
-                                return <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">{row.status}</span>;
+                                return <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 whitespace-nowrap">{row.status}</span>;
                               })()}
                             </td>
                             <td className="px-3 py-2 text-center" onClick={(e) => e.stopPropagation()}>

@@ -656,7 +656,7 @@ export default function HandoverReportPage() {
                     <td className="p-2.5 font-mono">{row.l.toLocaleString()}</td>
                     <td className="p-2.5 font-mono font-semibold text-blue-600">{row.v.toLocaleString()}</td>
                     <td className="p-2.5">
-                      <span className="px-2 py-0.5 text-[11px] font-semibold rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      <span className="px-2 py-0.5 text-[11px] font-semibold rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 whitespace-nowrap">
                         {th("100% Synced")}
                       </span>
                     </td>
@@ -686,7 +686,7 @@ export default function HandoverReportPage() {
               <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 text-center space-y-1">
                 <div className="text-xs font-mono font-bold uppercase text-slate-500">{lang.code} • {lang.dir}</div>
                 <div className="text-sm font-bold text-slate-900 dark:text-slate-100">{lang.name}</div>
-                <span className="inline-block px-2 py-0.5 text-[11px] font-semibold rounded bg-emerald-100 text-emerald-800">
+                <span className="inline-block px-2 py-0.5 text-[11px] font-semibold rounded bg-emerald-100 text-emerald-800 whitespace-nowrap">
                   {th(lang.status)}
                 </span>
               </div>

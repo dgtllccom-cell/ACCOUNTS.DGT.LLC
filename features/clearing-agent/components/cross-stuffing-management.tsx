@@ -277,7 +277,7 @@ export function CrossStuffingManagement({ lang: langProp }: { lang?: string }) {
                   <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{ev.warehouse_name || "—"}</td>
                   <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{ev.event_date}</td>
                   <td className="px-3 py-2">
-                    <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-black uppercase text-slate-600 dark:border-slate-700 dark:text-slate-300">{ev.status}</span>
+                    <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-black uppercase text-slate-600 dark:border-slate-700 dark:text-slate-300 whitespace-nowrap">{ev.status}</span>
                   </td>
                   <td className="px-3 py-2 text-end tabular-nums">{ev.line_count}</td>
                   <td className="px-3 py-2 text-end tabular-nums">{Number(ev.total_quantity || 0).toLocaleString()}</td>

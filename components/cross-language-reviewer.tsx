@@ -109,7 +109,7 @@ export function CrossLanguageReviewer({
           <Languages className="h-3.5 w-3.5" />
           {s.t("title", "Cross-language review")}
         </span>
-        <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[11px] font-semibold text-sky-800 dark:bg-sky-900 dark:text-sky-200">
+        <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[11px] font-semibold text-sky-800 dark:bg-sky-900 dark:text-sky-200 whitespace-nowrap">
           {s.t("spoken_in", "Original language")}: {LANG_LABEL[srcLang]}
         </span>
       </div>

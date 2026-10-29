@@ -272,7 +272,7 @@ export function SettlementDashboardView() {
                   {item.label}
                 </span>
                 {item.count !== null && item.count !== undefined && item.count > 0 && (
-                  <span className="mt-1 rounded-full bg-rose-500/10 text-rose-600 px-2 py-0.5 text-[11px] font-bold">
+                  <span className="mt-1 rounded-full bg-rose-500/10 text-rose-600 px-2 py-0.5 text-[11px] font-bold whitespace-nowrap">
                     {item.count} {s.t("open","open")}
                   </span>
                 )}

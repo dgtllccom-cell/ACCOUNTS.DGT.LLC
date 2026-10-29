@@ -989,7 +989,7 @@ function SuperAdminRoznamchaSummaryBody({
             </div>
             <div className="flex justify-between items-center mt-auto">
               <span>{th("Scope:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px]">{scopeLabel}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">{scopeLabel}</span>
             </div>
           </div>
         </div>
@@ -1125,7 +1125,7 @@ function SuperAdminRoznamchaSummaryBody({
                         </span>
                         {getFlag(item.name)} {item.name}
                       </span>
-                      <span className="bg-white/20 text-[11px] font-bold px-2 py-0.5 rounded-full">{item.entries} {th("Trx")}</span>
+                      <span className="bg-white/20 text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">{item.entries} {th("Trx")}</span>
                     </div>
                     <div className="p-4 space-y-3 bg-white dark:bg-slate-950">
                       <div className="flex justify-between items-end border-b border-slate-100 dark:border-slate-800 pb-2">

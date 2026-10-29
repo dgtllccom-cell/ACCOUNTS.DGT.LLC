@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { apiGet } from "@/lib/api/client";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import {
@@ -156,29 +157,22 @@ export default function InterCountryTransfersPage() {
   const finalCalculatedAmount = (Number(amount || 0) * Number(exchangeRate || 1)).toFixed(2);
 
   // Fetch reference metadata: countries, ledgers, authoritative 4 country accounts
+  // The ERP APIs answer { ok, data: {...} }; the raw fetch() this page used read the envelope as if it were the payload, so
+  // `countries` became an object and `countries.map` crashed the whole page. apiGet unwraps the envelope (and sends the language
+  // header); each list is checked to really be an array before it reaches state.
   const fetchMetadata = useCallback(async () => {
-    try {
-      const [cRes, lRes, aRes] = await Promise.all([
-        fetch("/api/erp/locations"),
-        fetch("/api/erp/accounting/ledgers"),
-        fetch("/api/erp/accounting/inter-country-transfers?action=country-accounts"),
-      ]);
-      if (cRes.ok) {
-        const cData = await cRes.json();
-        const rawCountries = cData.countries || cData || [];
-        setCountries(rawCountries);
-      }
-      if (lRes.ok) {
-        const lData = await lRes.json();
-        setLedgers(lData.ledgers || lData || []);
-      }
-      if (aRes.ok) {
-        const aData = await aRes.json();
-        setCountryAccounts(aData.countryAccounts || []);
-      }
-    } catch (e) {
-      console.warn("Failed to load metadata", e);
-    }
+    const list = <T,>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
+    const [c, l, a] = await Promise.allSettled([
+      apiGet<{ countries?: Country[] }>("/api/erp/locations/countries"),
+      apiGet<{ ledgers?: Ledger[] }>("/api/erp/accounting/ledgers"),
+      apiGet<{ countryAccounts?: typeof countryAccounts }>("/api/erp/accounting/inter-country-transfers?action=country-accounts"),
+    ]);
+    if (c.status === "fulfilled") setCountries(list<Country>(c.value?.countries));
+    else console.warn("Failed to load countries", c.reason);
+    if (l.status === "fulfilled") setLedgers(list<Ledger>(l.value?.ledgers));
+    else console.warn("Failed to load ledgers", l.reason);
+    if (a.status === "fulfilled") setCountryAccounts(list(a.value?.countryAccounts) as typeof countryAccounts);
+    else console.warn("Failed to load country accounts", a.reason);
   }, []);
 
   // Fetch transfers filtered by active tab
@@ -189,13 +183,10 @@ export default function InterCountryTransfersPage() {
       params.set("tab", activeTab);
       if (activeCountryId) params.set("countryId", activeCountryId);
 
-      const res = await fetch(`/api/erp/accounting/inter-country-transfers?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setTransfers(data.transfers || []);
-        if (typeof data.pendingIncomingCount === "number") {
-          setPendingIncomingCount(data.pendingIncomingCount);
-        }
+      const data = await apiGet<{ transfers?: TransferRecord[]; pendingIncomingCount?: number }>(`/api/erp/accounting/inter-country-transfers?${params.toString()}`);
+      setTransfers(Array.isArray(data?.transfers) ? data.transfers : []);
+      if (typeof data?.pendingIncomingCount === "number") {
+        setPendingIncomingCount(data.pendingIncomingCount);
       }
     } catch (e) {
       console.warn("Failed to load transfers", e);
@@ -566,7 +557,7 @@ export default function InterCountryTransfersPage() {
                 <span className="flex items-center gap-1.5">
                   <span className="text-base">{item.flag}</span> {item.name}
                 </span>
-                <span className="px-1.5 py-0.5 rounded bg-muted text-[11px] font-mono font-bold">
+                <span className="px-1.5 py-0.5 rounded bg-muted text-[11px] font-mono font-bold whitespace-nowrap">
                   {liveAcct?.currency || item.currency}
                 </span>
               </div>

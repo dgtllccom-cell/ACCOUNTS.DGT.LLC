@@ -108,7 +108,7 @@ export function Party360Modal({
                   {t(lang, "p360.erp_links_title", "Person Master — ERP Links & Registration Details")}
                 </span>
                 {summary?.customerCode && (
-                  <span className="rounded-md bg-indigo-100 dark:bg-indigo-950/60 px-2 py-0.5 font-mono text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
+                  <span className="rounded-md bg-indigo-100 dark:bg-indigo-950/60 px-2 py-0.5 font-mono text-[11px] font-bold text-indigo-700 dark:text-indigo-300 whitespace-nowrap">
                     {summary.customerCode}
                   </span>
                 )}
@@ -411,7 +411,7 @@ export function Party360Modal({
                                 <span className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
                                   {ac.name}
                                 </span>
-                                <span className="rounded bg-sky-50 dark:bg-sky-950 px-1.5 py-0.5 font-mono text-[11px] font-bold text-sky-700 dark:text-sky-300">
+                                <span className="rounded bg-sky-50 dark:bg-sky-950 px-1.5 py-0.5 font-mono text-[11px] font-bold text-sky-700 dark:text-sky-300 whitespace-nowrap">
                                   {ac.code}
                                 </span>
                               </div>
@@ -541,7 +541,7 @@ export function Party360Modal({
                             </div>
                           </div>
                           <div className="shrink-0 flex items-center gap-2">
-                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 whitespace-nowrap">
                               {emp.status || "Active"}
                             </span>
                             <button
@@ -598,7 +598,7 @@ export function Party360Modal({
                               </p>
                             </div>
                           </div>
-                          <span className="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+                          <span className="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap">
                             {bnk.accountStatus || "Active"}
                           </span>
                         </div>
@@ -642,7 +642,7 @@ export function Party360Modal({
                               </p>
                             </div>
                           </div>
-                          <span className="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-50 text-teal-800 border border-teal-200">
+                          <span className="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-50 text-teal-800 border border-teal-200 whitespace-nowrap">
                             {w.role}
                           </span>
                         </div>
@@ -686,7 +686,7 @@ export function Party360Modal({
                               )}
                             </div>
                           </div>
-                          <span className="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-md bg-orange-50 text-orange-800 border border-orange-200">
+                          <span className="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-md bg-orange-50 text-orange-800 border border-orange-200 whitespace-nowrap">
                             {tr.role}
                           </span>
                         </div>

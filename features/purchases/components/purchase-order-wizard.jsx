@@ -3945,7 +3945,7 @@ export function PurchaseOrderWizard({ session }) {
                       <div className="h-9 w-9 rounded-lg bg-emerald-500 text-white flex items-center justify-center shadow-sm">
                         <FilePlus2 className="h-5 w-5" />
                       </div>
-                      <span className="text-[11px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 dark:bg-emerald-900/60 dark:text-emerald-300 px-2 py-0.5 rounded">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 dark:bg-emerald-900/60 dark:text-emerald-300 px-2 py-0.5 rounded whitespace-nowrap">
                         Standard
                       </span>
                     </div>
@@ -3976,7 +3976,7 @@ export function PurchaseOrderWizard({ session }) {
                       <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
                         <ScanLine className="h-5 w-5" />
                       </div>
-                      <span className="text-[11px] font-black uppercase tracking-wider text-blue-700 bg-blue-100 dark:bg-blue-900/60 dark:text-blue-300 px-2 py-0.5 rounded">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-blue-700 bg-blue-100 dark:bg-blue-900/60 dark:text-blue-300 px-2 py-0.5 rounded whitespace-nowrap">
                         {t(lang, "dintake.st_ocr", "OCR")}
                       </span>
                     </div>
@@ -4015,7 +4015,7 @@ export function PurchaseOrderWizard({ session }) {
                       <div className="h-9 w-9 rounded-lg bg-purple-600 text-white flex items-center justify-center shadow-sm">
                         <Mic className="h-5 w-5" />
                       </div>
-                      <span className="text-[11px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 dark:bg-purple-900/60 dark:text-purple-300 px-2 py-0.5 rounded">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 dark:bg-purple-900/60 dark:text-purple-300 px-2 py-0.5 rounded whitespace-nowrap">
                         AI
                       </span>
                     </div>
@@ -4055,7 +4055,7 @@ export function PurchaseOrderWizard({ session }) {
                       <div className="h-9 w-9 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-sm">
                         <FileClock className="h-5 w-5" />
                       </div>
-                      <span className="text-[11px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/60 dark:text-amber-300 px-2 py-0.5 rounded">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/60 dark:text-amber-300 px-2 py-0.5 rounded whitespace-nowrap">
                         {t(lang, "dintake.st_draft_ready", "Draft Ready")}
                       </span>
                     </div>
@@ -4204,10 +4204,10 @@ export function PurchaseOrderWizard({ session }) {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="bg-emerald-600 text-white text-[11px] font-black uppercase px-2 py-0.5 rounded border border-emerald-500/30">
+                <span className="bg-emerald-600 text-white text-[11px] font-black uppercase px-2 py-0.5 rounded border border-emerald-500/30 whitespace-nowrap">
                   {t(lang, "purchase.posted_voucher_registration", "POSTED VOUCHER REGISTRATION")}
                 </span>
-                <span className="bg-blue-600 text-white text-[11px] font-black uppercase px-2 py-0.5 rounded">
+                <span className="bg-blue-600 text-white text-[11px] font-black uppercase px-2 py-0.5 rounded whitespace-nowrap">
                   ✓ LEDGER OK
                 </span>
               </div>
@@ -4355,7 +4355,7 @@ export function PurchaseOrderWizard({ session }) {
                       </div>
                       <div>
                         <span className="block text-[11px] uppercase font-bold text-slate-400">{t(lang, "purchase.booking_date_colon", "Booking Date:")}</span>
-                        <span className="inline-block bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded text-[11px]">
+                        <span className="inline-block bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded text-[11px] whitespace-nowrap">
                           {form.purchaseDate || "\u2014"}
                         </span>
                       </div>
@@ -4421,12 +4421,12 @@ export function PurchaseOrderWizard({ session }) {
                             <button
                               type="button"
                               onClick={() => setShowScopeModal(true)}
-                              className="text-[11px] font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 transition"
+                              className="text-[11px] font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 transition whitespace-nowrap"
                             >
                               {t(lang, "purchase.change_scope", "Scope ⚙")}
                             </button>
                           )}
-                          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                             {t(lang, "purchase.active_word", "Active")}
                           </span>
                         </div>
@@ -4476,7 +4476,7 @@ export function PurchaseOrderWizard({ session }) {
                           <span className="h-5 w-5 rounded bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center">2</span>
                           <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">{t(lang, "purchase.bill_details_title", "Bill Details")}</h4>
                         </div>
-                        <span className="text-[11px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+                        <span className="text-[11px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800 whitespace-nowrap">
                           {t(lang, "purchase.draft_badge", "DRAFT")}
                         </span>
                       </div>
@@ -4942,7 +4942,7 @@ export function PurchaseOrderWizard({ session }) {
                           <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
                             {form.purchaseCompanyName || form.purchaseAccountName || "\u2014"}
                           </h2>
-                          <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded">
+                          <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded whitespace-nowrap">
                             ({form.purchaseAccountNo || "\u2014"})
                           </span>
                         </div>
@@ -5047,7 +5047,7 @@ export function PurchaseOrderWizard({ session }) {
                                 <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-500/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                                   <div className="flex justify-between items-center px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/40 rounded-lg mb-1.5 border border-blue-100 dark:border-blue-900">
                                     <span className="text-[11px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">{t(lang, "purchase.select_purchase_account_dr_header", "Select Purchase Account (DR)")}</span>
-                                    <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                    <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                       {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).length))}
                                     </span>
                                   </div>
@@ -5070,11 +5070,11 @@ export function PurchaseOrderWizard({ session }) {
                                               {acc.accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account")}
                                             </span>
                                             <div className="flex flex-wrap items-center gap-1">
-                                              <span className="font-mono text-[11px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded">
+                                              <span className="font-mono text-[11px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                                 {acc.accountCode}
                                               </span>
                                               {acc.manualReferenceNumber && (
-                                                <span className="font-mono text-[11px] font-black bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1.5 py-0.5 rounded">
+                                                <span className="font-mono text-[11px] font-black bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                                   Ref: {acc.manualReferenceNumber}
                                                 </span>
                                               )}
@@ -5152,7 +5152,7 @@ export function PurchaseOrderWizard({ session }) {
                                 <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-500/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                                   <div className="flex justify-between items-center px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/40 rounded-lg mb-1.5 border border-blue-100 dark:border-blue-900">
                                     <span className="text-[11px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">{t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)")}</span>
-                                    <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                    <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                       {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length))}
                                     </span>
                                   </div>
@@ -5175,11 +5175,11 @@ export function PurchaseOrderWizard({ session }) {
                                               {acc.accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account")}
                                             </span>
                                             <div className="flex flex-wrap items-center gap-1">
-                                              <span className="font-mono text-[11px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded">
+                                              <span className="font-mono text-[11px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                                 {acc.accountCode}
                                               </span>
                                               {acc.manualReferenceNumber && (
-                                                <span className="font-mono text-[11px] font-black bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1.5 py-0.5 rounded">
+                                                <span className="font-mono text-[11px] font-black bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                                   Ref: {acc.manualReferenceNumber}
                                                 </span>
                                               )}
@@ -5496,7 +5496,7 @@ export function PurchaseOrderWizard({ session }) {
                                         <button
                                           type="button"
                                           onClick={handleUpdateHsCode}
-                                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
+                                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 whitespace-nowrap"
                                         >
                                           {t(lang, "purchase.save_short", "Save")}
                                         </button>
@@ -5536,7 +5536,7 @@ export function PurchaseOrderWizard({ session }) {
                                         <button
                                           type="button"
                                           onClick={() => handleSaveParamToMaster("brand", form.brand)}
-                                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
+                                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 whitespace-nowrap"
                                         >
                                           {t(lang, "purchase.save_short", "Save")}
                                         </button>
@@ -5588,7 +5588,7 @@ export function PurchaseOrderWizard({ session }) {
                                         <button
                                           type="button"
                                           onClick={() => handleSaveParamToMaster("size", form.size)}
-                                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
+                                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 whitespace-nowrap"
                                         >
                                           {t(lang, "purchase.save_short", "Save")}
                                         </button>
@@ -5644,7 +5644,7 @@ export function PurchaseOrderWizard({ session }) {
                                         <button
                                           type="button"
                                           onClick={() => handleSaveParamToMaster("variety", form.variety)}
-                                          className="text-[11px] font-bold text-amber-600 bg-amber-50 px-1 py-0.5 rounded border border-amber-200 hover:bg-amber-100"
+                                          className="text-[11px] font-bold text-amber-600 bg-amber-50 px-1 py-0.5 rounded border border-amber-200 hover:bg-amber-100 whitespace-nowrap"
                                         >
                                           {t(lang, "purchase.save_short", "Save")}
                                         </button>
@@ -6424,28 +6424,28 @@ export function PurchaseOrderWizard({ session }) {
                                       </div>
                                     </td>
                                     <td className="px-3 py-2.5 text-center">
-                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[11px] border border-slate-200/80 dark:border-slate-700/80">
+                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[11px] border border-slate-200/80 dark:border-slate-700/80 whitespace-nowrap">
                                         {row.size || "-"}
                                       </span>
                                     </td>
                                     <td className="px-3 py-2.5 text-center">
-                                      <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[11px] border border-blue-200/70 dark:border-blue-800/70">
+                                      <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[11px] border border-blue-200/70 dark:border-blue-800/70 whitespace-nowrap">
                                         {row.brand || "-"}
                                       </span>
                                     </td>
                                     <td className="px-3 py-2.5 text-center">
-                                      <span className="px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-850 text-slate-600 dark:text-slate-400 font-mono font-bold text-[11px] border border-slate-200 dark:border-slate-700">
+                                      <span className="px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-850 text-slate-600 dark:text-slate-400 font-mono font-bold text-[11px] border border-slate-200 dark:border-slate-700 whitespace-nowrap">
                                         {row.hsCode || "-"}
                                       </span>
                                     </td>
                                     <td className="px-3 py-2.5 text-center">
-                                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] border border-emerald-200/60 dark:border-emerald-800/60">
+                                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] border border-emerald-200/60 dark:border-emerald-800/60 whitespace-nowrap">
                                         {row.origin || "-"}
                                       </span>
                                     </td>
                                     <td className="px-3 py-2.5 text-right font-mono font-black text-slate-900 dark:text-slate-100">{Number(row.qtyNo || 0).toLocaleString()}</td>
                                     <td className="px-3 py-2.5 text-center">
-                                      <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                                      <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 whitespace-nowrap">
                                         {translateOptionLabel(lang, row.qtyName)}
                                       </span>
                                     </td>
@@ -6573,7 +6573,7 @@ export function PurchaseOrderWizard({ session }) {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-100/80 dark:bg-emerald-950/70 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-2xs">{t(lang, "purchase.step5_of5", "Step 5 of 5")}</span>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-100/80 dark:bg-emerald-950/70 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-2xs whitespace-nowrap">{t(lang, "purchase.step5_of5", "Step 5 of 5")}</span>
                     <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "purchase.final_verification_label", "Final Verification")}</span>
                   </div>
                   <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-slate-100 mt-1">{t(lang, "purchase.final_verification_title", "Purchase Booking Final Verification")}</h2>
@@ -6707,7 +6707,7 @@ export function PurchaseOrderWizard({ session }) {
                   <h3 className="font-black uppercase text-slate-900 dark:text-slate-100 text-xs tracking-wider flex items-center gap-1.5">
                     <ArrowDownLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" /> {t(lang, "purchase.purchase_account_short_title", "Purchase Account")}
                   </h3>
-                  <span className="bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-[11px] font-black px-2 py-0.5 rounded uppercase">{t(lang, "purchase.dr_debit_badge", "DR (Debit)")}</span>
+                  <span className="bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-[11px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap">{t(lang, "purchase.dr_debit_badge", "DR (Debit)")}</span>
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-1.5 text-xs">
                   <span className="text-slate-500 dark:text-slate-400 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-mono font-bold text-slate-900 dark:text-slate-100">{form.purchaseAccountNo || "N/A"}</span>
@@ -6721,7 +6721,7 @@ export function PurchaseOrderWizard({ session }) {
                   <h3 className="font-black uppercase text-slate-900 dark:text-slate-100 text-xs tracking-wider flex items-center gap-1.5">
                     <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> {t(lang, "purchase.sales_account_short_title", "Sales Account")}
                   </h3>
-                  <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[11px] font-black px-2 py-0.5 rounded uppercase">{t(lang, "purchase.cr_credit_badge", "CR (Credit)")}</span>
+                  <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[11px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap">{t(lang, "purchase.cr_credit_badge", "CR (Credit)")}</span>
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-1.5 text-xs">
                   <span className="text-slate-500 dark:text-slate-400 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-mono font-bold text-slate-900 dark:text-slate-100">{form.salesAccountNo || "N/A"}</span>
@@ -6789,7 +6789,7 @@ export function PurchaseOrderWizard({ session }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1.5">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-blue-700 dark:text-blue-300 uppercase text-[11px] bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded">{t(lang, "purchase.purchase_account_dr_badge", "Purchase Account (DR)")}</span>
+                    <span className="font-bold text-blue-700 dark:text-blue-300 uppercase text-[11px] bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded whitespace-nowrap">{t(lang, "purchase.purchase_account_dr_badge", "Purchase Account (DR)")}</span>
                     <span className="text-slate-600 dark:text-slate-400 font-mono font-bold">{form.purchaseAccountNo || "N/A"}</span>
                   </div>
                   <div className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate" title={form.purchaseAccountName}>{localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName || "N/A")}</div>
@@ -6801,7 +6801,7 @@ export function PurchaseOrderWizard({ session }) {
 
                 <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1.5">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-emerald-700 dark:text-emerald-300 uppercase text-[11px] bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-300 uppercase text-[11px] bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded whitespace-nowrap">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</span>
                     <span className="text-slate-600 dark:text-slate-400 font-mono font-bold">{form.salesAccountNo || "N/A"}</span>
                   </div>
                   <div className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate" title={form.salesAccountName}>{localizeBiz(form, lang, "salesAccountName", form.salesAccountName || "N/A")}</div>
@@ -6819,7 +6819,7 @@ export function PurchaseOrderWizard({ session }) {
                 <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" /> {t(lang, "purchase.user_audit_serial_hierarchy", "User Audit & Branch 4-Tier Serial Hierarchy")}
                 </h4>
-                <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 whitespace-nowrap">
                   {t(lang, "purchase.system_audit_log", "SYSTEM AUDIT LOG")}
                 </span>
               </div>

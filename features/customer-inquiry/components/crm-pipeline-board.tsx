@@ -147,7 +147,7 @@ export function CrmPipelineBoard({ lang }: { lang?: string }) {
               <div key={stage} className={`rounded-2xl border p-2.5 ${STAGE_TONE[stage]}`} data-testid={`pipe-col-${stage}`}>
                 <div className="mb-2 flex items-center justify-between px-1">
                   <h3 className="text-[11px] font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">{stageLabel[stage]}</h3>
-                  <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-900/50 dark:text-slate-300">{rows.length}</span>
+                  <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-900/50 dark:text-slate-300 whitespace-nowrap">{rows.length}</span>
                 </div>
                 <div className="space-y-2">
                   {rows.length === 0 ? (

@@ -282,7 +282,7 @@ export function LocalGoodsReceivedView({
           <Package className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           <h1 className="text-sm font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             {t(lang, "purchase.lgr_page_title", "Receiving Country Workflow (Goods Received)")}
-            <span className="bg-amber-400 text-amber-950 text-[11px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">{t(lang, "purchase.lgr_new_badge", "NEW")}</span>
+            <span className="bg-amber-400 text-amber-950 text-[11px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider whitespace-nowrap">{t(lang, "purchase.lgr_new_badge", "NEW")}</span>
           </h1>
         </div>,
         titleSlot

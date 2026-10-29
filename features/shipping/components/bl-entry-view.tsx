@@ -1058,11 +1058,11 @@ export function BlEntryView({
           <h1 className="text-xl font-black uppercase tracking-wider text-slate-100">
             {_("ble.title", "Bill of Lading (B/L)")}
           </h1>
-          <span className="rounded bg-cyan-950/80 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-cyan-400 border border-cyan-800/60">
+          <span className="rounded bg-cyan-950/80 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-cyan-400 border border-cyan-800/60 whitespace-nowrap">
             {blTypeLabel(form.blType)}
           </span>
           {form.id ? (
-            <span className="rounded bg-amber-950/80 px-2 py-0.5 text-[11px] font-bold text-amber-400 border border-amber-800/60">
+            <span className="rounded bg-amber-950/80 px-2 py-0.5 text-[11px] font-bold text-amber-400 border border-amber-800/60 whitespace-nowrap">
               Editing: {form.blNumber}
             </span>
           ) : null}
@@ -1808,7 +1808,7 @@ export function BlEntryView({
                 <span className="text-xs font-black uppercase tracking-wider text-slate-100">
                   {_("ble.lbl_goods_container_report", "Goods Container Report")}
                 </span>
-                <span className="rounded bg-cyan-950/80 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-cyan-400 border border-cyan-800/60">
+                <span className="rounded bg-cyan-950/80 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-cyan-400 border border-cyan-800/60 whitespace-nowrap">
                   {_("ble.live_inventory", "Live Inventory")}
                 </span>
               </div>

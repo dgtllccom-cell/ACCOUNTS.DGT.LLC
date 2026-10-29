@@ -605,7 +605,7 @@ export function CustomerOrderReviewSubmitView({
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
                   1C. {tt("goods_cargo_manifest", "Goods & Cargo Manifest")}
                 </h4>
-                <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 whitespace-nowrap">
                   {cargoTotals.count} {tt("items", "Items")}
                 </span>
               </div>
@@ -752,7 +752,7 @@ export function CustomerOrderReviewSubmitView({
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
                     1D. {tt("documents_and_charges", "Documents & Charges")}
                   </h4>
-                  <span className="rounded-full bg-blue-100 dark:bg-blue-950 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:text-blue-300">
+                  <span className="rounded-full bg-blue-100 dark:bg-blue-950 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:text-blue-300 whitespace-nowrap">
                     {sampleDocs.length} {tt("documents", "Documents")}
                   </span>
                 </div>
@@ -854,7 +854,7 @@ export function CustomerOrderReviewSubmitView({
                 </h4>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 whitespace-nowrap">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Live</span>
                 </span>

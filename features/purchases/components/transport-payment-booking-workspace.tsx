@@ -436,10 +436,10 @@ export function TransportPaymentBookingWorkspace() {
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 p-4 text-white shadow-md">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-blue-300 border border-blue-400/30">
+            <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-blue-300 border border-blue-400/30 whitespace-nowrap">
               Workflow Stage 4
             </span>
-            <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-bold text-slate-300">
+            <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-bold text-slate-300 whitespace-nowrap">
               Purchase Booking Module
             </span>
           </div>
@@ -655,7 +655,7 @@ export function TransportPaymentBookingWorkspace() {
                       </td>
                       <td className="px-3 py-3">
                         <div className="font-bold text-foreground">{r.transporterName}</div>
-                        <span className="inline-flex rounded bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:text-blue-300">
+                        <span className="inline-flex rounded bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:text-blue-300 whitespace-nowrap">
                           {r.transportMode}
                         </span>
                       </td>
@@ -681,7 +681,7 @@ export function TransportPaymentBookingWorkspace() {
                       <td className="px-3 py-3">
                         {r.isFullyPaid ? (
                           <div className="flex flex-col gap-0.5 items-start">
-                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider bg-slate-950 text-white border border-slate-900 shadow-sm dark:bg-white dark:text-slate-950">
+                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider bg-slate-950 text-white border border-slate-900 shadow-sm dark:bg-white dark:text-slate-950 whitespace-nowrap">
                               <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-slate-950" />
                               {translateHeader(activeLang, "Fully Paid")}
                             </span>
@@ -689,7 +689,7 @@ export function TransportPaymentBookingWorkspace() {
                           </div>
                         ) : (
                           <div className="flex flex-col gap-0.5 items-start">
-                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60 shadow-sm">
+                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60 shadow-sm whitespace-nowrap">
                               <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
                               {r.paymentStatus}
                             </span>
@@ -771,7 +771,7 @@ export function TransportPaymentBookingWorkspace() {
           <div className="w-full max-w-lg rounded-2xl border bg-card p-5 shadow-2xl animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 whitespace-nowrap">
                   Workflow Stage 4 &bull; Payment
                 </span>
                 <h3 className="text-base font-black text-foreground mt-0.5">{translateHeader(activeLang, "Record Transport Payment")}</h3>
@@ -926,7 +926,7 @@ export function TransportPaymentBookingWorkspace() {
           <div className="w-full max-w-lg rounded-2xl border bg-card p-5 shadow-2xl animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-black uppercase text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-black uppercase text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                   Configure Charges
                 </span>
                 <h3 className="text-base font-black text-foreground mt-0.5">Transport & Transporter Setup</h3>
@@ -1050,7 +1050,7 @@ export function TransportPaymentBookingWorkspace() {
           <div className="w-full max-w-2xl rounded-2xl border bg-card p-5 shadow-2xl animate-in fade-in zoom-in-95 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 whitespace-nowrap">
                   Payment History & Receipts
                 </span>
                 <h3 className="text-base font-black text-foreground mt-0.5">

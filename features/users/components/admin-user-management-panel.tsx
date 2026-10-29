@@ -949,7 +949,7 @@ export function AdminUserManagementPanel() {
                                       {mainBranch.name}
                                     </h3>
                                     {/* PROMINENT MAIN BRANCH CODE */}
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 max-lg:whitespace-nowrap max-sm:px-1.5 max-sm:text-[11px]">
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 max-lg:whitespace-nowrap max-sm:px-1.5 max-sm:text-[11px] whitespace-nowrap">
                                       <GitBranch className="h-3 w-3" />
                                       {tt("aump.main_branch_code", "Main Branch Code")}: {mainBranch.code}
                                     </span>
@@ -1036,7 +1036,7 @@ export function AdminUserManagementPanel() {
                                                     {cityBranch.cityName} - {cityBranch.name}
                                                   </span>
                                                   {/* CITY BRANCH CODE */}
-                                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800 max-lg:whitespace-nowrap max-sm:px-1.5 max-sm:text-[11px]">
+                                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800 max-lg:whitespace-nowrap max-sm:px-1.5 max-sm:text-[11px] whitespace-nowrap">
                                                     {tt("aump.code", "Code")}: {cityBranch.code}
                                                   </span>
                                                 </div>

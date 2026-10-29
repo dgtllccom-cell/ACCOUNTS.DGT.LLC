@@ -70,10 +70,10 @@ export function AccountDetailsModal({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
+                  <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 whitespace-nowrap">
                     {isSales ? "Sales Account (CR)" : "Customer / Party Account (DR)"}
                   </span>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-100 border border-emerald-300/30 flex items-center gap-1">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-100 border border-emerald-300/30 flex items-center gap-1 whitespace-nowrap">
                     <ShieldCheck className="w-3 h-3 text-emerald-300" />
                     Verified & Active
                   </span>

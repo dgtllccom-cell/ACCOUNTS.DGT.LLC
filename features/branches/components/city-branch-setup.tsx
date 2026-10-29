@@ -1753,11 +1753,11 @@ function CityBranchSetupContent() {
                       </p>
                     </div>
                     {operationalDomain ? (
-                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1 whitespace-nowrap">
                         ✓ Selected: {operationalDomain === "shipping" ? "Shipping Line & Clearing Agent" : "Business & Trading"}
                       </span>
                     ) : (
-                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse whitespace-nowrap">
                         ⚠️ Mandatory Selection Required
                       </span>
                     )}
@@ -2802,7 +2802,7 @@ function CityBranchSetupContent() {
                 <div className="px-4 pb-3 pt-2">
                   <div className="flex flex-wrap gap-1">
                     {permissionGrants.length > 0 ? permissionGrants.map(key => (
-                      <span key={key} className="rounded-full border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[11px] font-semibold text-indigo-700 dark:border-indigo-900/40 dark:bg-indigo-950/30 dark:text-indigo-300">
+                      <span key={key} className="rounded-full border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[11px] font-semibold text-indigo-700 dark:border-indigo-900/40 dark:bg-indigo-950/30 dark:text-indigo-300 whitespace-nowrap">
                         {key}
                       </span>
                     )) : (
@@ -2855,7 +2855,7 @@ function CityBranchSetupContent() {
                   <p className="mb-1.5 text-[11px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">⚠ {t(lang, "cbs.incomplete_fields")}</p>
                   <div className="flex flex-wrap gap-1">
                     {missing.map(m => (
-                      <span key={m} className="rounded border border-rose-200 bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">{m}</span>
+                      <span key={m} className="rounded border border-rose-200 bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300 whitespace-nowrap">{m}</span>
                     ))}
                   </div>
                 </div>

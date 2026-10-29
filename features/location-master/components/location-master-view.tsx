@@ -415,7 +415,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
               <h1 className="text-base font-black uppercase tracking-tight text-slate-900 dark:text-slate-100">
                 {s.t("title", "Central Location Master")}
               </h1>
-              <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[11px] font-bold text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300">
+              <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[11px] font-bold text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300 whitespace-nowrap">
                 {s.t("tab_locations", "Location Master")}
               </span>
             </div>
@@ -941,7 +941,7 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
                           {row.office_name}
                           <div className="mt-1 flex flex-wrap gap-1">
                             {(row.allowed_movements || []).map((m) => (
-                              <span key={m} className="rounded-sm bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                              <span key={m} className="rounded-sm bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">
                                 {m}
                               </span>
                             ))}

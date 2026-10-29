@@ -848,7 +848,7 @@ export default function KycReportsPage() {
               </div>
 
               <div className="text-right">
-                <div className="inline-block text-[11px] font-black uppercase text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
+                <div className="inline-block text-[11px] font-black uppercase text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                   {sessionCtx?.branchName || "DUBAI HEAD OFFICE"}
                 </div>
                 <div className="text-[11px] text-slate-400 font-medium mt-0.5">Current Branch</div>
@@ -1081,7 +1081,7 @@ export default function KycReportsPage() {
                       {item.missingRequirements.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {item.missingRequirements.map((req, idx) => (
-                            <span key={idx} className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
+                            <span key={idx} className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 whitespace-nowrap">
                               ⚠ {req}
                             </span>
                           ))}

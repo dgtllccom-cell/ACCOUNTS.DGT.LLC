@@ -314,7 +314,7 @@ export function AccountLiveReportPanel({
                 {getLabel("operationalBranchFromMaster", lang)}
               </h3>
             </div>
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800 whitespace-nowrap">
               {getLabel("automaticFromBranchMaster", lang)}
             </span>
           </div>
@@ -628,7 +628,7 @@ export function AccountLiveReportPanel({
             </div>
             <div className="flex items-center justify-between text-[11px] pt-1">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("status", lang)}</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
                 {getLabel("inProgress", lang)}
               </span>
             </div>

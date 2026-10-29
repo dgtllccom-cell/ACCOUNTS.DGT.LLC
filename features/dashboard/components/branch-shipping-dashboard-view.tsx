@@ -190,7 +190,7 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
                 {data.branchName}
               </h1>
-              <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">
                 <Anchor className="h-3 w-3" />
                 {tr("Shipping Line Dashboard")}
               </span>

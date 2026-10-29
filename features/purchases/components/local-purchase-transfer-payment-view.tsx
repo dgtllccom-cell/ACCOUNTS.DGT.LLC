@@ -405,7 +405,7 @@ export function LocalPurchaseTransferPaymentView({
             <Truck className="h-5 w-5 text-blue-600" />
             <h1 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
               {tt("lptpv.page_title","Local Purchase Transfer & Loading")}
-              <span className="bg-blue-600 text-white text-[11px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider">UNIFIED</span>
+              <span className="bg-blue-600 text-white text-[11px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider whitespace-nowrap">UNIFIED</span>
             </h1>
           </div>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
@@ -552,7 +552,7 @@ export function LocalPurchaseTransferPaymentView({
                   {loc("LOCAL PURCHASE TRANSFER & LOADING REGISTRY", "لوکل پرچیز ٹرانسفر اور لوڈنگ رجسٹری", "سجل تحويل وتحميل المشتريات المحلية", "دفتر ثبت انتقال و بارگیری خرید محلی", "د محلي پېرلو لېږد او بارولو راجستر")}
                 </CardTitle>
               </div>
-              <span className="text-[11px] font-mono font-bold text-blue-700 bg-blue-100 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded">
+              <span className="text-[11px] font-mono font-bold text-blue-700 bg-blue-100 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded whitespace-nowrap">
                 {loc("Total Records", "کل ریکارڈز", "إجمالي السجلات", "کل رکوردها", "ټول ریکارډونه")}: {filteredOperations.length}
               </span>
             </CardHeader>
@@ -632,7 +632,7 @@ export function LocalPurchaseTransferPaymentView({
                                   size="sm"
                                   title={translateHeader(activeLang, "A. Export Shipment")}
                                   onClick={() => openActionModal(row, "export")}
-                                  className="h-6 px-1.5 text-[11px] font-black bg-amber-600 hover:bg-amber-700 text-white rounded-md flex items-center gap-0.5"
+                                  className="h-6 px-1.5 text-[11px] font-black bg-amber-600 hover:bg-amber-700 text-white rounded-md flex items-center gap-0.5 whitespace-nowrap"
                                 >
                                   <Ship className="h-3 w-3" />
                                   <span>{loc("Export", "ایکسپورٹ", "تصدير", "صادرات", "صادرات")}</span>
@@ -641,7 +641,7 @@ export function LocalPurchaseTransferPaymentView({
                                   size="sm"
                                   title={translateHeader(activeLang, "B. Warehouse Transfer")}
                                   onClick={() => openActionModal(row, "warehouse")}
-                                  className="h-6 px-1.5 text-[11px] font-black bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-0.5"
+                                  className="h-6 px-1.5 text-[11px] font-black bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-0.5 whitespace-nowrap"
                                 >
                                   <Warehouse className="h-3 w-3" />
                                   <span>{loc("Warehouse", "گودام", "مستودع", "انبار", "ګودام")}</span>
@@ -650,7 +650,7 @@ export function LocalPurchaseTransferPaymentView({
                                   size="sm"
                                   title={translateHeader(activeLang, "C. Branch Transfer")}
                                   onClick={() => openActionModal(row, "branch")}
-                                  className="h-6 px-1.5 text-[11px] font-black bg-purple-600 hover:bg-purple-700 text-white rounded-md flex items-center gap-0.5"
+                                  className="h-6 px-1.5 text-[11px] font-black bg-purple-600 hover:bg-purple-700 text-white rounded-md flex items-center gap-0.5 whitespace-nowrap"
                                 >
                                   <Building2 className="h-3 w-3" />
                                   <span>{loc("Branch", "برانچ", "فرع", "شعبه", "څانګه")}</span>
@@ -659,7 +659,7 @@ export function LocalPurchaseTransferPaymentView({
                                   size="sm"
                                   title={translateHeader(activeLang, "D. Confirm & Hold")}
                                   onClick={() => openActionModal(row, "hold")}
-                                  className="h-6 px-1.5 text-[11px] font-black bg-slate-600 hover:bg-slate-700 text-white rounded-md flex items-center gap-0.5"
+                                  className="h-6 px-1.5 text-[11px] font-black bg-slate-600 hover:bg-slate-700 text-white rounded-md flex items-center gap-0.5 whitespace-nowrap"
                                 >
                                   <PauseCircle className="h-3 w-3" />
                                   <span>{loc("Hold", "روکیں", "احتجاز", "نگهداری", "ساتل")}</span>
@@ -669,7 +669,7 @@ export function LocalPurchaseTransferPaymentView({
                                   variant="outline"
                                   title={loc("Full Lot Journal", "مکمل لاٹ جرنل", "دفتر يومية الحصة الكاملة", "دفتر روزنامه کامل بهر", "د بشپړ لاټ ورځنۍ")}
                                   onClick={() => router.push(`/dashboard/purchase/local-purchase/${row.id}/goods-transfer`)}
-                                  className="h-6 px-1 text-[11px] font-bold text-slate-600 border-slate-300 hover:bg-slate-100 rounded-md"
+                                  className="h-6 px-1 text-[11px] font-bold text-slate-600 border-slate-300 hover:bg-slate-100 rounded-md whitespace-nowrap"
                                 >
                                   <Package className="h-3 w-3 text-indigo-600" />
                                 </Button>
@@ -768,7 +768,7 @@ export function LocalPurchaseTransferPaymentView({
                   {tt("lptpv.table_title","PENDING GENERAL LEDGER TRANSFERS")}
                 </CardTitle>
               </div>
-              <span className="text-[11px] font-mono font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+              <span className="text-[11px] font-mono font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded whitespace-nowrap">
                 {tt("lptpv.ready_to_post","Ready to Post")}: {filteredPendingGl.length}
               </span>
             </CardHeader>
@@ -847,7 +847,7 @@ export function LocalPurchaseTransferPaymentView({
                                     setTransferringId(null);
                                   }
                                 }}
-                                className="h-6 px-2 text-[11px] font-black bg-emerald-600 hover:bg-emerald-700 text-white rounded-md"
+                                className="h-6 px-2 text-[11px] font-black bg-emerald-600 hover:bg-emerald-700 text-white rounded-md whitespace-nowrap"
                               >
                                 {transferringId === row.id ? (
                                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -859,7 +859,7 @@ export function LocalPurchaseTransferPaymentView({
                                 size="sm"
                                 variant="outline"
                                 onClick={() => setSelectedRowForVoucher(row)}
-                                className="h-6 px-2 text-[11px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md"
+                                className="h-6 px-2 text-[11px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md whitespace-nowrap"
                               >
                                 {tt("lptp.view_voucher", "View Voucher")}
                               </Button>

@@ -604,7 +604,7 @@ export default function JournalStockReportDashboard({
               </div>
               <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-800">
                 <span>{t(lang, "ledger.ledger_status", "STATUS")}:</span>
-                <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[11px] uppercase tracking-wider">{t(lang, "status.active", "ACTIVE")}</span>
+                <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[11px] uppercase tracking-wider whitespace-nowrap">{t(lang, "status.active", "ACTIVE")}</span>
               </div>
             </div>
           </div>
@@ -691,7 +691,7 @@ export default function JournalStockReportDashboard({
                 </div>
                 <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">4. {t(lang, "report.all_countries_report", "ALL COUNTRIES REPORT")}</h4>
               </div>
-              <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-black text-slate-600 dark:text-slate-300 uppercase">
+              <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-black text-slate-600 dark:text-slate-300 uppercase whitespace-nowrap">
                 {showAllCountries ? t(lang, "report.hide_details", "HIDE DETAILS") : t(lang, "report.show_details", "SHOW DETAILS")}
               </span>
             </div>
@@ -699,7 +699,7 @@ export default function JournalStockReportDashboard({
               {countrySummaryRows.map((r, idx) => (
                 <div key={idx} className="flex justify-between items-center bg-slate-50 dark:bg-slate-850 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800">
                   <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{r.country}</span>
-                  <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded text-[11px] font-black text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded text-[11px] font-black text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap">
                     {r.branches.length} BRANCHES
                   </span>
                 </div>
@@ -718,7 +718,7 @@ export default function JournalStockReportDashboard({
                     <Globe className="w-4 h-4 text-blue-600" />
                     {c.country}
                   </h4>
-                  <span className="text-[11px] font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                  <span className="text-[11px] font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 whitespace-nowrap">
                     {c.branches.length} BRANCHES
                   </span>
                 </div>

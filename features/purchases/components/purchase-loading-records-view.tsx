@@ -1006,7 +1006,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       <h3 className="text-xs font-black uppercase tracking-widest text-emerald-800 dark:text-emerald-100">
                         {formStep === 1 ? tt("plr.step1", "New Loading (Step 1 of 2)") : tt("plr.step2", "New Loading (Step 2 of 2)")}
                       </h3>
-                      <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-black uppercase tracking-widest text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-100 dark:ring-emerald-500/30">{tt("plr.live", "Live")}</span>
+                      <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-black uppercase tracking-widest text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-100 dark:ring-emerald-500/30 whitespace-nowrap">{tt("plr.live", "Live")}</span>
                     </div>
                     <p className="text-[11px] font-semibold text-emerald-700/80 dark:text-emerald-200/80">
                       {formStep === 1 ? tt("plr.step1_desc", "Enter shipping and routing details.") : tt("plr.step2_desc_op", "Enter goods, container, seal and weight details.")}
@@ -1019,7 +1019,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       <div className="mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
                           <div className="flex items-center gap-2">
-                            <span className="rounded bg-indigo-100 px-2 py-0.5 text-[11px] font-black text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                            <span className="rounded bg-indigo-100 px-2 py-0.5 text-[11px] font-black text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 whitespace-nowrap">
                               {poRow.purchase_order_no || record.purchase_order_no || "PO"}
                             </span>
                             <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate max-w-[180px]">
@@ -1068,7 +1068,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             ({history.length} {tt("plr.completed", "completed")}, {remainingToLoadQuantity.toLocaleString()} {unitLabel} {tt("plr.remaining", "remaining")})
                           </span>
                         </div>
-                        <span className="rounded bg-emerald-600 px-2 py-0.5 text-[11px] font-black uppercase text-white tracking-wider">
+                        <span className="rounded bg-emerald-600 px-2 py-0.5 text-[11px] font-black uppercase text-white tracking-wider whitespace-nowrap">
                           {tt("plr.step_1_of_2", "Step 1/2")}
                         </span>
                       </div>
@@ -1463,7 +1463,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
                       <div className="mb-3 flex items-center justify-between rounded-lg bg-blue-50 p-2.5 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-800">
                         <div className="flex items-center gap-2">
-                          <span className="rounded bg-blue-600 px-2 py-0.5 text-[11px] font-black uppercase text-white">
+                          <span className="rounded bg-blue-600 px-2 py-0.5 text-[11px] font-black uppercase text-white whitespace-nowrap">
                             B/L {blNumber || record.purchase_order_no || "ENTRY"}
                           </span>
                           <span className="text-xs font-black text-blue-900 dark:text-blue-100">
@@ -1738,7 +1738,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                 <div className="space-y-2 pt-2">
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("plr.user_admin", "User Admin")}:</span>
-                    <span className="font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-0.5 rounded text-[11px] dark:bg-emerald-950/50">{adminLabel}</span>
+                    <span className="font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-0.5 rounded text-[11px] dark:bg-emerald-950/50 whitespace-nowrap">{adminLabel}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("common.user", "User")} ID:</span>
@@ -1849,7 +1849,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   </div>
                   <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[11px]">{tt("plr.loading_summary_report", "Loading Summary Report")}</h3>
                 </div>
-                <span className="text-[11px] font-mono font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900">
+                <span className="text-[11px] font-mono font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 whitespace-nowrap">
                   {loadingProgress.toFixed(1)}% {tt("plr.status_loaded", "Loaded")}
                 </span>
               </div>
@@ -2932,7 +2932,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
           <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-4 mb-4 dark:border-blue-900/40 dark:bg-blue-950/20 shadow-sm animate-in fade-in">
             <div className="flex items-center justify-between mb-3 border-b border-blue-100 pb-2 dark:border-blue-900/40">
               <div className="flex items-center gap-2">
-                <span className="rounded font-mono font-black text-xs bg-blue-600 text-white px-2.5 py-0.5">{tt("plr.sel_po", "SELECTED PO:")} {activeInvoiceRecord.purchase_order_no}</span>
+                <span className="rounded font-mono font-black text-xs bg-blue-600 text-white px-2.5 py-0.5 whitespace-nowrap">{tt("plr.sel_po", "SELECTED PO:")} {activeInvoiceRecord.purchase_order_no}</span>
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{tt("plr.approved_invoice", "Approved Invoice & Contract Details (Read-Only Source of Truth)")}</span>
               </div>
               <Button size="sm" variant="ghost" onClick={() => setSelectedInvoicePoNo("")} className="h-6 text-[11px] font-bold text-blue-600 hover:text-blue-800">{tt("plr.clear_selection", "Clear Selection")}</Button>
@@ -3045,7 +3045,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                   </span>
                   {scopeReportTitle}
                 </div>
-                <span className="text-[11px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 uppercase">
+                <span className="text-[11px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 uppercase whitespace-nowrap">
                   {scopeBadge}
                 </span>
               </summary>
@@ -3067,7 +3067,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                               </span>
                               {getFlag(r.country)} {r.country}
                             </span>
-                            <span className="rounded bg-white/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider backdrop-blur-sm">
+                            <span className="rounded bg-white/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider backdrop-blur-sm whitespace-nowrap">
                               {r.branches.length} Branches
                             </span>
                           </div>
@@ -3411,8 +3411,8 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                                 <td className="px-3 py-2 text-end font-mono text-slate-600 dark:text-slate-400">{gross > 0 ? `${gross.toLocaleString()} kg` : "-"}</td>
                                                 <td className="px-3 py-2" data-testid="list-lane-status">
                                                   {ls
-                                                    ? <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-black uppercase text-sky-700">{tt(`plane.${LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.key ?? ls.lane_status}`, LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.en ?? ls.lane_status)}</span>
-                                                    : <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-black uppercase text-slate-500">{tt("plr.not_in_lane", "Not in lane")}</span>}
+                                                    ? <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-black uppercase text-sky-700 whitespace-nowrap">{tt(`plane.${LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.key ?? ls.lane_status}`, LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.en ?? ls.lane_status)}</span>
+                                                    : <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-black uppercase text-slate-500 whitespace-nowrap">{tt("plr.not_in_lane", "Not in lane")}</span>}
                                                 </td>
                                                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{ls?.current_location || payload.loadingPort || r.loading_location || "-"}</td>
                                                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{ls?.assigned_to || "-"}</td>
@@ -3429,7 +3429,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                                       onClick={() => void onListLaneAction(r, act.kind, poRow.id ?? r.purchase_order_id ?? null)}
                                                       data-testid="list-lane-action"
                                                       data-kind={act.kind}
-                                                      className="h-6 gap-1 rounded bg-indigo-600 px-2 text-[11px] font-bold uppercase text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
+                                                      className="h-6 gap-1 rounded bg-indigo-600 px-2 text-[11px] font-bold uppercase text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 whitespace-nowrap"
                                                     >
                                                       <ArrowRightLeft className="h-3 w-3" />
                                                       {tt(`plane.${act.labelKey}`, act.label)}

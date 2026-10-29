@@ -154,7 +154,7 @@ export function SalesBookingStep1({
                 {tUi(lang, "voice.speak_to_fill", "Speak to fill this form")}
               </span>
             </div>
-            <span className="px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            <span className="px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
               MIC READY
             </span>
           </div>

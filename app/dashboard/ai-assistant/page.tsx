@@ -221,11 +221,11 @@ export default function AiAssistantPage() {
                 <h1 className="text-xl font-bold tracking-tight text-white">
                   DGT ERP AI Business Assistant
                 </h1>
-                <span className="rounded-full bg-emerald-500/10 border border-emerald-400/30 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 flex items-center gap-1">
+                <span className="rounded-full bg-emerald-500/10 border border-emerald-400/30 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 flex items-center gap-1 whitespace-nowrap">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   RBAC & Isolation Protected
                 </span>
-                <span className="rounded-full bg-cyan-500/10 border border-cyan-400/30 px-2 py-0.5 text-xs font-semibold text-cyan-300">
+                <span className="rounded-full bg-cyan-500/10 border border-cyan-400/30 px-2 py-0.5 text-xs font-semibold text-cyan-300 whitespace-nowrap">
                   DEV TEST ONLY
                 </span>
               </div>
@@ -322,31 +322,31 @@ export default function AiAssistantPage() {
                       {isAi && (
                         <div className="flex flex-wrap items-center gap-2 mb-2 pb-2 border-b border-slate-800/80">
                           {m.answerType === "erp_record" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-bold text-emerald-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-bold text-emerald-400 whitespace-nowrap">
                               <CheckCircle2 className="h-3 w-3" />
                               ERP Record (Verified)
                             </span>
                           )}
                           {m.answerType === "public_external" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 border border-blue-500/30 px-2 py-0.5 text-[11px] font-bold text-blue-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 border border-blue-500/30 px-2 py-0.5 text-[11px] font-bold text-blue-400 whitespace-nowrap">
                               <Globe className="h-3 w-3" />
                               Public / External Information
                             </span>
                           )}
                           {m.answerType === "permission_denied" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-[11px] font-bold text-rose-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-[11px] font-bold text-rose-400 whitespace-nowrap">
                               <Lock className="h-3 w-3" />
                               Permission Denied (Logged)
                             </span>
                           )}
                           {m.answerType === "write_refused" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[11px] font-bold text-amber-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[11px] font-bold text-amber-400 whitespace-nowrap">
                               <ShieldAlert className="h-3 w-3" />
                               Read-Only Guard
                             </span>
                           )}
                           {m.answerType === "no_record" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-700 border border-slate-600 px-2 py-0.5 text-[11px] font-bold text-slate-300">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-700 border border-slate-600 px-2 py-0.5 text-[11px] font-bold text-slate-300 whitespace-nowrap">
                               <Search className="h-3 w-3" />
                               No Record Found
                             </span>

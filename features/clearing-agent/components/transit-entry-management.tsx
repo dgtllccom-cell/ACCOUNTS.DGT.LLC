@@ -425,7 +425,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
           <div>
             <h1 className="text-base font-black tracking-tight text-foreground sm:text-lg flex items-center gap-2">
               {tt("transit.title", "TRANSIT ENTRY")}
-              <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 flex items-center gap-1">
+              <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 flex items-center gap-1 whitespace-nowrap">
                 <Database className="h-3 w-3 text-emerald-500" />
                 {tt("transit.db_active", "DB ACTIVE")}
               </span>

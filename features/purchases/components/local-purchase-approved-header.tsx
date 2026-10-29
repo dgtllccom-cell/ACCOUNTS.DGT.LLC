@@ -520,7 +520,7 @@ export function LocalPurchaseApprovedHeader({
     }
 
     return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-950 dark:bg-amber-900/40 dark:text-amber-200 text-[11px] font-bold">
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-950 dark:bg-amber-900/40 dark:text-amber-200 text-[11px] font-bold whitespace-nowrap">
         <Building2 className="h-2.5 w-2.5 opacity-70" />
         <span>{scopeLabel}</span>
       </span>
@@ -1020,7 +1020,7 @@ export function LocalPurchaseApprovedHeader({
               <Filter aria-hidden="true" />
               <span>{tx("common.filter", "Filters")}</span>
               {activeFiltersCount > 0 && (
-                <span className="ms-1 px-1.5 py-0.5 rounded-full text-[11px] font-black bg-blue-600 text-white" dir="ltr">
+                <span className="ms-1 px-1.5 py-0.5 rounded-full text-[11px] font-black bg-blue-600 text-white whitespace-nowrap" dir="ltr">
                   {activeFiltersCount}
                 </span>
               )}

@@ -50,7 +50,7 @@ export function ColumnCustomizerButton({
               <button
                 type="button"
                 onClick={prefs.reset}
-                className="rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 whitespace-nowrap"
               >
                 {_("report.reset_default", "Reset to Default")}
               </button>

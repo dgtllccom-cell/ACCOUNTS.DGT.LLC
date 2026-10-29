@@ -352,7 +352,7 @@ export function ModulePermissionModal({
                       {/* Who Can Edit? */}
                       <td className="p-3 text-center bg-blue-50/20 dark:bg-blue-950/10">
                         {u.isSuperAdmin ? (
-                          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                             Super Admin (Always)
                           </span>
                         ) : (
@@ -373,7 +373,7 @@ export function ModulePermissionModal({
                       {/* Who Can Delete? */}
                       <td className="p-3 text-center bg-rose-50/20 dark:bg-rose-950/10">
                         {u.isSuperAdmin ? (
-                          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                             Super Admin (Always)
                           </span>
                         ) : (

@@ -1553,7 +1553,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                         {c.linked_companies && c.linked_companies.length > 1 ? (
                           <div className="flex flex-col gap-1 items-start">
                             <span
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap"
                               title={c.linked_companies.map((co) => `${co.name}${co.code ? ` (${co.code})` : ""}`).join("\n")}
                             >
                               <Building2 className="h-3 w-3" />
@@ -1588,7 +1588,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                         {c.linked_branches && c.linked_branches.length > 1 ? (
                           <div className="flex flex-col gap-1 items-start">
                             <span
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800 whitespace-nowrap"
                               title={c.linked_branches.map((b) => `${b.name}${b.country_name ? ` (${b.country_name})` : ""}`).join("\n")}
                             >
                               <Building2 className="h-3 w-3" />
@@ -1612,7 +1612,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
                       {/* STATUS (styled pill badge with ● matching Image 2) */}
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                           {getStatusDisplay(leadStatus)}
                         </span>

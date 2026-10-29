@@ -275,7 +275,7 @@ export default function SettingsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-10 border-blue-400/30 bg-slate-900/60 pl-10 pr-12 text-xs text-white placeholder:text-blue-200/60 focus:border-blue-400"
                 />
-                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-white/20 bg-white/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-200">
+                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-white/20 bg-white/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-200 whitespace-nowrap">
                   ⌘K
                 </kbd>
               </div>

@@ -186,11 +186,11 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
                 {localizeCountryName(data.countryName, lang)}
               </h1>
-              <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300 whitespace-nowrap">
                 <Ship className="h-3 w-3" />
                 {tr("Shipping Line Dashboard")}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-black uppercase text-purple-700 dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-black uppercase text-purple-700 dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-300 whitespace-nowrap">
                 <ShieldCheck className="h-3 w-3" />
                 {tr("Country Admin")}
               </span>

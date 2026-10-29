@@ -668,7 +668,7 @@ export function OpenFullBillModal({
                     <ArrowDownLeft className="h-4 w-4" />
                     {t("DEBIT ENTRIES (DR) - LIABILITY / BILL AMOUNT")}
                   </span>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 whitespace-nowrap">
                     {debitEntries.length} {t("Records")}
                   </span>
                 </div>
@@ -725,7 +725,7 @@ export function OpenFullBillModal({
                     {t("CREDIT ENTRIES (CR) - PAYMENTS MADE TO SUPPLIER")}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 whitespace-nowrap">
                       {creditEntries.length} {t("Payments")}
                     </span>
                     <button
@@ -988,7 +988,7 @@ export function OpenFullBillModal({
                           {e.remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td className="px-3 py-2 text-center">
-                          <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
                             {e.status}
                           </span>
                         </td>

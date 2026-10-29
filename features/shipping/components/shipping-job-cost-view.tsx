@@ -283,7 +283,7 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                         <td className="px-2 py-2 text-right font-mono">{l.currency} {l.grandAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
                         <td className="px-2 py-2">
                           {l.claim ? (
-                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full uppercase bg-slate-700/60 text-slate-300">
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full uppercase bg-slate-700/60 text-slate-300 whitespace-nowrap">
                               {tt(`claimstatus_${l.claim.status}`, l.claim.status)}
                             </span>
                           ) : (

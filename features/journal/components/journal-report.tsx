@@ -569,7 +569,7 @@ export default function JournalReport({
                 </div>
                 <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-800">
                   <span>{tr("STATUS")}:</span>
-                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[11px] uppercase tracking-wider">{tr("ACTIVE")}</span>
+                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[11px] uppercase tracking-wider whitespace-nowrap">{tr("ACTIVE")}</span>
                 </div>
               </div>
             </div>
@@ -656,7 +656,7 @@ export default function JournalReport({
                   </div>
                   <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">4. {tr("ALL COUNTRIES REPORT")}</h4>
                 </div>
-                <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-black text-slate-600 dark:text-slate-300 uppercase">
+                <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-black text-slate-600 dark:text-slate-300 uppercase whitespace-nowrap">
                   {showAllCountries ? tr("HIDE DETAILS") : tr("SHOW DETAILS")}
                 </span>
               </div>
@@ -664,7 +664,7 @@ export default function JournalReport({
                 {countrySummaryRows.map((r, idx) => (
                   <div key={idx} className="flex justify-between items-center bg-slate-50 dark:bg-slate-850 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800">
                     <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{r.country}</span>
-                    <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded text-[11px] font-black text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded text-[11px] font-black text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap">
                       {r.branches.length} {tr("BRANCHES")}
                     </span>
                   </div>
@@ -683,7 +683,7 @@ export default function JournalReport({
                       <Globe className="w-4 h-4 text-blue-600" />
                       {c.country}
                     </h4>
-                    <span className="text-[11px] font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <span className="text-[11px] font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 whitespace-nowrap">
                       {c.branches.length} {tr("BRANCHES")}
                     </span>
                   </div>
@@ -951,7 +951,7 @@ export default function JournalReport({
                 <div className="hidden sm:block border-l border-slate-300 dark:border-slate-700 h-6 mx-1"></div>
 
                 <div>
-                  <span className="text-[11px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 rounded-md">
+                  <span className="text-[11px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 rounded-md whitespace-nowrap">
                     {t(lang, "jr.jr_purchase_order_audit", "Purchase Order Audit")}
                   </span>
                   <h3 className="text-xs sm:text-sm font-black text-slate-800 dark:text-white mt-0.5 flex items-center gap-1.5">
@@ -1106,7 +1106,7 @@ export default function JournalReport({
                         {/* STEP 1 Badge Header */}
                         <div className="bg-[#0d2d6b] text-white px-3 py-1.5 rounded-xl flex items-center justify-between shadow-xs">
                           <div className="flex items-center gap-2">
-                            <span className="bg-emerald-500 text-white font-black text-[11px] px-2 py-0.5 rounded-md uppercase tracking-wider">
+                            <span className="bg-emerald-500 text-white font-black text-[11px] px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap">
                               {t(lang, "jr.jr_step1_badge", "STEP 1")}
                             </span>
                             <span className="text-[11px] font-black uppercase tracking-wider">
@@ -1328,7 +1328,7 @@ export default function JournalReport({
                     {/* STEP 2 Badge Header */}
                     <div className="bg-[#0d2d6b] text-white px-3 py-1.5 rounded-xl flex items-center justify-between shadow-xs">
                       <div className="flex items-center gap-2">
-                        <span className="bg-blue-500 text-white font-black text-[11px] px-2 py-0.5 rounded-md uppercase tracking-wider">
+                        <span className="bg-blue-500 text-white font-black text-[11px] px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap">
                           {t(lang, "jr.jr_step2_badge", "STEP 2")}
                         </span>
                         <span className="text-[11px] font-black uppercase tracking-wider">
@@ -1394,7 +1394,7 @@ export default function JournalReport({
                     <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
                       <div className="bg-[#0d2d6b] text-white px-3 py-1.5 rounded-xl flex justify-between items-center text-[11px] font-black uppercase tracking-wider shadow-xs">
                         <div className="flex items-center gap-2">
-                          <span className="bg-purple-600 text-white font-black text-[11px] px-2 py-0.5 rounded-md uppercase tracking-wider">
+                          <span className="bg-purple-600 text-white font-black text-[11px] px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap">
                             {t(lang, "jr.jr_step22_badge", "STEP 2.2")}
                           </span>
                           <span className="text-[11px] font-black uppercase tracking-wider">

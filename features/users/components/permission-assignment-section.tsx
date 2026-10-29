@@ -207,18 +207,18 @@ export function PermissionAssignmentSection({
                 <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   {translateHeader(lang, summary.label)}
                 </span>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                   {summary.count}
                 </span>
               </div>
               <div className="mt-1.5 flex flex-wrap gap-1">
                 {summary.permissions.slice(0, 4).map((perm) => (
-                  <span key={perm} className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300">
+                  <span key={perm} className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300 whitespace-nowrap">
                     {perm}
                   </span>
                 ))}
                 {summary.permissions.length > 4 && (
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400 whitespace-nowrap">
                     +{summary.permissions.length - 4}
                   </span>
                 )}
@@ -397,14 +397,14 @@ export function PermissionAssignmentSection({
                 key={key}
                 type="button"
                 onClick={() => togglePermission(key)}
-                className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-100 px-2 py-0.5 text-[11px] font-semibold text-indigo-800 hover:bg-rose-100 hover:border-rose-200 hover:text-rose-700 transition-colors dark:border-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300"
+                className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-100 px-2 py-0.5 text-[11px] font-semibold text-indigo-800 hover:bg-rose-100 hover:border-rose-200 hover:text-rose-700 transition-colors dark:border-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 whitespace-nowrap"
               >
                 {key}
                 <span className="opacity-60">×</span>
               </button>
             ))}
             {selected.length > 20 && (
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 whitespace-nowrap">
                 +{selected.length - 20} more
               </span>
             )}

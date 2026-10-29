@@ -1540,7 +1540,7 @@ export function AccountGeneralReportView({
         <SlidersHorizontal className="h-3 w-3" />
         <span>{tr("FILTER")}</span>
         {activeFilterCount > 0 && (
-          <span className="ml-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-indigo-600 px-1 text-[11px] font-extrabold text-white leading-none">
+          <span className="ml-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-indigo-600 px-1 text-[11px] font-extrabold text-white leading-none whitespace-nowrap">
             {activeFilterCount}
           </span>
         )}
@@ -1713,7 +1713,7 @@ export function AccountGeneralReportView({
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span>{tr("STATUS:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px]">
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap">
                 {tr("ACTIVE")}
               </span>
             </div>
@@ -1781,7 +1781,7 @@ export function AccountGeneralReportView({
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-700 dark:text-slate-300">{tr("REGISTRY STATUS:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px]">
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap">
                 {tr("VERIFIED ACTIVE")}
               </span>
             </div>
@@ -1831,7 +1831,7 @@ export function AccountGeneralReportView({
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-700 dark:text-slate-300">{tr("SYSTEM STATUS:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px]">{tr("ALL CLEAR")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap">{tr("ALL CLEAR")}</span>
             </div>
           </div>
         </div>
@@ -2002,11 +2002,11 @@ export function AccountGeneralReportView({
                     <span className="flex items-center gap-2">
                       <span className="text-base">{getFlag(c.countryName)}</span>
                       <span className="hover:text-blue-600 transition">{c.countryName}</span>
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400 whitespace-nowrap">
                         {c.totalAccounts} {tr("accounts")}
                       </span>
                       {isSelected && (
-                        <span className="rounded bg-blue-100 text-blue-700 px-1.5 py-0.5 text-[11px] font-black uppercase">
+                        <span className="rounded bg-blue-100 text-blue-700 px-1.5 py-0.5 text-[11px] font-black uppercase whitespace-nowrap">
                           {tr("FILTERED")}
                         </span>
                       )}
@@ -2095,7 +2095,7 @@ export function AccountGeneralReportView({
                 <div>
                   <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                     {tr("ACCOUNT MASTER REGISTRY")}
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                       {sortedRows.length} {sortedRows.length === 1 ? tr("ACCOUNT") : tr("ACCOUNTS")}
                     </span>
                   </h2>
@@ -2199,7 +2199,7 @@ export function AccountGeneralReportView({
                         >
                           {/* 1. Account No. */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-mono font-black text-[11px] shadow-2xs group-hover:border-blue-400 dark:group-hover:border-blue-600 transition-colors">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-mono font-black text-[11px] shadow-2xs group-hover:border-blue-400 dark:group-hover:border-blue-600 transition-colors whitespace-nowrap">
                               <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
                               <span>{row.accountCode}</span>
                             </div>
@@ -2233,7 +2233,7 @@ export function AccountGeneralReportView({
                           {/* 3. Country */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <div className="inline-flex flex-col items-center gap-0.5">
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[11px] font-bold shadow-2xs">
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[11px] font-bold shadow-2xs whitespace-nowrap">
                                 <span>{getFlag(row.countryName)}</span>
                                 <span>{localizeTerm(row.countryName, lang)}</span>
                               </div>
@@ -2271,11 +2271,11 @@ export function AccountGeneralReportView({
                           {/* 5. Company (Yes/No) */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             {row.companyName && row.companyName !== "-" ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[11px] font-black uppercase">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[11px] font-black uppercase whitespace-nowrap">
                                 {t(lang, "common.yes", "Yes")}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[11px] font-black uppercase">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[11px] font-black uppercase whitespace-nowrap">
                                 {t(lang, "common.no", "No")}
                               </span>
                             )}
@@ -2295,7 +2295,7 @@ export function AccountGeneralReportView({
                                 type="button"
                                 title={t(lang, "acct.agrv_open_bank_registry", "Open Bank Registry")}
                                 onClick={(e) => { e.stopPropagation(); router.push("/dashboard/settings/bank" as Route); }}
-                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 text-[11px] font-bold hover:border-emerald-400 dark:hover:border-emerald-600 hover:underline cursor-pointer transition-colors"
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 text-[11px] font-bold hover:border-emerald-400 dark:hover:border-emerald-600 hover:underline cursor-pointer transition-colors whitespace-nowrap"
                               >
                                 <Landmark className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                                 <span className="truncate max-w-[120px]">{localizeName(row.bankName, lang)}</span>
@@ -2308,11 +2308,11 @@ export function AccountGeneralReportView({
                           {/* 8. Warehouse (Yes/No) */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             {row.warehouseName && row.warehouseName !== "-" ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 text-[11px] font-black uppercase">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 text-[11px] font-black uppercase whitespace-nowrap">
                                 {t(lang, "common.yes", "Yes")}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[11px] font-black uppercase">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[11px] font-black uppercase whitespace-nowrap">
                                 {t(lang, "common.no", "No")}
                               </span>
                             )}
@@ -2325,7 +2325,7 @@ export function AccountGeneralReportView({
 
                           {/* 10. Currency */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono font-black text-[11px] text-slate-700 dark:text-slate-300">
+                            <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono font-black text-[11px] text-slate-700 dark:text-slate-300 whitespace-nowrap">
                               {row.currency}
                             </span>
                           </td>
@@ -2383,7 +2383,7 @@ export function AccountGeneralReportView({
                   <tr>
                     <td colSpan={12} className="px-4 py-2.5 text-left uppercase tracking-wider font-extrabold text-slate-700 dark:text-slate-300">
                       <div className="flex items-center gap-3">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[11px] font-black">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[11px] font-black whitespace-nowrap">
                           {sortedRows.length} {sortedRows.length === 1 ? tr("ACCOUNT") : tr("TOTAL ACCOUNTS")}
                         </span>
                         <span className="text-[11px] text-slate-600 dark:text-slate-300 font-extrabold">

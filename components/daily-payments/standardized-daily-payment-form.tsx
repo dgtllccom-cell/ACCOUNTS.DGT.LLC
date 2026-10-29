@@ -547,7 +547,7 @@ export function StandardizedDailyPaymentForm({
           <div>
             <h3 className="font-black text-sm tracking-tight flex items-center gap-2">
               <span>{scope === "purchase" ? th("Purchase Payment Voucher") : th("Sales Receipt Voucher")}</span>
-              <span className="bg-white/20 text-white text-[11px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+              <span className="bg-white/20 text-white text-[11px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider whitespace-nowrap">
                 {condition.toUpperCase()}
               </span>
               <span className={cn(
@@ -598,7 +598,7 @@ export function StandardizedDailyPaymentForm({
                 {th("Step 1 — Invoice & Settlement Account (Auto-Resolved & Locked)")}
               </span>
             </div>
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded">
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded whitespace-nowrap">
               <Lock className="h-3 w-3" /> {th("Read-Only & Locked")}
             </span>
           </div>
@@ -854,7 +854,7 @@ export function StandardizedDailyPaymentForm({
                     <span className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" /> {th("TT / SWIFT Wire Details")}
                     </span>
-                    <span className="text-[11px] text-indigo-700 dark:text-indigo-300 font-bold bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 rounded">
+                    <span className="text-[11px] text-indigo-700 dark:text-indigo-300 font-bold bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 rounded whitespace-nowrap">
                       Manual Reference Mandatory
                     </span>
                   </div>
@@ -971,7 +971,7 @@ export function StandardizedDailyPaymentForm({
                     <span className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" /> {th("Cheque Details")}
                     </span>
-                    <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded">
+                    <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded whitespace-nowrap">
                       Notice: Pending cheque is not treated as cleared cash
                     </span>
                   </div>
@@ -1183,7 +1183,7 @@ export function StandardizedDailyPaymentForm({
             <span className="text-xs font-black uppercase tracking-wider text-indigo-950 dark:text-indigo-300">
               Double-Entry Ledger Balancing Status
             </span>
-            <span className="bg-emerald-600 text-white font-black text-[11px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+            <span className="bg-emerald-600 text-white font-black text-[11px] px-2.5 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap">
               Balanced
             </span>
           </div>

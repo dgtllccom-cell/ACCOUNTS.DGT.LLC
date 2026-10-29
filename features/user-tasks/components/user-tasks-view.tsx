@@ -143,7 +143,7 @@ export function UserTasksView({ scope, lang: langProp, autoAssign = false }: { s
             >
               <Bell className="h-3.5 w-3.5" />
               {(summary?.unread ?? 0) > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-bold text-white leading-none">
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-bold text-white leading-none whitespace-nowrap">
                   {summary.unread > 99 ? "99+" : summary.unread}
                 </span>
               )}

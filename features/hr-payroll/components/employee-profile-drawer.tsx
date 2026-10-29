@@ -236,15 +236,15 @@ export function EmployeeProfileDrawer({
                   </p>
                 )}
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <span className="font-mono font-black text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md text-[11px] border border-blue-200 dark:border-blue-800">
+                  <span className="font-mono font-black text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md text-[11px] border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                     {emp.employee_code}
                   </span>
                   {person.person_code && (
-                    <span className="font-mono font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-[11px]">
+                    <span className="font-mono font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-[11px] whitespace-nowrap">
                       {person.person_code}
                     </span>
                   )}
-                  <span className="font-bold text-slate-700 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-[11px] uppercase">
+                  <span className="font-bold text-slate-700 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-[11px] uppercase whitespace-nowrap">
                     {emp.category || "Staff"}
                   </span>
                 </div>

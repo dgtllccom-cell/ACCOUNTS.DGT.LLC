@@ -332,7 +332,7 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_role", "Role")}:</span>
-                <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
+                <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 whitespace-nowrap">
                   {isSuperAdmin ? s.t("kyc_super_admin", "Super Admin") : (session?.scopes?.summary?.scopeLabel || "—")}
                 </span>
               </div>
@@ -417,7 +417,7 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
                   </div>
                   <span className="text-xs font-bold text-blue-950 dark:text-blue-200">{s.t("kyc_all_countries_report", "All Countries KYC Report")}</span>
                 </div>
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider">
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider whitespace-nowrap">
                   {s.t("super_admin_only", "Super Admin Only")}
                 </span>
               </div>

@@ -394,14 +394,14 @@ export function CustomerProfile({
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <span className="text-xs font-mono font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-900/50">
+                    <span className="text-xs font-mono font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-900/50 whitespace-nowrap">
                       {parsedMeta.customerAccountNumber}
                     </span>
-                    <span className="text-xs font-extrabold px-2 py-0.5 rounded-md border bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                    <span className="text-xs font-extrabold px-2 py-0.5 rounded-md border bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 whitespace-nowrap">
                       {cType === "Female" ? "👩 Female" : cType === "Corporate" ? "🏢 Corporate" : "👨 Male"}
                     </span>
                     {(customer.father_name || parsedMeta.fatherName) && (
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-900/50">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-900/50 whitespace-nowrap">
                         <span className="text-[11px] uppercase font-black text-blue-500">S/O / D/O:</span>
                         <span>{customer.father_name || parsedMeta.fatherName}</span>
                       </span>
@@ -649,7 +649,7 @@ export function CustomerProfile({
             {t(lang, "pv.portrait", "Portrait")}
           </button>
           <span className="text-slate-500">{getLabel("pageOneOfOne", lang)}</span>
-          <span className="bg-slate-50 border border-slate-200 text-slate-700 text-[11px] px-2.5 py-0.5 rounded font-bold uppercase dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
+          <span className="bg-slate-50 border border-slate-200 text-slate-700 text-[11px] px-2.5 py-0.5 rounded font-bold uppercase dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 whitespace-nowrap">
             A4
           </span>
         </div>

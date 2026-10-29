@@ -101,7 +101,7 @@ export function SettlementAuditView() {
                     <td className="py-3 px-4 font-mono text-[11px]">{new Date(row.created_at).toLocaleString()}</td>
                     <td className="py-3 px-4 font-medium">{row.actor_name || "System User"}</td>
                     <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold uppercase text-[11px]">
+                      <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold uppercase text-[11px] whitespace-nowrap">
                         {row.action}
                       </span>
                     </td>

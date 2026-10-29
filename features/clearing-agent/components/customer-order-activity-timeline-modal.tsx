@@ -109,14 +109,14 @@ export function CustomerOrderActivityTimelineModal({
     switch (status) {
       case "completed":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300 whitespace-nowrap">
             <CheckCircle2 className="h-3 w-3" />
             <span>{tt("status_completed", "Completed")}</span>
           </span>
         );
       case "returned":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950 dark:border-rose-800 dark:text-rose-300">
+          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950 dark:border-rose-800 dark:text-rose-300 whitespace-nowrap">
             <AlertTriangle className="h-3 w-3" />
             <span>{tt("status_returned", "Returned for Correction")}</span>
           </span>
@@ -124,7 +124,7 @@ export function CustomerOrderActivityTimelineModal({
       case "pending":
       default:
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-300">
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-300 whitespace-nowrap">
             <Clock className="h-3 w-3" />
             <span>{tt("status_pending", "Pending / Assigned")}</span>
           </span>
@@ -204,7 +204,7 @@ export function CustomerOrderActivityTimelineModal({
                 <div className="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-850 space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-1.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="rounded-md bg-blue-100 dark:bg-blue-950 px-1.5 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:text-blue-300">
+                      <span className="rounded-md bg-blue-100 dark:bg-blue-950 px-1.5 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:text-blue-300 whitespace-nowrap">
                         {ev.stage || "STG"}
                       </span>
                       <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">

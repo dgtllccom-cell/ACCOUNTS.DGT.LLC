@@ -366,7 +366,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-base font-black tracking-tight text-white">{_("rsms.banner_title", "WhatsApp Business API Official Channel")}</h2>
                 {whatsappConfig.isConnected ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-0.5 text-[11px] font-mono font-bold text-emerald-300 shadow-xs">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-0.5 text-[11px] font-mono font-bold text-emerald-300 shadow-xs whitespace-nowrap">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
@@ -374,7 +374,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                     {_("rsms.banner_connected", "Connected")} ({whatsappConfig.officialNumber})
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[11px] font-mono font-bold text-amber-300 shadow-xs">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[11px] font-mono font-bold text-amber-300 shadow-xs whitespace-nowrap">
                     <span className="h-2 w-2 rounded-full bg-amber-400"></span>
                     {_("rsms.banner_not_connected", "Not connected — click Connect Official WhatsApp")}
                   </span>
@@ -507,21 +507,21 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                     </p>
 
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                      <span className="text-[11px] font-bold uppercase rounded-md bg-slate-100 px-1.5 py-0.5 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                      <span className="text-[11px] font-bold uppercase rounded-md bg-slate-100 px-1.5 py-0.5 text-slate-600 dark:bg-slate-800 dark:text-slate-400 whitespace-nowrap">
                         {c.senderType}
                       </span>
                       {c.countryName && (
-                        <span className="text-[11px] font-bold rounded-md bg-emerald-100 px-1.5 py-0.5 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+                        <span className="text-[11px] font-bold rounded-md bg-emerald-100 px-1.5 py-0.5 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 whitespace-nowrap">
                           {c.countryName}
                         </span>
                       )}
                       {c.status === "ai_ready" && (
-                        <span className="text-[11px] font-black rounded-md bg-amber-100 px-1.5 py-0.5 text-amber-700 dark:bg-amber-950 dark:text-amber-400 flex items-center gap-0.5">
+                        <span className="text-[11px] font-black rounded-md bg-amber-100 px-1.5 py-0.5 text-amber-700 dark:bg-amber-950 dark:text-amber-400 flex items-center gap-0.5 whitespace-nowrap">
                           <Sparkles className="h-2.5 w-2.5" /> {_("rsms.badge_ai_ready", "AI Ready")}
                         </span>
                       )}
                       {c.status === "approval_required" && (
-                        <span className="text-[11px] font-black rounded-md bg-rose-100 px-1.5 py-0.5 text-rose-700 dark:bg-rose-950 dark:text-rose-400 flex items-center gap-0.5">
+                        <span className="text-[11px] font-black rounded-md bg-rose-100 px-1.5 py-0.5 text-rose-700 dark:bg-rose-950 dark:text-rose-400 flex items-center gap-0.5 whitespace-nowrap">
                           <ShieldAlert className="h-2.5 w-2.5" /> {_("rsms.badge_approval", "Approval")}
                         </span>
                       )}

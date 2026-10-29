@@ -1598,7 +1598,7 @@ export function BranchGeneralReportView({
                           <td className="p-2.5">
                             <button
                               onClick={() => openSuperAdminBranchEdit(branch.id)}
-                              className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all"
+                              className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all whitespace-nowrap"
                             >
                               {tt("bgr.edit", "Edit")}
                             </button>
@@ -1705,7 +1705,7 @@ export function BranchGeneralReportView({
                             <div className="relative popup-trigger inline-block">
                               <div
                                 onClick={() => setActiveProductPopup(activeProductPopup === country.id ? null : country.id)}
-                                className="inline-flex items-center gap-1 bg-indigo-50/60 border border-indigo-100/80 px-2 py-0.5 rounded-full font-bold text-indigo-700 cursor-pointer text-[11px] hover:bg-indigo-100 hover:text-indigo-800 transition-all"
+                                className="inline-flex items-center gap-1 bg-indigo-50/60 border border-indigo-100/80 px-2 py-0.5 rounded-full font-bold text-indigo-700 cursor-pointer text-[11px] hover:bg-indigo-100 hover:text-indigo-800 transition-all whitespace-nowrap"
                               >
                                 <Link
                                   href={`/dashboard/branch-management/country/${country.id}`}
@@ -1801,7 +1801,7 @@ export function BranchGeneralReportView({
                               <button
                                 type="button"
                                 onClick={() => setBranchDetailModal({ country, branch: mainBranch || { id: country.id, name: `${country.name} Main Branch`, code: country.code, localCurrency: country.currency, status: country.status, isMain: true, cityBranches: [] } })}
-                                className="inline-flex items-center gap-0.5 rounded border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-black text-emerald-700 shadow-xs hover:bg-emerald-100 hover:border-emerald-400 transition-all"
+                                className="inline-flex items-center gap-0.5 rounded border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-black text-emerald-700 shadow-xs hover:bg-emerald-100 hover:border-emerald-400 transition-all whitespace-nowrap"
                                 title={tt("bgr.view", "View")}
                               >
                                 <Eye className="h-2.5 w-2.5" />
@@ -1812,7 +1812,7 @@ export function BranchGeneralReportView({
                                 onClick={() => {
                                   window.location.href = `/dashboard/settings/countries?edit=${encodeURIComponent(country.id)}`;
                                 }}
-                                className="inline-flex items-center gap-0.5 rounded border border-indigo-200 bg-white px-2 py-0.5 text-[11px] font-bold text-indigo-700 shadow-xs hover:bg-indigo-50 transition-all"
+                                className="inline-flex items-center gap-0.5 rounded border border-indigo-200 bg-white px-2 py-0.5 text-[11px] font-bold text-indigo-700 shadow-xs hover:bg-indigo-50 transition-all whitespace-nowrap"
                                 title={tt("bgr.edit", "Edit")}
                               >
                                 <PencilLine className="h-2.5 w-2.5" />
@@ -1826,7 +1826,7 @@ export function BranchGeneralReportView({
                                   scopeName: country.name,
                                   parentHierarchy: [country.name]
                                 })}
-                                className="inline-flex items-center gap-0.5 rounded border border-purple-300 bg-purple-50 px-2 py-0.5 text-[11px] font-black text-purple-700 shadow-xs hover:bg-purple-100 hover:border-purple-400 transition-all cursor-pointer"
+                                className="inline-flex items-center gap-0.5 rounded border border-purple-300 bg-purple-50 px-2 py-0.5 text-[11px] font-black text-purple-700 shadow-xs hover:bg-purple-100 hover:border-purple-400 transition-all cursor-pointer whitespace-nowrap"
                                 title="Rules & Permission Management"
                               >
                                 <Shield className="h-2.5 w-2.5 text-purple-600" />
@@ -1835,7 +1835,7 @@ export function BranchGeneralReportView({
                               <button
                                 type="button"
                                 onClick={() => toggleUserScope(countryUserScopeId)}
-                                className="inline-flex items-center gap-0.5 rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition-all"
+                                className="inline-flex items-center gap-0.5 rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition-all whitespace-nowrap"
                                 title="View / manage users"
                               >
                                 <Users className="h-2.5 w-2.5 text-slate-600" />
@@ -1844,7 +1844,7 @@ export function BranchGeneralReportView({
                               <button
                                 type="button"
                                 onClick={(e) => openActionDropdown(country.id, e.currentTarget)}
-                                className="action-dropdown-trigger inline-flex items-center gap-0.5 rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-100"
+                                className="action-dropdown-trigger inline-flex items-center gap-0.5 rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-100 whitespace-nowrap"
                                 title={tt("bgr.actions", "Actions")}
                               >
                                 <MoreHorizontal className="h-2.5 w-2.5" />
@@ -2015,13 +2015,13 @@ export function BranchGeneralReportView({
                                                   <button
                                                     onClick={() => viewCityBranch(cityBranch.id, country.name, cityBranch.cityName)}
                                                     disabled={viewLoadingId !== null}
-                                                    className="rounded border border-emerald-200 bg-white px-2 py-0.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300 shadow-sm transition-all"
+                                                    className="rounded border border-emerald-200 bg-white px-2 py-0.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300 shadow-sm transition-all whitespace-nowrap"
                                                   >
                                                     {viewLoadingId === cityBranch.id ? "..." : tt("bgr.view", "View")}
                                                   </button>
                                                   <button
                                                     onClick={() => openCityBranchEdit(cityBranch.id)}
-                                                    className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all"
+                                                    className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all whitespace-nowrap"
                                                   >
                                                     {tt("bgr.edit", "Edit")}
                                                   </button>
@@ -2033,7 +2033,7 @@ export function BranchGeneralReportView({
                                                       scopeName: `${cityBranch.cityName || ""} - ${cityBranch.name}`,
                                                       parentHierarchy: [country.name, mainBranch?.name || "Main Branch", cityBranch.name]
                                                     })}
-                                                    className="rounded border border-purple-300 bg-purple-50 px-2 py-0.5 text-[11px] font-black text-purple-700 hover:bg-purple-100 hover:border-purple-400 shadow-sm transition-all inline-flex items-center gap-0.5 cursor-pointer"
+                                                    className="rounded border border-purple-300 bg-purple-50 px-2 py-0.5 text-[11px] font-black text-purple-700 hover:bg-purple-100 hover:border-purple-400 shadow-sm transition-all inline-flex items-center gap-0.5 cursor-pointer whitespace-nowrap"
                                                     title={`Rules & Permissions for ${cityBranch.name}`}
                                                   >
                                                     <Shield className="h-2.5 w-2.5 text-purple-600" />
@@ -2042,7 +2042,7 @@ export function BranchGeneralReportView({
                                                   <button
                                                     type="button"
                                                     onClick={() => toggleUserScope(cityUserScopeId)}
-                                                    className="rounded border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition-all inline-flex items-center gap-0.5"
+                                                    className="rounded border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition-all inline-flex items-center gap-0.5 whitespace-nowrap"
                                                     title={`View users for ${cityBranch.name}`}
                                                   >
                                                     <Users className="h-2.5 w-2.5 text-slate-600" />
@@ -2052,7 +2052,7 @@ export function BranchGeneralReportView({
                                                     type="button"
                                                     onClick={() => handleDeleteCityBranch(cityBranch.id, cityBranch.name, cityBranch.code)}
                                                     disabled={deletingBranchId === cityBranch.id}
-                                                    className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[11px] font-bold text-rose-700 hover:bg-rose-100 hover:border-rose-300 shadow-sm transition-all inline-flex items-center gap-0.5"
+                                                    className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[11px] font-bold text-rose-700 hover:bg-rose-100 hover:border-rose-300 shadow-sm transition-all inline-flex items-center gap-0.5 whitespace-nowrap"
                                                     title={`Delete / Deactivate branch ${cityBranch.name}`}
                                                   >
                                                     <Trash2 className="h-2.5 w-2.5" />

@@ -381,7 +381,7 @@ export function LoginForm({
               >
                 <div className="flex items-center justify-between w-full">
                   <span className="font-bold text-[11px] text-slate-800 dark:text-slate-200">{p.presetName}</span>
-                  <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{p.scopeName}</span>
+                  <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded whitespace-nowrap">{p.scopeName}</span>
                 </div>
                 <span className="text-[11px] text-slate-500 font-mono truncate mt-0.5">{p.id}</span>
               </button>

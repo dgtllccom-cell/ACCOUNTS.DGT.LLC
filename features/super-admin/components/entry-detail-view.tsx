@@ -133,8 +133,8 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
       <div className="mb-4 flex items-center gap-2">
         <h2 className="text-sm font-black">{tt(card.titleKey, card.titleLabel)}</h2>
         {card.linked
-          ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">{card.viaKey ? tt(card.viaKey, card.viaLabel || "Linked via") : ""} {card.via}</span>
-          : <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500 dark:bg-slate-800">{tt("sed.state_not_linked", "Not linked")}</span>}
+          ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">{card.viaKey ? tt(card.viaKey, card.viaLabel || "Linked via") : ""} {card.via}</span>
+          : <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500 dark:bg-slate-800 whitespace-nowrap">{tt("sed.state_not_linked", "Not linked")}</span>}
       </div>
       {card.linked
         ? <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">{card.fields.map((x, i) => <Field key={i} label={tf(x)} value={x.value} />)}</div>
@@ -166,7 +166,7 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
               <h1 className="mt-0.5 text-xl font-black">{tt("sed.entry_details", "Entry Details")} — #{d.header.entryNo}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                 {d.header.status && <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${statusClass(d.header.status)}`}>{d.header.status}</span>}
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{d.moduleLabel}</span>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">{d.moduleLabel}</span>
                 {d.origin.country && <span>📍 {d.origin.country}{d.origin.branch ? " · " + d.origin.branch : ""}</span>}
                 <span className="text-slate-400">{tt("sed.source_module", "Source Module")}: {d.origin.sourceModule}</span>
               </div>
@@ -270,7 +270,7 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
                 <div className="flex flex-1 flex-wrap items-center justify-between gap-2">
                   <div className="text-xs">
                     <span className="font-bold">{ev.actor || "-"}</span>
-                    <span className="ms-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{ev.action}</span>
+                    <span className="ms-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">{ev.action}</span>
                   </div>
                   <span className="text-[11px] text-slate-400">{fmtDate(ev.at)}</span>
                 </div>

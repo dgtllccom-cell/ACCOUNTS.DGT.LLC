@@ -3147,7 +3147,7 @@ export function CashEntryForm({
 
                 <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-start">{tr("cj.status", "STATUS")}</span>
                 <div>
-                  <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400">
+                  <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400 whitespace-nowrap">
                     {activeStatus ? translateValue(lang, activeStatus.toUpperCase()) : tr("cj.statusDraft", "DRAFT")}
                   </span>
                 </div>
@@ -3187,14 +3187,14 @@ export function CashEntryForm({
                 <select
                   value={serialRoleFilter}
                   onChange={(e) => setSerialRoleFilter(e.target.value)}
-                  className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                  className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer whitespace-nowrap"
                 >
                   <option value="Super Admin">{tr("cj.roleSuperAdmin", "Super Admin")}</option>
                   <option value="Country Admin">{tr("cj.roleCountryAdmin", "Country Admin")}</option>
                   <option value="Branch Admin">{tr("cj.roleBranchAdmin", "Branch Admin")}</option>
                 </select>
               ) : (
-                <span className="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-[11px]">
+                <span className="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] whitespace-nowrap">
                   {userRoleLabel}
                 </span>
               )}
@@ -3249,12 +3249,12 @@ export function CashEntryForm({
                     </span>
                   </div>
                   {dailyRate?.found ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 whitespace-nowrap">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                       {tr("cj.rateApproved", "APPROVED / ACTIVE")}
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse whitespace-nowrap">
                       <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                       {tr("cj.ratePending", "PENDING / MISSING")}
                     </span>
@@ -3289,7 +3289,7 @@ export function CashEntryForm({
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-xs font-bold text-slate-200">{tr("cj.speakToFill", "Speak to fill this form")}</span>
-                <span className="px-1.5 py-0.5 rounded text-[11px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                <span className="px-1.5 py-0.5 rounded text-[11px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 whitespace-nowrap">
                   {tr("cj.micReady", "MIC READY")}
                 </span>
               </div>
@@ -3353,7 +3353,7 @@ export function CashEntryForm({
                       <select
                         value={cashPositionCountryFilter}
                         onChange={(e) => setCashPositionCountryFilter(e.target.value)}
-                        className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                        className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer whitespace-nowrap"
                       >
                         <option value="all">{t(lang, "roz.all_countries", "All Countries")}</option>
                         {countryList.map((c) => (
@@ -3364,7 +3364,7 @@ export function CashEntryForm({
                       </select>
                     </div>
                   ) : (
-                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200">
+                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 whitespace-nowrap">
                       {userCountry?.countryName || tr("cj.authorizedScope", "Authorized Scope")}
                     </span>
                   )}
@@ -3590,7 +3590,7 @@ export function CashEntryForm({
             {selectedCounterLedger.accountKind && (
               <div className="flex flex-col">
                 <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{t(lang, "common.category", "Category")}</span>
-                <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 px-2 py-0.5 text-[11px] font-bold text-purple-700 dark:text-purple-300">
+                <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 px-2 py-0.5 text-[11px] font-bold text-purple-700 dark:text-purple-300 whitespace-nowrap">
                   {localizeTerm(selectedCounterLedger.accountKind, lang)}
                 </span>
               </div>
@@ -3770,7 +3770,7 @@ export function CashEntryForm({
                             {selectedCountry ? `${selectedCountry.name.toUpperCase()} - ${selectedCityBranch?.name?.toUpperCase() || selectedMainBranch?.name?.toUpperCase() || tr("cj.mSelectBranchU", "SELECT BRANCH")}` : tr("cj.mSelectCountryBranchU", "SELECT COUNTRY & BRANCH")}
                           </span>
                           {isCountryAdmin && (
-                            <span className="inline-flex items-center gap-0.5 bg-amber-500 text-white rounded px-1.5 py-0.5 text-[11px] font-black tracking-wider">
+                            <span className="inline-flex items-center gap-0.5 bg-amber-500 text-white rounded px-1.5 py-0.5 text-[11px] font-black tracking-wider whitespace-nowrap">
                               <Lock className="h-2 w-2" />
                               {tr("cj.mLockedU", "LOCKED")}
                             </span>
@@ -3984,7 +3984,7 @@ export function CashEntryForm({
                                       {acc.currency && <span className="font-mono font-bold">• {acc.currency}</span>}
                                     </div>
                                   </div>
-                                  <span className="shrink-0 text-[11px] font-black uppercase px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200">
+                                  <span className="shrink-0 text-[11px] font-black uppercase px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 whitespace-nowrap">
                                     {tr("cef.select_recipient", "Select Recipient")}
                                   </span>
                                 </button>
@@ -4249,7 +4249,7 @@ export function CashEntryForm({
                                     <span className="text-[11px] font-normal text-slate-500">({selectedBankRecord.branch_name})</span>
                                   )}
                                 </span>
-                                <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">
+                                <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 whitespace-nowrap">
                                   {tr("cj.mBankVerified", "Bank Master Verified ✓")}
                                 </span>
                               </div>
@@ -4744,11 +4744,11 @@ export function CashEntryForm({
                                   : (selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || t(lang, "ledger.select_account_ph", "Select account"))}
                               </h4>
                               {selectedCrossBranchAccount ? (
-                                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200">
+                                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 whitespace-nowrap">
                                   {tr("cj.mCrossRecipient", "Cross-Branch Recipient")}
                                 </span>
                               ) : selectedCounterLedger?.accountKind ? (
-                                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200">
+                                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 whitespace-nowrap">
                                   {localizeTerm(selectedCounterLedger.accountKind, lang)}
                                 </span>
                               ) : null}
@@ -5056,7 +5056,7 @@ export function CashEntryForm({
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300 flex items-center gap-2">
             <span>📋 {t(lang, "roz.journal_roznamcha_entry_table", "JOURNAL ROZNAMCHA — ENTRY TABLE")}</span>
-            <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
               {recentEntriesSummary.count} {t(lang, "creg.entries", "Entries")}
             </span>
           </h3>
@@ -5291,7 +5291,7 @@ export function CashEntryForm({
 
                         {/* 3. Branch Code */}
                         <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
-                          <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                          <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 whitespace-nowrap">
                             {row.city_branches?.code || row.country_branches?.code || row.countries?.iso2 || "—"}
                           </span>
                         </td>
@@ -5632,7 +5632,7 @@ function ProfilePanel({
           <span className={cn("grid h-8 w-8 place-items-center rounded-lg", toneClass)}>{icon}</span>
           {title}
         </CardTitle>
-        {badge ? <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-black text-emerald-700">{badge}</span> : null}
+        {badge ? <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-black text-emerald-700 whitespace-nowrap">{badge}</span> : null}
       </CardHeader>
       <CardContent className="p-3">
         <div className="grid gap-x-4 gap-y-1.5 sm:grid-cols-2">

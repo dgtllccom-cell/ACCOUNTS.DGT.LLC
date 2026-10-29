@@ -437,7 +437,7 @@ export default function SearchPage() {
               )}
             >
               {tab.label}
-              <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-[11px] px-2 py-0.5 rounded-full font-black text-slate-500">
+              <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-[11px] px-2 py-0.5 rounded-full font-black text-slate-500 whitespace-nowrap">
                 {tab.count}
               </span>
             </button>
@@ -483,7 +483,7 @@ export default function SearchPage() {
                             <strong className="text-sm font-extrabold text-slate-900 dark:text-slate-100">{c.customer_name}</strong>
                             <p className="text-xs text-slate-400 mt-0.5">{parsed.companyBusinessType || th("Sole Proprietorship")} · {c.mobile || th("No Contact")}</p>
                           </div>
-                          <span className="text-[11px] font-black uppercase tracking-widest font-mono bg-teal-50 text-teal-700 px-2 py-0.5 rounded border border-teal-200">
+                          <span className="text-[11px] font-black uppercase tracking-widest font-mono bg-teal-50 text-teal-700 px-2 py-0.5 rounded border border-teal-200 whitespace-nowrap">
                             CUST-{c.id.slice(0, 6).toUpperCase()}
                           </span>
                         </div>

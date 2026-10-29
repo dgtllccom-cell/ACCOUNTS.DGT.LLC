@@ -1756,7 +1756,7 @@ export function NewAccountSetup({
               <h1 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
                 {initialAccountId ? getLabel("editAccountSetup", lang) : getLabel("newAccountReport", lang)}
               </h1>
-              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-black uppercase text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
+              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-black uppercase text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300 whitespace-nowrap">
                 ● {getLabel("draft", lang)}
               </span>
             </div>
@@ -2050,7 +2050,7 @@ export function NewAccountSetup({
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                         {getLabel("accountRequirementsTitle", lang)}
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 whitespace-nowrap">
                           {[companyRequired, bankRequired, warehouseRequired].filter(Boolean).length} / 3 {getLabel("linkedMastersActive", lang)}
                         </span>
                       </h4>
@@ -2160,7 +2160,7 @@ export function NewAccountSetup({
                                 setLinkedMastersMenuOpen(false);
                                 setCurrentStep(3);
                               }}
-                              className="shrink-0 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline px-1.5 py-0.5 bg-blue-100/70 dark:bg-blue-900/50 rounded"
+                              className="shrink-0 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline px-1.5 py-0.5 bg-blue-100/70 dark:bg-blue-900/50 rounded whitespace-nowrap"
                             >
                               {getLabel("openStepDirectly", lang)} →
                             </button>
@@ -2208,7 +2208,7 @@ export function NewAccountSetup({
                                 setLinkedMastersMenuOpen(false);
                                 setCurrentStep(4);
                               }}
-                              className="shrink-0 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline px-1.5 py-0.5 bg-emerald-100/70 dark:bg-emerald-900/50 rounded"
+                              className="shrink-0 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline px-1.5 py-0.5 bg-emerald-100/70 dark:bg-emerald-900/50 rounded whitespace-nowrap"
                             >
                               {getLabel("openStepDirectly", lang)} →
                             </button>
@@ -2256,7 +2256,7 @@ export function NewAccountSetup({
                                 setLinkedMastersMenuOpen(false);
                                 setCurrentStep(5);
                               }}
-                              className="shrink-0 text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:underline px-1.5 py-0.5 bg-purple-100/70 dark:bg-purple-900/50 rounded"
+                              className="shrink-0 text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:underline px-1.5 py-0.5 bg-purple-100/70 dark:bg-purple-900/50 rounded whitespace-nowrap"
                             >
                               {getLabel("openStepDirectly", lang)} →
                             </button>
@@ -2494,7 +2494,7 @@ export function NewAccountSetup({
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-900 dark:text-slate-100">{shippingLineDetail.name}</span>
                           {shippingLineDetail.shipping_line_code && (
-                            <span className="font-mono text-[11px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded font-semibold">
+                            <span className="font-mono text-[11px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded font-semibold whitespace-nowrap">
                               {shippingLineDetail.shipping_line_code}
                             </span>
                           )}
@@ -2539,7 +2539,7 @@ export function NewAccountSetup({
                       </p>
                     </div>
                   </div>
-                  <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-200">
+                  <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-200 whitespace-nowrap">
                     {linkedCountries.length} / {countries.length} {getLabel("countriesLinked", lang)}
                   </span>
                 </div>
@@ -2582,7 +2582,7 @@ export function NewAccountSetup({
                           <button
                             type="button"
                             onClick={() => setLinkedCountries(countries.map((c) => c.id))}
-                            className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 hover:underline px-1.5 py-0.5 rounded"
+                            className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 hover:underline px-1.5 py-0.5 rounded whitespace-nowrap"
                           >
                             ✓ {getLabel("selectAll", lang)}
                           </button>
@@ -2590,7 +2590,7 @@ export function NewAccountSetup({
                           <button
                             type="button"
                             onClick={() => setLinkedCountries([])}
-                            className="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 hover:underline px-1.5 py-0.5 rounded"
+                            className="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 hover:underline px-1.5 py-0.5 rounded whitespace-nowrap"
                           >
                             ✕ {getLabel("clearAll", lang)}
                           </button>
@@ -2777,7 +2777,7 @@ export function NewAccountSetup({
                     <Label htmlFor="globalAccountNumber" className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       {getLabel("globalAccountNumber", lang)}
                     </Label>
-                    <span className="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                       GLOBAL
                     </span>
                   </div>
@@ -2803,7 +2803,7 @@ export function NewAccountSetup({
                   </Label>
                   <span
                     dir="ltr"
-                    className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                    className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap"
                   >
                     {getLabel("manualReferenceBadge", lang)}
                   </span>
@@ -3305,7 +3305,7 @@ export function NewAccountSetup({
                     {getLabel("linkedCompaniesTitle", lang)} ({linkedCompanies.length})
                   </h3>
                   {linkedCompanies.length > 0 && (
-                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                       ✓ {lang === "ur" ? "مربوط" : "Connected"}
                     </span>
                   )}
@@ -3342,7 +3342,7 @@ export function NewAccountSetup({
                             <td className="p-3 text-slate-600 dark:text-slate-300">{comp.country || "-"}</td>
                             <td className="p-3">
                               {comp.isPrimary ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-bold text-[11px]">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-bold text-[11px] whitespace-nowrap">
                                   ★ {getLabel("primaryCompany", lang)}
                                 </span>
                               ) : (
@@ -3541,7 +3541,7 @@ export function NewAccountSetup({
                     {getLabel("linkedBanksTitle", lang)} ({linkedBanks.length})
                   </h3>
                   {linkedBanks.length > 0 && (
-                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                       ✓ {lang === "ur" ? "مربوط" : "Connected"}
                     </span>
                   )}
@@ -3579,7 +3579,7 @@ export function NewAccountSetup({
                             </td>
                             <td className="p-3">
                               {bank.isPrimary ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-[11px]">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] whitespace-nowrap">
                                   ★ {getLabel("primaryBank", lang)}
                                 </span>
                               ) : (
@@ -3755,7 +3755,7 @@ export function NewAccountSetup({
                     {getLabel("linkedWarehousesTitle", lang)} ({linkedWarehouses.length})
                   </h3>
                   {linkedWarehouses.length > 0 && (
-                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                       ✓ {lang === "ur" ? "مربوط" : "Connected"}
                     </span>
                   )}
@@ -3792,7 +3792,7 @@ export function NewAccountSetup({
                             <td className="p-3 font-mono text-[11px] text-slate-500">{wh.code || "-"}</td>
                             <td className="p-3">
                               {wh.isPrimary ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-bold text-[11px]">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-bold text-[11px] whitespace-nowrap">
                                   ★ {getLabel("primaryWarehouse", lang)}
                                 </span>
                               ) : (
@@ -3934,7 +3934,7 @@ export function NewAccountSetup({
                       <b>{getLabel("linkedCompaniesTitle", lang)} ({linkedCompanies.length}):</b>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {linkedCompanies.map((c) => (
-                          <span key={c.id} className="inline-flex items-center gap-1 rounded-lg bg-blue-50 dark:bg-blue-950 px-2 py-0.5 text-[11px] font-semibold text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+                          <span key={c.id} className="inline-flex items-center gap-1 rounded-lg bg-blue-50 dark:bg-blue-950 px-2 py-0.5 text-[11px] font-semibold text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                             {c.isPrimary && <span className="text-blue-600 font-bold">★</span>}
                             <span>{c.name}</span>
                             {c.country && <span className="text-[11px] text-blue-500 font-normal">({c.country})</span>}
@@ -3952,7 +3952,7 @@ export function NewAccountSetup({
                       <b>{getLabel("linkedBanksTitle", lang)} ({linkedBanks.length}):</b>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {linkedBanks.map((b) => (
-                          <span key={b.id} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">
+                          <span key={b.id} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                             {b.isPrimary && <span className="text-emerald-600 font-bold">★</span>}
                             <span>{b.name}</span>
                             {b.branchName && <span className="text-[11px] text-emerald-600 font-normal">• {b.branchName}</span>}
@@ -3980,7 +3980,7 @@ export function NewAccountSetup({
                         {linkedCountries.map((cId) => {
                           const matched = countries.find((c) => c.id === cId);
                           return (
-                            <span key={cId} className="inline-flex items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200">
+                            <span key={cId} className="inline-flex items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 whitespace-nowrap">
                               {localizeTerm(matched?.name || cId, lang)} ({matched?.iso2 || "-"})
                             </span>
                           );

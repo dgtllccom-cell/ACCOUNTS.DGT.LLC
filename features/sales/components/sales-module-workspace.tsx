@@ -335,7 +335,7 @@ export function SalesModuleWorkspace({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="truncate text-xl sm:text-2xl md:text-3xl font-black text-white">{displayTitle || title}</h1>
-                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-black uppercase text-emerald-400 border border-emerald-500/30">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
+                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-black uppercase text-emerald-400 border border-emerald-500/30 whitespace-nowrap">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
               </div>
               <p className="truncate text-xs sm:text-sm text-slate-300 font-medium mt-0.5">{description}</p>
             </div>
@@ -426,7 +426,7 @@ export function SalesModuleWorkspace({
             <div key={countryCard.country} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 p-4 shadow-xs">
               <div className="mb-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
                 <div className="font-black uppercase tracking-wide text-cyan-600 dark:text-cyan-400">{countryCard.country}</div>
-                <span className="rounded-full bg-cyan-500/10 border border-cyan-300 dark:border-cyan-800 px-2.5 py-0.5 text-[11px] font-black text-cyan-700 dark:text-cyan-400">{countryCard.totalOrders} SOs</span>
+                <span className="rounded-full bg-cyan-500/10 border border-cyan-300 dark:border-cyan-800 px-2.5 py-0.5 text-[11px] font-black text-cyan-700 dark:text-cyan-400 whitespace-nowrap">{countryCard.totalOrders} SOs</span>
               </div>
               
               <div className="space-y-4">

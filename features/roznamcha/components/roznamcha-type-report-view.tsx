@@ -914,7 +914,7 @@ export function RoznamchaTypeReportView({
               <span className="text-[11px] font-bold text-orange-600 group-hover:underline">
                 {showAllCategories ? tt("report.hide_details", "Hide Details") : tt("report.show_details", "Show Details")}
               </span>
-              <span className="text-[11px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded">
+              <span className="text-[11px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded whitespace-nowrap">
                 {tt("report.explore", "EXPLORE")} {isRtl ? "←" : "→"}
               </span>
             </div>

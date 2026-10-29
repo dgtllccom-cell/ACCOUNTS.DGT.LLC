@@ -730,7 +730,7 @@ export function UserJournalReport() {
             <div className="space-y-1">
               <div className="text-[11px] uppercase tracking-wide text-[var(--ujr-muted)] font-black">{thL("ERP Team / Role")}</div>
               <div>
-                <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-wider">
+                <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-wider whitespace-nowrap">
                   {sessionInfo?.roles[0]?.replace(/_/g, " ") ?? superAdminRow?.role?.replace(/_/g, " ") ?? "Super Admin"}
                 </span>
               </div>
@@ -1037,7 +1037,7 @@ export function UserJournalReport() {
                   </p>
                 </div>
               </div>
-              <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs text-amber-800 font-semibold">
+              <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs text-amber-800 font-semibold whitespace-nowrap">
                 Single View
               </span>
             </div>

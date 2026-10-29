@@ -1063,7 +1063,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
                     <td className="py-2 px-3 text-center font-mono">{h.paymentDate}</td>
                     <td className="py-2 px-3 text-center font-mono text-slate-500">{h.agreedDueDate || "—"}</td>
                     <td className="py-2 px-2 text-center">
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold whitespace-nowrap">
                         {h.status}
                       </span>
                     </td>

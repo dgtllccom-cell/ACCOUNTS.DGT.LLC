@@ -879,7 +879,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   <Globe2 className="h-4 w-4 shrink-0" aria-hidden />
                   <span className="truncate">{tt("email_mgmt.branch_settings", "Branch Settings")}</span>
                 </span>
-                <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[11px] font-bold text-foreground uppercase tracking-wider">{tt("email_mgmt.dashboard_label", "Dashboard")}</span>
+                <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[11px] font-bold text-foreground uppercase tracking-wider whitespace-nowrap">{tt("email_mgmt.dashboard_label", "Dashboard")}</span>
               </button>
             </div>
 

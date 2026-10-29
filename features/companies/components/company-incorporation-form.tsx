@@ -813,7 +813,7 @@ export function CompanyIncorporationForm({
                   </>
                 )}
                 {accountId && (
-                  <div className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                  <div className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                     {s.t("linked_account_number", "Linked Account Number")}: <span className="font-mono">{accounts.find((a) => a.id === accountId)?.accountNumber || "—"}</span>
                   </div>
                 )}
@@ -1232,7 +1232,7 @@ export function CompanyIncorporationForm({
               </div>
             );
             const Badge = ({ txt }: { txt: string }) => (
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">{txt}</span>
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 whitespace-nowrap">{txt}</span>
             );
             return (
               <div className={cn(card, "space-y-4 border-blue-200 dark:border-blue-900/50")}>
@@ -1323,7 +1323,7 @@ export function CompanyIncorporationForm({
                 <div className="rounded-xl border border-amber-300 bg-amber-50/40 p-3 dark:border-amber-800 dark:bg-amber-950/20">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.t("new_draft", "New Company Draft")}</span>
-                    <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-bold text-amber-900 dark:bg-amber-900/60 dark:text-amber-200">{savedId ? s.t("saved_badge", "Saved") : s.t("draft_badge", "Will be created")}</span>
+                    <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-bold text-amber-900 dark:bg-amber-900/60 dark:text-amber-200 whitespace-nowrap">{savedId ? s.t("saved_badge", "Saved") : s.t("draft_badge", "Will be created")}</span>
                   </div>
                   <div className="divide-y divide-amber-200/60 dark:divide-amber-900/40">
                     <Row k={s.t("company_name_lbl", "Company Name")} v={legalName || tradeName} />

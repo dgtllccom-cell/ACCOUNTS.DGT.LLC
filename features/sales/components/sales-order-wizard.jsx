@@ -4456,7 +4456,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                                 <td className="px-3 py-1.5 italic text-emerald-700">{t(lang, "sales.initial_import_inbound", "Initial Import / Stock Inbound")}</td>
                                                 <td className="px-3 py-1.5 text-right font-mono font-bold text-emerald-600">+{originalQty.toLocaleString()}</td>
                                                 <td className="px-3 py-1.5 text-right font-mono font-bold text-emerald-600">+{originalWeight.toLocaleString()} KG</td>
-                                                <td className="px-3 py-1.5"><span className="text-[11px] font-black uppercase bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded">{t(lang, "sales.inbound_word", "Inbound")}</span></td>
+                                                <td className="px-3 py-1.5"><span className="text-[11px] font-black uppercase bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded whitespace-nowrap">{t(lang, "sales.inbound_word", "Inbound")}</span></td>
                                               </tr>
 
                                               {/* Deduction history */}
@@ -4467,7 +4467,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                                   <td className="px-3 py-1.5 font-semibold text-slate-800">{d.customer}</td>
                                                   <td className="px-3 py-1.5 text-right font-mono font-bold">-{d.quantity.toLocaleString()}</td>
                                                   <td className="px-3 py-1.5 text-right font-mono font-bold">-{d.weight.toLocaleString()} KG</td>
-                                                  <td className="px-3 py-1.5"><span className="text-[11px] font-black uppercase bg-red-100 text-red-800 px-1 py-0.5 rounded">{t(lang, "sales.sold_out_word", "Sold Out")}</span></td>
+                                                  <td className="px-3 py-1.5"><span className="text-[11px] font-black uppercase bg-red-100 text-red-800 px-1 py-0.5 rounded whitespace-nowrap">{t(lang, "sales.sold_out_word", "Sold Out")}</span></td>
                                                 </tr>
                                               ))}
 
@@ -4486,7 +4486,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                                 <td colSpan={3} className="px-3 py-1.5 text-right uppercase tracking-wider text-[11px]">{t(lang, "sales.net_available_balance_colon", "Net Available Balance:")}</td>
                                                 <td className="px-3 py-1.5 text-right font-mono text-[11px] font-black text-sky-700">{lot.availableQty.toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</td>
                                                 <td className="px-3 py-1.5 text-right font-mono text-[11px] font-black text-sky-700">{lot.netWeight.toLocaleString()} KG</td>
-                                                <td className="px-3 py-1.5"><span className="text-[11px] font-black uppercase bg-sky-200 text-sky-800 px-1 py-0.5 rounded animate-pulse">{t(lang, "sales.live_stock_title", "Live Stock")}</span></td>
+                                                <td className="px-3 py-1.5"><span className="text-[11px] font-black uppercase bg-sky-200 text-sky-800 px-1 py-0.5 rounded animate-pulse whitespace-nowrap">{t(lang, "sales.live_stock_title", "Live Stock")}</span></td>
                                               </tr>
                                             </tbody>
                                           </table>
@@ -4528,7 +4528,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <span className="text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-200 flex items-center gap-2">
                           <Package className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.goods_table_title", "GOODS TABLE")}
                         </span>
-                        <span className="text-[11px] font-mono font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                        <span className="text-[11px] font-mono font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full whitespace-nowrap">
                           {goodsEntries.length} {t(lang, "lp.goods_entered_badge", "Goods Entered")}
                         </span>
                       </div>
@@ -4621,7 +4621,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className={sectionPanelHeaderCls}>
                     <h3 className={cn("text-xs font-black uppercase tracking-wider", isLocalSale ? "text-amber-900 dark:text-amber-200" : "text-foreground")}>{t(lang, "sales.booking_bill_info_title", "Sales Booking / Bill Info")}</h3>
                     {isLocalSale && (
-                      <span className="text-[11px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0">
+                      <span className="text-[11px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0 whitespace-nowrap">
                         {t(lang, "sales.local_sale_badge", "Local Sale")}
                       </span>
                     )}
@@ -4672,7 +4672,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                           <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
                             <span className="text-[11px] font-black uppercase text-primary tracking-wider">{t(lang, "sales.select_customer_account_dr_header", "Select Customer Account (DR)")}</span>
-                            <span className="text-[11px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            <span className="text-[11px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">
                               {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).length} found
                             </span>
                           </div>
@@ -4692,7 +4692,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 >
                                   <div className="flex justify-between items-start gap-2 mb-1">
                                     <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
-                                    <span className="font-mono text-[11px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
+                                    <span className="font-mono text-[11px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap">System: {acc.accountCode}</span>
                                   </div>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[11px] text-muted-foreground">
                                     <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
@@ -4752,7 +4752,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                           <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
                             <span className="text-[11px] font-black uppercase text-primary tracking-wider">{t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)")}</span>
-                            <span className="text-[11px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            <span className="text-[11px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">
                               {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length} found
                             </span>
                           </div>
@@ -4772,7 +4772,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 >
                                   <div className="flex justify-between items-start gap-2 mb-1">
                                     <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
-                                    <span className="font-mono text-[11px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
+                                    <span className="font-mono text-[11px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap">System: {acc.accountCode}</span>
                                   </div>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[11px] text-muted-foreground">
                                     <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
@@ -4905,7 +4905,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </h3>
                     <div className="flex items-center gap-2">
                       {isLocalSale && (
-                        <span className="text-[11px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0">
+                        <span className="text-[11px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0 whitespace-nowrap">
                           {t(lang, "sales.local_sale_badge", "Local Sale")}
                         </span>
                       )}
@@ -5813,7 +5813,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_user_admin_colon", "User Admin:")}</span><span className="font-bold text-slate-800">{form.userName || "—"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_user_id_colon", "User ID:")}</span><span className="font-bold text-slate-800 font-mono">{form.userId || "USR-1001"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "PKR"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_status_colon", "Status:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase w-max">{isTransferred ? t(lang, "common.active", "Active") : t(lang, "bdash.status_draft", "Draft")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_status_colon", "Status:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase w-max whitespace-nowrap">{isTransferred ? t(lang, "common.active", "Active") : t(lang, "bdash.status_draft", "Draft")}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.established_date_colon", "Established Date:")}</span><span className="font-bold text-slate-800">{form.salesDate}</span>
               </div>
             </div>
@@ -5936,8 +5936,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.email_documents_colon", "Email (For Documents):")}</span><span className="font-bold text-slate-850 truncate">{form.branchEmail || "—"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_colon", "Email (Notifications):")}</span><span className="font-bold text-slate-850 truncate">{form.notificationsEmail || "—"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_number_colon", "WhatsApp Number:")}</span><span className="font-bold text-slate-800">+92 333 1234567</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "sales.sms_notifications_colon", "SMS Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase w-max">{t(lang, "cbs.enabled_word", "Enabled")}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_row_colon", "Email Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase w-max">{t(lang, "cbs.enabled_word", "Enabled")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.sms_notifications_colon", "SMS Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase w-max whitespace-nowrap">{t(lang, "cbs.enabled_word", "Enabled")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_row_colon", "Email Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase w-max whitespace-nowrap">{t(lang, "cbs.enabled_word", "Enabled")}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.language_colon", "Language:")}</span><span className="font-bold text-slate-800">{t(lang, "cbs.lang_english_word", "English")}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.timezone_colon", "Time Zone:")}</span><span className="font-bold text-slate-800 truncate">(GMT+05:00) Pakistan</span>
               </div>

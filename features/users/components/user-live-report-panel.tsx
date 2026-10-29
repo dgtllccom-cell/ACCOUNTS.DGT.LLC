@@ -358,13 +358,13 @@ export function UserLiveReportPanel({
             <div className="p-4 space-y-3">
               <DetailRow label={tt("ulrp.user_name", "User Name")} value={fullName || "-"} />
               <DetailRow label={tt("ulrp.role", "Role")} value={role || "-"} />
-              <DetailRow label={tt("ulrp.status", "Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[11px] font-black uppercase tracking-wider">{activeStatus}</span>} />
+              <DetailRow label={tt("ulrp.status", "Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[11px] font-black uppercase tracking-wider whitespace-nowrap">{activeStatus}</span>} />
               <DetailRow label={tt("ulrp.reg_date", "Registered Date")} value={displayRegDate} />
               <DetailRow label={tt("ulrp.last_login", "Last Login")} value={displayLastLogin} />
               <DetailRow
                 label={tt("ulrp.password_sec", "Password Security")}
                 value={
-                  <span className="inline-flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700">
+                  <span className="inline-flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700 whitespace-nowrap">
                     {tt("ulrp.reset_notice", "Reset via Super Admin action only")}
                   </span>
                 }
@@ -400,7 +400,7 @@ export function UserLiveReportPanel({
               <DetailRow label={tt("ulrp.designation", "Designation")} value={designation} />
               <DetailRow label={tt("ulrp.department", "Department")} value={department} />
               <DetailRow label={tt("ulrp.joining_date", "Joining Date")} value={displayRegDate.slice(0, 11)} />
-              <DetailRow label={tt("ulrp.emp_status", "Employment Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[11px] font-black uppercase tracking-wider">{activeStatus}</span>} />
+              <DetailRow label={tt("ulrp.emp_status", "Employment Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[11px] font-black uppercase tracking-wider whitespace-nowrap">{activeStatus}</span>} />
             </div>
           </div>
 
@@ -562,7 +562,7 @@ export function UserLiveReportPanel({
                 <DetailRow label={tt("ulrp.updated_by", "Last Updated By")} value={updatedBy} />
                 <DetailRow label={tt("ulrp.updated_on", "Last Updated On")} value={displayLastLogin} />
                 <DetailRow label={tt("ulrp.total_updates", "Total Updates")} value={activityCounts.edits.toString()} />
-                <DetailRow label={tt("ulrp.record_status", "Record Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[11px] font-black uppercase tracking-wider">{activeStatus}</span>} />
+                <DetailRow label={tt("ulrp.record_status", "Record Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[11px] font-black uppercase tracking-wider whitespace-nowrap">{activeStatus}</span>} />
               </div>
             </div>
           </div>

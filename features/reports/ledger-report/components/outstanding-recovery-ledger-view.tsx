@@ -644,7 +644,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </div>
             <div className="flex justify-between items-center mt-auto pt-1">
               <span>{tr("STATUS:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px]">{scopeStatus}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">{scopeStatus}</span>
             </div>
           </div>
         </div>
@@ -714,7 +714,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </div>
             <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "rozrep.system_status", "SYSTEM STATUS:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px]">{t(lang, "ledger.orlv_all_clear", "ALL CLEAR")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">{t(lang, "ledger.orlv_all_clear", "ALL CLEAR")}</span>
             </div>
           </div>
         </div>
@@ -777,7 +777,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                   <span className="flex items-center gap-2">
                     <span className="text-base">{getFlag(c.name)}</span>
                     {c.name}
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400 whitespace-nowrap">
                       {c.accounts} accounts
                     </span>
                   </span>
@@ -990,7 +990,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                         </span>
                       </td>
                       <td className="px-2.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                        <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                           {x.branchName || scopeBranch}
                           {x.branchCode ? ` (${x.branchCode})` : ""}
                         </span>
@@ -1000,11 +1000,11 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                       </td>
                       <td className="px-2.5 py-2 text-center">
                         {isOverdue ? (
-                          <span className="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                          <span className="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 whitespace-nowrap">
                             {tv("Overdue")}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 whitespace-nowrap">
                             {tv(x.accountStatus || "Active")}
                           </span>
                         )}
@@ -1026,9 +1026,9 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                       </td>
                       <td className="px-2.5 py-2 text-center font-mono text-xs font-bold">
                         {x.balanceDirection === "DR" ? (
-                          <span className="inline-block rounded bg-rose-50 px-1.5 py-0.5 text-[11px] font-extrabold text-rose-700 dark:bg-rose-950 dark:text-rose-300">DR</span>
+                          <span className="inline-block rounded bg-rose-50 px-1.5 py-0.5 text-[11px] font-extrabold text-rose-700 dark:bg-rose-950 dark:text-rose-300 whitespace-nowrap">DR</span>
                         ) : x.balanceDirection === "CR" ? (
-                          <span className="inline-block rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-extrabold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">CR</span>
+                          <span className="inline-block rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-extrabold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">CR</span>
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}
@@ -1136,7 +1136,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-800/60">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="rounded bg-blue-600 px-2 py-0.5 font-mono text-xs font-bold text-white">
+                  <span className="rounded bg-blue-600 px-2 py-0.5 font-mono text-xs font-bold text-white whitespace-nowrap">
                     {selectedLedgerAccount.code}
                   </span>
                   <h3 className="text-base font-black text-slate-900 dark:text-slate-100">

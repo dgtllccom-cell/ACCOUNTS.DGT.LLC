@@ -506,33 +506,6 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
   const [filterVoucher, setFilterVoucher] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  // Fetch real database records
-  useEffect(() => {
-    let isMounted = true;
-    setLoading(true);
-    fetch(`/api/erp/clearing-agent/expenses-register?category=${category}`)
-      .then((res) => res.json())
-      .then((json) => {
-        if (isMounted) {
-          if (json.success && Array.isArray(json.data)) {
-            setRawRows(json.data);
-          } else {
-            setRawRows([]);
-          }
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load expenses register:", err);
-        if (isMounted) setRawRows([]);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, [category]);
-
   // Determine category-specific text
   const categoryTitle =
     category === "customer"
@@ -809,7 +782,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               {categoryTitle}
             </h1>
-            <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+            <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 whitespace-nowrap">
               ({summary.count})
             </span>
           </div>

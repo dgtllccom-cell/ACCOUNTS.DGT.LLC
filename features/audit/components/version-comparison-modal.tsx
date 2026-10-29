@@ -168,7 +168,7 @@ export function VersionComparisonModal({
                       {diff.label || diff.field.replace(/_/g, " ")}
                     </span>
                     {diff.isHighRisk && (
-                      <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-black uppercase">
+                      <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-black uppercase whitespace-nowrap">
                         {t(lang, "audit.vcm_high_risk", "High-Risk Financial Field")}
                       </span>
                     )}

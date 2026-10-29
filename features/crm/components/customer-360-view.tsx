@@ -1084,7 +1084,7 @@ export function Customer360View() {
                             setQuickActionNotes(`Follow up regarding: ${fu.subject}`);
                             setQuickActionModalOpen(true);
                           }}
-                          className="h-6 px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] rounded border border-blue-200"
+                          className="h-6 px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] rounded border border-blue-200 whitespace-nowrap"
                         >
                           {ct("startAction", "Start")}
                         </Button>

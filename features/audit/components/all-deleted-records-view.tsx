@@ -628,7 +628,7 @@ export function AllDeletedRecordsView() {
 
                       {/* Module Badge */}
                       <td className="py-2.5 px-3">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[11px] bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[11px] bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 whitespace-nowrap">
                           {row.module}
                         </span>
                       </td>

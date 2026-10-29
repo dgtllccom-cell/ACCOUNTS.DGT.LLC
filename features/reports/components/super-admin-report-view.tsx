@@ -296,7 +296,7 @@ export function SuperAdminReportView({
 
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-[11px] font-extrabold uppercase tracking-widest">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-[11px] font-extrabold uppercase tracking-widest whitespace-nowrap">
                 <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
                 <span>{tt("sarh.badge", "Reports & Analytics")}</span>
               </div>
@@ -588,7 +588,7 @@ export function SuperAdminReportView({
 
             <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
               <span className="text-[11px] font-bold text-slate-400 uppercase">{tt("sarh.status_colon", "Status:")}</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-extrabold tracking-wider">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-extrabold tracking-wider whitespace-nowrap">
                 {t(lang, "common.active", "Active").toUpperCase()}
               </span>
             </div>
@@ -670,7 +670,7 @@ export function SuperAdminReportView({
 
             <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
               <span className="text-[11px] font-bold text-slate-400 uppercase">{tt("sarh.system_status_colon", "System Status:")}</span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[11px] font-bold">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[11px] font-bold whitespace-nowrap">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 <span>{tt("sarh.online_synced", "Online & Synced")}</span>
               </span>
@@ -728,7 +728,7 @@ export function SuperAdminReportView({
               <button
                 type="button"
                 onClick={handlePrint}
-                className="px-2 py-0.5 rounded border border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 text-[11px] font-bold flex items-center gap-1"
+                className="px-2 py-0.5 rounded border border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 text-[11px] font-bold flex items-center gap-1 whitespace-nowrap"
               >
                 <span>{tt("sarh.explore", "Explore").toUpperCase()}</span>
                 <ArrowUpRight className="h-3 w-3" />

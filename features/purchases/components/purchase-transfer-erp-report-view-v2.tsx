@@ -306,7 +306,7 @@ function PurchaseTransferErpReportViewContent({
           <div>
             <h1 className="text-sm font-black text-slate-900 dark:text-white tracking-tight uppercase flex items-center gap-2">
               {tt("pterv2.page_title","Inter-Country Purchase Verification & Settlement Audit Sheet")}
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30 font-mono">
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30 font-mono whitespace-nowrap">
                 {tt("pterv2.double_entry_verified", "DOUBLE-ENTRY VERIFIED")}
               </span>
             </h1>
@@ -457,7 +457,7 @@ function PurchaseTransferErpReportViewContent({
               <div className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
                 Original Transaction: <span className="font-bold text-blue-600 dark:text-blue-400">{money(totalAmountFc)} {currencyFc}</span> @ FX {exchangeRate}
               </div>
-              <div className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100/60 dark:bg-emerald-900/40 rounded-md py-0.5 px-2 mt-1 inline-block">
+              <div className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100/60 dark:bg-emerald-900/40 rounded-md py-0.5 px-2 mt-1 inline-block whitespace-nowrap">
                 ✓ Posted exactly once in approved final currency ({currencyLc})
               </div>
             </div>
@@ -588,7 +588,7 @@ function PurchaseTransferErpReportViewContent({
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-black tracking-tight text-slate-900 uppercase">{brandLine}</h2>
-                    <span className="bg-slate-100 text-slate-700 text-[11px] font-extrabold px-1.5 py-0.5 rounded border border-slate-300 font-mono">
+                    <span className="bg-slate-100 text-slate-700 text-[11px] font-extrabold px-1.5 py-0.5 rounded border border-slate-300 font-mono whitespace-nowrap">
                       {tt("pterv2.double_entry_verified", "DOUBLE-ENTRY VERIFIED")}
                     </span>
                   </div>
@@ -600,7 +600,7 @@ function PurchaseTransferErpReportViewContent({
 
               {/* Barcode & Security Badge */}
               <div className="text-right text-[11px] text-slate-600 leading-tight space-y-0.5">
-                <div className="font-mono text-[11px] font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 inline-block">
+                <div className="font-mono text-[11px] font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 inline-block whitespace-nowrap">
                   {tt("pterv2.audit_hash_lbl","AUDIT HASH:")} {superAdminSerial.slice(0, 18)}
                 </div>
                 <div>COUNTRY: <b className="text-slate-900">{countryName}</b></div>
@@ -735,7 +735,7 @@ function PurchaseTransferErpReportViewContent({
                     <td className="p-1.5 border border-slate-300">
                       <div className="flex justify-between items-center">
                         <b className="text-slate-900 text-xs uppercase">{purchaseAccName} ({tt("pterv2.debit_acc_lbl","DEBIT ACCOUNT")})</b>
-                        <span className="text-[11px] font-mono font-bold bg-blue-100 text-blue-900 px-1.5 py-0.5 border border-blue-300 rounded">{debitSerial}</span>
+                        <span className="text-[11px] font-mono font-bold bg-blue-100 text-blue-900 px-1.5 py-0.5 border border-blue-300 rounded whitespace-nowrap">{debitSerial}</span>
                       </div>
                       <div className="text-[11px] font-mono text-slate-600 mt-1 space-x-1.5">
                         <span>{tt("pterv2.super_admin_sn","Super Admin S/N")}: <b className="text-slate-900">{superAdminSerial}</b></span> | 
@@ -754,7 +754,7 @@ function PurchaseTransferErpReportViewContent({
                     <td className="p-1.5 border border-slate-300">
                       <div className="flex justify-between items-center">
                         <b className="text-slate-900 text-xs uppercase">{salesAccName} ({tt("pterv2.credit_acc_lbl","CREDIT ACCOUNT")})</b>
-                        <span className="text-[11px] font-mono font-bold bg-emerald-100 text-emerald-900 px-1.5 py-0.5 border border-emerald-300 rounded">{creditSerial}</span>
+                        <span className="text-[11px] font-mono font-bold bg-emerald-100 text-emerald-900 px-1.5 py-0.5 border border-emerald-300 rounded whitespace-nowrap">{creditSerial}</span>
                       </div>
                       <div className="text-[11px] font-mono text-slate-600 mt-1 space-x-1.5">
                         <span>{tt("pterv2.super_admin_sn","Super Admin S/N")}: <b className="text-slate-900">{superAdminSerial}</b></span> | 

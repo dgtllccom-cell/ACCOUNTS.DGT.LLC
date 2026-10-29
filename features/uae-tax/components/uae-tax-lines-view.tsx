@@ -308,12 +308,12 @@ export function UaeTaxLinesView({
                     </td>
                     <td className="px-3 py-2">
                       {r.document_status === "missing" ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 whitespace-nowrap">
                           <FileWarning className="h-3 w-3" />
                           {s.t("doc_missing", "Missing")}
                         </span>
                       ) : (
-                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                           {s.t(`doc_${r.document_status}`, r.document_status)}
                         </span>
                       )}

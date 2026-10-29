@@ -1655,7 +1655,7 @@ export function ExtFormClient({ token }: { token: string }) {
                             </span>
                           </div>
                           {docFrontImage ? (
-                            <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
                               <CheckCircle2 size={11} /> {t("frontSideReady", lang)}
                             </span>
                           ) : (
@@ -1738,7 +1738,7 @@ export function ExtFormClient({ token }: { token: string }) {
                               </span>
                             </div>
                             {docBackImage ? (
-                              <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
                                 <CheckCircle2 size={11} /> {t("backSideReady", lang)}
                               </span>
                             ) : (
@@ -2351,7 +2351,7 @@ export function ExtFormClient({ token }: { token: string }) {
                         </p>
                       )}
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
-                        <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 text-[11px] font-bold uppercase">
+                        <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 text-[11px] font-bold uppercase whitespace-nowrap">
                           {t(gender, lang)}
                         </span>
                         {docDob && (
@@ -2534,7 +2534,7 @@ export function ExtFormClient({ token }: { token: string }) {
                         </p>
                       )}
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
-                        <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 text-[11px] font-bold uppercase">
+                        <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 text-[11px] font-bold uppercase whitespace-nowrap">
                           {t(gender, lang)}
                         </span>
                         {docDob && (
@@ -2809,7 +2809,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     {t("receiptTitle", lang)}
                   </span>
                 </div>
-                <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
+                <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">
                   {t("verifiedRecord", lang)}
                 </span>
               </div>

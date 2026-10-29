@@ -1750,7 +1750,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
                   {th("S Admin / All Users Directory")}
                 </h1>
-                <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[11px] font-black uppercase px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">
+                <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[11px] font-black uppercase px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800 whitespace-nowrap">
                   {th("USER MANAGEMENT")}
                 </span>
               </div>
@@ -2537,10 +2537,10 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         <span className="text-sm font-black text-foreground truncate">
                           {selectedUser.fullName}
                         </span>
-                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/30">
+                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/30 whitespace-nowrap">
                           {selectedUser.userCode}
                         </span>
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 uppercase">
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 uppercase whitespace-nowrap">
                           {selectedUser.roleLabel}
                         </span>
                         <span className={cn(
@@ -2765,7 +2765,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
 
                                   {/* Category pill */}
                                   <td className="px-3 py-2.5">
-                                    <span className="inline-block rounded px-2 py-0.5 text-[11px] font-extrabold bg-muted text-muted-foreground border border-border">
+                                    <span className="inline-block rounded px-2 py-0.5 text-[11px] font-extrabold bg-muted text-muted-foreground border border-border whitespace-nowrap">
                                       {th(form.category)}
                                     </span>
                                   </td>
@@ -2898,7 +2898,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleOpenPasswordModal(selectedUser)}
-                                className="h-6 px-2 text-[11px] font-bold text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded cursor-pointer flex items-center gap-1"
+                                className="h-6 px-2 text-[11px] font-bold text-indigo-600 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded cursor-pointer flex items-center gap-1 whitespace-nowrap"
                               >
                                 <KeyRound className="w-3 h-3" />
                                 <span>{th("Change")}</span>
@@ -3058,7 +3058,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     <div className="text-right text-[11px] font-mono text-slate-500 space-y-0.5">
                       <div className="font-bold text-slate-800">REF: {printModalUser.userCode}</div>
                       <div suppressHydrationWarning>{th("DATE")}: {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" })}</div>
-                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[11px]">{th("CONFIDENTIAL")}</span>
+                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[11px] whitespace-nowrap">{th("CONFIDENTIAL")}</span>
                     </div>
                   </div>
 
@@ -3069,7 +3069,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                   <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
                     <div className="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
                       <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">{th("OFFICER & SYSTEM IDENTITY")}</span>
-                      <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full">{th("ACTIVE STATUS")}</span>
+                      <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">{th("ACTIVE STATUS")}</span>
                     </div>
                     <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                       <div>
@@ -3154,7 +3154,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     <div className="text-right text-[11px] font-mono text-slate-500 space-y-0.5">
                       <div className="font-bold text-slate-800">TOTAL USERS: {filteredUsers.length}</div>
                       <div suppressHydrationWarning>{th("DATE")}: {new Date().toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" })}</div>
-                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[11px]">{th("CONFIDENTIAL")}</span>
+                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[11px] whitespace-nowrap">{th("CONFIDENTIAL")}</span>
                     </div>
                   </div>
 

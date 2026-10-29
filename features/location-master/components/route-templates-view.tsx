@@ -238,7 +238,7 @@ export function RouteTemplatesView({ lang: langProp }: { lang?: string }) {
                     </td>
                     <td className="px-3 py-2 text-end tabular-nums">{row.legs?.length || 0}</td>
                     <td className="px-3 py-2">
-                      <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-black uppercase text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                      <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-black uppercase text-slate-600 dark:border-slate-700 dark:text-slate-300 whitespace-nowrap">
                         {s.t(`status_${row.status}`, row.status)}
                       </span>
                     </td>

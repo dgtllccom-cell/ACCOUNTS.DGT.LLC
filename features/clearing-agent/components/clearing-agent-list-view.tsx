@@ -34,7 +34,7 @@ export function ClearingAgentListView({ initialAgents }: { initialAgents: Cleari
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-600 dark:border-blue-900/50 dark:bg-blue-950/50 dark:text-blue-400 uppercase tracking-wider">
+          <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-600 dark:border-blue-900/50 dark:bg-blue-950/50 dark:text-blue-400 uppercase tracking-wider whitespace-nowrap">
             Directory & Roster
           </span>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{translateHeader(lang, "Clearing Agent List")}</h1>

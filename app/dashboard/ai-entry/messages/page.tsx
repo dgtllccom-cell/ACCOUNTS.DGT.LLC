@@ -202,7 +202,7 @@ export default function AIMessagesPage() {
                 <h1 className="text-lg font-black tracking-tight text-white">
                   {s.t("ai_messages", "AI Voice & Chat Messaging")}
                 </h1>
-                <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 border border-cyan-400/20 px-2 py-0.5 text-[11px] font-extrabold text-cyan-300">
+                <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 border border-cyan-400/20 px-2 py-0.5 text-[11px] font-extrabold text-cyan-300 whitespace-nowrap">
                   <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
                   ERP CO-PILOT
                 </span>

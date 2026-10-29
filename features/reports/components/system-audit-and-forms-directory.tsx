@@ -604,11 +604,11 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
       <div className="no-print rounded-3xl bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 p-6 sm:p-8 text-white shadow-xl border border-border/40 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-emerald-500/20 px-3 py-0.5 text-xs font-black text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+            <span className="rounded-full bg-emerald-500/20 px-3 py-0.5 text-xs font-black text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 whitespace-nowrap">
               <Sparkles className="h-3 w-3" />
               {t(lang, "safd.safd_official_system_audit_directory", "OFFICIAL SYSTEM AUDIT & DIRECTORY")}
             </span>
-            <span className="rounded-full bg-blue-500/20 px-3 py-0.5 text-xs font-bold text-blue-300 border border-blue-500/30">
+            <span className="rounded-full bg-blue-500/20 px-3 py-0.5 text-xs font-bold text-blue-300 border border-blue-500/30 whitespace-nowrap">
               {t(lang, "safd.generated_on", "Generated")}: {formatErpDate(new Date().toISOString().slice(0, 10), lang)}
             </span>
           </div>
@@ -787,7 +787,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
                       )}
                     </td>
                     <td className="px-3.5 py-3">
-                      <span className="inline-block rounded-md bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[11px] font-extrabold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800">
+                      <span className="inline-block rounded-md bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[11px] font-extrabold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800 whitespace-nowrap">
                         {categoryLabel(item.category)}
                       </span>
                     </td>

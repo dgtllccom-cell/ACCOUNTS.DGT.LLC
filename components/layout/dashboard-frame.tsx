@@ -9,8 +9,6 @@ import {
   Briefcase,
   Building,
   Building2,
-  Calendar,
-  Check,
   CheckCircle2,
   ChevronDown,
   Coins,
@@ -47,9 +45,9 @@ import { filterSidebarTree } from "@/lib/navigation/sidebar";
 import { enterpriseRoles, virtualRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { PremiumSidebarNav } from "@/components/layout/premium-sidebar-nav";
-import { DigitalDockPremiumSidebar } from "@/components/layout/digital-dock-premium-sidebar";
+import { DigitalDockPremiumSidebar, DAMAN_SIDEBAR_ITEMS } from "@/components/layout/digital-dock-premium-sidebar";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { evaluateRouteAccess } from "@/lib/navigation/route-policy";
 import { DashboardContentGate } from "@/components/layout/dashboard-content-gate";
 import { dashboardForRoles } from "@/lib/permissions/enterprise-roles";
@@ -145,11 +143,6 @@ export function DashboardFrame({
   const [searchingDb, setSearchingDb] = useState(false);
 
   // Date Filter Dropdown State
-  const [dateMenuOpen, setDateMenuOpen] = useState(false);
-  const [selectedDateFilter, setSelectedDateFilter] = useState("all");
-  const [customDateFrom, setCustomDateFrom] = useState("");
-  const [customDateTo, setCustomDateTo] = useState("");
-  const dateMenuRef = useRef<HTMLDivElement>(null);
 
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -324,9 +317,6 @@ export function DashboardFrame({
       if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
         setNotificationsOpen(false);
       }
-      if (dateMenuRef.current && !dateMenuRef.current.contains(event.target as Node)) {
-        setDateMenuOpen(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -336,6 +326,23 @@ export function DashboardFrame({
     () => filterSidebarTree(nodes, roles, permissions ?? null, sidebarMenuVisibility),
     [nodes, roles, permissions, sidebarMenuVisibility]
   );
+  // Top-bar heading = the menu section the current page belongs to (it used to say "Dashboard" on every page). Built from the
+  // menu the user actually sees (DAMAN_SIDEBAR_ITEMS), translated the same way as the breadcrumb in erp-page-actions.
+  const sectionTitle = useMemo(() => {
+    type N = { label: string; href?: string; children?: N[] };
+    const clean = (h?: string) => (h || "").split("?")[0].replace(/\/$/, "");
+    let best: { len: number; label: string } | null = null;
+    const visit = (list: N[], top: N) => {
+      for (const n of list) {
+        const h = clean(n.href);
+        if (h && h !== "/dashboard" && (pathname === h || pathname.startsWith(h + "/")) && (!best || h.length > best.len)) best = { len: h.length, label: top.label };
+        if (n.children) visit(n.children, top);
+      }
+    };
+    for (const top of DAMAN_SIDEBAR_ITEMS as unknown as N[]) visit([top], top);
+    const found = best as { label: string } | null;
+    return found ? translateHeader(lang, found.label) : t(lang, "nav.dashboard", "Dashboard");
+  }, [pathname, lang]);
   const mobileNavItems = useMemo(() => {
     const roleList = (roles ?? []) as string[];
     const isSuper = roleList.includes("super_admin");
@@ -352,10 +359,12 @@ export function DashboardFrame({
       isDrawerTrigger?: boolean;
     }> = [
       { key: "home", href: home, icon: LayoutDashboard, label: t(lang, "nav.dashboard", "Dashboard"), active: pathname === "/dashboard" || pathname === home, show: true },
-      { key: "customers", href: "/dashboard/customers", icon: Users, label: t(lang, "dash.total_customers", "Customers"), active: pathname.startsWith("/dashboard/customers"), show: routeOk("/dashboard/customers") },
-      { key: "shipping", href: "/dashboard/shipping-clearing", icon: Truck, label: t(lang, "nav.shipping_clearing", "Shipments"), active: pathname.startsWith("/dashboard/shipping"), show: routeOk("/dashboard/shipping-clearing") },
-      { key: "ledgers", href: "/dashboard/ledger/detailed", icon: Coins, label: t(lang, "nav.ledgers", "Finance"), active: pathname.startsWith("/dashboard/ledger"), show: routeOk("/dashboard/ledger/detailed") },
-      { key: "menu", icon: Menu, label: t(lang, "nav.open_navigation", "Menu"), active: mobileOpen || drawerOpen, show: true, isDrawerTrigger: true },
+      // One short word per tab: the long keys ("Total Customers", "Shipping & Clearing", "Open navigation") collided on phones.
+      { key: "customers", href: "/dashboard/customers", icon: Users, label: t(lang, "nav.tab_customers", "Customers"), active: pathname.startsWith("/dashboard/customers"), show: routeOk("/dashboard/customers") },
+      // /dashboard/shipping-clearing never existed (404 on every page through link prefetch); the real landing page is the Logistics dashboard.
+      { key: "shipping", href: "/dashboard/logistics", icon: Truck, label: t(lang, "nav.tab_shipments", "Shipments"), active: ["/dashboard/logistics", "/dashboard/shipping", "/dashboard/clearing-agent"].some((p) => pathname.startsWith(p)), show: routeOk("/dashboard/logistics") },
+      { key: "ledgers", href: "/dashboard/ledger/detailed", icon: Coins, label: t(lang, "nav.ledgers", "Ledgers"), active: pathname.startsWith("/dashboard/ledger"), show: routeOk("/dashboard/ledger/detailed") },
+      { key: "menu", icon: Menu, label: t(lang, "nav.tab_menu", "Menu"), active: mobileOpen || drawerOpen, show: true, isDrawerTrigger: true },
     ];
     return items.filter((i) => i.show);
   }, [roles, permissions, operationalDomains, canViewFinancials, pathname, lang, mobileOpen, drawerOpen]);
@@ -484,24 +493,6 @@ export function DashboardFrame({
     router.push(href);
   };
 
-  function getDateFilterLabel(filter: string): string {
-    const currentYear = new Date().getFullYear();
-    switch (filter) {
-      case "today":
-        return t(lang, "ledger.preset_today", "Today");
-      case "week":
-        return t(lang, "ledger.preset_this_week", "This Week");
-      case "month":
-        return t(lang, "ledger.preset_this_month", "This Month");
-      case "year":
-        return `${t(lang, "dashboard.this_year", "This Year")} (${currentYear})`;
-      case "custom":
-        return t(lang, "ledger.preset_custom", "Custom Date Range");
-      case "all":
-      default:
-        return `${t(lang, "nav.all_dates", "All Dates")} (${currentYear})`;
-    }
-  }
 
   return (
     <ActiveRecordProvider>
@@ -584,7 +575,7 @@ export function DashboardFrame({
                 <Menu className="h-4 w-4" aria-hidden />
               </Button>
 
-              <h2 className="text-base font-bold text-foreground hidden sm:block">{t(lang, "nav.dashboard", "Dashboard")}</h2>
+              <h2 className="text-base font-bold text-foreground hidden sm:block">{sectionTitle}</h2>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
@@ -600,79 +591,6 @@ export function DashboardFrame({
                   <span className="text-xs">⌘</span>K
                 </kbd>
               </button>
-
-              <div className="relative hidden lg:block" ref={dateMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setDateMenuOpen(!dateMenuOpen)}
-                  className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-foreground/80 hover:bg-muted/80 transition-colors cursor-pointer"
-                  title={t(lang, "nav.filter_by_date_range", "Filter by date range")}
-                >
-                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="font-semibold">{getDateFilterLabel(selectedDateFilter)}</span>
-                  <ChevronDown className={cn("h-3 w-3 text-slate-500 transition-transform duration-200", dateMenuOpen ? "rotate-180" : "")} />
-                </button>
-
-                {dateMenuOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-64 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50 p-1.5 font-sans">
-                    <div className="px-2.5 py-1.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground border-b border-border/80 mb-1 flex items-center justify-between">
-                      <span>{t(lang, "nav.filter_by_date_range", "Filter by date range")}</span>
-                      <span className="font-mono text-[11px] text-primary">{new Date().getFullYear()}</span>
-                    </div>
-
-                    {[
-                      { id: "all", label: `${t(lang, "nav.all_dates", "All Dates")} (${new Date().getFullYear()})` },
-                      { id: "today", label: t(lang, "ledger.preset_today", "Today") },
-                      { id: "week", label: t(lang, "ledger.preset_this_week", "This Week") },
-                      { id: "month", label: t(lang, "ledger.preset_this_month", "This Month") },
-                      { id: "year", label: `${t(lang, "dashboard.this_year", "This Year")} (${new Date().getFullYear()})` },
-                      { id: "custom", label: t(lang, "ledger.preset_custom", "Custom Date Range") }
-                    ].map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedDateFilter(opt.id);
-                          if (opt.id !== "custom") {
-                            setDateMenuOpen(false);
-                          }
-                        }}
-                        className={cn(
-                          "flex w-full items-center justify-between px-2.5 py-2 text-xs font-semibold rounded-lg transition-colors text-left cursor-pointer",
-                          selectedDateFilter === opt.id
-                            ? "bg-primary/10 text-primary font-bold"
-                            : "hover:bg-muted text-foreground/80"
-                        )}
-                      >
-                        <span className="flex items-center gap-2">
-                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                          {opt.label}
-                        </span>
-                        {selectedDateFilter === opt.id && (
-                          <Check className="h-3.5 w-3.5 text-primary" />
-                        )}
-                      </button>
-                    ))}
-
-                    {selectedDateFilter === "custom" && (
-                      <div className="mt-2 pt-2 border-t border-border/80 px-2 pb-1">
-                        <ErpDatePicker
-                          mode="range"
-                          lang={lang}
-                          size="sm"
-                          presets={false}
-                          value={{ from: customDateFrom || null, to: customDateTo || null }}
-                          onApply={(v) => {
-                            setCustomDateFrom(v.from ?? "");
-                            setCustomDateTo(v.to ?? "");
-                            setDateMenuOpen(false);
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
 
               <div id={TOPBAR_VIEW_SLOT_ID} className="hidden md:contents" />
               <GlobalCalculator />
@@ -693,7 +611,7 @@ export function DashboardFrame({
                   <div className="absolute top-full end-0 mt-2 w-80 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
                     <div className="p-3 border-b border-border flex items-center justify-between bg-muted/40">
                       <span className="font-bold text-xs">{t(lang, "dashboard.system_notifications", "System Notifications")}</span>
-                      <span className="text-[11px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{t(lang, "dashboard.live", "Live")}</span>
+                      <span className="text-[11px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full whitespace-nowrap">{t(lang, "dashboard.live", "Live")}</span>
                     </div>
                     <div className="divide-y divide-border/60 max-h-64 overflow-y-auto text-xs">
                       <div className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
@@ -742,7 +660,7 @@ export function DashboardFrame({
                     <p className="font-bold text-sm text-foreground truncate">{userName || t(lang, "common.user", "User")}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">{userEmail}</p>
                     <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
-                      <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/20">
+                      <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/20 whitespace-nowrap">
                         {roleLabel || t(lang, "nav.administrator", "Administrator")}
                       </span>
                       {activeScopeLocation && (
@@ -959,7 +877,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ms-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800 whitespace-nowrap">
                     {t(lang, "dashboard.navigation", "Navigation")}
                   </span>
                 </CommandItem>
@@ -997,7 +915,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ms-3 rounded-lg bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-sky-700 dark:text-sky-300 ring-1 ring-sky-200 dark:ring-sky-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-sky-700 dark:text-sky-300 ring-1 ring-sky-200 dark:ring-sky-800 whitespace-nowrap">
                      {t(lang, "dashboard.module", "Module")}
                   </span>
                 </CommandItem>
@@ -1023,7 +941,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ms-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800 whitespace-nowrap">
                      {t(lang, "dashboard.action", "Action")}
                   </span>
                 </CommandItem>
@@ -1049,7 +967,7 @@ export function DashboardFrame({
                       <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
                     </div>
                   </div>
-                  <span className="shrink-0 ms-3 rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700">
+                  <span className="shrink-0 ms-3 rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700 whitespace-nowrap">
                      {t(lang, "dashboard.settings", "Settings")}
                   </span>
                 </CommandItem>
@@ -1077,7 +995,7 @@ export function DashboardFrame({
                       </p>
                     </div>
                   </div>
-                  <span className="shrink-0 ms-3 rounded-lg bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-800">
+                  <span className="shrink-0 ms-3 rounded-lg bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[11px] font-extrabold uppercase text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-800 whitespace-nowrap">
                     {item.entityType}
                   </span>
                 </CommandItem>

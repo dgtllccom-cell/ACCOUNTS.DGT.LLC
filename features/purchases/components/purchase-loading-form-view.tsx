@@ -384,7 +384,7 @@ export function PurchaseLoadingFormView() {
                         <div className="font-mono font-black text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                           {row.purchase_order_no}
                           {poRecords.length > 0 && (
-                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-800">
+                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-800 whitespace-nowrap">
                               {poRecords.length} {poRecords.length === 1 ? "Entry" : "Entries"}
                             </span>
                           )}
@@ -793,7 +793,7 @@ export function PurchaseLoadingFormView() {
               <h2 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
                 <Anchor className="h-4 w-4 text-blue-200" /> {tt("plrf.goods_container", "GOODS & CONTAINER REPORT")}
               </h2>
-              <span className="bg-blue-800 text-white text-[11px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+              <span className="bg-blue-800 text-white text-[11px] px-2 py-0.5 rounded font-bold uppercase tracking-wider whitespace-nowrap">
                 {tt("plf.live_inventory", "LIVE INVENTORY")}
               </span>
             </div>

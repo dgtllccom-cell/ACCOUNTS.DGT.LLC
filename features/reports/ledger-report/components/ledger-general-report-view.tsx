@@ -1370,7 +1370,7 @@ export function LedgerReportView({
                 </div>
                 <div className="flex justify-between items-center gap-3 mt-auto pt-1">
                   <span className="shrink-0">{th("STATUS:")}</span>
-                  <span className="shrink-0 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px]">{th("ACTIVE")}</span>
+                  <span className="shrink-0 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">{th("ACTIVE")}</span>
                 </div>
               </>
             )}
@@ -1637,7 +1637,7 @@ export function LedgerReportView({
                       </span>
                       {getFlag(item.name)} {item.name}
                     </span>
-                    <span className="bg-white/20 text-[11px] font-bold px-2 py-0.5 rounded-full">{item.entries} {th("ENTRIES")}</span>
+                    <span className="bg-white/20 text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">{item.entries} {th("ENTRIES")}</span>
                   </div>
                   <div className="p-4 space-y-3 bg-white dark:bg-slate-950">
                     <div className="flex justify-between items-end border-b border-slate-100 dark:border-slate-800 pb-2">

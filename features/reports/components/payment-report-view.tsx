@@ -375,7 +375,7 @@ export function PaymentReportView({
       render: (r: Record<string, unknown>) => {
         const row = r as unknown as PaymentRow;
         return (
-          <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
             {row.currency}
           </span>
         );
@@ -644,10 +644,10 @@ export function PaymentReportView({
                     >
                       {m.flow === "supplier_payment" ? "Purchase Payment" : "Customer Receipt"}
                     </span>
-                    <span className="rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-300">
+                    <span className="rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-300 whitespace-nowrap">
                       {kindLabel(m.paymentKind)}
                     </span>
-                    <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-emerald-300">
+                    <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-emerald-300 whitespace-nowrap">
                       {statusLabel(m.status)}
                     </span>
                   </div>

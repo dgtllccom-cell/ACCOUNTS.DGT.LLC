@@ -356,7 +356,7 @@ export function AllReportsView() {
                   <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded bg-slate-100 border text-slate-600">
+                  <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded bg-slate-100 border text-slate-600 whitespace-nowrap">
                     {tr(report.category)}
                   </span>
                 </div>

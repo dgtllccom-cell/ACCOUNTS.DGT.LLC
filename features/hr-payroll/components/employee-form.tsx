@@ -966,7 +966,7 @@ export function EmployeeForm({
                         {fullName || <span className="text-slate-400 font-normal italic">{translateHr("No Person Selected", lang)}</span>}
                       </div>
                       {selectedPersonObj?.person_code && (
-                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                           {selectedPersonObj.person_code}
                         </span>
                       )}
@@ -1020,7 +1020,7 @@ export function EmployeeForm({
                     <span>2. {translateHr("Location & Branch", lang)}</span>
                   </span>
                   {activeStep >= 2 && (
-                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded">
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded whitespace-nowrap">
                       {t(lang, "hr.step_configured", "Configured")}
                     </span>
                   )}
@@ -1066,7 +1066,7 @@ export function EmployeeForm({
                     <span>3. {translateHr("Shift & Timelines", lang)}</span>
                   </span>
                   {activeStep >= 3 && (
-                    <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-1.5 py-0.5 rounded">
+                    <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-1.5 py-0.5 rounded whitespace-nowrap">
                       {th("Active")}
                     </span>
                   )}
@@ -1098,7 +1098,7 @@ export function EmployeeForm({
                     <span>4. {translateHr("Salary / Compensation", lang)}</span>
                   </span>
                   {activeStep >= 4 && (
-                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded">
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded whitespace-nowrap">
                       {t(lang, "hr.step_calculated", "Calculated")}
                     </span>
                   )}

@@ -503,7 +503,7 @@ export function CustomerOrderTransferView() {
 
     if (isGeneralReceived) {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2.5 py-0.5 text-[11px] font-bold text-cyan-700 border border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-800">
+        <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2.5 py-0.5 text-[11px] font-bold text-cyan-700 border border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-800 whitespace-nowrap">
           <Inbox className="h-3 w-3" />
           {tt("cotr.status_general_received", "General Received Bill")}
         </span>
@@ -513,7 +513,7 @@ export function CustomerOrderTransferView() {
     const s = (status || stage || "pending").toLowerCase();
     if (s.includes("completed")) {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800">
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800 whitespace-nowrap">
           <CheckCircle2 className="h-3 w-3" />
           {tt("cotr.status_completed", "Completed")}
         </span>
@@ -521,14 +521,14 @@ export function CustomerOrderTransferView() {
     }
     if (s.includes("confirm") || s.includes("accepted") || s === "1c") {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800">
+        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800 whitespace-nowrap">
           <Clock className="h-3 w-3" />
           {tt("cotr.status_confirmed", "Confirmed")}
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800">
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800 whitespace-nowrap">
         <Clock className="h-3 w-3" />
         {coStatusLabel(lang, status) || tt("cotr.status_draft", "Draft")}
       </span>
@@ -688,7 +688,7 @@ export function CustomerOrderTransferView() {
             >
               <Inbox className="h-3.5 w-3.5 text-cyan-500" />
               <span>{tt("cotr.queue_general_received", "General Received Bills (Clearing Agent)")}</span>
-              <span className="px-1.5 py-0.5 rounded-full text-[11px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-mono font-bold">
+              <span className="px-1.5 py-0.5 rounded-full text-[11px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-mono font-bold whitespace-nowrap">
                 {stats.generalReceived}
               </span>
             </button>
@@ -704,7 +704,7 @@ export function CustomerOrderTransferView() {
             >
               <ArrowRightLeft className="h-3.5 w-3.5 text-amber-500" />
               <span>{tt("cotr.queue_transferred", "Transferred Expense Bills")}</span>
-              <span className="px-1.5 py-0.5 rounded-full text-[11px] bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 font-mono font-bold">
+              <span className="px-1.5 py-0.5 rounded-full text-[11px] bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 font-mono font-bold whitespace-nowrap">
                 {stats.transferred}
               </span>
             </button>
@@ -826,7 +826,7 @@ export function CustomerOrderTransferView() {
                             {order.customer_name || tt("cotr.customer_unspecified", "Unspecified Customer")}
                           </div>
                           {order.movement_type ? (
-                            <span className="inline-block mt-0.5 text-[11px] uppercase font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                            <span className="inline-block mt-0.5 text-[11px] uppercase font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                               {coMovementLabel(lang, order.movement_type)}
                             </span>
                           ) : null}
@@ -991,12 +991,12 @@ export function CustomerOrderTransferView() {
 
                     {/* Bill Classification Badge */}
                     {isGenReceived ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 px-3 py-0.5 text-xs font-bold">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 px-3 py-0.5 text-xs font-bold whitespace-nowrap">
                         <Inbox className="h-3 w-3" />
                         <span>{tt("cotr.general_received_bill_desk", "General Received Bill Desk")}</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 px-3 py-0.5 text-xs font-semibold">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 px-3 py-0.5 text-xs font-semibold whitespace-nowrap">
                         <FileText className="h-3 w-3" />
                         <span>{tt("cotr.customer_commercial_order", "Customer Commercial Order")}</span>
                       </span>
@@ -1173,7 +1173,7 @@ export function CustomerOrderTransferView() {
                       </div>
 
                       {isGenReceived ? (
-                        <span className="shrink-0 px-2 py-0.5 rounded text-[11px] font-bold bg-cyan-200 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">
+                        <span className="shrink-0 px-2 py-0.5 rounded text-[11px] font-bold bg-cyan-200 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200 whitespace-nowrap">
                           ✓ {tt("cotr.received_badge", "Received")}
                         </span>
                       ) : (
@@ -1374,7 +1374,7 @@ export function CustomerOrderTransferView() {
                         <div>
                           <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                             <span>{tt("cotr.commercial_accounts_desk", "Commercial & Financial Ledger Desk")}</span>
-                            <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                            <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 whitespace-nowrap">
                               {tt("cotr.badge_verified", "Verified")}
                             </span>
                           </div>
@@ -1434,7 +1434,7 @@ export function CustomerOrderTransferView() {
                     <div>
                       <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>{tt("cotr.transit_route_desk", "Transit Logistics & Corridor Desk")}</span>
-                        <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                        <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
                           {coMovementLabel(lang, selectedOrder.movement_type || "transit")}
                         </span>
                       </div>
@@ -1483,7 +1483,7 @@ export function CustomerOrderTransferView() {
                     <div>
                       <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>{tt("cotr.cargo_manifest_desk", "Cargo Manifest & Customs Classification")}</span>
-                        <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                        <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 whitespace-nowrap">
                           {tt("cotr.badge_declared_goods", "Declared Goods")}
                         </span>
                       </div>
@@ -1535,7 +1535,7 @@ export function CustomerOrderTransferView() {
                     <div>
                       <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>{tt("cotr.fleet_haulier_desk", "Transport Operations & Vehicle Dispatch")}</span>
-                        <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                        <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 whitespace-nowrap">
                           {tt("cotr.badge_road_freight", "Road Freight")}
                         </span>
                       </div>
@@ -1607,7 +1607,7 @@ export function CustomerOrderTransferView() {
                         <div>
                           <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                             <span>{tt("cotr.transfer_audit_registry", "Order Transfer Registry & Audit Log")}</span>
-                            <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300">
+                            <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300 whitespace-nowrap">
                               {tt("cotr.badge_audit_trail", "Audit Trail")}
                             </span>
                           </div>
@@ -1821,7 +1821,7 @@ export function CustomerOrderTransferView() {
                       </span>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 shrink-0">
+                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 shrink-0 whitespace-nowrap">
                     {tt("cotr.assigned_badge", "Active Assignee")}
                   </span>
                 </div>
