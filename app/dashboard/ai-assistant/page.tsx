@@ -499,7 +499,7 @@ export default function AiAssistantPage() {
                   New Account Setup Guidance
                 </div>
                 <p className="text-xs text-slate-300">
-                  When a user asks "United branch mein ek achcha sa code banana hai kis tarah banaa", the assistant provides structured step-by-step guidance rather than creating an unrelated purchase order draft.
+                  When a user asks &quot;United branch mein ek achcha sa code banana hai kis tarah banaa&quot;, the assistant provides structured step-by-step guidance rather than creating an unrelated purchase order draft.
                 </p>
                 <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 text-xs space-y-1.5 text-slate-300">
                   <div className="font-semibold text-cyan-300">Steps Prepared:</div>
@@ -616,7 +616,7 @@ export default function AiAssistantPage() {
                 <div>• Start, Pause, Resume, Stop controls with MM:SS audio timer.</div>
                 <div>• Verbatim transcription in 5 languages (English, Urdu, Pashto, Farsi, Arabic).</div>
                 <div>• NEVER silently rewrites, translates, or alters spoken text without user intent.</div>
-                <div>• User reviews transcript in modal and decides to "Append" or "Replace".</div>
+                <div>• User reviews transcript in modal and decides to &quot;Append&quot; or &quot;Replace&quot;.</div>
               </div>
             </div>
           </div>

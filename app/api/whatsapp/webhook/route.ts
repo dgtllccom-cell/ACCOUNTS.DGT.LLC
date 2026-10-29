@@ -186,7 +186,7 @@ async function processInboundMessage(
 function buildMessageRecord(scope: ScopeColumns, conversationId: string, msg: MetaMessage) {
   const msgType = detectMessageType(msg);
   let body: string | null = null;
-  let mediaUrl: string | null = null;
+  const mediaUrl: string | null = null;
   let mediaMime: string | null = null;
 
   if (msg.text) body = msg.text.body;

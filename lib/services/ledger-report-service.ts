@@ -1004,7 +1004,7 @@ export class LedgerReportService {
       .order("id", { ascending: true })
       .limit(limit);
 
-    let jlQuery = supabase
+    const jlQuery = supabase
       .from("journal_lines")
       .select(
         "id, journal_entry_id, description, debit, credit, journal_entries!inner(entry_no, entry_date, status, posted_at, posted_by)"

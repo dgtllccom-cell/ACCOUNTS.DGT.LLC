@@ -46,7 +46,7 @@ export async function GET(_request: NextRequest) {
       .select("*")
       .order("created_at", { ascending: false });
 
-    let rules = (rows ?? []).map((r: any) => ({
+    const rules = (rows ?? []).map((r: any) => ({
       id: r.id,
       ruleName: r.rule_name,
       triggerEvent: r.trigger_event,

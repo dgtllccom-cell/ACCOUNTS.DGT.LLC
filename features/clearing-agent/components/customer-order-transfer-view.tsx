@@ -1633,7 +1633,7 @@ export function CustomerOrderTransferView() {
                         </div>
                         {currentTransfer.memo && (
                           <div className="text-[11px] text-slate-500 italic">
-                            "{currentTransfer.memo}"
+                            &quot;{currentTransfer.memo}&quot;
                           </div>
                         )}
                       </div>

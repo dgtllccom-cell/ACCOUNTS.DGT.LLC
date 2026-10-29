@@ -1062,7 +1062,7 @@ function CityBranchSetupContent() {
       return;
     }
     try {
-      let res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}&operationalDomain=${effectiveDomain}`, {
+      const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}&operationalDomain=${effectiveDomain}`, {
         cache: "no-store"
       });
       if (!res.ok) {
@@ -1070,8 +1070,8 @@ function CityBranchSetupContent() {
         setCountryBranchId("");
         return;
       }
-      let json = (await res.json()) as { countryBranches?: CountryBranchRow[] };
-      let list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
+      const json = (await res.json()) as { countryBranches?: CountryBranchRow[] };
+      const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
 
       const mains = list.filter((b) => b.is_main !== false);
       const finalBranches = mains.length > 0 ? mains : list;

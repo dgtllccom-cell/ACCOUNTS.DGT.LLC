@@ -526,7 +526,7 @@ async function getLedgerIdByCode(supabase: any, code: string, input?: any) {
   const { data, error } = await ledgerQuery.maybeSingle();
   if (!error && data?.id) return data.id;
 
-  let accountQuery = supabase
+  const accountQuery = supabase
     .from("enterprise_accounts")
     .select("id, code, account_number, manual_reference_number, customer_number, name")
     .or(`code.eq."${lookup}",account_number.eq."${lookup}",manual_reference_number.eq."${lookup}",customer_number.eq."${lookup}"`)

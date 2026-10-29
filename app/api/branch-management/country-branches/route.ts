@@ -132,7 +132,7 @@ export async function GET(request: Request) {
       countryBranches = viaPg.countryBranches;
     } else {
       const supabase = createSupabaseAdminClient() as any;
-      let query = buildCountryBranchQuery(supabase, countryBranchSelect, id, countryId, session, operationalDomain);
+      const query = buildCountryBranchQuery(supabase, countryBranchSelect, id, countryId, session, operationalDomain);
       if (!query) return NextResponse.json({ countryBranches: [] }, { status: 200 });
 
       let { data, error } = await query;

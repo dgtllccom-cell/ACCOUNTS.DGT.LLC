@@ -648,7 +648,7 @@ export function DgtMailManagementView() {
               ) : filteredMailboxes.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-5 py-12 text-center text-slate-400">
-                    No mailboxes configured yet. Click "Add Mailbox" to connect a new account.
+                    No mailboxes configured yet. Click &quot;Add Mailbox&quot; to connect a new account.
                   </td>
                 </tr>
               ) : (

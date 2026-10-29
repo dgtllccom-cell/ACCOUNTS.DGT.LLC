@@ -201,7 +201,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
 
   // Aggregated totals matching requested dashboard summary stats
   const dashboardStats = useMemo(() => {
-    let totalSalesOrders = orders.length;
+    const totalSalesOrders = orders.length;
     let totalSalesAmount = 0; // Purchase Currency
     let totalInvoiceAmount = 0; // Purchase Currency
     let totalFinalCurrencyAmount = 0; // Final Currency AED

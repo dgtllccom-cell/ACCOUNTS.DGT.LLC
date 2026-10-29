@@ -854,7 +854,7 @@ function SuperAdminRoznamchaSummaryBody({
   const role = session?.roles?.[0] ? titleCase(session.roles[0]) : session?.role ? titleCase(session.role) : (isSuperAdminScope ? "Super Admin" : "Assigned Role");
 
   // Data Aggregation
-  let totalGlobalEntries = rows.length;
+  const totalGlobalEntries = rows.length;
   let totalCreditUSD = 0;
   let totalDebitUSD = 0;
 

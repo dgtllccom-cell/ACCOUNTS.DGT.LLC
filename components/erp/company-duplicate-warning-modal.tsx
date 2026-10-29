@@ -35,7 +35,7 @@ export function CompanyDuplicateWarningModal({
       <div className="p-5 space-y-4 text-xs text-slate-800 dark:text-slate-200">
         <p className="text-slate-600 dark:text-slate-300">
           {t(lang, "erp.company_dup_desc", "We found existing company record(s) that may match")}{" "}
-          <strong className="text-slate-900 dark:text-white">"{searchedName}"</strong>.{" "}
+          <strong className="text-slate-900 dark:text-white">&quot;{searchedName}&quot;</strong>.{" "}
           {t(lang, "erp.company_dup_desc2", "Use the existing Company ID instead of creating a duplicate, or continue if this is genuinely a different company.")}
         </p>
 

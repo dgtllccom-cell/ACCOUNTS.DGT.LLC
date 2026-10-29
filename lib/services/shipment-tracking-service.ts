@@ -336,7 +336,7 @@ export class ShipmentTrackingService {
       const order = orders[0];
 
       // an event can only belong to a leg of THIS shipment
-      let legId: string | null = input.legId || order.current_leg_id || null;
+      const legId: string | null = input.legId || order.current_leg_id || null;
       if (input.legId) {
         const own = (await sql`SELECT 1 FROM public.clearing_customer_order_legs WHERE id = ${input.legId}::uuid AND order_id = ${order.id} AND deleted_at IS NULL`) as any[];
         if (!own.length) throw new ApiClientError("That leg does not belong to this shipment.", { status: 400, code: "LEG_MISMATCH" });

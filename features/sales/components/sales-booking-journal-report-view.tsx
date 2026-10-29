@@ -406,7 +406,7 @@ export function SalesBookingJournalReportView({ onNewBooking }: { onNewBooking?:
                   <td className="px-6 py-4 text-muted-foreground">{r.salesDate?.split("T")[0]}</td>
                   <td className="px-6 py-4">
                     <div className="font-bold text-foreground">{localized(r, "customerName", r.customerName)}</div>
-                    <div className="text-[11px] text-muted-foreground">{localized(r, "branchName", r.branchName)} "  {localized(r, "countryName", r.countryName)}</div>
+                    <div className="text-[11px] text-muted-foreground">{localized(r, "branchName", r.branchName)} &quot;  {localized(r, "countryName", r.countryName)}</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-semibold text-foreground">{localized(r, "productName", r.productName)}</div>

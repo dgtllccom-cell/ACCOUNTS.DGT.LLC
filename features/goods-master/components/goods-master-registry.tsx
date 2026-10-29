@@ -780,7 +780,7 @@ export function GoodsMasterRegistry() {
                         <Package className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-sm font-medium">No goods items found.</p>
                         <p className="text-xs text-slate-400 mt-1">
-                          Click "+ New Goods Item" above to add your first master product.
+                          Click &quot;+ New Goods Item&quot; above to add your first master product.
                         </p>
                       </td>
                     </tr>
@@ -1309,7 +1309,7 @@ export function GoodsMasterRegistry() {
                         {(paramsByGoodsId[activeModalGoods.id] || []).filter((p) => p.param_type === "variety").length === 0 ? (
                           <tr>
                             <td colSpan={3} className="p-6 text-center text-slate-400">
-                              No varieties added yet. Type a variety above and click "+ Add Variety".
+                              No varieties added yet. Type a variety above and click &quot;+ Add Variety&quot;.
                             </td>
                           </tr>
                         ) : (
@@ -1396,7 +1396,7 @@ export function GoodsMasterRegistry() {
                         {(paramsByGoodsId[activeModalGoods.id] || []).filter((p) => p.param_type === "size").length === 0 ? (
                           <tr>
                             <td colSpan={3} className="p-6 text-center text-slate-400">
-                              No sizes/grades added yet. Type a size above and click "+ Add Size".
+                              No sizes/grades added yet. Type a size above and click &quot;+ Add Size&quot;.
                             </td>
                           </tr>
                         ) : (
@@ -1483,7 +1483,7 @@ export function GoodsMasterRegistry() {
                         {(paramsByGoodsId[activeModalGoods.id] || []).filter((p) => p.param_type === "brand").length === 0 ? (
                           <tr>
                             <td colSpan={3} className="p-6 text-center text-slate-400">
-                              No brands added yet. Type a brand above and click "+ Add Brand".
+                              No brands added yet. Type a brand above and click &quot;+ Add Brand&quot;.
                             </td>
                           </tr>
                         ) : (
@@ -1638,7 +1638,7 @@ export function GoodsMasterRegistry() {
                         {(activeModalGoods.variations || []).length === 0 ? (
                           <tr>
                             <td colSpan={6} className="p-6 text-center text-slate-400">
-                              No combinations added yet. Click "+ Add Variant Combination" above.
+                              No combinations added yet. Click &quot;+ Add Variant Combination&quot; above.
                             </td>
                           </tr>
                         ) : (

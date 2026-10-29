@@ -1159,9 +1159,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       }
     }
 
-    let fallbackCountryId = countries[0]?.id || null;
-    let fallbackCountryBranchId = mainBranches[0]?.id || null;
-    let fallbackCityBranchId = cityBranches[0]?.id || null;
+    const fallbackCountryId = countries[0]?.id || null;
+    const fallbackCountryBranchId = mainBranches[0]?.id || null;
+    const fallbackCityBranchId = cityBranches[0]?.id || null;
 
     let resolvedCountryId: string | null = countryId || fallbackCountryId;
     let resolvedCountryBranchId: string | null = null;
@@ -2800,7 +2800,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                         <div className="space-y-1">
                           <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200">
-                            Username Conflict: <span className="font-mono text-red-600 font-bold">"{loginUsername}"</span> is already in use
+                            Username Conflict: <span className="font-mono text-red-600 font-bold">&quot;{loginUsername}&quot;</span> is already in use
                           </h4>
                           <p className="text-[11px] text-amber-800 dark:text-amber-300">
                             One employee can have multiple user accounts. All 22 module permissions, role scopes, and entered details are preserved. Select an available alternative below or specify a custom username, then click <strong>{tr("saveUser")}</strong>:

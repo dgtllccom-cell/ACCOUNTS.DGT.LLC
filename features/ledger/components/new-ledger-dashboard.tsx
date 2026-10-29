@@ -132,7 +132,7 @@ function getBranchCode(branchName: string | null | undefined): string {
   if (name.includes("tehran") || name.includes("iran")) return "THR";
   if (name.includes("delhi") || name.includes("india")) return "DEL";
   
-  let clean = name.replace("main branch", "").replace("branch", "").trim();
+  const clean = name.replace("main branch", "").replace("branch", "").trim();
   if (clean.length >= 2) {
     const code = clean.replace(/[^a-z]/g, "").slice(0, 3).toUpperCase();
     return code || "BR";

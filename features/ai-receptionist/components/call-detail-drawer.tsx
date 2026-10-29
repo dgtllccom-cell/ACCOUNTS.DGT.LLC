@@ -194,7 +194,7 @@ export function CallDetailDrawer({ callId, onClose, lang }: { callId: string; on
                         {analysis.signals.filter((sig: any) => sig.present).map((sig: any) => (
                           <li key={sig.type} className="text-[11px] text-slate-600 dark:text-slate-300">
                             <span className="font-bold">{s.t(`signal_${sig.type}_title`, sig.type.replace(/_/g, " "))}</span>
-                            {sig.evidence ? <span className="italic text-slate-500"> — "{sig.evidence}"</span> : null}
+                            {sig.evidence ? <span className="italic text-slate-500"> — &quot;{sig.evidence}&quot;</span> : null}
                             {sig.explanation ? <span> — {sig.explanation}</span> : null}
                           </li>
                         ))}

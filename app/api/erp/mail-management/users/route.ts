@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
   const sql = getDb();
   try {
-    let query = sql`
+    const query = sql`
       SELECT 
         u.id, u.username, u.domain, u.email_address, u.display_name, 
         u.recovery_email, u.phone_number, u.plan_id, u.quota_bytes, 

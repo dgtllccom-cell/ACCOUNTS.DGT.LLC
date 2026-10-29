@@ -463,7 +463,7 @@ export async function probePages(baseUrl: string, cookie: string, session: ErpSe
       let title = e.label;
       let final: HealthStatus = status;
       let expected = "200 for an in-scope page, or redirect to login when unauthenticated";
-      let actual = r.status === 0 ? "no response (timeout / connection error)" : `HTTP ${r.status}${r.location ? ` → ${r.location}` : ""} (${r.ms}ms)`;
+      const actual = r.status === 0 ? "no response (timeout / connection error)" : `HTTP ${r.status}${r.location ? ` → ${r.location}` : ""} (${r.ms}ms)`;
       let i18n: HealthFinding["i18n"] = { titleKey: e.labelKey, expectedKey: "health.fx_page_ok" };
       if (status === "healthy" && !roleOk) {
         final = "warning";

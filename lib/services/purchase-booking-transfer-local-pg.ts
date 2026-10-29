@@ -175,8 +175,8 @@ export async function transferPurchaseBookingViaLocalPg(input: {
         form.customerId,
         form.customerName
       ];
-      let debitAccountObj = await resolveLedgerOrAccount(tx, purchaseTerms, form.purchaseAccountName || "Purchase Account", "debit");
-      let creditAccountObj = await resolveLedgerOrAccount(tx, creditTerms, form.salesAccountName || form.supplierName || "Payable Account", "credit");
+      const debitAccountObj = await resolveLedgerOrAccount(tx, purchaseTerms, form.purchaseAccountName || "Purchase Account", "debit");
+      const creditAccountObj = await resolveLedgerOrAccount(tx, creditTerms, form.salesAccountName || form.supplierName || "Payable Account", "credit");
 
       if (!debitAccountObj || !creditAccountObj) {
         throw new Error("Unable to resolve valid Purchase (DR) and Sales/Payable (CR) ledgers for transfer.");

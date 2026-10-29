@@ -70,7 +70,7 @@ function toOption(row: PersonRow, lang: string = "en", bilingual: boolean = fals
 
   const fatherPrefix = lang === "ur" ? "ولدیت:" : lang === "ar" ? "الوالد:" : lang === "fa" ? "فرزند:" : lang === "ps" ? "د پلار نوم:" : "S/O:";
 
-  let secondaryParts: string[] = [];
+  const secondaryParts: string[] = [];
   if (nativeName && nativeName !== name) secondaryParts.push(nativeName);
   if (father) secondaryParts.push(`${fatherPrefix} ${father}`);
   if (empDesig) {
@@ -82,7 +82,7 @@ function toOption(row: PersonRow, lang: string = "en", bilingual: boolean = fals
   const secondaryText = secondaryParts.length > 0 ? secondaryParts.join(" · ") : undefined;
 
   // Format clean name display with proper localization
-  let extraBits: string[] = [];
+  const extraBits: string[] = [];
   if (displayCode) extraBits.push(displayCode);
   if (father) extraBits.push(`${fatherPrefix} ${father}`);
   if (empDesig) extraBits.push(empDesig);

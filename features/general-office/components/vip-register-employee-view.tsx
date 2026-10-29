@@ -1028,7 +1028,7 @@ export function VipRegisterEmployeeView() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Father's Name</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Father&apos;s Name</label>
                   <Input
                     value={formData.fatherName}
                     onChange={e => setFormData({ ...formData, fatherName: e.target.value })}

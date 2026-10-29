@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
 
     const ids = (accounts ?? []).map((a: any) => a.id);
-    let transByAcct: Record<string, any[]> = {};
+    const transByAcct: Record<string, any[]> = {};
     if (ids.length) {
       // record_translations sits over per-language base tables with RLS gated on
       // auth.uid()/is_super_admin(), always NULL under this app's temp-session bootstrap —

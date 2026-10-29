@@ -176,7 +176,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
   const poExRate = Number(orderRow?.exchange_rate || 1);
   const outstanding = Math.max(0, grandTotalFC - totalPaid);
   
-  let displayNarration = payment.narration || "-";
+  const displayNarration = payment.narration || "-";
 
   const startAlign = isRtl ? "right" : "left";
   const endAlign = isRtl ? "left" : "right";

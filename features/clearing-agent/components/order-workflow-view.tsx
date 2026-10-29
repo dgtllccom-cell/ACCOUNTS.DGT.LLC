@@ -185,7 +185,7 @@ export function OrderWorkflowView({ orderId, lang }: { orderId: string; lang?: s
                   )}
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                  {s.t("assigned_by", "Assigned by")}: <span className="font-bold text-slate-800 dark:text-slate-200">{activeHandover.sender_name || "Branch User"}</span> • {s.t("instruction", "Instruction")}: <span className="italic font-medium">"{activeHandover.remarks || activeHandover.narration || "Please complete assigned work."}"</span>
+                  {s.t("assigned_by", "Assigned by")}: <span className="font-bold text-slate-800 dark:text-slate-200">{activeHandover.sender_name || "Branch User"}</span> • {s.t("instruction", "Instruction")}: <span className="italic font-medium">&quot;{activeHandover.remarks || activeHandover.narration || "Please complete assigned work."}&quot;</span>
                 </p>
               </div>
             </div>

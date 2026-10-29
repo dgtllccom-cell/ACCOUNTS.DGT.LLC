@@ -62,8 +62,8 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
   const currency = form.secondaryCurrency?.split(" ")?.[0] || form.currency || "-";
   
   let totalQuantity = 0;
-  let totalNetWeight = 0;
-  let totalGrossWeight = 0;
+  const totalNetWeight = 0;
+  const totalGrossWeight = 0;
   let totalAmount = 0;
 
   const items = goods.map((g: any, index: number) => {

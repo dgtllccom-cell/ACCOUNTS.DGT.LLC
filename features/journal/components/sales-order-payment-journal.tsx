@@ -182,7 +182,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
   const poExRate = Number(orderRow?.exchange_rate || 1);
   const outstanding = Math.max(0, grandTotalFC - totalPaid);
   
-  let displayNarration = payment.narration || "-";
+  const displayNarration = payment.narration || "-";
 
   const rtlFont = lang === "ur" ? "'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif" : lang === "ar" || lang === "ps" ? "'Cairo', 'Noto Naskh Arabic', sans-serif" : lang === "fa" ? "'Vazirmatn', sans-serif" : "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
   const html = `

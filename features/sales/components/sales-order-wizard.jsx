@@ -3120,7 +3120,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   )}
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                  {t(lang, "tc.assigned_by", "Assigned by")}: <span className="font-bold text-slate-800 dark:text-slate-200">{activeHandover.sender_name || t(lang, "tc.branch_user", "Branch User")}</span> • {t(lang, "tc.instruction", "Instruction")}: <span className="italic font-medium">"{activeHandover.remarks || activeHandover.narration || t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}"</span>
+                  {t(lang, "tc.assigned_by", "Assigned by")}: <span className="font-bold text-slate-800 dark:text-slate-200">{activeHandover.sender_name || t(lang, "tc.branch_user", "Branch User")}</span> • {t(lang, "tc.instruction", "Instruction")}: <span className="italic font-medium">&quot;{activeHandover.remarks || activeHandover.narration || t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}&quot;</span>
                 </p>
               </div>
             </div>

@@ -902,7 +902,7 @@ export async function GET(request: NextRequest) {
     if (profileRes.error) throw new Error(profileRes.error.message);
     if (accountRes.error) throw new Error(accountRes.error.message);
 
-    let accountRows = (accountRes.data ?? []) as EnterpriseAccountRow[];
+    const accountRows = (accountRes.data ?? []) as EnterpriseAccountRow[];
     try {
       const { data: coreCountryData } = await supabase
         .from("enterprise_accounts")

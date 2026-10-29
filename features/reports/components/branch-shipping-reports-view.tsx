@@ -221,7 +221,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
 
   const handleExportCsv = () => {
     let rows: Record<string, any>[] = [];
-    let filename = `branch_report_${activeTab}_${branch.code}.csv`;
+    const filename = `branch_report_${activeTab}_${branch.code}.csv`;
 
     if (activeTab === "operations") {
       rows = filteredShipments;

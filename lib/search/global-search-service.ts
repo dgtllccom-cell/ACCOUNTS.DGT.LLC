@@ -57,7 +57,7 @@ function buildScopeFilter(session: ErpSession): ScopeFilter {
 }
 
 function applyScopeToQuery(q: any, scope: ScopeFilter) {
-  let out = enforceScopeFilter(q, scope.session);
+  const out = enforceScopeFilter(q, scope.session);
   // a Shipping Line login only ever finds the shipping line(s) it is bound to
   return out;
 }

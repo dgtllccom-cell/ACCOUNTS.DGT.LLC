@@ -404,7 +404,7 @@ export async function GET() {
 
     // Fetch companies for name lookup
     const companyIds = [...new Set([...countryBranches.map(b => b.company_id), ...cityBranches.map(b => b.company_id)].filter(Boolean))] as string[];
-    let companiesById = new Map<string, string>();
+    const companiesById = new Map<string, string>();
     if (companyIds.length) {
       const { data: companyData } = await admin.from("companies").select("id, name").in("id", companyIds).is("deleted_at", null);
       for (const c of (companyData ?? []) as Array<{ id: string; name: string }>) {

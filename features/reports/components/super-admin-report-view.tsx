@@ -313,7 +313,7 @@ export function SuperAdminReportView({
 
             <div className="lg:self-center">
               <div className="relative rounded-xl border border-blue-400/30 bg-blue-950/40 backdrop-blur-md px-5 py-4 shadow-lg max-w-[260px]">
-                <div className="text-blue-400 mb-1 text-lg font-serif">"</div>
+                <div className="text-blue-400 mb-1 text-lg font-serif">&quot;</div>
                 <div className="text-xs font-black tracking-wide text-slate-100 space-y-0.5">
                   <p>{tt("sarh.quote_one_world", "One World")}</p>
                   <p>{tt("sarh.quote_one_erp", "One ERP")}</p>

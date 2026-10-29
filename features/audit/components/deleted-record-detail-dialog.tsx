@@ -172,7 +172,7 @@ export function DeletedRecordDetailDialog({
               {tt("aud.deletion_reason", "Deletion Reason Stated by Operator:")}
             </div>
             <p className="text-xs text-rose-900 dark:text-rose-200 italic font-medium">
-              "{record.reason || "Soft deleted from operational view and archived in Super Admin Vault."}"
+              &quot;{record.reason || "Soft deleted from operational view and archived in Super Admin Vault."}&quot;
             </p>
           </div>
 

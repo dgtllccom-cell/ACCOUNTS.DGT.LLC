@@ -201,7 +201,7 @@ export function EntryMethodSelector({
                   {s.t("em_no_drafts", "No saved drafts found for this screen.")}
                 </p>
                 <p className="mt-1 text-[11px] text-slate-400">
-                  Use "Scan / Upload Document" to create automated drafts from files.
+                  Use &quot;Scan / Upload Document&quot; to create automated drafts from files.
                 </p>
               </div>
             ) : (

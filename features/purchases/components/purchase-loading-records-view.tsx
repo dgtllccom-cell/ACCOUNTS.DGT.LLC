@@ -111,7 +111,7 @@ function calcLoadingFinance(h: LoadingRecord, poRow: any = {}, form: any = {}) {
 
   // Per-unit weight determination
   let qtyKgs = Number(reportPayload.oneQtyKgs || good.qtyKgs || 0);
-  let emptyKgs = Number(reportPayload.oneEmptyKgs || good.emptyKgs || 0);
+  const emptyKgs = Number(reportPayload.oneEmptyKgs || good.emptyKgs || 0);
 
   if (qtyKgs === 0 && totalQuantity > 0 && totalContractGross > 0) {
     qtyKgs = totalContractGross / totalQuantity;

@@ -89,7 +89,7 @@ async function loadLogisticsDashboardData(session: any): Promise<LogisticsDashbo
     const assignedOnly = !isGlobalSession(session) && (session?.roles ?? []).length > 0 &&
       (session.roles as string[]).every((r) => ["agent_user", "shipping_line_user", "shipping_line_admin", "staff_user"].includes(r));
     const applyTaskScope = (query: any) => {
-      let q = query.is("deleted_at", null);
+      const q = query.is("deleted_at", null);
       if (isGlobalSession(session)) return q;
       if (assignedOnly || (session?.isShippingScoped && clearingAgentIds.length > 0)) {
         return clearingAgentIds.length > 0
