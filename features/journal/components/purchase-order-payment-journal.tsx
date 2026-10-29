@@ -6,6 +6,16 @@ import { printStore } from "@/lib/store/print-store";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { printPaymentJournal } from "@/lib/reports/payment-journal-print";
 import { createPortal } from "react-dom";
+import { PurchasePaymentEntryDocument, type EntryPaymentRow } from "@/features/journal/components/purchase-payment-entry-document";
+import {
+  amountInPurchaseCurrency,
+  buildPaymentEntryModel,
+  checkPaymentLimit,
+  isEndorsementOrder,
+  officeCurrencyForCountryName,
+  orderPaymentPercent,
+  type PaymentEntryMode
+} from "@/lib/journal/purchase-payment-entry-model";
 import React, { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ArrowRight,
@@ -83,6 +93,7 @@ import { t as tGlobal } from "@/lib/i18n/ui";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { translateCountry } from "@/lib/i18n/table-values";
 import { PaymentModuleHeader, useModulePayments, type ModuleRow } from "./payment-module-approved-header";
 import { PapMenu, PapRefresh, PapSearch } from "@/components/purchase-ui/purchase-approved-header";
 import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
@@ -489,13 +500,7 @@ function rowCurrency(row: PurchaseOrderRow) {
 
 function rowOfficeCurrency(row: PurchaseOrderRow): string {
   if (!row) return "USD";
-  const country = (rowCountryName(row) || "").toUpperCase();
-  if (country.includes("PAKISTAN")) return "PKR";
-  if (country.includes("EMIRATES") || country.includes("UAE") || country.includes("DUBAI")) return "AED";
-  if (country.includes("CHINA")) return "CNY";
-  if (country.includes("INDIA")) return "INR";
-  if (country.includes("AFGHANISTAN")) return "AFN";
-  return "USD";
+  return officeCurrencyForCountryName(rowCountryName(row)); // also recognises the translated (UR/AR/FA/PS) country names
 }
 
 function getUsdExchangeRate(cur: string, row: any, liveRates: any[] = []) {
@@ -2771,6 +2776,34 @@ function getPurchaseOrderTableHeader(h: string, currentLanguage: LanguageCode): 
   return PURCHASE_ORDER_TABLE_HEADERS[h]?.[currentLanguage] || h;
 }
 
+/** In-page container for the Endorsement / Advance / Remaining payment document (used instead of the modal for those three modes). */
+function PaymentPanelShell({ docMode, children, ...modalProps }: { docMode: boolean; children?: React.ReactNode; title: string; onClose: () => void; maxWidth?: string; className?: string }) {
+  if (docMode) return <div data-testid="payment-entry-shell" className="w-full bg-slate-50 dark:bg-slate-950">{children}</div>;
+  return <SimpleModal {...modalProps}>{children}</SimpleModal>;
+}
+
+/**
+ * Renders its children where they are written, or — when `active` — inside the element with id `slotId` once that element exists. It lets the
+ * existing entry form (which owns all the payment state) appear inside the new document without being copied or moved in the source.
+ */
+function EntryPortal({ slotId, active, children }: { slotId: string; active: boolean; children: React.ReactNode }) {
+  const [target, setTarget] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!active) { setTarget(null); return; }
+    let raf = 0;
+    let tries = 0;
+    const find = () => {
+      const el = document.getElementById(slotId);
+      if (el) setTarget(el);
+      else if (tries++ < 120) raf = requestAnimationFrame(find);
+    };
+    find();
+    return () => { if (raf) cancelAnimationFrame(raf); };
+  }, [active, slotId]);
+  if (active && target) return createPortal(children, target);
+  return <>{children}</>;
+}
+
 export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout = false, paymentPage = false }: { mode?: PaymentMode; approvedLayout?: boolean; paymentPage?: boolean }) {
   const router = useRouter();
   const activeMode: PaymentMode = mode === "charges" ? "credit" : mode;
@@ -3032,6 +3065,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
   const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentsTick, setPaymentsTick] = useState(0);
+  // the order's supplier company (name / code / country / contacts) for the payment document's Supplier Details card — the list API does not carry it
+  const [supplierRecord, setSupplierRecord] = useState<{ orderId: string; company: any } | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState("");
   const [paymentError, setPaymentError] = useState("");
   const [selectedOrderPayments, setSelectedOrderPayments] = useState<any[]>([]);
@@ -3072,7 +3108,26 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     }
     void fetchPayments();
     return () => { cancelled = true; };
-  }, [selectedId, currentLanguage]);
+  }, [selectedId, currentLanguage, paymentsTick]);
+  useEffect(() => {
+    if (!selectedId) { setSupplierRecord(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch(`/api/erp/purchases/orders/${selectedId}`, { credentials: "include", cache: "no-store" });
+        const body = await response.json().catch(() => null);
+        const company = (body?.data?.order ?? body?.data)?.companies ?? null;
+        if (!cancelled) setSupplierRecord({ orderId: selectedId, company });
+      } catch { if (!cancelled) setSupplierRecord({ orderId: selectedId, company: null }); }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedId]);
+  // A payment was posted or edited: reload the open order's payment list (the "refresh-payments" event was dispatched but never listened to).
+  useEffect(() => {
+    const refresh = () => setPaymentsTick((n) => n + 1);
+    window.addEventListener("refresh-payments", refresh);
+    return () => window.removeEventListener("refresh-payments", refresh);
+  }, []);
   useEffect(() => {
     if (!viewingRow?.id) {
       setViewingRowPayments([]);
@@ -4265,9 +4320,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       : Number(finalPayment || 0);
   }, [showCalcPanel, isLocalCurrency, calcFinal, calcAmount, finalPayment]);
 
+  // Endorsement / Advance / Remaining open as ONE in-page document instead of the 4-tab modal. `overLimit` is reported by that document
+  // (the typed amount is more than the remaining balance); the payment API enforces the same rule, this only stops the click earlier.
+  const docMode = Boolean(selected) && (activeMode === "endorsement" || activeMode === "advance" || activeMode === "remaining");
+  const [overLimit, setOverLimit] = useState(false);
+  useEffect(() => {
+    if (docMode) setModalTab("payments"); // the entry form lives in the payments tab
+    else setOverLimit(false);
+  }, [docMode, selectedId]);
+
   const canSave = useMemo(() => {
-    return Boolean(roznamchaNumber && paymentType && amount > 0);
-  }, [roznamchaNumber, paymentType, amount]);
+    return Boolean(roznamchaNumber && paymentType && amount > 0 && !overLimit);
+  }, [roznamchaNumber, paymentType, amount, overLimit]);
 
   // Dynamic double entry preview values
   const selectedDebitLedger = useMemo(() => {
@@ -4502,6 +4566,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         }, 1200);
       } else {
         await loadOrders();
+        setPaymentsTick((n) => n + 1); // show the just-posted payment in the history
       }
     } catch (err: any) {
       setPaymentError(err?.message || "Failed to process payment settlement. Please try again.");
@@ -4914,7 +4979,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className={cn("flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950", isRtl ? "text-right" : "text-left")}>
-      {activeMode === "remaining" ? (
+      {docMode ? null : activeMode === "remaining" ? (
         // Owner-approved 1:1 screenshot restyle — mode="remaining" only (the route
         // this ships on: /dashboard/purchase/purchase-payments). Every other mode
         // keeps rendering the unchanged header/filters/table JSX below. The modals
@@ -5303,7 +5368,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
       {/* Ledger Cash Entry Panel (Modal) - Compact 4-Tab Architecture */}
       {selected && (
-        <SimpleModal
+        <PaymentPanelShell
+          docMode={docMode}
           title=""
           onClose={() => setSelectedId("")}
           maxWidth="max-w-[1360px]"
@@ -5437,8 +5503,106 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
             const displayEndorsement = historyWithBalance;
 
 
+            // ── Endorsement / Advance / Remaining: the in-page document. Every figure comes from the values computed above, so it shows exactly
+            //    what the old modal showed. The legacy markup below stays mounted (hidden) so the entry form, container picker and edit modal keep
+            //    their state — they are portaled into the document's slots instead of being duplicated. ──
+            let docNode: React.ReactNode = null;
+            if (docMode) {
+              const docPercent = orderPaymentPercent(form);
+              const docGoods = (Array.isArray(goods) ? goods : []).map((g: any) => ({
+                name: String(g.goodsName || g.name || ""),
+                hsCode: String(g.hsCode || g.hs_code || ""),
+                qty: Number(g.qtyNo ?? g.quantity ?? 0),
+                netKg: Number(g.netWeight ?? g.netKgs ?? g.netWt ?? 0),
+                amount: Number(g.totalAmount ?? g.amount ?? 0),
+                finalAmount: Number(g.finalAmount ?? g.localAmount ?? 0)
+              }));
+              const docPayments = historyWithBalance as unknown as EntryPaymentRow[];
+              const docModel = buildPaymentEntryModel({
+                mode: activeMode as PaymentEntryMode,
+                contractTotal: statementPurchaseForeign,
+                contractTotalLocal: statementPurchaseLocal,
+                rate: exRate,
+                percent: docPercent,
+                endorsementOrder: isEndorsementOrder(form),
+                goods: docGoods,
+                payments: docPayments.map((x) => ({ id: x.id, kind: x.kind, amountPurchase: x.amtUSD, amountLocal: x.amtAED, date: String(x.entry_date || x.created_at || "") })),
+                totalPaid: statTotalPaidFC,
+                balance: statRemainingFC
+              });
+              const docEntered = amountInPurchaseCurrency({
+                amount: payloadAmount,
+                paymentCurrency: currency,
+                rate: Number(exchangeRate || 0),
+                purchaseCurrency: poCurrencyHeader,
+                localCurrency: baseCurrency,
+                orderRate: exRate
+              });
+              // a loading-batch payment is limited by the batch, not the whole order: leave that to the payment API
+              const docLimit = fromLoading ? null : checkPaymentLimit({ entered: docEntered, balance: statRemainingFC, contractTotal: statementPurchaseForeign });
+              const ledgerLabelOf = (id?: string | null) => {
+                const l = id ? ledgers.find((x) => ledgerId(x) === id) : null;
+                return l ? ledgerName(l) : "";
+              };
+              const firstGoodsOrigin = (Array.isArray(goods) ? goods : []).map((g: any) => g.origin).find(Boolean);
+              const supplierCo = supplierRecord?.orderId === selected.id ? supplierRecord.company : null;
+              const docSupplierLedgerCode = form.salesAccountLedgerId ? ledgerCode(ledgers.find((x) => ledgerId(x) === form.salesAccountLedgerId)) : "";
+              const supplierContacts: any[] = Array.isArray(supplierCo?.contacts) ? supplierCo.contacts : [];
+              const docSupplierContact = String((supplierContacts.find((c) => /mobile|phone|office|tel/i.test(String(c?.type || ""))) ?? supplierContacts[0])?.value || "");
+              docNode = (
+                <PurchasePaymentEntryDocument
+                  lang={currentLanguage}
+                  isRtl={isRtl}
+                  mode={activeMode as PaymentEntryMode}
+                  model={docModel}
+                  limit={docLimit}
+                  purchaseCurrency={poCurrencyHeader}
+                  baseCurrency={baseCurrency}
+                  rate={exRate}
+                  percent={docPercent}
+                  endorsementOrder={isEndorsementOrder(form)}
+                  orderNo={selected.purchase_order_no ? `P#${selected.purchase_order_no}` : String(selected.id)}
+                  branchName={branchName}
+                  countryName={countryName}
+                  purchaseAccount={[form.purchaseAccountNo, debitAccountName].filter((v) => v && v !== "—").join(" · ")}
+                  paymentDate={paymentDate}
+                  supplier={{
+                    accountNo: String(form.salesAccountNo || form.supplierAccountNo || (selected as any).sales_account_no || docSupplierLedgerCode || supplierCo?.company_code || ""),
+                    name: String(supplierCo?.name || form.supplierName || (supplierHeader === "—" ? "" : supplierHeader)),
+                    country: supplierCo?.country_name ? translateCountry(String(supplierCo.country_name), currentLanguage) : String(form.supplierCountry || form.salesCountry || form.sellerCountry || ""),
+                    contact: String(docSupplierContact || form.supplierPhone || form.salesPhone || form.supplierMobile || form.supplierContact || "")
+                  }}
+                  contract={{
+                    no: String(form.contractNo || form.billNo || selected.purchase_order_no || ""),
+                    date: String(form.contractDate || form.purchaseDate || form.bookingDate || selected.created_at || ""),
+                    goods: docGoods.map((g) => g.name).filter(Boolean).join(", ") || String(form.goodsName || ""),
+                    origin: String(firstGoodsOrigin || form.originCountry || form.origin || "")
+                  }}
+                  payments={docPayments}
+                  ledgerLabel={ledgerLabelOf}
+                  saving={processingPayment}
+                  saveDisabled={Boolean(docLimit?.over)}
+                  onBack={() => setSelectedId("")}
+                  onPrint={() => handleOpenA4PDF(selected, true)}
+                  onSave={() => {
+                    setIsDoubleEntryExpanded(true);
+                    if (canSave && !processingPayment) void handleProcessPayment();
+                    else document.getElementById("ppe-entry-slot")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  onNewPayment={() => {
+                    setIsDoubleEntryExpanded(true);
+                    requestAnimationFrame(() => document.getElementById("ppe-entry-slot")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+                  }}
+                  onEdit={(pay) => setEditingPayment({ payment: pay, row: selected })}
+                  onLimitChange={setOverLimit}
+                />
+              );
+            }
+
             return (
-              <div className="flex flex-col h-full bg-slate-50 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 font-sans">
+              <>
+              {docNode}
+              <div className={cn("flex flex-col h-full bg-slate-50 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 font-sans", docMode && "hidden")}>
                 
                 {/* ── COMPACT FIXED TOP BAR ── */}
                 <div className="shrink-0 flex items-center justify-between gap-3 bg-white dark:bg-[#0c1427] border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 shadow-xs">
@@ -5788,7 +5952,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   )}
 
                   {/* TAB 3: PAYMENTS & LEDGER */}
-                  {modalTab === "payments" && (
+                  {(docMode || modalTab === "payments") && (
                     <div className="space-y-4">
                   {/* Card 7: Advance or Credit Payment & Financial Summary */}
                   {isCredit ? (
@@ -6234,6 +6398,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   </>
                 )}
                 {/* ââ PAYMENT ENTRY ACTION / DOUBLE-ENTRY POSTING PANEL ââ */}
+                <EntryPortal slotId="ppe-entry-slot" active={docMode}>
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm p-4 space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                     <div className="flex items-center gap-2">
@@ -6327,7 +6492,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                         <FieldBlock label={t("payment_condition", currentLanguage)} required>
                           <select
                             className="flex h-8 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus-visible:outline-none"
-                            value={typeDetails.condition || (activeMode === "advance" ? "Advance Payment" : isCredit ? "Credit Payment" : "Remaining Payment")}
+                            value={typeDetails.condition || (activeMode === "advance" || activeMode === "endorsement" ? "Advance Payment" : isCredit ? "Credit Payment" : "Remaining Payment")}
                             onChange={(e) => setTypeDetails((prev) => ({ ...prev, condition: e.target.value }))}
                           >
                             <option value="Advance Payment">{t("pc_advance", currentLanguage)}</option>
@@ -6735,14 +6900,16 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     </div>
                   )}
                 </div>
+                </EntryPortal>
               </div>
             )}
 
                   {/* TAB 4: TRANSPORT & BATCHES */}
-                  {modalTab === "transport" && (
+                  {(docMode || modalTab === "transport") && (
                     <div className="space-y-3">
                 {/* Container Selection / Active Container Banner for Remaining Mode */}
                 {activeMode === "remaining" && fromLoading && (
+                  <EntryPortal slotId="ppe-container-slot" active={docMode}>
                   <div className="flex flex-wrap items-center justify-between gap-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-2.5 shadow-sm">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white font-bold shrink-0">
@@ -6770,6 +6937,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       </Button>
                     )}
                   </div>
+                  </EntryPortal>
                 )}
 
                 {activeMode === "remaining" && !fromLoading && (
@@ -6872,7 +7040,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 </div>
 
                 {/* Edit Payment Modal for Table 3 and Table 4 Entries */}
-                {editingPayment && (
+                {editingPayment && (docMode ? (fn: React.ReactNode) => createPortal(fn, document.body) : (fn: React.ReactNode) => fn)(
                   <PaymentEditModal
                     open={Boolean(editingPayment)}
                     onOpenChange={(open) => {
@@ -6892,9 +7060,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 )}
 
               </div>
+              </>
             );
           })()}
-        </SimpleModal>
+        </PaymentPanelShell>
       )}
 
 
