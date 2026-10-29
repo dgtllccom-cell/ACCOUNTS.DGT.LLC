@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { canAccessCountry } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, invalidIdErrorOf } from "@/lib/api/response";
 import { asObject, buildHistoryTimeline, extractReference, humanizeTableName, normalizeActorRole } from "@/lib/audit/edit-history-service";
 
 // Real deleted-record detail: the delete event plus its full lifecycle
@@ -108,6 +108,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ success: true, data: { deletedRecord, lifecycleTimeline } });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     return NextResponse.json({ error: error.message || "Failed to fetch deleted record details." }, { status: 500 });
   }
 }

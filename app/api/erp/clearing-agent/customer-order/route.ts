@@ -4,7 +4,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { hasRolePermission, isGlobalSession } from "@/lib/permissions/middleware";
 import { isCountryLevelRole } from "@/lib/permissions/enterprise-roles";
 import { canAccessOrder } from "@/lib/services/clearing-customer-order-scope";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, invalidIdErrorOf } from "@/lib/api/response";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import {
   CROSS_BORDER_TRUCK_MESSAGE,
@@ -85,6 +85,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: withTransfers });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ success: false, error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     return NextResponse.json({ success: false, error: error.message, ...(typeof error.code === "string" && /^[A-Z_]+$/.test(error.code) ? { code: error.code, fields: error.fields } : {}) }, { status: httpStatusOfError(error) });
   }
 }
@@ -231,6 +233,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs, loading_allocations: result.loadingAllocations });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ success: false, error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     if (error instanceof RouteContinuityError) {
       return NextResponse.json({ success: false, error: error.message, code: "ROUTE_NOT_CONTINUOUS" }, { status: 400 });
     }

@@ -1,5 +1,5 @@
 import { getCurrentErpSession, type ErpSession } from "@/lib/auth/session";
-import { apiError, apiOk } from "@/lib/api/response";
+import { apiError, apiOk, invalidIdErrorOf } from "@/lib/api/response";
 import { mapInquiryError } from "./service";
 
 export async function requireInquirySession(): Promise<{ session: ErpSession } | { response: Response }> {
@@ -8,7 +8,10 @@ export async function requireInquirySession(): Promise<{ session: ErpSession } |
   return { session };
 }
 
-export function inquiryErrorResponse(error: unknown, emptyPayload?: Record<string, unknown>): Response {
+export async function inquiryErrorResponse(error: unknown, emptyPayload?: Record<string, unknown>): Promise<Response> {
+  // an account number / code in an id parameter is the caller's mistake, not an outage
+  const invalidId = await invalidIdErrorOf(error);
+  if (invalidId) return apiError(invalidId.code, invalidId.message, invalidId.status, { value: invalidId.value });
   const mapped = mapInquiryError(error);
   if (mapped.setupPending) return apiOk({ ...(emptyPayload ?? {}), setupPending: true });
   return apiError(mapped.code, mapped.message, mapped.status);

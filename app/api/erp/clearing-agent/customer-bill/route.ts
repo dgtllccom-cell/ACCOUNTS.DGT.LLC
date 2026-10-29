@@ -2,7 +2,7 @@ import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-ga
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, invalidIdErrorOf } from "@/lib/api/response";
 import {
   listCustomerBills,
   ensureCustomerBillForOrders,
@@ -77,6 +77,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: bills });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ success: false, error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     console.error("GET /api/erp/clearing-agent/customer-bill error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to fetch customer bills." },
@@ -122,6 +124,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: bill });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ success: false, error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     console.error("POST /api/erp/clearing-agent/customer-bill error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to generate customer bill." },

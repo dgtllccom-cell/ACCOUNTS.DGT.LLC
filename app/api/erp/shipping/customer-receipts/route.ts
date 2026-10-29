@@ -2,7 +2,7 @@ import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-ga
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { authorizeApiScope, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, invalidIdErrorOf } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { createReceipt } from "@/lib/services/customer-receipt-service";
@@ -40,6 +40,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: rows ?? [] });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ success: false, error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
@@ -94,6 +96,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: receipt });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return NextResponse.json({ success: false, error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
 }
