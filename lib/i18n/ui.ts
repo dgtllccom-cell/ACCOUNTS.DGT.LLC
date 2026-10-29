@@ -12687,6 +12687,7 @@ export type UiKey =
   | "ppe.view_cr"
   | "pjt.exchange_rate"
   | "pjt.payment_amount_usd"
+  | "pjt.post_endorsement_payment"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -38346,6 +38347,7 @@ const en: Dict = {
   "ppe.view_cr": "View CR / DR details",
   "pjt.exchange_rate": "Exchange Rate",
   "pjt.payment_amount_usd": "Payment Amount",
+  "pjt.post_endorsement_payment": "Post Endorsement Payment",
 };
 
 const ur: Dict = {
@@ -63973,6 +63975,7 @@ const ur: Dict = {
   "ppe.view_cr": "کریڈٹ / ڈیبٹ تفصیل دیکھیں",
   "pjt.exchange_rate": "شرح تبادلہ",
   "pjt.payment_amount_usd": "ادائیگی کی رقم",
+  "pjt.post_endorsement_payment": "توثیقی ادائیگی پوسٹ کریں",
 };
 
 const ar: Dict = {
@@ -89601,6 +89604,7 @@ const ar: Dict = {
   "ppe.view_cr": "عرض تفاصيل الدائن / المدين",
   "pjt.exchange_rate": "سعر الصرف",
   "pjt.payment_amount_usd": "مبلغ الدفعة",
+  "pjt.post_endorsement_payment": "ترحيل دفعة التظهير",
 };
 
 const fa: Dict = {
@@ -115228,6 +115232,7 @@ const fa: Dict = {
   "ppe.view_cr": "مشاهده جزئیات بستانکار / بدهکار",
   "pjt.exchange_rate": "نرخ ارز",
   "pjt.payment_amount_usd": "مبلغ پرداخت",
+  "pjt.post_endorsement_payment": "ثبت پرداخت پشت‌نویسی",
 };
 
 const ps: Dict = {
@@ -140862,6 +140867,7 @@ const ps: Dict = {
   "ppe.view_cr": "د کریډیټ / ډیبټ توضیحات وګورئ",
   "pjt.exchange_rate": "د تبادلې نرخ",
   "pjt.payment_amount_usd": "د تادیې مبلغ",
+  "pjt.post_endorsement_payment": "د تائیدۍ تادیې پوسټ کول",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -6758,7 +6758,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                   value={calcOp}
                                   onChange={(e) => setCalcOp(e.target.value as any)}
                                 >
-                                  <option value="mul">Multiply (*)</option>
+                                  <option value="mul">{t("multiply_op", currentLanguage)}</option>
                                   <option value="div">{translateHeader(currentLanguage, "Divide (/)")}</option>
                                 </select>
                               </FieldBlock>
@@ -6869,7 +6869,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                         return (
                           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
                             <div className="text-xs text-slate-600 dark:text-slate-400">
-                              Posting: <span className="text-blue-600 dark:text-blue-400 font-bold">DR {doubleEntry.debitName} ({doubleEntry.debitCode})</span> ➔ <span className="text-rose-600 dark:text-rose-400 font-bold">CR {doubleEntry.creditName} ({doubleEntry.creditCode})</span>
+                              {t("posting_colon", currentLanguage)} <span className="text-blue-600 dark:text-blue-400 font-bold">DR{doubleEntry.debitName} ({doubleEntry.debitCode})</span> ➔ <span className="text-rose-600 dark:text-rose-400 font-bold">CR {doubleEntry.creditName} ({doubleEntry.creditCode})</span>
                             </div>
                             <Button
                               type="button"
@@ -6877,7 +6877,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                               disabled={processingPayment || missing.length > 0}
                               className="h-10 px-6 font-bold text-xs uppercase shadow-md transition bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                             >
-                              {processingPayment ? "Processing..." : `Post ${activeMode === "advance" ? "Advance" : isCredit ? "Credit" : "Remaining"} Payment Voucher`}
+                              {processingPayment ? t("processing_label", currentLanguage) : t(activeMode === "endorsement" ? "post_endorsement_payment" : activeMode === "advance" ? "post_advance_payment" : isCredit ? "post_credit_payment" : "post_remaining_payment", currentLanguage)}
                             </Button>
                           </div>
                         );
