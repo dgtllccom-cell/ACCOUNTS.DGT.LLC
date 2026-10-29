@@ -337,8 +337,8 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#334155" : "#e2e8f0"} />
-                    <XAxis dataKey="countryName" tick={{ fontSize: 10, fill: isDark ? "#94a3b8" : "#64748b" }} interval={0} angle={-15} textAnchor="end" />
-                    <YAxis tick={{ fontSize: 10, fill: isDark ? "#94a3b8" : "#64748b" }} />
+                    <XAxis dataKey="countryName" tick={{ fontSize: 11, fill: isDark ? "#94a3b8" : "#64748b" }} interval={0} angle={-15} textAnchor="end" />
+                    <YAxis tick={{ fontSize: 11, fill: isDark ? "#94a3b8" : "#64748b" }} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: isDark ? "#0f172a" : "#ffffff",

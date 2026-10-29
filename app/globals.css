@@ -302,7 +302,7 @@ body {
 .erp-table-head {
   background: hsl(var(--muted) / 0.65);
   color: hsl(var(--muted-foreground));
-  font-size: 0.7rem;
+  font-size: max(11px, 0.7rem);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -421,6 +421,11 @@ html[dir="rtl"] div {
   }
 }
 
+/* Urdu (Nastaleeq) has a small x-height: the same px size reads about 2px smaller than Latin, so Urdu gets ~7% more at every breakpoint. */
+@media screen and (min-width: 1024px) and (max-width: 1440px) { html:lang(ur) { font-size: 14.5px; } }
+@media screen and (min-width: 1441px) { html:lang(ur) { font-size: 16px; } }
+@media screen and (max-width: 1023px) { html:lang(ur) { font-size: 16px; } }
+
 .erp-report-shell {
   background: white;
   color: #0f172a;
@@ -520,7 +525,7 @@ html, body {
 
 @media (max-width: 768px) {
   .erp-table-wrap table {
-    font-size: 0.8125rem;
+    font-size: max(11px, 0.8125rem);
   }
 
   .erp-table-wrap th,
@@ -1076,7 +1081,7 @@ button, a {
     overflow-wrap: anywhere;
   }
   main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody td::before {
-    content: attr(data-label); flex: 0 0 40%; max-width: 44%; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    content: attr(data-label); flex: 0 0 40%; max-width: 44%; font-size: max(11px, 0.66rem); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
     color: hsl(var(--muted-foreground)); padding-top: 0.12rem;
   }
   main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody td[data-label=""]::before { display: none; }

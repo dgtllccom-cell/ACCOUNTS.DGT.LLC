@@ -586,7 +586,7 @@ export function DashboardFrame({
                 aria-label={t(lang, "nav.search", "Search")}
               >
                 <Search className="h-3.5 w-3.5 shrink-0" />
-                <span className="erp-search-label font-semibold text-foreground/80 hidden sm:inline">{t(lang, "nav.search_and_filter", "Search & Filter")}</span>
+                <span className="erp-search-label whitespace-nowrap font-semibold text-foreground/80 hidden sm:inline">{t(lang, "nav.search_and_filter", "Search & Filter")}</span>
                 <kbd className="erp-search-kbd pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[11px] font-medium text-muted-foreground opacity-100 md:flex">
                   <span className="text-xs">⌘</span>K
                 </kbd>
@@ -646,7 +646,8 @@ export function DashboardFrame({
                   <div className="h-8 w-8 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shadow-sm">
                     {userName ? userName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : "SA"}
                   </div>
-                  <div className="min-w-0 max-w-[260px] hidden sm:block">
+                  {/* name + scope only from xl: with the view toggle in the bar, 640–1279px had no room and the text was cut at the screen edge */}
+                  <div className="min-w-0 max-w-[260px] hidden xl:block">
                     <p className="font-bold text-foreground leading-none truncate">{userName || t(lang, "role.super_admin", "Super Admin")}</p>
                     <p className="text-[11px] text-muted-foreground font-medium mt-0.5 truncate" title={fullRoleScopeLabel}>
                       {fullRoleScopeLabel}

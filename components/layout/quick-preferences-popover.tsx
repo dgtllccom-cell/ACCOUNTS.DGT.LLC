@@ -64,7 +64,8 @@ export function QuickPreferencesPopover({
         <Button
           variant="outline"
           className={cn(
-            "h-9 gap-2 rounded-full border-border bg-background px-3 text-xs font-semibold shadow-sm hover:bg-muted",
+            // rounded-lg like every other top-bar control (a full pill became a big circle next to square icon buttons on phones)
+            "h-9 gap-2 whitespace-nowrap rounded-lg border-border bg-background px-3 text-xs font-semibold shadow-sm hover:bg-muted",
             triggerClassName
           )}
           aria-label={triggerLabel ?? uiText(language, "common.settings")}

@@ -434,12 +434,12 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="month" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} />
+                    <XAxis dataKey="month" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 11 }} />
                     <YAxis
                       stroke="#94a3b8"
                       tickLine={false}
                       axisLine={false}
-                      style={{ fontSize: 10 }}
+                      style={{ fontSize: 11 }}
                       tickFormatter={(val) => (val >= 1000 ? `${Math.round(val / 1000)}K` : String(val))}
                     />
                     <Tooltip
@@ -500,12 +500,12 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="month" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} />
+                    <XAxis dataKey="month" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 11 }} />
                     <YAxis
                       stroke="#94a3b8"
                       tickLine={false}
                       axisLine={false}
-                      style={{ fontSize: 10 }}
+                      style={{ fontSize: 11 }}
                       tickFormatter={(val) => (val >= 1000000 ? `${(val / 1000000).toFixed(1)}M` : `${Math.round(val / 1000)}K`)}
                     />
                     <Tooltip

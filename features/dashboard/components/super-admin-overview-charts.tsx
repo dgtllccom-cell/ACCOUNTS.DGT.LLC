@@ -221,7 +221,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
   return (
     <div className="space-y-6">
       {/* ROW 1: 3 COLUMNS (Sales vs Purchase, Profit Trend, Country Performance) */}
-      <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.8fr)]">
         {/* Card 1: Sales vs Purchase */}
         <DashboardWidget id="salesPurchase">
           <Card className="h-full border-border/80 bg-card shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
@@ -333,7 +333,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
 
         {/* Card 3: Country Performance (Compact 6-row view with View All curtain/modal trigger) */}
         <DashboardWidget id="countryPerformance">
-          <Card className="h-full border-border/80 bg-card shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden flex flex-col md:col-span-2 lg:col-span-1">
+          <Card className="h-full border-border/80 bg-card shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden flex flex-col md:col-span-2 xl:col-span-1">
             <CardHeader className="pb-2 pt-4 px-4 sm:px-5 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
                 <Globe2 className="h-4 w-4 text-blue-500" />
@@ -355,7 +355,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
             </CardHeader>
             <CardContent className="px-4 pb-4 pt-1 flex-1 flex flex-col justify-between">
               <div className="overflow-x-auto rounded-xl border border-border/70 h-[240px] flex-1">
-                <table className="w-full min-w-[340px] text-left text-[11px]">
+                <table data-no-cards className="w-full min-w-[340px] text-left text-[11px]">
                   <thead className="bg-muted/60 text-muted-foreground border-b border-border/70 sticky top-0 backdrop-blur-xs">
                     <tr>
                       <Th className="py-2 px-2.5 font-bold">{translateHeader(lang, "COUNTRY")}</Th>
@@ -368,33 +368,10 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                   </thead>
                   <tbody className="divide-y divide-border/50 font-medium">
                     {displayedCountries.length === 0 ? (
-                      [
-                        { name: "Afghanistan", b: 0, u: 0, c: 0, s: 0, p: 0 },
-                        { name: "China", b: 0, u: 0, c: 0, s: 0, p: 0 },
-                        { name: "India", b: 0, u: 0, c: 0, s: 0, p: 0 },
-                        { name: "Iran", b: 0, u: 0, c: 0, s: 0, p: 0 },
-                        { name: "Pakistan", b: 3, u: 7, c: 0, s: 0, p: 0 },
-                        { name: "Tajikistan", b: 0, u: 0, c: 0, s: 0, p: 0 }
-                      ].map((row) => (
-                        <tr
-                          key={row.name}
-                          onClick={() => {
-                            setSelectedCountry(null);
-                            setIsCountryModalOpen(true);
-                          }}
-                          className="hover:bg-muted/40 transition-colors cursor-pointer"
-                        >
-                          <td className="py-2 px-2.5 flex items-center gap-1.5 font-semibold text-foreground">
-                            <span>{getCountryFlag(row.name)}</span>
-                            <span>{translateCountry(row.name, lang)}</span>
-                          </td>
-                          <td className="py-2 px-1 text-center text-muted-foreground">{row.b}</td>
-                          <td className="py-2 px-1 text-center text-muted-foreground">{row.u}</td>
-                          <td className="py-2 px-1 text-center text-muted-foreground">{row.c}</td>
-                          <td className="py-2 px-2.5 text-right font-semibold text-foreground">${row.s}</td>
-                          <td className="py-2 px-2.5 text-right font-semibold text-foreground">${row.p}</td>
-                        </tr>
-                      ))
+                      // Honest empty state. This used to list six hard-coded demo countries (Pakistan "3 branches / 7 users", …) as if real.
+                      <tr>
+                        <td colSpan={6} className="py-10 text-center text-xs text-muted-foreground">{t(lang, "dash.no_countries_yet", "No countries recorded yet.")}</td>
+                      </tr>
                     ) : (
                       displayedCountries.map((row) => (
                         <tr
@@ -414,8 +391,8 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                           <td className="py-2 px-1 text-center text-muted-foreground">{row.totalBranches}</td>
                           <td className="py-2 px-1 text-center text-muted-foreground">{row.totalUsers}</td>
                           <td className="py-2 px-1 text-center text-muted-foreground">0</td>
-                          <td className="py-2 px-2.5 text-right font-semibold text-foreground">${row.totalSales.toLocaleString()}</td>
-                          <td className="py-2 px-2.5 text-right font-semibold text-foreground">${row.totalPurchases.toLocaleString()}</td>
+                          <td className="whitespace-nowrap py-2 px-2.5 text-right font-semibold text-foreground">${row.totalSales.toLocaleString()}</td>
+                          <td className="whitespace-nowrap py-2 px-2.5 text-right font-semibold text-foreground">${row.totalPurchases.toLocaleString()}</td>
                         </tr>
                       ))
                     )}
@@ -428,7 +405,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
       </div>
 
       {/* ROW 2: 3 COLUMNS (Recent Activities, Top Countries by Sales, Latest Shipments) */}
-      <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.8fr)]">
         {/* Card 4: Recent Activities */}
         <DashboardWidget id="activity">
           <Card className="h-full border-border/80 bg-card shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden flex flex-col">
@@ -488,7 +465,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                 {translateHeader(lang, "VIEW ALL")}
               </Link>
             </CardHeader>
-            <CardContent className="px-4 pb-4 pt-1 flex-1 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <CardContent className="px-4 pb-4 pt-1 flex-1 flex flex-col 2xl:flex-row items-center justify-between gap-4">
               <div className="relative h-[180px] w-[180px] shrink-0 grid place-items-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -530,13 +507,13 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                   <p className="text-center text-xs text-muted-foreground">{t(lang, "dash.no_sales_yet", "No sales recorded yet.")}</p>
                 ) : null}
                 {donutData.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between text-muted-foreground">
-                    <div className="flex items-center gap-2 truncate">
+                  <div key={item.name} className="flex items-center justify-between gap-3 text-muted-foreground">
+                    <div className="flex min-w-0 items-center gap-2">
                       <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                       <span className="truncate text-foreground font-medium">{translateCountry(item.name, lang)}</span>
                     </div>
                     {/* a share is meaningful only within one currency */}
-                    <span className="font-bold text-foreground" dir="ltr">
+                    <span className="shrink-0 font-bold text-foreground" dir="ltr">
                       {salesCurrencies.length === 1 && totalSalesSum > 0 ? `${Math.round((item.value / totalSalesSum) * 100)}%` : `${item.value.toLocaleString()} ${item.currency}`}
                     </span>
                   </div>
@@ -548,7 +525,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
 
         {/* Card 6: Latest Shipments */}
         <DashboardWidget id="quick">
-          <Card className="h-full border-border/80 bg-card shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden flex flex-col md:col-span-2 lg:col-span-1">
+          <Card className="h-full border-border/80 bg-card shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden flex flex-col md:col-span-2 xl:col-span-1">
             <CardHeader className="pb-2 pt-4 px-4 sm:px-5 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
                 <Ship className="h-4 w-4 text-cyan-600" />
@@ -563,7 +540,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
             </CardHeader>
             <CardContent className="px-4 pb-4 pt-1 flex-1 flex flex-col">
               <div className="overflow-x-auto rounded-xl border border-border/70 flex-1">
-                <table className="w-full min-w-[360px] text-left text-[11px]">
+                <table data-no-cards className="w-full min-w-[360px] text-left text-[11px]">
                   <thead className="bg-muted/60 text-muted-foreground border-b border-border/70">
                     <tr>
                       <Th className="py-2 px-2.5 font-bold">{translateHeader(lang, "SHIPMENT NO")}</Th>

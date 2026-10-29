@@ -225,20 +225,20 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
         />
         <div className="relative z-10 min-h-[140px] sm:min-h-[160px] md:min-h-[184px] w-full p-4 sm:p-6 md:p-8 flex flex-col justify-between">
           {/* Top Tools: Action Buttons & Enclosed Date/Time */}
-          <div className="flex flex-col items-end gap-2 self-end z-20">
-            {/* Action buttons in a row */}
-            <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="z-20 flex w-full flex-col gap-2 sm:w-auto sm:items-end sm:self-end">
+            {/* Action buttons: an even grid on phones, one right-aligned row from tablet up (all the same 36px height) */}
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end">
               {/* Department Switcher: Shipping Line Dashboard */}
               <Link
                 href={"/dashboard/super-admin/shipping-line" as Route}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-blue-400/40 bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-md transition hover:from-blue-700 hover:to-indigo-700 cursor-pointer"
+                className="col-span-2 inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-blue-400/40 bg-gradient-to-r from-blue-600 to-indigo-600 px-3 text-xs font-extrabold text-white shadow-md transition hover:from-blue-700 hover:to-indigo-700 cursor-pointer sm:col-span-1"
               >
                 <Ship className="h-3.5 w-3.5 text-cyan-200" />
                 <span>{translateHeader(lang, "Shipping Line Dashboard")}</span>
               </Link>
 
               {/* 1. Business / Admin Scope Flyout */}
-              <div className="relative">
+              <div className="relative min-w-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -246,7 +246,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                     setSettingsOpen(false);
                   }}
                   aria-expanded={flyoutOpen}
-                  className="flex items-center gap-2 rounded-lg border border-[#ffe9a1] bg-gradient-to-r from-[#ffe184] to-[#ffc64b] px-3 py-1.5 text-xs font-extrabold text-[#443418] shadow-md transition hover:from-[#ffe697] hover:to-[#ffd064] cursor-pointer"
+                  className="flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-[#ffe9a1] bg-gradient-to-r from-[#ffe184] to-[#ffc64b] px-3 text-xs font-extrabold sm:w-auto text-[#443418] shadow-md transition hover:from-[#ffe697] hover:to-[#ffd064] cursor-pointer"
                 >
                   <span className="grid h-4 w-4 place-items-center rounded bg-white/60 text-[11px]">☷</span>
                   <span className="truncate max-w-[130px] sm:max-w-none">
@@ -370,24 +370,13 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                 setSettingsOpen(next);
                 if (next) setFlyoutOpen(false);
               }}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/40 bg-white/95 px-3 py-1.5 text-xs font-extrabold text-slate-800 shadow-sm backdrop-blur-xs transition hover:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-white cursor-pointer"
+              className="inline-flex h-9 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200/40 bg-white/95 px-3 text-xs font-extrabold text-slate-800 shadow-sm backdrop-blur-xs transition hover:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-white cursor-pointer sm:w-auto"
             />
 
             {/* 3. Reloading / Sync Ledgers Button */}
             <SyncLedgersButton
-              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-400/40 bg-blue-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700 cursor-pointer"
+              className="col-span-2 inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-blue-400/40 bg-blue-600 px-3 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700 cursor-pointer sm:col-span-1"
             />
-          </div>
-
-          {/* Enclosed Date & Time Badge right below the 3 buttons */}
-          <div className="flex items-center gap-2 rounded-lg border border-white/25 bg-black/40 px-3 py-1 text-[11px] font-bold text-white shadow-inner backdrop-blur-md">
-            <span className="text-[#ffd66a]">📅</span>
-            <span>{todayStr}</span>
-            <span className="text-white/40">•</span>
-            <span className="text-[11px] text-emerald-300 font-semibold tracking-wide flex items-center gap-1">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              {tt("dash.live_sync", "Live Sync")}
-            </span>
           </div>
         </div>
 
@@ -399,6 +388,16 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
             <p className="mt-1 text-xs sm:text-sm font-medium text-slate-200/90 drop-shadow-xs">
               {tt("dash.hero_tagline", "Import • Export • Shipping • Finance")}
             </p>
+            {/* Date + live status sit with the title (left), the actions sit right: a balanced hero instead of a stacked right column */}
+            <div className="mt-2 inline-flex items-center gap-2 whitespace-nowrap rounded-lg border border-white/25 bg-black/40 px-3 py-1 text-[11px] font-bold text-white shadow-inner backdrop-blur-md">
+              <span className="text-[#ffd66a]">📅</span>
+              <span>{todayStr}</span>
+              <span className="text-white/40">•</span>
+              <span className="flex items-center gap-1 text-[11px] font-semibold tracking-wide text-emerald-300">
+                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                {tt("dash.live_sync", "Live Sync")}
+              </span>
+            </div>
           </div>
         </div>
       </section>

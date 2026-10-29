@@ -409,8 +409,8 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={portData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "hsl(var(--border))" : "#e2e8f0"} opacity={0.6} />
-                    <XAxis dataKey="port" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} />
-                    <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} />
+                    <XAxis dataKey="port" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 11 }} />
+                    <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 11 }} />
                     <Tooltip
                       formatter={(val: any) => [val, tr("Shipments")]}
                       contentStyle={{

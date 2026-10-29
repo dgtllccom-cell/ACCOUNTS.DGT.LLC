@@ -301,9 +301,9 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
                 <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={220}>
                   <BarChart data={financialData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "hsl(var(--border))" : "#e2e8f0"} opacity={0.6} />
-                    <XAxis dataKey="name" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 9 }} />
-                    <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 9 }} />
-                    <Tooltip formatter={(value) => formatMoney(Number(value), currency)} contentStyle={{ background: isDark ? "hsl(var(--card))" : "#fff", border: isDark ? "1px solid hsl(var(--border))" : "1px solid #e2e8f0", borderRadius: 8, color: isDark ? "hsl(var(--card-foreground))" : "#0f172a", fontSize: 10 }} />
+                    <XAxis dataKey="name" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 11 }} />
+                    <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 11 }} />
+                    <Tooltip formatter={(value) => formatMoney(Number(value), currency)} contentStyle={{ background: isDark ? "hsl(var(--card))" : "#fff", border: isDark ? "1px solid hsl(var(--border))" : "1px solid #e2e8f0", borderRadius: 8, color: isDark ? "hsl(var(--card-foreground))" : "#0f172a", fontSize: 11 }} />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]} name={currency}>
                       {financialData.map((entry, index) => (
                         <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
@@ -338,7 +338,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
                         return <Cell key={entry.name} fill={CHART_COLORS[idx % CHART_COLORS.length]} />;
                       })}
                     </Pie>
-                    <Tooltip formatter={(value) => formatMoney(Number(value), currency)} contentStyle={{ background: isDark ? "hsl(var(--card))" : "#fff", border: isDark ? "1px solid hsl(var(--border))" : "1px solid #e2e8f0", borderRadius: 8, color: isDark ? "hsl(var(--card-foreground))" : "#0f172a", fontSize: 9 }} />
+                    <Tooltip formatter={(value) => formatMoney(Number(value), currency)} contentStyle={{ background: isDark ? "hsl(var(--card))" : "#fff", border: isDark ? "1px solid hsl(var(--border))" : "1px solid #e2e8f0", borderRadius: 8, color: isDark ? "hsl(var(--card-foreground))" : "#0f172a", fontSize: 11 }} />
                   </PieChart>
                 </ResponsiveContainer>
               )}

@@ -235,7 +235,7 @@ export function ReportDataTable({
                       col.width
                     )}
                     onClick={() => col.sortable && handleSort(col.key)}
-                    style={{ letterSpacing: "0.04em", fontSize: "10px" }}
+                    style={{ letterSpacing: "0.04em", fontSize: "11px" }}
                   >
                     <div className="flex items-center gap-1.5">
                       {col.label}

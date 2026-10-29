@@ -12580,6 +12580,7 @@ export type UiKey =
   | "nav.tab_customers"
   | "nav.tab_shipments"
   | "nav.tab_menu"
+  | "dash.no_countries_yet"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -38132,6 +38133,7 @@ const en: Dict = {
   "nav.tab_customers": "Customers",
   "nav.tab_shipments": "Shipments",
   "nav.tab_menu": "Menu",
+  "dash.no_countries_yet": "No countries recorded yet.",
 };
 
 const ur: Dict = {
@@ -63652,6 +63654,7 @@ const ur: Dict = {
   "nav.tab_customers": "کسٹمرز",
   "nav.tab_shipments": "شپمنٹس",
   "nav.tab_menu": "مینیو",
+  "dash.no_countries_yet": "ابھی تک کوئی ملک درج نہیں ہوا۔",
 };
 
 const ar: Dict = {
@@ -89173,6 +89176,7 @@ const ar: Dict = {
   "nav.tab_customers": "العملاء",
   "nav.tab_shipments": "الشحنات",
   "nav.tab_menu": "القائمة",
+  "dash.no_countries_yet": "لم يتم تسجيل أي دولة بعد.",
 };
 
 const fa: Dict = {
@@ -114693,6 +114697,7 @@ const fa: Dict = {
   "nav.tab_customers": "مشتریان",
   "nav.tab_shipments": "محموله‌ها",
   "nav.tab_menu": "منو",
+  "dash.no_countries_yet": "هنوز هیچ کشوری ثبت نشده است.",
 };
 
 const ps: Dict = {
@@ -140220,6 +140225,7 @@ const ps: Dict = {
   "nav.tab_customers": "پېرودونکي",
   "nav.tab_shipments": "بارونه",
   "nav.tab_menu": "مېنو",
+  "dash.no_countries_yet": "تر اوسه هېڅ هیواد نه دی ثبت شوی.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
