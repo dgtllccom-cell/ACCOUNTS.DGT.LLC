@@ -331,25 +331,8 @@ export function VipRegisterEmployeeView() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 font-sans" dir={dir}>
-      {/* ── 1. Top Navigation & Breadcrumbs (Matching Image 1) ── */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="text-left">
-              <span className="block text-xs font-black text-slate-900 dark:text-white leading-tight">{translateHeader(lang, "Employee Management")}</span>
-              <span className="block text-[11px] text-slate-400 font-medium">Manage all company employees across branches and departments</span>
-            </div>
-        </div>
-
-        <nav className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-          <span className="hover:text-slate-800 transition cursor-pointer">{T("common.dashboard", "Dashboard")}</span>
-          <ChevronRight className="h-3 w-3 text-slate-400" />
-          <span className="hover:text-slate-800 transition cursor-pointer">{translateHeader(lang, "General Office")}</span>
-          <ChevronRight className="h-3 w-3 text-slate-400" />
-          <span className="hover:text-slate-800 transition cursor-pointer">Employees</span>
-          <ChevronRight className="h-3 w-3 text-slate-400" />
-          <span className="text-slate-900 font-bold dark:text-slate-200">Employee Directory & Registration</span>
-        </nav>
-      </div>
+      {/* (A small "Employee Management" title + a second breadcrumb used to sit here; the global page bar already shows the breadcrumb and
+          the title follows below, so the page showed the same heading three times, in English even in Urdu.) */}
 
       {/* ── 2. Top Title Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

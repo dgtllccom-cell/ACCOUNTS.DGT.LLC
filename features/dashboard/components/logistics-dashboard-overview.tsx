@@ -301,10 +301,11 @@ export function LogisticsDashboardOverview({
                 <button
                   type="button"
                   onClick={() => setSettingsOpen(true)}
-                  className="h-9 px-3 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-700 dark:text-slate-200 text-xs font-bold inline-flex items-center gap-1.5 shadow-xs backdrop-blur-xs transition-all cursor-pointer"
+                  className="h-9 px-3 rounded-lg border border-slate-200/90 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-700 dark:text-slate-200 text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shadow-xs backdrop-blur-xs transition-all cursor-pointer"
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5 text-blue-600" />
-                  <span>{translateHeader(lang, "Settings")}</span>
+                  {/* "Dashboard Settings", not "Settings": the top bar already has a Settings (preferences) button */}
+                  <span>{tt("dash.dashboard_settings", "Dashboard Settings")}</span>
                 </button>
 
               </div>
@@ -397,7 +398,7 @@ export function LogisticsDashboardOverview({
 
         {/* Status Mix Donut (Center ~25%) */}
         {isWidgetVisible("status_mix") && (
-          <div className="lg:col-span-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between">
+          <div className="lg:col-span-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between">
             <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <Activity className="h-4 w-4 text-cyan-600" />
               <h3 className="text-xs font-bold text-slate-900 dark:text-white">
@@ -445,7 +446,7 @@ export function LogisticsDashboardOverview({
 
         {/* Quick Access Grid (Right ~30%) */}
         {isWidgetVisible("quick_access") && (
-          <div className="lg:col-span-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between">
+          <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between">
             <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <Zap className="h-4 w-4 text-blue-600" />
               <h3 className="text-xs font-bold text-slate-900 dark:text-white">

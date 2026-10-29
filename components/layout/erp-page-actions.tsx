@@ -86,7 +86,8 @@ function breadcrumbFor(pathname: string, lang: string): Crumb[] {
   };
   const trail = walk(DAMAN_SIDEBAR_ITEMS as unknown as N[], []);
   if (!trail) return [home];
-  const items = trail.filter((n) => n.href !== "/dashboard");
+  // The first menu group is itself called "Dashboard": showing it after the Home crumb read "Dashboard › Dashboard › Country Admin Dashboard".
+  const items = trail.filter((n, i) => n.href !== "/dashboard" && !(i === 0 && translateHeader(lang, n.label) === home.label));
   return [home, ...items.map((n, i) => ({ label: translateHeader(lang, n.label), href: i < items.length - 1 ? n.href : undefined }))];
 }
 
@@ -161,9 +162,16 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
   // A page that draws its OWN complete header (Back + actions) marks it with data-page-chrome; the global bar then steps aside so the
   // user never sees two Back buttons or two ⋮ menus. (The hard-coded isReportPage list below stays for pages that predate the marker.)
   const [pageOwnsChrome, setPageOwnsChrome] = useState(false);
+  // Lighter case: the page draws its own visible heading (and usually its own breadcrumb). The bar keeps Back / Actions, but its title +
+  // breadcrumb would repeat it ("Purchase Booking Journal Report" above "Purchase Booking Details"), so they become screen-reader-only.
+  const [pageOwnsTitle, setPageOwnsTitle] = useState(false);
   useEffect(() => {
     let raf = 0;
-    const check = () => { raf = 0; setPageOwnsChrome(Boolean(document.querySelector("[data-page-chrome]"))); };
+    const check = () => {
+      raf = 0;
+      setPageOwnsChrome(Boolean(document.querySelector("[data-page-chrome]")));
+      setPageOwnsTitle(Array.from(document.querySelectorAll("main[data-erp-content] h1")).some((h) => !h.closest("[data-erp-page-actions]") && h.getClientRects().length > 0));
+    };
     const schedule = () => { if (!raf) raf = requestAnimationFrame(check); };
     check();
     const mo = new MutationObserver(schedule);
@@ -328,8 +336,12 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
         </Button>
         <style>{`#erp-page-title-slot:not(:empty) ~ .default-title { display: none !important; }`}</style>
         <div id="erp-page-title-slot" className="min-w-0 empty:hidden" />
-        <div className="flex min-w-0 flex-col justify-center leading-tight default-title">
-          <h1 className="truncate text-xs font-black leading-tight tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">{title}</h1>
+        <div className={cn("flex min-w-0 flex-col justify-center leading-tight default-title", pageOwnsTitle && "sr-only")}>
+          {pageOwnsTitle ? (
+            <p className="truncate text-xs font-black leading-tight tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">{title}</p>
+          ) : (
+            <h1 className="truncate text-xs font-black leading-tight tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">{title}</h1>
+          )}
           {subtitleOverride ? (
             <p className="mt-0.5 hidden truncate text-[11px] font-medium leading-tight text-slate-400 sm:block">{subtitle}</p>
           ) : (

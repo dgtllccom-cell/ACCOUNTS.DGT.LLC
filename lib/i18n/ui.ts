@@ -27436,7 +27436,7 @@ const en: Dict = {
   "com.th_movement": "Movement",
   "com.th_route": "Route / Ports",
   "com.th_actions": "Actions",
-  "com.no_orders_found": "No customer orders found. Fill out the 4-step form on the left to create one.",
+  "com.no_orders_found": "No customer orders found.",
   "comv.customer_person_name": "Customer / Person Name",
 
   "comv.select_customer_account": "Select Customer Account",
@@ -53124,7 +53124,7 @@ const ur: Dict = {
   "com.th_movement": "نقل و حرکت",
   "com.th_route": "روٹ / بندرگاہیں",
   "com.th_actions": "کارروائیاں",
-  "com.no_orders_found": "کوئی کسٹمر آرڈر نہیں ملا۔ ایک بنانے کے لیے بائیں طرف 4 مرحلہ وار فارم مکمل کریں۔",
+  "com.no_orders_found": "کوئی کسٹمر آرڈر نہیں ملا۔",
   "comv.customer_person_name": "کسٹمر / لیجر نام",
 
   "comv.select_customer_account": "کسٹمر اکاؤنٹ منتخب کریں",
@@ -78595,7 +78595,7 @@ const ar: Dict = {
   "com.th_movement": "الحركة",
   "com.th_route": "المسار / الموانئ",
   "com.th_actions": "الإجراءات",
-  "com.no_orders_found": "لم يتم العثور على طلبات عملاء. أكمل النموذج المكون من 4 خطوات على اليسار لإنشاء طلب.",
+  "com.no_orders_found": "لم يتم العثور على أي طلبات عملاء.",
   "comv.customer_person_name": "اسم العميل / الشخص",
 
   "comv.select_customer_account": "اختر حساب العميل",
@@ -104116,7 +104116,7 @@ const fa: Dict = {
   "com.th_movement": "جابجایی",
   "com.th_route": "مسیر / بنادر",
   "com.th_actions": "اقدامات",
-  "com.no_orders_found": "هیچ سفارش مشتری یافت نشد. برای ایجاد یکی، فرم ۴ مرحله‌ای سمت چپ را تکمیل کنید.",
+  "com.no_orders_found": "هیچ سفارش مشتری یافت نشد.",
   "comv.customer_person_name": "نام مشتری / شخص",
 
   "comv.select_customer_account": "انتخاب حساب مشتری",
@@ -129635,7 +129635,7 @@ const ps: Dict = {
   "com.th_movement": "حرکت",
   "com.th_route": "لاره / بندرونه",
   "com.th_actions": "کړنې",
-  "com.no_orders_found": "هېڅ پیرودونکي امر ونه موندل شو. د یو جوړولو لپاره کیڼ اړخ د ۴ ګامي فورمه بشپړه کړئ.",
+  "com.no_orders_found": "هېڅ د پېرودونکي امر ونه موندل شو.",
   "comv.customer_person_name": "د پیرودونکي / شخص نوم",
 
   "comv.select_customer_account": "د پیرودونکي حساب وټاکئ",
