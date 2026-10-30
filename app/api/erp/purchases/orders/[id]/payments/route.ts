@@ -3,7 +3,7 @@ import { z } from "zod";
 import { apiCreated, apiOk, apiError, handleApiError, ApiClientError } from "@/lib/api/response";
 import { parseJsonish } from "@/lib/stock-journal/model";
 import { resolvePaymentCondition, resolvePurchaseAmounts } from "@/lib/services/purchase-calculation-service";
-import { loadedPayable, paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
+import { advanceClearance, loadedPayable, paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
 import { purchaseOrderPaymentPostSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -950,26 +950,31 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         const updated = updatedRows[0] as any;
         if (!updated) return;
 
-        const form = updated.form_data?.form ?? {};
+        // form_data is often a JSON string inside the jsonb column: spreading it as-is would scatter its characters into the saved object
+        const updatedForm = parseJsonish(updated.form_data) || {};
+        const form = updatedForm.form ?? {};
         const endorsementPercent = Number(form.endorsementPercent ?? form.endorsement_percent ?? form.advancePercent ?? form.advance_percent ?? 0);
-        const orderTotal = Number(updated.order_total || 0);
-        const requiredAdvance = endorsementPercent > 0 ? (orderTotal * endorsementPercent) / 100 : 0;
-        const advancePaid = Number(updated.advance_paid || 0);
+        // The required advance is taken from the bill in its PURCHASE currency (the currency of advance_paid / remaining_due). It used to be
+        // taken from order_total, which is in the LOCAL currency, so a USD bill whose advance was fully paid kept showing "advance not
+        // fulfilled" and the loading placeholder was never created.
+        const clearance = advanceClearance({ totalPurchaseFC: formTotalPur, advancePercent: endorsementPercent, advancePaidFC: Number(updated.advance_paid || 0) });
+        const requiredAdvance = clearance.requiredFC;
+        const advancePaid = clearance.paidFC;
         const remainingDue = Number(updated.remaining_due || 0);
 
-        const isAdvanceCompleted = requiredAdvance > 0 && advancePaid >= (requiredAdvance - 0.01);
+        const isAdvanceCompleted = requiredAdvance > 0 && clearance.cleared;
         const isFullyPaid = remainingDue <= 0.01;
 
         if (isFullyPaid) {
           const completedWorkflow = {
-            ...(updated.form_data?.workflow || {}),
+            ...(updatedForm.workflow || {}),
             lifecycleStatus: "Completed",
             paymentStatus: "completed",
             completedAt: new Date().toISOString(),
             completedBy: session.userId,
             completedByName: session.fullName || session.email || "User"
           };
-          const nextFormData = { ...(updated.form_data || {}), workflow: completedWorkflow };
+          const nextFormData = { ...updatedForm, workflow: completedWorkflow };
           await sql`
             update purchase_orders set payment_status = 'completed', remaining_due = 0,
               form_data = ${sql.json(nextFormData)}, updated_at = now()
@@ -978,14 +983,15 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         } else {
           // Partial payment - never mark bill as fully paid prematurely
           const partialWorkflow = {
-            ...(updated.form_data?.workflow || {}),
+            ...(updatedForm.workflow || {}),
             paymentStatus: "partial",
             endorsementRequirement: requiredAdvance,
             endorsementPaid: advancePaid,
-            endorsementRemaining: Math.max(0, requiredAdvance - advancePaid),
+            endorsementRemaining: clearance.remainingFC,
+            endorsementCurrency: orderCcy,
             isEndorsementFulfilled: isAdvanceCompleted
           };
-          const nextFormData = { ...(updated.form_data || {}), workflow: partialWorkflow };
+          const nextFormData = { ...updatedForm, workflow: partialWorkflow };
           await sql`
             update purchase_orders set payment_status = 'partial',
               form_data = ${sql.json(nextFormData)}, updated_at = now()
@@ -1023,7 +1029,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
                 shipment_status: "pending",
                 carrier_name: form.vesselName || form.shipName || null,
                 remarks: `Automatically moved to loading module after 100% advance completion of PO ${updated.purchase_order_no}`,
-                report_payload: updated.form_data ?? {},
+                report_payload: updatedForm,
                 created_by: session.userId
               } as any)}
             `;

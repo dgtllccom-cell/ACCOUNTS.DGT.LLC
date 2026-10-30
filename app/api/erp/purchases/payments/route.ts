@@ -23,6 +23,8 @@ const listQuerySchema = z.object({
   countryBranchId: uuidSchema.optional(),
   cityBranchId: uuidSchema.optional(),
   status: z.string().optional(),
+  /** only this kind of payment (advance | remaining | credit …); the Remaining Payment page asks for 'remaining' */
+  kind: z.string().regex(/^[a-z_]{3,24}$/).optional(),
   q: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(500).default(200)
 });
@@ -36,6 +38,7 @@ export async function GET(request: NextRequest) {
       countryBranchId: searchParams.get("countryBranchId") || undefined,
       cityBranchId: searchParams.get("cityBranchId") || undefined,
       status: searchParams.get("status") || undefined,
+      kind: searchParams.get("kind") || undefined,
       q: searchParams.get("q") || searchParams.get("search") || undefined,
       limit: searchParams.get("limit") || undefined
     });
@@ -99,6 +102,7 @@ export async function GET(request: NextRequest) {
           and (${!query.cityBranchId && query.countryBranchId ? sql`coalesce(po.country_branch_id, lp.country_branch_id) = ${query.countryBranchId}::uuid` : sql`true`})
           and (${!query.cityBranchId && !query.countryBranchId && query.countryId ? sql`coalesce(po.country_id, lp.country_id) = ${query.countryId}::uuid` : sql`true`})
           and (${query.status ? sql`p.status = ${query.status}` : sql`true`})
+          and (${query.kind ? sql`p.kind::text = ${query.kind}` : sql`true`})
           and (${like ? sql`(
             coalesce(po.purchase_order_no, lp.contract_no, lp.super_admin_serial, '') ILIKE ${like} OR p.reference_no ILIKE ${like} OR
             p.super_admin_serial ILIKE ${like} OR coalesce(po.form_data->'form'->>'supplierName', lp.supplier_name, '') ILIKE ${like}

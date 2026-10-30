@@ -28,6 +28,7 @@ import {
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { recordAuditEvent } from "@/lib/audit/enterprise-audit-service";
 import { stockInToWarehouse } from "@/lib/services/purchase-warehouse-stock";
+import { buildBillPayment, loadingPaymentOk, type BillPayment } from "@/lib/services/purchase-loading-payment-service";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import {
@@ -138,9 +139,30 @@ export interface StockJournalRow {
   canConfirm: boolean;
   canIssue: boolean;
   canReverse: boolean;
+  /** the bill's money picture (purchase currency) and, for a loading row, that loading's own payment state */
+  payment: RowPayment | null;
+  /** received and customs-cleared, but the loading's Remaining Payment is not complete yet — not eligible for Confirmed Stock */
+  paymentHold: boolean;
   /** Local Purchase stock is confirmed in its own Goods Transfer Journal */
   goodsTransferHref: string | null;
 }
+
+export type RowPayment = {
+  currency: string;
+  condition: string;
+  gated: boolean;
+  billTotal: number;
+  advancePercent: number;
+  advanceRequired: number;
+  advancePaid: number;
+  remainingPaid: number;
+  totalPaid: number;
+  outstanding: number;
+  totalQuantity: number;
+  loadedQuantity: number;
+  balanceQuantity: number;
+  loading: { value: number; advanceAllocated: number; paid: number; outstanding: number; complete: boolean } | null;
+};
 
 export type CardTotals = { lines: number; qty: number; byUnit: Record<string, number> };
 export interface StockJournalSummary {
@@ -341,7 +363,8 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
     const pos = await sql`
       select po.id, po.purchase_order_no, po.purchase_contract_no, po.country_id, po.country_branch_id, po.city_branch_id,
              po.status, po.ledger_posting_status, po.payment_status, po.purchase_currency, po.currency_code, po.form_data, po.created_at,
-             c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cib.city_name as city_branch_name
+             po.exchange_rate, po.order_total, po.total_goods_original, po.advance_paid, po.remaining_paid, po.credit_amount, po.remaining_due,
+             c.name as country_name, c.iso2 as country_code, c.currency_code as base_currency, cb.name as country_branch_name, cib.city_name as city_branch_name
       from public.purchase_orders po
       left join public.countries c on c.id = po.country_id
       left join public.country_branches cb on cb.id = po.country_branch_id
@@ -360,6 +383,13 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
           order by plr.created_at asc, plr.id asc`
       : [];
     const clearing = await clearingCustoms(sql, plrs);
+    // Remaining payments already posted, each tied to its loading (the Confirmed Stock rule needs them)
+    const remainingPays = poIds.length
+      ? await sql`
+          select purchase_order_id, loading_record_id, amount, currency_code, exchange_rate, base_currency_amount
+          from public.purchase_order_payments
+          where purchase_order_id = any(${poIds}::uuid[]) and deleted_at is null and status = 'posted' and kind::text = 'remaining'`
+      : [];
 
     const lps = await sql`
       select lp.id, lp.goods_id, lp.goods_name, lp.supplier_name, lp.quantity_name, lp.quantity_kgs, lp.numbers, lp.purchase_currency, lp.final_cost,
@@ -398,7 +428,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       where w.deleted_at is null and coalesce(w.is_active, true) = true
         and ${scope.kind === "all" ? sql`true` : scope.kind === "none" ? sql`false` : sql`(w.country_id is null or w.country_id = any(${session.countryIds ?? []}::uuid[]))`}
       order by w.warehouse_name asc`;
-    return { pos, plrs, clearing, lps, lots, lotStock, confs, warehouses };
+    return { pos, plrs, clearing, remainingPays, lps, lots, lotStock, confs, warehouses };
   });
   if (!data) throw new Error("Unable to load the stock database.");
 
@@ -417,8 +447,21 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
     if (c.local_purchase_id) (confByLp.get(c.local_purchase_id) ?? confByLp.set(c.local_purchase_id, []).get(c.local_purchase_id)!).push(c);
   }
 
+  const paysByPo = new Map<string, any[]>();
+  for (const p of data.remainingPays) (paysByPo.get(p.purchase_order_id) ?? paysByPo.set(p.purchase_order_id, []).get(p.purchase_order_id)!).push(p);
+  const rowPayment = (bill: BillPayment, loadingId: string | null): RowPayment => {
+    const st = loadingId ? bill.byLoading.get(loadingId) : undefined;
+    return {
+      currency: bill.currency, condition: bill.condition, gated: bill.gated, billTotal: bill.billTotal, advancePercent: bill.advancePercent,
+      advanceRequired: bill.advanceRequired, advancePaid: bill.advancePaid, remainingPaid: bill.remainingPaid, totalPaid: bill.totalPaid,
+      outstanding: bill.outstanding, totalQuantity: bill.totalQuantity, loadedQuantity: bill.loadedQuantity, balanceQuantity: bill.balanceQuantity,
+      loading: st ? { value: st.valueFC, advanceAllocated: st.advanceAllocFC, paid: st.paidFC, outstanding: st.outstandingFC, complete: st.complete } : null
+    };
+  };
+
   for (const po of data.pos) {
     const { lines, form } = extractPoGoodsLines(po.form_data);
+    const bill = buildBillPayment(po, plrByPo.get(po.id) ?? [], paysByPo.get(po.id) ?? []);
     const facts = (plrByPo.get(po.id) ?? []).map((p: any) => toLoadingFact(p, data.clearing));
     const factById = new Map(facts.map((x) => [x.id, x]));
     const { chunks, overLoaded } = allocateLoadings(lines, facts);
@@ -504,6 +547,8 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
         canConfirm: false,
         canIssue: false,
         canReverse: false,
+        payment: rowPayment(bill, null),
+        paymentHold: false,
         ...lineBase,
         ...over,
       });
@@ -532,15 +577,19 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
           legacyReceived: ch.legacyReceived,
           warehouseId: lf.receivingWarehouseId,
           warehouseName: lf.receivingWarehouseId ? whName.get(lf.receivingWarehouseId) ?? null : null,
+          payment: rowPayment(bill, lf.id),
         };
         if (ch.inTransit > EPS) {
-          rows.push(common({ ...chunkBase, id: `TR-${lf.id}-${line.lineKey}`, stage: "transit", quantity: ch.inTransit }));
+          rows.push(common({ ...chunkBase, id: `TR-${lf.id}-${line.lineKey}`, stage: "transit", quantity: ch.inTransit, payment: rowPayment(bill, lf.id) }));
         }
         const eligible = confirmableQuantity(ch, poConfs);
+        const loadingPayment = rowPayment(bill, lf.id);
         if (eligible > EPS) {
-          const ready = isCustomsOk(lf.customsStatus);
+          // Eligible for Confirmed Stock = received + customs cleared + (Advance / Endorsement bills) this loading's Remaining Payment complete
+          const payOk = loadingPaymentOk(bill, lf.id);
+          const ready = isCustomsOk(lf.customsStatus) && payOk;
           rows.push(
-            common({ ...chunkBase, id: `RV-${lf.id}-${line.lineKey}`, stage: ready ? "ready" : "receiving", quantity: eligible, canConfirm: ready && perms.confirm }),
+            common({ ...chunkBase, id: `RV-${lf.id}-${line.lineKey}`, stage: ready ? "ready" : "receiving", quantity: eligible, canConfirm: ready && perms.confirm, payment: loadingPayment, paymentHold: !payOk && isCustomsOk(lf.customsStatus) }),
           );
         }
         for (const c of poConfs) {
@@ -625,7 +674,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       loadingRecordId: null, loadingRecordNo: null, blNumber: "", warehouseId: null, warehouseName: null, transferId: null,
       transferNo: null, destinationType: null, customerName: null, salesOrderNo: null, documentRef: null, issueType: null,
       confirmedAt: null, issuedAt: null, quantityNotEntered: false, legacyReceived: false, overLoaded: false,
-      canConfirm: false, canIssue: false, canReverse: false, ...base, ...over,
+      canConfirm: false, canIssue: false, canReverse: false, payment: null, paymentHold: false, ...base, ...over,
     });
     const lpLots = lotsByLp.get(lp.id) ?? [];
     if (lpLots.length === 0) {
@@ -841,6 +890,19 @@ export async function confirmStock(session: ErpSession, input: ConfirmInput) {
 
       const confs = (await tx`select * from public.journal_stock_transfers where purchase_order_id = ${po.id}::uuid and deleted_at is null`).map(toConfirmationFact);
       const eligible = confirmableQuantity(chunk, confs);
+      // Advance / Endorsement bills: the loading's own Remaining Payment must be complete (posted and verified) before its quantity is confirmed
+      {
+        const remainingRows = await tx`select loading_record_id, amount, currency_code, exchange_rate, base_currency_amount from public.purchase_order_payments where purchase_order_id = ${po.id}::uuid and deleted_at is null and status = 'posted' and kind::text = 'remaining'`;
+        const baseCcy = po.country_id ? (await tx`select upper(currency_code) as c from public.countries where id = ${po.country_id}::uuid limit 1`)[0]?.c : null;
+        const bill = buildBillPayment({ ...po, base_currency: baseCcy }, plrs, remainingRows as any[]);
+        if (!loadingPaymentOk(bill, plr.id)) {
+          const st = bill.byLoading.get(plr.id);
+          throw new ApiClientError(
+            `The Remaining Payment for this loading is not complete (${(st?.outstandingFC ?? bill.outstanding).toFixed(2)} ${bill.currency} still outstanding). Post and verify the payment before confirming this stock.`,
+            { status: 409, code: "PAYMENT_NOT_COMPLETE" }
+          );
+        }
+      }
       if (!isCustomsOk(lf.customsStatus)) {
         throw new ApiClientError("Customs clearance is not complete for this loading record, so the stock is not ready for confirmation.", { status: 409, code: "CUSTOMS_NOT_CLEARED" });
       }

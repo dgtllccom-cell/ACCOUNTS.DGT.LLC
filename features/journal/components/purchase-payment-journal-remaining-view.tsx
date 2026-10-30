@@ -240,7 +240,9 @@ export function PurchasePaymentJournalRemainingView({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/erp/purchases/payments?lang=${lang}&limit=200`, { credentials: "include" });
+      // The Remaining Payment page lists Remaining payments only — an Advance bill whose required advance is not yet paid has none, so it does
+      // not appear here (before, every Advance / Credit payment row was listed under "Remaining Payment")
+      const res = await fetch(`/api/erp/purchases/payments?lang=${lang}&limit=200${headerKind === "module" ? "&kind=remaining" : ""}`, { credentials: "include" });
       const body = await res.json();
       if (!body?.ok) throw new Error(body?.error?.message || "Failed to load payments");
       setPayments(body.data.payments || []);

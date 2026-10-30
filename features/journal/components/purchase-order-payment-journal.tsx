@@ -3475,8 +3475,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         if (Number.isNaN(rowDate.getTime()) || rowDate > end) return false;
       }
 
-      // Extract form values for clearance calculation
-      const finalAmount = orderTotal(row);
+      // Extract form values for clearance calculation.
+      // The bill's total in its PURCHASE currency: advance_paid and remaining_due are stored in that currency, whereas order_total is the LOCAL
+      // currency figure. Comparing a local-currency requirement with a purchase-currency payment kept fully paid advance bills in the Advance
+      // list and hid them from Loading / Remaining (e.g. USD 1,158,750 at 10 % looked like "AED 425,261 required, USD 115,875 paid").
+      const finalAmount = resolvePurchaseCalculations(row).totalPurchaseFC;
       const paymentType = String(
         form.paymentType || 
         form.paymentCondition || 
@@ -3561,7 +3564,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           || Boolean(workflow.loadedQuantity && Number(workflow.loadedQuantity) > 0)
           || Boolean(workflow.transferredToRemaining);
         const isInvoiceBill = paymentType.includes("invoice");
-        const hasContainerMovement = hasTransferStatus || hasTransferAudit || hasLoadingRecord || isUrlLoadingScope || isInvoiceBill;
+        // An Advance / Endorsement bill owes a Remaining payment only for goods that have actually been LOADED. The booking's own "transferred"
+        // flag and the empty loading placeholder created when the advance completes are not loading — before, they listed the bill here at once.
+        const loadedQty = Number(workflow.loadedQuantity || 0) > 0 || Number((row as any).loaded_loading_count || 0) > 0;
+        const isAdvanceBillInRemaining = isAdvanceBill && advancePercent > 0 && !isCashBill && !isInvoiceBill;
+        const hasContainerMovement = isAdvanceBillInRemaining
+          ? loadedQty || isUrlLoadingScope
+          : hasTransferStatus || hasTransferAudit || hasLoadingRecord || isUrlLoadingScope || isInvoiceBill;
         if (!hasContainerMovement) return false; // Block: not yet transferred from loading
 
         // Show remaining if not fully settled
@@ -5162,7 +5171,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         <div className="px-6 py-4 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#091020] flex flex-wrap justify-between items-center gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <h3 className="text-sm font-black tracking-wider text-slate-900 dark:text-slate-100 uppercase">
-              PURCHASE ORDER PAYMENTS ({filtered.length})
+              {tGlobal(currentLanguage, "pojp.table_title", "PURCHASE ORDER PAYMENTS")} ({filtered.length})
             </h3>
             {/* Source Segmented Control */}
             <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-800 p-0.5 bg-slate-100/60 dark:bg-slate-950/60 text-xs">
@@ -5176,7 +5185,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                 )}
               >
-                All Sources ({sourceCounts.all})
+                {tGlobal(currentLanguage, "pojp.all_sources", "All Sources")} ({sourceCounts.all})
               </button>
               <button
                 type="button"
@@ -5188,7 +5197,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                 )}
               >
-                Purchase Booking ({sourceCounts.booking})
+                {tGlobal(currentLanguage, "pojp.src_booking", "Purchase Booking")} ({sourceCounts.booking})
               </button>
               <button
                 type="button"
@@ -5200,17 +5209,20 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                 )}
               >
-                Local Purchase ({sourceCounts.local})
+                {tGlobal(currentLanguage, "pojp.src_local", "Local Purchase")} ({sourceCounts.local})
               </button>
             </div>
             {activeFiltersCount > 0 && (
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-[#2563eb] border border-blue-200/80 dark:bg-blue-950/50 dark:text-blue-400 whitespace-nowrap">
-                {activeFiltersCount} Active
+                {activeFiltersCount} {tGlobal(currentLanguage, "pojp.active_count", "Active")}
               </span>
             )}
           </div>
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            Showing {displayRows.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, displayRows.length)} of {displayRows.length} entries
+            {tGlobal(currentLanguage, "pojp.showing_range", "Showing {from} to {to} of {total} entries")
+              .replace("{from}", String(displayRows.length > 0 ? pageIndex * pageSize + 1 : 0))
+              .replace("{to}", String(Math.min((pageIndex + 1) * pageSize, displayRows.length)))
+              .replace("{total}", String(displayRows.length))}
           </span>
         </div>
 

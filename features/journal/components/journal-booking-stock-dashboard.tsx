@@ -181,6 +181,46 @@ function CustomsBadge({ status, stage }: { status: string; stage: StockStage }) 
   );
 }
 
+/** what has been paid and what is still owed — for this loading when the row is a loading, otherwise for the bill */
+function paymentLine(r: StockJournalRow) {
+  const p = r.payment;
+  if (!p) return null;
+  if (p.loading) {
+    const paid = p.loading.advanceAllocated + p.loading.paid;
+    return { paid, of: p.loading.value, balance: p.loading.outstanding, ccy: p.currency, complete: p.loading.complete, scope: "loading" as const };
+  }
+  return { paid: p.advancePaid, of: p.advanceRequired, balance: p.outstanding, ccy: p.currency, complete: p.outstanding <= 0.05, scope: "bill" as const };
+}
+
+function PaymentCell({ r, t }: { r: StockJournalRow; t: (k: string, fb: string) => string }) {
+  const line = paymentLine(r);
+  if (!line || !r.payment) return <span className="text-slate-400">—</span>;
+  const p = r.payment;
+  const tip = [
+    `${t("pay_bill_total", "Bill total")}: ${fmtNum(p.billTotal)} ${p.currency}`,
+    `${t("pay_qty", "Quantity")}: ${fmtNum(p.totalQuantity, 3)} · ${t("pay_loaded", "loaded")} ${fmtNum(p.loadedQuantity, 3)} · ${t("pay_balance_qty", "balance")} ${fmtNum(p.balanceQuantity, 3)}`,
+    `${t("pay_advance_required", "Advance required")}: ${fmtNum(p.advanceRequired)} (${p.advancePercent}%) · ${t("pay_advance_paid", "paid")} ${fmtNum(p.advancePaid)}`,
+    `${t("pay_remaining_paid", "Remaining payments")}: ${fmtNum(p.remainingPaid)}`,
+    `${t("pay_total_paid", "Total paid")}: ${fmtNum(p.totalPaid)} · ${t("pay_outstanding", "Outstanding")}: ${fmtNum(p.outstanding)} ${p.currency}`
+  ].join("\n");
+  return (
+    <div className="min-w-[170px] space-y-0.5 py-0.5 text-[11px]" dir="ltr" title={tip} data-testid="payment-cell">
+      <div className="font-bold text-slate-800 dark:text-slate-200">
+        {line.scope === "loading" ? t("pay_paid", "Paid") : t("pay_advance", "Advance")}:{" "}
+        <span className="font-black tabular-nums">{fmtNum(line.paid)}</span> / <span className="tabular-nums">{fmtNum(line.of)}</span> {line.ccy}
+      </div>
+      <div className={`font-black tabular-nums ${line.complete ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}`}>
+        {t("pay_balance", "Balance")}: {fmtNum(line.balance)} {line.ccy}
+      </div>
+      {r.paymentHold && (
+        <div className="inline-block rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800" data-testid="payment-hold">
+          {t("pay_awaiting", "Awaiting Remaining Payment")}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProgressCell({ r }: { r: StockJournalRow }) {
   const loaded = Number(r.loadedQuantity) || 0;
   const received = Number(r.receivedQuantity) || 0;
@@ -731,6 +771,7 @@ export function JournalBookingStockDashboard({
       "Net Weight (Kg)",
       "Booking / Invoice No.",
       "Loaded / Received / Damage / Shortage / Outstanding",
+      "Paid / Balance (purchase currency)",
       "Ship Details",
       "Customs",
       "Warehouse",
@@ -750,6 +791,7 @@ export function JournalBookingStockDashboard({
         r.netWeight || r.quantity,
         `${r.bookingNo || ""} / ${r.invoiceNo || ""}`.trim(),
         `Loaded: ${r.loadedQuantity || 0}; Received: ${r.receivedQuantity || 0}; Damage: ${r.damagedQuantity || 0}; Shortage: ${r.shortageQuantity || 0}; Outstanding: ${r.outstandingQuantity || 0}`,
+        (() => { const l = paymentLine(r); return l ? `Paid ${fmtNum(l.paid)} of ${fmtNum(l.of)} ${l.ccy}; Balance ${fmtNum(l.balance)}${r.paymentHold ? "; awaiting remaining payment" : ""}` : ""; })(),
         r.shipDetails || r.truckOrContainer || "",
         customsLabel(r.customsStatus),
         r.warehouseName || (r.stage === "transit" ? "In Transit" : "—"),
@@ -818,6 +860,7 @@ export function JournalBookingStockDashboard({
         <th class="num">Net Wt (Kg)</th>
         <th>Booking / Invoice No.</th>
         <th>Loaded / Received / Damage / Shortage / Outstanding</th>
+        <th>${s.t("pay_paid_balance", "Paid / Balance")}</th>
         <th>Ship Details</th>
         <th class="center">Customs</th>
         <th>Warehouse</th>
@@ -840,6 +883,7 @@ export function JournalBookingStockDashboard({
           <td class="num">${fmtNum(r.netWeight || r.quantity)}</td>
           <td><b>${r.bookingNo || "—"}</b><br><small>${r.invoiceNo || "—"}</small></td>
           <td>Loaded: ${fmtNum(r.loadedQuantity || 0)} · Recv: ${fmtNum(r.receivedQuantity || 0)} · Dam: ${fmtNum(r.damagedQuantity || 0)} · Short: ${fmtNum(r.shortageQuantity || 0)} · Out: <b>${fmtNum(r.outstandingQuantity || 0)}</b></td>
+          <td>${(() => { const l = paymentLine(r); return l ? `${s.t("pay_paid", "Paid")} ${fmtNum(l.paid)} / ${fmtNum(l.of)} ${l.ccy}<br><b>${s.t("pay_balance", "Balance")} ${fmtNum(l.balance)}</b>${r.paymentHold ? `<br><small>${s.t("pay_awaiting", "Awaiting Remaining Payment")}</small>` : ""}` : "—"; })()}</td>
           <td>${r.shipDetails || r.truckOrContainer || "—"}</td>
           <td class="center">${customsLabel(r.customsStatus)}</td>
           <td>${r.warehouseName || (r.stage === "transit" ? "In Transit" : "—")}</td>
@@ -1762,6 +1806,7 @@ export function JournalBookingStockDashboard({
                   <th className="min-w-[105px] px-3 py-3 text-end text-[12px] font-black uppercase text-slate-500">{s.t("col_net_weight", "Net Weight (Kg)")}</th>
                   <th className="min-w-[130px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_booking_invoice_no", "Booking / Invoice No.")}</th>
                   <th className="min-w-[220px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_receiving", "Loaded / Received / Damage / Shortage / Outstanding")}</th>
+                  <th className="min-w-[190px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_payment", "Payment (Paid / Balance)")}</th>
                   <th className="min-w-[125px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_ship_details", "Ship Details")}</th>
                   <th className="min-w-[95px] px-2.5 py-3 text-center text-[12px] font-black uppercase text-slate-500">{s.t("col_customs", "Customs")}</th>
                   <th className="min-w-[125px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_warehouse", "Warehouse")}</th>
@@ -1771,7 +1816,7 @@ export function JournalBookingStockDashboard({
               <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60">
                 {loading && displayRows.length === 0 && (
                   <tr>
-                    <td colSpan={16} className="p-12 text-center text-slate-500">
+                    <td colSpan={17} className="p-12 text-center text-slate-500">
                       <Loader2 className="mx-auto h-6 w-6 animate-spin text-blue-600" />
                       <span className="mt-2 block font-medium">{s.t("loading", "Loading…")}</span>
                     </td>
@@ -1779,7 +1824,7 @@ export function JournalBookingStockDashboard({
                 )}
                 {!loading && displayRows.length === 0 && (
                   <tr>
-                    <td colSpan={16} className="p-12 text-center text-[14px] text-slate-500">
+                    <td colSpan={17} className="p-12 text-center text-[14px] text-slate-500">
                       {s.t("empty", "No stock records match these filters.")}
                     </td>
                   </tr>
@@ -1884,6 +1929,11 @@ export function JournalBookingStockDashboard({
                       {/* 13. Loaded / Received / Damage / Shortage / Outstanding */}
                       <td className="px-3 py-3" dir="ltr">
                         <ProgressCell r={r} />
+                      </td>
+
+                      {/* 13b. Payment: paid / balance (this loading, or the bill) */}
+                      <td className="px-3 py-3">
+                        <PaymentCell r={r} t={s.t} />
                       </td>
 
                       {/* 14. Ship Details */}

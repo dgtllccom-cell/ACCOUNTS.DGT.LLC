@@ -147,3 +147,80 @@ export function loadedPayable(i: LoadedPayableInput): LoadedPayable {
   const loadingOutstandingFC = mine ? Math.max(0, round4(owes(mine) - Math.max(0, num(i.remainingPaidThisLoadingFC)))) : null;
   return { loadedQuantity, loadedOutstandingFC, loadingOutstandingFC };
 }
+
+/**
+ * Advance clearance for one bill, all in the PURCHASE currency (the currency of `advance_paid` / `remaining_due`).
+ * The Advance / Remaining payment screens used to take the required advance from `order_total` — which is stored in the LOCAL currency —
+ * and compare it with `advance_paid` (purchase currency): a USD bill of 1,158,750 with 10 % advance (USD 115,875, fully paid) looked like
+ * "AED 425,261 required, USD 115,875 paid" and never left the Advance list.
+ */
+export function advanceClearance(input: { totalPurchaseFC: number; advancePercent: number; advancePaidFC: number; tolerance?: number }): {
+  requiredFC: number;
+  paidFC: number;
+  remainingFC: number;
+  cleared: boolean;
+} {
+  const total = Math.max(0, num(input.totalPurchaseFC));
+  const pct = Math.max(0, num(input.advancePercent));
+  const requiredFC = round4((total * pct) / 100);
+  const paidFC = Math.max(0, num(input.advancePaidFC));
+  const remainingFC = Math.max(0, round4(requiredFC - paidFC));
+  const tol = input.tolerance ?? 0.01;
+  return { requiredFC, paidFC, remainingFC, cleared: requiredFC > 0 ? remainingFC <= tol : paidFC > 0 };
+}
+
+export type LoadingPaymentState = {
+  id: string;
+  quantity: number;
+  /** this loading's value, its share of the advance already paid, what was paid as Remaining against it, and what is still owed */
+  valueFC: number;
+  advanceAllocFC: number;
+  paidFC: number;
+  outstandingFC: number;
+  /** the loading's Remaining Payment is complete (nothing outstanding) */
+  complete: boolean;
+};
+
+/**
+ * One state per loading of a bill. Remaining payments are tied to their loading (`loading_record_id`); payments made before that link
+ * existed (loadingId null) are applied to the loadings oldest-first so a fully paid older bill is never blocked. When the whole bill has
+ * nothing left to pay, every loading is complete.
+ */
+export function loadingPaymentStates(input: {
+  orderTotalFC: number;
+  advancePaidFC: number;
+  totalQuantity: number;
+  /** oldest first */
+  loadings: LoadingShare[];
+  remainingPayments: Array<{ amountFC: number; loadingId: string | null }>;
+  orderRemainingDueFC?: number | null;
+  tolerance?: number;
+}): LoadingPaymentState[] {
+  const tol = input.tolerance ?? 0.05;
+  const total = Math.max(0, num(input.orderTotalFC));
+  const advance = Math.min(total, Math.max(0, num(input.advancePaidFC)));
+  const qty = Math.max(0, num(input.totalQuantity));
+  const share = (q: number) => (qty > 0 ? Math.min(1, Math.max(0, num(q)) / qty) : 0);
+  const valueOf = (l: LoadingShare) => Math.min(total, Math.max(total * share(l.quantity), Math.max(0, num(l.reportedValueFC))));
+  const billSettled = input.orderRemainingDueFC != null && num(input.orderRemainingDueFC) <= tol;
+
+  const states: LoadingPaymentState[] = (input.loadings || []).map((l) => {
+    const valueFC = round4(valueOf(l));
+    const advanceAllocFC = round4(advance * share(l.quantity));
+    const paidFC = round4((input.remainingPayments || []).filter((p) => p.loadingId && p.loadingId === l.id).reduce((s, p) => s + Math.max(0, num(p.amountFC)), 0));
+    return { id: String(l.id ?? ""), quantity: Math.max(0, num(l.quantity)), valueFC, advanceAllocFC, paidFC, outstandingFC: 0, complete: false };
+  });
+  let pool = (input.remainingPayments || []).filter((p) => !p.loadingId).reduce((s, p) => s + Math.max(0, num(p.amountFC)), 0);
+  for (const st of states) {
+    let owed = Math.max(0, round4(st.valueFC - st.advanceAllocFC - st.paidFC));
+    if (owed > 0 && pool > 0) {
+      const take = Math.min(owed, pool);
+      pool -= take;
+      st.paidFC = round4(st.paidFC + take);
+      owed = Math.max(0, round4(owed - take));
+    }
+    st.outstandingFC = owed;
+    st.complete = billSettled || owed <= tol;
+  }
+  return states;
+}

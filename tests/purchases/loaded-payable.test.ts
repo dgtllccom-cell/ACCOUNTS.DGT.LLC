@@ -144,3 +144,62 @@ describe("loadedPayable — Remaining Payment reflects only the loaded quantity"
     expect(loadedPayable({ ...base, loadings: [load("L1", 900)], remainingPaidAllFC: 0 }).loadedOutstandingFC).toBe(40000);
   });
 });
+
+import { advanceClearance, loadingPaymentStates } from "@/lib/purchases/loaded-payable";
+
+describe("advanceClearance — purchase currency only (REAL Production bills)", () => {
+  // AE-001-0007: USD 1,158,750, 10 % advance, USD 115,875 paid (order_total in AED = 4,252,612.5 — the old comparison used this)
+  it("AE-001-0007: required 115,875 = paid 115,875 → cleared", () => {
+    const r = advanceClearance({ totalPurchaseFC: 1158750, advancePercent: 10, advancePaidFC: 115875 });
+    expect(r).toMatchObject({ requiredFC: 115875, paidFC: 115875, remainingFC: 0, cleared: true });
+  });
+  it("the old comparison (AED total vs USD paid) said 309,386 was still missing", () => {
+    const old = advanceClearance({ totalPurchaseFC: 4252612.5, advancePercent: 10, advancePaidFC: 115875 });
+    expect(old.cleared).toBe(false);
+    expect(old.remainingFC).toBeGreaterThan(300000);
+  });
+  it("AE-001-0005: USD 193,375 at 10 % = 19,337.50 required, 19,618 paid → cleared", () => {
+    expect(advanceClearance({ totalPurchaseFC: 193375, advancePercent: 10, advancePaidFC: 19618 }).cleared).toBe(true);
+  });
+  it("AE-001-0004: 20 % of 116,250 = 23,250, 22,000 paid → 1,250 still due", () => {
+    expect(advanceClearance({ totalPurchaseFC: 116250, advancePercent: 20, advancePaidFC: 22000 })).toMatchObject({ requiredFC: 23250, remainingFC: 1250, cleared: false });
+  });
+  it("AE-001-0006: 100 % advance of 126,500, 30,000 paid → 96,500 due", () => {
+    expect(advanceClearance({ totalPurchaseFC: 126500, advancePercent: 100, advancePaidFC: 30000 })).toMatchObject({ requiredFC: 126500, remainingFC: 96500, cleared: false });
+  });
+  it("no advance percent: cleared as soon as something is paid", () => {
+    expect(advanceClearance({ totalPurchaseFC: 1000, advancePercent: 0, advancePaidFC: 0 }).cleared).toBe(false);
+    expect(advanceClearance({ totalPurchaseFC: 1000, advancePercent: 0, advancePaidFC: 1 }).cleared).toBe(true);
+  });
+});
+
+describe("loadingPaymentStates — 2,000 cartons, 800 loaded", () => {
+  // bill USD 100,000, advance paid 20,000; 2,000 cartons
+  const base = { orderTotalFC: 100000, advancePaidFC: 20000, totalQuantity: 2000 };
+  it("only the 800 loaded cartons owe anything: 40,000 value − 8,000 advance share = 32,000", () => {
+    const [a] = loadingPaymentStates({ ...base, loadings: [{ id: "L1", quantity: 800 }], remainingPayments: [] });
+    expect(a).toMatchObject({ valueFC: 40000, advanceAllocFC: 8000, paidFC: 0, outstandingFC: 32000, complete: false });
+  });
+  it("paying exactly 32,000 against L1 completes it", () => {
+    const [a] = loadingPaymentStates({ ...base, loadings: [{ id: "L1", quantity: 800 }], remainingPayments: [{ amountFC: 32000, loadingId: "L1" }] });
+    expect(a).toMatchObject({ outstandingFC: 0, complete: true, paidFC: 32000 });
+  });
+  it("a second loading is tracked separately: L2 (600 cartons) owes 30,000 − 6,000 = 24,000", () => {
+    const s = loadingPaymentStates({ ...base, loadings: [{ id: "L1", quantity: 800 }, { id: "L2", quantity: 600 }], remainingPayments: [{ amountFC: 32000, loadingId: "L1" }] });
+    expect(s[0].complete).toBe(true);
+    expect(s[1]).toMatchObject({ valueFC: 30000, advanceAllocFC: 6000, outstandingFC: 24000, complete: false });
+  });
+  it("part payment leaves the loading incomplete", () => {
+    const [a] = loadingPaymentStates({ ...base, loadings: [{ id: "L1", quantity: 800 }], remainingPayments: [{ amountFC: 10000, loadingId: "L1" }] });
+    expect(a).toMatchObject({ outstandingFC: 22000, complete: false });
+  });
+  it("payments recorded before the link existed are applied oldest-first", () => {
+    const s = loadingPaymentStates({ ...base, loadings: [{ id: "L1", quantity: 800 }, { id: "L2", quantity: 600 }], remainingPayments: [{ amountFC: 40000, loadingId: null }] });
+    expect(s[0].complete).toBe(true);
+    expect(s[1]).toMatchObject({ paidFC: 8000, outstandingFC: 16000, complete: false });
+  });
+  it("a fully settled bill completes every loading", () => {
+    const s = loadingPaymentStates({ ...base, loadings: [{ id: "L1", quantity: 800 }], remainingPayments: [], orderRemainingDueFC: 0 });
+    expect(s[0].complete).toBe(true);
+  });
+});
