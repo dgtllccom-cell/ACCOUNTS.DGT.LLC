@@ -38,8 +38,8 @@ export function AccountDetailsModal({
   const isSales = accountType === "sales";
   const title = account.accountName || account.name || (isSales ? "Sales Account" : "Customer Account");
   const code = account.accountCode || account.code || account.account_number || "—";
-  const branch = account.cityBranchName || account.branchName || account.branch || "Main Branch";
-  const company = account.companyName || account.company || (isSales ? "Global Trading LLC" : "Al Noor Imports");
+  const branch = account.cityBranchName || account.branchName || account.branch || "—";
+  const company = account.companyName || account.company || "—";
   const currency = account.ledgerCurrency || account.currency || account.salesCurrency || "AED";
   const currentBalance = Number(account.currentBalance ?? account.current_balance ?? 0);
   const openingBalance = Number(account.openingBalance ?? account.opening_balance ?? 0);
@@ -47,9 +47,9 @@ export function AccountDetailsModal({
   const manualRef = account.manualReferenceNumber || account.manualReference || "—";
   const phone = account.mobile || account.phone || "—";
   const whatsapp = account.whatsapp || "—";
-  const address = account.address || account.companyAddress || (isSales ? "Office 101, Business Bay, Dubai, UAE" : "Warehouse 5, Jebel Ali, Dubai, UAE");
-  const license = account.licenseNo || (isSales ? "TRN1234567890" : "TRN0987654321");
-  const trn = account.gstTrn || (isSales ? "100123456789003" : "100987654321003");
+  const address = account.address || account.companyAddress || "—";
+  const license = account.licenseNo || "—";
+  const trn = account.gstTrn || "—";
 
   const handleCopyCode = () => {
     if (!code || code === "—") return;

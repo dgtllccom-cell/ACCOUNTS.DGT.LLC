@@ -55,6 +55,11 @@ export interface AvailableLot {
   unitCost?: number;
   landedUnitCost?: number;
   costCurrency?: string;
+  /** Stock record quantity before sales bookings, total weight (KG), quantity already booked for sale, and what may still be sold. */
+  totalQty?: number;
+  totalWeight?: number;
+  soldQty?: number;
+  remainingQty?: number;
 }
 
 const n = (v: unknown) => {
@@ -99,6 +104,8 @@ export async function listAvailableLots(
     lotId?: string | null;
     lang?: SupportedLanguage;
     limit?: number;
+    /** a sales order being edited: its own bookings are not counted as sold */
+    excludeOrderId?: string | null;
   },
 ): Promise<AvailableLot[]> {
   const source = opts.source;
@@ -360,9 +367,11 @@ export async function listAvailableLots(
       await fetchTransitLots();
     } else if (source === "booking") {
       const rows = (await sql`
-        SELECT id, purchase_order_no, currency_code, exchange_rate, form_data
+        SELECT id, purchase_order_no, currency_code, exchange_rate, form_data,
+               coalesce((SELECT sum(l.loaded_quantity) FROM public.purchase_loading_records l WHERE l.purchase_order_id = purchase_orders.id AND l.deleted_at IS NULL), 0) AS loaded_qty
         FROM public.purchase_orders
         WHERE ${scope}
+          AND deleted_at IS NULL
           AND (jsonb_typeof(form_data->'goodsEntries') = 'array'
                OR jsonb_typeof(form_data->'form'->'goodsEntries') = 'array')
         ORDER BY created_at DESC
@@ -370,6 +379,9 @@ export async function listAvailableLots(
       `) as unknown as any[];
       for (const r of rows) {
         const entries = r.form_data?.goodsEntries ?? r.form_data?.form?.goodsEntries ?? [];
+        // Booking stock = booked − loaded (what has been loaded has moved on to Transit / Export stock)
+        const bookedTotal = entries.reduce((sum: number, e: any) => sum + n(e.qtyNo ?? e.quantity), 0);
+        const loadedShare = bookedTotal > 0 ? Math.min(1, n(r.loaded_qty) / bookedTotal) : 0;
         entries.forEach((e: any, idx: number) => {
           out.push({
             lotNo: `${r.purchase_order_no}#${idx + 1}`,
@@ -381,10 +393,10 @@ export async function listAvailableLots(
             origin: e.origin ?? "",
             hsCode: e.hsCode ?? "",
             qtyName: e.qtyName ?? e.unitName ?? "BAGS",
-            availableQty: n(e.qtyNo ?? e.quantity),
+            availableQty: Math.max(0, n(e.qtyNo ?? e.quantity) * (1 - loadedShare)),
             qtyKgs: n(e.qtyKgs),
             emptyKgs: n(e.emptyKgs),
-            netWeight: n(e.netWeight),
+            netWeight: n(e.netWeight) * (1 - loadedShare),
             location: "Purchase Booking",
             branchName: "Booking Origin",
             warehouseName: "Purchase Booking",
@@ -485,7 +497,55 @@ export async function listAvailableLots(
     }
   }
 
+  result = await attachSoldQuantities(result, opts.excludeOrderId ?? null);
   return result.slice(0, limit);
+}
+
+
+/** KG of a whole stock record: its own net weight when it has one, else quantity × (KG per unit − empty KG). */
+function totalWeightOf(lot: AvailableLot, qty: number): number {
+  if (lot.netWeight > 0) return lot.netWeight;
+  return lot.qtyKgs > 0 ? Math.max(0, qty * (lot.qtyKgs - lot.emptyKgs)) : 0;
+}
+
+/**
+ * Quantity of each lot already booked for sale (open sales bookings: not cancelled / rejected / delivered, optionally not the order being
+ * edited), read from the goods lines the Sales wizard saves (stockLotNo). Summed across every branch — a lot cannot be oversold just because
+ * another branch took the booking.
+ */
+export async function getBookedQuantities(lotNos: string[], excludeOrderId: string | null = null): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  const refs = [...new Set(lotNos.filter(Boolean))];
+  if (!refs.length) return out;
+  const rows = await withLocalPg(async (sql) => (await sql`
+    WITH so AS (
+      SELECT id, CASE jsonb_typeof(form_data) WHEN 'string' THEN (form_data #>> '{}')::jsonb ELSE form_data END AS fd
+      FROM public.sales_orders
+      WHERE deleted_at IS NULL
+        AND coalesce(sales_status::text, '') NOT IN ('cancelled', 'rejected')
+        AND coalesce(delivery_status::text, '') NOT IN ('delivered', 'cancelled', 'issued', 'dispatched')
+        ${excludeOrderId ? sql`AND id <> ${excludeOrderId}::uuid` : sql``}
+    )
+    SELECT coalesce(ge->>'stockLotNo', ge->>'lotNo', '') AS lot_no,
+           sum(CASE WHEN ge->>'qtyNo' ~ '^[0-9]+([.][0-9]+)?$' THEN (ge->>'qtyNo')::numeric ELSE 0 END) AS qty
+    FROM so, jsonb_array_elements(CASE WHEN jsonb_typeof(so.fd->'goodsEntries') = 'array' THEN so.fd->'goodsEntries' ELSE '[]'::jsonb END) ge
+    WHERE coalesce(ge->>'stockLotNo', ge->>'lotNo', '') = ANY(${refs}::text[])
+    GROUP BY 1
+  `) as unknown as Array<{ lot_no: string; qty: string }>);
+  for (const r of rows ?? []) out.set(r.lot_no, n(r.qty));
+  return out;
+}
+
+async function attachSoldQuantities(lots: AvailableLot[], excludeOrderId: string | null): Promise<AvailableLot[]> {
+  const booked = await getBookedQuantities(lots.map((l) => l.lotNo), excludeOrderId).catch(() => new Map<string, number>());
+  return lots.map((lot) => {
+    const sold = booked.get(lot.lotNo) ?? 0;
+    // managed lots: the reservation has already moved the quantity out of "available", so it is not subtracted a second time
+    const netted = lot.source === "lot";
+    const remaining = netted ? lot.availableQty : Math.max(0, lot.availableQty - sold);
+    const total = netted ? lot.availableQty + sold : lot.availableQty;
+    return { ...lot, totalQty: total, totalWeight: totalWeightOf(lot, total), soldQty: sold, remainingQty: remaining, availableQty: remaining };
+  });
 }
 
 export interface LotDeduction {
@@ -506,21 +566,34 @@ export async function getLotDeductions(session: ErpSession, stockRef: string): P
   const rows = await withLocalPg(async (sql) => {
     const scope = scopeClause(sql, session);
     return (await sql`
-      SELECT sales_order_no, customer_name, order_date, quantity, total_weight, form_data
-      FROM public.sales_orders
-      WHERE ${scope} AND deleted_at IS NULL
-        AND (
-          form_data->'form'->>'allotName' = ${ref}
-          OR form_data->>'stockLotNo' = ${ref}
-          OR form_data->'form'->>'sourceStockRef' = ${ref}
-          OR form_data->'form'->>'stockRef' = ${ref}
-        )
-      ORDER BY order_date DESC
+      WITH so AS (
+        SELECT sales_order_no, customer_name, order_date, quantity, total_weight, created_at,
+               CASE jsonb_typeof(form_data) WHEN 'string' THEN (form_data #>> '{}')::jsonb ELSE form_data END AS fd
+        FROM public.sales_orders
+        WHERE ${scope} AND deleted_at IS NULL
+          AND coalesce(sales_status::text, '') NOT IN ('cancelled', 'rejected')
+      )
+      -- goods lines that took stock from this lot (the line's own quantity and net weight)
+      SELECT so.sales_order_no, so.customer_name, so.order_date,
+             CASE WHEN ge->>'qtyNo' ~ '^[0-9]+([.][0-9]+)?$' THEN (ge->>'qtyNo')::numeric ELSE 0 END AS quantity,
+             CASE WHEN ge->>'netWeight' ~ '^[0-9]+([.][0-9]+)?$' THEN (ge->>'netWeight')::numeric ELSE 0 END AS total_weight,
+             so.created_at
+      FROM so, jsonb_array_elements(CASE WHEN jsonb_typeof(so.fd->'goodsEntries') = 'array' THEN so.fd->'goodsEntries' ELSE '[]'::jsonb END) ge
+      WHERE coalesce(ge->>'stockLotNo', ge->>'lotNo', '') = ${ref}
+      UNION ALL
+      -- older bookings only recorded the lot at order level
+      SELECT so.sales_order_no, so.customer_name, so.order_date, so.quantity, so.total_weight, so.created_at
+      FROM so
+      WHERE (so.fd->'form'->>'allotName' = ${ref} OR so.fd->>'stockLotNo' = ${ref} OR so.fd->'form'->>'sourceStockRef' = ${ref} OR so.fd->'form'->>'stockRef' = ${ref})
+        AND NOT EXISTS (
+          SELECT 1 FROM jsonb_array_elements(CASE WHEN jsonb_typeof(so.fd->'goodsEntries') = 'array' THEN so.fd->'goodsEntries' ELSE '[]'::jsonb END) g
+          WHERE coalesce(g->>'stockLotNo', g->>'lotNo', '') = ${ref})
+      ORDER BY order_date DESC, created_at DESC
       LIMIT 100
     `) as unknown as any[];
   });
   return (rows ?? []).map((r) => ({
-    customer: r.customer_name || r.form_data?.form?.customerName || "—",
+    customer: r.customer_name || "—",
     date: String(r.order_date || "").slice(0, 10),
     quantity: n(r.quantity),
     weight: n(r.total_weight),

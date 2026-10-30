@@ -172,7 +172,7 @@ export function SalesBookingStep3({
                   Loading Port
                 </label>
                 <select
-                  value={form.loadingPort || "Jebel Ali Port"}
+                  value={form.loadingPort || ""}
                   onChange={(e) => setForm((p) => ({ ...p, loadingPort: e.target.value }))}
                   className="w-full h-8 px-2 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
                 >
@@ -615,11 +615,11 @@ export function SalesBookingStep3({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Shipping Line</span>
-                  <span className="font-bold truncate max-w-[120px]">: {form.shippingLine || "MSC Line"}</span>
+                  <span className="font-bold truncate max-w-[120px]">: {form.shippingLine || "—"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Vessel Name</span>
-                  <span className="font-bold truncate max-w-[120px]">: {form.vesselName || "MSC Evergreen"}</span>
+                  <span className="font-bold truncate max-w-[120px]">: {form.vesselName || "—"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Voyage No</span>
@@ -627,7 +627,7 @@ export function SalesBookingStep3({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Loading Port</span>
-                  <span className="font-bold truncate max-w-[120px]">: {form.loadingPort || "Jebel Ali Port"}</span>
+                  <span className="font-bold truncate max-w-[120px]">: {form.loadingPort || "—"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Receiving Port</span>

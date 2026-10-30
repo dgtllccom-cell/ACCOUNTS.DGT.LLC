@@ -12689,6 +12689,88 @@ export type UiKey =
   | "pjt.payment_amount_usd"
   | "pjt.post_endorsement_payment"
   | "pjt.remaining_loading_batch_summary"
+  | "sales.bk_currency_title"
+  | "sales.bk_invoice_currency"
+  | "sales.bk_settlement_currency"
+  | "sales.bk_select_currency"
+  | "sales.bk_exchange_rate"
+  | "sales.bk_same_currency"
+  | "sales.bk_rate_required"
+  | "sales.bk_daily_rate"
+  | "sales.bk_checking"
+  | "sales.bk_pick_country"
+  | "sales.bk_daily_denied"
+  | "sales.bk_daily_none"
+  | "sales.bk_rate_buy"
+  | "sales.bk_rate_sell"
+  | "sales.bk_rate_credit"
+  | "sales.bk_rate_debit"
+  | "sales.bk_as_of"
+  | "sales.bk_usd_only"
+  | "sales.bk_err_currency_req"
+  | "sales.bk_err_rate_req"
+  | "sales.stk_panel_title"
+  | "sales.stk_panel_sub"
+  | "sales.stk_cancel"
+  | "sales.stk_source_warehouse"
+  | "sales.stk_source_booking"
+  | "sales.stk_source_export"
+  | "sales.stk_source_warehouse_hint"
+  | "sales.stk_source_booking_hint"
+  | "sales.stk_source_export_hint"
+  | "sales.stk_search_ph"
+  | "sales.stk_loading"
+  | "sales.stk_denied"
+  | "sales.stk_load_error"
+  | "sales.stk_empty"
+  | "sales.stk_col_goods"
+  | "sales.stk_col_lot"
+  | "sales.stk_col_origin"
+  | "sales.stk_col_brand"
+  | "sales.stk_col_size"
+  | "sales.stk_col_qty"
+  | "sales.stk_col_weight"
+  | "sales.stk_col_sold"
+  | "sales.stk_col_remaining"
+  | "sales.stk_details_title"
+  | "sales.stk_pick_lot_hint"
+  | "sales.stk_d_unit"
+  | "sales.stk_d_kg_unit"
+  | "sales.stk_d_empty"
+  | "sales.stk_d_hs"
+  | "sales.stk_d_location"
+  | "sales.stk_d_branch"
+  | "sales.stk_d_reference"
+  | "sales.stk_d_container"
+  | "sales.stk_d_status"
+  | "sales.stk_d_history"
+  | "sales.stk_d_no_history"
+  | "sales.stk_d_sold_out"
+  | "sales.stk_confirm"
+  | "sales.stk_selected_title"
+  | "sales.stk_change"
+  | "sales.stk_select_stock"
+  | "sales.stk_clear"
+  | "sales.stk_not_linked_note"
+  | "sales.stk_err_over"
+  | "sales.stk_remaining_after"
+  | "sales.ge_err_goods"
+  | "sales.ge_err_qty"
+  | "sales.ge_err_price"
+  | "sales.ge_err_currency"
+  | "sales.ge_err_rate"
+  | "sales.ge_err_over"
+  | "sales.ge_err_nobalance"
+  | "sales.ge_lot_number"
+  | "sales.ge_invoice_currency"
+  | "sales.ge_exchange_rate"
+  | "sales.ge_rate_missing"
+  | "sales.ge_add_goods"
+  | "sales.ge_empty_table"
+  | "sales.ge_no_stock_tag"
+  | "sales.ge_total"
+  | "sales.ge_err_no_goods"
+  | "sales.ge_next_shipping"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -38350,6 +38432,88 @@ const en: Dict = {
   "pjt.payment_amount_usd": "Payment Amount",
   "pjt.post_endorsement_payment": "Post Endorsement Payment",
   "pjt.remaining_loading_batch_summary": "Remaining Payment & Loading Batch Summary",
+  "sales.bk_currency_title": "Booking Currency & Conversion",
+  "sales.bk_invoice_currency": "Invoice Currency",
+  "sales.bk_settlement_currency": "Settlement Currency",
+  "sales.bk_select_currency": "Select currency",
+  "sales.bk_exchange_rate": "Exchange Rate",
+  "sales.bk_same_currency": "Same currency — no conversion needed (rate 1).",
+  "sales.bk_rate_required": "Enter the exchange rate — a conversion cannot use a zero or missing rate.",
+  "sales.bk_daily_rate": "Daily Exchange Rate",
+  "sales.bk_checking": "Checking today's rate…",
+  "sales.bk_pick_country": "Select the country and branch to see the daily rate.",
+  "sales.bk_daily_denied": "Daily rates are not available to your role — enter the rate manually.",
+  "sales.bk_daily_none": "No Daily Exchange Rate is recorded for this branch — enter the rate manually.",
+  "sales.bk_rate_buy": "Buy",
+  "sales.bk_rate_sell": "Sell",
+  "sales.bk_rate_credit": "Credit",
+  "sales.bk_rate_debit": "Debit",
+  "sales.bk_as_of": "as of",
+  "sales.bk_usd_only": "The daily rate is a USD rate: it is applied automatically only for USD ↔ the branch currency.",
+  "sales.bk_err_currency_req": "Please select the Invoice and Settlement currencies before proceeding.",
+  "sales.bk_err_rate_req": "Please enter a valid exchange rate before proceeding.",
+  "sales.stk_panel_title": "Select Stock to Sell",
+  "sales.stk_panel_sub": "Choose a source, open a lot to inspect it, then confirm.",
+  "sales.stk_cancel": "Cancel",
+  "sales.stk_source_warehouse": "Warehouse Stock",
+  "sales.stk_source_booking": "Booking Stock",
+  "sales.stk_source_export": "Export Stock",
+  "sales.stk_source_warehouse_hint": "Goods in your warehouses, managed lots and local purchases",
+  "sales.stk_source_booking_hint": "Purchase-booked goods not yet loaded",
+  "sales.stk_source_export_hint": "Goods already loaded and on the way, and endorsed stock",
+  "sales.stk_search_ph": "Search goods, lot, origin, brand, warehouse…",
+  "sales.stk_loading": "Loading stock…",
+  "sales.stk_denied": "Your role cannot see stock for this source.",
+  "sales.stk_load_error": "Stock could not be loaded. Try again.",
+  "sales.stk_empty": "No stock available in this source.",
+  "sales.stk_col_goods": "Goods Name",
+  "sales.stk_col_lot": "Lot Number",
+  "sales.stk_col_origin": "Origin",
+  "sales.stk_col_brand": "Brand",
+  "sales.stk_col_size": "Size",
+  "sales.stk_col_qty": "Quantity",
+  "sales.stk_col_weight": "Total Weight",
+  "sales.stk_col_sold": "Sold Quantity",
+  "sales.stk_col_remaining": "Remaining Balance",
+  "sales.stk_details_title": "Stock Details",
+  "sales.stk_pick_lot_hint": "Click a lot to see its full details.",
+  "sales.stk_d_unit": "Quantity Type",
+  "sales.stk_d_kg_unit": "KG per unit",
+  "sales.stk_d_empty": "Empty KG",
+  "sales.stk_d_hs": "HS Code",
+  "sales.stk_d_location": "Location / Warehouse",
+  "sales.stk_d_branch": "Branch",
+  "sales.stk_d_reference": "Stock Reference",
+  "sales.stk_d_container": "Container",
+  "sales.stk_d_status": "Status",
+  "sales.stk_d_history": "Earlier bookings from this lot",
+  "sales.stk_d_no_history": "No other booking has taken stock from this lot.",
+  "sales.stk_d_sold_out": "Sold out — nothing left to sell from this lot.",
+  "sales.stk_confirm": "Confirm — sell from this lot",
+  "sales.stk_selected_title": "Selected stock",
+  "sales.stk_change": "Change Stock",
+  "sales.stk_select_stock": "Select Stock",
+  "sales.stk_clear": "Clear",
+  "sales.stk_not_linked_note": "No stock selected — goods entered without stock are not checked against inventory. Use Select Stock to sell from a lot.",
+  "sales.stk_err_over": "The quantity is more than the stock remaining in this lot.",
+  "sales.stk_remaining_after": "Remaining after this sale",
+  "sales.ge_err_goods": "Select or enter the goods name.",
+  "sales.ge_err_qty": "Enter a quantity greater than zero.",
+  "sales.ge_err_price": "Enter the selling price rate.",
+  "sales.ge_err_currency": "Select the invoice and settlement currencies in Step 1.",
+  "sales.ge_err_rate": "An exchange rate is required — go back to Step 1 and enter it (or use the daily rate).",
+  "sales.ge_err_over": "The quantity is more than the stock remaining in this lot.",
+  "sales.ge_err_nobalance": "The remaining balance of this stock is unknown. Select the stock again.",
+  "sales.ge_lot_number": "Lot Number",
+  "sales.ge_invoice_currency": "Invoice Currency",
+  "sales.ge_exchange_rate": "Exchange Rate",
+  "sales.ge_rate_missing": "Missing — set in Step 1",
+  "sales.ge_add_goods": "Add Goods to Table",
+  "sales.ge_empty_table": "No goods added yet.",
+  "sales.ge_no_stock_tag": "no stock link",
+  "sales.ge_total": "Total",
+  "sales.ge_err_no_goods": "Add at least one goods line before continuing.",
+  "sales.ge_next_shipping": "Next: Shipping & Payment",
 };
 
 const ur: Dict = {
@@ -63979,6 +64143,88 @@ const ur: Dict = {
   "pjt.payment_amount_usd": "ادائیگی کی رقم",
   "pjt.post_endorsement_payment": "توثیقی ادائیگی پوسٹ کریں",
   "pjt.remaining_loading_batch_summary": "بقایا ادائیگی اور لوڈنگ بیچ کا خلاصہ",
+  "sales.bk_currency_title": "بکنگ کرنسی اور تبادلہ",
+  "sales.bk_invoice_currency": "انوائس کرنسی",
+  "sales.bk_settlement_currency": "تصفیہ کرنسی",
+  "sales.bk_select_currency": "کرنسی منتخب کریں",
+  "sales.bk_exchange_rate": "شرحِ تبادلہ",
+  "sales.bk_same_currency": "ایک ہی کرنسی — تبادلے کی ضرورت نہیں (شرح 1)۔",
+  "sales.bk_rate_required": "شرحِ تبادلہ درج کریں — تبادلہ صفر یا غائب شرح پر نہیں ہو سکتا۔",
+  "sales.bk_daily_rate": "یومیہ شرحِ تبادلہ",
+  "sales.bk_checking": "آج کی شرح دیکھی جا رہی ہے…",
+  "sales.bk_pick_country": "یومیہ شرح دیکھنے کے لیے ملک اور برانچ منتخب کریں۔",
+  "sales.bk_daily_denied": "یومیہ شرحیں آپ کے کردار کے لیے دستیاب نہیں — شرح خود درج کریں۔",
+  "sales.bk_daily_none": "اس برانچ کے لیے کوئی یومیہ شرحِ تبادلہ درج نہیں — شرح خود درج کریں۔",
+  "sales.bk_rate_buy": "خرید",
+  "sales.bk_rate_sell": "فروخت",
+  "sales.bk_rate_credit": "کریڈٹ",
+  "sales.bk_rate_debit": "ڈیبٹ",
+  "sales.bk_as_of": "بتاریخ",
+  "sales.bk_usd_only": "یومیہ شرح ڈالر کی شرح ہے: یہ صرف ڈالر ↔ برانچ کرنسی کے لیے خودکار لاگو ہوتی ہے۔",
+  "sales.bk_err_currency_req": "آگے بڑھنے سے پہلے انوائس اور تصفیہ کرنسی منتخب کریں۔",
+  "sales.bk_err_rate_req": "آگے بڑھنے سے پہلے درست شرحِ تبادلہ درج کریں۔",
+  "sales.stk_panel_title": "فروخت کے لیے اسٹاک منتخب کریں",
+  "sales.stk_panel_sub": "ذریعہ منتخب کریں، لاٹ کھول کر دیکھیں، پھر تصدیق کریں۔",
+  "sales.stk_cancel": "منسوخ کریں",
+  "sales.stk_source_warehouse": "گودام اسٹاک",
+  "sales.stk_source_booking": "بکنگ اسٹاک",
+  "sales.stk_source_export": "برآمدی اسٹاک",
+  "sales.stk_source_warehouse_hint": "آپ کے گوداموں، منظم لاٹس اور مقامی خریداری میں موجود مال",
+  "sales.stk_source_booking_hint": "خریداری بکنگ کا مال جو ابھی لوڈ نہیں ہوا",
+  "sales.stk_source_export_hint": "لوڈ ہو کر راستے میں موجود مال اور توثیق شدہ اسٹاک",
+  "sales.stk_search_ph": "مال، لاٹ، ملک، برانڈ، گودام تلاش کریں…",
+  "sales.stk_loading": "اسٹاک لوڈ ہو رہا ہے…",
+  "sales.stk_denied": "آپ کا کردار اس ذریعے کا اسٹاک نہیں دیکھ سکتا۔",
+  "sales.stk_load_error": "اسٹاک لوڈ نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
+  "sales.stk_empty": "اس ذریعے میں کوئی اسٹاک دستیاب نہیں۔",
+  "sales.stk_col_goods": "مال کا نام",
+  "sales.stk_col_lot": "لاٹ نمبر",
+  "sales.stk_col_origin": "اصل ملک",
+  "sales.stk_col_brand": "برانڈ",
+  "sales.stk_col_size": "سائز",
+  "sales.stk_col_qty": "مقدار",
+  "sales.stk_col_weight": "کل وزن",
+  "sales.stk_col_sold": "فروخت شدہ مقدار",
+  "sales.stk_col_remaining": "بقیہ بیلنس",
+  "sales.stk_details_title": "اسٹاک کی تفصیل",
+  "sales.stk_pick_lot_hint": "مکمل تفصیل دیکھنے کے لیے لاٹ پر کلک کریں۔",
+  "sales.stk_d_unit": "مقدار کی قسم",
+  "sales.stk_d_kg_unit": "فی یونٹ کلوگرام",
+  "sales.stk_d_empty": "خالی وزن (کلوگرام)",
+  "sales.stk_d_hs": "ایچ ایس کوڈ",
+  "sales.stk_d_location": "مقام / گودام",
+  "sales.stk_d_branch": "برانچ",
+  "sales.stk_d_reference": "اسٹاک حوالہ",
+  "sales.stk_d_container": "کنٹینر",
+  "sales.stk_d_status": "حالت",
+  "sales.stk_d_history": "اس لاٹ سے پچھلی بکنگز",
+  "sales.stk_d_no_history": "اس لاٹ سے کسی اور بکنگ نے اسٹاک نہیں لیا۔",
+  "sales.stk_d_sold_out": "فروخت ہو چکا — اس لاٹ میں بیچنے کو کچھ نہیں بچا۔",
+  "sales.stk_confirm": "تصدیق کریں — اس لاٹ سے فروخت کریں",
+  "sales.stk_selected_title": "منتخب اسٹاک",
+  "sales.stk_change": "اسٹاک تبدیل کریں",
+  "sales.stk_select_stock": "اسٹاک منتخب کریں",
+  "sales.stk_clear": "صاف کریں",
+  "sales.stk_not_linked_note": "کوئی اسٹاک منتخب نہیں — بغیر اسٹاک درج کیا گیا مال انوینٹری سے نہیں جانچا جاتا۔ لاٹ سے بیچنے کے لیے اسٹاک منتخب کریں کا استعمال کریں۔",
+  "sales.stk_err_over": "مقدار اس لاٹ میں بچے ہوئے اسٹاک سے زیادہ ہے۔",
+  "sales.stk_remaining_after": "اس فروخت کے بعد بقیہ",
+  "sales.ge_err_goods": "مال کا نام منتخب یا درج کریں۔",
+  "sales.ge_err_qty": "صفر سے زیادہ مقدار درج کریں۔",
+  "sales.ge_err_price": "فروخت کی قیمت کی شرح درج کریں۔",
+  "sales.ge_err_currency": "مرحلہ 1 میں انوائس اور تصفیہ کرنسی منتخب کریں۔",
+  "sales.ge_err_rate": "شرحِ تبادلہ ضروری ہے — مرحلہ 1 پر جا کر درج کریں (یا یومیہ شرح استعمال کریں)۔",
+  "sales.ge_err_over": "مقدار اس لاٹ میں بچے ہوئے اسٹاک سے زیادہ ہے۔",
+  "sales.ge_err_nobalance": "اس اسٹاک کا بقیہ بیلنس معلوم نہیں۔ اسٹاک دوبارہ منتخب کریں۔",
+  "sales.ge_lot_number": "لاٹ نمبر",
+  "sales.ge_invoice_currency": "انوائس کرنسی",
+  "sales.ge_exchange_rate": "شرحِ تبادلہ",
+  "sales.ge_rate_missing": "غائب — مرحلہ 1 میں مقرر کریں",
+  "sales.ge_add_goods": "مال جدول میں شامل کریں",
+  "sales.ge_empty_table": "ابھی تک کوئی مال شامل نہیں کیا گیا۔",
+  "sales.ge_no_stock_tag": "اسٹاک سے منسلک نہیں",
+  "sales.ge_total": "کل",
+  "sales.ge_err_no_goods": "آگے بڑھنے سے پہلے کم از کم ایک مال کی لائن شامل کریں۔",
+  "sales.ge_next_shipping": "اگلا: شپنگ اور ادائیگی",
 };
 
 const ar: Dict = {
@@ -89609,6 +89855,88 @@ const ar: Dict = {
   "pjt.payment_amount_usd": "مبلغ الدفعة",
   "pjt.post_endorsement_payment": "ترحيل دفعة التظهير",
   "pjt.remaining_loading_batch_summary": "ملخص الدفعة المتبقية ودفعة التحميل",
+  "sales.bk_currency_title": "عملة الحجز والتحويل",
+  "sales.bk_invoice_currency": "عملة الفاتورة",
+  "sales.bk_settlement_currency": "عملة التسوية",
+  "sales.bk_select_currency": "اختر العملة",
+  "sales.bk_exchange_rate": "سعر الصرف",
+  "sales.bk_same_currency": "العملة نفسها — لا حاجة للتحويل (السعر 1).",
+  "sales.bk_rate_required": "أدخل سعر الصرف — لا يمكن إجراء التحويل بسعر صفر أو مفقود.",
+  "sales.bk_daily_rate": "سعر الصرف اليومي",
+  "sales.bk_checking": "جارٍ فحص سعر اليوم…",
+  "sales.bk_pick_country": "اختر الدولة والفرع لعرض السعر اليومي.",
+  "sales.bk_daily_denied": "الأسعار اليومية غير متاحة لدورك — أدخل السعر يدويًا.",
+  "sales.bk_daily_none": "لا يوجد سعر صرف يومي مسجّل لهذا الفرع — أدخل السعر يدويًا.",
+  "sales.bk_rate_buy": "شراء",
+  "sales.bk_rate_sell": "بيع",
+  "sales.bk_rate_credit": "دائن",
+  "sales.bk_rate_debit": "مدين",
+  "sales.bk_as_of": "بتاريخ",
+  "sales.bk_usd_only": "السعر اليومي هو سعر الدولار: يُطبَّق تلقائيًا فقط بين الدولار وعملة الفرع.",
+  "sales.bk_err_currency_req": "يرجى اختيار عملتي الفاتورة والتسوية قبل المتابعة.",
+  "sales.bk_err_rate_req": "يرجى إدخال سعر صرف صالح قبل المتابعة.",
+  "sales.stk_panel_title": "اختر المخزون للبيع",
+  "sales.stk_panel_sub": "اختر المصدر، افتح الدفعة لفحصها، ثم أكّد.",
+  "sales.stk_cancel": "إلغاء",
+  "sales.stk_source_warehouse": "مخزون المستودع",
+  "sales.stk_source_booking": "مخزون الحجز",
+  "sales.stk_source_export": "مخزون التصدير",
+  "sales.stk_source_warehouse_hint": "البضائع في مستودعاتك والدفعات المُدارة والمشتريات المحلية",
+  "sales.stk_source_booking_hint": "بضائع محجوزة بالشراء لم تُحمَّل بعد",
+  "sales.stk_source_export_hint": "بضائع محمّلة وفي الطريق، والمخزون المُظهَّر",
+  "sales.stk_search_ph": "ابحث عن بضاعة أو دفعة أو منشأ أو علامة أو مستودع…",
+  "sales.stk_loading": "جارٍ تحميل المخزون…",
+  "sales.stk_denied": "دورك لا يسمح برؤية مخزون هذا المصدر.",
+  "sales.stk_load_error": "تعذّر تحميل المخزون. حاول مرة أخرى.",
+  "sales.stk_empty": "لا يوجد مخزون متاح في هذا المصدر.",
+  "sales.stk_col_goods": "اسم البضاعة",
+  "sales.stk_col_lot": "رقم الدفعة",
+  "sales.stk_col_origin": "المنشأ",
+  "sales.stk_col_brand": "العلامة التجارية",
+  "sales.stk_col_size": "الحجم",
+  "sales.stk_col_qty": "الكمية",
+  "sales.stk_col_weight": "الوزن الإجمالي",
+  "sales.stk_col_sold": "الكمية المباعة",
+  "sales.stk_col_remaining": "الرصيد المتبقي",
+  "sales.stk_details_title": "تفاصيل المخزون",
+  "sales.stk_pick_lot_hint": "انقر على دفعة لعرض تفاصيلها الكاملة.",
+  "sales.stk_d_unit": "نوع الكمية",
+  "sales.stk_d_kg_unit": "كجم لكل وحدة",
+  "sales.stk_d_empty": "وزن الفارغ (كجم)",
+  "sales.stk_d_hs": "رمز النظام المنسق",
+  "sales.stk_d_location": "الموقع / المستودع",
+  "sales.stk_d_branch": "الفرع",
+  "sales.stk_d_reference": "مرجع المخزون",
+  "sales.stk_d_container": "الحاوية",
+  "sales.stk_d_status": "الحالة",
+  "sales.stk_d_history": "حجوزات سابقة من هذه الدفعة",
+  "sales.stk_d_no_history": "لم يسحب أي حجز آخر مخزونًا من هذه الدفعة.",
+  "sales.stk_d_sold_out": "نفد — لم يتبقَّ شيء للبيع من هذه الدفعة.",
+  "sales.stk_confirm": "تأكيد — البيع من هذه الدفعة",
+  "sales.stk_selected_title": "المخزون المحدد",
+  "sales.stk_change": "تغيير المخزون",
+  "sales.stk_select_stock": "اختيار المخزون",
+  "sales.stk_clear": "مسح",
+  "sales.stk_not_linked_note": "لم يُحدَّد مخزون — البضائع المدخلة دون مخزون لا يتم التحقق منها مقابل الجرد. استخدم «اختيار المخزون» للبيع من دفعة.",
+  "sales.stk_err_over": "الكمية أكبر من المخزون المتبقي في هذه الدفعة.",
+  "sales.stk_remaining_after": "المتبقي بعد هذا البيع",
+  "sales.ge_err_goods": "اختر اسم البضاعة أو أدخله.",
+  "sales.ge_err_qty": "أدخل كمية أكبر من صفر.",
+  "sales.ge_err_price": "أدخل سعر البيع.",
+  "sales.ge_err_currency": "اختر عملتي الفاتورة والتسوية في الخطوة 1.",
+  "sales.ge_err_rate": "سعر الصرف مطلوب — ارجع إلى الخطوة 1 وأدخله (أو استخدم السعر اليومي).",
+  "sales.ge_err_over": "الكمية أكبر من المخزون المتبقي في هذه الدفعة.",
+  "sales.ge_err_nobalance": "الرصيد المتبقي لهذا المخزون غير معروف. اختر المخزون مرة أخرى.",
+  "sales.ge_lot_number": "رقم الدفعة",
+  "sales.ge_invoice_currency": "عملة الفاتورة",
+  "sales.ge_exchange_rate": "سعر الصرف",
+  "sales.ge_rate_missing": "مفقود — حدده في الخطوة 1",
+  "sales.ge_add_goods": "إضافة البضاعة إلى الجدول",
+  "sales.ge_empty_table": "لم تتم إضافة أي بضاعة بعد.",
+  "sales.ge_no_stock_tag": "غير مرتبط بالمخزون",
+  "sales.ge_total": "الإجمالي",
+  "sales.ge_err_no_goods": "أضف سطر بضاعة واحدًا على الأقل قبل المتابعة.",
+  "sales.ge_next_shipping": "التالي: الشحن والدفع",
 };
 
 const fa: Dict = {
@@ -115238,6 +115566,88 @@ const fa: Dict = {
   "pjt.payment_amount_usd": "مبلغ پرداخت",
   "pjt.post_endorsement_payment": "ثبت پرداخت پشت‌نویسی",
   "pjt.remaining_loading_batch_summary": "خلاصه پرداخت باقی‌مانده و محموله بارگیری",
+  "sales.bk_currency_title": "ارز رزرو و تبدیل",
+  "sales.bk_invoice_currency": "ارز فاکتور",
+  "sales.bk_settlement_currency": "ارز تسویه",
+  "sales.bk_select_currency": "ارز را انتخاب کنید",
+  "sales.bk_exchange_rate": "نرخ تبدیل",
+  "sales.bk_same_currency": "ارز یکسان — نیازی به تبدیل نیست (نرخ ۱).",
+  "sales.bk_rate_required": "نرخ تبدیل را وارد کنید — تبدیل با نرخ صفر یا خالی ممکن نیست.",
+  "sales.bk_daily_rate": "نرخ روزانه ارز",
+  "sales.bk_checking": "در حال بررسی نرخ امروز…",
+  "sales.bk_pick_country": "برای دیدن نرخ روزانه کشور و شعبه را انتخاب کنید.",
+  "sales.bk_daily_denied": "نرخ‌های روزانه برای نقش شما در دسترس نیست — نرخ را دستی وارد کنید.",
+  "sales.bk_daily_none": "برای این شعبه نرخ روزانه ثبت نشده است — نرخ را دستی وارد کنید.",
+  "sales.bk_rate_buy": "خرید",
+  "sales.bk_rate_sell": "فروش",
+  "sales.bk_rate_credit": "بستانکار",
+  "sales.bk_rate_debit": "بدهکار",
+  "sales.bk_as_of": "به تاریخ",
+  "sales.bk_usd_only": "نرخ روزانه نرخ دلار است: فقط برای دلار ↔ ارز شعبه خودکار اعمال می‌شود.",
+  "sales.bk_err_currency_req": "لطفاً پیش از ادامه ارز فاکتور و ارز تسویه را انتخاب کنید.",
+  "sales.bk_err_rate_req": "لطفاً پیش از ادامه نرخ تبدیل معتبر وارد کنید.",
+  "sales.stk_panel_title": "انتخاب موجودی برای فروش",
+  "sales.stk_panel_sub": "منبع را انتخاب کنید، لات را برای بررسی باز کنید، سپس تأیید کنید.",
+  "sales.stk_cancel": "لغو",
+  "sales.stk_source_warehouse": "موجودی انبار",
+  "sales.stk_source_booking": "موجودی رزرو",
+  "sales.stk_source_export": "موجودی صادرات",
+  "sales.stk_source_warehouse_hint": "کالاهای انبارها، لات‌های مدیریت‌شده و خرید محلی",
+  "sales.stk_source_booking_hint": "کالاهای رزروشده خرید که هنوز بارگیری نشده‌اند",
+  "sales.stk_source_export_hint": "کالاهای بارگیری‌شده و در مسیر و موجودی پشت‌نویسی‌شده",
+  "sales.stk_search_ph": "جستجوی کالا، لات، مبدأ، برند، انبار…",
+  "sales.stk_loading": "در حال بارگذاری موجودی…",
+  "sales.stk_denied": "نقش شما نمی‌تواند موجودی این منبع را ببیند.",
+  "sales.stk_load_error": "بارگذاری موجودی ممکن نشد. دوباره تلاش کنید.",
+  "sales.stk_empty": "در این منبع موجودی‌ای وجود ندارد.",
+  "sales.stk_col_goods": "نام کالا",
+  "sales.stk_col_lot": "شماره لات",
+  "sales.stk_col_origin": "مبدأ",
+  "sales.stk_col_brand": "برند",
+  "sales.stk_col_size": "اندازه",
+  "sales.stk_col_qty": "مقدار",
+  "sales.stk_col_weight": "وزن کل",
+  "sales.stk_col_sold": "مقدار فروخته‌شده",
+  "sales.stk_col_remaining": "مانده باقی‌مانده",
+  "sales.stk_details_title": "جزئیات موجودی",
+  "sales.stk_pick_lot_hint": "برای دیدن جزئیات کامل روی یک لات کلیک کنید.",
+  "sales.stk_d_unit": "نوع مقدار",
+  "sales.stk_d_kg_unit": "کیلوگرم در هر واحد",
+  "sales.stk_d_empty": "وزن خالی (کیلوگرم)",
+  "sales.stk_d_hs": "کد تعرفه (HS)",
+  "sales.stk_d_location": "محل / انبار",
+  "sales.stk_d_branch": "شعبه",
+  "sales.stk_d_reference": "مرجع موجودی",
+  "sales.stk_d_container": "کانتینر",
+  "sales.stk_d_status": "وضعیت",
+  "sales.stk_d_history": "رزروهای قبلی از این لات",
+  "sales.stk_d_no_history": "هیچ رزرو دیگری از این لات موجودی برنداشته است.",
+  "sales.stk_d_sold_out": "فروخته شده — چیزی برای فروش از این لات باقی نمانده است.",
+  "sales.stk_confirm": "تأیید — فروش از این لات",
+  "sales.stk_selected_title": "موجودی انتخاب‌شده",
+  "sales.stk_change": "تغییر موجودی",
+  "sales.stk_select_stock": "انتخاب موجودی",
+  "sales.stk_clear": "پاک کردن",
+  "sales.stk_not_linked_note": "موجودی انتخاب نشده — کالای واردشده بدون موجودی با انبار کنترل نمی‌شود. برای فروش از یک لات «انتخاب موجودی» را بزنید.",
+  "sales.stk_err_over": "مقدار بیشتر از موجودی باقی‌مانده در این لات است.",
+  "sales.stk_remaining_after": "مانده پس از این فروش",
+  "sales.ge_err_goods": "نام کالا را انتخاب یا وارد کنید.",
+  "sales.ge_err_qty": "مقداری بزرگ‌تر از صفر وارد کنید.",
+  "sales.ge_err_price": "نرخ قیمت فروش را وارد کنید.",
+  "sales.ge_err_currency": "ارز فاکتور و تسویه را در مرحله ۱ انتخاب کنید.",
+  "sales.ge_err_rate": "نرخ تبدیل لازم است — به مرحله ۱ برگردید و آن را وارد کنید (یا نرخ روزانه را به‌کار ببرید).",
+  "sales.ge_err_over": "مقدار بیشتر از موجودی باقی‌مانده در این لات است.",
+  "sales.ge_err_nobalance": "مانده این موجودی معلوم نیست. موجودی را دوباره انتخاب کنید.",
+  "sales.ge_lot_number": "شماره لات",
+  "sales.ge_invoice_currency": "ارز فاکتور",
+  "sales.ge_exchange_rate": "نرخ تبدیل",
+  "sales.ge_rate_missing": "ناموجود — در مرحله ۱ تنظیم کنید",
+  "sales.ge_add_goods": "افزودن کالا به جدول",
+  "sales.ge_empty_table": "هنوز کالایی افزوده نشده است.",
+  "sales.ge_no_stock_tag": "بدون پیوند موجودی",
+  "sales.ge_total": "جمع",
+  "sales.ge_err_no_goods": "پیش از ادامه دست‌کم یک ردیف کالا اضافه کنید.",
+  "sales.ge_next_shipping": "بعدی: حمل و پرداخت",
 };
 
 const ps: Dict = {
@@ -140874,6 +141284,88 @@ const ps: Dict = {
   "pjt.payment_amount_usd": "د تادیې مبلغ",
   "pjt.post_endorsement_payment": "د تائیدۍ تادیې پوسټ کول",
   "pjt.remaining_loading_batch_summary": "د پاتې تادیې او بارولو بسته لنډیز",
+  "sales.bk_currency_title": "د بکینګ اسعار او بدلون",
+  "sales.bk_invoice_currency": "د انوائس اسعار",
+  "sales.bk_settlement_currency": "د تصفیې اسعار",
+  "sales.bk_select_currency": "اسعار وټاکئ",
+  "sales.bk_exchange_rate": "د تبادلې نرخ",
+  "sales.bk_same_currency": "ورته اسعار — بدلون ته اړتیا نشته (نرخ 1).",
+  "sales.bk_rate_required": "د تبادلې نرخ دننه کړئ — بدلون د صفر یا ورکې نرخ سره نشي کیدی.",
+  "sales.bk_daily_rate": "ورځنی د تبادلې نرخ",
+  "sales.bk_checking": "د نن ورځې نرخ څارل کیږي…",
+  "sales.bk_pick_country": "د ورځنی نرخ لیدلو لپاره هېواد او څانګه وټاکئ.",
+  "sales.bk_daily_denied": "ورځني نرخونه ستاسو رول ته نشته — نرخ په لاس دننه کړئ.",
+  "sales.bk_daily_none": "د دې څانګې لپاره ورځنی نرخ نه دی ثبت — نرخ په لاس دننه کړئ.",
+  "sales.bk_rate_buy": "پیرود",
+  "sales.bk_rate_sell": "پلور",
+  "sales.bk_rate_credit": "کریډیټ",
+  "sales.bk_rate_debit": "ډیبیټ",
+  "sales.bk_as_of": "تر نیټې",
+  "sales.bk_usd_only": "ورځنی نرخ د ډالر نرخ دی: یوازې د ډالر ↔ د څانګې اسعارو لپاره په اتومات ډول پلي کیږي.",
+  "sales.bk_err_currency_req": "مخکې له دې چې پرمخ ولاړ شئ د انوائس او تصفیې اسعار وټاکئ.",
+  "sales.bk_err_rate_req": "مخکې له دې چې پرمخ ولاړ شئ سم د تبادلې نرخ دننه کړئ.",
+  "sales.stk_panel_title": "د پلور لپاره ذخیره وټاکئ",
+  "sales.stk_panel_sub": "سرچینه وټاکئ، لاټ د کتلو لپاره خلاص کړئ، بیا تایید کړئ.",
+  "sales.stk_cancel": "لغوه",
+  "sales.stk_source_warehouse": "د ګودام ذخیره",
+  "sales.stk_source_booking": "د بکینګ ذخیره",
+  "sales.stk_source_export": "د صادراتو ذخیره",
+  "sales.stk_source_warehouse_hint": "ستاسو په ګودامونو، اداره شویو لاټونو او ځایي پیرودونو کې توکي",
+  "sales.stk_source_booking_hint": "د پیرود بکینګ توکي چې لا نه دي بار شوي",
+  "sales.stk_source_export_hint": "بار شوي او په لار کې توکي، او تایید شوې ذخیره",
+  "sales.stk_search_ph": "توکي، لاټ، اصلیت، برانډ، ګودام ولټوئ…",
+  "sales.stk_loading": "ذخیره بارېږي…",
+  "sales.stk_denied": "ستاسو رول د دې سرچینې ذخیره نشي لیدلی.",
+  "sales.stk_load_error": "ذخیره بار نه شوه. بیا هڅه وکړئ.",
+  "sales.stk_empty": "په دې سرچینه کې هیڅ ذخیره نشته.",
+  "sales.stk_col_goods": "د توکو نوم",
+  "sales.stk_col_lot": "د لاټ شمیره",
+  "sales.stk_col_origin": "اصلیت",
+  "sales.stk_col_brand": "برانډ",
+  "sales.stk_col_size": "اندازه",
+  "sales.stk_col_qty": "کمیت",
+  "sales.stk_col_weight": "ټول وزن",
+  "sales.stk_col_sold": "پلورل شوې کمیت",
+  "sales.stk_col_remaining": "پاتې توازن",
+  "sales.stk_details_title": "د ذخیرې تفصیل",
+  "sales.stk_pick_lot_hint": "د بشپړو جزیاتو لیدلو لپاره پر یو لاټ کلیک وکړئ.",
+  "sales.stk_d_unit": "د کمیت ډول",
+  "sales.stk_d_kg_unit": "په هر واحد کې کیلوګرام",
+  "sales.stk_d_empty": "تش وزن (کیلوګرام)",
+  "sales.stk_d_hs": "د HS کوډ",
+  "sales.stk_d_location": "ځای / ګودام",
+  "sales.stk_d_branch": "څانګه",
+  "sales.stk_d_reference": "د ذخیرې مرجع",
+  "sales.stk_d_container": "کانټینر",
+  "sales.stk_d_status": "حالت",
+  "sales.stk_d_history": "د دې لاټ مخکینۍ بکینګونه",
+  "sales.stk_d_no_history": "بل هیڅ بکینګ له دې لاټ څخه ذخیره نه ده اخیستې.",
+  "sales.stk_d_sold_out": "پلورل شوی — له دې لاټ څخه د پلورلو لپاره هیڅ نه دي پاتې.",
+  "sales.stk_confirm": "تایید — له دې لاټ څخه پلورل",
+  "sales.stk_selected_title": "ټاکل شوې ذخیره",
+  "sales.stk_change": "ذخیره بدل کړئ",
+  "sales.stk_select_stock": "ذخیره وټاکئ",
+  "sales.stk_clear": "پاکول",
+  "sales.stk_not_linked_note": "هیڅ ذخیره نه ده ټاکل شوې — پرته له ذخیرې دننه شوي توکي د انوینټري په وړاندې نه ګرندول کیږي. د لاټ څخه د پلورلو لپاره «ذخیره وټاکئ» وکاروئ.",
+  "sales.stk_err_over": "کمیت له دې لاټ کې پاتې ذخیرې څخه ډیر دی.",
+  "sales.stk_remaining_after": "له دې پلور وروسته پاتې",
+  "sales.ge_err_goods": "د توکو نوم وټاکئ یا دننه کړئ.",
+  "sales.ge_err_qty": "له صفر څخه لوی کمیت دننه کړئ.",
+  "sales.ge_err_price": "د پلور قیمت نرخ دننه کړئ.",
+  "sales.ge_err_currency": "په ۱ ګام کې د انوائس او تصفیې اسعار وټاکئ.",
+  "sales.ge_err_rate": "د تبادلې نرخ اړین دی — ۱ ګام ته ستانه شئ او دننه یې کړئ (یا ورځنی نرخ وکاروئ).",
+  "sales.ge_err_over": "کمیت له دې لاټ کې پاتې ذخیرې څخه ډیر دی.",
+  "sales.ge_err_nobalance": "د دې ذخیرې پاتې توازن نامعلوم دی. ذخیره بیا وټاکئ.",
+  "sales.ge_lot_number": "د لاټ شمیره",
+  "sales.ge_invoice_currency": "د انوائس اسعار",
+  "sales.ge_exchange_rate": "د تبادلې نرخ",
+  "sales.ge_rate_missing": "ورک — په ۱ ګام کې یې وټاکئ",
+  "sales.ge_add_goods": "توکي جدول ته اضافه کړئ",
+  "sales.ge_empty_table": "تر اوسه هیڅ توکي نه دي اضافه شوي.",
+  "sales.ge_no_stock_tag": "له ذخیرې سره نه تړل شوی",
+  "sales.ge_total": "ټول",
+  "sales.ge_err_no_goods": "مخکې له دې چې پرمخ ولاړ شئ لږ تر لږه یو د توکو کرښه اضافه کړئ.",
+  "sales.ge_next_shipping": "راتلونکی: لېږدونه او تادیه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

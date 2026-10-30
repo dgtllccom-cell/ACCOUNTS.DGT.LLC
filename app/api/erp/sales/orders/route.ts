@@ -14,6 +14,7 @@ import postgres from "postgres";
 import { normalizeLanguage, saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { localizeRecordNames, trustedTranslationMap } from "@/lib/i18n/localize-records";
 import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations";
+import { assertBookingCurrency, assertSalesWithinStock } from "@/lib/sales/booking-rules";
 
 
 async function attachSalesOrderTranslations(rows: any[]) {
@@ -313,6 +314,9 @@ export async function POST(request: NextRequest) {
     tenantHash = lockRes.tenantHash;
 
     const body = salesOrderSchema.parse(rawJson);
+    // a conversion needs a real rate, and goods taken from stock may not exceed what is left (open bookings of every branch counted)
+    assertBookingCurrency(body.formData);
+    await assertSalesWithinStock(session, body.formData);
     const effective = await resolveEffectiveScope({
       session,
       requested: {

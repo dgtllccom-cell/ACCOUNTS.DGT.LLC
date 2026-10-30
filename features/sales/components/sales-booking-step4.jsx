@@ -186,10 +186,10 @@ export function SalesBookingStep4({
             <div className="grid grid-cols-2 gap-2 text-slate-700 dark:text-slate-300 leading-tight">
               {/* Left Column: Loading */}
               <div className="space-y-1">
-                <div><span className="text-slate-400 font-medium">Loading Port: </span><span className="font-bold">{form.loadingPort || "Jebel Ali Port"}</span></div>
+                <div><span className="text-slate-400 font-medium">Loading Port: </span><span className="font-bold">{form.loadingPort || "—"}</span></div>
                 <div><span className="text-slate-400 font-medium">Loading Date: </span><span className="font-bold">{formatDisplayDate(form.loadingDate || form.salesDate)}</span></div>
-                <div><span className="text-slate-400 font-medium">Shipping Line: </span><span className="font-bold">{form.shippingLine || "MSC Line"}</span></div>
-                <div><span className="text-slate-400 font-medium">Vessel Name: </span><span className="font-bold">{form.vesselName || "MSC Evergreen"}</span></div>
+                <div><span className="text-slate-400 font-medium">Shipping Line: </span><span className="font-bold">{form.shippingLine || "—"}</span></div>
+                <div><span className="text-slate-400 font-medium">Vessel Name: </span><span className="font-bold">{form.vesselName || "—"}</span></div>
                 <div><span className="text-slate-400 font-medium">Voyage No.: </span><span className="font-mono font-bold">{form.voyageNo || "VY1234"}</span></div>
               </div>
 

@@ -69,18 +69,27 @@ export function SalesBookingStep5({
 
   const currency = form.salesCurrency || form.currencyType || "AED";
 
-  // Intelligent fallback text if Step 4 reports were left blank
-  const loadingReportText = form.loadingReport?.trim() ||
-    `Cargo loaded at ${form.loadingPort || "Jebel Ali Port"} on ${formatDisplayDate(form.loadingDate || form.salesDate)}. All containers inspected and sealed with ${form.shippingLine || "MSC Line"}. Documents (Packing List, Commercial Invoice and Certificate of Origin) handed over to shipping line. Vessel ${form.vesselName || "MSC Evergreen"} (${form.voyageNo || "VY1234"}) departed on time. No damage reported.`;
+  // Report texts: what the user wrote in Step 4, otherwise a summary built ONLY from this booking's own data. Nothing is invented
+  // (no port, vessel, payment-received or "no damage" statements the booking does not hold).
+  const goodsNames = goodsEntries.map((g) => g.goodsName || g.productName).filter(Boolean).join(", ");
+  const unitName = goodsEntries[0]?.qtyName || "";
+  const money = (n) => Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+  const loadingReportText = form.loadingReport?.trim() || "";
 
   const goodsSummaryReportText = form.orderReportRemarks?.trim() ||
-    `Total ${totals.totalQuantity.toLocaleString()} ${goodsEntries[0]?.qtyName || "MT"} including ${goodsEntries.map(g => g.goodsName || g.productName).filter(Boolean).join(", ") || "Almond Kernels, Pistachios and Raisins"}. All goods are in good condition and packed as per standard export quality. Net weight ${totals.totalNet.toLocaleString()} KG and gross weight ${totals.totalGross.toLocaleString()} KG. All HS codes verified and quantities matched with packing list.`;
+    (goodsEntries.length
+      ? `Total ${totals.totalQuantity.toLocaleString()} ${unitName} — ${goodsNames}. Net weight ${totals.totalNet.toLocaleString()} KG, gross weight ${totals.totalGross.toLocaleString()} KG.`
+      : "");
 
   const paymentReportText = form.paymentReport?.trim() ||
-    `Advance payment of ${totals.advancePercent}% (${currency} ${totals.advanceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}) received on ${formatDisplayDate(form.advancePaymentDate || form.salesDate)} via ${form.paymentType?.toLowerCase() || "cash"}. Remaining amount ${currency} ${totals.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} to be paid on or before ${formatDisplayDate(form.paymentDate || form.salesDate)}. Payment terms as per sales contract. No outstanding from previous bookings.`;
+    (totals.advancePercent > 0
+      ? `Advance required: ${totals.advancePercent}% (${currency} ${money(totals.advanceAmount)})${form.advancePaymentDate ? ` by ${formatDisplayDate(form.advancePaymentDate)}` : ""}. Remaining ${currency} ${money(totals.remainingAmount)}${form.paymentDate ? ` due by ${formatDisplayDate(form.paymentDate)}` : ""}.`
+      : "");
 
   const journalNarrationText = form.salesReportRemarks?.trim() ||
-    `Sales booking for export shipment of ${goodsEntries.map(g => g.goodsName || g.productName).filter(Boolean).join(", ") || "Almond Kernels, Pistachios and Raisins"} to ${form.destinationCountry || "Pakistan"} via ${form.loadingPort || "Jebel Ali Port"}. Total ${totals.totalQuantity.toLocaleString()} ${goodsEntries[0]?.qtyName || "MT"}, Invoice value USD ${totals.totalAmountUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })} (${currency} ${totals.totalAmountLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })} at rate ${totals.exRate.toFixed(4)}). Advance ${totals.advancePercent}% received and balance as per payment terms. All documents verified and shipment processed as per contract. Entry to be transferred to Sales Ledger (CR), Customer Ledger (DR) and stock as per approved booking.`;
+    (goodsEntries.length
+      ? `Sales booking of ${goodsNames}${form.destinationCountry ? ` to ${form.destinationCountry}` : ""}. Total ${totals.totalQuantity.toLocaleString()} ${unitName}, invoice value ${form.currencyType || currency} ${money(totals.totalAmountUsd)}${form.currencyType && form.secondaryCurrency && form.currencyType !== form.secondaryCurrency ? ` (${form.secondaryCurrency} ${money(totals.totalAmountLocal)} at rate ${Number(totals.exRate || 0).toFixed(4)})` : ""}.`
+      : "");
 
   const checklistItems = [
     "Booking Details Completed",
@@ -367,11 +376,11 @@ export function SalesBookingStep5({
                 <span>{tUi(lang, "sales.loading_export_import", "LOADING (EXPORT / IMPORT)")}</span>
               </div>
               <div className="grid grid-cols-2 gap-1 text-slate-700 leading-tight">
-                <div>Loading Port : <span className="font-bold">{form.loadingPort || "Jebel Ali Port"}</span></div>
+                <div>Loading Port : <span className="font-bold">{form.loadingPort || "—"}</span></div>
                 <div>Receiving Port : <span className="font-bold">{form.receivedPort || "Karachi Port"}</span></div>
                 <div>Loading Date : <span className="font-bold">{formatDisplayDate(form.loadingDate || form.salesDate)}</span></div>
                 <div>Receiving Date : <span className="font-bold">{formatDisplayDate(form.receivedDate || form.salesDate)}</span></div>
-                <div>Shipping Line : <span className="font-bold">{form.shippingLine || "MSC Line"}</span></div>
+                <div>Shipping Line : <span className="font-bold">{form.shippingLine || "—"}</span></div>
                 <div>Destination City : <span className="font-bold">{form.destinationCity || "Karachi"}</span></div>
               </div>
               {/* Displayed Report Box */}

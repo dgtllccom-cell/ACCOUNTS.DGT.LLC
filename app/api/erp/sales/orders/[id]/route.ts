@@ -11,6 +11,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { supportedLanguageSchema } from "@/lib/api/erp-validation";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations";
+import { assertBookingCurrency, assertSalesWithinStock } from "@/lib/sales/booking-rules";
 import { trustedTranslationMap } from "@/lib/i18n/localize-records";
 import { getDbUrl, withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 
@@ -155,6 +156,11 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       countryBranchId: (before as any).country_branch_id,
       cityBranchId: (before as any).city_branch_id
     });
+
+    if ((body as any).formData) {
+      assertBookingCurrency((body as any).formData);
+      await assertSalesWithinStock(session, (body as any).formData, { excludeOrderId: params.id });
+    }
 
     const patch: Record<string, any> = {
       updated_at: new Date().toISOString()
