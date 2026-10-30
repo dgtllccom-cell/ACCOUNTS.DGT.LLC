@@ -68,13 +68,13 @@ export function SalesBookingUpperCards({
   const [viewModalType, setViewModalType] = useState("customer");
 
   const bookingDateFormatted = formatDisplayDate(form.salesDate || form.bookingDate);
-  const bookingNo = form.salesOrderNo || "SB-2026-0001";
-  const serialNo = form.billNo || "SV-0001";
+  const bookingNo = form.salesOrderNo || "—";
+  const serialNo = form.billNo || "—";
   const paymentType = form.paymentType || "Cash";
   const shippingType = form.shippingMode || form.shipmentType || "By Sea";
-  const country = form.branchCountry || "United Arab Emirates";
+  const country = form.branchCountry || "—";
   const branch = form.branchName || "—";
-  const createdBy = form.userName || "Admin User";
+  const createdBy = form.userName || "—";
   const operationType = form.saleMode === "export" ? "Export" : (form.operationType || "Export");
 
   const handleOpenAccountModal = (type) => {
@@ -123,8 +123,8 @@ export function SalesBookingUpperCards({
   const salesAccountCode = form.salesAccountNo || "—";
   const salesAccountName = form.salesAccountName || "—";
   const salesBranch = form.salesAccountBranch || branch;
-  const salesBusinessName = form.salesAccountKind || "General Trading";
-  const salesCurrency = form.salesCurrency || form.currencyType || "AED";
+  const salesBusinessName = form.salesAccountKind || "—";
+  const salesCurrency = form.salesCurrency || form.currencyType || "—";
   const salesCompany = form.salesCompanyName || salesAccountName;
   const salesAddress = form.salesCompanyAddress || "—";
   const salesLicense = form.salesLicenseNo || "—";
@@ -134,21 +134,20 @@ export function SalesBookingUpperCards({
   const customerAccountCode = form.customerAccountNo || "—";
   const customerAccountName = form.customerAccountName || "—";
   const customerBranch = form.customerAccountBranch || branch;
-  const customerBusinessName = form.customerAccountKind || "Import & Export";
-  const customerCurrency = form.customerAccountCurrency || form.salesCurrency || "AED";
+  const customerBusinessName = form.customerAccountKind || "—";
+  const customerCurrency = form.customerAccountCurrency || form.salesCurrency || "—";
   const customerCompany = form.customerCompanyName || customerAccountName;
   const customerAddress = form.customerCompanyAddress || "—";
-  const customerLicense = form.customerLicenseNo || "TRN0987654321";
-  const customerGst = form.customerGstTrn || "100987654321003";
+  const customerLicense = form.customerLicenseNo || "—";
+  const customerGst = form.customerGstTrn || "—";
 
   // Handle currency change
   const handleCurrencyChange = (newCurr) => {
     if (readOnly || !setForm) return;
     setForm((prev) => ({
       ...prev,
-      salesCurrency: newCurr,
-      customerAccountCurrency: newCurr,
-      currencyType: newCurr === "USD" ? "USD" : prev.currencyType
+      salesAccountCurrency: newCurr,
+      customerAccountCurrency: newCurr
     }));
   };
 
@@ -382,11 +381,11 @@ export function SalesBookingUpperCards({
           </div>
           <div className="flex justify-between gap-1">
             <span className="truncate">Country : {country}</span>
-            <span className="truncate">State : Dubai</span>
+            <span className="truncate">State : {form.salesState || "—"}</span>
           </div>
           <div className="flex justify-between gap-1">
-            <span className="truncate">City : Dubai</span>
-            <span className="truncate font-mono">City Code : DXB</span>
+            <span className="truncate">City : {form.salesCity || "—"}</span>
+            <span className="truncate font-mono">City Code : {form.salesCityCode || "—"}</span>
           </div>
           <div className="truncate">
             <span className="text-slate-400 font-medium">Address : </span>
@@ -517,11 +516,11 @@ export function SalesBookingUpperCards({
           </div>
           <div className="flex justify-between gap-1">
             <span className="truncate">Country : {country}</span>
-            <span className="truncate">State : Dubai</span>
+            <span className="truncate">State : {form.customerState || "—"}</span>
           </div>
           <div className="flex justify-between gap-1">
-            <span className="truncate">City : Dubai</span>
-            <span className="truncate font-mono">City Code : DXB</span>
+            <span className="truncate">City : {form.customerCity || "—"}</span>
+            <span className="truncate font-mono">City Code : {form.customerCityCode || "—"}</span>
           </div>
           <div className="truncate">
             <span className="text-slate-400 font-medium">Address : </span>

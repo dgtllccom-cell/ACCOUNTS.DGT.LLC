@@ -16,9 +16,9 @@ import type { AvailableLot, LotDeduction } from "@/lib/sales/available-lots";
  */
 export type StockGroupId = "warehouse" | "booking" | "export";
 const GROUPS: Array<{ id: StockGroupId; sources: string[]; icon: typeof Building2; accent: string }> = [
-  { id: "warehouse", sources: ["warehouse", "lot", "local"], icon: Building2, accent: "text-blue-600" },
+  { id: "warehouse", sources: ["warehouse_all"], icon: Building2, accent: "text-blue-600" },
   { id: "booking", sources: ["booking"], icon: FileText, accent: "text-amber-600" },
-  { id: "export", sources: ["in_transit", "endorse"], icon: Plane, accent: "text-sky-600" }
+  { id: "export", sources: ["export_all"], icon: Plane, accent: "text-sky-600" }
 ];
 
 type GroupState = { status: "idle" | "loading" | "ok" | "denied" | "error"; lots: AvailableLot[] };
@@ -77,13 +77,14 @@ export function SalesStockPanel({
     [lang, excludeOrderId]
   );
 
-  // load every source when the panel opens so each shows how many records it holds
+  // the opened group loads when the panel opens; the others load when they are clicked (each is one request)
   useEffect(() => {
     if (!open) return;
     setGroup(initialGroup);
     setSearch("");
     setSelectedKey("");
-    (["warehouse", "booking", "export"] as StockGroupId[]).forEach((g) => void load(g));
+    setState({ warehouse: { status: "idle", lots: [] }, booking: { status: "idle", lots: [] }, export: { status: "idle", lots: [] } });
+    void load(initialGroup);
   }, [open, initialGroup, load]);
 
   const lots = state[group].lots;
@@ -122,7 +123,7 @@ export function SalesStockPanel({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-stretch justify-center bg-black/55 p-0 sm:p-4" role="dialog" aria-modal="true" aria-label={tt("panel_title", "Select Stock to Sell")} dir={isRtl ? "rtl" : "ltr"} data-testid="stock-panel">
-      <div className="flex w-full max-w-7xl flex-col overflow-hidden bg-white shadow-2xl dark:bg-slate-900 sm:rounded-2xl">
+      <div className="flex w-full max-w-[1560px] flex-col overflow-hidden bg-white shadow-2xl dark:bg-slate-900 sm:rounded-2xl">
         {/* header */}
         <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
           <div className="min-w-0">
@@ -135,7 +136,7 @@ export function SalesStockPanel({
         </div>
 
         {/* body: sources | lots | details */}
-        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[210px_minmax(0,1fr)_340px] lg:overflow-hidden">
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[200px_minmax(0,1fr)_320px] lg:overflow-hidden">
           {/* 1. sources */}
           <div className="flex gap-2 overflow-x-auto border-b border-slate-200 p-3 dark:border-slate-800 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-e" data-testid="stock-sources">
             {GROUPS.map((g) => {
@@ -149,6 +150,7 @@ export function SalesStockPanel({
                   onClick={() => {
                     setGroup(g.id);
                     setSelectedKey("");
+                    if (state[g.id].status === "idle" || state[g.id].status === "error") void load(g.id);
                   }}
                   aria-pressed={active}
                   data-testid={`stock-source-${g.id}`}

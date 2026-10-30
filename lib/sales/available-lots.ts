@@ -16,8 +16,9 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
-export type SaleSource = "booking" | "in_transit" | "local" | "warehouse" | "endorse" | "stock" | "lot";
-export const SALE_SOURCES: SaleSource[] = ["booking", "in_transit", "local", "warehouse", "endorse", "stock", "lot"];
+/** warehouse_all = managed lots + warehouse balances + local purchases; export_all = loaded / on-route goods + endorsed stock (one request each for the Select Stock panel) */
+export type SaleSource = "booking" | "in_transit" | "local" | "warehouse" | "endorse" | "stock" | "lot" | "warehouse_all" | "export_all";
+export const SALE_SOURCES: SaleSource[] = ["booking", "in_transit", "local", "warehouse", "endorse", "stock", "lot", "warehouse_all", "export_all"];
 
 export interface AvailableLot {
   id?: string;
@@ -358,8 +359,57 @@ export async function listAvailableLots(
       }
     };
 
+    const fetchEndorseLots = async () => {
+      const rows = (await sql`
+        SELECT sm.id, sm.goods_id, sm.quantity, sm.reference_no, sm.unit_cost,
+               g.goods_name, g.chs_code, w.warehouse_name,
+               cb.name as branch_name
+        FROM public.stock_movements sm
+        LEFT JOIN public.goods g ON g.id = sm.goods_id
+        LEFT JOIN public.warehouses w ON w.id = sm.warehouse_id
+        LEFT JOIN public.city_branches cb ON cb.id = sm.city_branch_id
+        WHERE ${scope} AND sm.deleted_at IS NULL
+          AND lower(sm.movement_type) LIKE '%endors%'
+        ORDER BY sm.created_at DESC
+        LIMIT ${limit}
+      `) as unknown as any[];
+      for (const r of rows) {
+        out.push({
+          lotNo: r.reference_no || `END-${String(r.id).slice(0, 8)}`,
+          source,
+          goodsId: r.goods_id ?? null,
+          goodsName: r.goods_name ?? "",
+          brand: "",
+          size: "",
+          origin: "",
+          hsCode: r.chs_code ?? "",
+          qtyName: "BAGS",
+          availableQty: n(r.quantity),
+          qtyKgs: 0,
+          emptyKgs: 0,
+          netWeight: 0,
+          location: r.warehouse_name || "Endorse Stock",
+          branchName: r.branch_name || "Endorse Branch",
+          warehouseName: r.warehouse_name || "Endorse Stock",
+          stockRef: r.reference_no || `END-${String(r.id).slice(0, 8)}`,
+          containerNo: null,
+          currencyType: "USD",
+          exchangeRate: 1,
+          coursePrice: n(r.unit_cost),
+          status: "Endorsed / sellable",
+        });
+      }
+    };
+
     if (source === "lot") {
       await fetchManagedLots();
+    } else if (source === "warehouse_all") {
+      await fetchManagedLots();
+      await fetchWarehouseLots();
+      await fetchLocalLots();
+    } else if (source === "export_all") {
+      await fetchTransitLots();
+      await fetchEndorseLots();
     } else if (source === "stock") {
       await fetchManagedLots();
       await fetchWarehouseLots();
@@ -416,45 +466,7 @@ export async function listAvailableLots(
     } else if (source === "warehouse") {
       await fetchWarehouseLots();
     } else if (source === "endorse") {
-      const rows = (await sql`
-        SELECT sm.id, sm.goods_id, sm.quantity, sm.reference_no, sm.unit_cost,
-               g.goods_name, g.chs_code, w.warehouse_name,
-               cb.name as branch_name
-        FROM public.stock_movements sm
-        LEFT JOIN public.goods g ON g.id = sm.goods_id
-        LEFT JOIN public.warehouses w ON w.id = sm.warehouse_id
-        LEFT JOIN public.city_branches cb ON cb.id = sm.city_branch_id
-        WHERE ${scope} AND sm.deleted_at IS NULL
-          AND lower(sm.movement_type) LIKE '%endors%'
-        ORDER BY sm.created_at DESC
-        LIMIT ${limit}
-      `) as unknown as any[];
-      for (const r of rows) {
-        out.push({
-          lotNo: r.reference_no || `END-${String(r.id).slice(0, 8)}`,
-          source,
-          goodsId: r.goods_id ?? null,
-          goodsName: r.goods_name ?? "",
-          brand: "",
-          size: "",
-          origin: "",
-          hsCode: r.chs_code ?? "",
-          qtyName: "BAGS",
-          availableQty: n(r.quantity),
-          qtyKgs: 0,
-          emptyKgs: 0,
-          netWeight: 0,
-          location: r.warehouse_name || "Endorse Stock",
-          branchName: r.branch_name || "Endorse Branch",
-          warehouseName: r.warehouse_name || "Endorse Stock",
-          stockRef: r.reference_no || `END-${String(r.id).slice(0, 8)}`,
-          containerNo: null,
-          currencyType: "USD",
-          exchangeRate: 1,
-          coursePrice: n(r.unit_cost),
-          status: "Endorsed / sellable",
-        });
-      }
+      await fetchEndorseLots();
     }
     return out;
   });
