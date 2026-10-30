@@ -72,7 +72,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
     try {
       const res = await fetch(`/api/erp/crm/customer-360?customerId=${encodeURIComponent(customerId)}`);
       const json = await res.json();
-      if (json.success && json.data) {
+      if (res.ok && json.ok && json.data) {
         setProfileData(json.data);
       }
     } catch (err) {
@@ -104,7 +104,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
         })
       });
       const json = await res.json();
-      if (json.success) {
+      if (res.ok && json.ok) {
         setLogModalOpen(false);
         setNotes("");
         setPromiseDate("");
@@ -158,44 +158,46 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
     csvContent += `Sales Manager,"${customer.assignedUserName || ""}"\n\n`;
 
     csvContent += `FINANCIAL POSITION SUMMARY\n`;
-    csvContent += `Currency,"${financialSummary.currency || "AED"}"\n`;
-    csvContent += `Total Receivables,"${financialSummary.totalReceivable || 0}"\n`;
-    csvContent += `Total Payables,"${financialSummary.totalPayable || 0}"\n`;
-    csvContent += `Net Financial Position,"${financialSummary.netPosition || 0}"\n`;
+    financialSummary.balancesByCurrency.forEach((balance: any) => {
+      csvContent += `${tUi(lang, "common.currency", "Currency")},"${balance.currency}"\n`;
+      csvContent += `${ct("totalReceivable", "Total Receivable")},"${balance.totalReceivable}"\n`;
+      csvContent += `${ct("totalPayable", "Total Payable")},"${balance.totalPayable}"\n`;
+      csvContent += `${ct("netPosition", "Net Position")},"${balance.netPosition}"\n`;
+    });
     csvContent += `Uncleared Cheques Count,"${financialSummary.chequesCount || 0}"\n\n`;
 
     csvContent += `SALES ORDERS / QUOTATIONS (${(salesOrders || []).length})\n`;
     csvContent += `Order #,Date,Amount,Currency,Status\n`;
     (salesOrders || []).forEach((o: any) => {
-      csvContent += `"${o.orderNumber || ""}","${o.date || ""}","${o.amount || 0}","${o.currency || "AED"}","${o.status || ""}"\n`;
+      csvContent += `"${o.salesOrderNo || ""}","${o.orderDate || ""}","${o.orderTotal || 0}","${o.currency || "AED"}","${o.salesStatus || ""}"\n`;
     });
     csvContent += `\n`;
 
     csvContent += `PURCHASE ORDERS (${(purchaseOrders || []).length})\n`;
     csvContent += `Order #,Date,Amount,Currency,Status\n`;
     (purchaseOrders || []).forEach((p: any) => {
-      csvContent += `"${p.orderNumber || ""}","${p.date || ""}","${p.amount || 0}","${p.currency || "AED"}","${p.status || ""}"\n`;
+      csvContent += `"${p.purchaseOrderNo || ""}","${p.orderDate || ""}","${p.orderTotal || 0}","${p.currency || "AED"}","${p.paymentStatus || ""}"\n`;
     });
     csvContent += `\n`;
 
     csvContent += `BANK CHEQUES REGISTER (${(cheques || []).length})\n`;
-    csvContent += `Cheque #,Bank,Due Date,Amount,Type,Status\n`;
+    csvContent += `Cheque #,Bank,Due Date,Amount,${tUi(lang, "common.currency", "Currency")},Status\n`;
     (cheques || []).forEach((ch: any) => {
-      csvContent += `"${ch.chequeNumber || ""}","${ch.bankName || ""}","${ch.dueDate || ""}","${ch.amount || 0}","${ch.type || ""}","${ch.status || ""}"\n`;
+      csvContent += `"${ch.chequeNo || ""}","${ch.bankName || ""}","${ch.dueDate || ""}","${Math.abs(ch.debit - ch.credit)}","${ch.currency || ""}","${ch.status || ""}"\n`;
     });
     csvContent += `\n`;
 
     csvContent += `SHIPPING & CLEARING ORDERS (${(shippingAndClearing || []).length})\n`;
     csvContent += `Ref #,Line / Agent,Date,Status\n`;
     (shippingAndClearing || []).forEach((s: any) => {
-      csvContent += `"${s.orderRef || ""}","${s.shippingLine || ""}","${s.date || ""}","${s.status || ""}"\n`;
+      csvContent += `"${s.referenceNo || ""}","${s.details || ""}","${s.date || ""}","${s.status || ""}"\n`;
     });
     csvContent += `\n`;
 
     csvContent += `ACTIVITY TIMELINE NOTES (${(timeline || []).length})\n`;
     csvContent += `Date,Type,Performed By,Notes / Outcome\n`;
     (timeline || []).forEach((tl: any) => {
-      csvContent += `"${tl.date || ""}","${tl.type || ""}","${tl.user || ""}","${(tl.notes || "").replace(/"/g, '""')}"\n`;
+      csvContent += `"${tl.date || ""}","${tl.type || ""}","${tl.author || ""}","${(tl.content || "").replace(/"/g, '""')}"\n`;
     });
 
     const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
@@ -208,7 +210,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
   };
 
   return (
-    <div className={`w-full min-h-screen pb-12 font-sans space-y-6 ${isRtl ? "rtl" : "ltr"}`}>
+    <div dir={isRtl ? "rtl" : "ltr"} className={`w-full min-h-screen pb-12 font-sans space-y-6 ${isRtl ? "rtl" : "ltr"}`}>
       {/* Top Banner Navigation & Quick Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
         <div className="flex items-center gap-3">
@@ -298,7 +300,9 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             </div>
           </div>
           <div className="text-xl font-black text-slate-900 dark:text-slate-100">
-            {financialSummary.currency} {Number(financialSummary.totalReceivable || 0).toLocaleString()}
+            {financialSummary.balancesByCurrency.length ? financialSummary.balancesByCurrency.map((balance: any) => (
+              <div key={balance.currency}>{balance.currency} {Number(balance.totalReceivable).toLocaleString()}</div>
+            )) : "—"}
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-1">
             {financialSummary.salesOrdersCount} {ct("salesOrders", "Quotations & Sales Records")}
@@ -314,7 +318,9 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             </div>
           </div>
           <div className="text-xl font-black text-slate-900 dark:text-slate-100">
-            {financialSummary.currency} {Number(financialSummary.totalPayable || 0).toLocaleString()}
+            {financialSummary.balancesByCurrency.length ? financialSummary.balancesByCurrency.map((balance: any) => (
+              <div key={balance.currency}>{balance.currency} {Number(balance.totalPayable).toLocaleString()}</div>
+            )) : "—"}
           </div>
           <p className="text-[11px] text-blue-600 font-semibold mt-1">
             {financialSummary.purchaseOrdersCount} {ct("purchases", "Purchase & Payment References")}
@@ -330,7 +336,9 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             </div>
           </div>
           <div className={`text-xl font-black ${financialSummary.netPosition >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-            {financialSummary.currency} {Number(financialSummary.netPosition || 0).toLocaleString()}
+            {financialSummary.balancesByCurrency.length ? financialSummary.balancesByCurrency.map((balance: any) => (
+              <div key={balance.currency}>{balance.currency} {Number(balance.netPosition).toLocaleString()}</div>
+            )) : "—"}
           </div>
           <p className="text-[11px] text-slate-400 font-medium mt-1">
             Receivable - Payable Net
@@ -469,6 +477,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                               {isMessage && <MessageCircle className="h-3.5 w-3.5 text-teal-600" />}
                               {!isCall && !isMeeting && !isMessage && <FileText className="h-3.5 w-3.5 text-blue-600" />}
                               <span>{item.type}</span>
+                              {item.link && <Link href={item.link} className="text-blue-600 underline">{tUi(lang, "common.view", "View")}</Link>}
                             </span>
                             <span className="text-slate-400 font-mono text-[11px]">
                               {new Date(item.date).toLocaleString()}

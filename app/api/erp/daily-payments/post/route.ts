@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
-import { requireErpSession } from "@/lib/auth/session";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { getCurrentErpSession, ErpAuthError } from "@/lib/auth/session";
+import { scopedSessionForPermission } from "@/lib/permissions/scoped-session";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 import { postCanonicalDailyPayment, CanonicalDailyPaymentInput } from "@/lib/services/canonical-daily-payment-posting-service";
 
@@ -14,8 +14,8 @@ const dailyPaymentPostSchema = z.object({
   method: z.enum(["cash", "bank_transfer", "tt_swift", "mobile_wallet", "cheque", "internal_transfer"]),
   entryDate: z.string().min(8),
   amount: z.coerce.number().positive(),
-  currencyCode: z.string().min(1).default("USD"),
-  exchangeRate: z.coerce.number().positive().default(1),
+  currencyCode: z.string().trim().regex(/^[A-Za-z]{3}$/).transform((v) => v.toUpperCase()),
+  exchangeRate: z.coerce.number().finite().positive(),
   debitLedgerId: z.string().uuid(),
   creditLedgerId: z.string().uuid(),
   referenceNo: z.string().optional().nullable(),
@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
   let tenantHash = "";
 
   try {
-    const session = await requireErpSession();
+    let session = await getCurrentErpSession();
+    if (!session) throw new ErpAuthError();
 
     let rawBody: any;
     const contentType = request.headers.get("content-type") || "";
@@ -43,6 +44,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = dailyPaymentPostSchema.parse(rawBody);
+    const isPurchase = body.targetType === "purchase_booking" || body.targetType === "local_purchase";
+    if (body.direction !== (isPurchase ? "purchase_payment" : "sales_payment")) {
+      return handleApiError(new z.ZodError([{ code: "custom", path: ["direction"], message: "Payment direction does not match target type" }]));
+    }
+    // Authorize before even creating an idempotency record.
+    session = scopedSessionForPermission(session, isPurchase ? "purchases" : "sales", "post");
 
     // Acquire idempotency lock to prevent double-click / duplicate submission
     const lockRes = await acquireIdempotencyLock({
@@ -65,17 +72,7 @@ export async function POST(request: NextRequest) {
     idempotencyKey = lockRes.idempotencyKey;
     tenantHash = lockRes.tenantHash;
 
-    // Check scope authorization
-    authorizeApiScope(session, {
-      resource: body.direction === "purchase_payment" ? "purchases" : "sales",
-      action: "post",
-    });
-
-    const result = await postCanonicalDailyPayment(body as CanonicalDailyPaymentInput, {
-      userId: session.userId,
-      countryIds: session.countryIds,
-      cityBranchIds: session.cityBranchIds,
-    });
+    const result = await postCanonicalDailyPayment(body as CanonicalDailyPaymentInput, session);
 
     await commitIdempotencySuccess(idempotencyKey, tenantHash, 201, result);
     return apiCreated(result);

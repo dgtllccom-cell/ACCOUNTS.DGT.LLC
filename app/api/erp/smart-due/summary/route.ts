@@ -1,6 +1,7 @@
+import { smartDueSourceSql } from "@/lib/services/smart-due-access";
 import { NextRequest } from "next/server";
-import { apiOk, handleApiError } from "@/lib/api/response";
-import { requireErpSession } from "@/lib/auth/session";
+import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
+import { getCurrentErpSession, ErpAuthError } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
 export const dynamic = "force-dynamic";
@@ -8,31 +9,17 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession();
+    const session = await getCurrentErpSession();
+    if (!session) throw new ErpAuthError();
     const params = request.nextUrl.searchParams;
     const countryId = params.get("countryId") || null;
     const countryBranchId = params.get("countryBranchId") || null;
     const cityBranchId = params.get("cityBranchId") || null;
 
-    let scopeCountryIds: string[] = [];
-    let scopeCountryBranchIds: string[] = [];
-    let scopeCityBranchIds: string[] = [];
-    if (!session.isSuperAdmin) {
-      scopeCountryIds = [...new Set(session.countryIds)];
-      scopeCountryBranchIds = [...new Set(session.countryBranchIds)];
-      scopeCityBranchIds = [...new Set(session.cityBranchIds)];
-    }
-
     const isShipping = session.isShippingScoped;
 
     const result = await withLocalPg(async (sql) => {
-      const scopeWhere = session.isSuperAdmin
-        ? sql`true`
-        : sql`(
-            city_branch_id = ANY(${scopeCityBranchIds}::uuid[])
-            OR country_branch_id = ANY(${scopeCountryBranchIds}::uuid[])
-            OR country_id = ANY(${scopeCountryIds}::uuid[])
-          )`;
+
 
       const explicitWhere = cityBranchId
         ? sql`city_branch_id = ${cityBranchId}`
@@ -55,19 +42,19 @@ export async function GET(request: NextRequest) {
             END AS urgency_class
           FROM public.bank_cheque_transactions
           WHERE deleted_at IS NULL AND status NOT IN ('cleared','dishonored')
-            AND (${scopeWhere}) AND (${explicitWhere})
+            AND (${smartDueSourceSql(sql, session, "cheques")}) AND (${explicitWhere})
         )
         , purchases AS (
           SELECT 'pending' AS urgency_class
           FROM public.purchase_orders
           WHERE deleted_at IS NULL AND payment_status::text NOT IN ('completed','cancelled') AND remaining_due > 0
-            AND (${scopeWhere}) AND (${explicitWhere})
+            AND (${smartDueSourceSql(sql, session, "purchases")}) AND (${explicitWhere})
         )
         , sales AS (
           SELECT 'pending' AS urgency_class
           FROM public.sales_orders
           WHERE deleted_at IS NULL AND payment_status NOT IN ('completed','paid','cancelled') AND remaining_amount > 0
-            AND (${scopeWhere}) AND (${explicitWhere})
+            AND (${smartDueSourceSql(sql, session, "sales")}) AND (${explicitWhere})
         )
         , shipping_bl AS (
           SELECT
@@ -81,7 +68,7 @@ export async function GET(request: NextRequest) {
             END AS urgency_class
           FROM public.shipping_bl_records
           WHERE deleted_at IS NULL AND shipment_status NOT IN ('delivered','completed')
-            AND (${scopeWhere}) AND (${explicitWhere})
+            AND (${smartDueSourceSql(sql, session, "shipping_bl")}) AND (${explicitWhere})
         )
         , shipping_line AS (
           SELECT
@@ -95,7 +82,7 @@ export async function GET(request: NextRequest) {
             END AS urgency_class
           FROM public.shipping_line_records
           WHERE deleted_at IS NULL AND shipment_status NOT IN ('delivered','completed')
-            AND (${scopeWhere}) AND (${explicitWhere})
+            AND (${smartDueSourceSql(sql, session, "shipping_line")}) AND (${explicitWhere})
         )
         , followups AS (
           SELECT
@@ -109,12 +96,12 @@ export async function GET(request: NextRequest) {
             END AS urgency_class
           FROM public.communication_center_followups
           WHERE deleted_at IS NULL AND status != 'closed'
-            AND (${scopeWhere})
+            AND (${smartDueSourceSql(sql, session, "followups")}) AND (${explicitWhere})
         )
         , approvals AS (
           SELECT 'pending' AS urgency_class
           FROM public.approval_requests
-          WHERE deleted_at IS NULL AND status = 'pending' AND (${scopeWhere})
+          WHERE deleted_at IS NULL AND status = 'pending' AND (${smartDueSourceSql(sql, session, "approvals")}) AND (${explicitWhere})
         )
         , tasks AS (
           SELECT
@@ -128,7 +115,7 @@ export async function GET(request: NextRequest) {
             END AS urgency_class
           FROM public.user_tasks
           WHERE deleted_at IS NULL AND status NOT IN ('completed','verified','cancelled')
-            AND (${scopeWhere})
+            AND (${smartDueSourceSql(sql, session, "tasks")}) AND (${explicitWhere})
         )
         , combined AS (
           ${isShipping
@@ -165,7 +152,8 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return apiOk(result ?? { total: 0, overdue: 0, dueToday: 0, dueTomorrow: 0, upcoming: 0, pending: 0 });
+    if (!result) throw new ApiClientError("Database unavailable", { status: 503, code: "DATABASE_UNAVAILABLE" });
+    return apiOk(result);
   } catch (err) {
     return handleApiError(err);
   }
