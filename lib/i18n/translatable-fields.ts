@@ -205,6 +205,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "account_title", mode: "translate" },
     { field: "remarks", mode: "translate" },
   ],
+  transfer_modes: [
+    { field: "name", mode: "translate" },
+    { field: "reference_label", mode: "translate" },
+    { field: "reference_placeholder", mode: "translate" },
+    { field: "description", mode: "translate" },
+  ],
   bank_cheque_transactions: [
     { field: "bank_name", mode: "transliterate" },
     { field: "user_name", mode: "transliterate" },

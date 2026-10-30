@@ -793,50 +793,7 @@ export function CashEntryForm({
   const [serialRoleFilter, setSerialRoleFilter] = useState("Super Admin");
   const [showSerialsDropdown, setShowSerialsDropdown] = useState(false);
 
-  // Small independent Roznamcha Bank / Payment Master (Parts 9 & 10)
-  const DEFAULT_ROZNAMCHA_BANKS: Record<string, string[]> = {
-    AE: ["Emirates NBD", "Abu Dhabi Commercial Bank (ADCB)", "Dubai Islamic Bank (DIB)", "First Abu Dhabi Bank (FAB)", "Mashreq Bank", "RAKBank", "Commercial Bank of Dubai"],
-    PK: ["Habib Bank Limited (HBL)", "Meezan Bank", "MCB Bank", "United Bank Limited (UBL)", "Allied Bank Limited (ABL)", "Bank Alfalah", "Faysal Bank", "Askari Bank"],
-    AF: ["Afghanistan International Bank (AIB)", "Azizi Bank", "New Kabul Bank", "Ghazanfar Bank", "Maiwand Bank", "Bank-e-Millie Afghan"],
-    IR: ["Bank Melli Iran", "Bank Mellat", "Bank Saderat Iran", "Bank Tejarat", "Parsian Bank", "Pasargad Bank"],
-    IN: ["State Bank of India (SBI)", "HDFC Bank", "ICICI Bank", "Axis Bank", "Punjab National Bank", "Kotak Mahindra Bank"],
-    DEFAULT: ["International Bank", "Standard Chartered", "Citibank", "HSBC", "Other Payment Channel"]
-  };
-  const [customRoznamchaBanks, setCustomRoznamchaBanks] = useState<Record<string, string[]>>({});
-  const [showNewBankModal, setShowNewBankModal] = useState(false);
-  const [newBankNameInput, setNewBankNameInput] = useState("");
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("erp_roznamcha_custom_banks_v1");
-      if (stored) setCustomRoznamchaBanks(JSON.parse(stored));
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  const availableRoznamchaBanks = useMemo(() => {
-    const iso = (activeCountryIso || "DEFAULT").toUpperCase();
-    const defaults = DEFAULT_ROZNAMCHA_BANKS[iso] || DEFAULT_ROZNAMCHA_BANKS.DEFAULT;
-    const custom = customRoznamchaBanks[iso] || [];
-    return [...new Set([...defaults, ...custom])];
-  }, [activeCountryIso, customRoznamchaBanks]);
-
-  const handleAddCustomBank = (name: string) => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    const iso = (activeCountryIso || "DEFAULT").toUpperCase();
-    setCustomRoznamchaBanks((prev) => {
-      const next = { ...prev, [iso]: [...new Set([...(prev[iso] || []), trimmed])] };
-      try {
-        localStorage.setItem("erp_roznamcha_custom_banks_v1", JSON.stringify(next));
-      } catch { /* ignore */ }
-      return next;
-    });
-    setTypeDetails((p) => ({ ...p, bankName: trimmed }));
-    setShowNewBankModal(false);
-    setNewBankNameInput("");
-  };
+  // Roznamcha Bank & Transfer Mode Master connected directly to DB tables (public.banks, public.transfer_modes)
 
   // Daily Cash Position states
   const [cashPositionRoleFilter, setCashPositionRoleFilter] = useState("Super Admin");
@@ -4705,7 +4662,8 @@ export function CashEntryForm({
                           onTransactionReferenceChange={(ref) => setTypeDetails((p) => ({ ...p, transferReferenceNumber: ref, refNo: ref, ref }))}
                           attachmentFile={attachmentFile}
                           onAttachmentChange={(file) => setAttachmentFile(file)}
-                          extraBanks={availableRoznamchaBanks}
+                          countryId={countryId}
+                          countryIso={activeCountryIso}
                           showAttachment={true}
                           lang={lang}
                         />

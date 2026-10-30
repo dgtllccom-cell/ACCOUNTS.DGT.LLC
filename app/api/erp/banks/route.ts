@@ -59,6 +59,7 @@ type LegacyBankRecord = {
   created_at: string;
   updated_at: string;
   country?: { name: string } | null;
+  full_address?: string | null;
 };
 
 function mapBank(row: BankRow): LegacyBankRecord {
@@ -79,7 +80,8 @@ function mapBank(row: BankRow): LegacyBankRecord {
     is_active: row.is_active,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    country: row.country_name ? { name: row.country_name } : null
+    country: row.country_name ? { name: row.country_name } : null,
+    full_address: row.full_address ?? null
   };
 }
 
@@ -237,13 +239,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { bankName, bankCode, branchName, countryId, accountTitle, accountNumber, iban, swiftCode, currencyCode, isActive } = body;
 
-    if (!bankName || !countryId) {
-      return new Response(JSON.stringify({ error: "bankName and countryId are required" }), {
+    if (!bankName) {
+      return new Response(JSON.stringify({ error: "bankName is required" }), {
         status: 400,
         headers: { "Content-Type": "application/json" }
       });
     }
-    if (!session.isSuperAdmin && !session.countryIds.includes(countryId)) {
+
+    let resolvedCountryId = countryId || (session.countryIds && session.countryIds.length > 0 ? session.countryIds[0] : null);
+    if (!resolvedCountryId) {
+      const fallback = await withLocalPg(async (sql) => {
+        const rows = await sql<{ id: string }[]>`SELECT id FROM public.countries WHERE is_active = true ORDER BY name ASC LIMIT 1`;
+        return rows[0]?.id || null;
+      });
+      resolvedCountryId = fallback;
+    }
+
+    if (!session.isSuperAdmin && resolvedCountryId && !session.countryIds.includes(resolvedCountryId)) {
       return new Response(JSON.stringify({ error: "Not authorized for this country" }), {
         status: 403,
         headers: { "Content-Type": "application/json" }
@@ -273,14 +285,14 @@ export async function POST(request: NextRequest) {
           ${iban || null},
           ${currencyCode || "USD"},
           ${body.accountStatus || (isActive === false ? "Inactive" : "Active")},
-          ${countryId}::uuid,
+          ${resolvedCountryId}::uuid,
           ${body.stateProvinceId || null}::uuid,
           ${body.districtId || null}::uuid,
           ${body.cityId || null}::uuid,
-          ${body.fullAddress || null},
+          ${body.fullAddress || body.bankAddress || body.address || null},
           ${body.phone || null},
           ${body.email || null},
-          ${swiftCode || null},
+          ${swiftCode || body.swiftBic || body.swift || null},
           ${body.website || null},
           ${body.remarks || null},
           ${isActive !== false},
