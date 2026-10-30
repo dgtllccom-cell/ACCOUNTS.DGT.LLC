@@ -342,6 +342,7 @@ export function JournalBookingStockDashboard({
   lang?: string;
 }) {
   const s = useErpScreen("sj", langProp);
+  const unitLabel = (u: string) => (u.toLowerCase() === "bags" ? s.t("unit_bags", "Bags") : u.toLowerCase() === "boxes" ? s.t("unit_boxes", "Boxes") : u);
   const [tab, setTab] = useState<StockTab>(initialStage);
   const [destination, setDestination] = useState<DestinationType | "">(initialDestination ?? "");
   const [sourceType, setSourceType] = useState<"all" | "purchase_booking" | "local_purchase">(initialSourceType);
@@ -859,7 +860,7 @@ export function JournalBookingStockDashboard({
         <th class="num">Gross Wt (Kg)</th>
         <th class="num">Net Wt (Kg)</th>
         <th>Booking / Invoice No.</th>
-        <th>Loaded / Received / Damage / Shortage / Outstanding</th>
+        <th>${s.t("col_receiving", "Loaded / Received / Damage / Shortage / Outstanding")}</th>
         <th>${s.t("pay_paid_balance", "Paid / Balance")}</th>
         <th>Ship Details</th>
         <th class="center">Customs</th>
@@ -1223,7 +1224,7 @@ export function JournalBookingStockDashboard({
                         <span className="text-[17px] font-black text-slate-900 dark:text-slate-50 tabular-nums">
                           {fmtNum(qty)}
                         </span>
-                        <span className="text-[11px] font-medium text-slate-400">{u}</span>
+                        <span className="text-[11px] font-medium text-slate-400">{unitLabel(u)}</span>
                       </div>
                     );
                   })}
@@ -1254,7 +1255,7 @@ export function JournalBookingStockDashboard({
                         <span className="text-[17px] font-black text-amber-600 dark:text-amber-400 tabular-nums">
                           {fmtNum(qty)}
                         </span>
-                        <span className="text-[11px] font-medium text-slate-400">{u}</span>
+                        <span className="text-[11px] font-medium text-slate-400">{unitLabel(u)}</span>
                       </div>
                     );
                   })}
@@ -1285,7 +1286,7 @@ export function JournalBookingStockDashboard({
                         <span className="text-[17px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
                           {fmtNum(qty)}
                         </span>
-                        <span className="text-[11px] font-medium text-slate-400">{u}</span>
+                        <span className="text-[11px] font-medium text-slate-400">{unitLabel(u)}</span>
                       </div>
                     );
                   })}
@@ -1416,7 +1417,7 @@ export function JournalBookingStockDashboard({
           </div>
 
           <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
-            {selectedCountry ? `Filtering by ${selectedCountry} · Click row to clear` : "Click any country to filter records."}
+            {selectedCountry ? s.t("filtering_by", "Filtering by {country} · Click row to clear").replace("{country}", selectedCountry) : s.t("click_any_country", "Click any country to filter records.")}
           </div>
         </article>
       </section>
@@ -1501,7 +1502,7 @@ export function JournalBookingStockDashboard({
                 <option value="">All Units</option>
                 {distinctUnits.map((u) => (
                   <option key={u} value={u}>
-                    {u}
+                    {unitLabel(u)}
                   </option>
                 ))}
               </select>
