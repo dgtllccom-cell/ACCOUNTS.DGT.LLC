@@ -12771,6 +12771,46 @@ export type UiKey =
   | "sales.ge_total"
   | "sales.ge_err_no_goods"
   | "sales.ge_next_shipping"
+  | "voice.speak_desc"
+  | "sales.customer_account_dr"
+  | "sales.search_customer_ph"
+  | "sales.sales_account_cr"
+  | "sales.search_sales_ph"
+  | "sales.contract_no"
+  | "sales.contract_booking_date"
+  | "sales.invoice_payment_select"
+  | "sales.ship_option"
+  | "sales.status"
+  | "sales.booking_remarks_terms"
+  | "sales.next_goods_entry"
+  | "sales.goods_items"
+  | "sales.booking_details_branch"
+  | "sales.booking_date_lbl"
+  | "sales.booking_no_lbl"
+  | "sales.serial_no_lbl"
+  | "sales.payment_type_lbl"
+  | "sales.shipping_type_lbl"
+  | "sales.operation_type_lbl"
+  | "sales.country_lbl"
+  | "sales.branch_lbl"
+  | "sales.created_by_lbl"
+  | "sales.account_code_lbl"
+  | "sales.account_name_lbl"
+  | "sales.business_name_lbl"
+  | "sales.currency_lbl"
+  | "sales.company_details"
+  | "sales.shipping_payment_details"
+  | "sales.goods_summary_report"
+  | "sales.shipping_details_report"
+  | "sales.payment_details_report"
+  | "sales.step4_subtitle"
+  | "sales.goods_overview_details"
+  | "sales.loading_export_import"
+  | "sales.goods_summary"
+  | "sales.payment_settlement"
+  | "sales.journal_report_narration"
+  | "sales.step5_subtitle"
+  | "sales.final_verification_transfer"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -38514,6 +38554,46 @@ const en: Dict = {
   "sales.ge_total": "Total",
   "sales.ge_err_no_goods": "Add at least one goods line before continuing.",
   "sales.ge_next_shipping": "Next: Shipping & Payment",
+  "voice.speak_desc": "Speak amounts, parties, accounts, and references in 5 languages.",
+  "sales.customer_account_dr": "Customer Account (DR)",
+  "sales.search_customer_ph": "Search customer name, account number, company, phone...",
+  "sales.sales_account_cr": "Sales Account (CR)",
+  "sales.search_sales_ph": "Search sales account name, account number, company...",
+  "sales.contract_no": "Contract No",
+  "sales.contract_booking_date": "Contract / Booking Date",
+  "sales.invoice_payment_select": "Invoice / Payment Select",
+  "sales.ship_option": "Ship Option",
+  "sales.status": "Status",
+  "sales.booking_remarks_terms": "Booking Remarks / Terms",
+  "sales.next_goods_entry": "NEXT: GOODS ENTRY",
+  "sales.goods_items": "GOODS ITEMS",
+  "sales.booking_details_branch": "BOOKING DETAILS & BRANCH INFORMATION",
+  "sales.booking_date_lbl": "Booking Date",
+  "sales.booking_no_lbl": "Booking No.",
+  "sales.serial_no_lbl": "Serial No.",
+  "sales.payment_type_lbl": "Payment Type",
+  "sales.shipping_type_lbl": "Shipping Type",
+  "sales.operation_type_lbl": "Operation Type",
+  "sales.country_lbl": "Country",
+  "sales.branch_lbl": "Branch",
+  "sales.created_by_lbl": "Created By",
+  "sales.account_code_lbl": "Account Code",
+  "sales.account_name_lbl": "Account Name",
+  "sales.business_name_lbl": "Business Name",
+  "sales.currency_lbl": "Currency",
+  "sales.company_details": "COMPANY DETAILS",
+  "sales.shipping_payment_details": "SHIPPING & PAYMENT DETAILS",
+  "sales.goods_summary_report": "GOODS SUMMARY REPORT",
+  "sales.shipping_details_report": "SHIPPING DETAILS REPORT",
+  "sales.payment_details_report": "PAYMENT DETAILS REPORT",
+  "sales.step4_subtitle": "Please review all details below before saving. You can add reports/remarks in each section.",
+  "sales.goods_overview_details": "GOODS OVERVIEW DETAILS",
+  "sales.loading_export_import": "LOADING (EXPORT / IMPORT)",
+  "sales.goods_summary": "GOODS SUMMARY",
+  "sales.payment_settlement": "PAYMENT & SETTLEMENT",
+  "sales.journal_report_narration": "JOURNAL REPORT / NARRATION",
+  "sales.step5_subtitle": "Review complete details, reports and remarks. Then confirm to transfer to ledger, stock and related modules.",
+  "sales.final_verification_transfer": "FINAL VERIFICATION & TRANSFER",
 };
 
 const ur: Dict = {
@@ -64225,6 +64305,46 @@ const ur: Dict = {
   "sales.ge_total": "کل",
   "sales.ge_err_no_goods": "آگے بڑھنے سے پہلے کم از کم ایک مال کی لائن شامل کریں۔",
   "sales.ge_next_shipping": "اگلا: شپنگ اور ادائیگی",
+  "voice.speak_desc": "رقم، فریقین، اکاؤنٹس اور حوالہ جات 5 زبانوں میں بولیں۔",
+  "sales.customer_account_dr": "کسٹمر اکاؤنٹ (ڈیبٹ)",
+  "sales.search_customer_ph": "کسٹمر کا نام، اکاؤنٹ نمبر، کمپنی، فون تلاش کریں...",
+  "sales.sales_account_cr": "سیلز اکاؤنٹ (کریڈٹ)",
+  "sales.search_sales_ph": "سیلز اکاؤنٹ کا نام، اکاؤنٹ نمبر، کمپنی تلاش کریں...",
+  "sales.contract_no": "کنٹریکٹ نمبر",
+  "sales.contract_booking_date": "کنٹریکٹ / بکنگ کی تاریخ",
+  "sales.invoice_payment_select": "انوائس / ادائیگی کا انتخاب",
+  "sales.ship_option": "شپنگ آپشن",
+  "sales.status": "حالت",
+  "sales.booking_remarks_terms": "بکنگ ریمارکس / شرائط",
+  "sales.next_goods_entry": "اگلا: مال کا اندراج",
+  "sales.goods_items": "مال کی اشیاء",
+  "sales.booking_details_branch": "بکنگ کی تفصیلات اور برانچ کی معلومات",
+  "sales.booking_date_lbl": "بکنگ کی تاریخ",
+  "sales.booking_no_lbl": "بکنگ نمبر",
+  "sales.serial_no_lbl": "سیریل نمبر",
+  "sales.payment_type_lbl": "ادائیگی کی قسم",
+  "sales.shipping_type_lbl": "شپنگ کی قسم",
+  "sales.operation_type_lbl": "آپریشن کی قسم",
+  "sales.country_lbl": "ملک",
+  "sales.branch_lbl": "برانچ",
+  "sales.created_by_lbl": "بنانے والا",
+  "sales.account_code_lbl": "اکاؤنٹ کوڈ",
+  "sales.account_name_lbl": "اکاؤنٹ کا نام",
+  "sales.business_name_lbl": "کاروبار کا نام",
+  "sales.currency_lbl": "کرنسی",
+  "sales.company_details": "کمپنی کی تفصیلات",
+  "sales.shipping_payment_details": "شپنگ اور ادائیگی کی تفصیلات",
+  "sales.goods_summary_report": "مال کی خلاصہ رپورٹ",
+  "sales.shipping_details_report": "شپنگ تفصیلات رپورٹ",
+  "sales.payment_details_report": "ادائیگی تفصیلات رپورٹ",
+  "sales.step4_subtitle": "محفوظ کرنے سے پہلے نیچے دی گئی تمام تفصیلات دیکھ لیں۔ ہر حصے میں رپورٹ/ریمارکس شامل کر سکتے ہیں۔",
+  "sales.goods_overview_details": "مال کا جائزہ",
+  "sales.loading_export_import": "لوڈنگ (برآمد / درآمد)",
+  "sales.goods_summary": "مال کا خلاصہ",
+  "sales.payment_settlement": "ادائیگی اور تصفیہ",
+  "sales.journal_report_narration": "جرنل رپورٹ / بیان",
+  "sales.step5_subtitle": "مکمل تفصیلات، رپورٹس اور ریمارکس دیکھیں۔ پھر لیجر، اسٹاک اور متعلقہ ماڈیولز میں منتقلی کی تصدیق کریں۔",
+  "sales.final_verification_transfer": "حتمی تصدیق اور منتقلی",
 };
 
 const ar: Dict = {
@@ -89937,6 +90057,46 @@ const ar: Dict = {
   "sales.ge_total": "الإجمالي",
   "sales.ge_err_no_goods": "أضف سطر بضاعة واحدًا على الأقل قبل المتابعة.",
   "sales.ge_next_shipping": "التالي: الشحن والدفع",
+  "voice.speak_desc": "انطق بالمبالغ والأطراف والحسابات والمراجع بخمس لغات.",
+  "sales.customer_account_dr": "حساب العميل (مدين)",
+  "sales.search_customer_ph": "ابحث باسم العميل أو رقم الحساب أو الشركة أو الهاتف...",
+  "sales.sales_account_cr": "حساب المبيعات (دائن)",
+  "sales.search_sales_ph": "ابحث باسم حساب المبيعات أو رقم الحساب أو الشركة...",
+  "sales.contract_no": "رقم العقد",
+  "sales.contract_booking_date": "تاريخ العقد / الحجز",
+  "sales.invoice_payment_select": "اختيار الفاتورة / الدفع",
+  "sales.ship_option": "خيار الشحن",
+  "sales.status": "الحالة",
+  "sales.booking_remarks_terms": "ملاحظات / شروط الحجز",
+  "sales.next_goods_entry": "التالي: إدخال البضائع",
+  "sales.goods_items": "بنود البضائع",
+  "sales.booking_details_branch": "تفاصيل الحجز ومعلومات الفرع",
+  "sales.booking_date_lbl": "تاريخ الحجز",
+  "sales.booking_no_lbl": "رقم الحجز",
+  "sales.serial_no_lbl": "الرقم التسلسلي",
+  "sales.payment_type_lbl": "نوع الدفع",
+  "sales.shipping_type_lbl": "نوع الشحن",
+  "sales.operation_type_lbl": "نوع العملية",
+  "sales.country_lbl": "الدولة",
+  "sales.branch_lbl": "الفرع",
+  "sales.created_by_lbl": "أنشأه",
+  "sales.account_code_lbl": "رمز الحساب",
+  "sales.account_name_lbl": "اسم الحساب",
+  "sales.business_name_lbl": "اسم النشاط",
+  "sales.currency_lbl": "العملة",
+  "sales.company_details": "تفاصيل الشركة",
+  "sales.shipping_payment_details": "تفاصيل الشحن والدفع",
+  "sales.goods_summary_report": "تقرير ملخص البضائع",
+  "sales.shipping_details_report": "تقرير تفاصيل الشحن",
+  "sales.payment_details_report": "تقرير تفاصيل الدفع",
+  "sales.step4_subtitle": "يرجى مراجعة جميع التفاصيل أدناه قبل الحفظ. يمكنك إضافة تقارير/ملاحظات في كل قسم.",
+  "sales.goods_overview_details": "تفاصيل نظرة عامة على البضائع",
+  "sales.loading_export_import": "التحميل (تصدير / استيراد)",
+  "sales.goods_summary": "ملخص البضائع",
+  "sales.payment_settlement": "الدفع والتسوية",
+  "sales.journal_report_narration": "تقرير اليومية / البيان",
+  "sales.step5_subtitle": "راجع التفاصيل والتقارير والملاحظات كاملةً، ثم أكّد النقل إلى الدفتر والمخزون والوحدات ذات الصلة.",
+  "sales.final_verification_transfer": "التحقق النهائي والنقل",
 };
 
 const fa: Dict = {
@@ -115648,6 +115808,46 @@ const fa: Dict = {
   "sales.ge_total": "جمع",
   "sales.ge_err_no_goods": "پیش از ادامه دست‌کم یک ردیف کالا اضافه کنید.",
   "sales.ge_next_shipping": "بعدی: حمل و پرداخت",
+  "voice.speak_desc": "مبالغ، طرف‌ها، حساب‌ها و ارجاعات را به ۵ زبان بگویید.",
+  "sales.customer_account_dr": "حساب مشتری (بدهکار)",
+  "sales.search_customer_ph": "جستجوی نام مشتری، شماره حساب، شرکت، تلفن...",
+  "sales.sales_account_cr": "حساب فروش (بستانکار)",
+  "sales.search_sales_ph": "جستجوی نام حساب فروش، شماره حساب، شرکت...",
+  "sales.contract_no": "شماره قرارداد",
+  "sales.contract_booking_date": "تاریخ قرارداد / رزرو",
+  "sales.invoice_payment_select": "انتخاب فاکتور / پرداخت",
+  "sales.ship_option": "گزینه حمل",
+  "sales.status": "وضعیت",
+  "sales.booking_remarks_terms": "ملاحظات / شرایط رزرو",
+  "sales.next_goods_entry": "بعدی: ورود کالا",
+  "sales.goods_items": "اقلام کالا",
+  "sales.booking_details_branch": "جزئیات رزرو و اطلاعات شعبه",
+  "sales.booking_date_lbl": "تاریخ رزرو",
+  "sales.booking_no_lbl": "شماره رزرو",
+  "sales.serial_no_lbl": "شماره سریال",
+  "sales.payment_type_lbl": "نوع پرداخت",
+  "sales.shipping_type_lbl": "نوع حمل",
+  "sales.operation_type_lbl": "نوع عملیات",
+  "sales.country_lbl": "کشور",
+  "sales.branch_lbl": "شعبه",
+  "sales.created_by_lbl": "ایجادکننده",
+  "sales.account_code_lbl": "کد حساب",
+  "sales.account_name_lbl": "نام حساب",
+  "sales.business_name_lbl": "نام کسب‌وکار",
+  "sales.currency_lbl": "ارز",
+  "sales.company_details": "جزئیات شرکت",
+  "sales.shipping_payment_details": "جزئیات حمل و پرداخت",
+  "sales.goods_summary_report": "گزارش خلاصه کالا",
+  "sales.shipping_details_report": "گزارش جزئیات حمل",
+  "sales.payment_details_report": "گزارش جزئیات پرداخت",
+  "sales.step4_subtitle": "لطفاً پیش از ذخیره همه جزئیات زیر را بررسی کنید. می‌توانید در هر بخش گزارش/ملاحظات اضافه کنید.",
+  "sales.goods_overview_details": "جزئیات نمای کلی کالا",
+  "sales.loading_export_import": "بارگیری (صادرات / واردات)",
+  "sales.goods_summary": "خلاصه کالا",
+  "sales.payment_settlement": "پرداخت و تسویه",
+  "sales.journal_report_narration": "گزارش دفتر روزنامه / شرح",
+  "sales.step5_subtitle": "جزئیات کامل، گزارش‌ها و ملاحظات را بررسی کنید. سپس انتقال به دفتر کل، موجودی و ماژول‌های مرتبط را تأیید کنید.",
+  "sales.final_verification_transfer": "تأیید نهایی و انتقال",
 };
 
 const ps: Dict = {
@@ -141366,6 +141566,46 @@ const ps: Dict = {
   "sales.ge_total": "ټول",
   "sales.ge_err_no_goods": "مخکې له دې چې پرمخ ولاړ شئ لږ تر لږه یو د توکو کرښه اضافه کړئ.",
   "sales.ge_next_shipping": "راتلونکی: لېږدونه او تادیه",
+  "voice.speak_desc": "په ۵ ژبو کې مقدارونه، ګوندونه، حسابونه او حوالې ووایاست.",
+  "sales.customer_account_dr": "د پېرودونکي حساب (ډیبیټ)",
+  "sales.search_customer_ph": "د پېرودونکي نوم، د حساب شمېره، شرکت، تلیفون ولټوئ...",
+  "sales.sales_account_cr": "د پلور حساب (کریډیټ)",
+  "sales.search_sales_ph": "د پلور حساب نوم، د حساب شمېره، شرکت ولټوئ...",
+  "sales.contract_no": "د قرارداد شمېره",
+  "sales.contract_booking_date": "د قرارداد / بکینګ نیټه",
+  "sales.invoice_payment_select": "د انوائس / تادیې انتخاب",
+  "sales.ship_option": "د لېږد اختیار",
+  "sales.status": "حالت",
+  "sales.booking_remarks_terms": "د بکینګ یادښتونه / شرایط",
+  "sales.next_goods_entry": "راتلونکی: د توکو داخلول",
+  "sales.goods_items": "د توکو توکي",
+  "sales.booking_details_branch": "د بکینګ جزیات او د څانګې معلومات",
+  "sales.booking_date_lbl": "د بکینګ نیټه",
+  "sales.booking_no_lbl": "د بکینګ شمېره",
+  "sales.serial_no_lbl": "سیریل شمېره",
+  "sales.payment_type_lbl": "د تادیې ډول",
+  "sales.shipping_type_lbl": "د لېږد ډول",
+  "sales.operation_type_lbl": "د عملیاتو ډول",
+  "sales.country_lbl": "هېواد",
+  "sales.branch_lbl": "څانګه",
+  "sales.created_by_lbl": "جوړونکی",
+  "sales.account_code_lbl": "د حساب کوډ",
+  "sales.account_name_lbl": "د حساب نوم",
+  "sales.business_name_lbl": "د کاروبار نوم",
+  "sales.currency_lbl": "اسعار",
+  "sales.company_details": "د شرکت جزیات",
+  "sales.shipping_payment_details": "د لېږد او تادیې جزیات",
+  "sales.goods_summary_report": "د توکو د لنډیز راپور",
+  "sales.shipping_details_report": "د لېږد د جزیاتو راپور",
+  "sales.payment_details_report": "د تادیې د جزیاتو راپور",
+  "sales.step4_subtitle": "مخکې له ساتلو لاندې ټول جزیات وګورئ. په هر برخه کې راپور/یادښتونه اضافه کولی شئ.",
+  "sales.goods_overview_details": "د توکو د عمومي کتنې جزیات",
+  "sales.loading_export_import": "بارول (صادرات / وارداتو)",
+  "sales.goods_summary": "د توکو لنډیز",
+  "sales.payment_settlement": "تادیه او تصفیه",
+  "sales.journal_report_narration": "د ژورنال راپور / بیان",
+  "sales.step5_subtitle": "بشپړ جزیات، راپورونه او یادښتونه وګورئ. بیا لیجر، ذخیرې او اړوندو ماډلونو ته لېږد تایید کړئ.",
+  "sales.final_verification_transfer": "وروستی تایید او لېږد",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -28,7 +28,7 @@ const block = (name) => {
 const enDict = block("en");
 const langDict = lang === "en" ? enDict : block(lang);
 /** the page-language text of an English UI string (falls back to the English text) */
-const tx = (enValue) => { for (const [k, v] of enDict) if (v === enValue) return langDict.get(k) ?? enValue; return enValue; };
+const tx = (enValue, key) => { if (key) return langDict.get(key) ?? enValue; for (const [k, v] of enDict) if (v === enValue) return langDict.get(k) ?? enValue; return enValue; };
 const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const results = [];
@@ -81,7 +81,7 @@ const num = (v) => Number(String(v ?? "").replace(/,/g, "").replace(/[^0-9.\-]/g
 await page.goto(`${BASE}/dashboard/sales/new-sales-booking-order`, { waitUntil: "domcontentloaded", timeout: 180000 });
 await page.waitForTimeout(6000);
 // "Open Form" is the manual-entry card (the first of four method cards)
-await page.getByText(tx("Open Form"), { exact: true }).first().click().catch(() => {});
+await page.getByText(tx("Open Form", "dintake.em_start_manual"), { exact: true }).first().click().catch(() => {});
 await page.waitForTimeout(5000);
 
 // scope (super admin): Pakistan → first branch → first city branch
@@ -115,14 +115,14 @@ async function pick(label) {
   await page.locator("[cmdk-item], [role=option]").first().click().catch(() => {});
   await page.waitForTimeout(2500);
 }
-await pick(tx("Search customer name, account number, company, phone...").slice(0, 14));
-await pick(tx("Search sales account name, account number, company...").slice(0, 14));
+await pick(tx("Search customer name, account number, company, phone...", "sales.search_customer_ph").slice(0, 14));
+await pick(tx("Search sales account name, account number, company...", "sales.search_sales_ph").slice(0, 14));
 
 // USD → PKR with NO rate: Step 1 must not continue
 await T("invoice-currency").selectOption("USD");
 await page.waitForTimeout(500);
 check("ui", "[step 1] USD → PKR with no rate shows the 'rate required' message", await T("rate-required").isVisible().catch(() => false));
-const nextBtn = page.locator("button").filter({ hasText: new RegExp(esc(tx("NEXT: GOODS ENTRY")), "i") }).last();
+const nextBtn = page.locator("button").filter({ hasText: new RegExp(esc(tx("NEXT: GOODS ENTRY", "sales.next_goods_entry")), "i") }).last();
 const dBefore = dialogs.length;
 await nextBtn.click();
 await page.waitForTimeout(1200);
@@ -186,8 +186,8 @@ await T("f-qty").fill(String(QTY));
 const kgs = page.locator('[data-testid="goods-fields"] input[type=number]');
 const idx = async (labelPart) => page.locator('[data-testid="goods-fields"] label').evaluateAll((els, part) => els.findIndex((e) => e.textContent.includes(part)), labelPart);
 const fill = async (labelPart, value) => { const i = await idx(labelPart); await page.locator('[data-testid="goods-fields"] > div').nth(i).locator("input").fill(String(value)); };
-await fill(tx("1 Qty KGS"), 50);
-await fill(tx("1 Empty KGS"), 1);
+await fill(tx("1 Qty KGS", "purchase.qty_kgs_1"), 50);
+await fill(tx("1 Empty KGS", "purchase.empty_kgs_1"), 1);
 await page.waitForTimeout(500);
 if (lang === "en") {
   check("ui", "[step 2] Amount = net 490 KG × 2 = 980 USD", num(await T("f-amount").inputValue()) === 980, await T("f-amount").inputValue());
