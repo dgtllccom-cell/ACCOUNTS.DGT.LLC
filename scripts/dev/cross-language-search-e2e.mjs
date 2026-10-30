@@ -108,6 +108,20 @@ for (const e of ENTITIES) {
   }
 }
 
+// ── 4. CROSS-TYPED SEARCH: the screen is in the language the record was SAVED in, the name is typed in each of the five ───────
+// (the diagonal is the plain case; the 20 off-diagonal cells are the ones a displayed-text-only search cannot find)
+for (const e of ENTITIES) {
+  for (const lang of LANGS) {
+    const term = spelling(e, lang);
+    const rep = await call("GET", `/api/erp/accounting/reports/accounts/general?lang=${e.saved}&q=${q(term)}&limit=50`, undefined, e.saved);
+    check("xsearch", `[xsearch] account saved ${e.saved}, screen ${e.saved}, typed ${lang}: Accounts General Report`, (rep.json?.data?.rows ?? []).some((r) => r.accountId === e.accountId), `status ${rep.status}`);
+    const led = await call("GET", `/api/erp/accounting/reports/ledger/ledgers?lang=${e.saved}&q=${q(term)}&limit=200`, undefined, e.saved);
+    check("xsearch", `[xsearch] account saved ${e.saved}, screen ${e.saved}, typed ${lang}: Ledger list`, (led.json?.data?.ledgers ?? []).some((r) => r.accountId === e.accountId), `status ${led.status}`);
+    const dir = await call("GET", `/api/erp/parties/directory?lang=${e.saved}&q=${q(term)}&limit=50`, undefined, e.saved);
+    check("xsearch", `[xsearch] customer saved ${e.saved}, screen ${e.saved}, typed ${lang}: Party Directory`, (dir.json?.data?.parties ?? dir.json?.parties ?? []).some((p) => p.customerId === e.customerId), `status ${dir.status}`);
+  }
+}
+
 // ── cleanup (archive through the app) ──────────────────────────────────────────────────────────────────────
 for (const e of ENTITIES) {
   if (e.accountId) await call("DELETE", `/api/erp/accounting/accounts/${e.accountId}`);

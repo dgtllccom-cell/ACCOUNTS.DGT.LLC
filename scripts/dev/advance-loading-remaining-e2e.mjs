@@ -80,6 +80,11 @@ const queueHas = async () => {
   const rows = r.j?.data?.records ?? r.j?.data?.loadingRecords ?? r.j?.records ?? (Array.isArray(r.j?.data) ? r.j.data : []);
   return rows.some((x) => x.purchase_order_id === id || x.purchase_order_no === no);
 };
+const stockRows = async () => {
+  const r = await api("GET", `/api/erp/inventory/journal-stock?limit=2000&search=${no}`);
+  return (r.j?.data?.rows ?? []).filter((x) => x.sourceId === id);
+};
+const stockQty = (rows, stage) => rows.filter((x) => x.stage === stage).reduce((a, x) => a + Number(x.quantity || 0), 0);
 const wf = async () => { const f = (await order()).form_data; const o = typeof f === "string" ? JSON.parse(f) : f; return o?.workflow ?? {}; };
 
 try {
@@ -114,6 +119,8 @@ try {
   check("remaining", "[4] BUG CHECK — a Remaining payment is refused while nothing is loaded", earlyRem.status >= 400, `${earlyRem.status} ${earlyRem.msg}`);
   if (earlyRem.status < 300) check("remaining", "[4] (cleanup note) an early remaining payment was accepted by this build", false, "payment posted before any loading");
 
+  { const st = await stockRows(); check("stock", "[4] before any loading all 500 bales are Booking stock and none is in Transit", stockQty(st, "booking") === 500 && stockQty(st, "transit") === 0, JSON.stringify(st.map((x) => [x.stage, x.quantity]))); }
+
   // ── 5. loading ───────────────────────────────────────────────────────────────────────────────────────────────────────────
   const l1 = await postLoad(loadBody(`E2E-C1-${no}`, 200));
   check("loading", "[5] first container (200 bales) is created", l1.status === 201, `${l1.status} ${l1.msg}`);
@@ -122,6 +129,7 @@ try {
   let rl = await realLoads();
   check("stock", "[5] exactly one loading holds the 200 bales", rl.length === 1 && rl[0].q === 200, JSON.stringify(rl.map((x) => [x.container_number, x.q])));
   check("stock", "[5] booking workflow loaded 200 / remaining 300 — in step with the loading rows", (await wf()).loadedQuantity === 200 && (await wf()).remainingQuantity === 300, JSON.stringify(await wf()).slice(0, 160));
+  { const st = await stockRows(); check("stock", "[5] Stock Journal: 200 moved out of Booking stock (300 left) into Loading / Transit stock (200); the total stays 500", stockQty(st, "booking") === 300 && stockQty(st, "transit") === 200, JSON.stringify(st.map((x) => [x.stage, x.quantity]))); }
   const tooMany = await postLoad(loadBody(`E2E-BIG-${no}`, 301));
   check("loading", "[5] loading more than the 300 bales left is refused", tooMany.status >= 400 && /exceeds|remaining/i.test(tooMany.msg), `${tooMany.status} ${tooMany.msg}`);
   check("stock", "[5] the refused load changed nothing", (await realLoads()).length === 1 && (await wf()).loadedQuantity === 200);
@@ -133,6 +141,7 @@ try {
   rl = await realLoads();
   const loadedTotal = rl.reduce((s, x) => s + x.q, 0);
   check("stock", "[5] total loaded never exceeds the 500 booked bales; workflow equals the rows", loadedTotal <= 500 && (await wf()).loadedQuantity === loadedTotal, `rows ${loadedTotal}, workflow ${(await wf()).loadedQuantity}`);
+  { const st = await stockRows(); check("stock", "[5] Stock Journal after the second container: Booking 0, Transit = everything loaded, nothing counted twice", stockQty(st, "booking") === 500 - loadedTotal && stockQty(st, "transit") === loadedTotal, JSON.stringify(st.map((x) => [x.stage, x.quantity]))); }
   const second = rl.find((x) => x.container_number.startsWith("E2E-RACE-"));
   const first = rl.find((x) => x.container_number === `E2E-C1-${no}`);
 
