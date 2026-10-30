@@ -5,6 +5,7 @@ import { authorizeLogistics } from "@/lib/api/scope-middleware";
 import { writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { parseJsonish } from "@/lib/stock-journal/model";
 
 const updateSchema = z.object({
   containerNumber: z.string().trim().min(1).max(160).optional(),
@@ -148,8 +149,19 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     if (lane && (lane.lane_status !== "loaded" || lane.owner_type !== "branch" || lane.leg_no > 1 || lane.disposition)) {
       return apiError("LOAD_IN_LANE", "This load has already moved in the Purchase Lane (transfer, customs, disposition). It cannot be deleted from the Loading page.", 409);
     }
+    // A loading that already has money posted against it cannot simply disappear: the payment and its ledger entry would be left
+    // pointing at nothing and the booking's balances would no longer add up. The payments must be reversed first.
+    const postedAgainst = await withLocalPg(async (sql) =>
+      Number((await sql`select count(*)::int as n from purchase_order_payments where loading_record_id = ${id}::uuid and deleted_at is null and status = 'posted'`)[0]?.n ?? 0)
+    );
+    if ((postedAgainst ?? 0) > 0) {
+      return apiError("LOADING_HAS_PAYMENTS", "Payments have already been posted against this loading. Reverse those payments before deleting the loading.", 409);
+    }
     const deletedAt = new Date().toISOString();
-    const updated = await withLocalPg(async (sql) => {
+    // one transaction under the booking's row lock (the same lock a new loading takes): the loading disappears and the booking's loaded /
+    // remaining quantity is recounted from the loadings that are left, so the Stock Journal, the workflow and the Remaining Payment list agree
+    const updated = await withLocalPg(async (pg) => pg.begin(async (sql) => {
+      if (existing.purchase_order_id) await sql`select 1 from purchase_orders where id = ${existing.purchase_order_id}::uuid for update`;
       if (lane) await sql`update purchase_lane_loads set deleted_at = now(), updated_at = now() where id = ${lane.id}::uuid`;
       const rows = await sql`
         update purchase_loading_records
@@ -157,8 +169,26 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         where id = ${id}::uuid
         returning id, loading_record_no
       `;
+      if (rows[0] && existing.purchase_order_id) {
+        const [po] = await sql`select form_data from purchase_orders where id = ${existing.purchase_order_id}::uuid and deleted_at is null`;
+        if (po) {
+          const formData = parseJsonish(po.form_data) || {};
+          const workflow = formData.workflow || {};
+          const [left] = await sql`
+            select coalesce(sum(loaded_quantity), 0)::float as qty, (count(*) filter (where loaded_quantity > 0))::int as containers
+            from purchase_loading_records where purchase_order_id = ${existing.purchase_order_id}::uuid and deleted_at is null`;
+          const totalQty = Number(workflow.totalQuantity || formData.totals?.totalQuantity || 0);
+          const totalContainers = Number(workflow.totalContainers || 0);
+          workflow.loadedQuantity = left.qty;
+          workflow.remainingQuantity = Math.max(0, totalQty - left.qty);
+          workflow.loadedContainers = left.containers;
+          if (totalContainers > 0) workflow.remainingContainers = Math.max(0, totalContainers - left.containers);
+          if (left.containers > 0) workflow.containerStatus = workflow.remainingQuantity > 0 ? "Partially Loaded" : "Fully Loaded";
+          await sql`update purchase_orders set form_data = ${sql.json({ ...formData, workflow })} where id = ${existing.purchase_order_id}::uuid`;
+        }
+      }
       return rows[0] || null;
-    });
+    }));
 
     if (!updated) {
       return apiError("DELETE_FAILED", "Failed to delete purchase loading record", 500);

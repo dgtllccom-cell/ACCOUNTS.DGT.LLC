@@ -162,7 +162,22 @@ try {
   const wrongLoad = await postPay(pay("remaining", 10, { typeDetails: { loadingRecordId: crypto.randomUUID() } }));
   check("remaining", "[6] a loading that is not on this booking is refused", wrongLoad.status >= 400, `${wrongLoad.status} ${wrongLoad.msg}`);
 
+  // deleting a loading: refused while money is posted against it; allowed (and everything recounted) while it is unpaid
+  const delPaid = await api("DELETE", `/api/erp/purchases/loading-records/${first.id}`);
+  check("loading", "[6] BUG CHECK — a loading with a posted payment cannot be deleted", delPaid.status === 409 && (await realLoads()).some((x) => x.id === first.id), `${delPaid.status} ${delPaid.msg}`);
+  let second2 = second;
   if (second) {
+    const delFree = await api("DELETE", `/api/erp/purchases/loading-records/${second.id}`);
+    check("loading", "[6] an unpaid loading can be deleted", delFree.status === 200, `${delFree.status} ${delFree.msg}`);
+    const stDel = await stockRows();
+    check("stock", "[6] after the delete the 300 bales are back in Booking stock and the booking is recounted (loaded 200)", stockQty(stDel, "booking") === second.q && stockQty(stDel, "transit") === first.q && (await wf()).loadedQuantity === first.q && (await wf()).remainingQuantity === second.q, JSON.stringify(stDel.map((x) => [x.stage, x.quantity])) + " " + JSON.stringify(await wf()).slice(0, 120));
+    const reload = await postLoad(loadBody(`E2E-C2R-${no}`, second.q));
+    check("loading", "[6] the same bales can be loaded again after the delete (no ghost quantity left behind)", reload.status === 201, `${reload.status} ${reload.msg}`);
+    second2 = (await realLoads()).find((x) => x.container_number === `E2E-C2R-${no}`);
+  }
+
+  if (second2) {
+    const second = second2;
     const owed2 = (REQUIRED_USD * second.q) / QTY;
     const rem2 = await postPay(pay("remaining", owed2, { typeDetails: { loadingRecordId: second.id } }));
     check("remaining", `[6] container 2 (${second.q} bales) settles exactly its share (USD ${owed2})`, rem2.status < 300, `${rem2.status} ${rem2.msg}`);
