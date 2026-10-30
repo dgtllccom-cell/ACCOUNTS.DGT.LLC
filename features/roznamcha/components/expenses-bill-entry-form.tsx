@@ -210,9 +210,28 @@ const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger:
   );
 };
 
+export interface CustomerOrderContext {
+  orderId?: string;
+  orderNo?: string;
+  customerName?: string;
+  customerId?: string;
+  truckNo?: string;
+  driverName?: string;
+  loadingCountry?: string;
+  receivingCountry?: string;
+  goodsName?: string;
+  assignedUserId?: string;
+  date?: string;
+  routeName?: string;
+  goodsWeight?: string;
+  goodsQuantity?: string;
+  transferRef?: string;
+}
+
 export function ExpensesBillEntryForm({
   lang: langProp,
-  initialBillCategory = "office_home"
+  initialBillCategory = "office_home",
+  customerOrderContext,
 }: {
   lang: SupportedLanguage;
   initialBillCategory?:
@@ -224,6 +243,7 @@ export function ExpensesBillEntryForm({
     | "truck_freight_rent"
     | "other_expenses"
     | string;
+  customerOrderContext?: CustomerOrderContext;
 }) {
   const lang = useActiveLanguage(langProp);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
@@ -311,6 +331,17 @@ export function ExpensesBillEntryForm({
       setBillTitle(initialBillCategory);
     }
   }, [initialBillCategory]);
+
+  // Pre-fill reference number from customer order context
+  useEffect(() => {
+    if (customerOrderContext?.orderNo && !referenceNo) {
+      setReferenceNo(customerOrderContext.orderNo);
+      setBillMode("attached");
+    }
+    if (customerOrderContext?.date) {
+      setBillDate(customerOrderContext.date);
+    }
+  }, [customerOrderContext]);
 
   const detailsRef = useRef<HTMLInputElement>(null);
 
@@ -1031,6 +1062,54 @@ export function ExpensesBillEntryForm({
       )}
 
       <div className={viewMode === "list" ? "hidden" : "space-y-4 mb-8"}>
+          {customerOrderContext?.orderNo && (
+            <div className="rounded-xl border-2 border-blue-400/60 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 px-4 py-3 text-xs space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 font-black text-blue-800 dark:text-blue-200">
+                  <ArrowRightLeft className="h-4 w-4 text-blue-600" />
+                  <span>{tt("exp.linked_order_banner", "Linked Customer Order")}</span>
+                  <span className="font-mono text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded text-[11px]">
+                    {customerOrderContext.orderNo}
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">
+                  ✓ {tt("exp.order_auto_linked", "Auto-Linked")}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {customerOrderContext.customerName && (
+                  <div className="rounded-lg bg-white/70 dark:bg-slate-800/50 px-2.5 py-1.5 border border-blue-100 dark:border-blue-900">
+                    <div className="text-[9px] uppercase font-bold text-slate-400 mb-0.5">{tt("exp.customer", "Customer")}</div>
+                    <div className="font-bold text-slate-800 dark:text-white truncate">{customerOrderContext.customerName}</div>
+                  </div>
+                )}
+                {(customerOrderContext.loadingCountry || customerOrderContext.receivingCountry) && (
+                  <div className="rounded-lg bg-white/70 dark:bg-slate-800/50 px-2.5 py-1.5 border border-blue-100 dark:border-blue-900">
+                    <div className="text-[9px] uppercase font-bold text-slate-400 mb-0.5">{tt("exp.route", "Route")}</div>
+                    <div className="font-bold text-slate-800 dark:text-white truncate">
+                      {customerOrderContext.loadingCountry || "—"} → {customerOrderContext.receivingCountry || "—"}
+                    </div>
+                  </div>
+                )}
+                {customerOrderContext.truckNo && (
+                  <div className="rounded-lg bg-white/70 dark:bg-slate-800/50 px-2.5 py-1.5 border border-blue-100 dark:border-blue-900">
+                    <div className="text-[9px] uppercase font-bold text-slate-400 mb-0.5">{tt("exp.truck", "Truck")}</div>
+                    <div className="font-mono font-bold text-slate-800 dark:text-white truncate">{customerOrderContext.truckNo}</div>
+                  </div>
+                )}
+                {customerOrderContext.goodsName && (
+                  <div className="rounded-lg bg-white/70 dark:bg-slate-800/50 px-2.5 py-1.5 border border-blue-100 dark:border-blue-900">
+                    <div className="text-[9px] uppercase font-bold text-slate-400 mb-0.5">{tt("exp.goods", "Goods")}</div>
+                    <div className="font-bold text-slate-800 dark:text-white truncate">{customerOrderContext.goodsName}</div>
+                  </div>
+                )}
+              </div>
+              <p className="text-[10px] text-blue-600/70 dark:text-blue-300/70">
+                {tt("exp.order_context_hint", "This bill is automatically linked to the above customer order. The order reference will be saved with every expense entry.")}
+              </p>
+            </div>
+          )}
+
           {intake.draft ? (
             <div className="flex items-start gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900">
               <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-violet-600" />

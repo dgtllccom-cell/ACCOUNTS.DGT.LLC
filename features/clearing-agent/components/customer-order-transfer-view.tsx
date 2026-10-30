@@ -1095,9 +1095,18 @@ export function CustomerOrderTransferView() {
                       </div>
 
                       {isGenReceived ? (
-                        <span className="shrink-0 px-2 py-0.5 rounded text-[10.5px] font-bold bg-cyan-200 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">
-                          ✓ {tt("received_badge", "Received")}
-                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-cyan-200 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">
+                            ✓ {tt("received_badge", "Received")}
+                          </span>
+                          <Link
+                            href={`/dashboard/clearing-agent/general-received-bill?orderId=${selectedOrder.id}`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            <span>{tt("open_bill_desk", "Open Desk")}</span>
+                          </Link>
+                        </div>
                       ) : (
                         <button
                           type="button"
@@ -1127,119 +1136,179 @@ export function CustomerOrderTransferView() {
               })()}
 
               {/* Destination 1: Customs Duty & Expenses */}
-              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-amber-400 dark:hover:border-amber-600 transition flex items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="p-1.5 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
-                    <Landmark className="h-3.5 w-3.5" />
-                  </span>
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
-                      {tt("customs_expenses_bill", "Customs Bills")}
-                    </h4>
-                    <p className="text-[10px] text-slate-400 truncate">
-                      {tt("customs_bill_desc", "Tariff clearance & border duty")}
-                    </p>
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-amber-400 dark:hover:border-amber-600 transition space-y-2">
+                <div className="flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="p-1.5 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
+                      <Landmark className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
+                        {tt("customs_expenses_bill", "Customs Bills")}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 truncate">
+                        {tt("customs_bill_desc", "Tariff clearance & border duty")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Link
+                      href={`/dashboard/clearing-agent/customs-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(selectedOrder.order_no)}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(selectedOrder.customer_name || "")}&loadingCountry=${encodeURIComponent(selectedOrder.loading_country_name || "")}&receivingCountry=${encodeURIComponent(selectedOrder.receiving_country_name || "")}&goodsName=${encodeURIComponent(selectedOrder.goods_name || "")}`}
+                      className="inline-flex items-center gap-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition"
+                    >
+                      <span>{tt("open_bill_btn", "Open Bill")}</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTransferTarget("customs");
+                        setTransferModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
+                    >
+                      <span>{tt("transfer_btn", "Transfer")}</span>
+                      <ArrowRight className="h-3 w-3 rtl:rotate-180" />
+                    </button>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTransferTarget("customs");
-                    setTransferModalOpen(true);
-                  }}
-                  className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
-                >
-                  <span>{tt("transfer_btn", "Transfer")}</span>
-                  <ArrowRight className="h-3 w-3 rtl:rotate-180" />
-                </button>
               </div>
 
               {/* Destination 2: Truck Expenses Bills */}
-              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-blue-400 dark:hover:border-blue-600 transition flex items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="p-1.5 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 shrink-0">
-                    <Truck className="h-3.5 w-3.5" />
-                  </span>
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
-                      {tt("truck_expenses_bill", "Truck Expenses Bills")}
-                    </h4>
-                    <p className="text-[10px] text-slate-400 truncate">
-                      {tt("truck_bill_desc", "Freight, tolls & driver advance")}
-                    </p>
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-blue-400 dark:hover:border-blue-600 transition space-y-2">
+                <div className="flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="p-1.5 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 shrink-0">
+                      <Truck className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
+                        {tt("truck_expenses_bill", "Truck Expenses Bills")}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 truncate">
+                        {tt("truck_bill_desc", "Freight, tolls & driver advance")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Link
+                      href={`/dashboard/clearing-agent/truck-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(selectedOrder.order_no)}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(selectedOrder.customer_name || "")}&truckNo=${encodeURIComponent(selectedOrder.truck_number || "")}&driver=${encodeURIComponent(selectedOrder.truck_driver_name || "")}&loadingCountry=${encodeURIComponent(selectedOrder.loading_country_name || "")}&receivingCountry=${encodeURIComponent(selectedOrder.receiving_country_name || "")}&goodsName=${encodeURIComponent(selectedOrder.goods_name || "")}`}
+                      className="inline-flex items-center gap-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition"
+                    >
+                      <span>{tt("open_bill_btn", "Open Bill")}</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTransferTarget("truck");
+                        setTransferModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
+                    >
+                      <span>{tt("transfer_btn", "Transfer")}</span>
+                      <ArrowRight className="h-3 w-3 rtl:rotate-180" />
+                    </button>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTransferTarget("truck");
-                    setTransferModalOpen(true);
-                  }}
-                  className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
-                >
-                  <span>{tt("transfer_btn", "Transfer")}</span>
-                  <ArrowRight className="h-3 w-3 rtl:rotate-180" />
-                </button>
               </div>
 
               {/* Destination 3: Customer Expenses Bills */}
-              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-emerald-400 dark:hover:border-emerald-600 transition flex items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
-                    <Receipt className="h-3.5 w-3.5" />
-                  </span>
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
-                      {tt("customer_expenses_bill", "Customer Expenses Bills")}
-                    </h4>
-                    <p className="text-[10px] text-slate-400 truncate">
-                      {tt("customer_bill_desc", "Direct client disbursements")}
-                    </p>
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-emerald-400 dark:hover:border-emerald-600 transition space-y-2">
+                <div className="flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
+                      <Receipt className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
+                        {tt("customer_expenses_bill", "Customer Expenses Bills")}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 truncate">
+                        {tt("customer_bill_desc", "Direct client disbursements")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Link
+                      href={`/dashboard/clearing-agent/customer-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(selectedOrder.order_no)}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(selectedOrder.customer_name || "")}&loadingCountry=${encodeURIComponent(selectedOrder.loading_country_name || "")}&receivingCountry=${encodeURIComponent(selectedOrder.receiving_country_name || "")}&goodsName=${encodeURIComponent(selectedOrder.goods_name || "")}`}
+                      className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition"
+                    >
+                      <span>{tt("open_bill_btn", "Open Bill")}</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTransferTarget("customer");
+                        setTransferModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
+                    >
+                      <span>{tt("transfer_btn", "Transfer")}</span>
+                      <ArrowRight className="h-3 w-3 rtl:rotate-180" />
+                    </button>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTransferTarget("customer");
-                    setTransferModalOpen(true);
-                  }}
-                  className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
-                >
-                  <span>{tt("transfer_btn", "Transfer")}</span>
-                  <ArrowRight className="h-3 w-3 rtl:rotate-180" />
-                </button>
               </div>
 
               {/* Destination 4: Other Expenses Bills */}
-              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-purple-400 dark:hover:border-purple-600 transition flex items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 shrink-0">
-                    <FileText className="h-3.5 w-3.5" />
-                  </span>
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
-                      {tt("other_expenses_bill", "Other Expenses Bills")}
-                    </h4>
-                    <p className="text-[10px] text-slate-400 truncate">
-                      {tt("other_bill_desc", "Inspection, lab, seals & fees")}
-                    </p>
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-purple-400 dark:hover:border-purple-600 transition space-y-2">
+                <div className="flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 shrink-0">
+                      <FileText className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
+                        {tt("other_expenses_bill", "Other Expenses Bills")}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 truncate">
+                        {tt("other_bill_desc", "Inspection, lab, seals & fees")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Link
+                      href={`/dashboard/clearing-agent/other-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(selectedOrder.order_no)}&customerName=${encodeURIComponent(selectedOrder.customer_name || "")}&loadingCountry=${encodeURIComponent(selectedOrder.loading_country_name || "")}&receivingCountry=${encodeURIComponent(selectedOrder.receiving_country_name || "")}&goodsName=${encodeURIComponent(selectedOrder.goods_name || "")}`}
+                      className="inline-flex items-center gap-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition"
+                    >
+                      <span>{tt("open_bill_btn", "Open Bill")}</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTransferTarget("other");
+                        setTransferModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
+                    >
+                      <span>{tt("transfer_btn", "Transfer")}</span>
+                      <ArrowRight className="h-3 w-3 rtl:rotate-180" />
+                    </button>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTransferTarget("other");
-                    setTransferModalOpen(true);
-                  }}
-                  className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
-                >
-                  <span>{tt("transfer_btn", "Transfer")}</span>
-                  <ArrowRight className="h-3 w-3 rtl:rotate-180" />
-                </button>
               </div>
 
               {/* Additional Operations: Handover & Official Customer Invoice */}
               <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                {/* Open General Received Bill — shown when order is in General Received queue */}
+                {(() => {
+                  const isGenReceived =
+                    generalReceivedOrderIds.includes(selectedOrder.id) ||
+                    transferHistory[selectedOrder.id]?.destination?.includes("General Received Bill") ||
+                    selectedOrder.current_stage === "general_received_bill";
+                  return isGenReceived ? (
+                    <Link
+                      href={`/dashboard/clearing-agent/general-received-bill?orderId=${selectedOrder.id}`}
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl border-2 border-cyan-400 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 dark:border-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 font-bold py-2 text-xs transition"
+                    >
+                      <Inbox className="h-3.5 w-3.5" />
+                      <span>{tt("open_general_received_bill", "Open General Received Bill Desk")}</span>
+                    </Link>
+                  ) : null;
+                })()}
                 <button
                   type="button"
                   onClick={() => setHandoverModalOpen(true)}
@@ -1856,7 +1925,15 @@ export function CustomerOrderTransferView() {
                     router.push(
                       `/dashboard/clearing-agent/customs-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
                         selectedOrder.order_no
-                      )}&customerId=${selectedOrder.customer_id || ""}&assignedUserId=${transferUserId}&date=${transferDate}`
+                      )}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(
+                        selectedOrder.customer_name || ""
+                      )}&loadingCountry=${encodeURIComponent(
+                        selectedOrder.loading_country_name || ""
+                      )}&receivingCountry=${encodeURIComponent(
+                        selectedOrder.receiving_country_name || ""
+                      )}&goodsName=${encodeURIComponent(
+                        selectedOrder.goods_name || ""
+                      )}&assignedUserId=${transferUserId}&date=${transferDate}`
                     );
                   } else if (transferTarget === "truck") {
                     router.push(
@@ -1864,18 +1941,42 @@ export function CustomerOrderTransferView() {
                         selectedOrder.order_no
                       )}&truckNo=${encodeURIComponent(selectedOrder.truck_number || "")}&driver=${encodeURIComponent(
                         selectedOrder.truck_driver_name || ""
+                      )}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(
+                        selectedOrder.customer_name || ""
+                      )}&loadingCountry=${encodeURIComponent(
+                        selectedOrder.loading_country_name || ""
+                      )}&receivingCountry=${encodeURIComponent(
+                        selectedOrder.receiving_country_name || ""
+                      )}&goodsName=${encodeURIComponent(
+                        selectedOrder.goods_name || ""
                       )}&assignedUserId=${transferUserId}&date=${transferDate}`
                     );
                   } else if (transferTarget === "customer") {
                     router.push(
-                      `/dashboard/clearing-agent/customer-bill?type=expenses&orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
+                      `/dashboard/clearing-agent/customer-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
                         selectedOrder.order_no
-                      )}&customerId=${selectedOrder.customer_id || ""}&assignedUserId=${transferUserId}&date=${transferDate}`
+                      )}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(
+                        selectedOrder.customer_name || ""
+                      )}&loadingCountry=${encodeURIComponent(
+                        selectedOrder.loading_country_name || ""
+                      )}&receivingCountry=${encodeURIComponent(
+                        selectedOrder.receiving_country_name || ""
+                      )}&goodsName=${encodeURIComponent(
+                        selectedOrder.goods_name || ""
+                      )}&assignedUserId=${transferUserId}&date=${transferDate}`
                     );
                   } else if (transferTarget === "other") {
                     router.push(
                       `/dashboard/clearing-agent/other-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
                         selectedOrder.order_no
+                      )}&customerName=${encodeURIComponent(
+                        selectedOrder.customer_name || ""
+                      )}&loadingCountry=${encodeURIComponent(
+                        selectedOrder.loading_country_name || ""
+                      )}&receivingCountry=${encodeURIComponent(
+                        selectedOrder.receiving_country_name || ""
+                      )}&goodsName=${encodeURIComponent(
+                        selectedOrder.goods_name || ""
                       )}&assignedUserId=${transferUserId}&date=${transferDate}`
                     );
                   }
