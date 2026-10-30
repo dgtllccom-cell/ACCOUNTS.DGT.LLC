@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       return results;
     });
 
-    let paged = rows || [];
+    let paged: any[] = rows ? Array.from(rows) : [];
     if (paged.length > 0 && !wantsRawRecord(request)) {
       const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
       paged = await localizeRecordFields<any>(paged, "transfer_modes", ["name", "reference_label", "reference_placeholder", "description"], lang);
