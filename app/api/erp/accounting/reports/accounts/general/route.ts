@@ -8,7 +8,7 @@ import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { DOMAIN_SUPER_ADMIN_ROLES } from "@/lib/permissions/enterprise-roles";
 import { ledgerScopeSchema, supportedLanguageSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { localizeRecordNames, getPhraseTranslator } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, getPhraseTranslator, translationMatchSet } from "@/lib/i18n/localize-records";
 import { getAppEnvironment } from "@/lib/env/environment";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { translateCountry } from "@/lib/i18n/table-values";
@@ -668,8 +668,11 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
     });
 
     const q = normalizeSearch(effectiveQuery.q ?? "");
+    // A name typed in another language still finds the account: ids whose stored translation matches.
+    const nameMatchIds = q ? await translationMatchSet("enterprise_accounts", ["name"], effectiveQuery.q ?? "") : null;
     const rowsFiltered = q
       ? filtered.filter((row) =>
+          nameMatchIds?.has(row.accountId) ||
           normalizeSearch(
             [
               row.accountCode,
@@ -1406,8 +1409,10 @@ export async function GET(request: NextRequest) {
     }
 
     const q = normalizeSearch(effectiveQuery.q ?? "");
+    const nameMatchIds = q ? await translationMatchSet("enterprise_accounts", ["name"], effectiveQuery.q ?? "") : null;
     const filtered = q
       ? rows.filter((row) =>
+          nameMatchIds?.has(row.accountId) ||
           normalizeSearch(
             [
               row.accountCode,

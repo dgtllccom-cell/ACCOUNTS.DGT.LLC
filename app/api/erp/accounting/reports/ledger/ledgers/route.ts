@@ -8,6 +8,7 @@ import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { ledgerReportService, type LedgerReportScope } from "@/lib/services/ledger-report-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { ledgerRowNameMatcher } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   reportScope: z.enum(["super_admin", "country", "branch"]).default("super_admin"),
@@ -74,7 +75,9 @@ export async function GET(request: NextRequest) {
     // Optional search (server-side convenience): ledger/account/company/location keywords.
     const qText = normalizeForSearch(query.q ?? "");
     if (qText) {
+      const nameMatch = await ledgerRowNameMatcher(query.q ?? "");
       filtered = filtered.filter((row) => {
+        if (nameMatch?.(row)) return true;
         const hay = normalizeForSearch(
           [
             row.ledgerCode,

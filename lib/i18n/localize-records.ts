@@ -767,3 +767,43 @@ export async function searchRecordIdsByTranslation(
     /* shared process-lifetime pool — deliberately not closed */ void 0;
   }
 }
+
+/**
+ * Set form of {@link searchRecordIdsByTranslation} for endpoints that filter rows already
+ * fetched (and already scope-restricted) in memory: a row whose id is in the set matches the
+ * search even when its displayed name is in a different language than the term typed.
+ * It only ever widens a result the caller has already authorised, so it cannot expose a
+ * record outside the caller's scope. Returns null when there is no term, so callers can skip.
+ */
+export async function translationMatchSet(
+  table: string | string[],
+  fields: string[],
+  searchTerm: string,
+  limit = 500
+): Promise<Set<string> | null> {
+  const term = (searchTerm || "").trim();
+  if (!term) return null;
+  const tables = Array.isArray(table) ? table : [table];
+  const lists = await Promise.all(tables.map((t) => searchRecordIdsByTranslation(t, fields, term, limit)));
+  return new Set(lists.flat());
+}
+
+type LedgerRowIds = { ledgerId?: string | null; accountId?: string | null; companyId?: string | null };
+
+/**
+ * Cross-language matcher for ledger list rows: true when the ledger, its account or its
+ * company has a stored name (any of the five languages, or the original entry) matching the
+ * term. Used next to the displayed-text match so a name typed in any language finds the row.
+ */
+export async function ledgerRowNameMatcher(searchTerm: string): Promise<((row: LedgerRowIds) => boolean) | null> {
+  const [ledgers, accounts, companies] = await Promise.all([
+    translationMatchSet("ledgers", ["name"], searchTerm),
+    translationMatchSet("enterprise_accounts", ["name"], searchTerm),
+    translationMatchSet("companies", ["name"], searchTerm)
+  ]);
+  if (!ledgers) return null;
+  return (row) =>
+    (!!row.ledgerId && ledgers.has(row.ledgerId)) ||
+    (!!row.accountId && !!accounts && accounts.has(row.accountId)) ||
+    (!!row.companyId && !!companies && companies.has(row.companyId));
+}

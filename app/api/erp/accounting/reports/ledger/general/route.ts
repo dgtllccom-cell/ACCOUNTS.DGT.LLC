@@ -11,6 +11,7 @@ import { ledgerReportService } from "@/lib/services/ledger-report-service";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { ledgerRowNameMatcher } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   reportScope: z.enum(["super_admin", "country", "branch"]).default("super_admin"),
@@ -107,7 +108,9 @@ export async function GET(request: NextRequest) {
     let rows = query.scope ? rawLedgers.filter((row) => row.scope === query.scope) : rawLedgers;
     const qText = normalizeForSearch(query.q ?? "");
     if (qText) {
+      const nameMatch = await ledgerRowNameMatcher(query.q ?? "");
       rows = rows.filter((row) => {
+        if (nameMatch?.(row)) return true;
         const hay = normalizeForSearch(
           [
             row.ledgerCode,

@@ -19,6 +19,7 @@ import { createApiSupabaseClient } from "@/lib/api/supabase";
 import type { ErpSession } from "@/lib/auth/session";
 import { enforceScopeFilter } from "@/lib/api/scope-middleware";
 import { hasRolePermission, isGlobalSession } from "@/lib/permissions/middleware";
+import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 
 export type SearchResultItem = {
   entityType: string;
@@ -66,6 +67,19 @@ const NIL = "00000000-0000-0000-0000-000000000000";
 
 function matchesNeedle(value: unknown, needle: string): boolean {
   return String(value ?? "").toLowerCase().includes(needle);
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Widen a PostgREST `.or()` filter with the ids whose stored translation (any of the five
+ * languages, or the original entry) matches the term, so a name typed in Urdu/Arabic/Farsi/
+ * Pashto finds a record saved in English and vice versa. The scope / soft-delete filters are
+ * separate AND conditions on the same query, so this can never widen past the caller's scope.
+ */
+async function orWithTranslatedIds(base: string, table: string, fields: string[], needle: string): Promise<string> {
+  const ids = (await searchRecordIdsByTranslation(table, fields, needle, 50)).filter((id) => UUID_RE.test(id));
+  return ids.length ? `${base},id.in.(${ids.join(",")})` : base;
 }
 
 async function searchPurchaseOrders(
@@ -137,7 +151,7 @@ async function searchAccounts(
     .from("enterprise_accounts")
     .select("id, name, code, kind, scope, country_id, country_branch_id, city_branch_id")
     .is("deleted_at", null)
-    .or(`name.ilike.%${needle}%,code.ilike.%${needle}%`)
+    .or(await orWithTranslatedIds(`name.ilike.%${needle}%,code.ilike.%${needle}%`, "enterprise_accounts", ["name"], needle))
     .order("name")
     .limit(limit);
 
@@ -177,7 +191,7 @@ async function searchCustomers(
     .from("customers")
     .select("id, customer_name, company_name, mobile, email, country_id")
     .is("deleted_at", null)
-    .or(`customer_name.ilike.%${needle}%,company_name.ilike.%${needle}%,mobile.ilike.%${needle}%,email.ilike.%${needle}%`)
+    .or(await orWithTranslatedIds(`customer_name.ilike.%${needle}%,company_name.ilike.%${needle}%,mobile.ilike.%${needle}%,email.ilike.%${needle}%`, "customers", ["customer_name", "company_name", "contact_person"], needle))
     .order("customer_name")
     .limit(limit);
 
@@ -339,7 +353,7 @@ async function searchProducts(
     .from("goods")
     .select("id, goods_name, chs_code")
     .is("deleted_at", null)
-    .or(`goods_name.ilike.%${needle}%,chs_code.ilike.%${needle}%`)
+    .or(await orWithTranslatedIds(`goods_name.ilike.%${needle}%,chs_code.ilike.%${needle}%`, "goods", ["goods_name"], needle))
     .limit(limit);
 
   if (error || !data) return [];

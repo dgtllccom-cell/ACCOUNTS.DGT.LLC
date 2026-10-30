@@ -1,7 +1,7 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { transliterateProperNoun } from "@/lib/i18n/transliteration";
-import { localizeRecordNames, localizeRecordFields } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, localizeRecordFields, translationMatchSet } from "@/lib/i18n/localize-records";
 import { nameMatches } from "@/lib/utils/person-duplicate-match";
 import { isAuthorizedNameTranslation, resolveCustomerName } from "@/lib/i18n/customer-name";
 
@@ -528,7 +528,14 @@ export class Party360Service {
       let filtered = parties;
       if (query.trim()) {
         const q = query.toLowerCase().trim();
+        // Names typed in any of the five languages (or the original entry) also match, by record id.
+        const [customerNameIds, companyNameIds] = await Promise.all([
+          translationMatchSet("customers", ["customer_name", "company_name", "contact_person"], query),
+          translationMatchSet("companies", ["name", "legal_name", "owner_name"], query)
+        ]);
         filtered = parties.filter((p) => {
+          if (p.customerId && customerNameIds?.has(p.customerId)) return true;
+          if (companyNameIds && p.companies.some((c) => c.id && companyNameIds.has(c.id))) return true;
           const haystack = [
             p.customerName,
             p.savedCustomerName || "",
