@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiCreated, apiOk, apiError, handleApiError } from "@/lib/api/response";
+import { apiCreated, apiOk, apiError, handleApiError, ApiClientError } from "@/lib/api/response";
+import { parseJsonish } from "@/lib/stock-journal/model";
+import { resolvePaymentCondition, resolvePurchaseAmounts } from "@/lib/services/purchase-calculation-service";
+import { loadedPayable, paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
 import { purchaseOrderPaymentPostSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -226,7 +229,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const { order, rows } = (await withLocalPg(async (sql) => {
       let orderRows = await sql`
         select id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id,
-               currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount,
+               currency_code, exchange_rate, order_total, total_goods_original, total_goods_usd, advance_paid, remaining_paid, credit_amount,
                remaining_due, form_data, ledger_posting_status, payment_status, 'purchase_booking' as order_type
         from purchase_orders where id = ${params.id}::uuid and deleted_at is null
         limit 1
@@ -266,6 +269,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           p.debit_ledger_id, p.credit_ledger_id, p.roznamcha_entry_id, p.status, p.reference_no,
           p.narration, p.source_module, p.source_transaction_type, p.source_reference_no,
           p.original_currency_code, p.currency_name, p.base_currency_amount, p.created_at,
+          p.loading_record_id,
           case when re.id is not null then jsonb_build_object(
             'id', re.id,
             'super_admin_serial_number', re.super_admin_serial_number,
@@ -361,7 +365,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     const order = await withLocalPg(async (sql) => {
       const rows = await sql`
         select id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id,
-               currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount,
+               currency_code, exchange_rate, order_total, total_goods_original, total_goods_usd, advance_paid, remaining_paid, credit_amount,
                remaining_due, form_data, ledger_posting_status, payment_status, 'purchase_booking' as order_type
         from purchase_orders where id = ${params.id}::uuid and deleted_at is null
         limit 1
@@ -410,6 +414,9 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     }
 
     const orderRow = order as any;
+    // many bookings hold form_data as a JSON string inside the jsonb column — read it as an object so the payment condition,
+    // advance percent and booked quantity below are the real ones
+    orderRow.form_data = parseJsonish(orderRow.form_data);
     const form = orderRow.form_data?.form || {};
 
     // Currency model (see 20261001_multicurrency_purchase_payment_fix.sql):
@@ -531,6 +538,65 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
 
     if ((body.kind === "remaining" || body.kind === "credit") && bodyAmountPur > remainingDuePur + tolerance) {
       throw new Error(`Payment amount cannot exceed remaining payable balance (${remainingDuePur.toFixed(2)} ${orderCcy}).`);
+    }
+
+    // ── Remaining payment ↔ loaded quantity ──
+    // A Remaining payment is due only against goods that have actually been loaded: an Advance / Endorsement purchase owes nothing as
+    // "remaining" until a quantity is loaded, then only that loaded share (less the advance already paid for it). When the payment is for
+    // one loading (container), that loading must belong to this order and the payment may not exceed what that loading still owes.
+    // The payment is then recorded against that loading so the Remaining Payment screen and the loading balances stay in step.
+    let linkedLoadingId: string | null = null;
+    if (orderRow.order_type !== "local_purchase" && body.kind === "remaining") {
+      const requestedLoadingId = String((body.typeDetails as any)?.loadingRecordId || "").trim();
+      if (requestedLoadingId && !uuidSchema.safeParse(requestedLoadingId).success) {
+        throw new ApiClientError("Loading record id is not valid.", { status: 422, code: "INVALID_ID" });
+      }
+      const condition = resolvePaymentCondition(orderRow);
+      const mustFollowLoading = condition === "advance" || condition === "endorsement";
+      const rateToBase = orderCcy === localCcy ? 1 : orderRate || 1;
+      const loadedState = await withLocalPg(async (sql) => ({
+        loadingRows: (await sql`
+          select id::text as id, loaded_quantity, report_payload
+          from purchase_loading_records
+          where purchase_order_id = ${params.id}::uuid and deleted_at is null
+        `) as any[],
+        remainingRows: (await sql`
+          select amount, currency_code, exchange_rate, base_currency_amount, loading_record_id::text as loading_record_id
+          from purchase_order_payments
+          where purchase_order_id = ${params.id}::uuid and deleted_at is null and status = 'posted' and kind::text = 'remaining'
+        `) as any[]
+      }));
+      if (!loadedState) throw new Error("Database connection is not configured for payment validation.");
+      const { loadingRows, remainingRows } = loadedState;
+      const toPur = (r: any) => paymentInPurchaseCurrency(r, orderCcy, rateToBase);
+      const loadings = loadingRows.map((r: any) => {
+        const payload = parseJsonish(r.report_payload) || {};
+        const reported = Number(payload.totalPurchase || payload.purchaseAmount || 0);
+        return { id: r.id as string, quantity: Number(r.loaded_quantity || payload.loadedQuantity || 0), reportedValueFC: Number.isFinite(reported) ? reported : 0 };
+      });
+      if (requestedLoadingId && !loadings.some((l: any) => l.id === requestedLoadingId)) {
+        throw new ApiClientError("This loading record does not belong to the purchase order being paid.", { status: 409, code: "BUSINESS_RULE" });
+      }
+      const payable = loadedPayable({
+        orderTotalFC: orderTotalPur,
+        advancePaidFC: advancePaidPur,
+        totalQuantity: resolvePurchaseAmounts(orderRow).totalQuantity,
+        loadings,
+        remainingPaidAllFC: remainingRows.reduce((s: number, r: any) => s + toPur(r), 0),
+        loadingId: requestedLoadingId || null,
+        remainingPaidThisLoadingFC: remainingRows.filter((r: any) => r.loading_record_id === requestedLoadingId).reduce((s: number, r: any) => s + toPur(r), 0)
+      });
+      const capTol = 0.05; // quantity shares are fractions of the total; a few cents of rounding must not block an exact settlement
+      if (mustFollowLoading && payable.loadedQuantity <= 0) {
+        throw new ApiClientError("No quantity has been loaded for this purchase order yet. A Remaining payment is due only against loaded quantity.", { status: 409, code: "BUSINESS_RULE" });
+      }
+      if (mustFollowLoading && bodyAmountPur > payable.loadedOutstandingFC + capTol) {
+        throw new ApiClientError(`Payment amount cannot exceed the remaining payable for the loaded quantity (${payable.loadedOutstandingFC.toFixed(2)} ${orderCcy}).`, { status: 409, code: "BUSINESS_RULE" });
+      }
+      if (requestedLoadingId && payable.loadingOutstandingFC != null && bodyAmountPur > payable.loadingOutstandingFC + capTol) {
+        throw new ApiClientError(`Payment amount cannot exceed what this loading still owes (${payable.loadingOutstandingFC.toFixed(2)} ${orderCcy}).`, { status: 409, code: "BUSINESS_RULE" });
+      }
+      linkedLoadingId = requestedLoadingId || null;
     }
 
     // Pass the raw payment facts straight through — post_purchase_order_payment
@@ -730,6 +796,12 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
 
       if (body.typeDetails?.sourceRecordId) {
         await sql`update purchase_order_payments set source_reference_no = ${String(body.typeDetails.sourceRecordId)} where id = ${paymentId}::uuid`;
+      }
+
+      // Record which loading (container) this Remaining payment settles, then let the database refresh the loading balances from it.
+      if (linkedLoadingId) {
+        await sql`update purchase_order_payments set loading_record_id = ${linkedLoadingId}::uuid where id = ${paymentId}::uuid and purchase_order_id = ${params.id}::uuid`;
+        await sql`select recalc_purchase_order_payment_totals(${params.id}::uuid)`;
       }
 
       const paymentRows = await sql`

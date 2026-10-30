@@ -105,6 +105,7 @@ import { PaymentJournalV2FilterModal } from "./payment-journal-v2-filter-modal";
 import { PurchasePaymentJournalRemainingView } from "./purchase-payment-journal-remaining-view";
 import { StandardizedDailyPaymentForm } from "@/components/daily-payments/standardized-daily-payment-form";
 import { calculatePaymentDueTracking, resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
+import { paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
 import { Badge } from "@/components/ui/badge";
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
@@ -3761,10 +3762,16 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       const payKind = p.kind || "";
       if (payKind !== "remaining") return false;
       if (!fromLoading) return true; // if not from loading, sum all remaining payments
-      const payRecordId = p.typeDetails?.loadingRecordId || p.typeDetails?.loading_record_id || "";
+      // the payments API now returns the loading each Remaining payment settled (loading_record_id)
+      const payRecordId = p.loading_record_id || p.typeDetails?.loadingRecordId || p.typeDetails?.loading_record_id || "";
       return payRecordId === cLoadingRecordId;
     });
-    const totalRemainingPaid = remainingPaymentsForThisLoading.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+    // payment rows hold the PAYMENT currency (e.g. AED); the balance above is in the order's purchase currency
+    const orderCcyForPayments = String(selected.currency_code || "").toUpperCase();
+    const totalRemainingPaid = remainingPaymentsForThisLoading.reduce(
+      (sum: number, p: any) => sum + (orderCcyForPayments ? paymentInPurchaseCurrency(p, orderCcyForPayments, exRate) : Number(p.amount || 0)),
+      0
+    );
 
     // Outstanding Balance (Final Currency Balance remaining)
     const outstandingBalance = Math.max(0, finalPurchaseAmount - loadingAdvancePaid - totalRemainingPaid);
@@ -5996,7 +6003,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
                       <div className="text-[11px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
                         <span>7</span>
-                        <span>Remaining Payment & Loading Batch Summary</span>
+                        <span>{t("remaining_loading_batch_summary", currentLanguage)}</span>
                       </div>
                       <div className="space-y-2 mt-2 text-[11px]">
                         <div>

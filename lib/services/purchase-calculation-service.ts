@@ -651,7 +651,8 @@ export function resolveLoadingEligibility(
         paymentCondition: condition,
         requiredAmountFC: requiredFC,
         paidAmountFC: paidFC,
-        shortfallFC: Math.max(requiredFC > 0 ? requiredFC : amounts.totalPurchaseFC, shortfall),
+        // nothing paid → the whole requirement is short; a partial advance → exactly what is still missing
+        shortfallFC: paidFC <= 0.005 ? Math.max(requiredFC > 0 ? requiredFC : amounts.totalPurchaseFC, shortfall) : shortfall,
       };
     }
 

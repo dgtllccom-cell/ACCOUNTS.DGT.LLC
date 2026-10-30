@@ -12,7 +12,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { ApiClientError } from "@/lib/api/response";
-import { resolvePurchaseAmounts, resolvePurchaseLoadingSummary, validatePurchaseLoadingEntries, resolveLoadingEligibility } from "@/lib/services/purchase-calculation-service";
+import { resolvePurchaseAmounts, resolvePurchaseLoadingSummary, validatePurchaseLoadingEntries, resolveLoadingEligibility, resolvePaymentCondition } from "@/lib/services/purchase-calculation-service";
+import { paidForLoadingGate, verifiedPaid } from "@/lib/purchases/loaded-payable";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
@@ -372,7 +373,16 @@ export async function GET(request: NextRequest) {
                       'exchange_rate', pop.exchange_rate,
                       'reference_no', pop.reference_no,
                       'narration', pop.narration,
-                      'source_reference_no', pop.source_reference_no
+                      'source_reference_no', pop.source_reference_no,
+                      -- what the Loading gate needs to count a payment honestly (see lib/purchases/loaded-payable.ts)
+                      'kind', pop.kind::text,
+                      'status', pop.status::text,
+                      'currency_code', pop.currency_code,
+                      'base_currency_amount', pop.base_currency_amount,
+                      'posted_to_journal', pop.posted_to_journal,
+                      'roznamcha_entry_id', pop.roznamcha_entry_id,
+                      'debit_ledger_id', pop.debit_ledger_id,
+                      'credit_ledger_id', pop.credit_ledger_id
                     )
                   )
                   from purchase_order_payments pop
@@ -409,16 +419,21 @@ export async function GET(request: NextRequest) {
           for (const po of poList) {
             if (existingPoIds.has(po.id)) continue;
 
+            // the payment condition is read from form_data, which many bookings hold as a JSON string — parse it before the gate
+            po.form_data = parseJsonish(po.form_data);
             const payments = Array.isArray(po.purchase_order_payments) ? po.purchase_order_payments : [];
-            const totalPaymentsFromPop = payments.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
-            const totalPaidFC = Math.max(Number(po.advance_paid || 0), totalPaymentsFromPop);
+            // Only posted, ledger-verified payments count, converted into the order's purchase currency (never the raw sum of `amount`,
+            // which is in the payment currency and includes booking / unposted rows).
+            const orderCcy = String(po.currency_code || "USD").toUpperCase();
+            const baseCcy = String(po.countries?.currency || orderCcy).toUpperCase();
+            const rateToBase = orderCcy === baseCcy ? 1 : Number(po.exchange_rate) > 0 ? Number(po.exchange_rate) : 1;
+            const totalPaidFC = paidForLoadingGate(resolvePaymentCondition(po as any), verifiedPaid(payments, orderCcy, rateToBase));
 
             // ── Loading Eligibility Gate ──
             // Use resolveLoadingEligibility to check if the payment condition is satisfied
             const eligibility = resolveLoadingEligibility(po as any, totalPaidFC);
             if (!eligibility.eligible) continue; // Payment condition not yet satisfied → do NOT show in loading queue
 
-            po.form_data = parseJsonish(po.form_data);
             const form = po.form_data?.form || {};
             const totals = po.form_data?.totals || {};
             const workflow = po.form_data?.workflow || {};
@@ -550,7 +565,22 @@ export async function POST(request: NextRequest) {
     let remainingLoadingBalance = 0;
     let localCurrency = "AED";
 
-    if (body.purchaseOrderId) {
+    // A load that names its booking by number only must meet the same gate as one that names it by id (it used to skip the gate).
+    let gatedPurchaseOrderId: string | null = body.purchaseOrderId ?? null;
+    if (!gatedPurchaseOrderId && body.purchaseOrderNo?.trim()) {
+      const orderNo = body.purchaseOrderNo.trim();
+      gatedPurchaseOrderId = ((await withLocalPg(async (sql) => {
+        const [order] = await sql`select id from purchase_orders where purchase_order_no = ${orderNo} and deleted_at is null limit 1`;
+        return order?.id ?? null;
+      })) ?? null) as string | null;
+    }
+    // When the load belongs to a booking, the row is inserted INSIDE the transaction that holds the booking's row lock and checks the
+    // remaining quantity — otherwise two requests could both pass the check before either row existed, and a failed insert would
+    // leave the booking's loaded quantity counted without a loading.
+    let insertedInLock: { id: string; loading_record_no: string } | null = null;
+    let lockedPayload: Record<string, any> | null = null;
+
+    if (gatedPurchaseOrderId) {
       // Mutating reads/writes go through withLocalPg, not the RLS-gated Supabase admin
       // client: in this environment SUPABASE_SERVICE_ROLE_KEY resolves to the same value
       // as the anon key (no real service-role secret configured), so RLS blocks writes
@@ -558,27 +588,42 @@ export async function POST(request: NextRequest) {
       // DELETE bug fixed earlier, same fix. Row-locks the PO for the duration so two
       // concurrent loading-record creates can't both under-count persistedLoadedQuantity
       // and jointly over-load the order.
-      const purchaseOrderId = body.purchaseOrderId;
+      const purchaseOrderId = gatedPurchaseOrderId;
       const poResult = await (async () => { try { return await withLocalPg(async (sql) => {
         return sql.begin(async (tx) => {
           const poRows = await tx`
-            select id, order_total, advance_paid, remaining_due, remaining_paid, credit_amount,
-                   currency_code, exchange_rate, form_data, payment_status, status, ledger_posting_status
-            from purchase_orders where id = ${purchaseOrderId}::uuid
-            for update
+            select po.id, po.purchase_order_no, po.order_total, po.advance_paid, po.remaining_due, po.remaining_paid, po.credit_amount,
+                   po.currency_code, po.exchange_rate, po.form_data, po.payment_status, po.status, po.ledger_posting_status,
+                   po.country_id, po.country_branch_id, po.city_branch_id,
+                   (select upper(c.currency_code) from countries c where c.id = po.country_id) as base_currency
+            from purchase_orders po where po.id = ${purchaseOrderId}::uuid and po.deleted_at is null
+            for update of po
           `;
           const po = poRows[0];
           if (!po) return null;
+          // the booking's own branch must be inside the caller's scope (the request's scope fields alone are not enough — a user must not be
+          // able to load another branch's booking by naming its id)
+          authorizeLogistics(session, {
+            action: "create",
+            countryId: po.country_id ?? null,
+            countryBranchId: po.country_branch_id ?? null,
+            cityBranchId: po.city_branch_id ?? null
+          });
           // many bookings hold form_data as a JSON string inside the jsonb column; read it as an object so the quantity gate sees the real goods
           po.form_data = parseJsonish(po.form_data);
 
-          const popRows = await tx`
-            select coalesce(sum(amount), 0) as total_payments
+          // Posted, ledger-verified payments only, in the order's purchase currency (see lib/purchases/loaded-payable.ts)
+          const payRows = await tx`
+            select kind::text as kind, status::text as status, amount, currency_code, exchange_rate, base_currency_amount,
+                   posted_to_journal, roznamcha_entry_id, debit_ledger_id, credit_ledger_id
             from purchase_order_payments
             where purchase_order_id = ${purchaseOrderId}::uuid and deleted_at is null
           `;
-          const totalPaymentsFromPop = Number(popRows[0]?.total_payments || 0);
-          const totalPaidFC = Math.max(Number(po.advance_paid || 0), totalPaymentsFromPop);
+          const gateCcy = String(po.currency_code || "USD").toUpperCase();
+          const gateBase = String(po.base_currency || gateCcy).toUpperCase();
+          const gateRateToBase = gateCcy === gateBase ? 1 : Number(po.exchange_rate) > 0 ? Number(po.exchange_rate) : 1;
+          const verified = verifiedPaid(payRows as any, gateCcy, gateRateToBase);
+          const totalPaidFC = paidForLoadingGate(resolvePaymentCondition(po as any), verified);
 
           // ── Approval gate: a booking is loadable only once it has been approved / transferred ──
           const approved =
@@ -592,7 +637,10 @@ export async function POST(request: NextRequest) {
           // Enforce payment condition before allowing loading record creation
           const eligibility = resolveLoadingEligibility(po as any, totalPaidFC);
           if (!eligibility.eligible) {
-            throw new Error(`Loading blocked: ${eligibility.reason}`);
+            const gapNote = verified.ledgerGaps > 0
+              ? ` ${verified.ledgerGaps} posted payment entr${verified.ledgerGaps === 1 ? "y is" : "ies are"} not fully posted to the ledger and ${verified.ledgerGaps === 1 ? "is" : "are"} not counted.`
+              : "";
+            throw new Error(`Loading blocked: ${eligibility.reason}${gapNote}`);
           }
 
           const amounts = resolvePurchaseAmounts(po as any);
@@ -608,9 +656,20 @@ export async function POST(request: NextRequest) {
           const currentLoadedQuantity = Number(body.loadedQuantity || reportGoodsEntries.reduce((sum: number, item: any) => sum + Number(item.quantityNo || item.loadedQuantity || item.loadingQuantity || item.quantity || 0), 0));
 
           const existingLoadingRows = await tx`
-            select loaded_quantity, report_payload from purchase_loading_records
+            select loaded_quantity, report_payload, container_number, created_at from purchase_loading_records
             where purchase_order_id = ${purchaseOrderId}::uuid and deleted_at is null
           `;
+          // The identical load submitted again within minutes (double-click, retry, replay) is a repeat, not a new loading.
+          const repeatContainer = String(body.containerNumber || "").trim().toLowerCase();
+          const repeatQty = Number(body.loadedQuantity || (body.reportPayload as any)?.loadedQuantity || 0);
+          if (repeatContainer && existingLoadingRows.some((row: any) =>
+            Number(row?.loaded_quantity || 0) > 0 &&
+            Number(row?.loaded_quantity || 0) === repeatQty &&
+            String(row?.container_number || "").trim().toLowerCase() === repeatContainer &&
+            Date.now() - new Date(row?.created_at).getTime() < 15 * 60 * 1000
+          )) {
+            throw new Error(`Loading blocked: container ${body.containerNumber} with this quantity was just loaded on this purchase order (repeated submission).`);
+          }
           const persistedLoadedQuantity = existingLoadingRows.reduce((sum: number, row: any) => {
             return sum + Number(row?.loaded_quantity || row?.report_payload?.loadedQuantity || row?.report_payload?.loadingQuantity || 0);
           }, 0);
@@ -657,7 +716,7 @@ export async function POST(request: NextRequest) {
 
           await tx`update purchase_orders set form_data = ${tx.json(formData)} where id = ${purchaseOrderId}::uuid`;
 
-          return {
+          const computed = {
             totalQuantity: summary.totalQuantity,
             loadingPercentage: Math.min(100, summary.totalQuantity > 0 ? (newLoadedQuantity / summary.totalQuantity) * 100 : 0),
             loadedPurchaseAmount: summary.loadedPurchaseFC,
@@ -670,6 +729,12 @@ export async function POST(request: NextRequest) {
             localCurrency: amounts.localCurrency,
             loadedQuantity: validatedBundle ? validatedBundle.loadedQuantity : loadedQuantity
           };
+          // insert the loading under the SAME row lock that just validated the quantity and the payment gate
+          const row = buildPayload({ ...computed, purchaseOrderId });
+          const lotName = row.lot_name ?? (await allotmentsForOrder(tx, purchaseOrderId, po.purchase_order_no));
+          const lockedRow = { ...row, lot_name: lotName };
+          const [ins] = await tx`insert into purchase_loading_records ${tx(lockedRow as any)} returning id, loading_record_no`;
+          return { ...computed, inserted: ins as { id: string; loading_record_no: string }, row: lockedRow as Record<string, any> };
         });
       }); } catch (e) {
         // a blocked / over-quantity loading is a business-rule refusal (422), not a server fault
@@ -691,14 +756,26 @@ export async function POST(request: NextRequest) {
         remainingLoadingBalance = poResult.remainingLoadingBalance;
         localCurrency = poResult.localCurrency;
         loadedQuantity = poResult.loadedQuantity;
+        insertedInLock = poResult.inserted;
+        lockedPayload = poResult.row;
       }
     }
 
-    const payload = {
+    // The row written for a load: hoisted, so the booking transaction above can insert it while it still holds the lock.
+    function buildPayload(f: {
+      loadedQuantity: number; totalQuantity: number; loadingPercentage: number; loadedPurchaseAmount: number; loadedAdvanceAmount: number;
+      purchaseCurrency: string; orderExchangeRate: number; loadedPurchaseLocal: number; loadedAdvanceLocal: number; remainingLoadingBalance: number;
+      localCurrency: string; purchaseOrderId: string | null;
+    }) {
+      const {
+        loadedQuantity, totalQuantity, loadingPercentage, loadedPurchaseAmount, loadedAdvanceAmount, purchaseCurrency, orderExchangeRate,
+        loadedPurchaseLocal, loadedAdvanceLocal, remainingLoadingBalance, localCurrency
+      } = f;
+      return {
       country_id: effective.countryId,
       country_branch_id: effective.countryBranchId,
       city_branch_id: effective.cityBranchId,
-      purchase_order_id: body.purchaseOrderId ?? null,
+      purchase_order_id: f.purchaseOrderId,
       purchase_order_no: body.purchaseOrderNo?.trim() || null,
       loading_record_no: loadingRecordNo,
       container_number: body.containerNumber,
@@ -756,22 +833,30 @@ export async function POST(request: NextRequest) {
       destination_text: body.destinationText ?? null,
       lot_name: body.lotName ?? ((body.reportPayload as any)?.allotName || null),
       created_by: session.userId
-    };
+      };
+    }
+
+    // A load of a booking was already inserted under the booking's lock; any other load (no booking) is inserted here.
+    const payload: Record<string, any> = lockedPayload ?? buildPayload({
+      loadedQuantity, totalQuantity, loadingPercentage, loadedPurchaseAmount, loadedAdvanceAmount, purchaseCurrency, orderExchangeRate,
+      loadedPurchaseLocal, loadedAdvanceLocal, remainingLoadingBalance, localCurrency, purchaseOrderId: body.purchaseOrderId ?? null
+    });
 
     // Same RLS root cause as above — insert (and the transport-expense insert that reuses
     // the existing purchase expense trail) via withLocalPg in one connection.
     const insertResult = await withLocalPg(async (sql) => {
-      if (!payload.purchase_order_id && payload.purchase_order_no) {
-        const [order] = await sql`select id from purchase_orders where purchase_order_no = ${payload.purchase_order_no} limit 1`;
-        if (order?.id) payload.purchase_order_id = order.id;
+      let rows: Array<{ id: string; loading_record_no: string }>;
+      if (insertedInLock) {
+        rows = [insertedInLock];
+      } else {
+        const lotName = payload.lot_name ?? (await allotmentsForOrder(sql, payload.purchase_order_id, payload.purchase_order_no));
+        rows = (await sql`insert into purchase_loading_records ${sql({ ...payload, lot_name: lotName } as any)} returning id, loading_record_no`) as any;
       }
-      const lotName = payload.lot_name ?? (await allotmentsForOrder(sql, payload.purchase_order_id, payload.purchase_order_no));
-      const rows = await sql`insert into purchase_loading_records ${sql({ ...payload, lot_name: lotName } as any)} returning id, loading_record_no`;
       // After Loading the load enters the General Purchase Lane (idempotent: one lane row per loading record).
       if (rows[0]?.id) await ensureLaneFromLoadingRecord(sql, rows[0].id, session);
-      if (body.transportExpenseAmount > 0 && body.purchaseOrderId) {
+      if (body.transportExpenseAmount > 0 && payload.purchase_order_id) {
         await sql`insert into purchase_order_expenses ${sql({
-          purchase_order_id: body.purchaseOrderId,
+          purchase_order_id: payload.purchase_order_id,
           expense_type: "transport",
           description: `Transport (${body.transportMode || "unspecified mode"}) for loading ${loadingRecordNo}`,
           expense_currency: body.transportExpenseCurrency,

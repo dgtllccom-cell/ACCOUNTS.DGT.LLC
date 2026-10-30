@@ -12688,6 +12688,7 @@ export type UiKey =
   | "pjt.exchange_rate"
   | "pjt.payment_amount_usd"
   | "pjt.post_endorsement_payment"
+  | "pjt.remaining_loading_batch_summary"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -38348,6 +38349,7 @@ const en: Dict = {
   "pjt.exchange_rate": "Exchange Rate",
   "pjt.payment_amount_usd": "Payment Amount",
   "pjt.post_endorsement_payment": "Post Endorsement Payment",
+  "pjt.remaining_loading_batch_summary": "Remaining Payment & Loading Batch Summary",
 };
 
 const ur: Dict = {
@@ -63976,6 +63978,7 @@ const ur: Dict = {
   "pjt.exchange_rate": "شرح تبادلہ",
   "pjt.payment_amount_usd": "ادائیگی کی رقم",
   "pjt.post_endorsement_payment": "توثیقی ادائیگی پوسٹ کریں",
+  "pjt.remaining_loading_batch_summary": "بقایا ادائیگی اور لوڈنگ بیچ کا خلاصہ",
 };
 
 const ar: Dict = {
@@ -89605,6 +89608,7 @@ const ar: Dict = {
   "pjt.exchange_rate": "سعر الصرف",
   "pjt.payment_amount_usd": "مبلغ الدفعة",
   "pjt.post_endorsement_payment": "ترحيل دفعة التظهير",
+  "pjt.remaining_loading_batch_summary": "ملخص الدفعة المتبقية ودفعة التحميل",
 };
 
 const fa: Dict = {
@@ -115233,6 +115237,7 @@ const fa: Dict = {
   "pjt.exchange_rate": "نرخ ارز",
   "pjt.payment_amount_usd": "مبلغ پرداخت",
   "pjt.post_endorsement_payment": "ثبت پرداخت پشت‌نویسی",
+  "pjt.remaining_loading_batch_summary": "خلاصه پرداخت باقی‌مانده و محموله بارگیری",
 };
 
 const ps: Dict = {
@@ -140868,6 +140873,7 @@ const ps: Dict = {
   "pjt.exchange_rate": "د تبادلې نرخ",
   "pjt.payment_amount_usd": "د تادیې مبلغ",
   "pjt.post_endorsement_payment": "د تائیدۍ تادیې پوسټ کول",
+  "pjt.remaining_loading_batch_summary": "د پاتې تادیې او بارولو بسته لنډیز",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
