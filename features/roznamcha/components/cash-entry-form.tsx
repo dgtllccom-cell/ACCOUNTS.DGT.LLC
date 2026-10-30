@@ -45,7 +45,18 @@ import {
   Lock,
   ShieldCheck,
   Globe2,
-  ExternalLink
+  ExternalLink,
+  BookOpen,
+  ArrowUp,
+  ArrowDown,
+  Equal,
+  Crown,
+  TrendingUp,
+  Info,
+  ChevronRight,
+  Filter,
+  MoreHorizontal,
+  Table2
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -77,6 +88,8 @@ import {
   CjActionsMenu, CjFiltersButton, CjFiltersDialog, CjHeading, CjPagination, CjSummaryCard,
   cjActiveFilterCount
 } from "@/features/roznamcha/components/cash-journal-design";
+import { TransferDetailsSection } from "@/features/roznamcha/components/transfer-details-section";
+
 import {
   EMPTY_JOURNAL_FILTERS, entriesWithLines, filterJournalEntries, journalFilterOptions, pageSlice, summarizeJournalUsd,
   type JournalFilters
@@ -113,25 +126,46 @@ function getRoznamchaCategoryLabel(row: any) {
 
 function getCountryFlag(name?: string) {
   if (!name) return "🏳️";
-  const lower = name.toLowerCase();
-  if (lower.includes("pakistan")) return "🇵🇰";
-  if (lower.includes("afghanistan")) return "🇦🇫";
-  if (lower.includes("iran")) return "🇮🇷";
-  if (lower.includes("emirates") || lower.includes("uae") || lower.includes("dubai")) return "🇦🇪";
-  if (lower.includes("india")) return "🇮🇳";
+  const lower = name.trim().toLowerCase();
+  if (lower === "pk" || lower === "pak" || lower.includes("pakistan")) return "🇵🇰";
+  if (lower === "af" || lower === "afg" || lower.includes("afghanistan")) return "🇦🇫";
+  if (lower === "ir" || lower === "irn" || lower.includes("iran")) return "🇮🇷";
+  if (lower === "ae" || lower === "uae" || lower.includes("emirates") || lower.includes("uae") || lower.includes("dubai") || lower.includes("abu dhabi")) return "🇦🇪";
+  if (lower === "sa" || lower === "ksa" || lower.includes("saudi") || lower.includes("riyadh")) return "🇸🇦";
+  if (lower === "in" || lower === "ind" || lower.includes("india")) return "🇮🇳";
+  if (lower === "cn" || lower === "chn" || lower.includes("china")) return "🇨🇳";
+  if (lower === "tr" || lower === "tur" || lower.includes("turkey")) return "🇹🇷";
+  if (lower === "om" || lower.includes("oman")) return "🇴🇲";
+  if (lower === "kw" || lower.includes("kuwait")) return "🇰🇼";
+  if (lower === "qa" || lower.includes("qatar")) return "🇶🇦";
+  if (lower === "bh" || lower.includes("bahrain")) return "🇧🇭";
   return "🏳️";
+}
+
+function formatDisplayDateShort(isoDate: string) {
+  if (!isoDate) return "";
+  const parts = isoDate.slice(0, 10).split("-").map(Number);
+  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return isoDate;
+  const d = new Date(parts[0], parts[1] - 1, parts[2]);
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function formatDisplayDateWithDay(isoDate: string) {
+  if (!isoDate) return "";
+  const parts = isoDate.slice(0, 10).split("-").map(Number);
+  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return isoDate;
+  const d = new Date(parts[0], parts[1] - 1, parts[2]);
+  return d.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
 }
 
 const SAVED_BANKS_KEY = "erp_saved_banks_v1";
 const SAVED_METHODS_KEY = "erp_saved_payment_methods_v1";
 
-// Display-only currency full names for the "Selected Account" bar — presentation
-// data, not a new master/lookup table, so this is safe alongside the "no DB/API
-// changes" rule for this redesign.
+// Display-only currency full names for the "Selected Account" bar and Exchange Rate card
 const CURRENCY_FULL_NAMES: Record<string, string> = {
   USD: "United States Dollar",
   PKR: "Pakistani Rupee",
-  AED: "United Arab Emirates Dirham",
+  AED: "UAE Dirham",
   AFN: "Afghan Afghani",
   EUR: "Euro",
   GBP: "British Pound",
@@ -546,7 +580,7 @@ export function CashEntryForm({
   const [journalFilters, setJournalFilters] = useState<JournalFilters>(EMPTY_JOURNAL_FILTERS);
   const [showJournalFilters, setShowJournalFilters] = useState(false);
   const [journalPage, setJournalPage] = useState(1);
-  const [journalPageSize, setJournalPageSize] = useState(25);
+  const [journalPageSize, setJournalPageSize] = useState(10);
   const [showFormSection, setShowFormSection] = useState(true);
 
   // ── AI Document Intake → Cash Entry bridge ──
@@ -650,10 +684,27 @@ export function CashEntryForm({
   const [loadingOverview, setLoadingOverview] = useState(false);
   const [expandedCountryId, setExpandedCountryId] = useState<string | null>(null);
 
+  // Top-bar Country & Branch view filters for Super Admin / Country Admin dashboard
+  const [topCountryFilter, setTopCountryFilter] = useState<string>("all");
+  const [topBranchFilter, setTopBranchFilter] = useState<string>("all");
+
+  // Connected Daily Exchange Rate module state (/api/erp/currency/daily-rates)
+  const [exchangeRateSearchQuery, setExchangeRateSearchQuery] = useState("");
+  const [dailyExchangeModuleRates, setDailyExchangeModuleRates] = useState<any[]>([]);
+  const [dailyExchangeCountriesStatus, setDailyExchangeCountriesStatus] = useState<any[]>([]);
+  const [loadingExchangeModule, setLoadingExchangeModule] = useState(false);
+
+  // Entry table date filtering state: defaults to 1 day ("day") as required
+  const [tableDateMode, setTableDateMode] = useState<"day" | "range" | "all">("day");
+  const [tableDate, setTableDate] = useState(todayIso());
+  const [tableFromDate, setTableFromDate] = useState(todayIso());
+  const [tableToDate, setTableToDate] = useState(todayIso());
+
   const fetchSummaryOverview = async () => {
     try {
       setLoadingOverview(true);
-      const res = await apiGet<any>(`/api/erp/roznamcha/summary-overview?date=${entryDate}`);
+      const targetDate = tableDateMode === "day" ? (tableDate || entryDate) : entryDate;
+      const res = await apiGet<any>(`/api/erp/roznamcha/summary-overview?date=${targetDate}`);
       if (res && Array.isArray(res.countries)) {
         setSummaryOverview(res);
       }
@@ -664,9 +715,26 @@ export function CashEntryForm({
     }
   };
 
+  const fetchAllDailyExchangeRates = async () => {
+    try {
+      setLoadingExchangeModule(true);
+      const res = await apiGet<any>("/api/erp/currency/daily-rates");
+      if (res) {
+        setDailyExchangeModuleRates(Array.isArray(res.rates) ? res.rates : Array.isArray(res.data) ? res.data : []);
+        setDailyExchangeCountriesStatus(Array.isArray(res.countriesStatus) ? res.countriesStatus : []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch daily exchange rates from module", err);
+    } finally {
+      setLoadingExchangeModule(false);
+    }
+  };
+
   useEffect(() => {
     fetchSummaryOverview();
-  }, [entryDate]);
+    fetchAllDailyExchangeRates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entryDate, tableDate, tableDateMode]);
 
   const selectedCountry = useMemo(
     () => countries.find((c) => c.id === countryId) ?? null,
@@ -697,21 +765,22 @@ export function CashEntryForm({
   }), [selectedCountry, selectedCityBranch, selectedMainBranch]);
 
   const liveSerials = useMemo(() => {
+    const latestEntry = recentEntries[0] || null;
     const nextSeq = recentEntries.length + 1;
-    const cIso = selectedCountry?.iso2 || "GLOBAL";
+    const year = (entryDate || todayIso()).slice(0, 4) || "2026";
+    const cIso = selectedCountry?.iso2 || (selectedCountry?.name ? (selectedCountry.name.toLowerCase().includes("emirates") || selectedCountry.name.toLowerCase().includes("uae") ? "UAE" : selectedCountry.name.slice(0, 3).toUpperCase()) : "UAE");
     const mCode = selectedMainBranch?.code || "MB";
-    const cityCode = selectedCityBranch?.code || "CB";
-    const bCode = selectedCityBranch?.code ? `BR-${selectedCityBranch.code}` : selectedMainBranch?.code ? `MAIN-${selectedMainBranch.code}` : "BR";
+    const cityCode = selectedCityBranch?.code || selectedMainBranch?.code || "DB";
 
     return {
-      superAdmin: `JRN-2026-${String(nextSeq).padStart(4, "0")}`,
-      country: `${cIso}-SR-${String(nextSeq).padStart(4, "0")}`,
-      branch: `${bCode}-SR-${String(nextSeq).padStart(4, "0")}`,
-      mainBranch: `${mCode}-SR-${String(nextSeq).padStart(4, "0")}`,
-      cityBranch: `${cityCode}-SR-${String(nextSeq).padStart(4, "0")}`,
-      entrySerial: `CE-${String(nextSeq).padStart(5, "0")}`
+      superAdmin: latestEntry?.super_admin_serial_number || `SA-${year}-${String(nextSeq).padStart(6, "0")}`,
+      country: latestEntry?.country_transaction_serial_number || `${cIso}-${year}-${String(nextSeq).padStart(6, "0")}`,
+      branch: latestEntry?.branch_transaction_serial_number || `${cityCode}-${year}-${String(nextSeq).padStart(6, "0")}`,
+      mainBranch: latestEntry?.main_branch_transaction_serial || `${mCode}-${year}-${String(nextSeq).padStart(6, "0")}`,
+      cityBranch: latestEntry?.city_branch_transaction_serial || `${cityCode}-${year}-${String(nextSeq).padStart(6, "0")}`,
+      entrySerial: latestEntry?.entry_serial_number || latestEntry?.roznamcha_lines?.[0]?.entry_serial_number || `EN-${year}-${String(nextSeq).padStart(6, "0")}`
     };
-  }, [recentEntries.length, selectedCountry, selectedMainBranch, selectedCityBranch]);
+  }, [recentEntries, entryDate, selectedCountry, selectedMainBranch, selectedCityBranch]);
   const [loadingEntries, setLoadingEntries] = useState(false);
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
   const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
@@ -775,6 +844,20 @@ export function CashEntryForm({
   const [cashPositionsList] = useState<any[]>([]);
 
   const isSuperAdmin = session?.scopes?.isSuperAdmin ?? false;
+
+  const assignedCountryCurrency = useMemo(() => {
+    const cid = countryId || session?.scopes?.countryIds?.[0] || (session?.scopes as any)?.summary?.branchCountryId;
+    const c = countries.find((x) => x.id === cid);
+    return c?.currency_code || null;
+  }, [countryId, session, countries]);
+
+  const branchCurrency =
+    selectedCityBranch?.local_currency ||
+    selectedMainBranch?.local_currency ||
+    selectedCountry?.currency_code ||
+    assignedCountryCurrency ||
+    (isSuperAdmin ? "USD" : "PKR");
+
 
   const userRoleLevel: "operator" | "branch" | "country" | "super_admin" = useMemo(() => {
     if (isSuperAdmin || session?.scopes?.isSuperAdmin) return "super_admin";
@@ -942,8 +1025,250 @@ export function CashEntryForm({
   // Options for the Filters dialog come from the rows already loaded for this scope (never a fixed list).
   const journalFilterChoices = useMemo(() => journalFilterOptions(recentEntries), [recentEntries]);
 
+  // Active countries & exchange rates connected to the Daily Exchange Rate module (/api/erp/currency/daily-rates)
+  const activeExchangeRatesList = useMemo(() => {
+    const targetDate = tableDateMode === "day" ? (tableDate || entryDate || todayIso()) : (entryDate || todayIso());
+    const map = new Map<string, {
+      countryId: string;
+      countryName: string;
+      iso2: string;
+      currencyCode: string;
+      currencyFullName: string;
+      rate: number | null;
+      status: "APPROVED" | "PENDING_MISSING";
+    }>();
+
+    // 1. Seed from countries master & summaryOverview
+    for (const c of countries) {
+      const code = (c.currency_code || "AED").toUpperCase();
+      map.set(c.id, {
+        countryId: c.id,
+        countryName: c.name,
+        iso2: (c as any).iso2 || c.name.slice(0, 2).toUpperCase(),
+        currencyCode: code,
+        currencyFullName: CURRENCY_FULL_NAMES[code] || code,
+        rate: null,
+        status: "PENDING_MISSING",
+      });
+    }
+
+    for (const sc of summaryOverview?.countries || []) {
+      const code = (sc.currencyCode || "AED").toUpperCase();
+      const existing = map.get(sc.countryId);
+      const ovRate = sc.rates?.creditRate ?? sc.rates?.debitRate ?? sc.rates?.buyingRate ?? sc.rates?.sellingRate ?? null;
+      map.set(sc.countryId, {
+        countryId: sc.countryId,
+        countryName: sc.countryName || existing?.countryName || "",
+        iso2: sc.iso2 || existing?.iso2 || "",
+        currencyCode: code,
+        currencyFullName: CURRENCY_FULL_NAMES[code] || code,
+        rate: ovRate != null && Number(ovRate) > 0 ? Number(ovRate) : (existing?.rate ?? null),
+        status: ovRate != null && Number(ovRate) > 0 ? "APPROVED" : (existing?.status ?? "PENDING_MISSING"),
+      });
+    }
+
+    // 2. Overlay from Daily Exchange Rate module countriesStatus
+    for (const cs of dailyExchangeCountriesStatus) {
+      if (!cs?.countryId) continue;
+      const code = (cs.currencyCode || "AED").toUpperCase();
+      const existing = map.get(cs.countryId);
+      const modRate = cs.creditRate ?? cs.debitRate ?? null;
+      map.set(cs.countryId, {
+        countryId: cs.countryId,
+        countryName: cs.countryName || existing?.countryName || "",
+        iso2: cs.iso2 || existing?.iso2 || "",
+        currencyCode: code,
+        currencyFullName: CURRENCY_FULL_NAMES[code] || code,
+        rate: modRate != null && Number(modRate) > 0 ? Number(modRate) : (existing?.rate ?? null),
+        status: modRate != null && Number(modRate) > 0 ? "APPROVED" : (existing?.status ?? "PENDING_MISSING"),
+      });
+    }
+
+    // 3. Overlay exact-date or latest non-superseded rate from daily_usd_rates table
+    for (const [cid, item] of map.entries()) {
+      const exactRow = dailyExchangeModuleRates.find(
+        (r) => r.country_id === cid && r.rate_date === targetDate && !r.superseded_at
+      );
+      const latestRow = exactRow || dailyExchangeModuleRates.find(
+        (r) => r.country_id === cid && !r.superseded_at
+      );
+      if (latestRow) {
+        const val = latestRow.credit_rate ?? latestRow.debit_rate ?? latestRow.selling_rate ?? latestRow.buying_rate ?? null;
+        if (val != null && Number(val) > 0) {
+          item.rate = Number(val);
+          item.status = "APPROVED";
+        }
+      }
+    }
+
+    const list = Array.from(map.values());
+    const q = exchangeRateSearchQuery.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((it) =>
+      it.countryName.toLowerCase().includes(q) ||
+      it.iso2.toLowerCase().includes(q) ||
+      it.currencyCode.toLowerCase().includes(q) ||
+      it.currencyFullName.toLowerCase().includes(q)
+    );
+  }, [countries, summaryOverview, dailyExchangeCountriesStatus, dailyExchangeModuleRates, entryDate, tableDate, tableDateMode, exchangeRateSearchQuery]);
+
+  // Fast currency -> rate map from Daily Exchange Rate module
+  const currencyRateLookup = useMemo(() => {
+    const m: Record<string, number> = { USD: 1 };
+    for (const r of dailyExchangeModuleRates) {
+      const cur = String(r.currency_code || r.countries?.currency_code || "").toUpperCase();
+      const val = Number(r.credit_rate ?? r.debit_rate ?? r.selling_rate ?? r.buying_rate ?? 0);
+      if (cur && val > 0 && !m[cur]) m[cur] = val;
+    }
+    for (const sc of summaryOverview?.countries || []) {
+      const cur = String(sc.currencyCode || "").toUpperCase();
+      const val = Number(sc.rates?.creditRate ?? sc.rates?.debitRate ?? sc.rates?.buyingRate ?? sc.rates?.sellingRate ?? 0);
+      if (cur && val > 0 && !m[cur]) m[cur] = val;
+    }
+    return m;
+  }, [dailyExchangeModuleRates, summaryOverview]);
+
   // "Amount & Payment" card: plain sums of the same USD figures the table's USD Credit / USD Debit columns display.
   const journalSummary = useMemo(() => summarizeJournalUsd(filteredRecentEntries), [filteredRecentEntries]);
+
+  // Primary display lines helper: excludes internal auto-generated "Offset - Source Cash/Bank" duplicate leg
+  const getDisplayLinesForEntry = (row: any): any[] => {
+    const lines: any[] = row?.roznamcha_lines || [];
+    if (lines.length <= 1) return lines;
+    const nonOffset = lines.filter((l) => !String(l?.description || "").startsWith("Offset - Source Cash/Bank"));
+    return nonOffset.length > 0 ? nonOffset : [lines[0]];
+  };
+
+  // USD Position card totals (Total Credit, Total Debit, Net Balance in one USD card)
+  const usdCardPosition = useMemo(() => {
+    let credit = 0;
+    let debit = 0;
+    for (const row of filteredRecentEntries) {
+      const lines = getDisplayLinesForEntry(row);
+      for (const line of lines) {
+        const c = Number(line.credit || 0);
+        const d = Number(line.debit || 0);
+        const cur = String(line.currency || row.countries?.currency_code || branchCurrency || "AED").toUpperCase();
+        const rate = Number(line.exchange_rate ?? line.usd_rate ?? row.exchange_rate ?? currencyRateLookup[cur] ?? 0);
+        if (c > 0) {
+          const usd = line.usd_amount != null && Number(line.usd_amount) > 0
+            ? Number(line.usd_amount)
+            : cur === "USD"
+            ? c
+            : rate > 0
+            ? c / rate
+            : 0;
+          credit += usd;
+        }
+        if (d > 0) {
+          const usd = line.usd_amount != null && Number(line.usd_amount) > 0
+            ? Number(line.usd_amount)
+            : cur === "USD"
+            ? d
+            : rate > 0
+            ? d / rate
+            : 0;
+          debit += usd;
+        }
+      }
+    }
+    return {
+      credit,
+      debit,
+      balance: credit - debit,
+    };
+  }, [filteredRecentEntries, currencyRateLookup, branchCurrency]);
+
+  // Country Position (Own Currency) rows — each country in its own currency, without extra combined total
+  const countryPositionRows = useMemo(() => {
+    const ovCountries = summaryOverview?.countries || [];
+    // Compute non-offset per-country totals from loaded entries if available, falling back to summaryOverview
+    const entryStatsByCountry = new Map<string, { credit: number; debit: number; count: number }>();
+    for (const row of recentEntries) {
+      const cid = row.country_id || "";
+      if (!cid) continue;
+      const curStats = entryStatsByCountry.get(cid) || { credit: 0, debit: 0, count: 0 };
+      curStats.count += 1;
+      for (const line of getDisplayLinesForEntry(row)) {
+        curStats.credit += Number(line.credit || 0);
+        curStats.debit += Number(line.debit || 0);
+      }
+      entryStatsByCountry.set(cid, curStats);
+    }
+
+    const baseList = ovCountries.length > 0
+      ? ovCountries.map((c) => {
+          const fromEntries = entryStatsByCountry.get(c.countryId);
+          // If summaryOverview had equal credit/debit due to double-entry offset legs, prefer primary entry stats
+          const useEntryStats = fromEntries && (c.totalCredit === c.totalDebit && fromEntries.credit !== fromEntries.debit);
+          const credit = useEntryStats ? fromEntries.credit : c.totalCredit;
+          const debit = useEntryStats ? fromEntries.debit : c.totalDebit;
+          const net = credit - debit;
+          return {
+            ...c,
+            totalCredit: credit,
+            totalDebit: debit,
+            balance: Math.abs(net),
+            balanceRaw: net,
+            balanceType: net > 0 ? "Cr" : net < 0 ? "Dr" : "-",
+          };
+        })
+      : countries.map((c) => {
+          const st = entryStatsByCountry.get(c.id) || { credit: 0, debit: 0, count: 0 };
+          const net = st.credit - st.debit;
+          return {
+            countryId: c.id,
+            countryName: c.name,
+            iso2: (c as any).iso2 || c.name.slice(0, 2).toUpperCase(),
+            currencyCode: c.currency_code || "AED",
+            totalCredit: st.credit,
+            totalDebit: st.debit,
+            balance: Math.abs(net),
+            balanceRaw: net,
+            balanceType: net > 0 ? "Cr" : net < 0 ? "Dr" : "-",
+            entryCount: st.count,
+            rates: { buyingRate: null, sellingRate: null, creditRate: null, debitRate: null },
+            branches: [],
+          };
+        });
+
+    if (topCountryFilter !== "all") {
+      return baseList.filter((c) => c.countryId === topCountryFilter || c.iso2?.toLowerCase() === topCountryFilter.toLowerCase());
+    }
+    return baseList;
+  }, [summaryOverview, recentEntries, countries, topCountryFilter]);
+
+  // All available branches for the top-bar "All Branches" dropdown
+  const allFilterBranches = useMemo(() => {
+    const ovCountries = summaryOverview?.countries || [];
+    const filteredC = topCountryFilter === "all"
+      ? ovCountries
+      : ovCountries.filter((c) => c.countryId === topCountryFilter);
+    const list: Array<{ id: string; name: string; code: string; countryId: string; countryName: string }> = [];
+    for (const c of filteredC) {
+      for (const b of c.branches || []) {
+        list.push({
+          id: b.branchId,
+          name: b.branchName,
+          code: b.branchCode,
+          countryId: c.countryId,
+          countryName: c.countryName,
+        });
+      }
+    }
+    if (list.length === 0) {
+      for (const b of cityBranches) {
+        list.push({
+          id: b.id,
+          name: b.name,
+          code: b.code,
+          countryId: b.country_id,
+          countryName: selectedCountry?.name || "",
+        });
+      }
+    }
+    return list;
+  }, [summaryOverview, topCountryFilter, cityBranches, selectedCountry]);
 
   // The table prints one row per posted line, so paging runs over the entries that actually carry lines.
   const journalRowEntries = useMemo(() => entriesWithLines(filteredRecentEntries), [filteredRecentEntries]);
@@ -956,11 +1281,6 @@ export function CashEntryForm({
   const [roznamchaBook, setRoznamchaBook] = useState("CB-001 - Main Cash Book");
   const [roznamchaNumber, setRoznamchaNumber] = useState("000123");
 
-  // Entry table date filtering state: defaults to 1 day ("day") as required
-  const [tableDateMode, setTableDateMode] = useState<"day" | "range" | "all">("day");
-  const [tableDate, setTableDate] = useState(todayIso());
-  const [tableFromDate, setTableFromDate] = useState(todayIso());
-  const [tableToDate, setTableToDate] = useState(todayIso());
 
   // Back to the first page whenever the visible set changes (search, filters, date scope, page size).
   useEffect(() => {
@@ -1029,9 +1349,16 @@ export function CashEntryForm({
       setLoadingEntries(true);
       const params = new URLSearchParams({ limit: "500" });
       params.set("language", lang);
-      if (countryId) params.set("countryId", countryId);
-      if (countryBranchId) params.set("countryBranchId", countryBranchId);
-      if (cityBranchId) params.set("cityBranchId", cityBranchId);
+      const effectiveFilterCountry = isSuperAdmin
+        ? (topCountryFilter !== "all" ? topCountryFilter : "")
+        : countryId;
+      const effectiveFilterCityBranch = (isSuperAdmin || isCountryAdmin)
+        ? (topBranchFilter !== "all" ? topBranchFilter : "")
+        : cityBranchId;
+
+      if (effectiveFilterCountry) params.set("countryId", effectiveFilterCountry);
+      if (!isSuperAdmin && !isCountryAdmin && countryBranchId) params.set("countryBranchId", countryBranchId);
+      if (effectiveFilterCityBranch) params.set("cityBranchId", effectiveFilterCityBranch);
 
       // Apply 1-day (default) or date-range filtering as requested
       if (tableDateMode === "day") {
@@ -1133,7 +1460,7 @@ export function CashEntryForm({
     fetchCashSummary();
     fetchDailyRate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId, countryBranchId, cityBranchId, tableDateMode, tableDate, tableFromDate, tableToDate, entryDate]);
+  }, [countryId, countryBranchId, cityBranchId, topCountryFilter, topBranchFilter, isSuperAdmin, isCountryAdmin, tableDateMode, tableDate, tableFromDate, tableToDate, entryDate]);
 
   const ledgerRowsWithAccount = useMemo(
     () => ledgers.filter((row) => Boolean(row.accountId && row.ledgerId)),
@@ -1195,19 +1522,6 @@ export function CashEntryForm({
       selectedCounterLedger?.ledgerId &&
       selectedCashLedger.ledgerId === selectedCounterLedger.ledgerId
   );
-
-  const assignedCountryCurrency = useMemo(() => {
-    const cid = countryId || session?.scopes?.countryIds?.[0] || (session?.scopes as any)?.summary?.branchCountryId;
-    const c = countries.find((x) => x.id === cid);
-    return c?.currency_code || null;
-  }, [countryId, session, countries]);
-
-  const branchCurrency =
-    selectedCityBranch?.local_currency ||
-    selectedMainBranch?.local_currency ||
-    selectedCountry?.currency_code ||
-    assignedCountryCurrency ||
-    (isSuperAdmin ? "USD" : "PKR");
 
   const cashBalanceText = useMemo(() => {
     if (!selectedCashLedger) return "—";
@@ -3011,535 +3325,575 @@ export function CashEntryForm({
       ============================================================ */}
 
 
-      {/* Page heading (design) — the existing page title; Back keeps its original navigation */}
-      <CjHeading lang={lang} title={tr("cj.title", "Cash Journal Entry (Receipt / Payment)")} onBack={() => router.push("/dashboard/roznamcha" as any)} />
-
-      {/* Scope & Session Cards - Branch Details, Serial Numbers, Daily Cash Position */}
-      {showFormSection && (
-      <div className="mx-4 mb-4 grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
-
-        {/* ════════ COLUMN 1: BRANCH DETAILS (xl:col-span-4) ════════ */}
-        <div className="xl:col-span-4 flex flex-col gap-4">
-
-          {/* Card 1A: Branch Information */}
-          <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
-              <span className="h-2 w-2 rounded-full bg-blue-600 inline-block" />
-              <h4 className="text-xs font-black uppercase tracking-wider text-blue-900 dark:text-blue-300">
-                {t(lang, "cbs.branch_information", "BRANCH INFORMATION")}
-              </h4>
-            </div>
-            <div className="p-3.5 grid grid-cols-1 2xl:grid-cols-2 gap-3 text-xs">
-              {/* Left Column: Branch Details */}
-              <div className="grid grid-cols-[95px_1fr] gap-x-2 gap-y-1.5 font-semibold">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "common.country", "COUNTRY")}</span>
-                <div className="relative flex items-center">
-                  <select
-                    value={countryId}
-                    disabled={loadingCountries || (effectiveScopeMode !== "super_admin" && !isSuperAdmin)}
-                    onChange={(e) => setCountryId(e.target.value)}
-                    className="bg-transparent border-none p-0 outline-none font-bold text-blue-600 dark:text-blue-400 cursor-pointer appearance-none text-xs hover:underline truncate"
-                  >
-                    <option value="" className="text-slate-900">
-                      {isSuperAdmin
-                        ? tr("cj.allCountriesSuper", "All Countries (Super Admin View)")
-                        : (!session?.scopes.countryIds || session.scopes.countryIds.length === 0)
-                        ? tr("cj.noCountry", "No Country Assigned")
-                        : tr("cj.selectCountry", "Select Country")}
-                    </option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.id} className="text-slate-900">{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_category", "BRANCH CATEGORY")}</span>
-                <div className="relative flex items-center">
-                  <select
-                    value={branchCategory}
-                    onChange={(e) => {
-                      setBranchCategory(e.target.value as "business" | "agent");
-                      setCityBranchId("");
-                    }}
-                    className="bg-transparent border-none p-0 outline-none font-bold text-indigo-600 dark:text-indigo-400 cursor-pointer appearance-none text-xs hover:underline"
-                  >
-                    <option value="business" className="text-slate-900">🏢 {tr("cj.businessBranchOpt", "Business Branch")}</option>
-                    <option value="agent" className="text-slate-900">🚢 {tr("cj.agentBranchOpt", "Clearing Agent Branch")}</option>
-                  </select>
-                </div>
-
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_name", "BRANCH NAME")}</span>
-                <div className="relative flex items-center">
-                  <select
-                    value={countryBranchId}
-                    disabled={!countryId}
-                    onChange={(e) => setCountryBranchId(e.target.value)}
-                    className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline truncate"
-                  >
-                    <option value="" className="text-slate-900">{tr("cj.selectBranch", "Select Branch")}</option>
-                    {mainBranches.map((b) => (
-                      <option key={b.id} value={b.id} className="text-slate-900">{b.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.branch_code", "BRANCH CODE")}</span>
-                <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                  {selectedMainBranch?.code || "—"}
-                </span>
-
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "roz.city_branch", "CITY BRANCH")}</span>
-                <div className="relative flex items-center">
-                  <select
-                    value={cityBranchId}
-                    disabled={!countryBranchId}
-                    onChange={(e) => setCityBranchId(e.target.value)}
-                    className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline truncate"
-                  >
-                    <option value="" className="text-slate-900">{tr("cj.selectCityBranch", "Select City Branch")}</option>
-                    {cityBranches.map((b) => (
-                      <option key={b.id} value={b.id} className="text-slate-900">{b.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">{t(lang, "common.date", "DATE")}</span>
-                <input
-                  type="date"
-                  value={entryDate}
-                  onChange={(e) => setEntryDate(e.target.value)}
-                  className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-150 cursor-pointer text-xs"
-                />
-              </div>
-
-              {/* Right Column: Voucher Audit & Status */}
-              <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-2 font-semibold border-t border-slate-100 pt-3 dark:border-slate-800 2xl:border-t-0 2xl:pt-0 2xl:border-s 2xl:ps-3 content-start">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-start">{tr("cj.createdBy", "CREATED BY")}</span>
-                <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate" title={activeCreator || session?.user?.fullName || "—"}>
-                  {activeCreator || session?.user?.fullName || "—"}
-                </span>
-
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-start">{tr("cj.approvedBy", "APPROVED BY")}</span>
-                <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate" title={activeApprover || tr("cj.pending", "Pending")}>
-                  {activeApprover || tr("cj.pending", "Pending")}
-                </span>
-
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-start">{tr("cj.status", "STATUS")}</span>
-                <div>
-                  <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400">
-                    {activeStatus ? translateValue(lang, activeStatus.toUpperCase()) : tr("cj.statusDraft", "DRAFT")}
-                  </span>
-                </div>
-              </div>
-            </div>
+      {/* ============================================================
+          APPROVED ROZNAMCHA HEADER BAR & 4 SUMMARY CARDS
+      ============================================================ */}
+      <div className="mx-4 mt-2 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white px-4 py-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        {/* Left: Brand Icon + Title & Subtitle */}
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shrink-0">
+            <BookOpen className="h-5 w-5" />
+          </span>
+          <div>
+            <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+              {tr("cj.roznamchaHeading", "Roznamcha")}
+            </h1>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              {tr("cj.dailyFinancialRecords", "Daily Financial Records")}
+            </p>
           </div>
-
-          {/* Card 1B: Amount & Payment — sums of the USD columns shown in the journal table below */}
-          {canViewUsd && (
-            <CjSummaryCard
-              lang={lang}
-              creditText={`${fmtAmount(journalSummary.credit)} USD`}
-              debitText={`${fmtAmount(journalSummary.debit)} USD`}
-              diffText={`${fmtAmount(Math.abs(journalSummary.credit - journalSummary.debit))} USD${journalSummary.credit - journalSummary.debit > 0.005 ? " Cr" : journalSummary.credit - journalSummary.debit < -0.005 ? " Dr" : ""}`}
-              diffZero={Math.abs(journalSummary.credit - journalSummary.debit) < 0.005}
-              creditCount={journalSummary.creditCount}
-              debitCount={journalSummary.debitCount}
-              missingRate={journalSummary.missingRate}
-              scopeText={`${selectedCountry?.name || t(lang, "roz.all_countries", "All Countries")} · ${tableDateMode === "day" ? (tableDate || entryDate) : tableDateMode === "range" ? `${tableFromDate} → ${tableToDate}` : t(lang, "common.all", "All")}`}
-            />
-          )}
-
         </div>
 
-        {/* ════════ COLUMN 2: SERIAL NUMBERS & COUNTRY RATES (xl:col-span-4) ════════ */}
-        <div className="xl:col-span-4 flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-indigo-50/50 dark:bg-indigo-900/10">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-indigo-600 inline-block" />
-              <h4 className="text-xs font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-300">
-                {tr("cj.serialRatesTitle", "SERIAL NUMBERS & COUNTRY RATES")}
-              </h4>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] font-bold text-slate-500">{tr("cj.role", "Role:")}</span>
-              {isSuperAdmin ? (
-                <select
-                  value={serialRoleFilter}
-                  onChange={(e) => setSerialRoleFilter(e.target.value)}
-                  className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
-                >
-                  <option value="Super Admin">{tr("cj.roleSuperAdmin", "Super Admin")}</option>
-                  <option value="Country Admin">{tr("cj.roleCountryAdmin", "Country Admin")}</option>
-                  <option value="Branch Admin">{tr("cj.roleBranchAdmin", "Branch Admin")}</option>
-                </select>
-              ) : (
-                <span className="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-[11px]">
-                  {userRoleLabel}
-                </span>
+        {/* Right: Date Selector, Serial Info, Country Filter, Branch Filter, Refresh, + New Entry */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* 1. Date Picker Box */}
+          <label className="relative inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-3 text-xs font-bold text-slate-800 hover:bg-slate-100/80 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer transition">
+            <Calendar className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+            <span>{formatDisplayDateWithDay(tableDateMode === "day" ? (tableDate || entryDate) : entryDate)}</span>
+            <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <input
+              type="date"
+              value={tableDateMode === "day" ? (tableDate || entryDate) : entryDate}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val) {
+                  setTableDateMode("day");
+                  setTableDate(val);
+                  setEntryDate(val);
+                }
+              }}
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              aria-label={t(lang, "common.date", "Date")}
+            />
+          </label>
+
+          {/* 2. Serial Info Button */}
+          <button
+            type="button"
+            onClick={() => setShowSerialsDropdown((prev) => !prev)}
+            className={cn(
+              "inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition cursor-pointer",
+              showSerialsDropdown
+                ? "border-blue-400 bg-blue-100 text-blue-800 dark:border-blue-600 dark:bg-blue-900/60 dark:text-blue-200"
+                : "border-blue-200 bg-blue-50/80 text-blue-700 hover:bg-blue-100/80 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300"
+            )}
+          >
+            <Info className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            <span>{tr("cj.serialInfoBtn", "Serial Info")}</span>
+          </button>
+
+          {/* 3. Country Filter Dropdown */}
+          <div className="relative inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            <Globe className="h-3.5 w-3.5 text-slate-500 me-1.5 shrink-0" />
+            <select
+              value={isSuperAdmin ? topCountryFilter : countryId}
+              disabled={loadingCountries || (!isSuperAdmin && effectiveScopeMode !== "super_admin")}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (isSuperAdmin) {
+                  setTopCountryFilter(val);
+                  setTopBranchFilter("all");
+                  if (val !== "all") {
+                    setCountryId(val);
+                    const cObj = countries.find((c) => c.id === val);
+                    setCashPositionCountryFilter((cObj as any)?.iso2 || val);
+                  } else {
+                    setCashPositionCountryFilter("all");
+                  }
+                } else {
+                  setCountryId(val);
+                }
+              }}
+              className="bg-transparent pr-5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none appearance-none cursor-pointer"
+            >
+              {isSuperAdmin && (
+                <option value="all" className="text-slate-900">
+                  {t(lang, "roz.all_countries", "All Countries")}
+                </option>
               )}
+              {countries.map((c) => (
+                <option key={c.id} value={c.id} className="text-slate-900">
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-slate-400" />
+          </div>
+
+          {/* 4. Branch Filter Dropdown */}
+          <div className="relative inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            <Building2 className="h-3.5 w-3.5 text-slate-500 me-1.5 shrink-0" />
+            <select
+              value={(isSuperAdmin || isCountryAdmin) ? topBranchFilter : cityBranchId}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (isSuperAdmin || isCountryAdmin) {
+                  setTopBranchFilter(val);
+                  if (val !== "all") {
+                    const matched = allFilterBranches.find((b) => b.id === val);
+                    if (matched?.countryId && matched.countryId !== countryId) {
+                      setCountryId(matched.countryId);
+                    }
+                    setCityBranchId(val);
+                  }
+                } else {
+                  setCityBranchId(val);
+                }
+              }}
+              className="bg-transparent pr-5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none appearance-none cursor-pointer max-w-[170px] truncate"
+            >
+              {(isSuperAdmin || isCountryAdmin) && (
+                <option value="all" className="text-slate-900">
+                  {tr("cj.fAllBranches", "All Branches")}
+                </option>
+              )}
+              {allFilterBranches.map((b) => (
+                <option key={b.id} value={b.id} className="text-slate-900">
+                  {b.name} {b.code ? `(${b.code})` : ""}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-slate-400" />
+          </div>
+
+          {/* 5. Refresh Button */}
+          <button
+            type="button"
+            onClick={() => {
+              fetchRecentEntries();
+              fetchCashSummary();
+              fetchSummaryOverview();
+              fetchDailyRate();
+              fetchAllDailyExchangeRates();
+            }}
+            title={t(lang, "common.refresh", "Refresh")}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition cursor-pointer"
+          >
+            <RefreshCw className={cn("h-4 w-4", (loadingEntries || loadingOverview || loadingExchangeModule) ? "animate-spin text-blue-600" : "")} />
+          </button>
+
+          {/* 6. + New Entry Button */}
+          <Button
+            type="button"
+            onClick={() => {
+              resetPaymentDraft();
+              setEditEntryId(null);
+              setShowPaymentWorkReport(true);
+            }}
+            className="h-9 gap-1.5 rounded-xl bg-blue-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            <span>{t(lang, "roz.new_entry", "New Entry")}</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* ============================================================
+          4 TOP SUMMARY CARDS (APPROVED DESIGN)
+          1. Super Admin – USD Position (Total Credit, Debit, Balance in one USD card)
+          2. Country Position (Own Currency) (Per-country figures without extra combined total)
+          3. Serial & Date Information (Highlighted Current Branch Entry Serial)
+          4. Exchange Rate (USD Base) (Connected to Daily Exchange Rate module)
+      ============================================================ */}
+      {showFormSection && (
+        <div className="mx-4 mb-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch">
+
+          {/* ════════ CARD 1: SUPER ADMIN – USD POSITION ════════ */}
+          <div className="flex flex-col justify-between rounded-2xl border border-blue-100 bg-gradient-to-b from-blue-50/40 via-white to-white p-4 shadow-xs dark:border-slate-800 dark:from-slate-900 dark:to-slate-900">
+            <div className="flex items-center gap-3 mb-3.5">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100/90 text-blue-600 font-black text-lg shrink-0 dark:bg-blue-950 dark:text-blue-400">
+                $
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                  {canViewUsd
+                    ? tr("cj.superAdminUsdPosition", "Super Admin – USD Position")
+                    : `${userRoleLabel} – ${branchCurrency} Position`}
+                </h3>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                  {isSuperAdmin && topCountryFilter === "all"
+                    ? tr("cj.allCountries", "All Countries")
+                    : (countries.find((c) => c.id === (isSuperAdmin ? topCountryFilter : countryId))?.name || selectedCountry?.name || tr("cj.allCountries", "All Countries"))}
+                  {" | "}
+                  {(isSuperAdmin || isCountryAdmin) && topBranchFilter === "all"
+                    ? tr("cj.fAllBranches", "All Branches")
+                    : (allFilterBranches.find((b) => b.id === topBranchFilter)?.name || selectedCityBranch?.name || selectedMainBranch?.name || tr("cj.fAllBranches", "All Branches"))}
+                </p>
+              </div>
+            </div>
+
+            {/* 3 Vertical Inner Boxes: Total Credit | Total Debit | Net Balance */}
+            <div className="grid grid-cols-3 gap-2.5 flex-1 items-stretch">
+              {/* Total Credit */}
+              <div className="flex flex-col items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50/60 px-2 py-3.5 text-center dark:border-emerald-900/50 dark:bg-emerald-950/25">
+                <span className="mb-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100/80 text-emerald-600 dark:bg-emerald-900/60 dark:text-emerald-400">
+                  <ArrowUp className="h-3.5 w-3.5 stroke-[2.5]" />
+                </span>
+                <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  {tr("cj.totalCredit", "Total Credit")}
+                </span>
+                <span className="mt-1 font-mono text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 tracking-tight" dir="ltr">
+                  {fmtAmount(canViewUsd ? usdCardPosition.credit : recentEntriesSummary.totalCredit)}
+                </span>
+                <span className="mt-0.5 text-[10px] font-bold uppercase text-slate-400">
+                  {canViewUsd ? "USD" : branchCurrency}
+                </span>
+              </div>
+
+              {/* Total Debit */}
+              <div className="flex flex-col items-center justify-center rounded-xl border border-rose-100 bg-rose-50/60 px-2 py-3.5 text-center dark:border-rose-900/50 dark:bg-rose-950/25">
+                <span className="mb-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-rose-100/80 text-rose-600 dark:bg-rose-900/60 dark:text-rose-400">
+                  <ArrowDown className="h-3.5 w-3.5 stroke-[2.5]" />
+                </span>
+                <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  {tr("cj.totalDebit", "Total Debit")}
+                </span>
+                <span className="mt-1 font-mono text-sm sm:text-base font-black text-rose-600 dark:text-rose-400 tracking-tight" dir="ltr">
+                  {fmtAmount(canViewUsd ? usdCardPosition.debit : recentEntriesSummary.totalDebit)}
+                </span>
+                <span className="mt-0.5 text-[10px] font-bold uppercase text-slate-400">
+                  {canViewUsd ? "USD" : branchCurrency}
+                </span>
+              </div>
+
+              {/* Net Balance */}
+              <div className="flex flex-col items-center justify-center rounded-xl border border-blue-100 bg-blue-50/60 px-2 py-3.5 text-center dark:border-blue-900/50 dark:bg-blue-950/25">
+                <span className="mb-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100/80 text-blue-600 dark:bg-blue-900/60 dark:text-blue-400">
+                  <Equal className="h-3.5 w-3.5 stroke-[2.5]" />
+                </span>
+                <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  {tr("cj.colNetBalance", "Net Balance")}
+                </span>
+                <span className="mt-1 font-mono text-sm sm:text-base font-black text-blue-600 dark:text-blue-400 tracking-tight" dir="ltr">
+                  {fmtAmount(canViewUsd ? usdCardPosition.balance : (recentEntriesSummary.totalCredit - recentEntriesSummary.totalDebit))}
+                </span>
+                <span className="mt-0.5 text-[10px] font-bold uppercase text-slate-400">
+                  {canViewUsd ? "USD" : branchCurrency}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="p-3.5 space-y-3 flex-1 flex flex-col justify-between">
+          {/* ════════ CARD 2: COUNTRY POSITION (OWN CURRENCY) ════════ */}
+          <div className="flex flex-col justify-between rounded-2xl border border-purple-100 bg-gradient-to-b from-purple-50/35 via-white to-white p-4 shadow-xs dark:border-slate-800 dark:from-slate-900 dark:to-slate-900">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100/90 text-purple-600 shrink-0 dark:bg-purple-950 dark:text-purple-400">
+                  <Globe2 className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                    {tr("cj.countryPositionOwnCurr", "Country Position (Own Currency)")}
+                  </h3>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                    {tr("cj.creditDebitBalancePerCountry", "Credit / Debit / Balance per Country")}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const firstWithBranch = countryPositionRows.find((c) => c.branches && c.branches.length > 0);
+                  if (firstWithBranch?.branches?.[0]) {
+                    const b = firstWithBranch.branches[0];
+                    setDrilldownBranch({
+                      branchName: `${firstWithBranch.countryName} - ${b.branchName}`,
+                      branchCode: b.branchCode,
+                      currency: firstWithBranch.currencyCode,
+                      totalCredit: b.totalCredit,
+                      totalDebit: b.totalDebit,
+                      balance: b.balance,
+                      balanceType: b.balanceType,
+                      entryCount: b.entryCount,
+                      transactions: (b as any).transactions || [],
+                    });
+                  }
+                }}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-purple-600 dark:border-slate-700 dark:bg-slate-800 cursor-pointer shrink-0"
+                title={tr("cj.viewTxTip", "Click to view transactions")}
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            {/* Clean Per-Country Table (Own Currency Only — No Extra Combined Total) */}
+            <div className="flex-1 overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-800">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/80 text-[10.5px] font-bold text-slate-500 dark:border-slate-800 dark:bg-slate-800/60">
+                    <th className="py-2 px-2.5">{tr("cj.colCountry", "Country")}</th>
+                    <th className="py-2 px-2">{tr("cj.fCurrency", "Currency")}</th>
+                    <th className="py-2 px-2 text-right">{tr("cj.colCredit", "Credit")}</th>
+                    <th className="py-2 px-2 text-right">{tr("cj.colDebit", "Debit")}</th>
+                    <th className="py-2 px-2.5 text-right">{tr("cj.balanceCol", "Balance")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {countryPositionRows.length > 0 ? (
+                    countryPositionRows.map((pos) => {
+                      const netVal = pos.totalCredit - pos.totalDebit;
+                      return (
+                        <tr
+                          key={pos.countryId}
+                          onClick={() => {
+                            if (pos.branches?.[0]) {
+                              setDrilldownBranch({
+                                branchName: `${pos.countryName} - ${pos.branches[0].branchName}`,
+                                branchCode: pos.branches[0].branchCode,
+                                currency: pos.currencyCode,
+                                totalCredit: pos.branches[0].totalCredit,
+                                totalDebit: pos.branches[0].totalDebit,
+                                balance: pos.branches[0].balance,
+                                balanceType: pos.branches[0].balanceType,
+                                entryCount: pos.branches[0].entryCount,
+                                transactions: (pos.branches[0] as any).transactions || [],
+                              });
+                            }
+                          }}
+                          className="hover:bg-purple-50/40 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
+                          title={tr("cj.viewTxTip", "Click to view transactions")}
+                        >
+                          <td className="py-2 px-2.5 font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5">
+                              <span>{getCountryFlag(pos.countryName || pos.iso2)}</span>
+                              <span>{pos.iso2 === "AE" ? "UAE" : localizeCountryName(pos.countryName, lang)}</span>
+                            </span>
+                          </td>
+                          <td className="py-2 px-2 font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            {pos.currencyCode}
+                          </td>
+                          <td className="py-2 px-2 text-right font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400" dir="ltr">
+                            {fmtAmount(pos.totalCredit)}
+                          </td>
+                          <td className="py-2 px-2 text-right font-mono text-[11px] font-bold text-rose-600 dark:text-rose-400" dir="ltr">
+                            {fmtAmount(pos.totalDebit)}
+                          </td>
+                          <td className="py-2 px-2.5 text-right font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400" dir="ltr">
+                            {fmtAmount(netVal)}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="py-6 text-center text-xs text-slate-400">
+                        {tr("cj.noBranchEntries", "No country entries found for selected date.")}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* ════════ CARD 3: SERIAL & DATE INFORMATION ════════ */}
+          <div className="flex flex-col justify-between rounded-2xl border border-orange-200/80 bg-gradient-to-b from-orange-50/45 via-white to-white p-4 shadow-xs dark:border-slate-800 dark:from-slate-900 dark:to-slate-900">
             <div>
-              {/* Current Serial & View Serials */}
-              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-150 dark:border-slate-750 mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
-                    {tr("cj.currentSerial", "CURRENT SERIAL")}
+              <div className="flex items-center gap-3 mb-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500 text-white shadow-xs shrink-0">
+                  <Hash className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                    {tr("cj.serialDateInfoTitle", "Serial & Date Information")}
+                  </h3>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                    {tr("cj.currentRunningNumbers", "Current Running Numbers")}
+                  </p>
+                </div>
+              </div>
+
+              {/* Highlighted Current Branch Entry Serial Box */}
+              <div className="rounded-xl border border-orange-200/90 bg-orange-50/70 p-2.5 mb-3 dark:border-orange-900/50 dark:bg-orange-950/25">
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-orange-500 text-white text-[9px] font-black">
+                      #
+                    </span>
+                    <span>{tr("cj.currentBranchEntrySerial", "Current Branch Entry Serial")}</span>
                   </span>
-                  <span className="font-mono text-xs font-black text-blue-700 dark:text-blue-400" dir="ltr">
-                    {currentSerialDisplay}
+                  <button
+                    type="button"
+                    onClick={() => setShowSerialsDropdown((prev) => !prev)}
+                    className="text-slate-400 hover:text-orange-600 cursor-pointer"
+                    title={tr("cj.viewSerials", "View Serials")}
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="inline-flex items-center gap-1.5 min-w-0">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white shrink-0">
+                      <Building2 className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
+                      {selectedCityBranch?.name || selectedMainBranch?.name || "Dubai Main"} ({selectedCountry?.iso2 || activeCountryIso})
+                    </span>
+                  </div>
+                  <span
+                    className="inline-flex items-center rounded-lg bg-orange-200/85 border border-orange-300 px-2.5 py-1 font-mono text-xs font-black text-orange-950 dark:bg-orange-900/70 dark:border-orange-700 dark:text-orange-100 shrink-0 shadow-2xs"
+                    dir="ltr"
+                  >
+                    {(savedSerials as any)?.entrySerial || liveSerials.entrySerial}
                   </span>
+                </div>
+              </div>
+
+              {/* 3 Running Serial Rows */}
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-2 font-semibold text-slate-600 dark:text-slate-300">
+                    <Crown className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                    <span>{tr("cj.superAdminSerialLabel", "Super Admin Serial")}</span>
+                  </span>
+                  <span className="rounded-md border border-blue-200 bg-blue-50/80 px-2 py-0.5 font-mono text-[11px] font-bold text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300" dir="ltr">
+                    {savedSerials?.superAdmin || liveSerials.superAdmin}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-2 font-semibold text-slate-600 dark:text-slate-300 truncate">
+                    <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                    <span className="truncate">
+                      {tr("cj.countrySerialLabel", "Country Serial")} ({selectedCountry?.iso2 || activeCountryIso})
+                    </span>
+                  </span>
+                  <span className="rounded-md border border-emerald-200 bg-emerald-50/80 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 shrink-0" dir="ltr">
+                    {savedSerials?.country || liveSerials.country}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-2 font-semibold text-slate-600 dark:text-slate-300 truncate">
+                    <Building2 className="h-3.5 w-3.5 text-purple-600 shrink-0" />
+                    <span className="truncate">
+                      {tr("cj.branchSerialLabel", "Branch Serial")} ({selectedCityBranch?.name || selectedMainBranch?.name || "Main"})
+                    </span>
+                  </span>
+                  <span className="rounded-md border border-indigo-200 bg-indigo-50/80 px-2 py-0.5 font-mono text-[11px] font-bold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 shrink-0" dir="ltr">
+                    {(savedSerials as any)?.cityBranch || savedSerials?.branch || liveSerials.cityBranch || liveSerials.branch}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer: Selected Date */}
+            <div className="mt-3 flex items-center justify-between border-t border-orange-200/60 pt-2.5 text-xs dark:border-slate-800">
+              <span className="inline-flex items-center gap-1.5 font-semibold text-slate-600 dark:text-slate-300">
+                <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                <span>{tr("cj.selectedDate", "Selected Date")}</span>
+              </span>
+              <label className="relative inline-flex items-center gap-1 font-extrabold text-slate-900 dark:text-white cursor-pointer hover:text-blue-600">
+                <span>{formatDisplayDateShort(tableDateMode === "day" ? (tableDate || entryDate) : entryDate)}</span>
+                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+                <input
+                  type="date"
+                  value={tableDateMode === "day" ? (tableDate || entryDate) : entryDate}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val) {
+                      setTableDateMode("day");
+                      setTableDate(val);
+                      setEntryDate(val);
+                    }
+                  }}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* ════════ CARD 4: EXCHANGE RATE (USD BASE) — CONNECTED TO DAILY EXCHANGE MODULE ════════ */}
+          <div className="flex flex-col justify-between rounded-2xl border border-emerald-200/80 bg-gradient-to-b from-emerald-50/40 via-white to-white p-4 shadow-xs dark:border-slate-800 dark:from-slate-900 dark:to-slate-900">
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100/90 text-emerald-600 shrink-0 dark:bg-emerald-950 dark:text-emerald-400">
+                    <ArrowLeftRight className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                      {tr("cj.exchangeRateUsdBase", "Exchange Rate (USD Base)")}
+                    </h3>
+                    <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                      {tr("cj.activeCountriesFromDailyExchange", "Active Countries (From Daily Exchange)")}
+                    </p>
+                  </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowSerialsDropdown((prev) => !prev)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-blue-200 bg-blue-50 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 transition"
+                  onClick={() => router.push("/dashboard/reports/exchange-rate" as any)}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-emerald-600 dark:border-slate-700 dark:bg-slate-800 cursor-pointer shrink-0"
+                  title={tr("cj.viewAllExchangeRates", "View All Exchange Rates")}
                 >
-                  {tr("cj.viewSerials", "View Serials")} <ChevronDown className="h-3 w-3" />
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               </div>
 
-              {/* View Serials Expanded Box */}
-              {showSerialsDropdown && (
-                <div className="mb-3 p-2.5 rounded-lg border border-blue-200 bg-blue-50/40 dark:border-blue-900 dark:bg-blue-950/20 text-xs grid grid-cols-2 gap-2 font-mono">
-                  {canViewUsd && (
-                    <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialSuperAdmin", "Super Admin:")}</span> <strong className="text-blue-700 dark:text-blue-300">{savedSerials?.superAdmin || liveSerials.superAdmin}</strong></div>
-                  )}
-                  {(isSuperAdmin || isCountryAdmin) && (
-                    <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialCountry", "Country:")}</span> <strong className="text-blue-700 dark:text-blue-300">{savedSerials?.country || liveSerials.country}</strong></div>
-                  )}
-                  <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialMainBranch", "Main Branch:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.mainBranch || liveSerials.mainBranch}</strong></div>
-                  <div><span className="text-[10px] text-slate-500 block">{tr("cj.serialCityBranch", "City Branch:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.cityBranch || liveSerials.cityBranch}</strong></div>
-                  <div><span className="text-[10px] text-slate-500 block">{t(lang, "cef.print_entry_serial", "Entry Serial:")}</span> <strong className="text-blue-700 dark:text-blue-300">{(savedSerials as any)?.entrySerial || liveSerials.entrySerial}</strong></div>
-                </div>
-              )}
+              {/* Search Country or Currency */}
+              <div className="relative mb-2.5">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={exchangeRateSearchQuery}
+                  onChange={(e) => setExchangeRateSearchQuery(e.target.value)}
+                  placeholder={tr("cj.searchCountryOrCurrency", "Search Country or currency...")}
+                  className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                />
+              </div>
 
-              {/* Authoritative Country Daily Exchange Rate */}
-              <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3.5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-slate-900 dark:text-white">
-                      {selectedCountry?.name || activeCountryIso} ({selectedCountry?.currency_code || branchCurrency})
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-mono">
-                      {entryDate}
-                    </span>
-                  </div>
-                  {dailyRate?.found ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      {tr("cj.rateApproved", "APPROVED / ACTIVE")}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
-                      <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                      {tr("cj.ratePending", "PENDING / MISSING")}
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                    <div className="text-[10px] uppercase font-bold text-slate-500">{tr("cj.drRate", "DR Rate (Buying)")}</div>
-                    <div className="font-mono text-sm font-black text-rose-600 dark:text-rose-400">
-                      {dailyRate?.found ? (dailyRate.debitRate ?? dailyRate.buyingRate ?? "—") : "—"}
+              {/* Active Country Rates List from Daily Exchange Rate Module */}
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[148px] overflow-y-auto pr-0.5">
+                {activeExchangeRatesList.length > 0 ? (
+                  activeExchangeRatesList.map((item) => (
+                    <div
+                      key={item.countryId}
+                      onClick={() => {
+                        setCountryId(item.countryId);
+                        if (isSuperAdmin) setTopCountryFilter(item.countryId);
+                      }}
+                      className="flex items-center justify-between py-1.5 px-1 hover:bg-emerald-50/40 dark:hover:bg-slate-800/40 rounded-md cursor-pointer transition-colors text-xs"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm shrink-0">{getCountryFlag(item.countryName || item.iso2)}</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white w-9 shrink-0">
+                          {item.currencyCode}
+                        </span>
+                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                          {item.currencyFullName}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="font-mono text-xs font-black text-slate-900 dark:text-white" dir="ltr">
+                          {item.rate != null && item.rate > 0 ? Number(item.rate).toFixed(4) : "—"}
+                        </span>
+                        <TrendingUp className={cn("h-3.5 w-3.5", item.rate != null && item.rate > 0 ? "text-emerald-600" : "text-amber-500")} />
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                    <div className="text-[10px] uppercase font-bold text-slate-500">{tr("cj.crRate", "CR Rate (Selling)")}</div>
-                    <div className="font-mono text-sm font-black text-emerald-600 dark:text-emerald-400">
-                      {dailyRate?.found ? (dailyRate.creditRate ?? dailyRate.sellingRate ?? "—") : "—"}
-                    </div>
-                  </div>
-                </div>
-
-                {!dailyRate?.found && (
-                  <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-[11px] text-rose-700 dark:text-rose-300">
-                    {tr("cj.ratePendingMsg", "Today's rate is pending. The Country Admin must enter today's rate in the Daily Exchange Rate module to enable financial postings.")}
+                  ))
+                ) : (
+                  <div className="py-4 text-center text-xs text-slate-400">
+                    {tr("cj.noMatchingRates", "No matching currencies found.")}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Dark Voice Banner (matching reference design) */}
-            <div className="mt-3 rounded-lg bg-[#0b1626] border border-blue-900/50 p-2.5 flex items-center justify-between text-white shadow-inner">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-bold text-slate-200">{tr("cj.speakToFill", "Speak to fill this form")}</span>
-                <span className="px-1.5 py-0.5 rounded text-[9.5px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  {tr("cj.micReady", "MIC READY")}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  resetPaymentDraft();
-                  setEditEntryId(null);
-                  setShowPaymentWorkReport(true);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition shadow-sm cursor-pointer"
-              >
-                <Mic className="h-3.5 w-3.5" />
-                {tr("cj.voice", "Voice")}
-              </button>
-            </div>
+            {/* Footer Link to Daily Exchange Rate Module */}
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard/reports/exchange-rate" as any)}
+              className="mt-2.5 flex w-full items-center justify-between border-t border-emerald-100 pt-2.5 text-xs font-bold text-blue-600 hover:text-blue-700 dark:border-slate-800 dark:text-blue-400 cursor-pointer"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <BarChart3 className="h-3.5 w-3.5" />
+                <span>{tr("cj.viewAllExchangeRates", "View All Exchange Rates")}</span>
+              </span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
           </div>
+
         </div>
-
-        {/* ════════ COLUMN 3: DAILY CASH POSITION (xl:col-span-4) ════════ */}
-        <div className="xl:col-span-4 flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          {(() => {
-            const isSuper = Boolean(summaryOverview?.isSuperAdmin);
-            const userCountry = summaryOverview?.countries?.[0] || null;
-            const countryList = summaryOverview?.countries || [];
-
-            // For Super Admin: allow filtering by country
-            const activeCountryData = isSuper
-              ? (cashPositionCountryFilter === "all" ? null : countryList.find(c => c.iso2?.toLowerCase() === cashPositionCountryFilter.toLowerCase() || c.countryId === cashPositionCountryFilter))
-              : userCountry;
-
-            // Compute totals
-            const totalCreditVal = isSuper && !activeCountryData
-              ? countryList.reduce((sum, c) => sum + (c.totalCredit || 0), 0)
-              : (activeCountryData?.totalCredit || 0);
-
-            const totalDebitVal = isSuper && !activeCountryData
-              ? countryList.reduce((sum, c) => sum + (c.totalDebit || 0), 0)
-              : (activeCountryData?.totalDebit || 0);
-
-            const netBalVal = totalCreditVal - totalDebitVal;
-            const balanceText = `${fmtAmount(Math.abs(netBalVal))} ${netBalVal > 0 ? "Cr" : netBalVal < 0 ? "Dr" : "-"}`;
-
-            const totalEntriesVal = isSuper && !activeCountryData
-              ? countryList.reduce((sum, c) => sum + (c.entryCount || 0), 0)
-              : (activeCountryData?.entryCount || 0);
-
-            const displayCurrency = activeCountryData?.currencyCode || (isSuper ? "USD" : branchCurrency);
-
-            return (
-              <>
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-600 inline-block" />
-                    <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
-                      {isSuper ? tr("cj.dailyCashPosition", "DAILY CASH POSITION") : `${tr("cj.dailyCashPosition", "DAILY CASH POSITION")} — ${userCountry?.countryName?.toUpperCase() || activeCountryIso}`}
-                    </h4>
-                  </div>
-                  {isSuper ? (
-                    <div className="flex items-center gap-1.5">
-                      <select
-                        value={cashPositionCountryFilter}
-                        onChange={(e) => setCashPositionCountryFilter(e.target.value)}
-                        className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
-                      >
-                        <option value="all">{t(lang, "roz.all_countries", "All Countries")}</option>
-                        {countryList.map((c) => (
-                          <option key={c.countryId} value={c.iso2}>
-                            {c.iso2} — {localizeCountryName(c.countryName, lang)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200">
-                      {userCountry?.countryName || tr("cj.authorizedScope", "Authorized Scope")}
-                    </span>
-                  )}
-                </div>
-
-                <div className="p-3.5 space-y-3">
-                  {/* 4 Summary Stats Blocks — Click to view drill-down */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <div
-                      onClick={() => {
-                        if (userCountry?.branches?.[0]) {
-                          setDrilldownBranch({
-                            branchName: userCountry.branches[0].branchName,
-                            branchCode: userCountry.branches[0].branchCode,
-                            currency: userCountry.currencyCode,
-                            totalCredit: userCountry.branches[0].totalCredit,
-                            totalDebit: userCountry.branches[0].totalDebit,
-                            balance: userCountry.branches[0].balance,
-                            balanceType: userCountry.branches[0].balanceType,
-                            entryCount: userCountry.branches[0].entryCount,
-                            transactions: (userCountry.branches[0] as any).transactions || []
-                          });
-                        }
-                      }}
-                      className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 cursor-pointer hover:border-emerald-300 transition-colors"
-                      title={tr("cj.drillTip", "Click for branch drill-down")}
-                    >
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.totalCreditU", "TOTAL CREDIT")}</span>
-                      <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 font-mono">
-                        {fmtAmount(totalCreditVal)} {displayCurrency}
-                      </span>
-                    </div>
-
-                    <div
-                      onClick={() => {
-                        if (userCountry?.branches?.[0]) {
-                          setDrilldownBranch({
-                            branchName: userCountry.branches[0].branchName,
-                            branchCode: userCountry.branches[0].branchCode,
-                            currency: userCountry.currencyCode,
-                            totalCredit: userCountry.branches[0].totalCredit,
-                            totalDebit: userCountry.branches[0].totalDebit,
-                            balance: userCountry.branches[0].balance,
-                            balanceType: userCountry.branches[0].balanceType,
-                            entryCount: userCountry.branches[0].entryCount,
-                            transactions: (userCountry.branches[0] as any).transactions || []
-                          });
-                        }
-                      }}
-                      className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 cursor-pointer hover:border-rose-300 transition-colors"
-                      title={tr("cj.drillTip", "Click for branch drill-down")}
-                    >
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.totalDebitU", "TOTAL DEBIT")}</span>
-                      <span className="text-xs font-black text-rose-700 dark:text-rose-400 font-mono">
-                        {fmtAmount(totalDebitVal)} {displayCurrency}
-                      </span>
-                    </div>
-
-                    <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.netBalanceU", "NET BALANCE")}</span>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
-                        {balanceText}
-                      </span>
-                    </div>
-
-                    <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">{tr("cj.entriesU", "ENTRIES")}</span>
-                      <span className="text-xs font-black text-slate-800 dark:text-slate-200 font-mono">
-                        {totalEntriesVal}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Scoped Table: Authorized Branches for Country Admin / Countries for Super Admin */}
-                  <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
-                    {!isSuper ? (
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead>
-                          <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                            <th className="py-2 px-3">{tr("cj.authorizedBranch", "Authorized Branch")}</th>
-                            <th className="py-2 px-2 text-end">{tr("cj.colCredit", "Credit")} ({userCountry?.currencyCode || "—"})</th>
-                            <th className="py-2 px-2 text-end">{tr("cj.colDebit", "Debit")} ({userCountry?.currencyCode || "—"})</th>
-                            <th className="py-2 px-2 text-end">{tr("cj.netBal", "Net Bal")}</th>
-                            <th className="py-2 px-2.5 text-center">{tr("cj.entriesCol", "Entries")}</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                          {userCountry?.branches && userCountry.branches.length > 0 ? (
-                            userCountry.branches.map((b) => (
-                              <tr
-                                key={b.branchId}
-                                onClick={() =>
-                                  setDrilldownBranch({
-                                    branchName: b.branchName,
-                                    branchCode: b.branchCode,
-                                    currency: b.localCurrency,
-                                    totalCredit: b.totalCredit,
-                                    totalDebit: b.totalDebit,
-                                    balance: b.balance,
-                                    balanceType: b.balanceType,
-                                    entryCount: b.entryCount,
-                                    transactions: (b as any).transactions || []
-                                  })
-                                }
-                                className="hover:bg-indigo-50/70 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
-                                title={tr("cj.viewTxTip", "Click to view transactions")}
-                              >
-                                <td className="py-2 px-3">
-                                  <div className="font-bold text-slate-900 dark:text-slate-100">{b.branchName}</div>
-                                  <div className="font-mono text-[10px] text-slate-400">{b.branchCode}</div>
-                                </td>
-                                <td className="py-2 px-2 text-right font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
-                                  {fmtAmount(b.totalCredit)}
-                                </td>
-                                <td className="py-2 px-2 text-right font-mono text-[11px] text-rose-700 dark:text-rose-400">
-                                  {fmtAmount(b.totalDebit)}
-                                </td>
-                                <td className="py-2 px-2 text-right font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                  {fmtAmount(b.balance)} {b.balanceType}
-                                </td>
-                                <td className="py-2 px-2.5 text-center font-mono text-[11px] font-bold text-blue-600">
-                                  <span className="inline-block px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 border border-blue-200">
-                                    {b.entryCount}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan={5} className="py-6 text-center text-slate-400 text-xs">
-                                {tr("cj.noBranchEntries", "No authorized branch entries found for today.")}
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead>
-                          <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                            <th className="py-2 px-3">{tr("cj.colCountry", "Country")}</th>
-                            <th className="py-2 px-2.5">{tr("cj.colCredit", "Credit")}</th>
-                            <th className="py-2 px-2.5">{tr("cj.colDebit", "Debit")}</th>
-                            <th className="py-2 px-2.5 text-end">{tr("cj.colNetBalance", "Net Balance")}</th>
-                            <th className="py-2 px-2.5 text-center">{tr("cj.entriesCol", "Entries")}</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                          {(cashPositionCountryFilter === "all" ? countryList : countryList.filter(c => c.iso2?.toLowerCase() === cashPositionCountryFilter.toLowerCase())).map((pos) => (
-                            <tr
-                              key={pos.countryId}
-                              onClick={() => {
-                                if (pos.branches?.[0]) {
-                                  setDrilldownBranch({
-                                    branchName: `${pos.countryName} - ${pos.branches[0].branchName}`,
-                                    branchCode: pos.branches[0].branchCode,
-                                    currency: pos.currencyCode,
-                                    totalCredit: pos.branches[0].totalCredit,
-                                    totalDebit: pos.branches[0].totalDebit,
-                                    balance: pos.branches[0].balance,
-                                    balanceType: pos.branches[0].balanceType,
-                                    entryCount: pos.branches[0].entryCount,
-                                    transactions: (pos.branches[0] as any).transactions || []
-                                  });
-                                }
-                              }}
-                              className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 cursor-pointer"
-                            >
-                              <td className="py-2 px-3 font-bold text-slate-900 dark:text-slate-100">
-                                {pos.countryName} ({pos.iso2})
-                              </td>
-                              <td className="py-2 px-2.5 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
-                                {fmtAmount(pos.totalCredit)} {pos.currencyCode}
-                              </td>
-                              <td className="py-2 px-2.5 font-mono text-[11px] text-rose-700 dark:text-rose-400">
-                                {fmtAmount(pos.totalDebit)} {pos.currencyCode}
-                              </td>
-                              <td className="py-2 px-2.5 font-mono text-[11px] font-bold text-slate-800 dark:text-slate-200 text-right">
-                                {fmtAmount(pos.balance)} {pos.balanceType}
-                              </td>
-                              <td className="py-2 px-2.5 font-mono text-[11px] font-bold text-center text-blue-600">
-                                {pos.entryCount}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
-                </div>
-              </>
-            );
-          })()}
-        </div>
-
-      </div>
       )}
 
       {/* Selected Account bar — shown when counter ledger is picked */}
@@ -4163,7 +4517,7 @@ export function CashEntryForm({
                             {paymentType === "bank"
                               ? tr("cj.mBankSub", "Bank account, method and reference for {c} banking").replace("{c}", activeCountryIso || tr("cj.mLocal", "local"))
                               : paymentType === "transfer"
-                              ? tr("cj.mTransferSub", "Transfer source, destination and reference")
+                              ? "Compact three-field layout · Add new names inside dropdowns"
                               : tr("cj.mCashSub", "Receiver / Sender identification and contact information")}
                           </p>
                         </div>
@@ -4342,53 +4696,19 @@ export function CashEntryForm({
                           </div>
                         </div>
                       ) : paymentType === "transfer" ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                          <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.from_account_branch", "From Account / Branch")}</Label>
-                            <Input
-                              value={typeDetails.from || ""}
-                              onChange={(e) => setTypeDetails((p) => ({ ...p, from: e.target.value }))}
-                              placeholder={t(lang, "cef.source_ph", "Source")}
-                              className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.to_account_branch", "To Account / Branch")}</Label>
-                            <Input
-                              value={typeDetails.to || ""}
-                              onChange={(e) => setTypeDetails((p) => ({ ...p, to: e.target.value }))}
-                              placeholder={t(lang, "cef.destination_ph", "Destination")}
-                              className="h-8.5 text-xs font-bold bg-white dark:bg-slate-950"
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.reference_number", "Reference Number")}</Label>
-                            <Input
-                              value={typeDetails.ref || ""}
-                              onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value }))}
-                              placeholder={tr("cj.mRefPh", "Reference")}
-                              className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mTransferAdvice", "Transfer Advice Upload")}</Label>
-                            <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
-                              <Paperclip className="h-3.5 w-3.5" />
-                              <span>{attachmentFile ? attachmentFile.name.slice(0, 12) : tr("cj.mAttach", "Attach File")}</span>
-                              <input
-                                type="file"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0] ?? null;
-                                  setAttachmentFile(file);
-                                }}
-                              />
-                            </label>
-                          </div>
-                        </div>
+                        <TransferDetailsSection
+                          bankName={typeDetails.bankName || ""}
+                          onBankNameChange={(name) => setTypeDetails((p) => ({ ...p, bankName: name }))}
+                          transferMode={typeDetails.method || typeDetails.transferType || "Bank Transfer"}
+                          onTransferModeChange={(mode) => setTypeDetails((p) => ({ ...p, method: mode, transferType: mode }))}
+                          transactionReference={typeDetails.transferReferenceNumber || typeDetails.refNo || typeDetails.ref || ""}
+                          onTransactionReferenceChange={(ref) => setTypeDetails((p) => ({ ...p, transferReferenceNumber: ref, refNo: ref, ref }))}
+                          attachmentFile={attachmentFile}
+                          onAttachmentChange={(file) => setAttachmentFile(file)}
+                          extraBanks={availableRoznamchaBanks}
+                          showAttachment={true}
+                          lang={lang}
+                        />
                       ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                           <div className="space-y-1">
@@ -5015,143 +5335,24 @@ export function CashEntryForm({
           </div>
         )}
 
-    {/* Recent Cash Entries Table Card */}
-    <Card className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-
-      {/* Date Filter & Day-by-Day Scope Toolbar */}
-      <div className="border-b border-slate-200 bg-slate-50/80 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/60 flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Table Title & Filter Mode Switcher */}
+    {/* ============================================================
+        ROZNAMCHA ENTRIES TABLE CARD (APPROVED DESIGN)
+    ============================================================ */}
+    <Card className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-950">
+      {/* Header Toolbar: Roznamcha Entries | Search... | Filter | Export | ... */}
+      <div className="border-b border-slate-200/80 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300 flex items-center gap-2">
-            <span>📋 {t(lang, "roz.journal_roznamcha_entry_table", "JOURNAL ROZNAMCHA — ENTRY TABLE")}</span>
-            <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-              {recentEntriesSummary.count} {t(lang, "creg.entries", "Entries")}
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              <Table2 className="h-4 w-4" />
             </span>
-          </h3>
-
-          <div className="inline-flex rounded-lg bg-slate-200/80 p-1 dark:bg-slate-800">
-            <button
-              type="button"
-              onClick={() => {
-                setTableDateMode("day");
-                setTableDate(todayIso());
-                setEntryDate(todayIso());
-              }}
-              className={cn(
-                "px-3 py-1 text-xs font-bold rounded-md transition-all",
-                tableDateMode === "day" && tableDate === todayIso()
-                  ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-              )}
-            >
-              📅 {t(lang, "roz.today", "Today")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setTableDateMode("day")}
-              className={cn(
-                "px-3 py-1 text-xs font-bold rounded-md transition-all",
-                tableDateMode === "day" && tableDate !== todayIso()
-                  ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-              )}
-            >
-              📅 {t(lang, "roz.filter_one_day", "Single Date")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setTableDateMode("range")}
-              className={cn(
-                "px-3 py-1 text-xs font-bold rounded-md transition-all",
-                tableDateMode === "range"
-                  ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-              )}
-            >
-              📆 {t(lang, "roz.filter_date_range", "From Date → To Date")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setTableDateMode("all")}
-              className={cn(
-                "px-3 py-1 text-xs font-bold rounded-md transition-all",
-                tableDateMode === "all"
-                  ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-              )}
-            >
-              🌐 {t(lang, "roz.filter_all_dates", "All Dates")}
-            </button>
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
+              {tr("cj.roznamchaEntriesTitle", "Roznamcha Entries")}
+            </h3>
           </div>
-
-          {/* Active scope indicator badge */}
-          <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold">
-            <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-            <span>
-              {tableDateMode === "day"
-                ? `${t(lang, "cef.showing_date", "Showing")}: ${tableDate || entryDate} (1 Day)`
-                : tableDateMode === "range"
-                ? `${tableFromDate} ➔ ${tableToDate}`
-                : t(lang, "cef.all_historical_entries", "All Historical Entries")}
-            </span>
-          </div>
-        </div>
-
-        {/* Right: Date Pickers & Navigation Buttons based on active mode */}
-        <div className="flex flex-wrap items-center gap-2">
-          {tableDateMode === "day" && (
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                onClick={() => shiftTableDay(-1)}
-                title={t(lang, "cef.previous_day", "Previous Day")}
-              >
-                ◀ {t(lang, "roz.prev_day", "Prev Day")}
-              </Button>
-              <ErpDatePicker
-                mode="single"
-                size="sm"
-                lang={lang}
-                value={{ from: tableDate || null }}
-                onApply={(val: any) => {
-                  const dateStr = typeof val === "string" ? val : val?.from;
-                  if (dateStr) {
-                    setTableDate(dateStr);
-                    setEntryDate(dateStr);
-                  }
-                }}
-                applyLabel="update"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "h-7 px-2 text-xs font-bold",
-                  tableDate === todayIso() ? "text-blue-600 dark:text-blue-400 font-extrabold bg-blue-50 dark:bg-blue-950/40" : "text-slate-700 dark:text-slate-300"
-                )}
-                onClick={() => setTableDatePreset("today")}
-              >
-                📅 {t(lang, "roz.today", "Today")}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                onClick={() => shiftTableDay(1)}
-                title={t(lang, "cef.next_day", "Next Day")}
-              >
-                {t(lang, "roz.next_day", "Next Day")} ▶
-              </Button>
-            </div>
-          )}
 
           {tableDateMode === "range" && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
               <ErpDatePicker
                 mode="range"
                 size="sm"
@@ -5166,48 +5367,110 @@ export function CashEntryForm({
                 }}
                 applyLabel="update"
               />
+              <button
+                type="button"
+                onClick={() => {
+                  setTableDateMode("day");
+                  setTableDate(todayIso());
+                  setEntryDate(todayIso());
+                }}
+                className="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer"
+              >
+                {t(lang, "roz.today", "Today")}
+              </button>
             </div>
           )}
         </div>
+
+        {/* Right Controls: Search... | Filter | Export | ... */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <input
+              value={tableSearchQuery}
+              onChange={(e) => setTableSearchQuery(e.target.value)}
+              placeholder={t(lang, "common.search_placeholder", "Search...")}
+              aria-label={t(lang, "common.search_placeholder", "Search...")}
+              className="h-8.5 w-[190px] sm:w-[220px] rounded-xl border border-slate-200 bg-slate-50/60 pl-8.5 pr-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 transition"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowJournalFilters(true)}
+            className="inline-flex h-8.5 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition cursor-pointer"
+          >
+            <Filter className="h-3.5 w-3.5 text-slate-500" />
+            <span>{tr("cj.filterBtn", "Filter")}</span>
+            {cjActiveFilterCount(journalFilters) > 0 && (
+              <span className="ml-0.5 rounded-full bg-blue-600 px-1.5 py-0.2 text-[10px] font-black text-white">
+                {cjActiveFilterCount(journalFilters)}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handlePrintRegister(false)}
+            className="inline-flex h-8.5 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition cursor-pointer"
+          >
+            <Download className="h-3.5 w-3.5 text-slate-500" />
+            <span>{t(lang, "common.export", "Export")}</span>
+          </button>
+
+          <CjActionsMenu
+            lang={lang}
+            items={[
+              { key: "print", label: t(lang, "common.print", "Print A4 Register"), icon: <Printer />, onClick: () => handlePrintRegister(true) },
+              { key: "pdf", label: t(lang, "urs.a_download_pdf", "Download PDF"), icon: <Download />, onClick: () => handlePrintRegister(false) },
+              { key: "today", label: t(lang, "roz.today", "Show Today"), icon: <Calendar />, onClick: () => { setTableDateMode("day"); setTableDate(todayIso()); setEntryDate(todayIso()); } },
+              { key: "range", label: t(lang, "roz.filter_date_range", "Filter by Date Range"), icon: <CalendarDays />, onClick: () => setTableDateMode("range") },
+              { key: "all_dates", label: t(lang, "roz.filter_all_dates", "Show All Historical Dates"), icon: <Globe />, onClick: () => setTableDateMode("all") },
+              { key: "refresh", label: t(lang, "common.refresh", "Refresh"), icon: <RefreshCw className={cn(loadingEntries ? "animate-spin" : "")} />, disabled: loadingEntries, onClick: () => { fetchRecentEntries(); fetchCashSummary(); fetchSummaryOverview(); fetchAllDailyExchangeRates(); } }
+            ]}
+          />
+        </div>
       </div>
+
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1050px] border-collapse border border-slate-200 dark:border-slate-800 text-xs">
-            <thead className="bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
-              <tr className="text-left text-xs">
-                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Date &amp; Time</Th>
-                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">User Name</Th>
-                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Branch Code</Th>
-                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Entry Serial</Th>
-                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">B2B</Th>
-                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Number</Th>
-                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 min-w-[200px]">Details</Th>
-                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
-                  {`Credit (${branchCurrency})`}
-                </Th>
-                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400 whitespace-nowrap">
-                  {`Debit (${branchCurrency})`}
-                </Th>
+          <table className="w-full min-w-[1180px] border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-slate-200/80 bg-slate-50/90 text-left text-[11px] font-bold text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+                <Th className="py-2.5 px-3 font-bold whitespace-nowrap w-10">#</Th>
+                <Th className="py-2.5 px-3 font-bold whitespace-nowrap">Date &amp; Time</Th>
+                <Th className="py-2.5 px-3 font-bold whitespace-nowrap">Branch</Th>
+                <Th className="py-2.5 px-3 font-bold whitespace-nowrap">Country</Th>
+                <Th className="py-2.5 px-3 font-bold whitespace-nowrap">Roznamcha Type</Th>
+                <Th className="py-2.5 px-3 font-bold min-w-[180px]">Details</Th>
+                <Th className="py-2.5 px-2.5 font-bold text-center whitespace-nowrap">Currency</Th>
+                {canViewUsd && (
+                  <Th className="py-2.5 px-2.5 font-bold text-right whitespace-nowrap">Exchange Rate</Th>
+                )}
+                <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Credit (Local)</Th>
+                {canViewUsd && (
+                  <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Credit (USD)</Th>
+                )}
+                <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Debit (Local)</Th>
                 {canViewUsd && (
                   <>
-                    <Th className="p-2.5 font-bold text-center border border-slate-200 dark:border-slate-800 whitespace-nowrap">Exchange Rate</Th>
-                    <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-emerald-600 whitespace-nowrap">USD Credit</Th>
-                    <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-rose-600 whitespace-nowrap">USD Debit</Th>
+                    <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Debit (USD)</Th>
+                    <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Balance (USD)</Th>
                   </>
                 )}
-                <Th className="p-2.5 font-bold text-center border border-slate-200 dark:border-slate-800 whitespace-nowrap">Actions</Th>
+                <Th className="py-2.5 px-3 font-bold text-center whitespace-nowrap">Action</Th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {loadingEntries ? (
                 <tr>
-                  <td colSpan={canViewUsd ? 13 : 10} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
+                  <td colSpan={canViewUsd ? 14 : 10} className="p-8 text-center text-slate-400 font-medium italic">
                     {t(lang, "roz.loading_entries", "Loading entries...")}
                   </td>
                 </tr>
               ) : filteredRecentEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={canViewUsd ? 13 : 10} className="p-12 text-center text-slate-400 font-medium border border-slate-200 dark:border-slate-800">
+                  <td colSpan={canViewUsd ? 14 : 10} className="p-12 text-center text-slate-400 font-medium">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                       <span>{t(lang, "roz.no_entries_found", "No Roznamcha journal entries found for the selected filter / date.")}</span>
@@ -5215,177 +5478,185 @@ export function CashEntryForm({
                   </td>
                 </tr>
               ) : (
-                pagedRecentEntries.flatMap((row) => {
-                  return (row.roznamcha_lines || []).map((line: any, idx: number) => {
-                    const isDebit = Number(line.debit || 0) > 0;
-                    const isCredit = Number(line.credit || 0) > 0;
-                    const amountVal = isDebit ? Number(line.debit) : Number(line.credit);
-                    
-                    const type = line.payment_entry_type || row.type || "";
-                    const sign = isDebit ? "+" : isCredit ? "-" : "";
-                    const amountStr = `${sign}${fmtAmount(amountVal)} ${line.currency || ""}`;
-                    
-                    const lineExchangeRate = line.exchange_rate ?? line.usd_rate ?? row.exchange_rate ?? null;
-                    const lineUsdAmount = line.usd_amount ?? (lineExchangeRate ? amountVal / Number(lineExchangeRate) : null);
-                    const usdCredit = isCredit ? (lineUsdAmount ? `$${fmtAmount(lineUsdAmount)}` : (lineExchangeRate ? `$${fmtAmount(amountVal / Number(lineExchangeRate))}` : null)) : null;
-                    const usdDebit = isDebit ? (lineUsdAmount ? `$${fmtAmount(lineUsdAmount)}` : (lineExchangeRate ? `$${fmtAmount(amountVal / Number(lineExchangeRate))}` : null)) : null;
+                (() => {
+                  let rowCounter = (journalPageSafe - 1) * journalPageSize;
+                  return pagedRecentEntries.flatMap((row) => {
+                    const displayLines = getDisplayLinesForEntry(row);
+                    return displayLines.map((line: any, idx: number) => {
+                      rowCounter += 1;
+                      const isDebit = Number(line.debit || 0) > 0;
+                      const isCredit = Number(line.credit || 0) > 0;
+                      const creditLocal = isCredit ? Number(line.credit || 0) : 0;
+                      const debitLocal = isDebit ? Number(line.debit || 0) : 0;
+                      const amountVal = isDebit ? debitLocal : creditLocal;
 
-                    // Clean RZ reference
-                    const rzRef = line.entry_serial_number || (row.journal_no ? (row.journal_no.startsWith("RZ-") ? row.journal_no : `RZ-${row.journal_no.slice(-6)}`) : (isDebit ? `DR-${row.id?.slice(0, 6)?.toUpperCase()}` : `CR-${row.id?.slice(0, 6)?.toUpperCase()}`));
-                    const rzhType = row.type ? (row.type.charAt(0).toUpperCase() + row.type.slice(1)) : "Cash";
+                      const lineCurr = String(line.currency || row.countries?.currency_code || branchCurrency || "AED").toUpperCase();
+                      const rawRate = line.exchange_rate ?? line.usd_rate ?? row.exchange_rate ?? currencyRateLookup[lineCurr] ?? (lineCurr === "USD" ? 1 : null);
+                      const rateNum = rawRate != null && Number(rawRate) > 0 ? Number(rawRate) : null;
 
-                    const isPur = (rzhType || "").toLowerCase().includes("purchase");
-                    const isSale = (rzhType || "").toLowerCase().includes("sale");
-                    const isCash = (rzhType || "").toLowerCase().includes("cash");
+                      const lineUsdVal = line.usd_amount != null && Number(line.usd_amount) > 0
+                        ? Number(line.usd_amount)
+                        : lineCurr === "USD"
+                        ? amountVal
+                        : rateNum
+                        ? amountVal / rateNum
+                        : 0;
 
-                    return (
-                      <tr key={`${row.id}-${line.id || idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
-                        {/* 1. Date & Time */}
-                        <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
-                          <div className="font-bold text-slate-900 dark:text-slate-100">
-                            {row.entry_date ? String(row.entry_date).slice(0, 10) : new Date(row.created_at).toLocaleDateString()}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground font-mono">
-                            {new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                          </div>
-                        </td>
+                      const creditUsdVal = isCredit ? lineUsdVal : 0;
+                      const debitUsdVal = isDebit ? lineUsdVal : 0;
+                      const balanceUsdVal = creditUsdVal - debitUsdVal;
 
-                        {/* 2. User Name */}
-                        <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {row.profiles?.full_name || row.created_by || t(lang, "common.system", "System")}
-                          </span>
-                        </td>
+                      const categoryLabel = getRoznamchaCategoryLabel(row);
+                      const isBankType = categoryLabel.toLowerCase().includes("bank");
 
-                        {/* 3. Branch Code */}
-                        <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
-                          <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
-                            {row.city_branches?.code || row.country_branches?.code || row.countries?.iso2 || "—"}
-                          </span>
-                        </td>
+                      const dateStr = row.entry_date ? formatDisplayDateShort(String(row.entry_date).slice(0, 10)) : new Date(row.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+                      const timeStr = row.created_at ? new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
 
-                        {/* 4. Entry Serial / RZ Reference */}
-                        <td className="p-2.5 font-mono text-[11px] border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
-                          <span className={cn(
-                            "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-black border",
-                            isDebit
-                              ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300"
-                              : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-300"
-                          )}>
-                            {rzRef} <ChevronDown className="h-3 w-3" />
-                          </span>
-                        </td>
+                      const branchDisplay = row.city_branches?.name || row.country_branches?.name || row.city_branches?.code || row.country_branches?.code || "Main Branch";
+                      const countryNameRaw = row.countries?.name || selectedCountry?.name || "UAE";
+                      const countryDisplay = countryNameRaw.toLowerCase().includes("emirates") ? "UAE" : localizeCountryName(countryNameRaw, lang);
 
-                        {/* 5. B2B */}
-                        <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
-                          <span className={cn(
-                            "inline-flex items-center rounded-md px-2 py-0.5 text-[10.5px] font-bold ring-1 ring-inset",
-                            isPur ? "bg-purple-50 text-purple-700 ring-purple-700/10 dark:bg-purple-400/10 dark:text-purple-400" :
-                            isSale ? "bg-pink-50 text-pink-700 ring-pink-700/10 dark:bg-pink-400/10 dark:text-pink-400" :
-                            isCash ? "bg-blue-50 text-blue-700 ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400" :
-                            "bg-slate-100 text-slate-700 ring-slate-700/10 dark:bg-slate-800 dark:text-slate-300"
-                          )}>
-                            {rzhType}
-                          </span>
-                        </td>
+                      const rawNarration = resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || translateNarrationBlock(line.description || row.narration, lang) || line.ledgers?.name || "-";
+                      const cleanNarration = String(rawNarration).split("\n").filter((l) => !l.trim().startsWith("[Audit Trail")).join(" · ").trim() || line.ledgers?.name || "-";
 
-                        {/* 6. Number */}
-                        <td className="p-2.5 font-mono text-[11px] border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
-                          <span className="font-bold text-slate-700 dark:text-slate-300">
-                            {line.account_number || line.manual_reference_number || row.voucher_no || row.journal_no || "—"}
-                          </span>
-                        </td>
+                      return (
+                        <tr key={`${row.id}-${line.id || idx}`} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/50 transition-colors">
+                          {/* 1. # */}
+                          <td className="py-2.5 px-3 font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                            {rowCounter}
+                          </td>
 
-                        {/* 7. Details */}
-                        <td className="p-2.5 text-[11px] font-medium leading-relaxed text-slate-600 dark:text-slate-400 min-w-[200px] border border-slate-200 dark:border-slate-800 align-top" title={translateNarrationBlock(line.description || row.narration, lang) || ""}>
-                          <div className="line-clamp-2">
-                            {resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || translateNarrationBlock(line.description || row.narration, lang) || line.ledgers?.name || "-"}
-                          </div>
-                          {(line.customer_number || row.source_reference_no) && (
-                            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                              {line.customer_number ? `${tr("cj.custShort", "Cust:")} ${line.customer_number}` : ""} {row.source_reference_no ? `${tr("cj.refShort", "Ref:")} ${row.source_reference_no}` : ""}
-                            </div>
-                          )}
-                        </td>
+                          {/* 2. Date & Time */}
+                          <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap" dir="ltr">
+                            {dateStr} {timeStr}
+                          </td>
 
-                        {/* 8. Credit */}
-                        <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 align-top">
-                          {isCredit ? `${fmtAmount(Number(line.credit))} ${line.currency || ""}` : <span className="text-slate-300 dark:text-slate-700">—</span>}
-                        </td>
+                          {/* 3. Branch */}
+                          <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                            {branchDisplay}
+                          </td>
 
-                        {/* 9. Debit */}
-                        <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400 align-top">
-                          {isDebit ? `${fmtAmount(Number(line.debit))} ${line.currency || ""}` : <span className="text-slate-300 dark:text-slate-700">—</span>}
-                        </td>
+                          {/* 4. Country */}
+                          <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5">
+                              <span>{getCountryFlag(countryNameRaw)}</span>
+                              <span>{countryDisplay}</span>
+                            </span>
+                          </td>
 
-                        {canViewUsd && (
-                          <>
-                            {/* 10. Exchange Rate */}
-                            <td className="p-2.5 text-center whitespace-nowrap border border-slate-200 dark:border-slate-800 align-top">
-                              {lineExchangeRate ? (
-                                <div className="text-[11px] font-mono font-bold text-blue-700 dark:text-blue-400 leading-tight">
-                                  <span>{Number(lineExchangeRate).toFixed(4)}</span>
-                                  <span className="block text-[9px] text-slate-400 font-sans">{line.currency || branchCurrency}/USD</span>
-                                </div>
+                          {/* 5. Roznamcha Type */}
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200">
+                              {isBankType ? (
+                                <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-blue-600 text-white text-[10px]">
+                                  <Building2 className="h-3 w-3" />
+                                </span>
                               ) : (
-                                <span className="text-amber-600 dark:text-amber-400 text-[10px] font-bold">
-                                  {translateHeader(lang, "Rate Missing")}
+                                <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-emerald-600 text-white text-[10px]">
+                                  <Banknote className="h-3 w-3" />
                                 </span>
                               )}
-                            </td>
+                              <span>{isBankType ? tr("cj.mBank", "Bank") : categoryLabel}</span>
+                            </span>
+                          </td>
 
-                            {/* 11. USD Credit */}
-                            <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 align-top">
-                              {isCredit ? (
-                                usdCredit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
-                              ) : (
-                                <span className="text-slate-300 dark:text-slate-700">—</span>
-                              )}
-                            </td>
+                          {/* 6. Details */}
+                          <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300 font-medium max-w-[260px] truncate" title={cleanNarration}>
+                            {cleanNarration}
+                          </td>
 
-                            {/* 12. USD Debit */}
-                            <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-rose-600 dark:text-rose-400 align-top">
-                              {isDebit ? (
-                                usdDebit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
-                              ) : (
-                                <span className="text-slate-300 dark:text-slate-700">—</span>
-                              )}
-                            </td>
-                          </>
-                        )}
+                          {/* 7. Currency */}
+                          <td className="py-2.5 px-2.5 text-center font-mono font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                            {lineCurr}
+                          </td>
 
-                        {/* 13. Actions */}
-                        <td className="p-2.5 text-center border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
-                          {idx === 0 ? (
-                            <div className="flex items-center justify-center gap-1">
-                              {canEditOrDelete && (
-                                <Button
+                          {/* 8. Exchange Rate */}
+                          {canViewUsd && (
+                            <td className="py-2.5 px-2.5 text-right font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap" dir="ltr">
+                              {rateNum ? rateNum.toFixed(4) : "—"}
+                            </td>
+                          )}
+
+                          {/* 9. Credit (Local) */}
+                          <td className={cn(
+                            "py-2.5 px-3 text-right font-mono whitespace-nowrap",
+                            creditLocal > 0 ? "font-bold text-emerald-600 dark:text-emerald-400" : "font-medium text-slate-400 dark:text-slate-600"
+                          )} dir="ltr">
+                            {fmtAmount(creditLocal)}
+                          </td>
+
+                          {/* 10. Credit (USD) */}
+                          {canViewUsd && (
+                            <td className={cn(
+                              "py-2.5 px-3 text-right font-mono whitespace-nowrap",
+                              creditUsdVal > 0 ? "font-semibold text-slate-800 dark:text-slate-200" : "font-medium text-slate-400 dark:text-slate-600"
+                            )} dir="ltr">
+                              {fmtAmount(creditUsdVal)}
+                            </td>
+                          )}
+
+                          {/* 11. Debit (Local) */}
+                          <td className={cn(
+                            "py-2.5 px-3 text-right font-mono whitespace-nowrap",
+                            debitLocal > 0 ? "font-bold text-rose-600 dark:text-rose-400" : "font-medium text-slate-400 dark:text-slate-600"
+                          )} dir="ltr">
+                            {fmtAmount(debitLocal)}
+                          </td>
+
+                          {/* 12. Debit (USD) & 13. Balance (USD) */}
+                          {canViewUsd && (
+                            <>
+                              <td className={cn(
+                                "py-2.5 px-3 text-right font-mono whitespace-nowrap",
+                                debitUsdVal > 0 ? "font-semibold text-slate-800 dark:text-slate-200" : "font-medium text-slate-400 dark:text-slate-600"
+                              )} dir="ltr">
+                                {fmtAmount(debitUsdVal)}
+                              </td>
+
+                              <td className={cn(
+                                "py-2.5 px-3 text-right font-mono font-bold whitespace-nowrap",
+                                balanceUsdVal < 0
+                                  ? "text-rose-600 dark:text-rose-400"
+                                  : balanceUsdVal > 0
+                                  ? "text-slate-800 dark:text-slate-200"
+                                  : "text-slate-400"
+                              )} dir="ltr">
+                                {balanceUsdVal < 0 ? `-${fmtAmount(Math.abs(balanceUsdVal))}` : fmtAmount(balanceUsdVal)}
+                              </td>
+                            </>
+                          )}
+
+                          {/* 14. Action */}
+                          <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                            {idx === 0 ? (
+                              <div className="relative inline-block">
+                                <button
                                   type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-6 px-1.5 text-[10px] font-bold border-slate-200 text-blue-600 hover:bg-slate-50 dark:border-slate-800"
-                                  onClick={() => handleEditEntry(row)}
-                                >
-                                  {t(lang, "common.edit", "Edit")}
-                                </Button>
-                              )}
-                              
-                              <div className="relative">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 border-none hover:bg-slate-100 dark:hover:bg-slate-900"
                                   onClick={() => setActiveRowMenuId(activeRowMenuId === row.id ? null : row.id)}
+                                  className="inline-flex h-6 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-pointer"
+                                  aria-label={tr("common.actions", "Actions")}
                                 >
-                                  <MoreVertical className="h-3.5 w-3.5 text-slate-400" />
-                                </Button>
-                                
+                                  <MoreHorizontal className="h-3.5 w-3.5" />
+                                </button>
+
                                 {activeRowMenuId === row.id && (
-                                  <div className="absolute right-0 top-full z-50 mt-1 w-32 rounded-md border border-slate-200 bg-white shadow-lg outline-none dark:border-slate-700 dark:bg-slate-900">
+                                  <div className="absolute right-0 top-full z-50 mt-1 w-36 rounded-xl border border-slate-200 bg-white py-1 shadow-xl outline-none dark:border-slate-700 dark:bg-slate-900">
+                                    {canEditOrDelete && (
+                                      <button
+                                        type="button"
+                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                                        onClick={() => {
+                                          setActiveRowMenuId(null);
+                                          handleEditEntry(row);
+                                        }}
+                                      >
+                                        <Pencil className="h-3.5 w-3.5 text-blue-600" />
+                                        {t(lang, "common.edit", "Edit")}
+                                      </button>
+                                    )}
                                     <button
                                       type="button"
-                                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
                                       onClick={() => {
                                         setActiveRowMenuId(null);
                                         handleViewA4ById(row.id);
@@ -5397,7 +5668,7 @@ export function CashEntryForm({
                                     {canEditOrDelete && (
                                       <button
                                         type="button"
-                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
                                         onClick={() => {
                                           setActiveRowMenuId(null);
                                           handleDeleteEntry(row.id);
@@ -5410,17 +5681,17 @@ export function CashEntryForm({
                                   </div>
                                 )}
                               </div>
-                            </div>
-                          ) : null}
-                        </td>
-                      </tr>
-                    );
+                            ) : null}
+                          </td>
+                        </tr>
+                      );
+                    });
                   });
-                })
+                })()
               )}
             </tbody>
-              </table>
-            </div>
+          </table>
+        </div>
             <CjPagination
               lang={lang}
               page={journalPageSafe}

@@ -3,12 +3,30 @@ node_modules/
 /.pnp
 .pnp.js
 
-# Personal Claude Code settings overrides (never shared/committed)
+# Claude Code settings & runtime state
 .claude/settings.local.json
+.claude/scheduled_tasks.*
+.claude/routines/
+.claude/worktrees/
+.claude/checkpoints/
+.claude/mailbox/
+.claude/agent-*
+.claude/first-run
+.claude/assistant-daemon-state.json
+
+# Gemini & Antigravity agent artifacts
+.gemini/
+.antigravity/
+.agents/
 
 # Next.js build & cache
 .next/
 .next-dev/
+.next-dev.pid
+.next-sweep/
+.next-dev3000/
+.next-dev3260/
+.next-rbac/
 out/
 build/
 dist/
@@ -55,6 +73,8 @@ api-error-log.txt
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+*~
 
 # AI Document Intake — vendored OCR assets (run: npm run ocr:vendor) + private intake storage
 vendor/ocr/
@@ -64,8 +84,16 @@ storage/document-intake/
 *.traineddata
 uat-samples/
 
-# Local verification scratch space (never commit — may contain session cookies / DB dumps)
+# Local verification scratch space & temp files (never commit — may contain session cookies / DB dumps)
 scratch/
+tmp/
+.tmp/
+*.tmp
+*.bak
+*.patch
+*.diff
+.eslintcache
+_scratch_prototype_preview.html
 supabase/backups/.env*
 # Database dumps must never be committed — they carry real credentials / PII
 supabase/backups/*.json
@@ -80,17 +108,11 @@ design-assets/
 
 # Local incremental TypeScript build cache — regenerates every tsc run and
 # should never be tracked (was causing spurious "dirty tree" deploy aborts)
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # Android SDK location (machine specific)
 android/local.properties
-android/build/
-android/app/build/
-android/.gradle/
 android/capacitor-cordova-android-plugins/build/
-.next-sweep/
-.next-dev3000/
-.next-dev3260/
 
 # generated store screenshots (kept in the owner folder, not in git)
 docs/store/screenshots/

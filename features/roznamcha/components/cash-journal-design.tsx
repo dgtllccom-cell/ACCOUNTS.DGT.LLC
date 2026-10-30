@@ -158,7 +158,7 @@ export function CjSummaryCard({
   );
 }
 
-/** Journal table footer: "Showing x to y of N entries", rows per page, previous / next. */
+/** Journal table footer: "Showing x to y of N entries", rows per page, previous / numbered pages / next. */
 export function CjPagination({
   lang, page, pageSize, total, onPage, onPageSize,
 }: { lang?: string | null; page: number; pageSize: number; total: number; onPage: (p: number) => void; onPageSize: (n: number) => void }) {
@@ -166,22 +166,72 @@ export function CjPagination({
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
+
+  // Build visible page numbers (e.g. 1, 2, 3, 4, 5, ..., last)
+  const pageNumbers: Array<number | "ellipsis"> = [];
+  if (pages <= 7) {
+    for (let i = 1; i <= pages; i++) pageNumbers.push(i);
+  } else {
+    pageNumbers.push(1);
+    if (page > 4) pageNumbers.push("ellipsis");
+    const start = Math.max(2, Math.min(page - 1, pages - 4));
+    const end = Math.min(pages - 1, Math.max(page + 1, 5));
+    for (let i = start; i <= end; i++) pageNumbers.push(i);
+    if (page < pages - 3) pageNumbers.push("ellipsis");
+    pageNumbers.push(pages);
+  }
+
   return (
-    <div className="dgt-cj-pager" dir={s.dir}>
-      <span className="dgt-cj-range" dir="ltr">{s.t("showing", "Showing")} {from} {s.t("to", "to")} {to} {s.t("of", "of")} {total} {s.t("entries", "entries")}</span>
-      <label className="dgt-cj-rows">
-        <span>{s.t("rowsPerPage", "Rows per page")}</span>
-        <select value={pageSize} onChange={(e) => onPageSize(Number(e.target.value))}>
-          {[10, 25, 50].map((n) => <option key={n} value={n}>{n}</option>)}
-        </select>
-      </label>
-      <div className="dgt-cj-pages">
-        <button type="button" className="dgt-cj-ctrl" disabled={page <= 1} onClick={() => onPage(page - 1)}>
-          <ChevronLeft className="dgt-cj-flip" aria-hidden="true" /> {s.t("prev", "Previous")}
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 px-4 py-3 text-xs text-slate-600 dark:text-slate-400" dir={s.dir}>
+      <div className="flex items-center gap-4">
+        <span className="font-medium text-slate-600 dark:text-slate-400" dir="ltr">
+          {s.t("showing", "Showing")} <strong className="font-bold text-slate-800 dark:text-slate-200">{from}</strong> {s.t("to", "to")} <strong className="font-bold text-slate-800 dark:text-slate-200">{to}</strong> {s.t("of", "of")} <strong className="font-bold text-slate-800 dark:text-slate-200">{total}</strong> {s.t("entries", "entries")}
+        </span>
+        <label className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-slate-500">
+          <span>{s.t("rowsPerPage", "Rows")}</span>
+          <select
+            value={pageSize}
+            onChange={(e) => onPageSize(Number(e.target.value))}
+            className="h-7 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none"
+          >
+            {[10, 25, 50].map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </label>
+      </div>
+      <div className="flex items-center gap-1" dir="ltr">
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onPage(page - 1)}
+          className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-45 disabled:cursor-not-allowed transition cursor-pointer"
+        >
+          {s.t("prev", "Previous")}
         </button>
-        <span className="dgt-cj-page-no" dir="ltr">{page} / {pages}</span>
-        <button type="button" className="dgt-cj-ctrl" disabled={page >= pages} onClick={() => onPage(page + 1)}>
-          {s.t("next", "Next")} <ChevronRight className="dgt-cj-flip" aria-hidden="true" />
+        {pageNumbers.map((item, idx) =>
+          item === "ellipsis" ? (
+            <span key={`el-${idx}`} className="px-1.5 text-slate-400 font-semibold">...</span>
+          ) : (
+            <button
+              key={item}
+              type="button"
+              onClick={() => onPage(item)}
+              className={
+                item === page
+                  ? "inline-flex h-8 min-w-[32px] items-center justify-center rounded-lg bg-blue-600 px-2.5 text-xs font-bold text-white shadow-xs cursor-pointer"
+                  : "inline-flex h-8 min-w-[32px] items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
+              }
+            >
+              {item}
+            </button>
+          )
+        )}
+        <button
+          type="button"
+          disabled={page >= pages}
+          onClick={() => onPage(page + 1)}
+          className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-45 disabled:cursor-not-allowed transition cursor-pointer"
+        >
+          {s.t("next", "Next")}
         </button>
       </div>
     </div>
