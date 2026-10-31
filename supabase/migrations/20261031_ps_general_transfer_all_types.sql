@@ -41,3 +41,4 @@ CREATE INDEX IF NOT EXISTS purchase_lane_loads_dest_idx
   ON public.purchase_lane_loads (transfer_destination) WHERE deleted_at IS NULL AND transfer_destination IS NOT NULL;
 
 COMMIT;
+
