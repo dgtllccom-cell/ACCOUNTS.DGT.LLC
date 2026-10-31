@@ -3827,6 +3827,37 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     advancePaidPercent
   } = orderDetails;
 
+  // The server's own per-loading figures (value from the goods actually loaded, the advance allocated, what is payable): the amount offered for a
+  // loading must be the amount the payment API will accept, so it comes from the same rules and not from a client-side estimate.
+  const [dueLoadings, setDueLoadings] = useState<Record<string, { outstanding: number; value: number; advanceAllocated: number }>>({});
+  const [dueReady, setDueReady] = useState(false);
+  const pendingLoadingPick = React.useRef<string | null>(null);
+  useEffect(() => {
+    const onPay = (e: Event) => {
+      const d = (e as CustomEvent).detail || {};
+      pendingLoadingPick.current = d.loadingId ? String(d.loadingId) : null;
+    };
+    window.addEventListener("remaining-pay", onPay);
+    return () => window.removeEventListener("remaining-pay", onPay);
+  }, []);
+  useEffect(() => {
+    setDueReady(false);
+    setDueLoadings({});
+    if (!(selected && activeMode === "remaining")) return;
+    let cancelled = false;
+    fetch(`/api/erp/purchases/remaining-due?orderNo=${encodeURIComponent(String(selected.purchase_order_no))}&includeSettled=1`, { credentials: "include", cache: "no-store" })
+      .then((res) => res.json())
+      .then((res) => {
+        if (cancelled) return;
+        const map: Record<string, { outstanding: number; value: number; advanceAllocated: number }> = {};
+        for (const b of res?.data?.bills ?? []) for (const l of b.loadings ?? []) map[String(l.id)] = { outstanding: Number(l.outstanding || 0), value: Number(l.value || 0), advanceAllocated: Number(l.advanceAllocated || 0) };
+        setDueLoadings(map);
+      })
+      .catch(() => undefined)
+      .finally(() => { if (!cancelled) setDueReady(true); });
+    return () => { cancelled = true; };
+  }, [selected, activeMode]);
+
   // Fetch loaded container records for Remaining Payment mode
   useEffect(() => {
     if (selected && activeMode === "remaining") {
@@ -3897,9 +3928,23 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     const loadedRemainingUSD = Math.max(0, finance.amountUSD - loadedAdvanceUSD);
     
     const exRateVal = Number(exchangeRate || finance.exRate || 1);
-    setCalcAmount(loadedRemainingUSD.toFixed(4));
-    setFinalPayment((loadedRemainingUSD * exRateVal).toFixed(2));
+    const due = dueLoadings[String(lr?.id)];
+    const payableNow = due ? due.outstanding : loadedRemainingUSD;
+    setCalcAmount(payableNow.toFixed(4));
+    setFinalPayment((payableNow * exRateVal).toFixed(2));
   };
+
+  // a loading chosen on the "Bills waiting for Remaining Payment" list is selected here as soon as the bill's loadings and figures are in
+  useEffect(() => {
+    const want = pendingLoadingPick.current;
+    if (!want || !selected || activeMode !== "remaining" || !dueReady) return;
+    const lr = loadingRecords.find((r: any) => String(r.id) === want);
+    if (lr) {
+      pendingLoadingPick.current = null;
+      handleSelectLoadingRecord(lr);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingRecords, dueReady, selected, activeMode]);
 
   const displayRows = useMemo(() => {
     if (activeMode !== "remaining") return filtered;
@@ -7198,7 +7243,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         />
       )}
 
-      {editingPayment && (
+      {editingPayment && !selected && (
         <PaymentEditModal
           open={!!editingPayment}
           onOpenChange={(open) => !open && setEditingPayment(null)}

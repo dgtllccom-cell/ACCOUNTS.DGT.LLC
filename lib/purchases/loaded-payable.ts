@@ -101,6 +101,31 @@ export type LoadingShare = {
   reportedValueFC?: number | null;
 };
 
+/**
+ * One value per loading, in order: the loading's own exact value (priced from its real goods, quantity and weight at the contract price —
+ * see lib/purchases/loading-value.ts) when it is known, otherwise its quantity share of the bill. Never more than the bill in total; and when
+ * the loadings together carry the whole booked quantity the last one takes whatever is left of the bill, so the parts add up exactly.
+ */
+export function loadingValues(totalFC: number, totalQuantity: number, loadings: LoadingShare[]): number[] {
+  const total = Math.max(0, num(totalFC));
+  const qty = Math.max(0, num(totalQuantity));
+  const share = (q: number) => (qty > 0 ? Math.min(1, Math.max(0, num(q)) / qty) : 0);
+  const out: number[] = [];
+  let used = 0;
+  let loadedQ = 0;
+  (loadings || []).forEach((l, i, all) => {
+    loadedQ += Math.max(0, num(l.quantity));
+    const left = Math.max(0, total - used);
+    const exact = num(l.reportedValueFC);
+    let v = Math.min(exact > 0 ? exact : total * share(l.quantity), left);
+    if (i === all.length - 1 && qty > 0 && loadedQ >= qty - 1e-6) v = left;
+    v = round4(v);
+    out.push(v);
+    used += v;
+  });
+  return out;
+}
+
 export type LoadedPayableInput = {
   /** order total, purchase currency */
   orderTotalFC: number;
@@ -127,24 +152,22 @@ export type LoadedPayable = {
 
 /**
  * Remaining payable on the LOADED quantity only. The advance already paid is spread over the whole booked quantity, so a loading of
- * q out of Q booked owes  value(q) − advance × q/Q  (value(q) = the loading's share of the total, or its own recorded value when that
- * is higher), less what was already paid as Remaining against it. Nothing is payable for goods still in the Booking stock.
+ * q out of Q booked owes  value(q) − advance × q/Q  (value(q) = the loading's own value priced from its real goods, or its share of the total when that
+ * is unknown), less what was already paid as Remaining against it. Nothing is payable for goods still in the Booking stock.
  */
 export function loadedPayable(i: LoadedPayableInput): LoadedPayable {
   const total = Math.max(0, num(i.orderTotalFC));
   const advance = Math.min(total, Math.max(0, num(i.advancePaidFC)));
-  const qty = Math.max(0, num(i.totalQuantity));
-  const share = (q: number) => (qty > 0 ? Math.min(1, Math.max(0, num(q)) / qty) : 0);
-  const valueOf = (l: LoadingShare) => Math.min(total, Math.max(total * share(l.quantity), Math.max(0, num(l.reportedValueFC))));
-  const owes = (l: LoadingShare) => valueOf(l) - advance * share(l.quantity);
-
   const loadings = i.loadings || [];
+  const values = loadingValues(total, num(i.totalQuantity), loadings);
+  // the advance paid belongs to the bill's value, so a loading carries the advance in proportion to its VALUE
+  const advanceOn = (v: number) => (total > 0 ? advance * (v / total) : 0);
   const loadedQuantity = loadings.reduce((s, l) => s + Math.max(0, num(l.quantity)), 0);
-  const loadedValue = Math.min(total, loadings.reduce((s, l) => s + valueOf(l), 0));
-  const loadedOutstandingFC = Math.max(0, round4(loadedValue - advance * share(loadedQuantity) - Math.max(0, num(i.remainingPaidAllFC))));
+  const loadedValue = Math.min(total, values.reduce((s, v) => s + v, 0));
+  const loadedOutstandingFC = Math.max(0, round4(loadedValue - advanceOn(loadedValue) - Math.max(0, num(i.remainingPaidAllFC))));
 
-  const mine = i.loadingId ? loadings.find((l) => l.id === i.loadingId) : undefined;
-  const loadingOutstandingFC = mine ? Math.max(0, round4(owes(mine) - Math.max(0, num(i.remainingPaidThisLoadingFC)))) : null;
+  const at = i.loadingId ? loadings.findIndex((l) => l.id === i.loadingId) : -1;
+  const loadingOutstandingFC = at >= 0 ? Math.max(0, round4(values[at] - advanceOn(values[at]) - Math.max(0, num(i.remainingPaidThisLoadingFC)))) : null;
   return { loadedQuantity, loadedOutstandingFC, loadingOutstandingFC };
 }
 
@@ -199,14 +222,12 @@ export function loadingPaymentStates(input: {
   const tol = input.tolerance ?? 0.05;
   const total = Math.max(0, num(input.orderTotalFC));
   const advance = Math.min(total, Math.max(0, num(input.advancePaidFC)));
-  const qty = Math.max(0, num(input.totalQuantity));
-  const share = (q: number) => (qty > 0 ? Math.min(1, Math.max(0, num(q)) / qty) : 0);
-  const valueOf = (l: LoadingShare) => Math.min(total, Math.max(total * share(l.quantity), Math.max(0, num(l.reportedValueFC))));
   const billSettled = input.orderRemainingDueFC != null && num(input.orderRemainingDueFC) <= tol;
+  const values = loadingValues(total, num(input.totalQuantity), input.loadings || []);
 
-  const states: LoadingPaymentState[] = (input.loadings || []).map((l) => {
-    const valueFC = round4(valueOf(l));
-    const advanceAllocFC = round4(advance * share(l.quantity));
+  const states: LoadingPaymentState[] = (input.loadings || []).map((l, idx) => {
+    const valueFC = values[idx];
+    const advanceAllocFC = round4(total > 0 ? advance * (valueFC / total) : 0);
     const paidFC = round4((input.remainingPayments || []).filter((p) => p.loadingId && p.loadingId === l.id).reduce((s, p) => s + Math.max(0, num(p.amountFC)), 0));
     return { id: String(l.id ?? ""), quantity: Math.max(0, num(l.quantity)), valueFC, advanceAllocFC, paidFC, outstandingFC: 0, complete: false };
   });

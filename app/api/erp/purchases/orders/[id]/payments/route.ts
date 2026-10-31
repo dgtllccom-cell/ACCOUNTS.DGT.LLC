@@ -4,6 +4,7 @@ import { apiCreated, apiOk, apiError, handleApiError, ApiClientError } from "@/l
 import { parseJsonish } from "@/lib/stock-journal/model";
 import { resolvePaymentCondition, resolvePurchaseAmounts } from "@/lib/services/purchase-calculation-service";
 import { advanceClearance, loadedPayable, paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
+import { contractLines, loadingGoodsValue } from "@/lib/purchases/loading-value";
 import { purchaseOrderPaymentPostSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -77,7 +78,8 @@ function buildPurchaseGoodsAuditRemark(orderRow: any, fallbackReference?: string
   const grossWeight = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.grossWeight ?? item.gross_weight ?? 0), 0) || Number(form.grossWeight || totals.totalGross || 0);
   const netWeight = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.netWeight ?? item.net_weight ?? 0), 0) || Number(form.netWeight || totals.totalNet || 0);
   const purchaseAmount = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.totalAmount ?? item.purchaseAmount ?? 0), 0) || Number(form.totalAmount || totals.grandPrimaryFinal || orderRow.order_total || 0);
-  const purchaseCurrency = String(goodsEntries[0]?.purchaseCurrency || goodsEntries[0]?.pricingCurrency || form.purchaseCurrency || form.pricingCurrency || orderRow.currency_code || "USD").toUpperCase();
+  // the amount above is in the bill's PRICING currency (`currencyType`); `purchaseCurrency` on a goods line holds the branch currency, so it must not label a USD price as AED
+  const purchaseCurrency = String(goodsEntries[0]?.currencyType || goodsEntries[0]?.pricingCurrency || form.currencyType || form.pricingCurrency || orderRow.purchase_currency || orderRow.currency_code || goodsEntries[0]?.purchaseCurrency || form.purchaseCurrency || "USD").toUpperCase();
   return `Purchase Bill: ${billNo} | Goods: ${goodsName} | Qty: ${formatAuditNumber(totalQty)}${unit ? ` ${unit}` : ""} | Gross WT: ${formatAuditNumber(grossWeight)} KG | Net WT: ${formatAuditNumber(netWeight)} KG | Purchase Price: ${formatAuditNumber(purchaseAmount)} ${purchaseCurrency}`;
 }
 
@@ -556,7 +558,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       const rateToBase = orderCcy === localCcy ? 1 : orderRate || 1;
       const loadedState = await withLocalPg(async (sql) => ({
         loadingRows: (await sql`
-          select id::text as id, loaded_quantity, report_payload
+          select id::text as id, loaded_quantity, net_weight, report_payload
           from purchase_loading_records
           where purchase_order_id = ${params.id}::uuid and deleted_at is null
         `) as any[],
@@ -569,9 +571,11 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       if (!loadedState) throw new Error("Database connection is not configured for payment validation.");
       const { loadingRows, remainingRows } = loadedState;
       const toPur = (r: any) => paymentInPurchaseCurrency(r, orderCcy, rateToBase);
+      const goodsLines = contractLines(parseJsonish(orderRow.form_data)?.goodsEntries);
       const loadings = loadingRows.map((r: any) => {
         const payload = parseJsonish(r.report_payload) || {};
-        const reported = Number(payload.totalPurchase || payload.purchaseAmount || 0);
+        // the loading's own value: priced from the goods, quantity and weight it really carries at the contract price (not an equal share)
+        const reported = Number(payload.totalPurchase || payload.purchaseAmount || 0) || (loadingGoodsValue(goodsLines, r) ?? 0);
         return { id: r.id as string, quantity: Number(r.loaded_quantity || payload.loadedQuantity || 0), reportedValueFC: Number.isFinite(reported) ? reported : 0 };
       });
       if (requestedLoadingId && !loadings.some((l: any) => l.id === requestedLoadingId)) {

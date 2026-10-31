@@ -705,7 +705,8 @@ export async function POST(request: NextRequest) {
           workflow.inventoryStatus = "Remaining Stock";
           workflow.nextDestination = "Land Stock";
           workflow.stockStatus = "RED";
-          workflow.containerStatus = remainingContainers > 0 ? "Partially Loaded" : "Fully Loaded";
+          // "Fully Loaded" means every booked unit is loaded - not that the saved container count (often 1) is used up: a bill of 22,500 cartons with 2,250 loaded is partial
+          workflow.containerStatus = remainingContainers > 0 || remainingQuantity > 0 ? "Partially Loaded" : "Fully Loaded";
 
           formData.workflow = workflow;
 
