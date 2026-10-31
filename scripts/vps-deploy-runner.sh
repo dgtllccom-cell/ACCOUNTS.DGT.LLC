@@ -19,21 +19,18 @@ echo "[2/7] Resetting any uncommitted working changes..."
 git reset --hard HEAD
 git clean -fd -e .env.local -e .env -e "prod-before-deploy*"
 
-echo "[3/7] Fetching and syncing latest code (0abab40)..."
+echo "[3/7] Fetching and syncing latest code from origin/main..."
 git remote set-url origin https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git
 git fetch origin main production
+TARGET_SHA=$(git rev-parse origin/main)
+echo "Target SHA: $TARGET_SHA"
+
 git checkout -f main
-git reset --hard 0abab4020ce9b803caa8c06ba71d95d326af80ae
-git branch -f production 0abab4020ce9b803caa8c06ba71d95d326af80ae
+git reset --hard "$TARGET_SHA"
+git branch -f production "$TARGET_SHA"
 
 echo "[4/7] Verified Git HEAD on VPS:"
 git log -n 1 --oneline
-CURRENT_SHA=$(git rev-parse HEAD)
-echo "Current SHA: $CURRENT_SHA"
-if [ "$CURRENT_SHA" != "0abab4020ce9b803caa8c06ba71d95d326af80ae" ]; then
-  echo "ERROR: Current SHA does not match expected 0abab40!"
-  exit 1
-fi
 
 echo "[5/7] Installing dependencies..."
 npm install --include=dev
