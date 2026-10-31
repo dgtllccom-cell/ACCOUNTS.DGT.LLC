@@ -64,6 +64,7 @@ import {
   type Disposition,
   type LaneStatus,
   type SourceType,
+  type TransferRequest,
   type TransferType,
 } from "@/lib/purchases/lane-rules";
 import { Th } from "@/components/ui/translated-th";
@@ -291,7 +292,7 @@ export function PurchaseTransitLaneView({
             <select
               value={sourceType}
               onChange={(e) => setSourceType(e.target.value)}
-              className="${inputCls} !w-auto min-w-0 max-w-full flex-1 sm:flex-none font-bold"
+              className={`${inputCls} !w-auto min-w-0 max-w-full flex-1 sm:flex-none font-bold`}
               aria-label={T("source", "Source")}
               data-testid="lane-source"
             >
@@ -305,7 +306,7 @@ export function PurchaseTransitLaneView({
             <button
               type="button"
               onClick={() => void load()}
-              className="${btnCls} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-sm"
+              className={`${btnCls} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-sm`}
               data-testid="lane-refresh"
             >
               <RefreshCw className="h-3.5 w-3.5" />
@@ -319,11 +320,11 @@ export function PurchaseTransitLaneView({
           <button
             type="button"
             onClick={() => setStatus("")}
-            className="${btnCls} ${
+            className={`${btnCls} ${
               status === ""
                 ? "bg-blue-600 text-white shadow-sm shadow-blue-500/30"
                 : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-            }"
+            }`}
           >
             {T("all", "All")} ({rows.length})
           </button>
@@ -333,11 +334,11 @@ export function PurchaseTransitLaneView({
               type="button"
               onClick={() => setStatus(status === st ? "" : st)}
               data-testid={`chip-${st}`}
-              className="${btnCls} ${
+              className={`${btnCls} ${
                 status === st
                   ? "bg-blue-600 text-white shadow-sm shadow-blue-500/30"
                   : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-              }"
+              }`}
             >
               {stLabel(st)}{" "}
               <span className="rounded-full bg-black/10 px-1.5 text-[11px] font-mono font-bold dark:bg-white/10">
@@ -376,7 +377,7 @@ export function PurchaseTransitLaneView({
                 const targets = rows.filter((r) => selected.has(r.id));
                 setTransferTargetLoads(targets);
               }}
-              className="${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/20"
+              className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/20`}
               data-testid="bulk-selected"
             >
               <ArrowRightLeft className="h-3.5 w-3.5" />
@@ -387,7 +388,7 @@ export function PurchaseTransitLaneView({
               type="button"
               disabled={untransferred.length === 0}
               onClick={() => setTransferTargetLoads(untransferred)}
-              className="${btnCls} border border-indigo-300 bg-white text-indigo-700 hover:bg-indigo-50 dark:bg-slate-900 dark:border-indigo-800 dark:text-indigo-300 shadow-sm"
+              className={`${btnCls} border border-indigo-300 bg-white text-indigo-700 hover:bg-indigo-50 dark:bg-slate-900 dark:border-indigo-800 dark:text-indigo-300 shadow-sm`}
               data-testid="bulk-all"
             >
               <ArrowRightLeft className="h-3.5 w-3.5" />
@@ -579,7 +580,7 @@ export function PurchaseTransitLaneView({
                               <button
                                 type="button"
                                 onClick={() => setTransferTargetLoads([r])}
-                                className="${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
+                                className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm`}
                                 data-testid="lane-transfer"
                               >
                                 <ArrowRightLeft className="h-3 w-3" />
@@ -591,7 +592,7 @@ export function PurchaseTransitLaneView({
                             <button
                               type="button"
                               onClick={() => void openHistory(r)}
-                              className="${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                              className={`${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800`}
                               title={T("col_transfer_history", "Transfer History")}
                               data-testid="lane-history-btn"
                             >
@@ -610,7 +611,7 @@ export function PurchaseTransitLaneView({
                                 type="button"
                                 disabled={busy}
                                 onClick={() => void na.run()}
-                                className="${btnCls} bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                                className={`${btnCls} bg-blue-600 text-white hover:bg-blue-700 shadow-sm`}
                                 data-testid="lane-next"
                               >
                                 {na.label}
@@ -621,7 +622,7 @@ export function PurchaseTransitLaneView({
                             <button
                               type="button"
                               onClick={() => void openDetail(r.id)}
-                              className="${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200"
+                              className={`${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200`}
                               data-testid="lane-details"
                             >
                               <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
@@ -695,7 +696,7 @@ export function PurchaseTransitLaneView({
                         <button
                           type="button"
                           onClick={() => setTransferTargetLoads([r])}
-                          className="${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
+                          className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm`}
                         >
                           <ArrowRightLeft className="h-3 w-3" />
                           {T("act_transfer_load", "Transfer Load")}
@@ -704,7 +705,7 @@ export function PurchaseTransitLaneView({
                       <button
                         type="button"
                         onClick={() => void openHistory(r)}
-                        className="${btnCls} border border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300"
+                        className={`${btnCls} border border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300`}
                       >
                         <History className="h-3 w-3" />
                         {T("col_transfer_history", "History")}
@@ -714,7 +715,7 @@ export function PurchaseTransitLaneView({
                           type="button"
                           disabled={busy}
                           onClick={() => void na.run()}
-                          className="${btnCls} bg-blue-600 text-white"
+                          className={`${btnCls} bg-blue-600 text-white`}
                         >
                           {na.label}
                         </button>
@@ -722,7 +723,7 @@ export function PurchaseTransitLaneView({
                       <button
                         type="button"
                         onClick={() => void openDetail(r.id)}
-                        className="${btnCls} border border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300"
+                        className={`${btnCls} border border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300`}
                       >
                         {T("act_details", "Details")}
                       </button>
@@ -1013,7 +1014,7 @@ function CenterTransferConfirmationModal({
             <select
               value={type}
               onChange={(e) => setType(e.target.value as TransferType)}
-              className="${inputCls} font-bold text-indigo-700 dark:text-indigo-400"
+              className={`${inputCls} font-bold text-indigo-700 dark:text-indigo-400`}
               data-testid="tr-type"
             >
               <optgroup label={T("group_erp_modules", "ERP Business Modules")}>
@@ -1042,7 +1043,7 @@ function CenterTransferConfirmationModal({
                 <select
                   value={countryId}
                   onChange={(e) => setCountryId(e.target.value)}
-                  className="${inputCls} ${bad("country") ? "!border-rose-400" : ""}"
+                  className={`${inputCls} ${bad("country") ? "!border-rose-400" : ""}`}
                   data-testid="tr-country"
                 >
                   <option value="">—</option>
@@ -1058,7 +1059,7 @@ function CenterTransferConfirmationModal({
                 <select
                   value={countryBranchId}
                   onChange={(e) => setCountryBranchId(e.target.value)}
-                  className="${inputCls} ${bad("branch") ? "!border-rose-400" : ""}"
+                  className={`${inputCls} ${bad("branch") ? "!border-rose-400" : ""}`}
                   disabled={!countryId}
                   data-testid="tr-main"
                 >
@@ -1098,7 +1099,7 @@ function CenterTransferConfirmationModal({
                 <select
                   value={agentId}
                   onChange={(e) => setAgentId(e.target.value)}
-                  className="${inputCls} ${bad("agent") && !agentName ? "!border-rose-400" : ""}"
+                  className={`${inputCls} ${bad("agent") && !agentName ? "!border-rose-400" : ""}`}
                   data-testid="tr-agent"
                 >
                   <option value="">—</option>
@@ -1130,7 +1131,7 @@ function CenterTransferConfirmationModal({
               <select
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
-                className="${inputCls} ${bad("user") ? "!border-rose-400" : ""}"
+                className={`${inputCls} ${bad("user") ? "!border-rose-400" : ""}`}
                 data-testid="tr-user"
               >
                 <option value="">—</option>
@@ -1155,7 +1156,7 @@ function CenterTransferConfirmationModal({
                 value={expectedLocation}
                 onChange={(e) => setExpectedLocation(e.target.value)}
                 placeholder={isMod ? destinationName(type, T) : ""}
-                className="${inputCls} ${bad("expectedLocation") ? "!border-rose-400" : ""}"
+                className={`${inputCls} ${bad("expectedLocation") ? "!border-rose-400" : ""}`}
                 data-testid="tr-location"
                 dir="auto"
               />
@@ -1165,7 +1166,7 @@ function CenterTransferConfirmationModal({
               <select
                 value={responsibility}
                 onChange={(e) => setResponsibility(e.target.value)}
-                className="${inputCls} ${bad("responsibility") ? "!border-rose-400" : ""}"
+                className={`${inputCls} ${bad("responsibility") ? "!border-rose-400" : ""}`}
                 data-testid="tr-resp"
               >
                 {RESPONSIBILITIES.map((r) => (
@@ -1220,7 +1221,7 @@ function CenterTransferConfirmationModal({
           <button
             type="button"
             onClick={onClose}
-            className="${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+            className={`${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300`}
           >
             {T("cancel", "Cancel")}
           </button>
@@ -1228,7 +1229,7 @@ function CenterTransferConfirmationModal({
             type="button"
             disabled={busy}
             onClick={() => void submit()}
-            className="${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/20"
+            className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/20`}
             data-testid="tr-submit"
           >
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
@@ -1369,7 +1370,7 @@ function TransferHistoryModal({
           <button
             type="button"
             onClick={onClose}
-            className="${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+            className={`${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300`}
           >
             {T("close", "Close")}
           </button>
@@ -1610,7 +1611,7 @@ function DetailDrawer({
                 type="button"
                 disabled={busy}
                 onClick={() => void onAct(l.id, { action: "accept" }, T("done_accepted", "Transfer accepted."))}
-                className="${btnCls} bg-emerald-600 text-white"
+                className={`${btnCls} bg-emerald-600 text-white`}
                 data-testid="d-accept"
               >
                 <Check className="h-3.5 w-3.5" />
@@ -1623,7 +1624,7 @@ function DetailDrawer({
                 type="button"
                 disabled={busy}
                 onClick={() => void onAct(l.id, { action: "status", to: nx }, T("done_status", "Status updated."))}
-                className="${btnCls} bg-blue-600 text-white"
+                className={`${btnCls} bg-blue-600 text-white`}
                 data-testid={`d-to-${nx}`}
               >
                 {T("act_mark", "Mark")} {stLabel(nx)}
@@ -1632,7 +1633,7 @@ function DetailDrawer({
             <button
               type="button"
               onClick={onTransfer}
-              className="${btnCls} border border-indigo-300 text-indigo-700"
+              className={`${btnCls} border border-indigo-300 text-indigo-700`}
               data-testid="d-transfer"
             >
               <ArrowRightLeft className="h-3.5 w-3.5" />
@@ -1710,7 +1711,7 @@ function DetailDrawer({
                 value={nextDestination}
                 onChange={(e) => setNextDestination(e.target.value)}
                 placeholder={T("next_destination", "Next destination of the new route leg")}
-                className="${inputCls} mt-2"
+                className={`${inputCls} mt-2`}
                 data-testid="disp-next"
                 dir="auto"
               />
@@ -1727,13 +1728,13 @@ function DetailDrawer({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder={T("note", "Note")}
-              className="${inputCls} mt-2"
+              className={`${inputCls} mt-2`}
             />
             <button
               type="button"
               disabled={local || busy}
               onClick={() => void dispose()}
-              className="${btnCls} mt-2 bg-rose-600 text-white hover:bg-rose-700"
+              className={`${btnCls} mt-2 bg-rose-600 text-white hover:bg-rose-700`}
               data-testid="disp-confirm"
             >
               {local ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
@@ -1791,7 +1792,7 @@ function DetailDrawer({
                           type="button"
                           disabled={local}
                           onClick={() => void advance(e.id, "review")}
-                          className="${btnCls} border border-slate-300"
+                          className={`${btnCls} border border-slate-300`}
                           data-testid="ex-review"
                         >
                           {T("ex_review", "Review")}
@@ -1802,7 +1803,7 @@ function DetailDrawer({
                           type="button"
                           disabled={local}
                           onClick={() => void advance(e.id, "confirm")}
-                          className="${btnCls} bg-emerald-600 text-white"
+                          className={`${btnCls} bg-emerald-600 text-white`}
                           data-testid="ex-confirm"
                         >
                           {T("ex_confirm", "Confirm")}
@@ -1813,7 +1814,7 @@ function DetailDrawer({
                           type="button"
                           disabled={local}
                           onClick={() => void advance(e.id, "cancel")}
-                          className="${btnCls} border border-rose-300 text-rose-700"
+                          className={`${btnCls} border border-rose-300 text-rose-700`}
                         >
                           {T("cancel", "Cancel")}
                         </button>
@@ -1892,7 +1893,7 @@ function DetailDrawer({
                 type="button"
                 disabled={local || !exAmount}
                 onClick={() => void addExpense()}
-                className="${btnCls} col-span-2 justify-center bg-blue-600 text-white"
+                className={`${btnCls} col-span-2 justify-center bg-blue-600 text-white`}
                 data-testid="ex-add"
               >
                 {T("add_expense", "Add expense (draft)")}

@@ -197,6 +197,18 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     return ["all", "purchase_booking", "local_purchase", "sales_booking", "local_sales", "shipping_bl", "clearing_bill", "general_expenses"];
   }, [section]);
 
+
+  const moduleLabel = useCallback(
+    (m: SourceModule) =>
+      m === "purchase_booking" ? s.t("tab_purchase_booking", "Purchase Booking")
+      : m === "local_purchase" ? s.t("tab_local_purchase", "Local Purchase")
+      : m === "sales_booking" ? s.t("tab_sales_booking", "Sales Booking")
+      : m === "local_sales" ? s.t("tab_local_sales", "Local Sales")
+      : m === "shipping_bl" ? s.t("tab_shipping_bl", "Shipping / BL")
+      : s.t("tab_clearing_bill", "Clearing Bill"),
+    [s]
+  );
+
   const getTabLabel = useCallback(
     (t: TabKey) => {
       if (t === "all") {
@@ -214,16 +226,6 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     load();
   }, [moduleTab, statusFilter, section, sectionFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const moduleLabel = useCallback(
-    (m: SourceModule) =>
-      m === "purchase_booking" ? s.t("tab_purchase_booking", "Purchase Booking")
-      : m === "local_purchase" ? s.t("tab_local_purchase", "Local Purchase")
-      : m === "sales_booking" ? s.t("tab_sales_booking", "Sales Booking")
-      : m === "local_sales" ? s.t("tab_local_sales", "Local Sales")
-      : m === "shipping_bl" ? s.t("tab_shipping_bl", "Shipping / BL")
-      : s.t("tab_clearing_bill", "Clearing Bill"),
-    [s]
-  );
 
   const statusLabel = useCallback(
     (st: BillRow["status"] | "all") =>
@@ -266,7 +268,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
       branchName: scope.branchDisplayName,
       printedBy: scope.userName,
       filters: [
-        { label: s.t("col_source", "Source Module"), value: moduleTab === "all" ? s.t("tab_all", "All Bills") : moduleLabel(moduleTab) },
+        { label: s.t("col_source", "Source Module"), value: getTabLabel(moduleTab) },
         { label: s.t("col_status", "Status"), value: statusLabel(statusFilter) },
         { label: s.t("summary_bills", "Bills"), value: String(rows.length) }
       ],
@@ -297,7 +299,8 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
 
   const filtersActive = moduleTab !== "all" || statusFilter !== "all" || !!search.trim();
 
-  const generalSummaryCards = useMemo(() => {
+  type CardItem = { label: string; value: string; accent: string; icon: any; sub?: string };
+  const generalSummaryCards = useMemo((): CardItem[] => {
     if (moduleTab !== "general_expenses") return [];
     const totalBills = expensesBills.length;
     const postedCount = expensesBills.filter((b) => b.transferredToRoznamcha).length;
@@ -312,7 +315,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     ];
   }, [moduleTab, expensesBills, s]);
 
-  const summaryCards = summary
+  const summaryCards: CardItem[] = summary
     ? [
         { label: s.t("summary_bills", "Bills"), value: String(rows.length), accent: "border-t-indigo-500", icon: FileText },
         // Money is never added across currencies: one currency => one figure, several => one line per currency
