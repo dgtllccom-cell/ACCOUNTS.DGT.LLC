@@ -320,6 +320,33 @@ export function UnifiedDetailedLedgerView() {
     const printedBy = sessionInfo?.user?.fullName || sessionInfo?.user?.email || null;
     const brand = await resolveLedgerBranding(header, lang, printedBy);
     const filtered = filterType !== "none" && filterValue;
+
+    const rawContacts = (header as any).contacts;
+    let parsedContacts: Array<{ type?: string; value?: string }> = [];
+    if (Array.isArray(rawContacts)) parsedContacts = rawContacts;
+    else if (typeof rawContacts === "string") {
+      try {
+        parsedContacts = JSON.parse(rawContacts);
+      } catch {
+        parsedContacts = [];
+      }
+    }
+    const pickContact = (types: string[]) =>
+      parsedContacts.find((c) => types.includes(String(c?.type || "").toLowerCase()) && String(c?.value || "").trim())?.value?.trim() || null;
+
+    const phone = (header as any).accountPhone || pickContact(["mobile", "phone", "landline", "office"]) || null;
+    const whatsapp = pickContact(["whatsapp"]) || (header as any).accountPhone || null;
+    const email = (header as any).accountEmail || pickContact(["email"]) || null;
+    const openedDate = header.createdAt ? header.createdAt.slice(0, 10) : null;
+    const finalAddress = (header as any).accountAddress || header.address || null;
+    const branchName = brand.branchName || header.cityBranchName || header.countryBranchName || null;
+    const branchCode = (header as any).branchCode || (header as any).cityBranchCode || (header as any).countryBranchCode || null;
+    const countryName = brand.countryName || header.countryName || null;
+    const countryCode = (header as any).countryCode || (countryName ? countryName.slice(0, 3).toUpperCase() : null);
+    const stateProvince = (header as any).stateName || null;
+    const city = (header as any).cityName || null;
+    const category = header.accountKind ? tv(header.accountKind) : null;
+
     openLedgerStatementPrint(
       {
         company: brand.companyInfo,
@@ -329,11 +356,22 @@ export function UnifiedDetailedLedgerView() {
           customerNumber: header.customerNumber ?? null,
           manualReference: header.manualReferenceNumber ?? null,
           kind: header.accountKind ? tv(header.accountKind) : null,
+          category,
           currency: header.ledgerCurrency || "",
-          country: brand.countryName || header.countryName,
-          branch: brand.branchName || header.cityBranchName || header.countryBranchName,
+          openedDate,
+          branchName,
+          branchCode,
+          countryCode,
+          country: countryName,
+          stateProvince,
+          city,
+          finalAddress,
+          address: finalAddress,
+          phone,
+          whatsapp,
+          email,
+          branch: branchName,
           company: header.companyName,
-          address: header.address,
         },
         normalBalance: header.normalBalance === "credit" ? "credit" : "debit",
         fromDate,
@@ -342,21 +380,34 @@ export function UnifiedDetailedLedgerView() {
         totalDebit: calculatedTotals.sumDr,
         totalCredit: calculatedTotals.sumCr,
         closingBalance: calculatedTotals.running,
-        lines: calculatedTotals.lines.map((l) => ({
-          date: l.entryDate,
-          serial: l.branchSerialNo || l.countrySerialNo || l.superAdminSerialNo || null,
-          manualRef: l.referenceNo,
-          source: l.sourceTable,
-          branch: l.branchName ?? null,
-          user: l.createdByName,
-          description: l.description,
-          currency: l.currency,
-          usdRate: l.usdRate,
-          usdAmount: l.usdAmount,
-          debit: l.debit || 0,
-          credit: l.credit || 0,
-          balance: l.runningBalance || 0,
-        })),
+        lines: calculatedTotals.lines.map((l) => {
+          const serial = l.branchSerialNo || l.countrySerialNo || l.superAdminSerialNo || null;
+          const rznNo = l.referenceNo || serial;
+          const rznName = l.sourceTable === "roznamcha_entries" ? "Roznamcha" : l.sourceTable === "ledger_posting_batches" ? "Batch Posting" : "Journal";
+          const userCode = l.createdByName ? l.createdByName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 5) : null;
+          const lineBranchCode = (l as any).branchCode || (l.branchName ? l.branchName.slice(0, 4).toUpperCase() : null);
+
+          return {
+            date: l.entryDate,
+            serial,
+            entryNo: serial || l.referenceNo || null,
+            rznNo: rznNo || null,
+            rznName,
+            manualRef: l.referenceNo,
+            source: l.sourceTable,
+            branch: l.branchName ?? null,
+            branchCode: lineBranchCode,
+            user: l.createdByName,
+            userCode,
+            description: l.description,
+            currency: l.currency,
+            usdRate: l.usdRate,
+            usdAmount: l.usdAmount,
+            debit: l.debit || 0,
+            credit: l.credit || 0,
+            balance: l.runningBalance || 0,
+          };
+        }),
         printedBy,
         printedAt: new Date().toISOString().slice(0, 16).replace("T", " "),
         filterNote: filtered ? `${tr(filterType === "user" ? "User" : filterType === "branch" ? "Branch" : "Country")}: ${filterValue}` : null,
