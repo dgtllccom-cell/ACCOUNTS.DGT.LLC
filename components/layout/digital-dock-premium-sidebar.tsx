@@ -266,9 +266,9 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("Expenses"),
     icon: Banknote,
     children: [
-      { label: nt("Daily Operational Expenses"), href: "/dashboard/roznamcha/daily-expenses-bill", icon: Banknote },
-      { label: nt("Office / Home Expenses Bill"), href: "/dashboard/roznamcha/expenses-bill", icon: FileSpreadsheet },
-      { label: nt("Bill Expenses"), href: "/dashboard/expenses/bill-expenses", icon: Receipt },
+      { label: nt("Purchase Expenses"), href: "/dashboard/expenses/purchase", icon: ShoppingCart },
+      { label: nt("Sales Expenses"), href: "/dashboard/expenses/sales", icon: TrendingUp },
+
     ],
   },
   {
@@ -360,15 +360,15 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       },
       {
         key: "sub-bcp",
-        label: nt("Bill Cost, Expenses & Profit"),
+        label: nt("Bill Cost & Profit"),
         icon: FileSpreadsheet,
         children: [
           { label: nt("Bill Cost & Profit Overview"), href: "/dashboard/bill-cost-profit", icon: BarChart3 },
-          { label: nt("Bill Expenses Entry"), href: "/dashboard/expenses/bill-expenses?source=bcp", icon: Banknote },
-          { label: nt("Business Edit Invoice"), href: "/dashboard/business-edit-invoice?source=bcp", icon: FileText },
-          { label: nt("BCP Purchase Cost Audit"), href: "/dashboard/bill-cost-profit/purchase", icon: ShoppingCart },
-          { label: nt("BCP Sales Profit Analytics"), href: "/dashboard/bill-cost-profit/sales", icon: TrendingUp },
-          { label: nt("BCP Operational Expenses"), href: "/dashboard/bill-cost-profit/expenses", icon: Receipt },
+
+
+
+
+
           { label: nt("BCP Universal Reports"), href: "/dashboard/bill-cost-profit/reports", icon: FileBarChart },
         ],
       },

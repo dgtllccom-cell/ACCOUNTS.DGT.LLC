@@ -93,6 +93,8 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/inter-country-transfers": ["purchases:read", "shipping_records:read", "shipping_transfers:read", "route:/dashboard/inter-country-transfers"],
   "/dashboard/purchase/country-purchase-reports": ["purchases:read", "reports:read", "route:/dashboard/purchase/country-purchase-reports"],
   "/dashboard/bill-cost-profit": ["purchases:read", "expenses:read", "route:/dashboard/bill-cost-profit"],
+  "/dashboard/expenses/purchase": ["purchases:read", "expenses:read", "route:/dashboard/expenses/purchase"],
+  "/dashboard/expenses/sales": ["sales:read", "expenses:read", "route:/dashboard/expenses/sales"],
   "/dashboard/expenses/bill-expenses": ["expenses:read", "expenses:create", "route:/dashboard/expenses/bill-expenses"],
   "/dashboard/inventory": ["products:read", "inventory:read", "route:/dashboard/inventory"],
   "/dashboard/clearing-agent/customer-order": ["shipping_records:read", "clearing_agents:read", "customer_orders:step_1a:read", "customer_orders:step_1b:read", "customer_orders:step_1c:read", "route:/dashboard/clearing-agent/customer-order"],

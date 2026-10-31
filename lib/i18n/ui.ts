@@ -3023,6 +3023,18 @@ export type UiKey =
   | "bexp.void_failed"
   | "bexp.tab_shipping_bl"
   | "bexp.tab_clearing_bill"
+  | "bexp.title_purchase"
+  | "bexp.title_sales"
+  | "bexp.subtitle_purchase"
+  | "bexp.subtitle_sales"
+  | "bexp.tab_general_expenses"
+  | "bexp.tab_transferred_bills"
+  | "bexp.tab_all_purchase"
+  | "bexp.tab_all_sales"
+  | "bexp.btn_view_report"
+  | "bexp.btn_new_expense_bill"
+  | "bexp.btn_open_bill"
+  | "bexp.linked_report_modal_title"
   | "hr.step_configured"
   | "hr.step_calculated"
   | "aump.manage_country"
@@ -29636,6 +29648,18 @@ const en: Dict = {
 
 
   "bexp.tab_clearing_bill": "Clearing Bill",
+  "bexp.title_purchase": "Purchase Expenses",
+  "bexp.title_sales": "Sales Expenses",
+  "bexp.subtitle_purchase": "Additional and operational expenses recorded against Purchase orders, contracts and general expenses.",
+  "bexp.subtitle_sales": "Additional and operational expenses recorded against Sales orders, deliveries and general expenses.",
+  "bexp.tab_general_expenses": "General Expenses",
+  "bexp.tab_transferred_bills": "Transferred Bills",
+  "bexp.tab_all_purchase": "All Purchase Bills",
+  "bexp.tab_all_sales": "All Sales Bills",
+  "bexp.btn_view_report": "View Report",
+  "bexp.btn_new_expense_bill": "New Expense Bill",
+  "bexp.btn_open_bill": "Open Bill",
+  "bexp.linked_report_modal_title": "Linked Expense & Cost Report",
   "hr.step_configured": "Configured",
 
 
@@ -55420,6 +55444,18 @@ const ur: Dict = {
 
 
   "bexp.tab_clearing_bill": "کلیئرنگ بل",
+  "bexp.title_purchase": "خریداری کے اخراجات",
+  "bexp.title_sales": "سیلز کے اخراجات",
+  "bexp.subtitle_purchase": "خریداری آرڈرز، معاہدوں اور عمومی اخراجات کے خلاف ریکارڈ کیے گئے اضافی اور عملیاتی اخراجات۔",
+  "bexp.subtitle_sales": "سیلز آرڈرز، ڈیلیوریز اور عمومی اخراجات کے خلاف ریکارڈ کیے گئے اضافی اور عملیاتی اخراجات۔",
+  "bexp.tab_general_expenses": "عمومی اخراجات",
+  "bexp.tab_transferred_bills": "منتقل شدہ بلز",
+  "bexp.tab_all_purchase": "تمام خریداری بل",
+  "bexp.tab_all_sales": "تمام سیلز بل",
+  "bexp.btn_view_report": "رپورٹ دیکھیں",
+  "bexp.btn_new_expense_bill": "نیا اخراجات بل",
+  "bexp.btn_open_bill": "بل کھولیں",
+  "bexp.linked_report_modal_title": "منسلک اخراجات اور لاگت کی رپورٹ",
   "hr.step_configured": "ترتیب دیا گیا",
 
 
@@ -81286,6 +81322,18 @@ const ar: Dict = {
 
 
   "bexp.tab_clearing_bill": "فاتورة التخليص",
+  "bexp.title_purchase": "مصروفات المشتريات",
+  "bexp.title_sales": "مصروفات المبيعات",
+  "bexp.subtitle_purchase": "المصروفات الإضافية والتشغيلية المسجلة مقابل طلبات الشراء والعقود والمصروفات العامة.",
+  "bexp.subtitle_sales": "المصروفات الإضافية والتشغيلية المسجلة مقابل طلبات المبيعات والتسليمات والمصروفات العامة.",
+  "bexp.tab_general_expenses": "المصروفات العامة",
+  "bexp.tab_transferred_bills": "الفواتير المحولة",
+  "bexp.tab_all_purchase": "كل فواتير الشراء",
+  "bexp.tab_all_sales": "كل فواتير المبيعات",
+  "bexp.btn_view_report": "عرض التقرير",
+  "bexp.btn_new_expense_bill": "فاتورة مصروفات جديدة",
+  "bexp.btn_open_bill": "فتح الفاتورة",
+  "bexp.linked_report_modal_title": "تقرير المصروفات والتكلفة المرتبط",
   "hr.step_configured": "تم التكوين",
 
 
@@ -107202,6 +107250,18 @@ const fa: Dict = {
 
 
   "bexp.tab_clearing_bill": "صورتحساب ترخیص",
+  "bexp.title_purchase": "هزینه‌های خرید",
+  "bexp.title_sales": "هزینه‌های فروش",
+  "bexp.subtitle_purchase": "هزینه‌های اضافی و عملیاتی ثبت‌شده در برابر سفارشات خرید، قراردادها و هزینه‌های عمومی.",
+  "bexp.subtitle_sales": "هزینه‌های اضافی و عملیاتی ثبت‌شده در برابر سفارشات فروش، تحویل‌ها و هزینه‌های عمومی.",
+  "bexp.tab_general_expenses": "هزینه‌های عمومی",
+  "bexp.tab_transferred_bills": "صورتحساب‌های منتقل‌شده",
+  "bexp.tab_all_purchase": "همه صورتحساب‌های خرید",
+  "bexp.tab_all_sales": "همه صورتحساب‌های فروش",
+  "bexp.btn_view_report": "مشاهده گزارش",
+  "bexp.btn_new_expense_bill": "صورتحساب هزینه جدید",
+  "bexp.btn_open_bill": "باز کردن صورتحساب",
+  "bexp.linked_report_modal_title": "گزارش هزینه و بهای تمام‌شده مرتبط",
   "hr.step_configured": "پیکربندی شد",
 
 
@@ -133116,6 +133176,18 @@ const ps: Dict = {
 
 
   "bexp.tab_clearing_bill": "د کلیرنس بل",
+  "bexp.title_purchase": "د پیرودلو لګښتونه",
+  "bexp.title_sales": "د پلورلو لګښتونه",
+  "bexp.subtitle_purchase": "اضافي او عملیاتي لګښتونه چې د پیرود امرونو، قراردادونو او عمومي لګښتونو پر وړاندې ثبت شوي.",
+  "bexp.subtitle_sales": "اضافي او عملیاتي لګښتونه چې د پلور امرونو، تحویلۍ او عمومي لګښتونو پر وړاندې ثبت شوي.",
+  "bexp.tab_general_expenses": "عمومي لګښتونه",
+  "bexp.tab_transferred_bills": "لیږدول شوي بلونه",
+  "bexp.tab_all_purchase": "د پیرودلو ټول بلونه",
+  "bexp.tab_all_sales": "د پلور ټول بلونه",
+  "bexp.btn_view_report": "راپور کتل",
+  "bexp.btn_new_expense_bill": "د لګښت نوی بل",
+  "bexp.btn_open_bill": "بل پرانیزئ",
+  "bexp.linked_report_modal_title": "اړوند د لګښت او بیې راپور",
   "hr.step_configured": "تنظیم شو",
 
 

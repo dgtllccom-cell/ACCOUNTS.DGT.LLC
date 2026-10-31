@@ -18,6 +18,8 @@ import { printStore } from "@/lib/store/print-store";
 import { Th } from "@/components/ui/translated-th";
 import { formatCurrencyTotals, type CurrencyTotal } from "@/lib/finance/currency-totals";
 import { calculateExpenseLine, type TaxMode } from "@/lib/finance/expense-line-calculator";
+import { BillDrilldownView } from "@/features/expenses/components/bill-drilldown-view";
+import { ExpensesInvoicePrint } from "@/components/reports/expenses-invoice-print";
 
 type SourceModule =
   | "purchase_booking"
@@ -90,7 +92,10 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
 
   const [rows, setRows] = useState<BillRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [moduleTab, setModuleTab] = useState<"all" | SourceModule>("all");
+  type TabKey = "all" | SourceModule | "general_expenses";
+  const [moduleTab, setModuleTab] = useState<TabKey>("all");
+  const [reportBillId, setReportBillId] = useState<string | null>(null);
+  const [viewGeneralBill, setViewGeneralBill] = useState<any | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in_progress" | "closed">("all");
   const [search, setSearch] = useState("");
   const [summary, setSummary] = useState<{ originalTotal: number | null; expenseTotal: number | null; originalByCurrency?: CurrencyTotal[]; expenseByCurrency?: CurrencyTotal[]; mixedCurrency?: boolean; currency?: string | null; withExpenses: number; byModule: Record<string, number> } | null>(null);
@@ -111,21 +116,23 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const qs = new URLSearchParams();
-      if (moduleTab !== "all") qs.set("module", moduleTab);
-      else if (sectionModules) qs.set("modules", sectionModules.join(","));
-      if (statusFilter !== "all") qs.set("status", statusFilter);
-      if (sectionFilter !== "all") qs.set("section", sectionFilter);
-      if (search.trim()) qs.set("q", search.trim());
-      const res = await fetch(`/api/erp/bill-expenses?${qs.toString()}`);
-      const j = await res.json();
-      if (j.ok) {
-        setRows(j.data.rows || []);
-        setSummary(j.data.summary || null);
-        setCanChooseSection(Boolean(j.data.canChooseSection));
+      if (moduleTab !== "general_expenses") {
+        const qs = new URLSearchParams();
+        if (moduleTab !== "all") qs.set("module", moduleTab);
+        else if (sectionModules) qs.set("modules", sectionModules.join(","));
+        if (statusFilter !== "all") qs.set("status", statusFilter);
+        if (sectionFilter !== "all") qs.set("section", sectionFilter);
+        if (search.trim()) qs.set("q", search.trim());
+        const res = await fetch(`/api/erp/bill-expenses?${qs.toString()}`);
+        const j = await res.json();
+        if (j.ok) {
+          setRows(j.data.rows || []);
+          setSummary(j.data.summary || null);
+          setCanChooseSection(Boolean(j.data.canChooseSection));
+        }
       }
-      // Consolidated "Expenses" section — also pull the Daily-Payment expenses_bills (read-only)
-      if (section === "expenses") {
+      // Load General Expenses bills whenever in general_expenses tab, or in expenses/purchase/sales sections
+      if (moduleTab === "general_expenses" || section === "expenses" || section === "purchase" || section === "sales") {
         const ebQs = new URLSearchParams();
         if (search.trim()) ebQs.set("q", search.trim());
         if (sectionFilter !== "all") ebQs.set("section", sectionFilter);
@@ -140,6 +147,68 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
       setLoading(false);
     }
   }, [moduleTab, statusFilter, search, section, sectionModules, sectionFilter]);
+
+  const handleViewGeneralBill = useCallback(async (b: any) => {
+    try {
+      const res = await fetch("/api/erp/expenses?limit=100");
+      const j = await res.json();
+      const found = j?.bills?.find((x: any) => x.id === b.id);
+      if (found) {
+        setViewGeneralBill(found);
+        return;
+      }
+    } catch {
+      // fallback
+    }
+    setViewGeneralBill({
+      ...b,
+      serial_no: b.billSerial,
+      bill_date: b.billDate,
+      bill_title: b.billTitle,
+      reference_no: b.referenceNo,
+      city_branches: {
+        name: b.branchLabel,
+        countries: {
+          currency_code: b.currency,
+          name: b.countryName
+        }
+      },
+      expenses_bill_lines: [
+        {
+          row_serial: 1,
+          details: b.billTitle || "Expense",
+          qty: 1,
+          unit_price: b.grandTotal,
+          amount: b.grandTotal,
+          currency: b.currency,
+          grand_amount: b.grandTotal
+        }
+      ]
+    });
+  }, []);
+
+  const availableTabs: TabKey[] = useMemo(() => {
+    if (section === "purchase") {
+      return ["all", "purchase_booking", "local_purchase", "shipping_bl", "clearing_bill", "general_expenses"];
+    }
+    if (section === "sales") {
+      return ["all", "sales_booking", "local_sales", "general_expenses"];
+    }
+    return ["all", "purchase_booking", "local_purchase", "sales_booking", "local_sales", "shipping_bl", "clearing_bill", "general_expenses"];
+  }, [section]);
+
+  const getTabLabel = useCallback(
+    (t: TabKey) => {
+      if (t === "all") {
+        if (section === "purchase") return s.t("tab_all_purchase", "All Purchase Bills");
+        if (section === "sales") return s.t("tab_all_sales", "All Sales Bills");
+        return s.t("tab_all", "All Bills");
+      }
+      if (t === "general_expenses") return s.t("tab_general_expenses", "General Expenses");
+      return moduleLabel(t as SourceModule);
+    },
+    [section, s, moduleLabel]
+  );
 
   useEffect(() => {
     load();
@@ -210,7 +279,38 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     });
   }
 
+  const pageTitle =
+    section === "purchase"
+      ? s.t("title_purchase", "Purchase Expenses")
+      : section === "sales"
+      ? s.t("title_sales", "Sales Expenses")
+      : costProfit
+      ? s.tGlobal("nav.bill_cost_profit", "Bill Cost, Expenses & Profit")
+      : s.t("title", "Bill Expenses");
+
+  const pageSubtitle =
+    section === "purchase"
+      ? s.t("subtitle_purchase", "Additional and operational expenses recorded against Purchase orders, contracts and general expenses.")
+      : section === "sales"
+      ? s.t("subtitle_sales", "Additional and operational expenses recorded against Sales orders, deliveries and general expenses.")
+      : s.t("subtitle", "Additional expenses recorded against submitted Purchase & Sales bills — the original bill is referenced, never re-entered.");
+
   const filtersActive = moduleTab !== "all" || statusFilter !== "all" || !!search.trim();
+
+  const generalSummaryCards = useMemo(() => {
+    if (moduleTab !== "general_expenses") return [];
+    const totalBills = expensesBills.length;
+    const postedCount = expensesBills.filter((b) => b.transferredToRoznamcha).length;
+    const unpostedCount = totalBills - postedCount;
+    const totalAmount = expensesBills.reduce((acc, b) => acc + (Number(b.grandTotal) || 0), 0);
+    const curr = expensesBills[0]?.currency || "";
+    return [
+      { label: s.t("summary_bills", "Bills"), value: String(totalBills), accent: "border-t-indigo-500", icon: FileText },
+      { label: s.t("summary_expenses", "Expenses Total"), value: `${curr ? curr + " " : ""}${money(totalAmount)}`, accent: "border-t-rose-500", icon: Calculator },
+      { label: s.t("posting_posted", "Posted"), value: String(postedCount), accent: "border-t-emerald-500", icon: CheckCircle2 },
+      { label: s.t("posting_unposted", "Not posted"), value: String(unpostedCount), accent: "border-t-amber-400", icon: BadgePercent }
+    ];
+  }, [moduleTab, expensesBills, s]);
 
   const summaryCards = summary
     ? [
@@ -238,8 +338,15 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
             <div className="flex items-center gap-2">
               <span className="mr-1 hidden items-center gap-1.5 text-xs font-bold text-slate-500 sm:flex">
                 <Receipt className="h-3.5 w-3.5 text-primary" />
-                {s.t("title", "Bill Expenses")}
+                {pageTitle}
               </span>
+              {moduleTab === "general_expenses" && (
+                <Button size="sm" asChild className="h-7 bg-blue-600 hover:bg-blue-700 text-xs text-white shadow-sm">
+                  <Link href="/dashboard/roznamcha/expenses-bill">
+                    <Plus className="mr-1 h-3 w-3" /> {s.t("btn_new_expense_bill", "New Expense Bill")}
+                  </Link>
+                </Button>
+              )}
               <Button size="sm" onClick={load} variant="outline" className="h-7 text-xs shadow-sm">
                 <RefreshCw className="mr-1 h-3 w-3" /> {s.tGlobal("common.refresh", "Refresh")}
               </Button>
@@ -256,14 +363,14 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
 
         <div>
           <h2 className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-100">
-            <Receipt className="h-4 w-4 text-primary" /> {s.t("title", "Bill Expenses")}
+            <Receipt className="h-4 w-4 text-primary" /> {pageTitle}
           </h2>
-          <p className="mt-0.5 max-w-3xl text-xs text-slate-500">{s.t("subtitle", "Additional expenses recorded against submitted Purchase & Sales bills — the original bill is referenced, never re-entered.")}</p>
+          <p className="mt-0.5 max-w-3xl text-xs text-slate-500">{pageSubtitle}</p>
         </div>
 
         {/* Summary cards — colored top border, matching the Expenses Bill design family */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-          {summaryCards.map((c) => (
+          {(moduleTab === "general_expenses" ? generalSummaryCards : summaryCards).map((c) => (
             <Card key={c.label} className={`border-t-4 ${c.accent} shadow-sm opacity-90 transition-opacity hover:opacity-100`}>
               <CardHeader className="border-b border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/60">
                 <CardTitle className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-slate-600 dark:text-slate-300">
@@ -282,7 +389,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
         <Card className="shadow-sm">
           <CardContent className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap gap-1.5">
-              {(["all", ...(sectionModules ?? ["purchase_booking", "local_purchase", "sales_booking", "local_sales", "shipping_bl", "clearing_bill"])] as Array<"all" | SourceModule>).map((m) => (
+              {availableTabs.map((m) => (
                 <button
                   key={m}
                   onClick={() => setModuleTab(m)}
@@ -292,7 +399,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                   }`}
                 >
-                  {m === "all" ? s.t("tab_all", "All Bills") : moduleLabel(m)}
+                  {getTabLabel(m)}
                 </button>
               ))}
             </div>
@@ -347,103 +454,67 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
           </CardContent>
         </Card>
 
-        {/* Register table */}
-        <Card className="overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900/60">
-                <tr>
-                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_source", "Source Module")}</Th>
-                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</Th>
-                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_manual_bill", "Manual Bill / Contract")}</Th>
-                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_date", "Date")}</Th>
-                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_branch", "Branch")}</Th>
-                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_party", "Party / Account")}</Th>
-                  <Th className="px-4 py-3 text-right font-semibold">{s.t("col_original_amount", "Original Bill Amount")}</Th>
-                  <Th className="px-4 py-3 text-right font-black bg-slate-100 text-slate-800 dark:bg-slate-800">{s.t("col_expense_total", "Expense Total")}</Th>
-                  <Th className="px-4 py-3 text-center font-semibold">{s.t("col_status", "Status")}</Th>
-                  <Th className="px-4 py-3 text-center font-semibold w-24">{s.t("col_actions", "Actions")}</Th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {loading ? (
-                  <tr>
-                    <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
-                      <RefreshCw className="mx-auto mb-2 h-5 w-5 animate-spin text-slate-300" />
-                      {s.tGlobal("common.loading", "Loading…")}
-                    </td>
-                  </tr>
-                ) : rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="px-4 py-12 text-center text-slate-500">
-                      <FileText className="mx-auto mb-3 h-8 w-8 opacity-20" />
-                      {filtersActive
-                        ? s.t("empty_filtered", "No bills match the selected filters.")
-                        : s.t("empty", "No submitted bills yet.")}
-                    </td>
-                  </tr>
-                ) : (
-                  rows.map((r) => (
-                    <BillExpenseRow
-                      key={r.id}
-                      r={r}
-                      s={s}
-                      moduleLabel={moduleLabel}
-                      statusLabel={statusLabel}
-                      onView={() => { setOpenId(r.id); setOpenFocusForm(false); }}
-                      onAdd={() => { setOpenId(r.id); setOpenFocusForm(true); }}
-                    />
-                  ))
-                )}
-              </tbody>
-              <tfoot className="border-t-2 border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60">
-                <tr>
-                  <td colSpan={6} className="px-4 py-3 text-end font-black text-slate-600 dark:text-slate-300">
-                    {s.t("summary_expenses", "Expenses Total")}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono text-slate-500">{money(summary?.originalTotal)}</td>
-                  <td className="px-4 py-3 text-right font-mono text-lg font-black text-primary">{money(summary?.expenseTotal)}</td>
-                  <td colSpan={2} />
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </Card>
-
-        {/* Consolidated view — Daily-Payment Expenses Bills (read-only, no re-posting here) */}
-        {section === "expenses" && (
-          <Card className="mt-4 overflow-hidden shadow-sm">
-            <CardHeader className="border-b border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/60">
-              <CardTitle className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-slate-600 dark:text-slate-300">
-                <Receipt className="h-3.5 w-3.5" /> {s.t("daily_expenses_bills", "Daily Payment — Expenses Bills")}
-                <span className="ml-1 rounded bg-slate-200 px-1.5 text-[11px] text-slate-500 dark:bg-slate-700">{expensesBills.length}</span>
-              </CardTitle>
-            </CardHeader>
+        {/* Conditional View: General Expenses Table vs Transferred Bills Register Table */}
+        {moduleTab === "general_expenses" ? (
+          <Card className="overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/60">
+              <div className="flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-primary" />
+                <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-200">
+                  {s.t("tab_general_expenses", "General Expenses")}
+                </span>
+                <span className="rounded bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                  {expensesBills.length}
+                </span>
+              </div>
+              <Button size="sm" asChild className="h-7 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs shadow-sm">
+                <Link href="/dashboard/roznamcha/expenses-bill">
+                  <Plus className="mr-1 h-3 w-3" /> {s.t("btn_new_expense_bill", "New Expense Bill")}
+                </Link>
+              </Button>
+            </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="border-b bg-slate-50 text-[11px] uppercase text-slate-500 dark:bg-slate-900/40">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900/40">
                   <tr>
-                    <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</Th>
-                    <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("f_details", "Details / Narration")}</Th>
-                    <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_date", "Date")}</Th>
-                    <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_branch", "Branch")}</Th>
-                    <Th className="px-3 py-2 text-right font-semibold">{s.t("f_grand_amount", "Grand Amount")}</Th>
-                    <Th className="px-3 py-2 text-center font-semibold">{s.t("f_posting", "Accounting")}</Th>
-                    <Th className="px-3 py-2 text-center font-semibold w-8" />
+                    <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</Th>
+                    <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("f_details", "Details / Narration")}</Th>
+                    <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_manual_bill", "Manual Bill / Contract")}</Th>
+                    <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_date", "Date")}</Th>
+                    <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_branch", "Branch")}</Th>
+                    <Th className="px-4 py-3 text-right font-semibold">{s.t("f_grand_amount", "Grand Amount")}</Th>
+                    <Th className="px-4 py-3 text-center font-semibold">{s.t("f_posting", "Accounting")}</Th>
+                    <Th className="px-4 py-3 text-center font-semibold">{s.t("col_actions", "Actions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {expensesBills.length === 0 ? (
-                    <tr><td colSpan={7} className="px-3 py-8 text-center text-slate-400">{s.t("no_daily_expenses", "No Daily-Payment expense bills in your scope.")}</td></tr>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-10 text-center text-slate-400">
+                        <RefreshCw className="mx-auto mb-2 h-5 w-5 animate-spin text-slate-300" />
+                        {s.tGlobal("common.loading", "Loading…")}
+                      </td>
+                    </tr>
+                  ) : expensesBills.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-12 text-center text-slate-500">
+                        <FileText className="mx-auto mb-3 h-8 w-8 opacity-20" />
+                        {s.t("no_daily_expenses", "No Daily-Payment expense bills in your scope.")}
+                      </td>
+                    </tr>
                   ) : (
                     expensesBills.map((b: any) => (
                       <tr key={b.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                        <td className="px-3 py-2 font-mono font-semibold">{b.billSerial || "—"}</td>
-                        <td className="px-3 py-2 text-slate-500">{b.billTitle || "—"}</td>
-                        <td className="px-3 py-2">{b.billDate ? new Date(b.billDate).toLocaleDateString("en-GB") : "—"}</td>
-                        <td className="px-3 py-2">{b.branchLabel || "—"}</td>
-                        <td className="px-3 py-2 text-right font-mono font-bold">{b.currency || ""} {money(b.grandTotal)}</td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-4 py-3 font-mono font-semibold text-slate-800 dark:text-white">{b.billSerial || "—"}</td>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-300 font-medium">{b.billTitle || "—"}</td>
+                        <td className="px-4 py-3 text-slate-500">{b.referenceNo || "—"}</td>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{b.billDate ? new Date(b.billDate).toLocaleDateString("en-GB") : "—"}</td>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{b.branchLabel || "—"}</td>
+                        <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 dark:text-white">
+                          <span className="mr-1 text-xs text-slate-400 font-normal">{b.currency}</span>
+                          {money(b.grandTotal)}
+                        </td>
+                        <td className="px-4 py-3 text-center">
                           {b.transferredToRoznamcha ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 whitespace-nowrap">
                               <CheckCircle2 className="h-3 w-3" /> {s.t("posting_posted", "Posted")}
@@ -452,13 +523,98 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
                             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500 dark:bg-slate-800">{s.t("posting_unposted", "Not posted")}</span>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-center">
-                          <a href="/dashboard/roznamcha/expenses-bill" className="text-[11px] text-blue-600 hover:underline dark:text-blue-400">{s.t("open", "Open")}</a>
+                        <td className="px-4 py-3 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2.5 gap-1 text-xs border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300"
+                              onClick={() => handleViewGeneralBill(b)}
+                              title={s.t("btn_view_report", "View Report")}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              <span>{s.t("btn_view_report", "View Report")}</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-xs text-slate-600 hover:text-slate-900"
+                              asChild
+                            >
+                              <Link href={`/dashboard/roznamcha/expenses-bill?id=${b.id}`}>
+                                {s.t("btn_open_bill", "Open Bill")}
+                              </Link>
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))
                   )}
                 </tbody>
+              </table>
+            </div>
+          </Card>
+        ) : (
+          /* Register table */
+          <Card className="overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900/60">
+                  <tr>
+                    <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_source", "Source Module")}</Th>
+                    <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</Th>
+                    <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_manual_bill", "Manual Bill / Contract")}</Th>
+                    <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_date", "Date")}</Th>
+                    <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_branch", "Branch")}</Th>
+                    <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_party", "Party / Account")}</Th>
+                    <Th className="px-4 py-3 text-right font-semibold">{s.t("col_original_amount", "Original Bill Amount")}</Th>
+                    <Th className="px-4 py-3 text-right font-black bg-slate-100 text-slate-800 dark:bg-slate-800">{s.t("col_expense_total", "Expense Total")}</Th>
+                    <Th className="px-4 py-3 text-center font-semibold">{s.t("col_status", "Status")}</Th>
+                    <Th className="px-4 py-3 text-center font-semibold w-24">{s.t("col_actions", "Actions")}</Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
+                        <RefreshCw className="mx-auto mb-2 h-5 w-5 animate-spin text-slate-300" />
+                        {s.tGlobal("common.loading", "Loading…")}
+                      </td>
+                    </tr>
+                  ) : rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="px-4 py-12 text-center text-slate-500">
+                        <FileText className="mx-auto mb-3 h-8 w-8 opacity-20" />
+                        {filtersActive
+                          ? s.t("empty_filtered", "No bills match the selected filters.")
+                          : s.t("empty", "No submitted bills yet.")}
+                      </td>
+                    </tr>
+                  ) : (
+                    rows.map((r) => (
+                      <BillExpenseRow
+                        key={r.id}
+                        r={r}
+                        s={s}
+                        moduleLabel={moduleLabel}
+                        statusLabel={statusLabel}
+                        onViewReport={() => setReportBillId(r.id)}
+                        onView={() => { setOpenId(r.id); setOpenFocusForm(false); }}
+                        onAdd={() => { setOpenId(r.id); setOpenFocusForm(true); }}
+                      />
+                    ))
+                  )}
+                </tbody>
+                <tfoot className="border-t-2 border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60">
+                  <tr>
+                    <td colSpan={6} className="px-4 py-3 text-end font-black text-slate-600 dark:text-slate-300">
+                      {s.t("summary_expenses", "Expenses Total")}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono text-slate-500">{money(summary?.originalTotal)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-lg font-black text-primary">{money(summary?.expenseTotal)}</td>
+                    <td colSpan={2} />
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </Card>
@@ -474,18 +630,61 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
           onChanged={load}
         />
       )}
+
+      {reportBillId && (
+        <SimpleModal
+          isOpen={true}
+          onClose={() => setReportBillId(null)}
+          title={s.t("linked_report_modal_title", "Linked Expense & Cost Report")}
+          maxWidth="max-w-6xl"
+        >
+          <div className="max-h-[85vh] overflow-y-auto">
+            <BillDrilldownView id={reportBillId} lang={lang} />
+          </div>
+        </SimpleModal>
+      )}
+
+      {viewGeneralBill && (
+        <SimpleModal
+          isOpen={true}
+          onClose={() => setViewGeneralBill(null)}
+          title={s.t("linked_report_modal_title", "Linked Expense & Cost Report")}
+          maxWidth="max-w-5xl"
+        >
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-end gap-2 print:hidden">
+              <Button
+                size="sm"
+                onClick={() => window.print()}
+                className="h-8 bg-blue-600 hover:bg-blue-700 text-white text-xs shadow-sm"
+              >
+                <Printer className="mr-1.5 h-3.5 w-3.5" /> {s.t("print_report", "Print Report")}
+              </Button>
+            </div>
+            <div className="bg-slate-600 p-4 md:p-8 rounded-lg overflow-y-auto max-h-[75vh] flex justify-center print:hidden shadow-inner overflow-x-auto">
+              <div className="bg-white shadow-2xl w-[210mm] min-h-[297mm] flex-shrink-0 origin-top p-6">
+                <ExpensesInvoicePrint bill={viewGeneralBill} />
+              </div>
+            </div>
+            <div className="hidden print:block">
+              <ExpensesInvoicePrint bill={viewGeneralBill} />
+            </div>
+          </div>
+        </SimpleModal>
+      )}
     </div>
   );
 }
 
 /* ── Register row: matches the ExpensesBillRow pattern (Eye + MoreHorizontal menu) ── */
 function BillExpenseRow({
-  r, s, moduleLabel, statusLabel, onView, onAdd
+  r, s, moduleLabel, statusLabel, onViewReport, onView, onAdd
 }: {
   r: BillRow;
   s: ReturnType<typeof useErpScreen>;
   moduleLabel: (m: SourceModule) => string;
   statusLabel: (st: BillRow["status"] | "all") => string;
+  onViewReport: () => void;
   onView: () => void;
   onAdd: () => void;
 }) {
@@ -534,15 +733,25 @@ function BillExpenseRow({
         )}
       </td>
       <td className="relative px-4 py-3 text-center">
-        <div className="flex items-center justify-center gap-1" ref={ref}>
+        <div className="flex items-center justify-center gap-1.5" ref={ref}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2.5 gap-1 text-xs border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 font-medium"
+            onClick={onViewReport}
+            title={s.t("btn_view_report", "View Report")}
+          >
+            <Eye className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{s.t("btn_view_report", "View Report")}</span>
+          </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+            className="h-7 px-2 text-slate-600 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
             onClick={onView}
             title={s.t("open_detail", "Open")}
           >
-            <Eye className="h-4 w-4" />
+            {s.t("open", "Open")}
           </Button>
           <div className="relative">
             <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setMenuOpen(!menuOpen)}>
@@ -550,8 +759,11 @@ function BillExpenseRow({
             </Button>
             {menuOpen && (
               <div className={`absolute z-50 mt-1 w-44 overflow-hidden rounded-md border bg-white py-1 text-left text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900 ${s.isRtl ? "left-0" : "right-0"}`}>
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => { setMenuOpen(false); onViewReport(); }}>
+                  <Eye className="h-4 w-4" /> {s.t("btn_view_report", "View Report")}
+                </button>
                 <button className="flex w-full items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => { setMenuOpen(false); onView(); }}>
-                  <Eye className="h-4 w-4" /> {s.t("open_detail", "Open")}
+                  <FileText className="h-4 w-4" /> {s.t("open_detail", "Open")}
                 </button>
                 <Link
                   href={`/dashboard/bill-cost-profit/bill/${r.id}`}
