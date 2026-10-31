@@ -301,6 +301,13 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: ShoppingCart,
     children: [
       {
+        key: "sub-ps-general-transfer",
+        label: nt("P/S General Transfer"),
+        href: "/dashboard/purchase/purchase-transit-lane",
+        icon: ArrowRightLeft,
+        upgraded: true,
+      },
+      {
         key: "sub-purchase-booking",
         label: nt("Purchase Booking"),
         icon: ClipboardList,
