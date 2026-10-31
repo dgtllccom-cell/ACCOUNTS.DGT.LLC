@@ -197,19 +197,6 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     return ["all", "purchase_booking", "local_purchase", "sales_booking", "local_sales", "shipping_bl", "clearing_bill", "general_expenses"];
   }, [section]);
 
-  const getTabLabel = useCallback(
-    (t: TabKey) => {
-      if (t === "all") {
-        if (section === "purchase") return s.t("tab_all_purchase", "All Purchase Bills");
-        if (section === "sales") return s.t("tab_all_sales", "All Sales Bills");
-        return s.t("tab_all", "All Bills");
-      }
-      if (t === "general_expenses") return s.t("tab_general_expenses", "General Expenses");
-      return moduleLabel(t as SourceModule);
-    },
-    [section, s, moduleLabel]
-  );
-
   useEffect(() => {
     load();
   }, [moduleTab, statusFilter, section, sectionFilter]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -223,6 +210,19 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
       : m === "shipping_bl" ? s.t("tab_shipping_bl", "Shipping / BL")
       : s.t("tab_clearing_bill", "Clearing Bill"),
     [s]
+  );
+
+  const getTabLabel = useCallback(
+    (t: TabKey) => {
+      if (t === "all") {
+        if (section === "purchase") return s.t("tab_all_purchase", "All Purchase Bills");
+        if (section === "sales") return s.t("tab_all_sales", "All Sales Bills");
+        return s.t("tab_all", "All Bills");
+      }
+      if (t === "general_expenses") return s.t("tab_general_expenses", "General Expenses");
+      return moduleLabel(t as SourceModule);
+    },
+    [section, s, moduleLabel]
   );
 
   const statusLabel = useCallback(
@@ -266,7 +266,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
       branchName: scope.branchDisplayName,
       printedBy: scope.userName,
       filters: [
-        { label: s.t("col_source", "Source Module"), value: moduleTab === "all" ? s.t("tab_all", "All Bills") : moduleLabel(moduleTab) },
+        { label: s.t("col_source", "Source Module"), value: moduleTab === "all" ? s.t("tab_all", "All Bills") : moduleTab === "general_expenses" ? s.t("tab_general_expenses", "General Expenses") : moduleLabel(moduleTab) },
         { label: s.t("col_status", "Status"), value: statusLabel(statusFilter) },
         { label: s.t("summary_bills", "Bills"), value: String(rows.length) }
       ],
@@ -305,10 +305,10 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     const totalAmount = expensesBills.reduce((acc, b) => acc + (Number(b.grandTotal) || 0), 0);
     const curr = expensesBills[0]?.currency || "";
     return [
-      { label: s.t("summary_bills", "Bills"), value: String(totalBills), accent: "border-t-indigo-500", icon: FileText },
-      { label: s.t("summary_expenses", "Expenses Total"), value: `${curr ? curr + " " : ""}${money(totalAmount)}`, accent: "border-t-rose-500", icon: Calculator },
-      { label: s.t("posting_posted", "Posted"), value: String(postedCount), accent: "border-t-emerald-500", icon: CheckCircle2 },
-      { label: s.t("posting_unposted", "Not posted"), value: String(unpostedCount), accent: "border-t-amber-400", icon: BadgePercent }
+      { label: s.t("summary_bills", "Bills"), value: String(totalBills), accent: "border-t-indigo-500", sub: "", icon: FileText },
+      { label: s.t("summary_expenses", "Expenses Total"), value: `${curr ? curr + " " : ""}${money(totalAmount)}`, accent: "border-t-rose-500", sub: "", icon: Calculator },
+      { label: s.t("posting_posted", "Posted"), value: String(postedCount), accent: "border-t-emerald-500", sub: "", icon: CheckCircle2 },
+      { label: s.t("posting_unposted", "Not posted"), value: String(unpostedCount), accent: "border-t-amber-400", sub: "", icon: BadgePercent }
     ];
   }, [moduleTab, expensesBills, s]);
 
