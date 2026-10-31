@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, PencilLine, Trash2, Plus, Search, Loader2, Printer, FileDown } from "lucide-react";
+import { Eye, PencilLine, Trash2, Plus, Search, Loader2, Printer, FileDown, X } from "lucide-react";
+import { apiPost, apiPut } from "@/lib/api/client";
 import { apiGet, apiDelete } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ type BankRecord = {
   is_active: boolean;
   created_at: string;
   country?: { name: string };
+  full_address?: string | null;
 };
 
 export function BankRegistry() {
@@ -46,6 +48,82 @@ export function BankRegistry() {
   const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
   const [deleting, setDeleting] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
+
+  // Quick Modal State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingBank, setEditingBank] = useState<BankRecord | null>(null);
+  const [formBankName, setFormBankName] = useState("");
+  const [formBankCode, setFormBankCode] = useState("");
+  const [formBranchName, setFormBranchName] = useState("");
+  const [formSwift, setFormSwift] = useState("");
+  const [formAddress, setFormAddress] = useState("");
+  const [formAccountTitle, setFormAccountTitle] = useState("");
+  const [formAccountNumber, setFormAccountNumber] = useState("");
+  const [formIban, setFormIban] = useState("");
+  const [formCurrency, setFormCurrency] = useState("USD");
+  const [formIsActive, setFormIsActive] = useState(true);
+  const [savingModal, setSavingModal] = useState(false);
+
+  const openCreateModal = () => {
+    setEditingBank(null);
+    setFormBankName("");
+    setFormBankCode("");
+    setFormBranchName("");
+    setFormSwift("");
+    setFormAddress("");
+    setFormAccountTitle("");
+    setFormAccountNumber("");
+    setFormIban("");
+    setFormCurrency("USD");
+    setFormIsActive(true);
+    setModalOpen(true);
+  };
+
+  const openEditModal = (bank: BankRecord) => {
+    setEditingBank(bank);
+    setFormBankName(bank.bank_name);
+    setFormBankCode(bank.bank_code || "");
+    setFormBranchName(bank.branch_name || "");
+    setFormSwift(bank.swift_code || "");
+    setFormAddress(bank.full_address || "");
+    setFormAccountTitle(bank.account_title || "");
+    setFormAccountNumber(bank.account_number || "");
+    setFormIban(bank.iban || "");
+    setFormCurrency(bank.currency_code || "USD");
+    setFormIsActive(bank.is_active);
+    setModalOpen(true);
+  };
+
+  const handleModalSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formBankName.trim()) return;
+    setSavingModal(true);
+    try {
+      const payload: any = {
+        bankName: formBankName.trim(),
+        bankCode: formBankCode.trim() || null,
+        branchName: formBranchName.trim() || null,
+        swiftCode: formSwift.trim() || null,
+        fullAddress: formAddress.trim() || null,
+        accountTitle: formAccountTitle.trim() || null,
+        accountNumber: formAccountNumber.trim() || null,
+        iban: formIban.trim() || null,
+        currencyCode: formCurrency.trim() || "USD",
+        isActive: formIsActive,
+      };
+      if (editingBank) {
+        await apiPut(`/api/erp/banks/${editingBank.id}`, payload);
+      } else {
+        await apiPost("/api/erp/banks", payload);
+      }
+      setModalOpen(false);
+      await loadBanks();
+    } catch (err: any) {
+      alert(`Failed to save bank: ${err.message}`);
+    } finally {
+      setSavingModal(false);
+    }
+  };
 
   async function loadBanks() {
     setLoading(true);
@@ -127,8 +205,9 @@ export function BankRegistry() {
         { key: "country_name", label: t(lang, "report.country", "Country"), width: "11%" },
         { key: "account_title", label: t(lang, "bank.account_title_label", "Account Title"), width: "14%" },
         { key: "account_number", label: t(lang, "bank.account_number", "Account Number"), width: "14%" },
-        { key: "iban", label: t(lang, "bank.iban_label", "IBAN"), width: "13%" },
-        { key: "swift_code", label: t(lang, "acct.swift", "SWIFT"), width: "8%" },
+        { key: "iban", label: t(lang, "bank.iban_label", "IBAN"), width: "11%" },
+        { key: "swift_code", label: t(lang, "acct.swift", "SWIFT"), width: "7%" },
+        { key: "full_address", label: t(lang, "td.address", "Bank Address"), width: "12%" },
         { key: "currency_code", label: t(lang, "hr.f_currency", "Currency"), align: "center", width: "5%" },
         { key: "status", label: t(lang, "log.tbl_status", "Status"), align: "center", format: "badge", width: "5%" }
       ],
@@ -141,6 +220,7 @@ export function BankRegistry() {
         account_number: b.account_number || "-",
         iban: b.iban || "-",
         swift_code: b.swift_code || "-",
+        full_address: b.full_address || "-",
         currency_code: b.currency_code,
         status: b.is_active ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive")
       })),
@@ -160,12 +240,14 @@ export function BankRegistry() {
               {th("Manage all banks and banking details")}
             </p>
           </div>
-          <Button
-            onClick={() => router.push("/dashboard/settings/bank/new")}
-            className="w-full shrink-0 justify-center bg-blue-600 text-white shadow-sm hover:bg-blue-700 sm:w-auto"
-          >
-            <Plus className="w-4 h-4 mr-1" /> {t(lang, "bankreg.bankreg_new_bank", "New Bank")}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={openCreateModal}
+              className="w-full shrink-0 justify-center bg-blue-600 text-white shadow-sm hover:bg-blue-700 sm:w-auto"
+            >
+              <Plus className="w-4 h-4 mr-1" /> {t(lang, "bankreg.bankreg_new_bank", "New Bank")}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2 flex-wrap">
@@ -244,6 +326,8 @@ export function BankRegistry() {
                     <Th className="p-3 text-left font-semibold text-slate-700">Code</Th>
                     <Th className="p-3 text-left font-semibold text-slate-700">Branch</Th>
                     <Th className="p-3 text-left font-semibold text-slate-700">Country</Th>
+                    <Th className="p-3 text-left font-semibold text-slate-700">SWIFT / BIC</Th>
+                    <Th className="p-3 text-left font-semibold text-slate-700">Bank Address</Th>
                     <Th className="p-3 text-left font-semibold text-slate-700">Account Title</Th>
                     <Th className="p-3 text-left font-semibold text-slate-700">IBAN</Th>
                     <Th className="p-3 text-center font-semibold text-slate-700">Currency</Th>
@@ -259,6 +343,8 @@ export function BankRegistry() {
                       <td className="p-3 text-slate-600 font-mono">{bank.bank_code || "-"}</td>
                       <td className="p-3 text-slate-600">{bank.branch_name || "-"}</td>
                       <td className="p-3 text-slate-600">{bank.country?.name || "-"}</td>
+                      <td className="p-3 text-slate-600 font-mono text-xs">{bank.swift_code || "-"}</td>
+                      <td className="p-3 text-slate-600 text-xs max-w-[180px] truncate" title={bank.full_address || ""}>{bank.full_address || "-"}</td>
                       <td className="p-3 text-slate-600 text-xs">{bank.account_title || "-"}</td>
                       <td className="p-3 text-slate-600 font-mono text-xs">{bank.iban || "-"}</td>
                       <td className="p-3 text-center font-mono text-sm">{bank.currency_code}</td>
@@ -282,7 +368,7 @@ export function BankRegistry() {
                             <Eye className="w-4 h-4 text-blue-600" />
                           </button>
                           <button
-                            onClick={() => router.push(`/dashboard/settings/bank/${bank.id}/edit`)}
+                            onClick={() => openEditModal(bank)}
                             title={t(lang, "common.edit", "Edit")}
                             className="p-1 hover:bg-amber-100 rounded transition"
                           >
@@ -348,6 +434,8 @@ export function BankRegistry() {
           { key: "account_title", label: t(lang, "bank.account_title_label", "Account Title") },
           { key: "account_number", label: t(lang, "bank.account_number", "Account Number") },
           { key: "iban", label: t(lang, "bank.iban_label", "IBAN") },
+          { key: "swift_code", label: t(lang, "acct.swift", "SWIFT") },
+          { key: "full_address", label: t(lang, "td.address", "Bank Address") },
           { key: "currency_code", label: t(lang, "hr.f_currency", "Currency") },
           { key: "status", label: t(lang, "log.tbl_status", "Status"), align: "center" }
         ]}
@@ -359,10 +447,166 @@ export function BankRegistry() {
           account_title: b.account_title || "-",
           account_number: b.account_number || "-",
           iban: b.iban || "-",
+          swift_code: b.swift_code || "-",
+          full_address: b.full_address || "-",
           currency_code: b.currency_code,
           status: b.is_active ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive")
         }))}
       />
+
+      {/* Quick Add / Edit Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <PencilLine className="h-4 w-4 text-blue-600" />
+                {editingBank ? t(lang, "td.edit_bank", "Edit Bank") : t(lang, "bankreg.bankreg_new_bank", "New Bank")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleModalSave} className="p-5 space-y-3.5">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {t(lang, "bank.bank_name", "Bank Name")} *
+                </label>
+                <Input
+                  required
+                  value={formBankName}
+                  onChange={(e) => setFormBankName(e.target.value)}
+                  placeholder={t(lang, "td.enter_bank_name", "Enter bank name")}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {t(lang, "common.code", "Code")}
+                  </label>
+                  <Input
+                    value={formBankCode}
+                    onChange={(e) => setFormBankCode(e.target.value)}
+                    placeholder="0000"
+                    className="font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {t(lang, "report.branch", "Branch")}
+                  </label>
+                  <Input
+                    value={formBranchName}
+                    onChange={(e) => setFormBranchName(e.target.value)}
+                    placeholder={t(lang, "report.branch", "Branch")}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {t(lang, "acct.swift", "SWIFT")}
+                  </label>
+                  <Input
+                    value={formSwift}
+                    onChange={(e) => setFormSwift(e.target.value)}
+                    placeholder="SWIFT / BIC"
+                    className="font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {t(lang, "hr.f_currency", "Currency")}
+                  </label>
+                  <Input
+                    value={formCurrency}
+                    onChange={(e) => setFormCurrency(e.target.value)}
+                    placeholder="USD"
+                    className="font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {t(lang, "td.address", "Bank Address")}
+                </label>
+                <Input
+                  value={formAddress}
+                  onChange={(e) => setFormAddress(e.target.value)}
+                  placeholder={t(lang, "td.address", "Bank Address")}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {t(lang, "bank.account_title_label", "Account Title")}
+                  </label>
+                  <Input
+                    value={formAccountTitle}
+                    onChange={(e) => setFormAccountTitle(e.target.value)}
+                    placeholder={t(lang, "bank.account_title_label", "Account Title")}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {t(lang, "bank.account_number", "Account Number")}
+                  </label>
+                  <Input
+                    value={formAccountNumber}
+                    onChange={(e) => setFormAccountNumber(e.target.value)}
+                    placeholder="123456789"
+                    className="font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {t(lang, "bank.iban_label", "IBAN")}
+                </label>
+                <Input
+                  value={formIban}
+                  onChange={(e) => setFormIban(e.target.value)}
+                  placeholder="AE00000000000000000000"
+                  className="font-mono text-xs"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="bank_is_active"
+                  checked={formIsActive}
+                  onChange={(e) => setFormIsActive(e.target.checked)}
+                  className="rounded text-blue-600"
+                />
+                <label htmlFor="bank_is_active" className="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+                  {t(lang, "god.active", "Active")}
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <Button type="button" variant="outline" size="sm" onClick={() => setModalOpen(false)}>
+                  {t(lang, "td.cancel", "Cancel")}
+                </Button>
+                <Button type="submit" disabled={savingModal} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold gap-1.5">
+                  {savingModal && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{savingModal ? t(lang, "td.saving", "Saving...") : t(lang, "td.save_changes", "Save Changes")}</span>
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
