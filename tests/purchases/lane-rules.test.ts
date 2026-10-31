@@ -115,3 +115,37 @@ describe("final disposition", () => {
     expect(purchaseIsFinallyCompleted([])).toBe(false);
   });
 });
+
+describe("P/S General Transfer — 4 bill types & destination routing", () => {
+  it("supports all 4 bill types in the central register", async () => {
+    const { SOURCE_TYPES } = await import("@/lib/purchases/lane-rules");
+    expect(SOURCE_TYPES).toEqual(["purchase_booking", "local_purchase", "sales_booking", "local_sales"]);
+  });
+
+  it("routes module transfers to their correct ERP destinations", async () => {
+    const { destinationRoute, isModuleDestination } = await import("@/lib/purchases/lane-rules");
+    expect(isModuleDestination("general_purchase_expenses")).toBe(true);
+    expect(isModuleDestination("general_sales_expenses")).toBe(true);
+    expect(isModuleDestination("remaining_payment")).toBe(true);
+    expect(isModuleDestination("jc_journal_voucher")).toBe(true);
+    expect(isModuleDestination("pc_petty_cash")).toBe(true);
+    expect(isModuleDestination("own_branch")).toBe(false);
+
+    expect(destinationRoute("general_purchase_expenses")).toBe("/dashboard/expenses/purchase");
+    expect(destinationRoute("general_sales_expenses")).toBe("/dashboard/expenses/sales");
+    expect(destinationRoute("remaining_payment", "purchase_booking")).toBe("/dashboard/journal/purchase-order-payment/remaining");
+    expect(destinationRoute("remaining_payment", "sales_booking")).toBe("/dashboard/sales/sales-order");
+    expect(destinationRoute("jc_journal_voucher")).toBe("/dashboard/reports/journal");
+    expect(destinationRoute("pc_petty_cash")).toBe("/dashboard/daily-payment-entry");
+  });
+
+  it("module transfers are valid without branch or agent and need no acceptance", async () => {
+    const { transferProblems, transferNeedsAcceptance } = await import("@/lib/purchases/lane-rules");
+    expect(transferProblems({ type: "general_purchase_expenses" })).toEqual([]);
+    expect(transferProblems({ type: "remaining_payment" })).toEqual([]);
+    expect(transferProblems({ type: "jc_journal_voucher" })).toEqual([]);
+    expect(transferProblems({ type: "pc_petty_cash" })).toEqual([]);
+    expect(transferNeedsAcceptance("general_purchase_expenses")).toBe(false);
+    expect(transferNeedsAcceptance("remaining_payment")).toBe(false);
+  });
+});

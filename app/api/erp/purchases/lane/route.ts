@@ -10,7 +10,8 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { TRANSFER_TYPES } from "@/lib/purchases/lane-rules";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import {
-  ensureLaneFromLoadingRecord, ensureLaneFromLocalPurchase, laneStatesForLoadingRecords, listLaneLoads, transferLoads,
+  ensureLaneFromLoadingRecord, ensureLaneFromLocalPurchase, ensureLaneFromSalesOrder, ensureLaneFromLocalSale,
+  laneStatesForLoadingRecords, listLaneLoads, transferLoads,
 } from "@/lib/services/purchase-lane-service";
 
 const uuid = z.string().uuid();
@@ -54,7 +55,7 @@ const transferSchema = z.object({
   note: z.string().trim().max(1000).nullish(),
 });
 const bodySchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("ensure"), loadingRecordId: uuid.optional(), localPurchaseId: uuid.optional() }),
+  z.object({ action: z.literal("ensure"), loadingRecordId: uuid.optional(), localPurchaseId: uuid.optional(), salesOrderId: uuid.optional() }),
   z.object({ action: z.literal("transfer"), ids: z.array(uuid).min(1).max(200), transfer: transferSchema }),
 ]);
 
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
       const out = await withLocalPg(async (sql) => {
         if (body.loadingRecordId) return ensureLaneFromLoadingRecord(sql, body.loadingRecordId, session);
         if (body.localPurchaseId) return ensureLaneFromLocalPurchase(sql, body.localPurchaseId, session);
+        if (body.salesOrderId) return ensureLaneFromSalesOrder(sql, body.salesOrderId, session);
         return null;
       });
       return apiOk({ lane: out });

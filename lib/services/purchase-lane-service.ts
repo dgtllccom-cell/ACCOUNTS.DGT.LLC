@@ -3,8 +3,8 @@ import type { ErpSession } from "@/lib/auth/session";
 import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { ApiClientError } from "@/lib/api/response";
 import {
-  canChooseDisposition, canMoveStatus, dispositionOutcome, dispositionProblems, isFinalDisposition, LANE_STATUSES,
-  purchaseIsFinallyCompleted, remainingToLoad, transferNeedsAcceptance, transferProblems,
+  canChooseDisposition, canMoveStatus, destinationRoute, dispositionOutcome, dispositionProblems, isFinalDisposition,
+  isModuleDestination, LANE_STATUSES, purchaseIsFinallyCompleted, remainingToLoad, transferNeedsAcceptance, transferProblems,
   type Disposition, type LaneStatus, type TransferRequest,
 } from "@/lib/purchases/lane-rules";
 import { stockInToWarehouse } from "@/lib/services/purchase-warehouse-stock";
@@ -74,7 +74,109 @@ async function addEvent(sql: Sql, load: Record<string, any>, ev: { type: string;
     values (${load.id}::uuid, ${load.purchase_order_id ?? null}, ${ev.type}, ${ev.from ?? null}, ${ev.to ?? null}, ${sql.json((ev.detail ?? {}) as never)}, ${session.userId}::uuid, ${session.fullName ?? null})`;
 }
 
-// ───────────────────────────── entering the lane ─────────────────────────────
+// ───────────────────────────── schema assurance & entering the lane ─────────────────────────────
+
+async function ensureLaneSchema(sql: Sql) {
+  try {
+    await sql`
+      DO $
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'purchase_lane_loads_source_type_check'
+        ) THEN
+          ALTER TABLE public.purchase_lane_loads DROP CONSTRAINT purchase_lane_loads_source_type_check;
+        END IF;
+      END $;
+    `;
+    await sql`
+      ALTER TABLE public.purchase_lane_loads
+        ADD CONSTRAINT purchase_lane_loads_source_type_check
+        CHECK (source_type IN ('purchase_booking', 'local_purchase', 'sales_booking', 'local_sales'));
+    `;
+    await sql`
+      ALTER TABLE public.purchase_lane_loads
+        ADD COLUMN IF NOT EXISTS sales_order_id uuid REFERENCES public.sales_orders(id) ON DELETE SET NULL,
+        ADD COLUMN IF NOT EXISTS remaining_quantity numeric NOT NULL DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS transfer_destination text;
+    `;
+  } catch {
+    // schema already up to date
+  }
+}
+
+export async function ensureLaneFromSalesOrder(sql: Sql, salesOrderId: string, session: ErpSession): Promise<{ id: string; created: boolean } | null> {
+  const rows = await sql`
+    insert into public.purchase_lane_loads (
+      source_type, source_id, sales_order_id, purchase_ref_no, supplier_name, goods_name,
+      bl_number, container_number, loaded_quantity, remaining_quantity, unit, gross_weight, net_weight,
+      origin_text, destination_text, transport_mode, lane_status, current_location, owner_type,
+      owner_country_id, owner_country_branch_id, owner_city_branch_id, lane_stock_qty,
+      country_id, country_branch_id, city_branch_id, created_by)
+    select
+      'sales_booking', so.id, so.id, so.sales_order_no,
+      so.customer_name,
+      coalesce(so.product_summary, so.form_data->'goodsEntries'->0->>'goodsName', so.form_data->'form'->>'goodsName', 'Goods'),
+      coalesce(so.form_data->'form'->>'blNumber', so.form_data->>'blNumber', '-'),
+      coalesce(so.form_data->'form'->>'containerNumber', so.form_data->>'containerNumber', '-'),
+      coalesce((so.form_data->'workflow'->>'loadedQuantity')::numeric, so.quantity, 0),
+      greatest(0, coalesce(so.quantity, 0) - coalesce((so.form_data->'workflow'->>'loadedQuantity')::numeric, so.quantity, 0)),
+      coalesce(so.form_data->'form'->>'unit', so.form_data->'goodsEntries'->0->>'unit', 'PCS'),
+      coalesce(so.total_weight, 0), coalesce(so.total_weight, 0),
+      coalesce(so.form_data->'form'->>'origin', 'Origin Yard'),
+      coalesce(so.form_data->'form'->>'destination', 'Customer Delivery'),
+      'By Road', 'loaded',
+      coalesce(so.form_data->'form'->>'location', 'Loading Facility'),
+      'branch',
+      so.country_id, so.country_branch_id, so.city_branch_id,
+      coalesce((so.form_data->'workflow'->>'loadedQuantity')::numeric, so.quantity, 0),
+      so.country_id, so.country_branch_id, so.city_branch_id, ${session.userId}::uuid
+    from public.sales_orders so
+    where so.id = ${salesOrderId}::uuid and so.deleted_at is null
+      and (so.form_data->>'saleSource' is null or so.form_data->>'saleSource' <> 'local')
+    on conflict (source_type, source_id) where deleted_at is null do nothing
+    returning id`;
+  if (rows[0]) {
+    await addEvent(sql, { id: rows[0].id }, { type: "loaded", to: "loaded", detail: { source: "sales_booking", salesOrderId } }, session);
+    return { id: rows[0].id as string, created: true };
+  }
+  const ex = await sql`select id from public.purchase_lane_loads where source_type = 'sales_booking' and source_id = ${salesOrderId}::uuid and deleted_at is null`;
+  return ex[0] ? { id: ex[0].id as string, created: false } : null;
+}
+
+export async function ensureLaneFromLocalSale(sql: Sql, salesOrderId: string, session: ErpSession): Promise<{ id: string; created: boolean } | null> {
+  const rows = await sql`
+    insert into public.purchase_lane_loads (
+      source_type, source_id, sales_order_id, purchase_ref_no, supplier_name, goods_name,
+      bl_number, container_number, loaded_quantity, remaining_quantity, unit, gross_weight, net_weight,
+      origin_text, destination_text, transport_mode, lane_status, current_location, owner_type,
+      owner_country_id, owner_country_branch_id, owner_city_branch_id, lane_stock_qty,
+      country_id, country_branch_id, city_branch_id, created_by)
+    select
+      'local_sales', so.id, so.id, so.sales_order_no,
+      so.customer_name,
+      coalesce(so.product_summary, so.form_data->'goodsEntries'->0->>'goodsName', so.form_data->'form'->>'goodsName', 'Local Goods'),
+      '-', coalesce(so.form_data->'form'->>'vehicleNumber', '-'),
+      coalesce(so.quantity, 0),
+      0,
+      coalesce(so.form_data->'form'->>'unit', 'PCS'),
+      coalesce(so.total_weight, 0), coalesce(so.total_weight, 0),
+      'Local Yard', 'Local Yard', 'By Road', 'loaded',
+      'Warehouse', 'branch',
+      so.country_id, so.country_branch_id, so.city_branch_id,
+      coalesce(so.quantity, 0),
+      so.country_id, so.country_branch_id, so.city_branch_id, ${session.userId}::uuid
+    from public.sales_orders so
+    where so.id = ${salesOrderId}::uuid and so.deleted_at is null
+      and so.form_data->>'saleSource' = 'local'
+    on conflict (source_type, source_id) where deleted_at is null do nothing
+    returning id`;
+  if (rows[0]) {
+    await addEvent(sql, { id: rows[0].id }, { type: "loaded", to: "loaded", detail: { source: "local_sales", salesOrderId } }, session);
+    return { id: rows[0].id as string, created: true };
+  }
+  const ex = await sql`select id from public.purchase_lane_loads where source_type = 'local_sales' and source_id = ${salesOrderId}::uuid and deleted_at is null`;
+  return ex[0] ? { id: ex[0].id as string, created: false } : null;
+}
 
 /** Idempotent: a loading record has exactly one lane row. Called when a loading is saved (and lazily for older loads). */
 export async function ensureLaneFromLoadingRecord(sql: Sql, loadingRecordId: string, session: ErpSession): Promise<{ id: string; created: boolean } | null> {
@@ -139,16 +241,45 @@ export async function ensureLaneFromLocalPurchase(sql: Sql, localPurchaseId: str
   return ex[0] ? { id: ex[0].id as string, created: false } : null;
 }
 
-/** Older loads (saved before the lane existed) enter the lane the first time their scope looks at it. */
+/** All four bill types enter the P/S General Transfer lane upon first inspection (idempotent). */
 async function backfillScope(sql: Sql, session: ErpSession) {
+  await ensureLaneSchema(sql);
   const scope = sessionSqlScope(session);
-  const ids = await sql`
+
+  // 1. Purchase Booking (Loading Records)
+  const pbIds = await sql`
     select plr.id from public.purchase_loading_records plr
     where plr.deleted_at is null and plr.loading_status <> 'cancelled' and coalesce(plr.loaded_quantity,0) > 0
       and ${sqlScopeCondition(sql, scope, "plr")}
       and not exists (select 1 from public.purchase_lane_loads l where l.source_type='purchase_booking' and l.source_id = plr.id and l.deleted_at is null)
-    limit 500`;
-  for (const r of ids) await ensureLaneFromLoadingRecord(sql, r.id, session);
+    limit 100`;
+  for (const r of pbIds) await ensureLaneFromLoadingRecord(sql, r.id, session);
+
+  // 2. Local Purchase
+  const lpIds = await sql`
+    select lp.id from public.local_purchases lp
+    where lp.deleted_at is null and ${sqlScopeCondition(sql, scope, "lp")}
+      and not exists (select 1 from public.purchase_lane_loads l where l.source_type='local_purchase' and l.source_id = lp.id and l.deleted_at is null)
+    limit 100`;
+  for (const r of lpIds) await ensureLaneFromLocalPurchase(sql, r.id, session);
+
+  // 3. Sales Booking
+  const sbIds = await sql`
+    select so.id from public.sales_orders so
+    where so.deleted_at is null and (so.form_data->>'saleSource' is null or so.form_data->>'saleSource' <> 'local')
+      and ${sqlScopeCondition(sql, scope, "so")}
+      and not exists (select 1 from public.purchase_lane_loads l where l.source_type='sales_booking' and l.source_id = so.id and l.deleted_at is null)
+    limit 100`;
+  for (const r of sbIds) await ensureLaneFromSalesOrder(sql, r.id, session);
+
+  // 4. Local Sales
+  const lsIds = await sql`
+    select so.id from public.sales_orders so
+    where so.deleted_at is null and so.form_data->>'saleSource' = 'local'
+      and ${sqlScopeCondition(sql, scope, "so")}
+      and not exists (select 1 from public.purchase_lane_loads l where l.source_type='local_sales' and l.source_id = so.id and l.deleted_at is null)
+    limit 100`;
+  for (const r of lsIds) await ensureLaneFromLocalSale(sql, r.id, session);
 }
 
 // ───────────────────────────── queries ─────────────────────────────
@@ -162,8 +293,10 @@ export async function listLaneLoads(session: ErpSession, f: LaneFilters = {}) {
     const rows = await sql`
       select l.*,
              coalesce(cb.name, '') as owner_country_branch_name, coalesce(ci.name, '') as owner_city_branch_name,
+             (select count(*)::int from public.purchase_lane_events ev where ev.lane_load_id = l.id) as history_count,
              (select count(*)::int from public.purchase_lane_expenses e where e.lane_load_id = l.id and e.deleted_at is null) as expense_count,
-             (select coalesce(sum(e.amount),0) from public.purchase_lane_expenses e where e.lane_load_id = l.id and e.deleted_at is null and e.status <> 'cancelled') as expense_total
+             (select coalesce(sum(e.amount),0) from public.purchase_lane_expenses e where e.lane_load_id = l.id and e.deleted_at is null and e.status <> 'cancelled') as expense_total,
+             coalesce(l.remaining_quantity, 0) as remaining_quantity
       from public.purchase_lane_loads l
       left join public.country_branches cb on cb.id = l.owner_country_branch_id
       left join public.city_branches ci on ci.id = l.owner_city_branch_id
@@ -224,6 +357,10 @@ async function loadForUpdate(tx: Sql, session: ErpSession, id: string) {
 async function resolveTarget(tx: Sql, session: ErpSession, req: TransferRequest) {
   const t: { country: string | null; countryBranch: string | null; cityBranch: string | null; agentId: string | null; agentName: string | null; userId: string | null; userName: string | null } =
     { country: null, countryBranch: null, cityBranch: null, agentId: null, agentName: null, userId: null, userName: null };
+
+  if (isModuleDestination(req.type)) {
+    return t;
+  }
 
   const branchFromCity = async (cityId: string) => {
     const r = (await tx`select id, country_id, country_branch_id from public.city_branches where id = ${cityId}::uuid and deleted_at is null`)[0];
@@ -291,26 +428,31 @@ export async function transferLoads(session: ErpSession, ids: string[], req: Tra
       for (const id of [...new Set(ids)]) {
         const l = await loadForUpdate(tx, session, id);
         if (l.lane_status === "completed") throw fail(`Load ${l.container_number || l.purchase_ref_no} is completed and cannot be transferred.`, "LOAD_COMPLETED");
+        const isMod = isModuleDestination(req.type);
         const needsAccept = transferNeedsAcceptance(req.type);
         const to: LaneStatus = needsAccept ? "transfer_pending" : "assigned";
         const prevOwner = { type: l.owner_type, countryBranchId: l.owner_country_branch_id, cityBranchId: l.owner_city_branch_id, agent: l.owner_agent_name, user: l.owner_user_name };
+        const ownerType = isMod ? "module" : (req.type === "own_branch" || req.type === "other_branch" ? "branch" : req.type === "other_user" ? "user" : req.type === "self_managed" ? "self" : req.type);
+        const destLocation = isMod ? (req.expectedLocation || req.type) : (req.expectedLocation ?? null);
         await tx`
           update public.purchase_lane_loads set
             lane_status = ${to},
-            owner_type = ${req.type === "own_branch" || req.type === "other_branch" ? "branch" : req.type === "other_user" ? "user" : req.type === "self_managed" ? "self" : req.type},
+            owner_type = ${ownerType},
             owner_country_id = ${target.country}, owner_country_branch_id = ${target.countryBranch}, owner_city_branch_id = ${target.cityBranch},
             owner_agent_id = ${target.agentId}, owner_agent_name = ${target.agentName},
             owner_user_id = ${target.userId}, owner_user_name = ${target.userName},
-            responsibility = ${req.responsibility ?? null}, expected_location = ${req.expectedLocation ?? null},
+            responsibility = ${req.responsibility ?? (isMod ? "custody" : null)},
+            expected_location = ${destLocation},
+            transfer_destination = ${req.type},
             updated_at = now()
           where id = ${id}::uuid`;
         await addEvent(tx, l, {
-          type: "transferred", from: l.lane_status, to,
+          type: isMod ? "transferred_destination" : "transferred", from: l.lane_status, to,
           detail: {
-            transferType: req.type, responsibility: req.responsibility, expectedLocation: req.expectedLocation, note: req.note ?? null,
+            transferType: req.type, responsibility: req.responsibility ?? (isMod ? "custody" : null), expectedLocation: destLocation, note: req.note ?? null,
             from: prevOwner,
             to: { type: req.type, ...target },
-            // an internal branch hand-over is settled between branches — it is NOT a sale
+            destinationRoute: isMod ? destinationRoute(req.type, l.source_type, l.purchase_ref_no) : undefined,
             settlement: req.type === "own_branch" || req.type === "other_branch" ? "inter_branch" : "none",
           },
         }, session);

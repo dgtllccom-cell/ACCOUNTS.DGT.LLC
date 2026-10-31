@@ -10916,6 +10916,29 @@ export type UiKey =
   | "plane.ev_expense_reviewed"
   | "plane.ev_expense_confirmed"
   | "plane.ev_expense_cancelled"
+  | "plane.src_sales_booking"
+  | "plane.src_local_sales"
+  | "plane.col_bill_no"
+  | "plane.col_bill_type"
+  | "plane.col_party"
+  | "plane.col_remaining_qty"
+  | "plane.col_transfer_history"
+  | "plane.dest_expenses_p"
+  | "plane.dest_expenses_s"
+  | "plane.dest_payment"
+  | "plane.dest_jc"
+  | "plane.dest_pc"
+  | "plane.confirm_popup_title"
+  | "plane.confirm_review_summary"
+  | "plane.confirm_destination_select"
+  | "plane.confirm_accounting_notice"
+  | "plane.group_erp_modules"
+  | "plane.group_logistics_handover"
+  | "plane.ph_routing_notes"
+  | "plane.history_title"
+  | "plane.history_empty"
+  | "plane.open_destination"
+  | "plane.ev_transferred_destination"
   | "nav.purchase_transit_lane"
   | "plr.err_exceeds_remaining"
   | "plr.new_loading_disabled"
@@ -35212,6 +35235,26 @@ const en: Dict = {
   "plane.ev_expense_reviewed": "Expense reviewed",
   "plane.ev_expense_confirmed": "Expense confirmed",
   "plane.ev_expense_cancelled": "Expense cancelled",
+  "plane.src_sales_booking": "Sales Booking",
+  "plane.src_local_sales": "Local Sales",
+  "plane.col_bill_no": "Bill No. / Ref",
+  "plane.col_bill_type": "Bill Type",
+  "plane.col_party": "Party (Supplier/Customer)",
+  "plane.col_remaining_qty": "Remaining Qty",
+  "plane.col_transfer_history": "Transfer History",
+  "plane.dest_expenses_p": "General Purchase Expenses",
+  "plane.dest_expenses_s": "General Sales Expenses",
+  "plane.dest_payment": "Remaining Payment",
+  "plane.dest_jc": "JC (Journal Clearing / Voucher)",
+  "plane.dest_pc": "PC (Petty Cash / Payment Certificate)",
+  "plane.confirm_popup_title": "Transfer Bill & Workflow Routing",
+  "plane.confirm_review_summary": "Selected Bill Details",
+  "plane.confirm_destination_select": "Select Applicable Destination",
+  "plane.confirm_accounting_notice": "Transfer routes the bill to the selected destination and writes an immutable audit log. Bills, stock movements, and accounting entries are never duplicated. Existing Advance, Credit, and Remaining Payment validation rules remain strictly preserved.",
+  "plane.history_title": "Transfer & Audit History",
+  "plane.history_empty": "No transfer history recorded yet.",
+  "plane.open_destination": "Open in Destination Module",
+  "plane.ev_transferred_destination": "Transferred to Destination",
   "nav.purchase_transit_lane": "Purchase Transit & Lane",
   "plr.err_exceeds_remaining": "Loading quantity is more than the quantity still to load.",
   "plr.new_loading_disabled": "Everything is already loaded. Edit an existing entry to correct it.",
@@ -61187,6 +61230,26 @@ const ur: Dict = {
   "plane.ev_expense_reviewed": "خرچ کا جائزہ لیا گیا",
   "plane.ev_expense_confirmed": "خرچ کی تصدیق ہوئی",
   "plane.ev_expense_cancelled": "خرچ منسوخ",
+  "plane.src_sales_booking": "سیلز بکنگ",
+  "plane.src_local_sales": "لوکل سیلز",
+  "plane.col_bill_no": "بل نمبر / حوالہ",
+  "plane.col_bill_type": "بل کی قسم",
+  "plane.col_party": "پارٹی (سپلائر / کسٹمر)",
+  "plane.col_remaining_qty": "بقیہ مقدار",
+  "plane.col_transfer_history": "منتقلی کی تاریخچہ",
+  "plane.dest_expenses_p": "جنرل پرچیز اخراجات",
+  "plane.dest_expenses_s": "جنرل سیلز اخراجات",
+  "plane.dest_payment": "بقیہ ادائیگی",
+  "plane.dest_jc": "جے سی (جرنل کلیرنگ / واؤچر)",
+  "plane.dest_pc": "پی سی (پیٹی کیش / ادائیگی کا سرٹیفکیٹ)",
+  "plane.confirm_popup_title": "بل کی منتقلی اور ورک فلو روٹنگ",
+  "plane.confirm_review_summary": "منتخب بل کی تفصیلات",
+  "plane.confirm_destination_select": "مناسب منزل کا انتخاب کریں",
+  "plane.confirm_accounting_notice": "منتقلی بل کو منتخب منزل پر بھیجتی ہے اور مستقل آڈٹ لاگ درج کرتی ہے۔ بل، اسٹاک کی نقل و حرکت اور مالیاتی اندراجات کبھی ڈپلیکیٹ نہیں ہوتے۔ ایڈوانس، کریڈٹ اور بقیہ ادائیگی کے توثیقی اصول مکمل طور پر محفوظ رہتے ہیں۔",
+  "plane.history_title": "منتقلی اور آڈٹ کی تاریخچہ",
+  "plane.history_empty": "ابھی تک کوئی منتقلی ریکارڈ نہیں ہوئی۔",
+  "plane.open_destination": "منزل کے ماڈیول میں کھولیں",
+  "plane.ev_transferred_destination": "منزل پر منتقل کر دیا گیا",
   "nav.purchase_transit_lane": "خریداری ٹرانزٹ اور لین",
   "plr.err_exceeds_remaining": "لوڈنگ کی مقدار باقی لوڈ ہونے والی مقدار سے زیادہ ہے۔",
   "plr.new_loading_disabled": "سب کچھ پہلے ہی لوڈ ہو چکا ہے۔ درستی کے لیے موجودہ اندراج میں ترمیم کریں۔",
@@ -87163,6 +87226,26 @@ const ar: Dict = {
   "plane.ev_expense_reviewed": "روجع المصروف",
   "plane.ev_expense_confirmed": "أُكّد المصروف",
   "plane.ev_expense_cancelled": "أُلغي المصروف",
+  "plane.src_sales_booking": "حجز المبيعات",
+  "plane.src_local_sales": "مبيعات محلية",
+  "plane.col_bill_no": "رقم الفاتورة / المرجع",
+  "plane.col_bill_type": "نوع الفاتورة",
+  "plane.col_party": "الطرف (المورد / العميل)",
+  "plane.col_remaining_qty": "الكمية المتبقية",
+  "plane.col_transfer_history": "سجل التحويلات",
+  "plane.dest_expenses_p": "مصاريف المشتريات العامة",
+  "plane.dest_expenses_s": "مصاريف المبيعات العامة",
+  "plane.dest_payment": "الدفعة المتبقية",
+  "plane.dest_jc": "قيد اليومية / مقاصة القيود (JC)",
+  "plane.dest_pc": "النثريات / شهادة الدفع (PC)",
+  "plane.confirm_popup_title": "تحويل الفاتورة وتوجيه مسار العمل",
+  "plane.confirm_review_summary": "تفاصيل الفواتير المحددة",
+  "plane.confirm_destination_select": "اختر الوجهة المناسبة",
+  "plane.confirm_accounting_notice": "يقوم التحويل بتوجيه الفاتورة إلى الوجهة المختارة مع تسجيل سجل تدقيق ثابت. لا يتم تكرار الفواتير أو حركات المخزون أو القيود المحاسبية مطلقاً. تظل قواعد التحقق من الدفعة المقدمة والآجل والرصيد المتبقي محفوظة تماماً.",
+  "plane.history_title": "سجل التحويلات والتدقيق",
+  "plane.history_empty": "لم يتم تسجيل أي تحويلات بعد.",
+  "plane.open_destination": "فتح في الوجهة المحددة",
+  "plane.ev_transferred_destination": "تم التحويل إلى الوجهة",
   "nav.purchase_transit_lane": "عبور المشتريات والمسار",
   "plr.err_exceeds_remaining": "كمية التحميل أكبر من الكمية المتبقية للتحميل.",
   "plr.new_loading_disabled": "تم تحميل كل شيء بالفعل. عدّل قيدًا موجودًا للتصحيح.",
@@ -113138,6 +113221,26 @@ const fa: Dict = {
   "plane.ev_expense_reviewed": "هزینه بررسی شد",
   "plane.ev_expense_confirmed": "هزینه تأیید شد",
   "plane.ev_expense_cancelled": "هزینه لغو شد",
+  "plane.src_sales_booking": "ثبت فروش",
+  "plane.src_local_sales": "فروش محلی",
+  "plane.col_bill_no": "شماره صورتحساب / مرجع",
+  "plane.col_bill_type": "نوع صورتحساب",
+  "plane.col_party": "طرف حساب (تامین‌کننده / مشتری)",
+  "plane.col_remaining_qty": "تعداد باقی‌مانده",
+  "plane.col_transfer_history": "تاریخچه انتقال",
+  "plane.dest_expenses_p": "هزینه‌های عمومی خرید",
+  "plane.dest_expenses_s": "هزینه‌های عمومی فروش",
+  "plane.dest_payment": "پرداخت باقیمانده",
+  "plane.dest_jc": "اسناد تسویه روزنامچه (JC)",
+  "plane.dest_pc": "تنخواه‌گردان / گواهی پرداخت (PC)",
+  "plane.confirm_popup_title": "انتقال صورتحساب و مسیریابی فرآیند",
+  "plane.confirm_review_summary": "جزئیات صورتحساب انتخاب‌شده",
+  "plane.confirm_destination_select": "مقصد مورد نظر را انتخاب کنید",
+  "plane.confirm_accounting_notice": "انتقال، صورتحساب را به مقصد تعیین‌شده هدایت کرده و رویداد حسابرسی غیرقابل‌تغییر ثبت می‌کند. صورتحساب‌ها، موجودی انبار و اسناد مالی به هیچ وجه تکراری نمی‌شوند. قوانین اعتبارسنجی پیش‌پرداخت، نسیه و باقیمانده کاملاً حفظ می‌شوند.",
+  "plane.history_title": "تاریخچه انتقال و حسابرسی",
+  "plane.history_empty": "هنوز تاریخچه انتقالی ثبت نشده است.",
+  "plane.open_destination": "باز کردن در ماژول مقصد",
+  "plane.ev_transferred_destination": "به مقصد انتقال یافت",
   "nav.purchase_transit_lane": "ترانزیت و مسیر خرید",
   "plr.err_exceeds_remaining": "مقدار بارگیری از مقدار باقی‌مانده برای بارگیری بیشتر است.",
   "plr.new_loading_disabled": "همه چیز قبلاً بارگیری شده است. برای اصلاح، یک ردیف موجود را ویرایش کنید.",
@@ -139120,6 +139223,26 @@ const ps: Dict = {
   "plane.ev_expense_reviewed": "لګښت وکتل شو",
   "plane.ev_expense_confirmed": "لګښت تایید شو",
   "plane.ev_expense_cancelled": "لګښت لغوه شو",
+  "plane.src_sales_booking": "د پلور بکینګ",
+  "plane.src_local_sales": "محلي پلور",
+  "plane.col_bill_no": "د بل شمېره / مرجع",
+  "plane.col_bill_type": "د بل ډول",
+  "plane.col_party": "اړخ (عرضه کوونکی / پیرودونکی)",
+  "plane.col_remaining_qty": "پاتې مقدار",
+  "plane.col_transfer_history": "د لیږد تاریخچه",
+  "plane.dest_expenses_p": "د عمومي پیرود لګښتونه",
+  "plane.dest_expenses_s": "د عمومي پلور لګښتونه",
+  "plane.dest_payment": "پاتې تادیه",
+  "plane.dest_jc": "ورځنی تصفیه واوچر (JC)",
+  "plane.dest_pc": "کوچنۍ نغدې / د تادیې سند (PC)",
+  "plane.confirm_popup_title": "د بل انتقال او کاري بهیر لارښود",
+  "plane.confirm_review_summary": "د ټاکل شوي بل جزیات",
+  "plane.confirm_destination_select": "مناسب منزل وټاکئ",
+  "plane.confirm_accounting_notice": "لیږد بل ټاکل شوي منزل ته لارښوونه کوي او یو تلپاتې تفتیش ثبتوي. بلونه، د ګودام بدلونونه او مالي اندراجات هېڅکله نه دوه چنده کیږي. د مخکینۍ تادیې، پور او پاتې پیسو قواعد په بشپړه توګه خوندي پاتې کیږي.",
+  "plane.history_title": "د لیږد او پلټنې تاریخچه",
+  "plane.history_empty": "تر اوسه د لیږد کوم ریکارډ نشته.",
+  "plane.open_destination": "په ټاکل شوي ماډیول کې خلاص کړئ",
+  "plane.ev_transferred_destination": "منزل ته انتقال شو",
   "nav.purchase_transit_lane": "د پیرود ترانزیت او مسیر",
   "plr.err_exceeds_remaining": "د بارولو مقدار د پاتې بارولو مقدار څخه ډیر دی.",
   "plr.new_loading_disabled": "ټول مخکې بار شوي دي. د سمون لپاره شته ثبت سم کړئ.",

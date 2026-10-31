@@ -197,9 +197,6 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     return ["all", "purchase_booking", "local_purchase", "sales_booking", "local_sales", "shipping_bl", "clearing_bill", "general_expenses"];
   }, [section]);
 
-  useEffect(() => {
-    load();
-  }, [moduleTab, statusFilter, section, sectionFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const moduleLabel = useCallback(
     (m: SourceModule) =>
@@ -224,6 +221,11 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     },
     [section, s, moduleLabel]
   );
+
+  useEffect(() => {
+    load();
+  }, [moduleTab, statusFilter, section, sectionFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const statusLabel = useCallback(
     (st: BillRow["status"] | "all") =>
@@ -266,7 +268,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
       branchName: scope.branchDisplayName,
       printedBy: scope.userName,
       filters: [
-        { label: s.t("col_source", "Source Module"), value: moduleTab === "all" ? s.t("tab_all", "All Bills") : moduleTab === "general_expenses" ? s.t("tab_general_expenses", "General Expenses") : moduleLabel(moduleTab) },
+        { label: s.t("col_source", "Source Module"), value: getTabLabel(moduleTab) },
         { label: s.t("col_status", "Status"), value: statusLabel(statusFilter) },
         { label: s.t("summary_bills", "Bills"), value: String(rows.length) }
       ],
@@ -297,7 +299,8 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
 
   const filtersActive = moduleTab !== "all" || statusFilter !== "all" || !!search.trim();
 
-  const generalSummaryCards = useMemo(() => {
+  type CardItem = { label: string; value: string; accent: string; icon: any; sub?: string };
+  const generalSummaryCards = useMemo((): CardItem[] => {
     if (moduleTab !== "general_expenses") return [];
     const totalBills = expensesBills.length;
     const postedCount = expensesBills.filter((b) => b.transferredToRoznamcha).length;
@@ -305,14 +308,14 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     const totalAmount = expensesBills.reduce((acc, b) => acc + (Number(b.grandTotal) || 0), 0);
     const curr = expensesBills[0]?.currency || "";
     return [
-      { label: s.t("summary_bills", "Bills"), value: String(totalBills), accent: "border-t-indigo-500", sub: "", icon: FileText },
-      { label: s.t("summary_expenses", "Expenses Total"), value: `${curr ? curr + " " : ""}${money(totalAmount)}`, accent: "border-t-rose-500", sub: "", icon: Calculator },
-      { label: s.t("posting_posted", "Posted"), value: String(postedCount), accent: "border-t-emerald-500", sub: "", icon: CheckCircle2 },
-      { label: s.t("posting_unposted", "Not posted"), value: String(unpostedCount), accent: "border-t-amber-400", sub: "", icon: BadgePercent }
+      { label: s.t("summary_bills", "Bills"), value: String(totalBills), accent: "border-t-indigo-500", icon: FileText },
+      { label: s.t("summary_expenses", "Expenses Total"), value: `${curr ? curr + " " : ""}${money(totalAmount)}`, accent: "border-t-rose-500", icon: Calculator },
+      { label: s.t("posting_posted", "Posted"), value: String(postedCount), accent: "border-t-emerald-500", icon: CheckCircle2 },
+      { label: s.t("posting_unposted", "Not posted"), value: String(unpostedCount), accent: "border-t-amber-400", icon: BadgePercent }
     ];
   }, [moduleTab, expensesBills, s]);
 
-  const summaryCards = summary
+  const summaryCards: CardItem[] = summary
     ? [
         { label: s.t("summary_bills", "Bills"), value: String(rows.length), accent: "border-t-indigo-500", icon: FileText },
         // Money is never added across currencies: one currency => one figure, several => one line per currency

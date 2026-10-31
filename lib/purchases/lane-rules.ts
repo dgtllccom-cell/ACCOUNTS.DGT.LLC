@@ -54,10 +54,67 @@ export function canMoveStatus(from: LaneStatus, to: LaneStatus): boolean {
   return allowedNextStatuses(from).includes(to);
 }
 
+// ───────────────────────────── source types ─────────────────────────────
+
+export const SOURCE_TYPES = ["purchase_booking", "local_purchase", "sales_booking", "local_sales"] as const;
+export type SourceType = (typeof SOURCE_TYPES)[number];
+
+export const SOURCE_TYPE_LABEL: Record<SourceType, { key: string; en: string }> = {
+  purchase_booking: { key: "src_booking", en: "Purchase Booking" },
+  local_purchase: { key: "src_local", en: "Local Purchase" },
+  sales_booking: { key: "src_sales_booking", en: "Sales Booking" },
+  local_sales: { key: "src_local_sales", en: "Local Sales" },
+};
+
 // ───────────────────────────── transfers ─────────────────────────────
 
-export const TRANSFER_TYPES = ["own_branch", "other_branch", "internal_agent", "external_agent", "other_user", "self_managed"] as const;
+export const PS_TRANSFER_DESTINATIONS = [
+  "general_purchase_expenses",
+  "general_sales_expenses",
+  "remaining_payment",
+  "jc_journal_voucher",
+  "pc_petty_cash",
+  "own_branch",
+  "other_branch",
+  "internal_agent",
+  "external_agent",
+  "other_user",
+  "self_managed",
+] as const;
+
+export const TRANSFER_TYPES = PS_TRANSFER_DESTINATIONS;
 export type TransferType = (typeof TRANSFER_TYPES)[number];
+
+export const MODULE_DESTINATIONS = [
+  "general_purchase_expenses",
+  "general_sales_expenses",
+  "remaining_payment",
+  "jc_journal_voucher",
+  "pc_petty_cash",
+] as const;
+export type ModuleDestination = (typeof MODULE_DESTINATIONS)[number];
+
+export const isModuleDestination = (t: string): t is ModuleDestination =>
+  (MODULE_DESTINATIONS as readonly string[]).includes(t as ModuleDestination);
+
+export function destinationRoute(dest: string, sourceType?: string, _refNo?: string): string {
+  switch (dest) {
+    case "general_purchase_expenses":
+      return "/dashboard/expenses/purchase";
+    case "general_sales_expenses":
+      return "/dashboard/expenses/sales";
+    case "remaining_payment":
+      return sourceType && (sourceType === "sales_booking" || sourceType === "local_sales")
+        ? "/dashboard/sales/sales-order"
+        : "/dashboard/journal/purchase-order-payment/remaining";
+    case "jc_journal_voucher":
+      return "/dashboard/reports/journal";
+    case "pc_petty_cash":
+      return "/dashboard/daily-payment-entry";
+    default:
+      return "/dashboard/purchase/purchase-transit-lane";
+  }
+}
 
 export const RESPONSIBILITIES = ["custody", "transport", "customs_clearance", "full_handling"] as const;
 export type Responsibility = (typeof RESPONSIBILITIES)[number];
@@ -79,8 +136,11 @@ export type TransferRequest = {
 export function transferProblems(t: TransferRequest): string[] {
   const out: string[] = [];
   if (!TRANSFER_TYPES.includes(t.type)) out.push("type");
-  if (!t.responsibility || !(RESPONSIBILITIES as readonly string[]).includes(t.responsibility)) out.push("responsibility");
-  if (t.type !== "self_managed" && !String(t.expectedLocation ?? "").trim()) out.push("expectedLocation");
+  const isMod = isModuleDestination(t.type);
+  if (!isMod) {
+    if (!t.responsibility || !(RESPONSIBILITIES as readonly string[]).includes(t.responsibility)) out.push("responsibility");
+    if (t.type !== "self_managed" && !String(t.expectedLocation ?? "").trim()) out.push("expectedLocation");
+  }
   switch (t.type) {
     case "own_branch":
       if (!t.countryBranchId && !t.cityBranchId) out.push("branch");
@@ -104,8 +164,9 @@ export function transferProblems(t: TransferRequest): string[] {
   return out;
 }
 
-/** Self-managed and own-branch hand-overs need nobody to accept; everything else waits as "Transfer Pending". */
+/** Self-managed, own-branch, and direct ERP module routings need nobody to accept; other hand-overs wait as "Transfer Pending". */
 export function transferNeedsAcceptance(type: TransferType): boolean {
+  if (isModuleDestination(type)) return false;
   return type !== "self_managed" && type !== "own_branch";
 }
 
