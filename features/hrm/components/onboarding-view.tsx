@@ -110,7 +110,7 @@ export function OnboardingView({ lang }: { lang?: string }) {
             ))}
           </div>
           <div className="min-w-[16rem] flex-1">
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("employee", "Employee")}</label>
+            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("employee", "Employee")}</label>
             <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-transparent px-2.5 py-1.5 text-xs outline-none dark:border-slate-700 dark:bg-slate-800">
               <option value="">{s.t("ob_all", "All (summary)")}</option>
               {employees.map((e) => <option key={e.id} value={e.id}>{e.name} ({e.employee_code})</option>)}
@@ -147,7 +147,7 @@ export function OnboardingView({ lang }: { lang?: string }) {
                     <td className="px-3 py-2 text-slate-500">{t.category}</td>
                     <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-200">{t.task_name}{t.is_mandatory ? <span className="ms-1 text-rose-500">*</span> : null}</td>
                     <td className="px-3 py-2 text-slate-500">{s.t(`ob_r_${t.responsible}`, t.responsible)}</td>
-                    <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[t.status] || STATUS_TONE.pending}`}>{s.t(`ob_st_${t.status}`, t.status)}</span></td>
+                    <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[t.status] || STATUS_TONE.pending}`}>{s.t(`ob_st_${t.status}`, t.status)}</span></td>
                     <td className="px-3 py-2 text-right">
                       <select value={t.status} onChange={(e) => void setStatus(t.id, e.target.value)} className="rounded border border-slate-200 bg-transparent px-1.5 py-1 text-[11px] dark:border-slate-700">
                         {["pending", "in_progress", "done", "not_applicable"].map((k) => <option key={k} value={k}>{s.t(`ob_st_${k}`, k)}</option>)}
@@ -172,7 +172,7 @@ export function OnboardingView({ lang }: { lang?: string }) {
                   <tr><td colSpan={4} className="px-3 py-8 text-center text-xs text-slate-400">{s.t("ob_no_checklists", "No checklists generated yet.")}</td></tr>
                 ) : summary.map((r) => (
                   <tr key={r.employee_id} className="cursor-pointer border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40" onClick={() => setEmployeeId(r.employee_id)}>
-                    <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-200">{r.employee_name} <span className="font-mono text-[10px] text-slate-400">{r.employee_code}</span></td>
+                    <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-200">{r.employee_name} <span className="font-mono text-[11px] text-slate-400">{r.employee_code}</span></td>
                     <td className="px-3 py-2 text-slate-500">{r.country_name || "—"}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{r.done}/{r.total}</td>
                     <td className={`px-3 py-2 text-right tabular-nums font-bold ${Number(r.pending_mandatory) > 0 ? "text-rose-600" : "text-emerald-600"}`}>{r.pending_mandatory}</td>

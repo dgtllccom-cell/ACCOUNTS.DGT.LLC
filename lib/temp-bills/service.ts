@@ -181,7 +181,7 @@ export async function listTempBills(
   const lang = opts.lang ?? "en";
   // ONE record → the viewer's language: party name transliterates, goods name translates.
   // Amounts, bill/container/BL numbers, dates and reference numbers are never touched.
-  let out = await localizeRecordFields<any>(rows as any, "temp_bill", ["party_name", "goods_name"], lang);
+  const out = await localizeRecordFields<any>(rows as any, "temp_bill", ["party_name", "goods_name"], lang);
   return { rows: out as TempBillRow[] };
 }
 

@@ -1167,9 +1167,9 @@ function CountryBranchSetupContent() {
             >
               <div className="flex items-start gap-2">
                 <span className={cn("flex h-6 w-6 min-w-6 min-h-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold", Number(no) === activeStep ? "bg-cyan-600 text-white" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200")}>{no}</span>
-                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-900 dark:text-slate-100 leading-tight line-clamp-2">{title}</span>
+                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-900 dark:text-slate-100 leading-tight line-clamp-2">{title}</span>
               </div>
-              <p className="mt-1 text-[9px] leading-snug text-slate-500 line-clamp-2">{desc}</p>
+              <p className="mt-1 text-[11px] leading-snug text-slate-500 line-clamp-2">{desc}</p>
             </div>
           ))}
           </div>
@@ -1286,7 +1286,7 @@ function CountryBranchSetupContent() {
                         <span className="text-2xl">🏢</span>
                         <div>
                           <div className="text-xs font-bold">{lang === "ur" ? "بزنس و کارپوریٹ برانچ" : lang === "ar" ? "فرع تجاري / أعمال" : lang === "ps" ? "تجارتي / بزنس څانګه" : lang === "fa" ? "شعبه تجاری و شرکتی" : "Business & Corporate Branch"}</div>
-                          <div className="text-[10px] text-slate-500">{t(lang, "cbs.general_commercial_ops", "General commercial & trading operations")}</div>
+                          <div className="text-[11px] text-slate-500">{t(lang, "cbs.general_commercial_ops", "General commercial & trading operations")}</div>
                         </div>
                       </button>
                       <button
@@ -1301,7 +1301,7 @@ function CountryBranchSetupContent() {
                         <span className="text-2xl">🚢</span>
                         <div>
                           <div className="text-xs font-bold">{lang === "ur" ? "کسٹم کلیئرنگ ایجنٹ و شپنگ لائن" : lang === "ar" ? "فرع التخليص الجمركي وخط الشحن" : lang === "ps" ? "ګمرکي کلیرنګ ایجنټ او د کښتۍ لاین" : lang === "fa" ? "کارگزاری گمرک و خط کشتیرانی" : "Clearing Agent & Shipping Line"}</div>
-                          <div className="text-[10px] text-slate-500">{t(lang, "cbs.ports_shipping_customs", "Ports, shipping lines & customs clearing")}</div>
+                          <div className="text-[11px] text-slate-500">{t(lang, "cbs.ports_shipping_customs", "Ports, shipping lines & customs clearing")}</div>
                         </div>
                       </button>
                     </div>

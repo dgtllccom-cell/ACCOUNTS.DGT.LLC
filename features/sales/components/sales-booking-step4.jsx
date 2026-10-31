@@ -87,14 +87,14 @@ export function SalesBookingStep4({
             <Package className="w-4 h-4 text-blue-600" />
             {tUi(lang, "sales.goods_overview_details", "GOODS OVERVIEW DETAILS")}
           </h3>
-          <span className="text-[10px] font-bold text-slate-500 font-mono">
+          <span className="text-[11px] font-bold text-slate-500 font-mono">
             Total Items: {totals.totalItems}
           </span>
         </div>
 
         <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
           <table className="w-full text-xs text-left border-collapse">
-            <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+            <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="p-2.5 w-8 text-center">#</th>
                 <th className="p-2.5">GOODS NAME</th>
@@ -117,7 +117,7 @@ export function SalesBookingStep4({
                 const amtFinal = Number(item.finalAmount || (amtUsd * ex));
                 return (
                   <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="p-2.5 text-center font-mono text-[10px] text-slate-400">{idx + 1}</td>
+                    <td className="p-2.5 text-center font-mono text-[11px] text-slate-400">{idx + 1}</td>
                     <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">{item.goodsName || item.productName}</td>
                     <td className="p-2.5 text-slate-600 dark:text-slate-300">{item.size || "Standard"}</td>
                     <td className="p-2.5 text-slate-600 dark:text-slate-300">{item.brand || "Al Baraka"}</td>
@@ -176,26 +176,26 @@ export function SalesBookingStep4({
       {/* Lower Row: 3 Lower Reports with independent Remarks/Report fields */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* 1. LOADING (EXPORT / IMPORT) */}
-        <div className="bg-white dark:bg-slate-900 border border-purple-200/80 dark:border-purple-900/60 rounded-xl p-3 shadow-xs space-y-2.5 text-[10px] flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-purple-200/80 dark:border-purple-900/60 rounded-xl p-3 shadow-xs space-y-2.5 text-[11px] flex flex-col justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2 border-b border-purple-100 dark:border-purple-900/40 pb-1.5 text-purple-700 dark:text-purple-400 font-black uppercase tracking-wider">
-              <span className="w-4 h-4 rounded bg-purple-600 text-white text-[9px] font-black flex items-center justify-center shrink-0">1</span>
+              <span className="w-4 h-4 rounded bg-purple-600 text-white text-[11px] font-black flex items-center justify-center shrink-0 leading-none">1</span>
               <span>{tUi(lang, "sales.loading_export_import", "LOADING (EXPORT / IMPORT)")}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-slate-700 dark:text-slate-300 leading-tight">
               {/* Left Column: Loading */}
               <div className="space-y-1">
-                <div><span className="text-slate-400 font-medium">Loading Port: </span><span className="font-bold">{form.loadingPort || "Jebel Ali Port"}</span></div>
+                <div><span className="text-slate-400 font-medium">Loading Port: </span><span className="font-bold">{form.loadingPort || "—"}</span></div>
                 <div><span className="text-slate-400 font-medium">Loading Date: </span><span className="font-bold">{formatDisplayDate(form.loadingDate || form.salesDate)}</span></div>
-                <div><span className="text-slate-400 font-medium">Shipping Line: </span><span className="font-bold">{form.shippingLine || "MSC Line"}</span></div>
-                <div><span className="text-slate-400 font-medium">Vessel Name: </span><span className="font-bold">{form.vesselName || "MSC Evergreen"}</span></div>
+                <div><span className="text-slate-400 font-medium">Shipping Line: </span><span className="font-bold">{form.shippingLine || "—"}</span></div>
+                <div><span className="text-slate-400 font-medium">Vessel Name: </span><span className="font-bold">{form.vesselName || "—"}</span></div>
                 <div><span className="text-slate-400 font-medium">Voyage No.: </span><span className="font-mono font-bold">{form.voyageNo || "VY1234"}</span></div>
               </div>
 
               {/* Right Column: Receiving */}
               <div className="space-y-1 border-l border-slate-100 dark:border-slate-800 pl-2">
-                <div className="font-black text-[9px] uppercase text-purple-600 mb-0.5">RECEIVING DETAILS</div>
+                <div className="font-black text-[11px] uppercase text-purple-600 mb-0.5">RECEIVING DETAILS</div>
                 <div><span className="text-slate-400 font-medium">Receiving Country: </span><span className="font-bold">{form.receivedCountry || "Pakistan"}</span></div>
                 <div><span className="text-slate-400 font-medium">Receiving Port: </span><span className="font-bold">{form.receivedPort || "Karachi Port"}</span></div>
                 <div><span className="text-slate-400 font-medium">Receiving Date: </span><span className="font-bold">{formatDisplayDate(form.receivedDate || form.salesDate)}</span></div>
@@ -206,7 +206,7 @@ export function SalesBookingStep4({
 
           {/* Independent Remarks Field */}
           <div className="space-y-1 pt-2 border-t border-purple-100 dark:border-purple-900/40">
-            <label className="block font-black text-[9.5px] uppercase tracking-wider text-purple-700 dark:text-purple-300">
+            <label className="block font-black text-[11px] uppercase tracking-wider text-purple-700 dark:text-purple-300">
               Remarks / Notes (Loading & Shipping)
             </label>
             <textarea
@@ -220,10 +220,10 @@ export function SalesBookingStep4({
         </div>
 
         {/* 2. GOODS SUMMARY */}
-        <div className="bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-emerald-900/60 rounded-xl p-3 shadow-xs space-y-2.5 text-[10px] flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-emerald-900/60 rounded-xl p-3 shadow-xs space-y-2.5 text-[11px] flex flex-col justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2 border-b border-emerald-100 dark:border-emerald-900/40 pb-1.5 text-emerald-700 dark:text-emerald-400 font-black uppercase tracking-wider">
-              <span className="w-4 h-4 rounded bg-emerald-600 text-white text-[9px] font-black flex items-center justify-center shrink-0">2</span>
+              <span className="w-4 h-4 rounded bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center shrink-0 leading-none">2</span>
               <span>{tUi(lang, "sales.goods_summary", "GOODS SUMMARY")}</span>
             </div>
 
@@ -261,7 +261,7 @@ export function SalesBookingStep4({
 
           {/* Independent Remarks Field */}
           <div className="space-y-1 pt-2 border-t border-emerald-100 dark:border-emerald-900/40">
-            <label className="block font-black text-[9.5px] uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+            <label className="block font-black text-[11px] uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
               Remarks / Notes (Goods Summary)
             </label>
             <textarea
@@ -275,10 +275,10 @@ export function SalesBookingStep4({
         </div>
 
         {/* 3. PAYMENT & SETTLEMENT */}
-        <div className="bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-amber-900/60 rounded-xl p-3 shadow-xs space-y-2.5 text-[10px] flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-amber-900/60 rounded-xl p-3 shadow-xs space-y-2.5 text-[11px] flex flex-col justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2 border-b border-amber-100 dark:border-amber-900/40 pb-1.5 text-amber-700 dark:text-amber-400 font-black uppercase tracking-wider">
-              <span className="w-4 h-4 rounded bg-amber-600 text-white text-[9px] font-black flex items-center justify-center shrink-0">3</span>
+              <span className="w-4 h-4 rounded bg-amber-600 text-white text-[11px] font-black flex items-center justify-center shrink-0 leading-none">3</span>
               <span>{tUi(lang, "sales.payment_settlement", "PAYMENT & SETTLEMENT")}</span>
             </div>
 
@@ -316,7 +316,7 @@ export function SalesBookingStep4({
 
           {/* Independent Remarks Field */}
           <div className="space-y-1 pt-2 border-t border-amber-100 dark:border-amber-900/40">
-            <label className="block font-black text-[9.5px] uppercase tracking-wider text-amber-700 dark:text-amber-300">
+            <label className="block font-black text-[11px] uppercase tracking-wider text-amber-700 dark:text-amber-300">
               Remarks / Notes (Payment & Settlement)
             </label>
             <textarea

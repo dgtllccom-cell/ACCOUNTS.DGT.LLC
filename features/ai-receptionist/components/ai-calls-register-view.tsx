@@ -133,31 +133,31 @@ export function AiCallsRegisterView({ lang }: { lang?: string }) {
       {/* Conversation Intelligence — portfolio dashboard */}
       {intel ? (
         <div className={s.textStart}>
-          <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+          <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground">
             <Sparkles className="h-3 w-3" /> {s.t("intel_portfolio_title", "Conversation Intelligence — Portfolio Risk")}
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-xl border border-border bg-card p-3">
-              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-600"><ShieldAlert className="h-3.5 w-3.5" />{s.t("intel_risk_high", "High Risk")}</div>
+              <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-rose-600"><ShieldAlert className="h-3.5 w-3.5" />{s.t("intel_risk_high", "High Risk")}</div>
               <div className="mt-1 text-xl font-black">{intel.counts.high}</div>
             </div>
             <div className="rounded-xl border border-border bg-card p-3">
-              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-amber-600"><ShieldQuestion className="h-3.5 w-3.5" />{s.t("intel_risk_medium", "Medium Risk")}</div>
+              <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-amber-600"><ShieldQuestion className="h-3.5 w-3.5" />{s.t("intel_risk_medium", "Medium Risk")}</div>
               <div className="mt-1 text-xl font-black">{intel.counts.medium}</div>
             </div>
             <div className="rounded-xl border border-border bg-card p-3">
-              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-600"><ShieldCheck className="h-3.5 w-3.5" />{s.t("intel_risk_low", "Low Risk")}</div>
+              <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-emerald-600"><ShieldCheck className="h-3.5 w-3.5" />{s.t("intel_risk_low", "Low Risk")}</div>
               <div className="mt-1 text-xl font-black">{intel.counts.low}</div>
             </div>
             <div className="rounded-xl border border-border bg-card p-3">
-              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground"><ShieldQuestion className="h-3.5 w-3.5" />{s.t("intel_not_analyzed", "Not Yet Analyzed")}</div>
+              <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground"><ShieldQuestion className="h-3.5 w-3.5" />{s.t("intel_not_analyzed", "Not Yet Analyzed")}</div>
               <div className="mt-1 text-xl font-black">{intel.counts.not_analyzed}</div>
             </div>
           </div>
 
           <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
             <div className="rounded-xl border border-border bg-card p-3">
-              <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_top_signals", "Top Signals")}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_top_signals", "Top Signals")}</p>
               {intel.topSignals.length ? (
                 <ul className="mt-1.5 space-y-1">
                   {intel.topSignals.map((sig) => (
@@ -170,7 +170,7 @@ export function AiCallsRegisterView({ lang }: { lang?: string }) {
               ) : <p className="mt-1 text-[11px] text-muted-foreground">{s.t("intel_no_data", "No data yet.")}</p>}
             </div>
             <div className="rounded-xl border border-border bg-card p-3">
-              <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_top_topics", "Top Topics")}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_top_topics", "Top Topics")}</p>
               {intel.topTopics.length ? (
                 <ul className="mt-1.5 space-y-1">
                   {intel.topTopics.map((tp) => (
@@ -183,7 +183,7 @@ export function AiCallsRegisterView({ lang }: { lang?: string }) {
               ) : <p className="mt-1 text-[11px] text-muted-foreground">{s.t("intel_no_data", "No data yet.")}</p>}
             </div>
             <div className="rounded-xl border border-border bg-card p-3">
-              <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_repeated_contact", "Repeated Contact")}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_repeated_contact", "Repeated Contact")}</p>
               {intel.repeatedContact.length ? (
                 <ul className="mt-1.5 space-y-1">
                   {intel.repeatedContact.map((rc) => (
@@ -196,7 +196,7 @@ export function AiCallsRegisterView({ lang }: { lang?: string }) {
               ) : <p className="mt-1 text-[11px] text-muted-foreground">{s.t("intel_no_data", "No data yet.")}</p>}
             </div>
             <div className="rounded-xl border border-border bg-card p-3">
-              <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_agent_performance", "Agent / User Performance")}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-muted-foreground">{s.t("intel_agent_performance", "Agent / User Performance")}</p>
               {intel.agentPerformance.length ? (
                 <ul className="mt-1.5 space-y-1">
                   {intel.agentPerformance.map((ap) => (

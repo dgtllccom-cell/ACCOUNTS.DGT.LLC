@@ -615,7 +615,7 @@ export function LocalPurchaseDestinationQueueView({
                     {cg.countryName}
                   </span>
                 </div>
-                <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                <span className="text-[11px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                   {cg.branches.length} {th("BRANCHES")}
                 </span>
               </CardHeader>
@@ -655,7 +655,7 @@ export function LocalPurchaseDestinationQueueView({
 
                 {/* Branch Breakdown Section */}
                 <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 space-y-2">
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider">
                     {th("BRANCH BREAKDOWN")}
                   </span>
                   <div className="space-y-1.5">
@@ -668,7 +668,7 @@ export function LocalPurchaseDestinationQueueView({
                           {b.branchName}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-slate-400 text-[10px]">
+                          <span className="text-slate-400 text-[11px]">
                             {b.totalBills} bills
                           </span>
                           <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
@@ -733,7 +733,7 @@ export function LocalPurchaseDestinationQueueView({
                 ]}
                 orientation="landscape"
               />
-              <span className="text-[10px] font-mono font-bold text-slate-500">
+              <span className="text-[11px] font-mono font-bold text-slate-500">
                 Total Scoped Entries: {filteredPurchases.length}
               </span>
             </div>
@@ -743,7 +743,7 @@ export function LocalPurchaseDestinationQueueView({
         <CardContent className="p-0">
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-320px)]">
             <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
-              <thead className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
+              <thead className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
                 <tr>
                   <Th className="p-2.5 text-center border-r border-slate-200 dark:border-slate-700 w-8"></Th>
                   <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
@@ -813,7 +813,7 @@ export function LocalPurchaseDestinationQueueView({
                   <Th className="p-2.5 text-center">{th("ACTIONS")}</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px]">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[11px]">
                 {loading ? (
                   <tr>
                     <td colSpan={22} className="p-8 text-center text-slate-400 font-mono">
@@ -837,7 +837,7 @@ export function LocalPurchaseDestinationQueueView({
                   countryGroups.map((cg) => (
                     <Fragment key={cg.countryName}>
                       {/* Country Group Header Row */}
-                      <tr className="bg-slate-100 dark:bg-slate-800/80 font-black text-slate-800 dark:text-slate-200 text-[10px]">
+                      <tr className="bg-slate-100 dark:bg-slate-800/80 font-black text-slate-800 dark:text-slate-200 text-[11px]">
                         <td
                           colSpan={22}
                           className="px-4 py-2 uppercase tracking-wider border-y border-slate-200 dark:border-slate-700"
@@ -948,10 +948,10 @@ export function LocalPurchaseDestinationQueueView({
                               <td className="p-2 border-r border-slate-150 dark:border-slate-800">
                                 {row.countryName || row.country_name || "-"}
                               </td>
-                              <td className="p-2 font-mono text-[9px] font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">
+                              <td className="p-2 font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">
                                 {row.purchaseAccountNo || row.purchase_account_no || "—"}
                               </td>
-                              <td className="p-2 font-mono text-[9px] font-bold text-purple-600 dark:text-purple-400 border-r border-slate-150 dark:border-slate-800">
+                              <td className="p-2 font-mono text-[11px] font-bold text-purple-600 dark:text-purple-400 border-r border-slate-150 dark:border-slate-800">
                                 {row.salesAccountNo ||
                                   row.sales_account_no ||
                                   row.brokerAccountNo ||
@@ -993,13 +993,13 @@ export function LocalPurchaseDestinationQueueView({
                               </td>
 
                               {/* Truck / Driver / Destination info */}
-                              <td className="p-2 border-r border-slate-150 dark:border-slate-800 text-[10px]">
+                              <td className="p-2 border-r border-slate-150 dark:border-slate-800 text-[11px]">
                                 {stage === "loading" ? (
                                   <div>
                                     <div className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
                                       {row.truckNo || row.truck_no || "—"}
                                     </div>
-                                    <div className="text-slate-500 text-[9px]">
+                                    <div className="text-slate-500 text-[11px]">
                                       {row.driverName || row.driver_name || "—"}
                                     </div>
                                   </div>
@@ -1008,7 +1008,7 @@ export function LocalPurchaseDestinationQueueView({
                                     <div className="font-semibold text-slate-800 dark:text-slate-200">
                                       {row.warehouseName || row.warehouse_name || "—"}
                                     </div>
-                                    <div className="text-slate-400 text-[9px]">
+                                    <div className="text-slate-400 text-[11px]">
                                       {row.warehousePlotNo || row.warehouse_plot_no || ""}
                                     </div>
                                   </div>
@@ -1022,12 +1022,12 @@ export function LocalPurchaseDestinationQueueView({
                               {/* Status Badge */}
                               <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
                                 {isCompleted ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                                     <CheckCircle2 className="h-2.5 w-2.5" />{" "}
                                     {th(config.completedLabel.toUpperCase())}
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[9px] font-black uppercase text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-black uppercase text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 whitespace-nowrap">
                                     <Clock className="h-2.5 w-2.5" />{" "}
                                     {th(config.pendingLabel.toUpperCase())}
                                   </span>
@@ -1042,7 +1042,7 @@ export function LocalPurchaseDestinationQueueView({
                                       size="sm"
                                       disabled={actingId === row.id}
                                       onClick={() => void markComplete(row.id)}
-                                      className="h-6 px-2 text-[9px] font-bold bg-slate-800 hover:bg-slate-900 text-white rounded-md flex items-center gap-1 shadow-xs"
+                                      className="h-6 px-2 text-[11px] font-bold bg-slate-800 hover:bg-slate-900 text-white rounded-md flex items-center gap-1 shadow-xs whitespace-nowrap"
                                     >
                                       {actingId === row.id ? (
                                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -1057,7 +1057,7 @@ export function LocalPurchaseDestinationQueueView({
                                     <a
                                       href={`/dashboard/purchase/purchase-transit-lane?source=local_purchase&sourceId=${row.id}`}
                                       data-testid="lp-open-lane"
-                                      className="inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-md border border-indigo-300 bg-indigo-50 px-2 text-[9px] font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300"
+                                      className="inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-md border border-indigo-300 bg-indigo-50 px-2 text-[11px] font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300"
                                     >
                                       {t(activeLang as any, "plane.act_open_lane" as any, "Open in Purchase Lane")}
                                     </a>
@@ -1067,7 +1067,7 @@ export function LocalPurchaseDestinationQueueView({
                                     size="sm"
                                     variant="outline"
                                     onClick={() => setSelectedRowForVoucher(row)}
-                                    className="h-6 px-2 text-[9px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-900 dark:hover:bg-blue-950 rounded-md"
+                                    className="h-6 px-2 text-[11px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-900 dark:hover:bg-blue-950 rounded-md whitespace-nowrap"
                                   >
                                     <Eye className="h-3 w-3 mr-1" />
                                     {th("View Voucher")}
@@ -1080,7 +1080,7 @@ export function LocalPurchaseDestinationQueueView({
                             {isExpanded && (
                               <tr className="bg-slate-50/60 dark:bg-slate-850/60">
                                 <td colSpan={22} className="p-4 border-b border-slate-200 dark:border-slate-800">
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px]">
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[11px]">
                                     <div>
                                       <span className="font-bold text-slate-400 block mb-1">
                                         SUPPLIER DETAILS
@@ -1285,7 +1285,7 @@ export function LocalPurchaseDestinationQueueView({
                 if (isUAE) {
                   return (
                     <div className="overflow-x-auto print:overflow-visible">
-                      <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[10px] text-slate-800 print:max-w-none print:text-[9px]">
+                      <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[11px] text-slate-800 print:max-w-none print:text-[11px]">
                         <div className="overflow-hidden rounded-2xl border border-slate-300">
                           <div className="grid grid-cols-[88px_1fr_210px] gap-4 bg-slate-950 p-5 text-white">
                             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">
@@ -1298,12 +1298,12 @@ export function LocalPurchaseDestinationQueueView({
                               <p className="text-sm font-extrabold uppercase tracking-wide">
                                 {companyName}
                               </p>
-                              <p className="text-[10px] text-slate-300">{branchName}</p>
-                              <p className="max-w-lg text-[10px] leading-4 text-slate-300">
+                              <p className="text-[11px] text-slate-300">{branchName}</p>
+                              <p className="max-w-lg text-[11px] leading-4 text-slate-300">
                                 {officeAddress}
                               </p>
                             </div>
-                            <div className="space-y-1 text-right text-[10px]">
+                            <div className="space-y-1 text-right text-[11px]">
                               <p>
                                 {tt("lpjr.inv_invoice_no", "Invoice No")}:{" "}
                                 <span className="font-mono font-black text-white">
@@ -1334,7 +1334,7 @@ export function LocalPurchaseDestinationQueueView({
 
                           <div className="grid grid-cols-3 gap-3 border-b border-slate-200 bg-slate-50 p-4">
                             <div className="rounded-xl border border-slate-200 bg-white p-3">
-                              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
+                              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
                                 {tt("lpjr.inv_supplier_details", "Supplier Details")}
                               </p>
                               <p className="text-sm font-black text-slate-900">
@@ -1351,7 +1351,7 @@ export function LocalPurchaseDestinationQueueView({
                               </p>
                             </div>
                             <div className="rounded-xl border border-slate-200 bg-white p-3">
-                              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
+                              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
                                 {tt("lpjr.inv_delivery_wh", "Delivery / Warehouse")}
                               </p>
                               <p>
@@ -1376,7 +1376,7 @@ export function LocalPurchaseDestinationQueueView({
                               </p>
                             </div>
                             <div className="rounded-xl border border-slate-200 bg-white p-3">
-                              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
+                              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
                                 {tt("lpjr.inv_invoice_control", "Invoice Control")}
                               </p>
                               <p>
@@ -1399,7 +1399,7 @@ export function LocalPurchaseDestinationQueueView({
                           </div>
 
                           <div className="p-4">
-                            <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[9px]">
+                            <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[11px]">
                               <thead className="bg-slate-900 text-white">
                                 <tr>
                                   <Th className="border border-slate-800 p-2 text-left">
@@ -1445,7 +1445,7 @@ export function LocalPurchaseDestinationQueueView({
                                   <td className="border border-slate-200 p-2">1</td>
                                   <td className="border border-slate-200 p-2 font-bold text-slate-900">
                                     {goodsName}
-                                    <div className="mt-1 text-[8px] font-semibold text-slate-500">
+                                    <div className="mt-1 text-[11px] font-semibold text-slate-500">
                                       {tt("lpjr.inv_gross_wt", "Gross WT")}:{" "}
                                       {rowGrossWt.toLocaleString()} kg |{" "}
                                       {tt("lpjr.inv_net_wt_label", "Net WT")}:{" "}
@@ -1495,13 +1495,13 @@ export function LocalPurchaseDestinationQueueView({
 
                             <div className="mt-4 grid grid-cols-[1fr_310px] gap-4">
                               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                                <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">
+                                <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
                                   {tt("lpjr.inv_amount_words", "Amount In Words")}
                                 </p>
                                 <p className="text-sm font-black capitalize text-slate-900">
                                   {amountToWordsEn(rowGrandTotal, rowCurrency)}
                                 </p>
-                                <div className="mt-4 grid grid-cols-2 gap-3 text-[9px]">
+                                <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
                                   <div className="rounded-lg border border-dashed border-slate-300 bg-white p-3">
                                     <p className="font-black uppercase text-slate-500">
                                       {tt("lpjr.inv_qr_code", "QR Code")}
@@ -1521,8 +1521,8 @@ export function LocalPurchaseDestinationQueueView({
                                 </div>
                               </div>
 
-                              <div className="overflow-hidden rounded-xl border border-slate-300 text-[10px]">
-                                <div className="bg-slate-100 px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-700">
+                              <div className="overflow-hidden rounded-xl border border-slate-300 text-[11px]">
+                                <div className="bg-slate-100 px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-700">
                                   {tt("lpjr.inv_summary", "Summary")}
                                 </div>
                                 <div className="space-y-2 p-3">

@@ -158,7 +158,7 @@ export function ConversationIntelligenceView({ lang }: { lang?: string }) {
                           <td className="py-1.5 pe-2"><input type="checkbox" data-testid="ci-task-include" checked={!!t.include} onChange={(e) => setTask(i, "include", e.target.checked)} /></td>
                           <td className="py-1.5 pe-2">
                             <input className={INP} value={t.title} onChange={(e) => setTask(i, "title", e.target.value)} />
-                            <p className="mt-0.5 text-[10px] text-slate-400">{t.kind === "date" ? s.t("kind_date", "Important date") : `${s.t("kind_action", "Action")}${t.owner ? ` · ${t.owner}` : ""}${t.side === "customer" ? ` · ${s.t("side_customer", "customer's action")}` : t.side === "us" ? ` · ${s.t("side_us", "our action")}` : ""}`}</p>
+                            <p className="mt-0.5 text-[11px] text-slate-400">{t.kind === "date" ? s.t("kind_date", "Important date") : `${s.t("kind_action", "Action")}${t.owner ? ` · ${t.owner}` : ""}${t.side === "customer" ? ` · ${s.t("side_customer", "customer's action")}` : t.side === "us" ? ` · ${s.t("side_us", "our action")}` : ""}`}</p>
                           </td>
                           <td className="py-1.5 pe-2"><input type="date" data-testid="ci-task-due" className={`${INP} w-36`} value={t.dueDate ?? ""} onChange={(e) => setTask(i, "dueDate", e.target.value)} /></td>
                           <td className="py-1.5 pe-2">
@@ -167,7 +167,7 @@ export function ConversationIntelligenceView({ lang }: { lang?: string }) {
                               {assignees.map((u) => <option key={u.userId} value={u.userId}>{u.name ?? u.userId}</option>)}
                             </select>
                           </td>
-                          <td className="py-1.5">{t.priority === "high" && <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">{s.t("urgent", "Urgent")}</span>}</td>
+                          <td className="py-1.5">{t.priority === "high" && <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 whitespace-nowrap">{s.t("urgent", "Urgent")}</span>}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -233,5 +233,5 @@ export function ConversationIntelligenceView({ lang }: { lang?: string }) {
 
 /** Label + control. Module-level so inputs keep focus while typing. */
 function L({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
+  return <div><label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
 }

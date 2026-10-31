@@ -221,7 +221,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
 
   const handleExportCsv = () => {
     let rows: Record<string, any>[] = [];
-    let filename = `branch_report_${activeTab}_${branch.code}.csv`;
+    const filename = `branch_report_${activeTab}_${branch.code}.csv`;
 
     if (activeTab === "operations") {
       rows = filteredShipments;
@@ -273,7 +273,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
                 {tr("Shipping Line Branch Reports")}
               </h1>
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-black uppercase text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black uppercase text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300 whitespace-nowrap">
                 <Ship className="h-3 w-3" />
                 {branch.name}
               </span>
@@ -341,15 +341,15 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
 
           <div className="flex flex-wrap gap-2 shrink-0">
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[110px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-200">{tr("Shipments")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-amber-200">{tr("Shipments")}</p>
               <p className="text-xl font-black text-white">{shipments.length}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[110px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-200">{tr("Vouchers")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-amber-200">{tr("Vouchers")}</p>
               <p className="text-xl font-black text-white">{roznamcha.length}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-center backdrop-blur-md min-w-[110px]">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-200">{tr("Ledgers")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-amber-200">{tr("Ledgers")}</p>
               <p className="text-xl font-black text-white">{ledgers.length}</p>
             </div>
           </div>
@@ -383,7 +383,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
               <Icon className="h-4 w-4 shrink-0" />
               <span>{tr(tab.label)}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-md font-mono ${
+                className={`text-[11px] px-1.5 py-0.2 rounded-md font-mono ${
                   isActive ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
                 }`}
               >
@@ -430,7 +430,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
           <div className="overflow-x-auto">
             {activeTab === "operations" && (
               <table className="w-full text-left text-xs">
-                <thead className="bg-muted/60 text-muted-foreground font-black text-[10px] uppercase border-b border-border">
+                <thead className="bg-muted/60 text-muted-foreground font-black text-[11px] uppercase border-b border-border">
                   <tr>
                     <th className="p-3.5">{tr("BL Number")}</th>
                     <th className="p-3.5">{tr("Container No")}</th>
@@ -459,7 +459,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
                         <td className="p-3.5 text-muted-foreground">{s.eta || "-"}</td>
                         <td className="p-3.5 text-end">
                           <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
                               s.status.toLowerCase().includes("arrived")
                                 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
                                 : s.status.toLowerCase().includes("transit")
@@ -479,7 +479,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
 
             {activeTab === "tracking" && (
               <table className="w-full text-left text-xs">
-                <thead className="bg-muted/60 text-muted-foreground font-black text-[10px] uppercase border-b border-border">
+                <thead className="bg-muted/60 text-muted-foreground font-black text-[11px] uppercase border-b border-border">
                   <tr>
                     <th className="p-3.5">{tr("Container No")}</th>
                     <th className="p-3.5">{tr("BL Number")}</th>
@@ -505,7 +505,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
                         <td className="p-3.5 text-muted-foreground">{trk.port || "-"}</td>
                         <td className="p-3.5 text-muted-foreground">{trk.eta || "-"}</td>
                         <td className="p-3.5 text-end">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-bold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 whitespace-nowrap">
                             <Compass className="h-3 w-3" />
                             {trk.status}
                           </span>
@@ -519,7 +519,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
 
             {(activeTab === "payments" || activeTab === "transactions") && (
               <table className="w-full text-left text-xs">
-                <thead className="bg-muted/60 text-muted-foreground font-black text-[10px] uppercase border-b border-border">
+                <thead className="bg-muted/60 text-muted-foreground font-black text-[11px] uppercase border-b border-border">
                   <tr>
                     <th className="p-3.5">{tr("Voucher No")}</th>
                     <th className="p-3.5">{tr("Date")}</th>
@@ -551,7 +551,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
                           {r.credit > 0 ? `${branch.currency} ${r.credit.toLocaleString()}` : "-"}
                         </td>
                         <td className="p-3.5 text-end">
-                          <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                          <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 whitespace-nowrap">
                             {r.status || "Posted"}
                           </span>
                         </td>
@@ -564,7 +564,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
 
             {activeTab === "expenses" && (
               <table className="w-full text-left text-xs">
-                <thead className="bg-muted/60 text-muted-foreground font-black text-[10px] uppercase border-b border-border">
+                <thead className="bg-muted/60 text-muted-foreground font-black text-[11px] uppercase border-b border-border">
                   <tr>
                     <th className="p-3.5">{tr("Voucher No")}</th>
                     <th className="p-3.5">{tr("Date")}</th>
@@ -599,7 +599,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
 
             {activeTab === "cash_bank" && (
               <table className="w-full text-left text-xs">
-                <thead className="bg-muted/60 text-muted-foreground font-black text-[10px] uppercase border-b border-border">
+                <thead className="bg-muted/60 text-muted-foreground font-black text-[11px] uppercase border-b border-border">
                   <tr>
                     <th className="p-3.5">{tr("Account Code")}</th>
                     <th className="p-3.5">{tr("Account Title")}</th>
@@ -638,7 +638,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
 
             {activeTab === "ledgers" && (
               <table className="w-full text-left text-xs">
-                <thead className="bg-muted/60 text-muted-foreground font-black text-[10px] uppercase border-b border-border">
+                <thead className="bg-muted/60 text-muted-foreground font-black text-[11px] uppercase border-b border-border">
                   <tr>
                     <th className="p-3.5">{tr("Account Code")}</th>
                     <th className="p-3.5">{tr("Account Title")}</th>
@@ -659,7 +659,7 @@ export function BranchShippingReportsView({ data }: { data: BranchReportData }) 
                       <tr key={l.id} className="hover:bg-muted/40 transition-colors">
                         <td className="p-3.5 font-mono font-bold text-foreground">{l.accountCode}</td>
                         <td className="p-3.5 font-semibold text-foreground">{l.accountTitle}</td>
-                        <td className="p-3.5 uppercase text-[10px] text-muted-foreground font-bold">{l.type}</td>
+                        <td className="p-3.5 uppercase text-[11px] text-muted-foreground font-bold">{l.type}</td>
                         <td className="p-3.5 font-mono text-muted-foreground">{l.currency}</td>
                         <td
                           className={`p-3.5 font-mono font-bold text-end ${

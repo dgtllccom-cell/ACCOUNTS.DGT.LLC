@@ -444,7 +444,7 @@ export function VoiceRemarksMic({
                   {s.t("transcript_preview", "Transcript Preview (editable before inserting):")}
                 </label>
                 {interimText && (
-                  <span className="text-[10px] font-semibold text-cyan-500 italic animate-pulse">
+                  <span className="text-[11px] font-semibold text-cyan-500 italic animate-pulse">
                     Live: {interimText}
                   </span>
                 )}

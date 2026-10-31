@@ -1,6 +1,129 @@
 # DGT ERP — Main Master Progress Report
 Owner-facing. Updated 2026-10-27 (Dubai, UTC+4). (No earlier file with this name was found in the repository or on the Desktop — if one exists elsewhere, tell me where and I will merge this into it.)
 
+## Issue #36 round (2026-10-27 evening → 28) — saved data in the viewer's language (owner letter "URGENT — FIX MULTILINGUAL DATA DISPLAY")
+
+Evidence is DEV only (`csesvyxxjivnkkozgopt`); Production was only read. Production had moved to `b8535f7` (unified customer &
+account search card, deployed by Asmatullah); it was merged into `release/rc2` before this work (no conflict).
+
+**What the owner saw, and why (Production, read-only, 2026-10-27)**
+* **Names typed in Urdu** — 53 Chaman account / ledger names, 6 customers, truck owners and drivers. Their stored "English" was a
+  letter-for-letter machine rendering ("نعمت اللہ بروکر" → "Namt Allah Brwkr") and nobody had approved an English version. Under the
+  owner's name rule (approved variant, else the saved name) an English viewer correctly saw the saved Urdu — but with no way to tell
+  why and no screen to approve the English name. The **Ledger report did worse**: it read the stored rows with no approval check and
+  showed "Namt Allah Brwkr" as the account name. Roznamcha, purchase / sales order APIs and the purchase booking report shipped the
+  same unchecked machine rows to the screen.
+* **Machine rows marked "complete"** — the local translator writes half-translated text ("گودام کیٹگری" → "Warehouse کیٹگری",
+  "ٹرانسپورٹ" → "ٹرانسPort", Arabic "تشمن" for چمن) as `complete / local_dictionary`, and the display trusted that engine label.
+* **Terms typed in Urdu never matched the dictionary** — the approved dictionaries are keyed by English, so "گودام", "ملازم",
+  "پارٹی" stayed Urdu for an English viewer although approved translations of those exact words exist.
+* **Contact types saved as Urdu labels** — the external customer form sent the translated label ("موبائل فون", "واٹس ایپ نمبر")
+  as the stored contact type; English viewers saw Urdu and the server's Mobile / WhatsApp lookup missed it.
+* **No machine-translation engine on the VPS** — no `GOOGLE_TRANSLATE_API_KEY` / `AI_TRANSLATE_*`, so a free Urdu sentence (an
+  address, a remark) cannot be machine-translated at all; only a person can supply its English version.
+
+**Fixed (one central path; no new table, module or translation store)**
+* One trust rule for every reader (`trustedStoredTranslation`, `lib/i18n/localize-records.ts`): an approved row (a person's entry
+  / correction, a verified row, an admin import) is shown; a machine rendering only when it was made from English and is clean in the
+  viewer's script. Used by the central resolver and by the ledger report, Roznamcha, purchase / sales order APIs and the booking report.
+* Person names in every module (truck owner / driver, receiver / sender, consignee, contact person, supplier, buyer …) follow the
+  legal-name rule — never a machine re-spelling.
+* A term saved in Urdu / Pashto / Persian / Arabic resolves through the SAME approved dictionaries in every language
+  (exact, unambiguous whole-value match): "گودام" → Warehouse, "موبائل فون" → Mobile Phone, "ملازم" → Employee.
+* **Review queue** — Translation Management opens on it: every live saved name / text without an approved version in a chosen
+  language, with a suggestion ("Naimatullah Abdul Baqi Zeera Wala", not "Namt Allah …"); Accept or type, Approve. Only the languages
+  the reviewer confirms are stored; an account's approved name is applied to its ledger too; the saved text never changes. The
+  per-record correction dialog (purchase / sales) no longer pre-fills machine values (saving used to approve them).
+* Marker: a saved value not in the viewer's language carries a small "UR" / "PS" / "EN" chip with an explanation (Customer Register,
+  Party Directory name / father / address, Account Master report, Truck Registration, the shared customer card).
+* Customer addresses are enrolled for translation (approve once, shown in that language); Party Directory resolves name, father and
+  address.
+* External form saves the canonical contact type; old Urdu labels display in the viewer's language.
+* Purchase payment → automatic Loading record: no invented `CONT-<order no>` container number (empty until entered); the
+  pending-loading row no longer invents "20ft Standard".
+* New Account Setup: nine labels showed as raw keys ("accountNameRequired", "countryRequired", "selectCity", …) in every language —
+  now real messages in five languages. The new customer card (b8535f7) kept the name of the language it was picked in after a live
+  switch (undoing fc0a384) and showed the raw record id while loading — fixed; its status / balance / button titles follow the language.
+
+**Results (DEV)**
+| Check | Result |
+|---|---|
+| Issue #36 end-to-end (new Urdu, Pashto and English customers + an Urdu account, through the real save APIs; before / review / approve / after; APIs in EN / UR / AR / FA / PS; Customer Register, Party Directory, account view, review screen; live switch + reload; search by saved and by approved name; Urdu term → approved term) | PASS — 99 / 99 |
+| Names across screens · Party Directory · Cash Entry notices | PASS — 210 / 210 · 33 / 33 · 24 / 24 |
+| Regression (20 financial / operational / security scripts) | PASS — 20 / 20 (two first crashed with a Windows process error under load and passed on re-run: purchase transfer 8 / 8, shipping bills 12 / 12); leak scan 156 PASS + the same 4 known DEV records |
+| New Account Setup — Create → Save → Reopen → live switch → Refresh → Reopen again → Update, 6 real DEV customers × 5 languages (on the merged build) | PASS — 255 / 255 (first runs failed only on the old "Linked:" selector replaced by b8535f7, on test accounts left by an interrupted run — HTTP 409 duplicate guard — and on reads before the card had loaded; all three fixed in the harness, not in the app) |
+| Five-language sweep of the touched screens (Translation Management, Customer Register, Accounts, New Account Setup, Truck Registration, Ledger and Accounts General reports) × EN / UR / AR / FA / PS × 1440 / 390 | PASS — 80 / 80 |
+| Unit tests / tsc / build / guards | PASS — 605 (+ 2 skipped), of which 36 new; tsc 0 errors; build green; i18n guard 22,371 keys × 5 |
+| Production deploy through the gate | DEPLOYED `70abf90` at 22:04:32Z (02:04 Dubai, 28 Oct): pre-deploy backup `prod-before-deploy-20261027-215427.dump`, approval (no migrations), dry-run "all checks passed", isolated build, atomic swap, pm2 reload. Live checks without signing in: VPS HEAD = release, pm2 online, deploy log DEPLOYED, `/auth/login` 200 with lang / dir in all five languages, every signed-out page and API (incl. the review queue) sent to login, this release's keys in the live build, no "CONT-" placeholder in the build, no new error-log line since the deploy, public https://ac.dgt.llc 200. Production rows identical before / after (8 customers, 60 accounts, 60 ledgers, 1,949 translations, 10 profiles, 0 Roznamcha, 0 journals, 0 loading records). Signed-in check: the owner's login (runbook) |
+
+**Merged from Production during this round:** `b8535f7` (customer card, before the work) and `9b6814c` + `cf954e5` (deployed by a
+parallel session at 21:34 Dubai). Two parts of `9b6814c` were not kept because they contradict the owner's written rules for this
+issue: it removed account / ledger names from the legal-name rule (so the machine spellings were being shown) and made automatic
+saves stamp a machine rendering of an account name "verified". This release restores the rule and additionally treats any
+machine-written row stamped "verified" as not approved.
+
+**Only the owner can finish**
+* Approve the English (or other-language) names in Translation Management → Review queue. Until a name is approved the English
+  viewer sees the saved Urdu name with a "UR" marker — by the owner's own rule names are never machine-rewritten.
+* Automatic translation of free text (addresses, remarks, narration) needs a translation-engine key on the VPS
+  (`AI_TRANSLATE_PROVIDER` + `AI_TRANSLATE_API_KEY`, or Google). Without it those texts are approved through the review queue.
+
+## rc2 completion round (2026-10-27, afternoon) — owner's written instruction: "merge the verified code and deploy through the approved Production process"
+
+Evidence is DEV only (`csesvyxxjivnkkozgopt`, real DEV records); Production was only read (and, after the deploy, checked without signing in).
+While this round ran, Production moved to `2f44ace` (Clearing E1 sub-sections / location pickers, deployed through the gate at 11:11Z).
+It was merged into `release/rc2` (`989b8bc`, one key-list conflict resolved by keeping both lists) and the merged build re-tested.
+
+| Work card | Result |
+|---|---|
+| A. New Account Setup — Create → Save → Reopen → live language switch → Refresh → Reopen again → Update, six real DEV customers, form started in EN / UR / AR / FA / PS + an approved-variant customer | PASS — 256 / 256. Account name stays the saved name in every language; the Linked customer follows the language (approved variant, else saved name); an unsaved edit survives a language switch; the ledger name and customer link never change on Update; test accounts archived through the app afterwards |
+| B. Names on every screen (customer master, Customer Register list + page, Party Directory API, account API, Accounts General Report, Ledger General Report), 5 real DEV customers × 5 languages | PASS — 210 / 210. No stored machine rendering is ever shown. (One check — Accounts General Report in Arabic — first missed the test's 16-second wait while two servers and the regression suite were running; the page showed the name after 23–26 s; re-run with a 40-second wait: 50 / 50 for that customer.) |
+| C. Party Directory screen | FIXED + PASS — 33 / 33 (was 23 / 33 on the previous build) |
+| D. Customer Register 160 / 160 · customer picker 9 / 9 · Truck Registration 41 / 41 · Truck print 6 / 6 | PASS |
+| E. Roznamcha Cash Entry notices in five languages | FIXED + PASS — 24 / 24 |
+| F. Outstanding Ledger, user profile, audit filters (English leftovers from the sweep) | FIXED + PASS — sweep of the 13 screens touched in this round × 5 languages × 3 widths (195 page-loads, run while two servers and the regression suite were busy): 169 PASS; of the 26 others, 15 were read before the page finished loading (menu still English during the first paint on an overloaded box), 5 the brand name, 5 "Staff User" / "Authorized Scope" (then fixed: e250998) and one hydration warning (#418). Quiet re-run of the four affected screens (60 page-loads): no English label left except the brand name "Digital Dock ERP" on Outstanding Ledger (a name — not translated), no page error |
+| G. Regression (20 financial / operational / security scripts) | PASS — 20 / 20 scripts, 507 checks (purchase / sales payments, transfers, local purchase, shipping bills, expense framework and registers, money exchange, delivery, shipment tracking, truck print, user creation by domain, shipping account approval, branch-admin permissions, direct-URL / API matrix). Leak scan 156 PASS + the same 4 known items as rc2 final (Shipping-domain DEV test records on Business branches — DEV data, not leaks). Two scripts first failed while two servers and a sweep were running (no print document within the wait; an empty user list) and passed on a quiet re-run: truck print 6 / 6, user creation 25 / 25 |
+| H. Unit tests / tsc / build / guards | PASS — 570 / 570 (also on the merged tree); tsc 0 errors; build green; i18n guard 22,339 keys × 5 after the merge, nav, stock, repo-safety green |
+| I. Production deploy through the gate | DEPLOYED — two gated deploys, each with its own pre-deploy backup, dgt-approve-deploy (no migrations), dry-run, isolated build, atomic swap and zero-downtime reload (rollback build kept): 989b8bc at 12:03:49Z (this round + Production 2f44ace) and e249760 at 12:47:25Z (no-invented-figures fix). Live checks after each: 30 / 30 — VPS HEAD = release, pm2 online, deploy log DEPLOYED, /auth/login 200 with lang / dir following erp_lang in EN / UR / AR / FA / PS, every signed-out page sent to /auth/login, protected APIs refused, this release's dictionary keys present in the live build; public https://ac.dgt.llc/auth/login 200 (UR: lang=ur-PK dir=rtl); live build has the Shipping Line page and 0 invented sample strings. Production data identical before and after (8 customers, 60 accounts, 60 ledgers, 1,930 translations, 10 profiles, 0 Roznamcha, 0 journals, 104 locations, 216 cities). Signed-in checks need the owner's login (listed in the runbook) |
+| J. No invented figures (found while checking the live build) | FIXED — Purchase Booking Journal report, Purchase Order dashboard, Clearing Customer Order and Sales Transfer report invented container / B/L / truck / seal numbers (see below); built code scanned: 0 invented strings left; sweep of the four screens × 5 languages × 3 widths: 60 / 60 (one Persian tablet load was first read before the page finished loading; re-check PASS) |
+
+**Root causes found and fixed in this round**
+* **Party Directory — saved name not searchable:** the search (server and screen) matched only the name shown in the selected
+  language. With an approved Urdu / Arabic / Persian / Pashto variant, typing the saved name gave "No records found". The saved name
+  is now searchable (never shown in place of the display name).
+* **Party Directory — names kept the old language:** the screen loaded its list once; after a live language switch every name stayed
+  in the language the screen was opened in. It now reloads on a language change. Employee names come from the person record (its
+  approved variants), as on the party row itself — before, they were rendered by the machine transliterator.
+* **Roznamcha Cash Entry:** every validation / save / delete notice, the approver and the status were English-only; a translated
+  refusal would also have turned green (the colour was guessed from English words). 16 hand-written keys; the tone is now stored
+  with the notice.
+* **Outstanding Ledger:** "All Branches" / "All Countries" group names and the Currency / Type labels were English; the API invented
+  an "All Branches" branch name; the branch count compared against the English label.
+* **User profile header:** role, department and "Global Scope" were English.
+* **New Account Setup (earlier today, fc0a384):** a language switch reloaded the whole edit form — unsaved edits were wiped and the
+  linked names did not follow the language. Fixed; covered by card A.
+* **Invented container / B/L / truck / seal numbers (e249760):** the Purchase Booking Journal report built a container list for every
+  booking (CONT-001…, BL-1001…, trucks ABC-123 / XYZ-888, seals S-00123…, receiving country "Dubai", 5 containers when the count was 0,
+  a "confirmed" share guessed from the status); the country / branch summaries counted those 5 containers and every search matched
+  them. The Purchase Order dashboard did the same (container numbers, seals, 20 / 40 FT sizes). Clearing Customer Order showed truck
+  "XYZ-786" when none was entered; the Sales Transfer report showed "CONT-<n> containers" as a container number. Production has 0
+  purchase / sales transactions, so nothing invented was on screen yet — it would have appeared with the first real booking.
+
+**Observed, not changed**
+* **Purchase payment → automatic Loading record:** when a purchase payment creates the first Loading record and no container number
+  was entered, the server stores `CONT-<purchase order no>` as the container number (`app/api/erp/purchases/orders/[id]/payments`).
+  That writes a placeholder identifier into the data; changing it touches the Loading / Transit lane, so it is left for the owner to
+  decide (store nothing until a real container number is entered, or keep the placeholder).
+* Ledger General Report lists only ledgers with entries or a balance, even when opened directly on an idle ledger (by design of the
+  report; three idle Shipping AR ledgers are therefore not shown there).
+* An intermittent React hydration warning (#418) on Account Setup: seen twice while two servers and two test suites were running,
+  not reproduced in 19 dedicated loads. React recovers on its own; nothing visible to the user was found.
+* Place names: the Customer Register shows the Urdu spelling of Herat (ہرات) on the Arabic / Persian / Pashto screens. Cause: the DEV
+  city translation row for Herat holds the Urdu form in all four columns (the Arabic / Persian / Pashto spelling is هرات). City data
+  belongs to Location Management, which is on the owner's do-not-modify list — left for the owner to correct. Production has no such
+  row (read-only check), so this is a DEV data item.
+* Tax Management (VAT) — postponed by the owner; untouched.
+
 ## rc2 final (2026-10-27) — ready for the owner's gate, NOT deployed
 
 Production runs `dffd724` (deployed through the gate 2026-10-26 20:35Z). Branch `release/rc2` contains it (strict superset) and

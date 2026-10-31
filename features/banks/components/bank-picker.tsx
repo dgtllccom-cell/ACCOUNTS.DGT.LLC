@@ -150,36 +150,36 @@ export function BankPicker({
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{t(lang, "bankreg.bp_account_title_colon", "Account Title:")} <span className="font-bold text-slate-700 dark:text-slate-300">{localizeName(viewBank.account_title, lang)}</span></p>
               </div>
               <div className="text-right">
-                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900">
+                <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900">
                   {viewBank.is_active !== false ? t(lang, "bankreg.bp_active_bank", "Active Bank") : t(lang, "god.inactive", "Inactive")}
                 </span>
-                <p className="text-[10px] text-slate-400 mt-1">{t(lang, "purchase.currency_colon_label", "Currency:")} <span className="font-bold text-slate-800 dark:text-white">{viewBank.currency || "AED"}</span></p>
+                <p className="text-[11px] text-slate-400 mt-1">{t(lang, "purchase.currency_colon_label", "Currency:")} <span className="font-bold text-slate-800 dark:text-white">{viewBank.currency || "AED"}</span></p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-950">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "bank.account_number", "Account Number")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "bank.account_number", "Account Number")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-white text-sm" dir="ltr">{viewBank.account_number}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_branch_name_code", "Branch Name / Code")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_branch_name_code", "Branch Name / Code")}</span>
                 <span className="font-bold text-slate-800 dark:text-white text-sm">{viewBank.branch_name ? localizeName(viewBank.branch_name, lang) : "—"} ({viewBank.branch_code || "N/A"})</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_short_name", "Short Name")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_short_name", "Short Name")}</span>
                 <span className="font-bold text-slate-800 dark:text-white text-sm">{viewBank.short_name || "—"}</span>
               </div>
               <div className="sm:col-span-2">
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_iban_number", "IBAN Number")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_iban_number", "IBAN Number")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-white text-xs" dir="ltr">{viewBank.iban_number || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_swift_bic_code", "SWIFT / BIC Code")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_swift_bic_code", "SWIFT / BIC Code")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-white text-xs" dir="ltr">{viewBank.swift_bic || "—"}</span>
               </div>
               <div className="sm:col-span-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_opening_net_balance", "Opening / Net Balance")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "bankreg.bp_opening_net_balance", "Opening / Net Balance")}</span>
                 <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm" dir="ltr">
                   {viewBank.currency || "AED"} {Number(viewBank.opening_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>

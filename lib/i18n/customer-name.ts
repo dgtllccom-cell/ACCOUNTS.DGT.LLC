@@ -27,6 +27,7 @@ export type NameTranslationMeta = {
 export const TRUSTED_TRANSLATION_ENGINES: ReadonlySet<string> = new Set(["manual", "local_dictionary", "dictionary", "glossary", "human", "verified"]);
 const UNRESOLVED_STATUSES: ReadonlySet<string> = new Set(["needs_review", "pending", "rejected", "failed"]);
 const VERIFIED_STATUSES: ReadonlySet<string> = new Set(["human_verified", "verified", "approved"]);
+const HUMAN_ENGINES: ReadonlySet<string> = new Set(["manual", "human", "verified"]);
 
 /** True when the stored name translations are an authorized version (never a raw machine guess). */
 export function isAuthorizedNameTranslation(meta: NameTranslationMeta | null | undefined): boolean {
@@ -35,6 +36,10 @@ export function isAuthorizedNameTranslation(meta: NameTranslationMeta | null | u
   if (String(meta.source || "").toLowerCase() === "manual") return true;
   const status = String(meta.translation_status || "").toLowerCase();
   if (UNRESOLVED_STATUSES.has(status)) return false;
+  // a machine-written row stays a machine row whatever status it was stamped with (an automatic save that marks its own
+  // dictionary / transliteration output "verified" is not an approval); curated rows carry a human / verified engine
+  const engine = String(meta.translated_by_engine || "").toLowerCase();
+  if (String(meta.source || "").toLowerCase() === "auto" && engine && !HUMAN_ENGINES.has(engine)) return false;
   // An engine label is NOT an authorization: the local dictionary / translator / transliteration engines write "complete" rows for
   // names they merely re-spelled ("Hamid" -> "ہامید", "ګل" -> "Gl"). Only a person's entry or an explicit verification counts.
   return VERIFIED_STATUSES.has(status);

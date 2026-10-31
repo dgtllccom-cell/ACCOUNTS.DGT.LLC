@@ -4,6 +4,9 @@ import React from "react";
 import { Building2, FileText, Mail, MapPin, Pencil, Phone, Tag, X, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { accountAvatarStyleFor } from "@/components/ui/search-select";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
+import { SavedText } from "@/components/i18n/saved-text";
 
 export interface CustomerAccountCardProps {
   account: {
@@ -45,14 +48,19 @@ export function CustomerAccountCard({
   onClear,
   className,
   selected = false,
-  clearLabel = "Clear",
-  editLabel = "Edit"
+  clearLabel,
+  editLabel
 }: CustomerAccountCardProps) {
+  const lang = useActiveLanguage();
+  const clearTitle = clearLabel || t(lang, "common.clear", "Clear");
+  const editTitle = editLabel || t(lang, "common.edit", "Edit");
   const name = account?.name || "-";
   const initials = account?.initials || getInitials(name);
   const avatarStyle = accountAvatarStyleFor(name);
   const statusRaw = account?.status || "Active";
   const isActive = statusRaw.toLowerCase() === "active";
+  // the status is a value ("Active" / "Inactive"): shown in the selected language
+  const statusLabel = isActive ? t(lang, "common.active", "Active") : statusRaw.toLowerCase() === "inactive" ? t(lang, "common.inactive", "Inactive") : statusRaw;
   const address = account?.address || [account?.branch, account?.city, account?.country].filter(Boolean).join(", ");
 
   return (
@@ -80,19 +88,19 @@ export function CustomerAccountCard({
       <div className="flex-1 min-w-0">
         {/* Row 1: Name + Status Badge + Actions */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[13.5px] font-bold text-slate-900 dark:text-slate-100 truncate" title={name}>
-            {name}
+          <span className="text-[13.5px] font-bold text-slate-900 dark:text-slate-100 truncate" title={name} data-testid="customer-account-card-name">
+            <SavedText value={name} lang={lang} kind="name" />
           </span>
           <div className="flex items-center gap-1.5 shrink-0">
             <span
               className={cn(
-                "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide",
+                "inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide",
                 isActive
                   ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60"
                   : "bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60"
               )}
             >
-              {statusRaw}
+              {statusLabel}
             </span>
 
             {onEdit && (
@@ -100,7 +108,7 @@ export function CustomerAccountCard({
                 type="button"
                 onClick={onEdit}
                 className="p-1 rounded-lg border border-blue-200 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition cursor-pointer"
-                title={editLabel}
+                title={editTitle}
               >
                 <Pencil className="h-3 w-3" />
               </button>
@@ -111,7 +119,7 @@ export function CustomerAccountCard({
                 type="button"
                 onClick={onClear}
                 className="p-1 rounded-lg border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer"
-                title={clearLabel}
+                title={clearTitle}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -169,7 +177,7 @@ export function CustomerAccountCard({
         {address && (
           <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mt-1">
             <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-            <span className="truncate">{address}</span>
+            <SavedText value={address} lang={lang} className="truncate" />
           </div>
         )}
 
@@ -177,7 +185,7 @@ export function CustomerAccountCard({
         {account?.balance !== undefined && account?.balance !== null && (
           <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-semibold mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800">
             <Wallet className="h-3 w-3" />
-            <span>Balance:</span>
+            <span>{t(lang, "lgr.balance", "Balance")}:</span>
             <span>
               {typeof account.balance === "number" ? account.balance.toLocaleString() : account.balance} {account.currency || ""}
             </span>

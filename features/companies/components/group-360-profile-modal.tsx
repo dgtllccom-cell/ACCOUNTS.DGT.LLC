@@ -293,10 +293,10 @@ export function Group360ProfileModal({
                   <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
                     {localizeName(group.consortiumName, activeLang)}
                   </h2>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-white/20 border border-white/30 text-white backdrop-blur-xs">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-white/20 border border-white/30 text-white backdrop-blur-xs whitespace-nowrap">
                     {group.totalCompaniesCount} {activeLang === "ur" ? "کمپنیاں" : "Sister Companies"}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/30 border border-emerald-400/40 text-emerald-100">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/30 border border-emerald-400/40 text-emerald-100 whitespace-nowrap">
                     Active Consortium
                   </span>
                 </div>
@@ -388,9 +388,9 @@ export function Group360ProfileModal({
                     <Building2 className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-blue-800 dark:text-blue-300">Sister Companies</div>
+                    <div className="text-[11px] uppercase font-bold text-blue-800 dark:text-blue-300">Sister Companies</div>
                     <div className="text-2xl font-black text-blue-950 dark:text-blue-100">{group.totalCompaniesCount}</div>
-                    <div className="text-[10px] text-blue-700 dark:text-blue-400">Under this Consortium</div>
+                    <div className="text-[11px] text-blue-700 dark:text-blue-400">Under this Consortium</div>
                   </div>
                 </div>
 
@@ -399,9 +399,9 @@ export function Group360ProfileModal({
                     <FileText className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-purple-800 dark:text-purple-300">Total Contracts/Licenses</div>
+                    <div className="text-[11px] uppercase font-bold text-purple-800 dark:text-purple-300">Total Contracts/Licenses</div>
                     <div className="text-2xl font-black text-purple-950 dark:text-purple-100">{group.totalContractsCount}</div>
-                    <div className="text-[10px] text-purple-700 dark:text-purple-400">Trade Lic., VAT & CR</div>
+                    <div className="text-[11px] text-purple-700 dark:text-purple-400">Trade Lic., VAT & CR</div>
                   </div>
                 </div>
 
@@ -410,11 +410,11 @@ export function Group360ProfileModal({
                     <DollarSign className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-emerald-800 dark:text-emerald-300">Active Currencies</div>
+                    <div className="text-[11px] uppercase font-bold text-emerald-800 dark:text-emerald-300">Active Currencies</div>
                     <div className="text-lg font-black text-emerald-950 dark:text-emerald-100 flex items-center gap-1">
                       {currencies.length > 0 ? currencies.join(", ") : "USD"}
                     </div>
-                    <div className="text-[10px] text-emerald-700 dark:text-emerald-400">Multi-Currency Base</div>
+                    <div className="text-[11px] text-emerald-700 dark:text-emerald-400">Multi-Currency Base</div>
                   </div>
                 </div>
 
@@ -423,9 +423,9 @@ export function Group360ProfileModal({
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-amber-800 dark:text-amber-300">Consortium Status</div>
+                    <div className="text-[11px] uppercase font-bold text-amber-800 dark:text-amber-300">Consortium Status</div>
                     <div className="text-lg font-black text-amber-950 dark:text-amber-100">Verified & Active</div>
-                    <div className="text-[10px] text-amber-700 dark:text-amber-400">Compliant Enterprise</div>
+                    <div className="text-[11px] text-amber-700 dark:text-amber-400">Compliant Enterprise</div>
                   </div>
                 </div>
               </div>
@@ -441,10 +441,10 @@ export function Group360ProfileModal({
                       </div>
                       <div>
                         <div className="text-xs font-black text-slate-900 dark:text-slate-100">Selected Owner / Investor</div>
-                        <div className="text-[10px] text-muted-foreground">Principal Stakeholder</div>
+                        <div className="text-[11px] text-muted-foreground">Principal Stakeholder</div>
                       </div>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-900 whitespace-nowrap">
                       Primary Owner
                     </span>
                   </div>
@@ -510,10 +510,10 @@ export function Group360ProfileModal({
                       </div>
                       <div>
                         <div className="text-xs font-black text-slate-900 dark:text-slate-100">Selected Company Manager</div>
-                        <div className="text-[10px] text-muted-foreground">Authorized Signatory</div>
+                        <div className="text-[11px] text-muted-foreground">Authorized Signatory</div>
                       </div>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 whitespace-nowrap">
                       Authorized
                     </span>
                   </div>
@@ -567,14 +567,14 @@ export function Group360ProfileModal({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
                   <div className="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground">Branch Rules:</span>
+                    <span className="text-[11px] uppercase font-bold text-muted-foreground">Branch Rules:</span>
                     <div className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                       <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                       <span>{localizeTerm(group.branchRules, activeLang)}</span>
                     </div>
                   </div>
                   <div className="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-1 md:col-span-2">
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground">Head Office Address:</span>
+                    <span className="text-[11px] uppercase font-bold text-muted-foreground">Head Office Address:</span>
                     <div className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                       <span className="shrink-0">{getCountryFlag(group.country)}</span>
                       <span>{group.address || "Main Commercial Plaza"}, {group.city}, {group.state ? `${group.state}, ` : ""}{group.country}</span>
@@ -618,15 +618,15 @@ export function Group360ProfileModal({
                           {/* Top Row: #1 + Active, Currency */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                                 #{i + 1}
                               </span>
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
+                              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1 whitespace-nowrap">
                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
                                 Active
                               </span>
                             </div>
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300">
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 whitespace-nowrap">
                               {comp.base_currency || "USD"}
                             </span>
                           </div>
@@ -768,10 +768,10 @@ export function Group360ProfileModal({
                               <h4 className="font-black text-sm sm:text-base text-slate-900 dark:text-slate-100">
                                 {localizeName(comp.name, activeLang)}
                               </h4>
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-950 dark:text-blue-300">
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-black bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-950 dark:text-blue-300 whitespace-nowrap">
                                 {comp.base_currency || "USD"}
                               </span>
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-mono">
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-mono whitespace-nowrap">
                                 {comp.business_type || "LLC"}
                               </span>
                             </div>
@@ -829,7 +829,7 @@ export function Group360ProfileModal({
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                         {/* Address */}
                         <div className="p-2.5 bg-slate-50/70 dark:bg-slate-900 rounded-xl space-y-0.5">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                          <span className="text-[11px] uppercase font-bold text-muted-foreground flex items-center gap-1">
                             <MapPin className="h-3 w-3 text-rose-500" /> Location / Address
                           </span>
                           <div className="text-slate-800 dark:text-slate-200 font-medium">
@@ -839,7 +839,7 @@ export function Group360ProfileModal({
 
                         {/* Contacts */}
                         <div className="p-2.5 bg-slate-50/70 dark:bg-slate-900 rounded-xl space-y-0.5">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                          <span className="text-[11px] uppercase font-bold text-muted-foreground flex items-center gap-1">
                             <Phone className="h-3 w-3 text-emerald-500" /> Direct Contacts
                           </span>
                           <div className="flex items-center gap-2" dir="ltr">
@@ -860,7 +860,7 @@ export function Group360ProfileModal({
 
                         {/* Licenses */}
                         <div className="p-2.5 bg-slate-50/70 dark:bg-slate-900 rounded-xl space-y-0.5">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                          <span className="text-[11px] uppercase font-bold text-muted-foreground flex items-center gap-1">
                             <FileText className="h-3 w-3 text-purple-500" /> Primary License / TRN
                           </span>
                           <div className="font-mono font-bold text-slate-800 dark:text-slate-200">
@@ -889,7 +889,7 @@ export function Group360ProfileModal({
 
               <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 font-black uppercase text-[10px]">
+                  <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 font-black uppercase text-[11px]">
                     <tr>
                       <Th className="p-3">Entity / Stakeholder</Th>
                       <Th className="p-3">Contact Type</Th>
@@ -960,7 +960,7 @@ export function Group360ProfileModal({
 
               <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 font-black uppercase text-[10px]">
+                  <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 font-black uppercase text-[11px]">
                     <tr>
                       <Th className="p-3 text-center w-10">#</Th>
                       <Th className="p-3">Sister Company</Th>
@@ -975,12 +975,12 @@ export function Group360ProfileModal({
                         <td className="p-3 text-center font-bold text-slate-400">{idx + 1}</td>
                         <td className="p-3 font-bold text-slate-900 dark:text-slate-100">
                           {reg.companyName}
-                          <span className="block text-[10px] text-muted-foreground font-mono">{reg.companyCode}</span>
+                          <span className="block text-[11px] text-muted-foreground font-mono">{reg.companyCode}</span>
                         </td>
                         <td className="p-3 font-semibold text-slate-700 dark:text-slate-300">{reg.type}</td>
                         <td className="p-3 font-mono font-bold text-blue-600 dark:text-blue-400">{reg.value}</td>
                         <td className="p-3 text-center">
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
                             Verified
                           </span>
                         </td>
@@ -1014,7 +1014,7 @@ export function Group360ProfileModal({
                         </div>
                         <div>
                           <div className="font-black text-xs">{curr} Operating Ledger</div>
-                          <div className="text-[10px] text-muted-foreground">Main Settlement Currency</div>
+                          <div className="text-[11px] text-muted-foreground">Main Settlement Currency</div>
                         </div>
                       </div>
                       <span className="font-mono font-bold text-xs text-emerald-600">Active</span>
@@ -1049,7 +1049,7 @@ export function Group360ProfileModal({
                     </div>
                     <div>
                       <h4 className="font-black text-sm">Group Master Profile (A4)</h4>
-                      <p className="text-[10px] text-muted-foreground">Official consortium record with all sister entities</p>
+                      <p className="text-[11px] text-muted-foreground">Official consortium record with all sister entities</p>
                     </div>
                   </div>
                   <Button
@@ -1069,7 +1069,7 @@ export function Group360ProfileModal({
                     </div>
                     <div>
                       <h4 className="font-black text-sm">Consortium Compliance Certificate</h4>
-                      <p className="text-[10px] text-muted-foreground">360° corporate structure and shareholding breakdown</p>
+                      <p className="text-[11px] text-muted-foreground">360° corporate structure and shareholding breakdown</p>
                     </div>
                   </div>
                   <Button
@@ -1105,7 +1105,7 @@ export function Group360ProfileModal({
                   <div className="space-y-0.5">
                     <div className="font-bold text-slate-900 dark:text-slate-100">Consortium Registered</div>
                     <div className="text-muted-foreground">Created by Super Admin • Master Serial: {group.groupAccountNo}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">Status: Verified in Database</div>
+                    <div className="text-[11px] text-slate-400 font-mono">Status: Verified in Database</div>
                   </div>
                 </div>
 
@@ -1117,7 +1117,7 @@ export function Group360ProfileModal({
                     <div className="space-y-0.5">
                       <div className="font-bold text-slate-900 dark:text-slate-100">Sister Company Added: {c.name}</div>
                       <div className="text-muted-foreground">Code: {c.company_code} • Currency: {c.base_currency}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">{c.created_at || "Active Record"}</div>
+                      <div className="text-[11px] text-slate-400 font-mono">{c.created_at || "Active Record"}</div>
                     </div>
                   </div>
                 ))}
@@ -1172,7 +1172,7 @@ export function Group360ProfileModal({
                     <h3 className="font-black text-base text-slate-900 dark:text-slate-100">
                       {localizeName(selectedCompanyForPreview.name, activeLang)}
                     </h3>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 whitespace-nowrap">
                       {selectedCompanyForPreview.base_currency || "USD"}
                     </span>
                   </div>
@@ -1193,15 +1193,15 @@ export function Group360ProfileModal({
 
             <div className="grid grid-cols-2 gap-2.5 text-xs">
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Business Type / Form:</span>
+                <span className="text-[11px] uppercase font-bold text-muted-foreground">Business Type / Form:</span>
                 <div className="font-bold text-slate-800 dark:text-slate-200">{selectedCompanyForPreview.business_type || "LLC"}</div>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Operating Currency:</span>
+                <span className="text-[11px] uppercase font-bold text-muted-foreground">Operating Currency:</span>
                 <div className="font-bold text-blue-600 dark:text-blue-400">{selectedCompanyForPreview.base_currency || "USD"} Base Ledger</div>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1 col-span-2">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Location & Address:</span>
+                <span className="text-[11px] uppercase font-bold text-muted-foreground">Location & Address:</span>
                 <div className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
                   <span>
@@ -1210,13 +1210,13 @@ export function Group360ProfileModal({
                 </div>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Primary Mobile:</span>
+                <span className="text-[11px] uppercase font-bold text-muted-foreground">Primary Mobile:</span>
                 <div className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
                   {selectedCompanyForPreview.contacts?.find((c) => c.type.toLowerCase().includes("mobile") || c.type.toLowerCase().includes("phone"))?.value || group.primaryContact}
                 </div>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Official Email:</span>
+                <span className="text-[11px] uppercase font-bold text-muted-foreground">Official Email:</span>
                 <div className="font-mono font-bold text-blue-600 dark:text-blue-400 truncate">
                   {selectedCompanyForPreview.contacts?.find((c) => c.type.toLowerCase().includes("email"))?.value || group.email}
                 </div>
@@ -1226,7 +1226,7 @@ export function Group360ProfileModal({
             {/* Registrations & Licenses */}
             {selectedCompanyForPreview.registrations && selectedCompanyForPreview.registrations.length > 0 && (
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Verified Registrations:</span>
+                <span className="text-[11px] uppercase font-bold text-muted-foreground">Verified Registrations:</span>
                 <div className="space-y-1">
                   {selectedCompanyForPreview.registrations.map((r, idx) => (
                     <div key={idx} className="flex justify-between text-xs">

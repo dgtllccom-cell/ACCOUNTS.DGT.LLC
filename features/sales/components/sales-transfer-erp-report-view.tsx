@@ -91,7 +91,7 @@ function SectionCard({
           <h2 className="text-[11px] font-black uppercase tracking-wider text-[#0f2942]">{title}</h2>
         </div>
         {badge && (
-          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${statusColor(badge)}`}>
+          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-black uppercase tracking-wider ${statusColor(badge)}`}>
             {statusLabel(badge, lang)}
           </span>
         )}
@@ -361,18 +361,18 @@ function getCurrencySymbol(c: string) {
             className="h-8 text-white hover:bg-white/10 gap-1.5 px-2"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-bold uppercase">{t(lang, "pter.back_to_report", "Back to Report")}</span>
+            <span className="text-[11px] font-bold uppercase">{t(lang, "pter.back_to_report", "Back to Report")}</span>
           </Button>
           <div className="h-4 w-px bg-white/20" />
           <div>
-            <p className="text-[8px] font-bold uppercase tracking-widest text-blue-200">{t(lang, "nav.sales_transfer_payment", "Sales Transfer Payment")}</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-blue-200">{t(lang, "nav.sales_transfer_payment", "Sales Transfer Payment")}</p>
             <p className="text-xs font-black text-white">{d.salesBookingOrderNumber}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Status badge */}
-          <span className={`hidden sm:inline-flex items-center rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${statusColor(d.payment_status || d.status || "Pending")}`}>
+          <span className={`hidden sm:inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider ${statusColor(d.payment_status || d.status || "Pending")}`}>
             {statusLabel(d.payment_status || d.status || "Pending", lang)}
           </span>
 
@@ -384,7 +384,7 @@ function getCurrencySymbol(c: string) {
             className="h-8 text-white hover:bg-white/10 gap-1.5 px-2.5"
           >
             <Printer className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-bold uppercase hidden sm:inline">{t(lang, "purchase.pmw_print_pdf", "Print / PDF")}</span>
+            <span className="text-[11px] font-bold uppercase hidden sm:inline">{t(lang, "purchase.pmw_print_pdf", "Print / PDF")}</span>
           </Button>
 
           <Button
@@ -396,7 +396,7 @@ function getCurrencySymbol(c: string) {
             className="h-8 text-white hover:bg-white/10 gap-1.5 px-2.5 disabled:opacity-50"
           >
             <PenLine className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-bold uppercase hidden sm:inline">{t(lang, "sales.ster_edit_booking", "Edit Booking")}</span>
+            <span className="text-[11px] font-bold uppercase hidden sm:inline">{t(lang, "sales.ster_edit_booking", "Edit Booking")}</span>
           </Button>
 
           {/* ★ PRIMARY: Transfer Payment button */}
@@ -405,7 +405,7 @@ function getCurrencySymbol(c: string) {
             size="sm"
             onClick={handleTransferPayment}
             disabled={transferring || (d.ledger_posting_status === "posted" && !d.is_edited_since_transfer)}
-            className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] uppercase tracking-wide px-3 shadow-md gap-1.5 border-none disabled:opacity-50"
+            className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[11px] uppercase tracking-wide px-3 shadow-md gap-1.5 border-none disabled:opacity-50"
           >
             <WalletCards className="h-3.5 w-3.5" />
             {transferring ? "Transferring..." : "Transfer Payment"}
@@ -420,14 +420,14 @@ function getCurrencySymbol(c: string) {
         <div className="rounded-xl bg-[#0f2942] text-white p-5 shadow-md print:rounded-none">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-blue-200">{brandLine} — {t(lang, "ster.enterprise_erp", "Enterprise ERP")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-200">{brandLine} — {t(lang, "ster.enterprise_erp", "Enterprise ERP")}</p>
               <h1 className="text-xl font-black tracking-tight mt-0.5">{t(lang, "pter.erp_report_title", "ERP Transaction Report")}</h1>
-              <p className="text-[10px] text-blue-200 font-semibold mt-0.5">{t(lang, "ster.sales_transfer_audit_doc", "Sales Transfer Payment — Official Audit Document")}</p>
+              <p className="text-[11px] text-blue-200 font-semibold mt-0.5">{t(lang, "ster.sales_transfer_audit_doc", "Sales Transfer Payment — Official Audit Document")}</p>
             </div>
             <div className="text-right">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-blue-200">{t(lang, "pter.journal_number", "Journal Number")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-blue-200">{t(lang, "pter.journal_number", "Journal Number")}</p>
               <p className="text-sm font-black font-mono">{journalNumber}</p>
-              <p className="text-[10px] text-blue-300 font-mono mt-0.5">{journalDate}</p>
+              <p className="text-[11px] text-blue-300 font-mono mt-0.5">{journalDate}</p>
             </div>
           </div>
         </div>
@@ -486,7 +486,7 @@ function getCurrencySymbol(c: string) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs border-collapse">
               <thead>
-                <tr className="bg-[#0f2942] text-white text-[10px] font-black uppercase tracking-wider">
+                <tr className="bg-[#0f2942] text-white text-[11px] font-black uppercase tracking-wider">
                   {["#", "Product Name", "Qty", "Unit", "Gross Wt (kg)", "Net Wt (kg)", "Rate", "Total Amount"].map((h) => (
                     <Th key={h} className="px-3 py-2 text-right first:text-left border-r border-white/10 last:border-r-0 whitespace-nowrap">
                       {h}
@@ -500,7 +500,7 @@ function getCurrencySymbol(c: string) {
                     <td className="px-3 py-2.5 text-slate-400 font-bold">{idx + 1}</td>
                     <td className="px-3 py-2.5 font-bold text-slate-800 text-left max-w-[180px]">
                       {g.goodsName || g.productName || "-"}
-                      {g.brand ? <span className="block text-[9px] text-slate-400 font-medium">{g.brand}</span> : null}
+                      {g.brand ? <span className="block text-[11px] text-slate-400 font-medium">{g.brand}</span> : null}
                     </td>
                     <td className="px-3 py-2.5 text-right font-mono font-bold">{Number(g.qtyNo || 0).toLocaleString()}</td>
                     <td className="px-3 py-2.5 text-right font-semibold">{g.qtyName || "Units"}</td>
@@ -574,9 +574,9 @@ function getCurrencySymbol(c: string) {
                   { label: "Remaining Due", value: `${money(displayRemainingUsd)} ${currencySymbol}`, subValue: `${money(displayRemainingPkr)} ${localCurrencySymbol}`, color: "text-rose-600" }
                 ].map((item) => (
                   <div key={item.label} className="rounded-lg border bg-slate-50 p-3 text-center dark:bg-slate-900/40">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
+                    <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
                     <p className={`text-sm font-black mt-1 font-mono ${item.color}`}>{item.value}</p>
-                    {item.subValue && <p className="text-[10px] font-bold font-mono text-slate-500 mt-0.5">{item.subValue}</p>}
+                    {item.subValue && <p className="text-[11px] font-bold font-mono text-slate-500 mt-0.5">{item.subValue}</p>}
                   </div>
                 ))}
               </div>
@@ -609,7 +609,7 @@ function getCurrencySymbol(c: string) {
               <div className="overflow-x-auto rounded-lg border border-slate-200">
                 <table className="w-full text-xs border-collapse">
                   <thead>
-                    <tr className="bg-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-650 border-b border-slate-200">
+                    <tr className="bg-slate-100 text-[11px] font-black uppercase tracking-wider text-slate-650 border-b border-slate-200">
                       <Th className="px-4 py-2.5 text-left">{t(lang, "pter.col_gl_code", "GL Code")}</Th>
                       <Th className="px-4 py-2.5 text-left">{t(lang, "purchase.f_account_name", "Account Name")}</Th>
                       <Th className="px-4 py-2.5 text-right">{t(lang, "cdash.col_debit", "Debit")}</Th>
@@ -638,8 +638,8 @@ function getCurrencySymbol(c: string) {
           </div>
 
           {/* Accounting flow note */}
-          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-[10px] font-semibold text-slate-500 space-y-1">
-            <p className="font-black text-slate-600 uppercase text-[9px] tracking-wider mb-1">{t(lang, "ster.accounting_flow_stage", "Accounting Flow — Purchase Transfer Stage")}</p>
+          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] font-semibold text-slate-500 space-y-1">
+            <p className="font-black text-slate-600 uppercase text-[11px] tracking-wider mb-1">{t(lang, "ster.accounting_flow_stage", "Accounting Flow — Purchase Transfer Stage")}</p>
             <p>
               <span className="text-blue-700 font-black">{t(lang, "pter.debit_label", "DEBIT:")}</span>{" "}
               Customer Account ({form.purchaseAccountNo || d.purchaseAccountNumber || "—"}) = Goods received at purchase cost
@@ -660,7 +660,7 @@ function getCurrencySymbol(c: string) {
             </div>
             <div>
               <p className="text-xs font-black text-emerald-900">{t(lang, "ster.ready_to_process_transfer", "Ready to process payment transfer?")}</p>
-              <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">
+              <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
                 This will automatically generate double-entry ledgers, post to general/supplier/cash accounts, and update status.
               </p>
             </div>
@@ -689,7 +689,7 @@ function getCurrencySymbol(c: string) {
         )}
 
         {/* Footer */}
-        <footer className="rounded-xl bg-[#0f2942] text-white py-3 px-5 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider print:rounded-none">
+        <footer className="rounded-xl bg-[#0f2942] text-white py-3 px-5 flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold uppercase tracking-wider print:rounded-none">
           <div className="flex items-center gap-2">
             <Globe className="h-3.5 w-3.5" />
             <span>{brandLine}</span>
@@ -705,7 +705,7 @@ function getCurrencySymbol(c: string) {
         </footer>
 
         {/* Print-only Transfer To Payment notice */}
-        <div className="hidden print:block border-t border-slate-300 pt-4 mt-2 text-center text-[10px] font-semibold text-slate-500">
+        <div className="hidden print:block border-t border-slate-300 pt-4 mt-2 text-center text-[11px] font-semibold text-slate-500">
           This is an official ERP transaction document. Transfer to payment must be processed via the ERP system.
         </div>
       </main>

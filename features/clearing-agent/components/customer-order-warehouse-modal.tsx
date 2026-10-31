@@ -307,10 +307,10 @@ export function CustomerOrderWarehouseModal({
                 </span>
               </div>
               {activeTab === "company_warehouse" && (
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-white text-[9px] font-bold">✓</span>
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold leading-none">✓</span>
               )}
             </div>
-            <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {tt("company_wh_desc", "From DGT central or branch warehouse master")}
             </p>
           </button>
@@ -333,10 +333,10 @@ export function CustomerOrderWarehouseModal({
                 </span>
               </div>
               {activeTab === "customer_warehouse" && (
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-white text-[9px] font-bold">✓</span>
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px] font-bold leading-none">✓</span>
               )}
             </div>
-            <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {tt("customer_wh_desc", "Search by Customer Account # & registered address")}
             </p>
           </button>
@@ -359,10 +359,10 @@ export function CustomerOrderWarehouseModal({
                 </span>
               </div>
               {activeTab === "other" && (
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 text-white text-[9px] font-bold">✓</span>
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 text-white text-[11px] font-bold leading-none">✓</span>
               )}
             </div>
-            <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {tt("other_wh_desc", "Custom third-party yard, port terminal or depot")}
             </p>
           </button>
@@ -377,7 +377,7 @@ export function CustomerOrderWarehouseModal({
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
                   <span>{tt("select_company_warehouse_dropdown", "Company Warehouse Account / Facility")} *</span>
-                  <span className="text-[10px] font-mono text-slate-400">
+                  <span className="text-[11px] font-mono text-slate-400">
                     {loadingWhs ? tt("loading", "Loading warehouses...") : `${filteredCompanyWarehouses.length} ${tt("facilities_available", "facilities available")}`}
                   </span>
                 </label>
@@ -428,17 +428,17 @@ export function CustomerOrderWarehouseModal({
                             {selectedCompanyRecord.warehouse_name || selectedCompanyRecord.name}
                           </span>
                           {selectedCompanyRecord.warehouse_code && (
-                            <span className="rounded bg-blue-200/80 px-1.5 py-0.2 text-[10px] font-mono font-bold text-blue-900 dark:bg-blue-900 dark:text-blue-200">
+                            <span className="rounded bg-blue-200/80 px-1.5 py-0.2 text-[11px] font-mono font-bold text-blue-900 dark:bg-blue-900 dark:text-blue-200">
                               {selectedCompanyRecord.warehouse_code}
                             </span>
                           )}
                         </div>
-                        <p className="text-[10.5px] text-blue-700/80 dark:text-blue-300">
+                        <p className="text-[11px] text-blue-700/80 dark:text-blue-300">
                           {tt("dgt_verified_facility", "DGT Verified Corporate Storage Facility")}
                         </p>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
                       <ShieldCheck className="h-3 w-3" />
                       <span>{selectedCompanyRecord.status || tt("active", "Active")}</span>
                     </span>
@@ -449,7 +449,7 @@ export function CustomerOrderWarehouseModal({
                       <div className="flex items-start gap-1.5 text-slate-600 dark:text-slate-300">
                         <MapPin className="h-3.5 w-3.5 text-blue-600 shrink-0 mt-0.5" />
                         <div>
-                          <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                          <span className="text-[11px] font-bold uppercase text-slate-400 block">
                             {tt("warehouse_address", "Facility Full Address")}
                           </span>
                           <span className="font-semibold text-slate-800 dark:text-slate-100">
@@ -536,7 +536,7 @@ export function CustomerOrderWarehouseModal({
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
                   <span>{tt("select_customer_facility_label", "Select Customer / Account Facility")} *</span>
-                  <span className="text-[10px] font-mono text-slate-400">
+                  <span className="text-[11px] font-mono text-slate-400">
                     {filteredCustomerList.length} {tt("customers_available", "registered clients")}
                   </span>
                 </label>
@@ -572,12 +572,12 @@ export function CustomerOrderWarehouseModal({
                           }`}
                         >
                           <div className="min-w-0 pr-1">
-                            <span className="font-mono text-[10px] text-slate-400 block">
+                            <span className="font-mono text-[11px] text-slate-400 block">
                               {c.person_code || c.customer_code || `#${c.id.slice(0, 6)}`}
                             </span>
                             <span className="truncate block font-semibold">{c.customer_name}</span>
                             {c.city_name && (
-                              <span className="text-[10px] text-slate-400 block truncate">{c.city_name}, {c.country_name}</span>
+                              <span className="text-[11px] text-slate-400 block truncate">{c.city_name}, {c.country_name}</span>
                             )}
                           </div>
                           {isSelected && <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
@@ -648,7 +648,7 @@ export function CustomerOrderWarehouseModal({
                 <div className="flex items-center gap-2 font-bold mb-1">
                   <User className="h-3.5 w-3.5 text-emerald-600" />
                   <span>{custWhName.trim() || tt("customer_facility_preview", "Customer Registered Facility")}</span>
-                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-emerald-200/80 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-200">
+                  <span className="text-[11px] uppercase font-mono px-1.5 py-0.2 rounded bg-emerald-200/80 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-200">
                     {tt("verified_client", "Registered Client")}
                   </span>
                 </div>
@@ -656,7 +656,7 @@ export function CustomerOrderWarehouseModal({
                   {custWhAddress.trim() || tt("registered_destination_address", "Client destination facility for delivery and unloading.")}
                 </p>
                 {(custContactPerson || custContactPhone) && (
-                  <p className="text-[10.5px] text-emerald-700 dark:text-emerald-400 mt-1">
+                  <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-1">
                     {tt("contact", "Contact")}: {[custContactPerson, custContactPhone].filter(Boolean).join(" • ")}
                   </p>
                 )}
@@ -739,7 +739,7 @@ export function CustomerOrderWarehouseModal({
                 <div className="flex items-center gap-2 font-bold mb-1">
                   <MapPin className="h-3.5 w-3.5 text-amber-600" />
                   <span>{otherWhName.trim() || tt("adhoc_yard_preview", "Ad-Hoc / Third-Party External Facility")}</span>
-                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-amber-200/80 text-amber-900 dark:bg-amber-900 dark:text-amber-200">
+                  <span className="text-[11px] uppercase font-mono px-1.5 py-0.2 rounded bg-amber-200/80 text-amber-900 dark:bg-amber-900 dark:text-amber-200">
                     {tt("adhoc_saved", "Saved to Order")}
                   </span>
                 </div>
@@ -747,7 +747,7 @@ export function CustomerOrderWarehouseModal({
                   {otherWhAddress.trim() || tt("enter_adhoc_address", "Specify external location address and gate handling details above. This information is saved directly to this cargo manifest entry.")}
                 </p>
                 {(otherContactPerson || otherContactPhone) && (
-                  <p className="text-[10.5px] text-amber-700 dark:text-amber-400 mt-1">
+                  <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-1">
                     {tt("contact", "Contact")}: {[otherContactPerson, otherContactPhone].filter(Boolean).join(" • ")}
                   </p>
                 )}

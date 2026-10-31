@@ -207,7 +207,7 @@ export function MobileDocsView({
                     <p className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">
                       {d.name}
                     </p>
-                    <p className="text-[10px] text-slate-400">
+                    <p className="text-[11px] text-slate-400">
                       {d.createdAt ? String(d.createdAt).slice(0, 10) : ""}
                     </p>
                   </div>

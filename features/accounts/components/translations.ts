@@ -1,4 +1,5 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 
 export const accountTranslations: Record<string, Record<SupportedLanguage, string>> = {
   newAccountReport: {
@@ -2259,6 +2260,8 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
 
 export function getLabel(key: string, lang: SupportedLanguage): string {
   const dict = accountTranslations[key];
-  if (!dict) return key;
+  // a label this table does not carry comes from the central dictionary ("nas.<key>") — never the raw key on screen
+  // ("accountNameRequired" was shown as text in every language)
+  if (!dict) return t(lang, `nas.${key}` as never, "") || key;
   return dict[lang] || dict["en"];
 }

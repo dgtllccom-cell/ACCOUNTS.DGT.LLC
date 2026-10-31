@@ -11,6 +11,7 @@ import { ledgerReportService } from "@/lib/services/ledger-report-service";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { ledgerRowNameMatcher } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   reportScope: z.enum(["super_admin", "country", "branch"]).default("super_admin"),
@@ -107,7 +108,9 @@ export async function GET(request: NextRequest) {
     let rows = query.scope ? rawLedgers.filter((row) => row.scope === query.scope) : rawLedgers;
     const qText = normalizeForSearch(query.q ?? "");
     if (qText) {
+      const nameMatch = await ledgerRowNameMatcher(query.q ?? "");
       rows = rows.filter((row) => {
+        if (nameMatch?.(row)) return true;
         const hay = normalizeForSearch(
           [
             row.ledgerCode,
@@ -577,7 +580,16 @@ export async function GET(request: NextRequest) {
       lastEntryDateOverall
     });
 
-    const selectedLedger = query.ledgerId ? finalRows.find((row) => row.ledgerId === query.ledgerId) ?? null : null;
+    // ?ledgerId= may also carry what the screen shows — the account number (ACC-000080) or an
+    // account / ledger code; listLedgers already narrowed the rows to it, so match on those too.
+    const wantedRef = (query.ledgerId ?? "").trim().toUpperCase();
+    const selectedLedger = query.ledgerId
+      ? finalRows.find((row) => row.ledgerId === query.ledgerId) ??
+        finalRows.find((row) =>
+          [row.accountCode, row.rawAccountCode, row.ledgerCode, row.manualReferenceNumber].some((ref) => ref && String(ref).trim().toUpperCase() === wantedRef)
+        ) ??
+        null
+      : null;
 
     const statement =
       query.ledgerId && selectedLedger

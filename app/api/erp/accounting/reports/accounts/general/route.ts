@@ -8,7 +8,7 @@ import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { DOMAIN_SUPER_ADMIN_ROLES } from "@/lib/permissions/enterprise-roles";
 import { ledgerScopeSchema, supportedLanguageSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { localizeRecordNames, getPhraseTranslator } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, getPhraseTranslator, translationMatchSet } from "@/lib/i18n/localize-records";
 import { getAppEnvironment } from "@/lib/env/environment";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { translateCountry } from "@/lib/i18n/table-values";
@@ -668,8 +668,11 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
     });
 
     const q = normalizeSearch(effectiveQuery.q ?? "");
+    // A name typed in another language still finds the account: ids whose stored translation matches.
+    const nameMatchIds = q ? await translationMatchSet("enterprise_accounts", ["name"], effectiveQuery.q ?? "") : null;
     const rowsFiltered = q
       ? filtered.filter((row) =>
+          nameMatchIds?.has(row.accountId) ||
           normalizeSearch(
             [
               row.accountCode,
@@ -902,7 +905,7 @@ export async function GET(request: NextRequest) {
     if (profileRes.error) throw new Error(profileRes.error.message);
     if (accountRes.error) throw new Error(accountRes.error.message);
 
-    let accountRows = (accountRes.data ?? []) as EnterpriseAccountRow[];
+    const accountRows = (accountRes.data ?? []) as EnterpriseAccountRow[];
     try {
       const { data: coreCountryData } = await supabase
         .from("enterprise_accounts")
@@ -998,35 +1001,36 @@ export async function GET(request: NextRequest) {
     // Account/company name localization is handled in one batch after row assembly via the
     // central resolver (localizeAccountNames / localizeRecordNames) — no per-row translation
     // prefetch needed here anymore.
-    const ledgerRes = await fetchInChunks(accountIds, 150, async (chunk) => {
-      return supabase
-        .from("ledgers")
-        .select("id, enterprise_account_id, parent_ledger_id, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active, created_at, updated_at")
-        .is("deleted_at", null)
-        .or(`enterprise_account_id.in.(${chunk.join(",")}),id.in.(${chunk.join(",")})`);
-    });
-
-    const postingRes = await fetchInChunks(accountIds, 150, async (chunk) => {
-      return supabase
-        .from("ledger_posting_lines")
-        .select("enterprise_account_id, ledger_id, batch_id, debit, credit, currency, usd_rate, usd_amount, created_at")
-        .or(`enterprise_account_id.in.(${chunk.join(",")}),ledger_id.in.(${chunk.join(",")})`);
-    });
-
-    const roznamchaLineRes = await fetchInChunks(accountIds, 150, async (chunk) => {
-      return supabase
-        .from("roznamcha_lines")
-        .select("enterprise_account_id, ledger_id, roznamcha_entry_id, debit, credit, currency, usd_rate, usd_amount")
-        .or(`enterprise_account_id.in.(${chunk.join(",")}),ledger_id.in.(${chunk.join(",")})`);
-    });
-
-    const auditRes = await fetchInChunks(accountIds, 150, async (chunk) => {
-      return supabase
-        .from("audit_logs")
-        .select("entity_id, entity_table, action, created_at")
-        .in("entity_id", chunk)
-        .in("entity_table", ["enterprise_accounts", "ledgers"]);
-    });
+    // These four reads are independent HTTP requests (unlike the single-connection local-pg path above), so they run together:
+    // the register waited ~20s for ~18 sequential round trips. Same queries, same results.
+    const [ledgerRes, postingRes, roznamchaLineRes, auditRes] = await Promise.all([
+      fetchInChunks(accountIds, 150, async (chunk) => {
+        return supabase
+          .from("ledgers")
+          .select("id, enterprise_account_id, parent_ledger_id, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active, created_at, updated_at")
+          .is("deleted_at", null)
+          .or(`enterprise_account_id.in.(${chunk.join(",")}),id.in.(${chunk.join(",")})`);
+      }),
+      fetchInChunks(accountIds, 150, async (chunk) => {
+        return supabase
+          .from("ledger_posting_lines")
+          .select("enterprise_account_id, ledger_id, batch_id, debit, credit, currency, usd_rate, usd_amount, created_at")
+          .or(`enterprise_account_id.in.(${chunk.join(",")}),ledger_id.in.(${chunk.join(",")})`);
+      }),
+      fetchInChunks(accountIds, 150, async (chunk) => {
+        return supabase
+          .from("roznamcha_lines")
+          .select("enterprise_account_id, ledger_id, roznamcha_entry_id, debit, credit, currency, usd_rate, usd_amount")
+          .or(`enterprise_account_id.in.(${chunk.join(",")}),ledger_id.in.(${chunk.join(",")})`);
+      }),
+      fetchInChunks(accountIds, 150, async (chunk) => {
+        return supabase
+          .from("audit_logs")
+          .select("entity_id, entity_table, action, created_at")
+          .in("entity_id", chunk)
+          .in("entity_table", ["enterprise_accounts", "ledgers"]);
+      }),
+    ]);
 
     if (ledgerRes.error) throw new Error(ledgerRes.error.message);
     if (postingRes.error) throw new Error(postingRes.error.message);
@@ -1041,13 +1045,14 @@ export async function GET(request: NextRequest) {
     const batchIds = [...new Set(postingLines.map((row) => row.batch_id).filter((value): value is string => Boolean(value)))];
     const entryIds = [...new Set(rozLines.map((row) => row.roznamcha_entry_id).filter((value): value is string => Boolean(value)))];
 
-    const postingBatchRes = await fetchInChunks(batchIds, 150, async (chunk) => {
-      return supabase.from("ledger_posting_batches").select("id, reference_no, entry_date, status, created_at").in("id", chunk);
-    });
-
-    const roznamchaEntryRes = await fetchInChunks(entryIds, 150, async (chunk) => {
-      return supabase.from("roznamcha_entries").select("id, voucher_no, entry_date, status, created_at").in("id", chunk);
-    });
+    const [postingBatchRes, roznamchaEntryRes] = await Promise.all([
+      fetchInChunks(batchIds, 150, async (chunk) => {
+        return supabase.from("ledger_posting_batches").select("id, reference_no, entry_date, status, created_at").in("id", chunk);
+      }),
+      fetchInChunks(entryIds, 150, async (chunk) => {
+        return supabase.from("roznamcha_entries").select("id, voucher_no, entry_date, status, created_at").in("id", chunk);
+      }),
+    ]);
 
     if (postingBatchRes.error) throw new Error(postingBatchRes.error.message);
     if (roznamchaEntryRes.error) throw new Error(roznamchaEntryRes.error.message);
@@ -1063,14 +1068,16 @@ export async function GET(request: NextRequest) {
     const bankIds = [...new Set(accountRows.map((row) => row.bank_id).filter((value): value is string => Boolean(value)))];
     const creatorIds = [...new Set(accountRows.map((row: any) => row.created_by).filter((value: any): value is string => Boolean(value)))];
 
-    const countriesRes = await fetchInChunks(countryIds, 150, async (chunk) => supabase.from("countries").select("id, name, iso2, currency_code").in("id", chunk));
-    const countryBranchesRes = await fetchInChunks(countryBranchIds, 150, async (chunk) => supabase.from("country_branches").select("id, country_id, name, code, local_currency, status").in("id", chunk));
-    const cityBranchesRes = await fetchInChunks(cityBranchIds, 150, async (chunk) => supabase.from("city_branches").select("id, country_id, country_branch_id, city_name, name, code, local_currency, status").in("id", chunk));
-    const companyRes = profileRes.data?.default_company_id ? await supabase.from("companies").select("id, name, legal_name, base_currency, created_at, updated_at").eq("id", profileRes.data.default_company_id).maybeSingle() : { data: null, error: null };
-    const customersRes = await fetchInChunks(customerIds, 150, async (chunk) => supabase.from("customers").select("id, customer_name").in("id", chunk));
-    const companiesListRes = await fetchInChunks(companyIds, 150, async (chunk) => supabase.from("companies").select("id, name, legal_name").in("id", chunk));
-    const banksListRes = await fetchInChunks(bankIds, 150, async (chunk) => supabase.from("banks").select("id, bank_name, branch_name, account_number, phone, email").in("id", chunk));
-    const creatorsRes = await fetchInChunks(creatorIds, 150, async (chunk) => supabase.from("profiles").select("id, full_name, user_code").in("id", chunk));
+    const [countriesRes, countryBranchesRes, cityBranchesRes, companyRes, customersRes, companiesListRes, banksListRes, creatorsRes] = await Promise.all([
+      fetchInChunks(countryIds, 150, async (chunk) => supabase.from("countries").select("id, name, iso2, currency_code").in("id", chunk)),
+      fetchInChunks(countryBranchIds, 150, async (chunk) => supabase.from("country_branches").select("id, country_id, name, code, local_currency, status").in("id", chunk)),
+      fetchInChunks(cityBranchIds, 150, async (chunk) => supabase.from("city_branches").select("id, country_id, country_branch_id, city_name, name, code, local_currency, status").in("id", chunk)),
+      profileRes.data?.default_company_id ? supabase.from("companies").select("id, name, legal_name, base_currency, created_at, updated_at").eq("id", profileRes.data.default_company_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+      fetchInChunks(customerIds, 150, async (chunk) => supabase.from("customers").select("id, customer_name").in("id", chunk)),
+      fetchInChunks(companyIds, 150, async (chunk) => supabase.from("companies").select("id, name, legal_name").in("id", chunk)),
+      fetchInChunks(bankIds, 150, async (chunk) => supabase.from("banks").select("id, bank_name, branch_name, account_number, phone, email").in("id", chunk)),
+      fetchInChunks(creatorIds, 150, async (chunk) => supabase.from("profiles").select("id, full_name, user_code").in("id", chunk)),
+    ]);
 
     if (countriesRes.error) throw new Error(countriesRes.error.message);
     if (countryBranchesRes.error) throw new Error(countryBranchesRes.error.message);
@@ -1402,8 +1409,10 @@ export async function GET(request: NextRequest) {
     }
 
     const q = normalizeSearch(effectiveQuery.q ?? "");
+    const nameMatchIds = q ? await translationMatchSet("enterprise_accounts", ["name"], effectiveQuery.q ?? "") : null;
     const filtered = q
       ? rows.filter((row) =>
+          nameMatchIds?.has(row.accountId) ||
           normalizeSearch(
             [
               row.accountCode,

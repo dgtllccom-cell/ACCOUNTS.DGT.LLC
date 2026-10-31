@@ -341,12 +341,12 @@ export function CustomerOrderMultiSelect({
                           {ord.order_no}
                         </span>
                         {ord.transport_mode && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                             {ord.transport_mode.replace("_", " ")}
                           </span>
                         )}
                         {ord.movement_type && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50">
+                          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded uppercase bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 whitespace-nowrap">
                             {ord.movement_type}
                           </span>
                         )}
@@ -359,7 +359,7 @@ export function CustomerOrderMultiSelect({
                       )}
 
                       {(ord.loading_port_name || ord.destination_port_name) && (
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                        <div className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
                           {[ord.loading_port_name, ord.destination_port_name]
                             .filter(Boolean)
                             .join(isRtl ? " ← " : " → ")}
@@ -369,7 +369,7 @@ export function CustomerOrderMultiSelect({
 
                     {/* Right badge */}
                     {ord.bl_number && (
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 shrink-0 font-mono">
+                      <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 shrink-0 font-mono">
                         {ord.bl_number}
                       </span>
                     )}

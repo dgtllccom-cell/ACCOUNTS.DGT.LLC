@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
     assertShippingUserExplicitPermission(session, "employees", "create");
-    let supabase = await createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const body = await request.json();
 
     const {

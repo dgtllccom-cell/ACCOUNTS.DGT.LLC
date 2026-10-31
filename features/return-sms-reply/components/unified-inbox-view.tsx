@@ -366,7 +366,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-base font-black tracking-tight text-white">{_("rsms.banner_title", "WhatsApp Business API Official Channel")}</h2>
                 {whatsappConfig.isConnected ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-0.5 text-[10.5px] font-mono font-bold text-emerald-300 shadow-xs">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-0.5 text-[11px] font-mono font-bold text-emerald-300 shadow-xs whitespace-nowrap">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
@@ -374,7 +374,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                     {_("rsms.banner_connected", "Connected")} ({whatsappConfig.officialNumber})
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[10.5px] font-mono font-bold text-amber-300 shadow-xs">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[11px] font-mono font-bold text-amber-300 shadow-xs whitespace-nowrap">
                     <span className="h-2 w-2 rounded-full bg-amber-400"></span>
                     {_("rsms.banner_not_connected", "Not connected — click Connect Official WhatsApp")}
                   </span>
@@ -384,7 +384,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                 {whatsappConfig.isConnected ? (
                   <>
                     <span>{_("rsms.banner_live_webhook", "Live Webhook")}:</span>
-                    <code className="bg-slate-950/80 border border-emerald-500/20 px-2 py-0.5 rounded-lg text-[10.5px] font-mono text-emerald-300">
+                    <code className="bg-slate-950/80 border border-emerald-500/20 px-2 py-0.5 rounded-lg text-[11px] font-mono text-emerald-300">
                       {webhookUrl}
                     </code>
                   </>
@@ -497,7 +497,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                       <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
                         {c.senderName}
                       </h4>
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[11px] text-slate-400 font-mono">
                         {c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
                       </span>
                     </div>
@@ -507,21 +507,21 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                     </p>
 
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                      <span className="text-[9px] font-bold uppercase rounded-md bg-slate-100 px-1.5 py-0.5 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                      <span className="text-[11px] font-bold uppercase rounded-md bg-slate-100 px-1.5 py-0.5 text-slate-600 dark:bg-slate-800 dark:text-slate-400 whitespace-nowrap">
                         {c.senderType}
                       </span>
                       {c.countryName && (
-                        <span className="text-[9px] font-bold rounded-md bg-emerald-100 px-1.5 py-0.5 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+                        <span className="text-[11px] font-bold rounded-md bg-emerald-100 px-1.5 py-0.5 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 whitespace-nowrap">
                           {c.countryName}
                         </span>
                       )}
                       {c.status === "ai_ready" && (
-                        <span className="text-[9px] font-black rounded-md bg-amber-100 px-1.5 py-0.5 text-amber-700 dark:bg-amber-950 dark:text-amber-400 flex items-center gap-0.5">
+                        <span className="text-[11px] font-black rounded-md bg-amber-100 px-1.5 py-0.5 text-amber-700 dark:bg-amber-950 dark:text-amber-400 flex items-center gap-0.5 whitespace-nowrap">
                           <Sparkles className="h-2.5 w-2.5" /> {_("rsms.badge_ai_ready", "AI Ready")}
                         </span>
                       )}
                       {c.status === "approval_required" && (
-                        <span className="text-[9px] font-black rounded-md bg-rose-100 px-1.5 py-0.5 text-rose-700 dark:bg-rose-950 dark:text-rose-400 flex items-center gap-0.5">
+                        <span className="text-[11px] font-black rounded-md bg-rose-100 px-1.5 py-0.5 text-rose-700 dark:bg-rose-950 dark:text-rose-400 flex items-center gap-0.5 whitespace-nowrap">
                           <ShieldAlert className="h-2.5 w-2.5" /> {_("rsms.badge_approval", "Approval")}
                         </span>
                       )}
@@ -585,12 +585,12 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                 ) : messages.length === 0 && selectedConv.lastMessageText ? (
                   <div className="flex flex-col max-w-[85%] mr-auto items-start">
                     <div className="rounded-2xl p-3.5 text-xs leading-relaxed shadow-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-bl-none">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mb-1">
                         <MessageSquare className="h-3 w-3" /> {_("rsms.incoming_message", "Incoming Customer Message")}
                       </div>
                       <p className="whitespace-pre-wrap font-medium">{selectedConv.lastMessageText}</p>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-400">
+                    <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400">
                       <span>{selectedConv.lastMessageAt ? new Date(selectedConv.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : _("rsms.just_now", "Just now")}</span>
                     </div>
                   </div>
@@ -619,7 +619,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                         <p className="whitespace-pre-wrap">{m.body}</p>
                       </div>
 
-                      <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-400">
+                      <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400">
                         <span>{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         {m.direction === "outgoing" && (
                           <CheckCheck className="h-3 w-3 text-emerald-500" />
@@ -653,7 +653,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                           key={l}
                           onClick={() => setReplyLang(l)}
                           className={cn(
-                            "px-2 py-0.5 font-bold uppercase rounded-lg transition-all text-[10px]",
+                            "px-2 py-0.5 font-bold uppercase rounded-lg transition-all text-[11px]",
                             replyLang === l ? "bg-white dark:bg-slate-950 text-emerald-600 shadow-sm" : "text-slate-500"
                           )}
                         >
@@ -664,7 +664,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                   </div>
 
                   {aiDraft && (
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 rounded-lg">
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 rounded-lg">
                       ✓ {_("rsms.ai_verified", "AI verified against live context")}
                     </span>
                   )}
@@ -683,7 +683,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-2 text-slate-400">
                       <Paperclip className="h-4 w-4 cursor-pointer hover:text-slate-600" />
-                      <span className="text-[10px]">{_("rsms.zero_hallucination", "Zero-hallucination database mode active")}</span>
+                      <span className="text-[11px]">{_("rsms.zero_hallucination", "Zero-hallucination database mode active")}</span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -766,7 +766,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                   <p className="font-extrabold text-emerald-800 dark:text-emerald-300">{_("rsms.cfg_live_status", "Live status: active & connected")}</p>
                   <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">{whatsappConfig.accountName}</p>
                 </div>
-                <span className="bg-emerald-600 text-white font-black px-3 py-1 rounded-full text-[10px] tracking-wider uppercase">
+                <span className="bg-emerald-600 text-white font-black px-3 py-1 rounded-full text-[11px] tracking-wider uppercase">
                   {_("rsms.cfg_online", "Online")}
                 </span>
               </div>
@@ -820,7 +820,7 @@ export function UnifiedInboxView({ lang: langProp }: Props) {
                     type="text"
                     readOnly
                     value={webhookUrl}
-                    className="w-full font-mono text-[10.5px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 outline-none"
+                    className="w-full font-mono text-[11px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 outline-none"
                   />
                   <button
                     onClick={() => navigator.clipboard.writeText(webhookUrl)}

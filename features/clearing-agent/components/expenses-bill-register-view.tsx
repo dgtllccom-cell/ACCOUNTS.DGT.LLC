@@ -506,33 +506,6 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
   const [filterVoucher, setFilterVoucher] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  // Fetch real database records
-  useEffect(() => {
-    let isMounted = true;
-    setLoading(true);
-    fetch(`/api/erp/clearing-agent/expenses-register?category=${category}`)
-      .then((res) => res.json())
-      .then((json) => {
-        if (isMounted) {
-          if (json.success && Array.isArray(json.data)) {
-            setRawRows(json.data);
-          } else {
-            setRawRows([]);
-          }
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load expenses register:", err);
-        if (isMounted) setRawRows([]);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, [category]);
-
   // Determine category-specific text
   const categoryTitle =
     category === "customer"
@@ -809,7 +782,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               {categoryTitle}
             </h1>
-            <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+            <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 whitespace-nowrap">
               ({summary.count})
             </span>
           </div>
@@ -1039,9 +1012,9 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             {/* Blue: Total Bills */}
             <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-2.5 flex items-center justify-between dark:border-blue-900 dark:bg-blue-950/40">
               <div>
-                <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.total_bills}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">{t.total_bills}</span>
                 <span className="font-mono font-black text-blue-950 dark:text-blue-200 text-sm">{summary.total}</span>
-                <span className="text-[10px] text-slate-400 block">{summary.count} {t.records}</span>
+                <span className="text-[11px] text-slate-400 block">{summary.count} {t.records}</span>
               </div>
               <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
                 <DollarSign className="h-4 w-4" />
@@ -1051,9 +1024,9 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             {/* Green: Transferred to Ledger */}
             <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-2.5 flex items-center justify-between dark:border-emerald-900 dark:bg-emerald-950/40">
               <div>
-                <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.transferred_to_ledger}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">{t.transferred_to_ledger}</span>
                 <span className="font-mono font-black text-emerald-900 dark:text-emerald-200 text-sm">{summary.transferred}</span>
-                <span className="text-[10px] text-slate-400 block">{summary.transferredCount} {t.records}</span>
+                <span className="text-[11px] text-slate-400 block">{summary.transferredCount} {t.records}</span>
               </div>
               <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
                 <CheckCircle2 className="h-4 w-4" />
@@ -1063,9 +1036,9 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             {/* Amber: Pending Review */}
             <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-2.5 flex items-center justify-between dark:border-amber-900 dark:bg-amber-950/40">
               <div>
-                <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.pending_review}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">{t.pending_review}</span>
                 <span className="font-mono font-black text-amber-900 dark:text-amber-200 text-sm">{summary.pending}</span>
-                <span className="text-[10px] text-slate-400 block">{summary.pendingCount} {t.records}</span>
+                <span className="text-[11px] text-slate-400 block">{summary.pendingCount} {t.records}</span>
               </div>
               <div className="h-8 w-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
                 <Clock className="h-4 w-4" />
@@ -1075,9 +1048,9 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
             {/* Rose: Remaining Balance */}
             <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-2.5 flex items-center justify-between dark:border-rose-900 dark:bg-rose-950/40">
               <div>
-                <span className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 block">{t.remaining_balance}</span>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">{t.remaining_balance}</span>
                 <span className="font-mono font-black text-rose-900 dark:text-rose-200 text-sm">{summary.remaining}</span>
-                <span className="text-[10px] text-slate-400 block">{summary.pendingCount} {t.records}</span>
+                <span className="text-[11px] text-slate-400 block">{summary.pendingCount} {t.records}</span>
               </div>
               <div className="h-8 w-8 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0">
                 <ArrowRightLeft className="h-4 w-4" />
@@ -1287,7 +1260,7 @@ export function ExpensesBillRegisterView({ category, onOpenEntryForm }: Expenses
                       </td>
                       <td className="py-2.5 px-3 font-mono text-slate-500 text-center">{row.currency}</td>
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold border ${statusBadge}`}>
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusBadge}`}>
                           {statusLabel}
                         </span>
                       </td>

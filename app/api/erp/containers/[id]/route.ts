@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, invalidIdErrorOf } from "@/lib/api/response";
 
 const TEXT = ["container_number", "container_type", "seal_number", "status", "remarks"];
 
@@ -36,6 +36,8 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
     return NextResponse.json({ container: data });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
+    const invalidId = await invalidIdErrorOf(err);
+    if (invalidId) return NextResponse.json({ error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -79,6 +81,8 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     return NextResponse.json({ container: data });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
+    const invalidId = await invalidIdErrorOf(err);
+    if (invalidId) return NextResponse.json({ error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -109,6 +113,8 @@ export async function DELETE(_req: Request, context: { params: Promise<{ id: str
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
+    const invalidId = await invalidIdErrorOf(err);
+    if (invalidId) return NextResponse.json({ error: invalidId.message, code: invalidId.code }, { status: invalidId.status });
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

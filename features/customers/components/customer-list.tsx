@@ -47,6 +47,7 @@ import { getLabel } from "./translations";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { resolveCustomerName, readBilingualNamesPreference, writeBilingualNamesPreference, BILINGUAL_NAMES_STORAGE_KEY } from "@/lib/i18n/customer-name";
+import { SavedText } from "@/components/i18n/saved-text";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
@@ -674,14 +675,14 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                     />
                     <span>
                       {t(lang, "cl.show_both_names", "Show both names (second language line)")}
-                      <span className="block text-[10px] font-medium text-slate-400">{t(lang, "cl.show_both_names_hint", "Off: one name in the selected language. The saved legal name is never changed.")}</span>
+                      <span className="block text-[11px] font-medium text-slate-400">{t(lang, "cl.show_both_names_hint", "Off: one name in the selected language. The saved legal name is never changed.")}</span>
                     </span>
                   </label>
 
                   {/* 2-column selects */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">{getLabel("country", lang)}</label>
+                      <label className="text-[11px] font-bold text-slate-500 uppercase">{getLabel("country", lang)}</label>
                       <select
                         value={selectedCountryFilter}
                         onChange={(e) => {
@@ -698,7 +699,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">{getLabel("branchAndUserDetails", lang).split(" ")[0] || "Branch"}</label>
+                      <label className="text-[11px] font-bold text-slate-500 uppercase">{getLabel("branchAndUserDetails", lang).split(" ")[0] || "Branch"}</label>
                       <select
                         value={selectedBranchFilter}
                         onChange={(e) => {
@@ -717,7 +718,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">{getLabel("customerType", lang)}</label>
+                      <label className="text-[11px] font-bold text-slate-500 uppercase">{getLabel("customerType", lang)}</label>
                       <select
                         value={selectedCategoryFilter}
                         onChange={(e) => {
@@ -737,7 +738,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">{getLabel("status", lang)}</label>
+                      <label className="text-[11px] font-bold text-slate-500 uppercase">{getLabel("status", lang)}</label>
                       <select
                         value={selectedStatusTab}
                         onChange={(e) => {
@@ -759,7 +760,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cl.assigned_user", "Assigned User")}</label>
+                    <label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cl.assigned_user", "Assigned User")}</label>
                     <select
                       value={selectedAssignedFilter}
                       onChange={(e) => {
@@ -776,7 +777,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cl.col_created_date", "Created Date")}</label>
+                    <label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "cl.col_created_date", "Created Date")}</label>
                     <button
                       type="button"
                       className="w-full h-8 mt-1 px-2.5 flex items-center justify-between text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 font-medium text-slate-600"
@@ -853,7 +854,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{t(lang, "cl.customer_list_menu", "Customer List")}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("customerListSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("customerListSub", lang)}</p>
                   </div>
                 </div>
 
@@ -866,7 +867,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("registeredThisMonth", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("registeredThisMonthSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("registeredThisMonthSub", lang)}</p>
                   </div>
                 </div>
 
@@ -879,7 +880,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("customerByCountry", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("customerByCountrySub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("customerByCountrySub", lang)}</p>
                   </div>
                 </div>
 
@@ -892,7 +893,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("customerByBranch", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("customerByBranchSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("customerByBranchSub", lang)}</p>
                   </div>
                 </div>
 
@@ -905,7 +906,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("customerByStatus", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("customerByStatusSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("customerByStatusSub", lang)}</p>
                   </div>
                 </div>
 
@@ -918,7 +919,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("exportData", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("exportDataSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("exportDataSub", lang)}</p>
                   </div>
                 </div>
               </div>
@@ -960,7 +961,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("viewDrafts", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("viewDraftsSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("viewDraftsSub", lang)}</p>
                   </div>
                 </div>
 
@@ -973,7 +974,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("myDrafts", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("myDraftsSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("myDraftsSub", lang)}</p>
                   </div>
                 </div>
 
@@ -986,7 +987,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("draftsByUsers", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("draftsByUsersSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("draftsByUsersSub", lang)}</p>
                   </div>
                 </div>
 
@@ -999,7 +1000,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("todaysDrafts", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("todaysDraftsSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("todaysDraftsSub", lang)}</p>
                   </div>
                 </div>
 
@@ -1012,7 +1013,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("restoreDraft", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("restoreDraftSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("restoreDraftSub", lang)}</p>
                   </div>
                 </div>
 
@@ -1025,7 +1026,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-rose-700 dark:text-rose-400">{getLabel("manageDrafts", lang)}</p>
-                    <p className="text-[10px] text-rose-400">{getLabel("manageDraftsSub", lang)}</p>
+                    <p className="text-[11px] text-rose-400">{getLabel("manageDraftsSub", lang)}</p>
                   </div>
                 </div>
               </div>
@@ -1067,7 +1068,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("newCustomer", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("newCustomerSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("newCustomerSub", lang)}</p>
                   </div>
                 </div>
 
@@ -1080,7 +1081,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("importCustomers", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("importCustomersSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("importCustomersSub", lang)}</p>
                   </div>
                 </div>
 
@@ -1093,7 +1094,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("quickAdd", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("quickAddSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("quickAddSub", lang)}</p>
                   </div>
                 </div>
 
@@ -1106,7 +1107,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("duplicateCheck", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("duplicateCheckSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("duplicateCheckSub", lang)}</p>
                   </div>
                 </div>
 
@@ -1119,7 +1120,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{getLabel("openLastDraft", lang)}</p>
-                    <p className="text-[10px] text-slate-400">{getLabel("openLastDraftSub", lang)}</p>
+                    <p className="text-[11px] text-slate-400">{getLabel("openLastDraftSub", lang)}</p>
                   </div>
                 </div>
 
@@ -1199,7 +1200,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                 {userStatsLoading ? (
                   <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" />
                 ) : userStatsError ? (
-                  <span className="text-[10px] text-rose-500 font-medium">{t(lang, "cl.error", "Error")}</span>
+                  <span className="text-[11px] text-rose-500 font-medium">{t(lang, "cl.error", "Error")}</span>
                 ) : (
                   userStats?.totalUsers ?? 0
                 )}
@@ -1246,7 +1247,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
               <span>{t(lang, "cl.f_total_customers", "Total Customers")}</span>
               <span className="font-black text-slate-900 dark:text-slate-100">
-                {loading ? <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" /> : error ? <span className="text-[10px] text-rose-500">{t(lang, "cl.error", "Error")}</span> : parsedCustomers.length}
+                {loading ? <Loader2 className="h-3 w-3 animate-spin text-slate-400 inline" /> : error ? <span className="text-[11px] text-rose-500">{t(lang, "cl.error", "Error")}</span> : parsedCustomers.length}
               </span>
             </div>
             <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
@@ -1344,7 +1345,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               <span>{getCustomerTabLabel(tab.id, tab.en, lang)}</span>
               <span
                 className={cn(
-                  "text-[10px] font-black px-1.5 py-0.2 rounded-full",
+                  "text-[11px] font-black px-1.5 py-0.2 rounded-full",
                   isSelected
                     ? "bg-blue-500 text-white"
                     : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
@@ -1517,20 +1518,21 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                               <div className="truncate">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate max-w-[180px]">
-                                    {primaryName}
+                                    {/* the saved legal name unless an approved variant exists; marked when it is not in the viewer's language */}
+                                    <SavedText value={primaryName} lang={lang} kind="name" />
                                   </span>
                                   {c.is_truck_driver && (
-                                    <span className="shrink-0 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                    <span className="shrink-0 px-1.5 py-0.2 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
                                       {getRoleBadgeLabel("driver")}
                                     </span>
                                   )}
                                   {c.is_truck_owner && (
-                                    <span className="shrink-0 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                    <span className="shrink-0 px-1.5 py-0.2 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
                                       {getRoleBadgeLabel("owner")}
                                     </span>
                                   )}
                                   {c.is_employee && (
-                                    <span className="shrink-0 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span className="shrink-0 px-1.5 py-0.2 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                       {getRoleBadgeLabel("staff")}
                                     </span>
                                   )}
@@ -1551,13 +1553,13 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                         {c.linked_companies && c.linked_companies.length > 1 ? (
                           <div className="flex flex-col gap-1 items-start">
                             <span
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap"
                               title={c.linked_companies.map((co) => `${co.name}${co.code ? ` (${co.code})` : ""}`).join("\n")}
                             >
                               <Building2 className="h-3 w-3" />
                               {c.linked_companies.length} {t(lang, "cl.companies", "Companies")}
                             </span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[160px]" title={c.linked_companies.map((co) => co.name).join(", ")}>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[160px]" title={c.linked_companies.map((co) => co.name).join(", ")}>
                               {c.linked_companies.map((co) => co.name).join(", ")}
                             </span>
                           </div>
@@ -1565,7 +1567,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                           <div className="truncate max-w-[160px]" title={c.linked_companies[0].name}>
                             <span className="text-slate-800 dark:text-slate-200 font-bold">{c.linked_companies[0].name}</span>
                             {c.linked_companies[0].code && (
-                              <span className="block text-[10px] font-mono text-slate-400">{c.linked_companies[0].code}</span>
+                              <span className="block text-[11px] font-mono text-slate-400">{c.linked_companies[0].code}</span>
                             )}
                           </div>
                         ) : (
@@ -1586,13 +1588,13 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                         {c.linked_branches && c.linked_branches.length > 1 ? (
                           <div className="flex flex-col gap-1 items-start">
                             <span
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800 whitespace-nowrap"
                               title={c.linked_branches.map((b) => `${b.name}${b.country_name ? ` (${b.country_name})` : ""}`).join("\n")}
                             >
                               <Building2 className="h-3 w-3" />
                               {c.linked_branches.length} {t(lang, "cl.branches", "Branches")}
                             </span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[160px]" title={c.linked_branches.map((b) => b.name).join(", ")}>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[160px]" title={c.linked_branches.map((b) => b.name).join(", ")}>
                               {c.linked_branches.map((b) => b.name).join(", ")}
                             </span>
                           </div>
@@ -1600,7 +1602,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                           <div className="truncate max-w-[160px]" title={c.linked_branches[0].name}>
                             <span className="text-slate-800 dark:text-slate-200 font-semibold">{c.linked_branches[0].name}</span>
                             {c.linked_branches[0].code && (
-                              <span className="block text-[10px] font-mono text-slate-400">{c.linked_branches[0].code}</span>
+                              <span className="block text-[11px] font-mono text-slate-400">{c.linked_branches[0].code}</span>
                             )}
                           </div>
                         ) : (
@@ -1610,7 +1612,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
                       {/* STATUS (styled pill badge with ● matching Image 2) */}
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                           {getStatusDisplay(leadStatus)}
                         </span>

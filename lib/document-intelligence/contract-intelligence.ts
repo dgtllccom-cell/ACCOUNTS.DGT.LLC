@@ -126,7 +126,7 @@ function buildDeterministicFindings(fullText: string): DeterministicClauseFindin
 function riskFromFindings(findings: DeterministicClauseFinding[], contractType: string, remainingBalance: number, expiryDate: string | null, paymentTermsFound: boolean, lang: SupportedLanguage): { level: "high" | "medium" | "low"; missing: any[]; paymentWarnings: any[] } {
   const missing: any[] = [];
   let highCount = 0;
-  let mediumCount = 0;
+  const mediumCount = 0;
 
   // Missing-clause detection is driven by contract_standard_clause_library's
   // is_required/applies_to/severity, joined against the deterministic scan.

@@ -202,7 +202,7 @@ export function MailView({
                   {message.sender_name || message.sender_email}
                 </span>
                 {message.sender_verified && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shrink-0">
                     <ShieldCheck className="h-3 w-3" />
                     {tt("mail.verified", "Verified")}
                   </span>
@@ -301,7 +301,7 @@ export function MailView({
                       <p className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[180px]">
                         {att.name}
                       </p>
-                      <p className="text-[10px] text-slate-400 tabular-nums">{(att.size / 1024).toFixed(1)} {tt("mail.kb_size", "KB")}</p>
+                      <p className="text-[11px] text-slate-400 tabular-nums">{(att.size / 1024).toFixed(1)} {tt("mail.kb_size", "KB")}</p>
                     </div>
                   </div>
 

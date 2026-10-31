@@ -667,7 +667,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                         deletedRecords.map((del: any) => (
                           <tr key={del.id} className="border-b last:border-0 hover:bg-rose-50/30">
                             <td className="p-2.5">
-                              <Badge className="bg-rose-600 text-white font-mono text-[10px]">{tt("eaud.deleted_label", "DELETED")}</Badge>
+                              <Badge className="bg-rose-600 text-white font-mono text-[11px]">{tt("eaud.deleted_label", "DELETED")}</Badge>
                             </td>
                             <td className="p-2.5 font-semibold capitalize">{del.entity_type.replace(/_/g, " ")}</td>
                             <td className="p-2.5 font-mono">{del.reference_no || del.entity_id}</td>
@@ -812,11 +812,11 @@ export function EnterpriseAuditMonitoringDashboard() {
                               </td>
                               <td className="p-2.5 text-center font-mono">{b.roznamcha_count}</td>
                               <td className="p-2.5 text-center space-x-1">
-                                <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700">
+                                <Badge variant="outline" className="text-[11px] bg-blue-50 text-blue-700">
                                   {b.edited_count} edits
                                 </Badge>
                                 {b.deleted_count > 0 && (
-                                  <Badge variant="outline" className="text-[10px] bg-rose-50 text-rose-700">
+                                  <Badge variant="outline" className="text-[11px] bg-rose-50 text-rose-700">
                                     {b.deleted_count} del
                                   </Badge>
                                 )}
@@ -871,7 +871,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                           <tr key={u.id} className="border-b last:border-0 hover:bg-muted/30">
                             <td className="p-2.5 font-bold">
                               {u.full_name || u.email}
-                              <div className="text-[10px] text-muted-foreground font-normal">{u.email}</div>
+                              <div className="text-[11px] text-muted-foreground font-normal">{u.email}</div>
                             </td>
                             <td className="p-2.5 capitalize">{u.role ? tt(`role.${u.role}` as never, u.role.replace(/_/g, " ")) : "—"}</td>
                             <td className="p-2.5 text-muted-foreground">{u.country_name || "—"} / {u.branch_name || "—"}</td>
@@ -879,7 +879,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                             <td className="p-2.5 text-center font-mono text-blue-600 font-semibold">{u.records_edited}</td>
                             <td className="p-2.5 text-center font-mono text-rose-600 font-semibold">{u.records_deleted}</td>
                             <td className="p-2.5 text-right">
-                              <Badge className="bg-emerald-600 text-white text-[10px]">{tt("common.active", "Active")}</Badge>
+                              <Badge className="bg-emerald-600 text-white text-[11px]">{tt("common.active", "Active")}</Badge>
                             </td>
                           </tr>
                         ))

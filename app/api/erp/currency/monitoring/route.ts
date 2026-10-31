@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     }>;
     const countryIds = countries.map((country) => country.id);
 
-    let rateQuery = supabase
+    const rateQuery = supabase
       .from("daily_usd_rates")
       .select("country_id, country_branch_id, rate_date, buying_rate, selling_rate, credit_rate, debit_rate, updated_at")
       .in("country_id", countryIds.length ? countryIds : ["00000000-0000-0000-0000-000000000000"])

@@ -320,7 +320,7 @@ export function LoginForm({
         {/* Language Options Popover */}
         {isLangMenuOpen && (
           <div className="absolute bottom-11 z-50 w-52 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95 duration-100">
-            <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">
+            <div className="px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">
               {t.selectLanguage}
             </div>
             {LANGUAGES.map((l) => (
@@ -367,7 +367,7 @@ export function LoginForm({
               <Sparkles className="h-3.5 w-3.5 text-blue-600" />
               {t.demoCredentialsTitle}
             </span>
-            <span className="text-[10px] text-blue-600/80 font-semibold">{t.fillCreds}</span>
+            <span className="text-[11px] text-blue-600/80 font-semibold">{t.fillCreds}</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {DEMO_PRESETS.map((p) => (
@@ -381,9 +381,9 @@ export function LoginForm({
               >
                 <div className="flex items-center justify-between w-full">
                   <span className="font-bold text-[11px] text-slate-800 dark:text-slate-200">{p.presetName}</span>
-                  <span className="text-[9px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{p.scopeName}</span>
+                  <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded whitespace-nowrap">{p.scopeName}</span>
                 </div>
-                <span className="text-[10px] text-slate-500 font-mono truncate mt-0.5">{p.id}</span>
+                <span className="text-[11px] text-slate-500 font-mono truncate mt-0.5">{p.id}</span>
               </button>
             ))}
           </div>

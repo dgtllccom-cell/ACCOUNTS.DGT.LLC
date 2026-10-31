@@ -124,7 +124,7 @@ export function CustomerOrderReturnCorrectionModal({
             }
             className="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs text-slate-900 outline-none transition focus:border-rose-500 focus:ring-1 focus:ring-rose-500 dark:border-slate-700 dark:bg-slate-850 dark:text-slate-100"
           />
-          <p className="text-[10px] text-slate-500 dark:text-slate-400">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">
             {tt("min_reason_note", "Please provide clear and complete details so the user can quickly rectify the issue.")}
           </p>
         </div>

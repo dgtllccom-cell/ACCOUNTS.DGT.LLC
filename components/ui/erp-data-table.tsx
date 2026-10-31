@@ -14,9 +14,9 @@ export const ERP_TABLE_STYLES = {
   scrollWrapper: "w-full overflow-x-auto custom-scrollbar",
   table: "w-full min-w-[1200px] border-collapse text-xs text-slate-800 dark:text-slate-200",
   thead: "bg-slate-50 border-b border-slate-200 dark:bg-slate-950/60 dark:border-slate-800",
-  th: "h-10 px-3 py-2 text-start text-[10.5px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap select-none",
-  thRight: "h-10 px-3 py-2 text-end text-[10.5px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap select-none",
-  thCenter: "h-10 px-3 py-2 text-center text-[10.5px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap select-none",
+  th: "h-10 px-3 py-2 text-start text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap select-none",
+  thRight: "h-10 px-3 py-2 text-end text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap select-none",
+  thCenter: "h-10 px-3 py-2 text-center text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap select-none",
   tr: "h-11 border-b border-slate-100 hover:bg-slate-50/80 transition-colors dark:border-slate-800/80 dark:hover:bg-slate-800/50 cursor-pointer",
   trStatic: "h-11 border-b border-slate-100 dark:border-slate-800/80",
   trSelected: "bg-blue-50/70 hover:bg-blue-50 dark:bg-blue-950/40 dark:hover:bg-blue-950/50 ring-1 ring-inset ring-blue-500/30",
@@ -60,7 +60,7 @@ export function formatStatusBadge(status: string | undefined | null) {
   }
 
   return (
-    <span className={cn("inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider min-w-[70px] text-center whitespace-nowrap", colorClass)}>
+    <span className={cn("inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider min-w-[70px] text-center whitespace-nowrap", colorClass)}>
       {status || "—"}
     </span>
   );

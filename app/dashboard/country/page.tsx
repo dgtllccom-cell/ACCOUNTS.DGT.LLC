@@ -426,7 +426,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div className="space-y-1.5 max-w-xl">
               {/* Role Badge */}
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50/80 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900 text-[11px] font-bold text-blue-700 dark:text-blue-300 backdrop-blur-xs">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50/80 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900 text-[11px] font-bold text-blue-700 dark:text-blue-300 backdrop-blur-xs whitespace-nowrap">
                 {isSuperAdmin
                   ? "Global Super Admin"
                   : domainSuper

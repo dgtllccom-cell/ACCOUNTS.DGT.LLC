@@ -57,7 +57,7 @@ const ExpensesBillRow = ({ b, total, countryName, currencyCode, branchName, user
       <td className="px-4 py-3 text-slate-600 font-medium">{countryName}</td>
       <td className="px-4 py-3 text-slate-600">{branchName}</td>
       <td className="px-4 py-3 text-slate-600">
-        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${b.bill_mode === 'attached' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+        <span className={`px-2 py-0.5 rounded text-[11px] uppercase font-bold ${b.bill_mode === 'attached' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
           {b.bill_mode} - {b.bill_title}
         </span>
       </td>
@@ -70,12 +70,12 @@ const ExpensesBillRow = ({ b, total, countryName, currencyCode, branchName, user
         {b.transferred_to_roznamcha ? (
           <div className="flex flex-col items-center justify-center text-emerald-600 font-medium">
             <span className="flex items-center gap-1 text-xs"><CheckCircle2 className="w-3.5 h-3.5"/> {tt("exp.transferred", "Transferred")}</span>
-            <span className="text-[9px] text-slate-400 mt-0.5">{new Date(b.updated_at || b.created_at || Date.now()).toLocaleString("en-GB", { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">{new Date(b.updated_at || b.created_at || Date.now()).toLocaleString("en-GB", { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center">
-            <span className="text-[10px] text-slate-500 mb-1">{tt("exp.no_transfer", "No Transfer")}</span>
-            <Button size="sm" className="h-6 px-3 text-[10px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200" onClick={onTransfer}>
+            <span className="text-[11px] text-slate-500 mb-1">{tt("exp.no_transfer", "No Transfer")}</span>
+            <Button size="sm" className="h-6 px-3 text-[11px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200" onClick={onTransfer}>
               {tt("exp.transfer_btn", "Transfer")}
             </Button>
           </div>
@@ -150,7 +150,7 @@ const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger:
   return (
     <div className={`bg-white border ${borderColorClass} rounded p-2 text-xs relative shadow-sm mb-2 group flex flex-col gap-1.5`}>
        <p className="font-bold text-slate-800 break-words border-b pb-1 border-slate-100">{displayName}</p>
-       <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-[10px]">
+       <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-[11px]">
          {displayId && (
            <>
              <span className="text-slate-500">{tt("exp.id_label", "ID:")}</span>
@@ -191,12 +191,12 @@ const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger:
        {contacts && Array.isArray(contacts) && contacts.length > 0 && (
          <div className="mt-1 pt-1 border-t border-slate-100 space-y-1">
            {contacts.map((c: any, i: number) => {
-             if (typeof c === 'string') return <div key={i} className="text-[10px] text-right text-slate-700">{c}</div>;
+             if (typeof c === 'string') return <div key={i} className="text-[11px] text-right text-slate-700">{c}</div>;
              if (typeof c === 'object' && c !== null) {
                const type = c.type || c.contact_type || Object.keys(c)[0] || "Detail";
                const val = c.value || c.contact_value || Object.values(c)[0] || "";
                return (
-                 <div key={i} className="flex justify-between text-[10px] items-start">
+                 <div key={i} className="flex justify-between text-[11px] items-start">
                    <span className="text-slate-500 capitalize">{String(type)}:</span>
                    <span className="text-slate-700 text-right break-all ml-2">{String(val)}</span>
                  </div>
@@ -210,30 +210,16 @@ const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger:
   );
 };
 
-export interface CustomerOrderContext {
-  orderId?: string;
-  orderNo?: string;
-  customerName?: string;
-  customerId?: string;
-  truckNo?: string;
-  driverName?: string;
-  loadingCountry?: string;
-  receivingCountry?: string;
-  goodsName?: string;
-  assignedUserId?: string;
-  date?: string;
-  routeName?: string;
-  goodsWeight?: string;
-  goodsQuantity?: string;
-  transferRef?: string;
-}
+/** A customer order the bill is made for (Order Transfer / General Received Bills); with billId, that order's bill to open. */
+export type CustomerOrderBillContext = { orderId: string; orderNo: string; billId?: string | null; date?: string | null };
 
 export function ExpensesBillEntryForm({
   lang: langProp,
   initialBillCategory = "office_home",
-  customerOrderContext,
+  customerOrderContext = null
 }: {
   lang: SupportedLanguage;
+  customerOrderContext?: CustomerOrderBillContext | null;
   initialBillCategory?:
     | "office_home"
     | "daily_expenses"
@@ -243,7 +229,6 @@ export function ExpensesBillEntryForm({
     | "truck_freight_rent"
     | "other_expenses"
     | string;
-  customerOrderContext?: CustomerOrderContext;
 }) {
   const lang = useActiveLanguage(langProp);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
@@ -331,17 +316,6 @@ export function ExpensesBillEntryForm({
       setBillTitle(initialBillCategory);
     }
   }, [initialBillCategory]);
-
-  // Pre-fill reference number from customer order context
-  useEffect(() => {
-    if (customerOrderContext?.orderNo && !referenceNo) {
-      setReferenceNo(customerOrderContext.orderNo);
-      setBillMode("attached");
-    }
-    if (customerOrderContext?.date) {
-      setBillDate(customerOrderContext.date);
-    }
-  }, [customerOrderContext]);
 
   const detailsRef = useRef<HTMLInputElement>(null);
 
@@ -550,9 +524,11 @@ export function ExpensesBillEntryForm({
   const fetchRecentBills = async () => {
     try {
       setLoadingBills(true);
-      const url = initialBillCategory
-        ? `/api/erp/expenses?category=${encodeURIComponent(initialBillCategory)}`
-        : "/api/erp/expenses";
+      // opened on a customer order: the list shows that order's bills of this category
+      const qs = new URLSearchParams();
+      if (initialBillCategory) qs.set("category", initialBillCategory);
+      if (customerOrderContext?.orderNo) qs.set("referenceNos", customerOrderContext.orderNo);
+      const url = `/api/erp/expenses${qs.toString() ? `?${qs.toString()}` : ""}`;
       const res = await apiGet<any>(url);
       if (res && res.bills) {
         setRecentBills(res.bills);
@@ -676,6 +652,41 @@ export function ExpensesBillEntryForm({
       setEditingBillId(null);
     }
   }, [viewMode]);
+
+  // Opened from a customer order: a new bill is ATTACHED to it (reference = the order number) and keeps this page's own bill
+  // category; with billId the order's existing bill opens — for editing, or read-only once it is posted to Roznamcha.
+  const orderContextApplied = useRef<string | null>(null);
+  useEffect(() => {
+    const ctx = customerOrderContext;
+    if (!ctx?.orderNo) return;
+    const key = `${ctx.orderId}:${ctx.billId ?? ""}`;
+    if (orderContextApplied.current === key) return;
+    orderContextApplied.current = key;
+    if (ctx.billId) {
+      void (async () => {
+        const qs = new URLSearchParams({ referenceNos: ctx.orderNo, limit: "200" });
+        if (initialBillCategory) qs.set("category", initialBillCategory);
+        const res = await apiGet<any>(`/api/erp/expenses?${qs.toString()}`).catch(() => null);
+        const bill = ((res?.bills ?? []) as any[]).find((b) => String(b.id) === String(ctx.billId));
+        if (!bill) {
+          alert(tt("obill.bill_not_found", "This bill was not found for the order (it may be outside your branch scope)."));
+          return;
+        }
+        if (bill.transferred_to_roznamcha) {
+          setViewMode("list");
+          setViewBill(bill);
+          return;
+        }
+        handleEditBill(bill);
+      })();
+      return;
+    }
+    setViewMode("form");
+    setBillMode("attached");
+    setReferenceNo(ctx.orderNo);
+    if (ctx.date && /^\d{4}-\d{2}-\d{2}$/.test(ctx.date)) setBillDate(ctx.date);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerOrderContext?.orderId, customerOrderContext?.orderNo, customerOrderContext?.billId]);
 
   // Fetch initial countries (operational entry: branches only)
   useEffect(() => {
@@ -936,8 +947,9 @@ export function ExpensesBillEntryForm({
       if (res?.billId && intake.draft) await intake.consume(String(res.billId));
       alert(editingBillId ? "Expenses Bill updated successfully!" : "Expenses Bill saved successfully!");
       setRows([]);
-      setBillTitle("");
-      setReferenceNo("");
+      // the next bill keeps this page's category (an empty title saved bills outside every register) and, on an order, its reference
+      setBillTitle(initialBillCategory || "");
+      setReferenceNo(customerOrderContext?.orderNo ?? "");
       setEditingBillId(null);
       fetchRecentBills();
       setViewMode("list");
@@ -1026,7 +1038,7 @@ export function ExpensesBillEntryForm({
               : initialBillCategory === "other_expenses"
               ? tt("exp.other_bill_title", "Other Expenses Bill")
               : tt("exp.office_bill_title", "Office / Home Expenses Bill")}
-            <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">NEW</span>
+            <span className="bg-amber-400 text-amber-950 text-[11px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider whitespace-nowrap">NEW</span>
           </h1>
           {viewMode === "list" ? (
             <Button size="sm" onClick={() => setViewMode("form")} className="h-7 text-xs bg-primary hover:bg-primary/90 text-white shadow-sm">
@@ -1062,54 +1074,6 @@ export function ExpensesBillEntryForm({
       )}
 
       <div className={viewMode === "list" ? "hidden" : "space-y-4 mb-8"}>
-          {customerOrderContext?.orderNo && (
-            <div className="rounded-xl border-2 border-blue-400/60 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 px-4 py-3 text-xs space-y-2">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2 font-black text-blue-800 dark:text-blue-200">
-                  <ArrowRightLeft className="h-4 w-4 text-blue-600" />
-                  <span>{tt("exp.linked_order_banner", "Linked Customer Order")}</span>
-                  <span className="font-mono text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded text-[11px]">
-                    {customerOrderContext.orderNo}
-                  </span>
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">
-                  ✓ {tt("exp.order_auto_linked", "Auto-Linked")}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {customerOrderContext.customerName && (
-                  <div className="rounded-lg bg-white/70 dark:bg-slate-800/50 px-2.5 py-1.5 border border-blue-100 dark:border-blue-900">
-                    <div className="text-[9px] uppercase font-bold text-slate-400 mb-0.5">{tt("exp.customer", "Customer")}</div>
-                    <div className="font-bold text-slate-800 dark:text-white truncate">{customerOrderContext.customerName}</div>
-                  </div>
-                )}
-                {(customerOrderContext.loadingCountry || customerOrderContext.receivingCountry) && (
-                  <div className="rounded-lg bg-white/70 dark:bg-slate-800/50 px-2.5 py-1.5 border border-blue-100 dark:border-blue-900">
-                    <div className="text-[9px] uppercase font-bold text-slate-400 mb-0.5">{tt("exp.route", "Route")}</div>
-                    <div className="font-bold text-slate-800 dark:text-white truncate">
-                      {customerOrderContext.loadingCountry || "—"} → {customerOrderContext.receivingCountry || "—"}
-                    </div>
-                  </div>
-                )}
-                {customerOrderContext.truckNo && (
-                  <div className="rounded-lg bg-white/70 dark:bg-slate-800/50 px-2.5 py-1.5 border border-blue-100 dark:border-blue-900">
-                    <div className="text-[9px] uppercase font-bold text-slate-400 mb-0.5">{tt("exp.truck", "Truck")}</div>
-                    <div className="font-mono font-bold text-slate-800 dark:text-white truncate">{customerOrderContext.truckNo}</div>
-                  </div>
-                )}
-                {customerOrderContext.goodsName && (
-                  <div className="rounded-lg bg-white/70 dark:bg-slate-800/50 px-2.5 py-1.5 border border-blue-100 dark:border-blue-900">
-                    <div className="text-[9px] uppercase font-bold text-slate-400 mb-0.5">{tt("exp.goods", "Goods")}</div>
-                    <div className="font-bold text-slate-800 dark:text-white truncate">{customerOrderContext.goodsName}</div>
-                  </div>
-                )}
-              </div>
-              <p className="text-[10px] text-blue-600/70 dark:text-blue-300/70">
-                {tt("exp.order_context_hint", "This bill is automatically linked to the above customer order. The order reference will be saved with every expense entry.")}
-              </p>
-            </div>
-          )}
-
           {intake.draft ? (
             <div className="flex items-start gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900">
               <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-violet-600" />
@@ -1133,7 +1097,7 @@ export function ExpensesBillEntryForm({
                   <span className="text-slate-500 font-medium">{tt("common.user", "User")}</span>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-700">{sessionInfo?.user?.fullName || "superadmin"}</span>
-                    <span className="font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-[10px]">
+                    <span className="font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap">
                       {sessionInfo?.roles?.[0] ? sessionInfo.roles[0].replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) : "Super Admin"}
                     </span>
                   </div>
@@ -1252,10 +1216,14 @@ export function ExpensesBillEntryForm({
                     <option value="attached-purchase">{tt("exp.attached_purchase", "Attached (Purchase)")}</option>
                     <option value="attached-sale">{tt("exp.attached_sale", "Attached (Sale)")}</option>
                     <option value="attached-customer_order">{tt("exp.attached_customer_order", "Attached (Customer Order)")}</option>
+                    {/* a bill attached to a customer order keeps its own category (customs / truck / customer / other) */}
+                    {billMode === "attached" && !["purchase", "sale", "customer_order"].includes(billTitle) && (
+                      <option value={`attached-${billTitle}`}>{tt("obill.attached_to_order", "Attached to customer order")}</option>
+                    )}
                   </select>
                   <Input placeholder={tt("exp.search_bill_no", "Search Bill No...")} className="h-6 text-xs w-[130px] border-slate-200" disabled={headerLocked || billMode === 'new'} />
                 </div>
-                <div className="text-[10px] bg-slate-50 p-1.5 rounded border border-slate-100 text-slate-600 italic">
+                <div className="text-[11px] bg-slate-50 p-1.5 rounded border border-slate-100 text-slate-600 italic">
                   {tt("exp.bill_type_hint", "Select bill type to attach references.")}
                 </div>
 
@@ -1320,7 +1288,7 @@ export function ExpensesBillEntryForm({
                     </Button>
                   )}
 
-                  <div className="text-[10px] text-slate-500 bg-blue-50 p-1.5 rounded border border-blue-100 mt-auto">
+                  <div className="text-[11px] text-slate-500 bg-blue-50 p-1.5 rounded border border-blue-100 mt-auto">
                     {tt("exp.debit_account_hint", "This account will be debited for the expense amount.")}
                   </div>
                 </div>
@@ -1368,7 +1336,7 @@ export function ExpensesBillEntryForm({
                     </Button>
                   )}
 
-                  <div className="text-[10px] text-slate-500 bg-emerald-50 p-1.5 rounded border border-emerald-100 mt-auto">
+                  <div className="text-[11px] text-slate-500 bg-emerald-50 p-1.5 rounded border border-emerald-100 mt-auto">
                     {tt("exp.credit_account_hint", "This account will be credited (e.g. Cash or Bank).")}
                   </div>
                 </div>
@@ -1380,7 +1348,7 @@ export function ExpensesBillEntryForm({
               <CardHeader className="py-2 px-3 bg-slate-50 border-b border-slate-100">
                 <CardTitle className="text-xs uppercase font-bold text-slate-600 flex justify-between items-center">
                   <span className="flex items-center gap-1.5"><Settings2 className="w-3.5 h-3.5" /> {tt("exp.summary_card", "5. Summary")}</span>
-                  <span className="text-[10px] font-mono text-amber-600 bg-amber-50 px-1 rounded border border-amber-200">{billSerial.split("-")[2] || billSerial}</span>
+                  <span className="text-[11px] font-mono text-amber-600 bg-amber-50 px-1 rounded border border-amber-200">{billSerial.split("-")[2] || billSerial}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 flex flex-col h-full">
@@ -1623,7 +1591,7 @@ export function ExpensesBillEntryForm({
                     <td className="px-3 py-2 text-right font-mono">{Number(r.exchangeRate || 0) > 0 ? Number(r.exchangeRate || 0).toFixed(4) : "-"}</td>
                     <td className="px-3 py-2 text-right font-mono font-medium">{Number(r.finalAmount || 0).toFixed(2)}</td>
                     <td className="px-3 py-2 text-right font-mono">
-                      {r.taxOn ? <span className="inline-flex items-center text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded text-[10px]"><BadgePercent className="w-3 h-3 mr-0.5"/> {r.taxPct}%</span> : "-"}
+                      {r.taxOn ? <span className="inline-flex items-center text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded text-[11px]"><BadgePercent className="w-3 h-3 mr-0.5"/> {r.taxPct}%</span> : "-"}
                     </td>
                     <td className="px-3 py-2 text-right font-mono text-amber-600">{r.taxOn ? r.taxAmt.toFixed(2) : "-"}</td>
                     <td className="px-3 py-2 text-right font-mono font-bold bg-slate-50/50">{r.grandAmount.toFixed(2)}</td>
@@ -1860,7 +1828,7 @@ export function ExpensesBillEntryForm({
 
               <div className="space-y-6 flex-1">
                 <div className="space-y-2 p-4 border border-blue-100 bg-blue-50/50 rounded-lg relative shadow-sm">
-                  <div className="absolute -top-3 left-4 bg-blue-100 text-blue-700 font-black text-xs px-2 py-0.5 rounded shadow-sm border border-blue-200">DR</div>
+                  <div className="absolute -top-3 left-4 bg-blue-100 text-blue-700 font-black text-xs px-2 py-0.5 rounded shadow-sm border border-blue-200 whitespace-nowrap">DR</div>
                   <Label className="text-sm font-bold text-slate-700 flex items-center justify-between">
                     <span>{tt("exp.debit_acct_expense", "Debit Account (Expense)")}</span>
                   </Label>
@@ -1871,11 +1839,11 @@ export function ExpensesBillEntryForm({
                     placeholder={tt("exp.search_debit_ph", "Search & Select Debit Ledger...")}
                     className="w-full"
                   />
-                  <p className="text-[10px] text-blue-600/80 font-medium">{tt("exp.debit_dr_hint", "This account will be debited (DR) for the expense.")}</p>
+                  <p className="text-[11px] text-blue-600/80 font-medium">{tt("exp.debit_dr_hint", "This account will be debited (DR) for the expense.")}</p>
                 </div>
 
                 <div className="space-y-2 p-4 border border-emerald-100 bg-emerald-50/50 rounded-lg relative shadow-sm">
-                  <div className="absolute -top-3 left-4 bg-emerald-100 text-emerald-700 font-black text-xs px-2 py-0.5 rounded shadow-sm border border-emerald-200">CR</div>
+                  <div className="absolute -top-3 left-4 bg-emerald-100 text-emerald-700 font-black text-xs px-2 py-0.5 rounded shadow-sm border border-emerald-200 whitespace-nowrap">CR</div>
                   <Label className="text-sm font-bold text-slate-700 flex items-center justify-between">
                     <span>{tt("exp.credit_acct_payment", "Credit Account (Payment Source)")}</span>
                   </Label>
@@ -1886,7 +1854,7 @@ export function ExpensesBillEntryForm({
                     placeholder={tt("exp.search_credit_ph", "Search & Select Credit Ledger...")}
                     className="w-full"
                   />
-                  <p className="text-[10px] text-emerald-600/80 font-medium">{tt("exp.credit_cr_hint", "This account will be credited (CR) (e.g. Cash, Bank).")}</p>
+                  <p className="text-[11px] text-emerald-600/80 font-medium">{tt("exp.credit_cr_hint", "This account will be credited (CR) (e.g. Cash, Bank).")}</p>
                 </div>
 
                 <div className="mt-4 p-4 border border-slate-200 bg-white rounded-lg shadow-sm text-[11px] leading-relaxed relative overflow-hidden">

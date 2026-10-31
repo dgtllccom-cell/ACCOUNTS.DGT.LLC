@@ -75,7 +75,7 @@ export function SettlementAuditView() {
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[10px]">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[11px]">
               <tr>
                 <Th className="py-3 px-4">{th("Timestamp")}</Th>
                 <Th className="py-3 px-4">{th("Actor")}</Th>
@@ -101,7 +101,7 @@ export function SettlementAuditView() {
                     <td className="py-3 px-4 font-mono text-[11px]">{new Date(row.created_at).toLocaleString()}</td>
                     <td className="py-3 px-4 font-medium">{row.actor_name || "System User"}</td>
                     <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold uppercase text-[9px]">
+                      <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold uppercase text-[11px] whitespace-nowrap">
                         {row.action}
                       </span>
                     </td>
@@ -109,7 +109,7 @@ export function SettlementAuditView() {
                     <td className="py-3 px-4 text-right font-medium">
                       {row.currency ? `${row.currency} ` : ""}{row.amount_involved ? Number(row.amount_involved).toLocaleString() : "—"}
                     </td>
-                    <td className="py-3 px-4 text-[10px]">
+                    <td className="py-3 px-4 text-[11px]">
                       {row.previous_status ? `${row.previous_status} → ${row.new_status}` : row.new_status || "—"}
                     </td>
                     <td className="py-3 px-4 text-slate-500 max-w-[200px] truncate">{row.reason || "—"}</td>

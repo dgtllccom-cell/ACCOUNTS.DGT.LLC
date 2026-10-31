@@ -78,7 +78,7 @@ export function LocationBackdrop({
           {title && <h2 className="text-base font-black tracking-tight drop-shadow sm:text-lg">{title}</h2>}
           {subtitle && <p className="text-[11px] font-semibold text-white/85 drop-shadow sm:text-xs">{subtitle}</p>}
           {showLabel && (
-            <span className="mt-0.5 inline-flex w-fit items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-bold backdrop-blur-sm">
+            <span className="mt-0.5 inline-flex w-fit items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-bold backdrop-blur-sm whitespace-nowrap">
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: theme.accent }} />
               {theme.label}
             </span>

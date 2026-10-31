@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get("userId");
     const year = searchParams.get("year") ? Number(searchParams.get("year")) : new Date().getFullYear();
     const month = searchParams.get("month") ? Number(searchParams.get("month")) : new Date().getMonth() + 1;
-    let countryId = searchParams.get("countryId");
+    const countryId = searchParams.get("countryId");
 
     // One scope rule (sessionSqlScope): branch users see only their own branch's users,
     // country roles their country; an explicit countryId outside that scope is refused.

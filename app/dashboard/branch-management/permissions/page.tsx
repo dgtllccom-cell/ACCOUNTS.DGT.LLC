@@ -104,8 +104,8 @@ export default async function BranchUserPermissionsPage(props: {
 
   const userIds = Array.from(new Set((assignments || []).map((a: any) => a.user_id))).filter(Boolean);
 
-  let profilesMap: Record<string, any> = {};
-  let permissionsMap: Record<string, string[]> = {};
+  const profilesMap: Record<string, any> = {};
+  const permissionsMap: Record<string, string[]> = {};
 
   if (userIds.length > 0) {
     const [profilesRes, permsRes] = await Promise.all([

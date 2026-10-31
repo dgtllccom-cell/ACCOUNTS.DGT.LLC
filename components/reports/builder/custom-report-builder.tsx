@@ -277,7 +277,7 @@ export function CustomReportBuilder({
           {effectiveDateField ? (
             <>
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-slate-500 uppercase">{t(lang, "datepick.date_range", "Date Range")}</label>
+                <label className="text-[11px] font-semibold text-slate-500 uppercase">{t(lang, "datepick.date_range", "Date Range")}</label>
                 <ErpDatePicker
                   mode="range"
                   lang={lang}

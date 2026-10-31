@@ -136,12 +136,12 @@ export default function ApprovalQueuePage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-black text-slate-900 dark:text-slate-50">{row.job_no}</span>
                     {row.status === "returned_for_review" && (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 whitespace-nowrap">
                         {s.t("approval_status_returned", "Returned for review")}
                       </span>
                     )}
                     {row.source_type && (
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 dark:bg-slate-800">{row.source_type}</span>
+                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 whitespace-nowrap">{row.source_type}</span>
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">

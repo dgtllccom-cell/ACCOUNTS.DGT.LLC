@@ -436,10 +436,10 @@ export function TransportPaymentBookingWorkspace() {
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 p-4 text-white shadow-md">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-blue-300 border border-blue-400/30">
+            <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-blue-300 border border-blue-400/30 whitespace-nowrap">
               Workflow Stage 4
             </span>
-            <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-300">
+            <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-bold text-slate-300 whitespace-nowrap">
               Purchase Booking Module
             </span>
           </div>
@@ -485,7 +485,7 @@ export function TransportPaymentBookingWorkspace() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="rounded-xl border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-muted-foreground">Total Transport Bookings</span>
+            <span className="text-[11px] font-black uppercase text-muted-foreground">Total Transport Bookings</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Truck className="h-4 w-4" />
             </div>
@@ -500,7 +500,7 @@ export function TransportPaymentBookingWorkspace() {
 
         <Card className="rounded-xl border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-muted-foreground">Total Transport Payable</span>
+            <span className="text-[11px] font-black uppercase text-muted-foreground">Total Transport Payable</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-slate-500/10 text-slate-700 dark:text-slate-300">
               <DollarSign className="h-4 w-4" />
             </div>
@@ -514,7 +514,7 @@ export function TransportPaymentBookingWorkspace() {
 
         <Card className="rounded-xl border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400">Total Transport Paid</span>
+            <span className="text-[11px] font-black uppercase text-emerald-700 dark:text-emerald-400">Total Transport Paid</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/10 text-emerald-600">
               <CheckCircle2 className="h-4 w-4" />
             </div>
@@ -528,7 +528,7 @@ export function TransportPaymentBookingWorkspace() {
 
         <Card className="rounded-xl border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-rose-700 dark:text-rose-400">Transport Balance Due</span>
+            <span className="text-[11px] font-black uppercase text-rose-700 dark:text-rose-400">Transport Balance Due</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-rose-500/10 text-rose-600">
               <AlertCircle className="h-4 w-4" />
             </div>
@@ -538,7 +538,7 @@ export function TransportPaymentBookingWorkspace() {
               {actionError ? "—" : stats.totalRemaining.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <span className={cn(
-              "rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
+              "rounded-full px-2 py-0.5 text-[11px] font-black uppercase tracking-wider",
               actionError ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300" : stats.totalRemaining <= 0.005 ? "bg-slate-900 text-white" : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
             )}>
               {actionError ? "Error" : stats.totalRemaining <= 0.005 ? "Fully Settled" : "Outstanding"}
@@ -605,7 +605,7 @@ export function TransportPaymentBookingWorkspace() {
       <section className="rounded-xl border bg-card shadow-sm overflow-hidden">
         <div className="overflow-auto">
           <table className="w-full min-w-[1400px] border-collapse text-xs">
-            <thead className="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase tracking-wide text-slate-600 dark:bg-slate-900/80 dark:text-slate-400">
+            <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] uppercase tracking-wide text-slate-600 dark:bg-slate-900/80 dark:text-slate-400">
               <tr>
                 <Th className="border-b px-3 py-3 text-left font-black">Booking No</Th>
                 <Th className="border-b px-3 py-3 text-left font-black">Bill / Invoice & Date</Th>
@@ -643,19 +643,19 @@ export function TransportPaymentBookingWorkspace() {
                     <tr key={r.id} className="border-b hover:bg-muted/40 transition-colors">
                       <td className="px-3 py-3 font-mono font-black text-primary">
                         {r.purchaseOrderNo}
-                        <div className="text-[9px] font-mono text-muted-foreground">{r.loadingRecordNo}</div>
+                        <div className="text-[11px] font-mono text-muted-foreground">{r.loadingRecordNo}</div>
                       </td>
                       <td className="px-3 py-3">
                         <div className="font-bold text-foreground">{r.billInvoiceNo}</div>
-                        <div className="text-[10px] text-muted-foreground">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "-"}</div>
+                        <div className="text-[11px] text-muted-foreground">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "-"}</div>
                       </td>
                       <td className="px-3 py-3">
                         <div className="font-bold text-foreground">{r.supplierAccount}</div>
-                        <div className="text-[10px] text-muted-foreground">{r.country} &bull; {r.branch}</div>
+                        <div className="text-[11px] text-muted-foreground">{r.country} &bull; {r.branch}</div>
                       </td>
                       <td className="px-3 py-3">
                         <div className="font-bold text-foreground">{r.transporterName}</div>
-                        <span className="inline-flex rounded bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 text-[9px] font-black uppercase text-blue-700 dark:text-blue-300">
+                        <span className="inline-flex rounded bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:text-blue-300 whitespace-nowrap">
                           {r.transportMode}
                         </span>
                       </td>
@@ -664,7 +664,7 @@ export function TransportPaymentBookingWorkspace() {
                       </td>
                       <td className="px-3 py-3">
                         <div className="font-bold text-foreground">{r.driverName}</div>
-                        <div className="text-[10px] text-muted-foreground font-mono">{r.driverMobile}</div>
+                        <div className="text-[11px] text-muted-foreground font-mono">{r.driverMobile}</div>
                       </td>
                       <td className="px-3 py-3 text-right font-bold text-foreground">
                         {r.transportCharges.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {curr}
@@ -681,19 +681,19 @@ export function TransportPaymentBookingWorkspace() {
                       <td className="px-3 py-3">
                         {r.isFullyPaid ? (
                           <div className="flex flex-col gap-0.5 items-start">
-                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-slate-950 text-white border border-slate-900 shadow-sm dark:bg-white dark:text-slate-950">
+                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider bg-slate-950 text-white border border-slate-900 shadow-sm dark:bg-white dark:text-slate-950 whitespace-nowrap">
                               <span className="h-1.5 w-1.5 rounded-full bg-white dark:bg-slate-950" />
                               {translateHeader(activeLang, "Fully Paid")}
                             </span>
-                            <span className="text-[9px] font-bold text-slate-500">Remaining: 0.00 {curr}</span>
+                            <span className="text-[11px] font-bold text-slate-500">Remaining: 0.00 {curr}</span>
                           </div>
                         ) : (
                           <div className="flex flex-col gap-0.5 items-start">
-                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60 shadow-sm">
+                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60 shadow-sm whitespace-nowrap">
                               <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
                               {r.paymentStatus}
                             </span>
-                            <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">
+                            <span className="text-[11px] font-black text-rose-600 dark:text-rose-400">
                               Due: {r.transportBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {curr}
                             </span>
                           </div>
@@ -701,7 +701,7 @@ export function TransportPaymentBookingWorkspace() {
                       </td>
                       <td className="px-3 py-3">
                         {/* Clear separate display of purchase bill payments vs transport payments */}
-                        <div className="rounded-lg bg-slate-50 dark:bg-slate-900/60 p-1.5 text-[10px] border border-slate-200/60 dark:border-slate-800">
+                        <div className="rounded-lg bg-slate-50 dark:bg-slate-900/60 p-1.5 text-[11px] border border-slate-200/60 dark:border-slate-800">
                           <div className="flex justify-between gap-2">
                             <span className="text-muted-foreground">Bill Total:</span>
                             <span className="font-bold">{r.purchaseBillTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
@@ -729,7 +729,7 @@ export function TransportPaymentBookingWorkspace() {
                             size="sm"
                             variant="default"
                             onClick={() => openPaymentModal(r)}
-                            className="h-7 px-2.5 text-[10px] font-bold bg-primary text-primary-foreground hover:bg-primary/90"
+                            className="h-7 px-2.5 text-[11px] font-bold bg-primary text-primary-foreground hover:bg-primary/90"
                             title={translateHeader(activeLang, "Record Transport Payment")}
                           >
                             <CreditCard className="mr-1 h-3 w-3" /> {translateHeader(activeLang, "Pay")}
@@ -739,7 +739,7 @@ export function TransportPaymentBookingWorkspace() {
                             size="sm"
                             variant="outline"
                             onClick={() => openChargesModal(r)}
-                            className="h-7 px-2 text-[10px] font-semibold"
+                            className="h-7 px-2 text-[11px] font-semibold"
                             title={translateHeader(activeLang, "Edit Charges / Truck")}
                           >
                             {translateHeader(activeLang, "Edit")}
@@ -749,7 +749,7 @@ export function TransportPaymentBookingWorkspace() {
                             size="sm"
                             variant="outline"
                             onClick={() => setSelectedRecordForHistory(r)}
-                            className="h-7 px-2 text-[10px] font-semibold"
+                            className="h-7 px-2 text-[11px] font-semibold"
                             title={translateHeader(activeLang, "Payment History")}
                           >
                             <History className="h-3 w-3 text-blue-600" />
@@ -771,7 +771,7 @@ export function TransportPaymentBookingWorkspace() {
           <div className="w-full max-w-lg rounded-2xl border bg-card p-5 shadow-2xl animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 whitespace-nowrap">
                   Workflow Stage 4 &bull; Payment
                 </span>
                 <h3 className="text-base font-black text-foreground mt-0.5">{translateHeader(activeLang, "Record Transport Payment")}</h3>
@@ -926,7 +926,7 @@ export function TransportPaymentBookingWorkspace() {
           <div className="w-full max-w-lg rounded-2xl border bg-card p-5 shadow-2xl animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-black uppercase text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                   Configure Charges
                 </span>
                 <h3 className="text-base font-black text-foreground mt-0.5">Transport & Transporter Setup</h3>
@@ -1050,7 +1050,7 @@ export function TransportPaymentBookingWorkspace() {
           <div className="w-full max-w-2xl rounded-2xl border bg-card p-5 shadow-2xl animate-in fade-in zoom-in-95 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 whitespace-nowrap">
                   Payment History & Receipts
                 </span>
                 <h3 className="text-base font-black text-foreground mt-0.5">
@@ -1070,15 +1070,15 @@ export function TransportPaymentBookingWorkspace() {
 
             <div className="my-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 p-3 border text-xs grid grid-cols-3 gap-2">
               <div>
-                <span className="block text-muted-foreground text-[10px] uppercase font-bold">Total Charge</span>
+                <span className="block text-muted-foreground text-[11px] uppercase font-bold">Total Charge</span>
                 <b className="text-sm font-mono">{selectedRecordForHistory.transportCharges.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selectedRecordForHistory.transportCurrency}</b>
               </div>
               <div>
-                <span className="block text-muted-foreground text-[10px] uppercase font-bold text-emerald-700">{translateHeader(activeLang, "Total Paid")}</span>
+                <span className="block text-muted-foreground text-[11px] uppercase font-bold text-emerald-700">{translateHeader(activeLang, "Total Paid")}</span>
                 <b className="text-sm font-mono text-emerald-700">{selectedRecordForHistory.transportPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selectedRecordForHistory.transportCurrency}</b>
               </div>
               <div>
-                <span className="block text-muted-foreground text-[10px] uppercase font-bold text-rose-700">Remaining</span>
+                <span className="block text-muted-foreground text-[11px] uppercase font-bold text-rose-700">Remaining</span>
                 <b className={cn("text-sm font-mono", selectedRecordForHistory.isFullyPaid ? "text-slate-900" : "text-rose-600")}>
                   {selectedRecordForHistory.transportBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selectedRecordForHistory.transportCurrency}
                 </b>
@@ -1093,7 +1093,7 @@ export function TransportPaymentBookingWorkspace() {
                 </div>
               ) : (
                 <table className="w-full border-collapse text-xs">
-                  <thead className="bg-slate-50 text-[10px] uppercase text-slate-600 dark:bg-slate-900/80">
+                  <thead className="bg-slate-50 text-[11px] uppercase text-slate-600 dark:bg-slate-900/80">
                     <tr>
                       <th className="p-2 text-left font-black">Date</th>
                       <th className="p-2 text-left font-black">Reference</th>
@@ -1116,7 +1116,7 @@ export function TransportPaymentBookingWorkspace() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="h-6 px-2 text-[10px] font-bold"
+                            className="h-6 px-2 text-[11px] font-bold"
                             onClick={() => handlePrintReceipt(selectedRecordForHistory, p)}
                           >
                             <Printer className="mr-1 h-3 w-3" /> Print

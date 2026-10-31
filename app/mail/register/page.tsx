@@ -241,7 +241,7 @@ export default function PublicMailRegisterPage() {
                 <span className="text-[11px] text-slate-400">1.0 GB Free Included</span>
               </div>
             </div>
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
               FREE
             </span>
           </div>

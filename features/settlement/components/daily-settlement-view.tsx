@@ -94,7 +94,7 @@ export function DailySettlementView() {
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[10px]">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[11px]">
               <tr>
                 <Th className="py-3 px-4">{th("Date")}</Th>
                 <Th className="py-3 px-4">{th("Country & Branch")}</Th>
@@ -123,7 +123,7 @@ export function DailySettlementView() {
                     <td className="py-3 px-4 font-semibold">{r.txn_date}</td>
                     <td className="py-3 px-4">
                       <div className="font-medium text-slate-900 dark:text-white">{r.branch_name || r.city_branch_name || "—"}</div>
-                      <div className="text-[10px] text-slate-400">{r.country_name || "Country"}</div>
+                      <div className="text-[11px] text-slate-400">{r.country_name || "Country"}</div>
                     </td>
                     <td className="py-3 px-4 text-center font-bold">{r.total_entries}</td>
                     <td className="py-3 px-4 text-right font-medium text-emerald-600">
@@ -136,9 +136,9 @@ export function DailySettlementView() {
                       {r.local_currency} {Number(r.remaining_cr_local || r.remaining_dr_local || 0).toLocaleString()}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <span className="text-[10px] font-bold text-emerald-600">{r.count_settled}</span>
+                      <span className="text-[11px] font-bold text-emerald-600">{r.count_settled}</span>
                       <span className="text-slate-400 mx-1">/</span>
-                      <span className="text-[10px] font-bold text-rose-600">{r.count_unsettled}</span>
+                      <span className="text-[11px] font-bold text-rose-600">{r.count_unsettled}</span>
                     </td>
                     <td className="py-3 px-4 text-right font-bold text-emerald-600">
                       +${Number(r.total_fx_gain_usd || 0).toFixed(2)}

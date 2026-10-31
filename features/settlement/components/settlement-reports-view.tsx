@@ -149,7 +149,7 @@ export function SettlementReportsView() {
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[10px]">
+              <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[11px]">
                 <tr>
                   <Th className="py-3 px-4">Date</Th>
                   <Th className="py-3 px-4">Reference</Th>
@@ -172,7 +172,7 @@ export function SettlementReportsView() {
                     <td className="py-3 px-4 text-right font-medium">{r.local_currency} {num(r.local_amount)}</td>
                     <td className="py-3 px-4 text-right font-bold">{r.local_currency} {num(r.remaining_local)}</td>
                     <td className="py-3 px-4 text-center">
-                      <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-slate-100 dark:bg-slate-800">
+                      <span className="px-2 py-0.5 rounded text-[11px] uppercase font-bold bg-slate-100 dark:bg-slate-800 whitespace-nowrap">
                         {r.settlement_status}
                       </span>
                     </td>

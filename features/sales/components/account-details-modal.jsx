@@ -38,8 +38,8 @@ export function AccountDetailsModal({
   const isSales = accountType === "sales";
   const title = account.accountName || account.name || (isSales ? "Sales Account" : "Customer Account");
   const code = account.accountCode || account.code || account.account_number || "—";
-  const branch = account.cityBranchName || account.branchName || account.branch || "Main Branch";
-  const company = account.companyName || account.company || (isSales ? "Global Trading LLC" : "Al Noor Imports");
+  const branch = account.cityBranchName || account.branchName || account.branch || "—";
+  const company = account.companyName || account.company || "—";
   const currency = account.ledgerCurrency || account.currency || account.salesCurrency || "AED";
   const currentBalance = Number(account.currentBalance ?? account.current_balance ?? 0);
   const openingBalance = Number(account.openingBalance ?? account.opening_balance ?? 0);
@@ -47,9 +47,9 @@ export function AccountDetailsModal({
   const manualRef = account.manualReferenceNumber || account.manualReference || "—";
   const phone = account.mobile || account.phone || "—";
   const whatsapp = account.whatsapp || "—";
-  const address = account.address || account.companyAddress || (isSales ? "Office 101, Business Bay, Dubai, UAE" : "Warehouse 5, Jebel Ali, Dubai, UAE");
-  const license = account.licenseNo || (isSales ? "TRN1234567890" : "TRN0987654321");
-  const trn = account.gstTrn || (isSales ? "100123456789003" : "100987654321003");
+  const address = account.address || account.companyAddress || "—";
+  const license = account.licenseNo || "—";
+  const trn = account.gstTrn || "—";
 
   const handleCopyCode = () => {
     if (!code || code === "—") return;
@@ -70,10 +70,10 @@ export function AccountDetailsModal({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
+                  <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 whitespace-nowrap">
                     {isSales ? "Sales Account (CR)" : "Customer / Party Account (DR)"}
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-100 border border-emerald-300/30 flex items-center gap-1">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-100 border border-emerald-300/30 flex items-center gap-1 whitespace-nowrap">
                     <ShieldCheck className="w-3 h-3 text-emerald-300" />
                     Verified & Active
                   </span>
@@ -114,7 +114,7 @@ export function AccountDetailsModal({
           {/* KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Currency</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Currency</span>
               <div className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-1 mt-0.5">
                 <span>{getCurrencyFlag(currency)}</span>
                 <span>{currency}</span>
@@ -122,21 +122,21 @@ export function AccountDetailsModal({
             </div>
 
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Current Balance</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Current Balance</span>
               <div className="text-sm font-black font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
                 {currency} {currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
 
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Opening Balance</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Opening Balance</span>
               <div className="text-sm font-black font-mono text-slate-700 dark:text-slate-300 mt-0.5">
                 {currency} {openingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
 
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Manual Ref / A/C</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Manual Ref / A/C</span>
               <div className="text-sm font-black font-mono text-slate-700 dark:text-slate-300 truncate mt-0.5">
                 {manualRef}
               </div>
@@ -145,7 +145,7 @@ export function AccountDetailsModal({
 
           {/* Section 1: Classification & Branch */}
           <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 space-y-2">
-            <h4 className="text-[10.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-1.5">
               <Building2 className="w-3.5 h-3.5 text-blue-600" />
               Organization & Classification
             </h4>
@@ -171,7 +171,7 @@ export function AccountDetailsModal({
 
           {/* Section 2: Contact & Tax Information */}
           <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 space-y-2">
-            <h4 className="text-[10.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-1.5">
               <Phone className="w-3.5 h-3.5 text-emerald-600" />
               Contact & Tax Details
             </h4>

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiError, apiOk, rethrowIfNextControlFlow } from "@/lib/api/response";
+import { apiError, apiOk, rethrowIfNextControlFlow, invalidIdErrorOf } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
 import { financialModuleDenied } from "@/lib/permissions/middleware";
@@ -21,6 +21,8 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
     return apiOk({ bill });
   } catch (error) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return apiError(invalidId.code, invalidId.message, invalidId.status, { value: invalidId.value });
     const m = mapTempBillError(error);
     return apiError(m.code, m.message, m.status);
   }
@@ -79,6 +81,8 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     return apiOk({ ok: true });
   } catch (error) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return apiError(invalidId.code, invalidId.message, invalidId.status, { value: invalidId.value });
     if (error instanceof z.ZodError) return apiError("BAD_REQUEST", error.issues.map((i) => i.message).join("; "), 400);
     const m = mapTempBillError(error);
     return apiError(m.code, m.message, m.status);
@@ -95,6 +99,8 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
     return apiOk({ ok: true });
   } catch (error) {
     rethrowIfNextControlFlow(error);
+    const invalidId = await invalidIdErrorOf(error);
+    if (invalidId) return apiError(invalidId.code, invalidId.message, invalidId.status, { value: invalidId.value });
     const m = mapTempBillError(error);
     return apiError(m.code, m.message, m.status);
   }

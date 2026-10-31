@@ -308,7 +308,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
           )}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               {s.t("kpi_incoming", "Incoming Tasks")}
             </span>
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
@@ -316,7 +316,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
             </span>
           </div>
           <div className="mt-2 text-xl font-black text-slate-900 dark:text-white">{counts.incoming}</div>
-          <div className="mt-1 text-[9.5px] font-semibold text-blue-600 dark:text-blue-400">
+          <div className="mt-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
             {s.t("kpi_action_required", "Action Required")}
           </div>
         </div>
@@ -332,7 +332,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
           )}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               {s.t("kpi_sent", "Sent Handovers")}
             </span>
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
@@ -340,7 +340,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
             </span>
           </div>
           <div className="mt-2 text-xl font-black text-purple-600 dark:text-purple-400">{counts.sent}</div>
-          <div className="mt-1 text-[9.5px] font-semibold text-slate-500">
+          <div className="mt-1 text-[11px] font-semibold text-slate-500">
             {s.t("kpi_delegated", "Delegated by you")}
           </div>
         </div>
@@ -356,7 +356,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
           )}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               {s.t("kpi_accepted", "Accepted")}
             </span>
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
@@ -364,7 +364,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
             </span>
           </div>
           <div className="mt-2 text-xl font-black text-emerald-600 dark:text-emerald-400">{counts.accepted}</div>
-          <div className="mt-1 text-[9.5px] font-semibold text-slate-500">
+          <div className="mt-1 text-[11px] font-semibold text-slate-500">
             {s.t("kpi_in_progress", "In Active Progress")}
           </div>
         </div>
@@ -380,7 +380,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
           )}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               {s.t("kpi_returned", "Returned")}
             </span>
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
@@ -388,7 +388,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
             </span>
           </div>
           <div className="mt-2 text-xl font-black text-amber-600 dark:text-amber-400">{counts.returned}</div>
-          <div className="mt-1 text-[9.5px] font-semibold text-amber-600 dark:text-amber-400">
+          <div className="mt-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
             {s.t("kpi_needs_review", "Needs Correction")}
           </div>
         </div>
@@ -404,7 +404,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
           )}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               {s.t("kpi_completed", "Completed")}
             </span>
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -412,7 +412,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
             </span>
           </div>
           <div className="mt-2 text-xl font-black text-slate-800 dark:text-slate-200">{counts.completed}</div>
-          <div className="mt-1 text-[9.5px] font-semibold text-emerald-600 dark:text-emerald-400">
+          <div className="mt-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
             {s.t("kpi_closed", "Successfully Closed")}
           </div>
         </div>
@@ -445,7 +445,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                   {counts[t] > 0 && (
                     <span
                       className={cn(
-                        "min-w-[1.4rem] rounded-full px-1.5 py-0.5 text-center text-[10px] font-black",
+                        "min-w-[1.4rem] rounded-full px-1.5 py-0.5 text-center text-[11px] font-black",
                         active
                           ? "bg-white/20 text-white"
                           : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
@@ -460,7 +460,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
           </nav>
 
           <div className="mt-4 border-t border-slate-200 pt-3 dark:border-slate-800">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               {s.t("filter_type", "Workflow Domain")}
             </label>
             <select
@@ -523,7 +523,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                       <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-black text-slate-900 dark:text-slate-100">
                         <Icon className="h-3.5 w-3.5 text-blue-600" /> {it.transfer_no}
                       </span>
-                      <Badge variant={statusBadgeVariant(it.status)} className="text-[9px] capitalize">
+                      <Badge variant={statusBadgeVariant(it.status)} className="text-[11px] capitalize">
                         {s.t(`status_${it.status}`, it.status)}
                       </Badge>
                     </div>
@@ -541,12 +541,12 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                     </span>
 
                     {it.narration && (
-                      <span className="truncate text-[10.5px] font-medium text-slate-600 dark:text-slate-400">
+                      <span className="truncate text-[11px] font-medium text-slate-600 dark:text-slate-400">
                         {it.narration}
                       </span>
                     )}
 
-                    <div className="flex items-center justify-between pt-1 text-[9.5px] text-slate-400">
+                    <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400">
                       <span>{new Date(it.created_at).toLocaleString()}</span>
                       {it.metadata?.priority && (
                         <span
@@ -597,7 +597,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                         <h3 className="whitespace-nowrap text-base font-black text-slate-900 dark:text-white">
                           {selected.transfer_no}
                         </h3>
-                        <Badge variant={statusBadgeVariant(selected.status)} className="capitalize text-[10px]">
+                        <Badge variant={statusBadgeVariant(selected.status)} className="capitalize text-[11px]">
                           {s.t(`status_${selected.status}`, selected.status)}
                         </Badge>
                       </div>
@@ -667,7 +667,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                 {/* Sender & Receiver Summary Grid */}
                 <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-3 text-xs">
                   <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 dark:border-slate-800 dark:bg-slate-800/40">
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       {s.t("sender", "Sender User")}
                     </span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -675,7 +675,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                     </span>
                   </div>
                   <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 dark:border-slate-800 dark:bg-slate-800/40">
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       {s.t("receiver", "Receiver User")}
                     </span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -683,7 +683,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                     </span>
                   </div>
                   <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 dark:border-slate-800 dark:bg-slate-800/40">
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       {s.t("source", "Source Scope")}
                     </span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
@@ -691,7 +691,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                     </span>
                   </div>
                   <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 dark:border-slate-800 dark:bg-slate-800/40">
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       {s.t("destination", "Destination Scope")}
                     </span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
@@ -719,7 +719,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                           ? "outline"
                           : "secondary"
                       }
-                      className="capitalize text-[10px] font-bold"
+                      className="capitalize text-[11px] font-bold"
                     >
                       {selected.metadata.priority}
                     </Badge>
@@ -729,7 +729,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 text-xs">
                   {selected.metadata?.requestedTask && (
                     <div className="rounded-xl border border-white/80 bg-white/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/70">
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
                         {s.t("requested_task", "Requested Next Task")}
                       </span>
                       <span className="font-black text-blue-700 dark:text-blue-400 text-sm">
@@ -739,7 +739,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                   )}
                   {selected.metadata?.currentStage && (
                     <div className="rounded-xl border border-white/80 bg-white/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/70">
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
                         {s.t("workflow_stage", "Workflow Stage")}
                       </span>
                       <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -768,7 +768,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                         <span>{s.t("open_linked_form", "OPEN LINKED FORM")}</span>
                         <ArrowRight className="h-4 w-4" />
                       </Button>
-                      <p className="mt-1 text-center text-[10px] text-slate-500 dark:text-slate-400">
+                      <p className="mt-1 text-center text-[11px] text-slate-500 dark:text-slate-400">
                         {s.t("open_linked_desc", "Opens the original canonical ERP record — ZERO duplicate records or parallel forms.")}
                       </p>
                     </div>
@@ -812,7 +812,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
               {/* Instructions / Remarks */}
               {selected.narration && (
                 <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-                  <span className="block text-[10.5px] font-bold uppercase tracking-wider text-slate-400">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     {s.t("narration", "Task Summary / Narration")}
                   </span>
                   <p className="mt-1 text-xs font-semibold text-slate-800 dark:text-slate-200">
@@ -823,7 +823,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
 
               {selected.remarks && (
                 <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-                  <span className="block text-[10.5px] font-bold uppercase tracking-wider text-slate-400">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     {s.t("remarks", "Detailed Instructions / Remarks")}
                   </span>
                   <p className="mt-1 whitespace-pre-wrap text-xs text-slate-700 dark:text-slate-300">

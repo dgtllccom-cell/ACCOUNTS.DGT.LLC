@@ -205,7 +205,7 @@ export function MobileInboxView({ lang }: Props) {
               </button>
               <div>
                 <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">{selectedConv.senderName}</h4>
-                <p className="text-[10px] text-slate-500">{selectedConv.contactIdentifier}</p>
+                <p className="text-[11px] text-slate-500">{selectedConv.contactIdentifier}</p>
               </div>
             </div>
 
@@ -214,7 +214,7 @@ export function MobileInboxView({ lang }: Props) {
                 href={`/dashboard/reports?id=${selectedConv.relatedEntityId}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200"
+                className="flex items-center gap-1 text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200"
               >
                 <ExternalLink className="h-3 w-3" /> {tt("mbl.erp_record", "ERP Record")}
               </a>
@@ -242,13 +242,13 @@ export function MobileInboxView({ lang }: Props) {
               <button
                 onClick={handleGenerateAi}
                 disabled={isGeneratingAi}
-                className="flex items-center gap-1 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white px-2.5 py-1 text-[10px] font-bold disabled:opacity-50"
+                className="flex items-center gap-1 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white px-2.5 py-1 text-[11px] font-bold disabled:opacity-50"
               >
                 <Sparkles className="h-3 w-3" />
                 {isGeneratingAi ? tt("mbl.querying_erp", "Querying ERP...") : tt("mbl.ai_draft", "AI Draft")}
               </button>
 
-              <div className="flex items-center gap-1 text-[10px] font-bold">
+              <div className="flex items-center gap-1 text-[11px] font-bold">
                 {(["en", "ur", "ps", "fa", "ar"] as const).map((l) => (
                   <button
                     key={l}

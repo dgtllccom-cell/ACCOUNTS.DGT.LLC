@@ -13,6 +13,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { getLabel } from "./translations";
 import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
+import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { openMasterProfile } from "@/lib/reports/master-profiles";
 import { Party360Modal } from "./party-360-modal";
 import { SendToCustomerModal } from "./send-to-customer-modal";
@@ -383,7 +384,7 @@ export function CustomerProfile({
                       {customer.customer_name}
                     </h2>
                     <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold border ${
                         parsedMeta.status === "Active"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
                           : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
@@ -393,15 +394,15 @@ export function CustomerProfile({
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <span className="text-xs font-mono font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-900/50">
+                    <span className="text-xs font-mono font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-900/50 whitespace-nowrap">
                       {parsedMeta.customerAccountNumber}
                     </span>
-                    <span className="text-xs font-extrabold px-2 py-0.5 rounded-md border bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                    <span className="text-xs font-extrabold px-2 py-0.5 rounded-md border bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 whitespace-nowrap">
                       {cType === "Female" ? "👩 Female" : cType === "Corporate" ? "🏢 Corporate" : "👨 Male"}
                     </span>
                     {(customer.father_name || parsedMeta.fatherName) && (
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-900/50">
-                        <span className="text-[10px] uppercase font-black text-blue-500">S/O / D/O:</span>
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-900/50 whitespace-nowrap">
+                        <span className="text-[11px] uppercase font-black text-blue-500">S/O / D/O:</span>
                         <span>{customer.father_name || parsedMeta.fatherName}</span>
                       </span>
                     )}
@@ -497,7 +498,7 @@ export function CustomerProfile({
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {parsedMeta.contacts.map((contact, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
-                        <td className="px-3 py-1.5 font-bold text-slate-700 dark:text-slate-300">{contact.type}</td>
+                        <td className="px-3 py-1.5 font-bold text-slate-700 dark:text-slate-300">{translateOptionLabel(lang, contact.type)}</td>
                         <td className="px-3 py-1.5 font-mono text-slate-900 dark:text-slate-100">{contact.value || "-"}</td>
                       </tr>
                     ))}
@@ -536,7 +537,7 @@ export function CustomerProfile({
           {/* Remarks */}
           {parsedMeta.remarks && (
             <div className="space-y-1.5 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 bg-white dark:bg-slate-900 shadow-xs">
-              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{getLabel("remarksRegistryNotes", lang)}</h4>
+              <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{getLabel("remarksRegistryNotes", lang)}</h4>
               <p className="text-xs text-slate-700 leading-relaxed font-medium dark:text-slate-300">{parsedMeta.remarks}</p>
             </div>
           )}
@@ -642,13 +643,13 @@ export function CustomerProfile({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            className="h-7 px-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-semibold text-[10px] uppercase flex items-center gap-1.5 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
+            className="h-7 px-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-semibold text-[11px] uppercase flex items-center gap-1.5 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
           >
             <Columns className="h-3 w-3" />
             {t(lang, "pv.portrait", "Portrait")}
           </button>
           <span className="text-slate-500">{getLabel("pageOneOfOne", lang)}</span>
-          <span className="bg-slate-50 border border-slate-200 text-slate-700 text-[10px] px-2.5 py-0.5 rounded font-bold uppercase dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
+          <span className="bg-slate-50 border border-slate-200 text-slate-700 text-[11px] px-2.5 py-0.5 rounded font-bold uppercase dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 whitespace-nowrap">
             A4
           </span>
         </div>
@@ -742,22 +743,22 @@ export function CustomerProfile({
                 <h2 className="text-lg font-extrabold text-teal-800 tracking-tight">
                   {customer.customer_name || "CUSTOMER PROFILE"}
                 </h2>
-                <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mt-0.5">
+                <p className="text-[11px] text-slate-500 uppercase font-bold tracking-widest mt-0.5">
                   {getLabel("customerRegistry", lang) || "CUSTOMER MASTER REGISTRY"}
                 </p>
               </div>
               <div className="text-right">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-[10px] font-bold text-teal-700 border border-teal-200 uppercase">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-[11px] font-bold text-teal-700 border border-teal-200 uppercase">
                   {parsedMeta.status}
                 </span>
-                <p className="text-[10px] text-slate-500 font-mono mt-1">{customer.person_code || parsedMeta.customerAccountNumber}</p>
+                <p className="text-[11px] text-slate-500 font-mono mt-1">{customer.person_code || parsedMeta.customerAccountNumber}</p>
               </div>
             </div>
 
             {/* Document Title */}
             <div className="text-center py-2 bg-slate-50 border rounded-lg">
               <h1 className="text-base font-extrabold text-slate-800 uppercase tracking-widest">{getLabel("officialCustomerProfileRegistry", lang)}</h1>
-              <p className="text-[10px] text-slate-500 mt-0.5">{getLabel("databaseAuditRecordCertificateMsg", lang)}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">{getLabel("databaseAuditRecordCertificateMsg", lang)}</p>
             </div>
 
             {/* Content Grids */}
@@ -767,7 +768,7 @@ export function CustomerProfile({
                 <div className="absolute top-3 right-3 text-teal-600/30">
                   <User className="h-6 w-6" />
                 </div>
-                <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("personalInfo", lang)}</h3>
+                <h3 className="text-[11px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("personalInfo", lang)}</h3>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
                     <span className="text-slate-500">{getLabel("customerName", lang)}</span>
@@ -799,7 +800,7 @@ export function CustomerProfile({
                 <div className="absolute top-3 right-3 text-teal-600/30">
                   <MapPin className="h-6 w-6" />
                 </div>
-                <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("locationInfo", lang)}</h3>
+                <h3 className="text-[11px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("locationInfo", lang)}</h3>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
                     <span className="text-slate-500">{getLabel("country", lang)}</span>
@@ -823,7 +824,7 @@ export function CustomerProfile({
 
             {/* Contacts Table style */}
             <div className="space-y-2">
-              <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("communicationChannels", lang)}</h3>
+              <h3 className="text-[11px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("communicationChannels", lang)}</h3>
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b">
@@ -837,7 +838,7 @@ export function CustomerProfile({
                     {parsedMeta.contacts.map((contact, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50">
                         <td className="px-4 py-2 text-slate-400 font-medium">{idx + 1}</td>
-                        <td className="px-4 py-2 font-bold text-slate-700">{contact.type}</td>
+                        <td className="px-4 py-2 font-bold text-slate-700">{translateOptionLabel(lang, contact.type)}</td>
                         <td className="px-4 py-2 font-mono text-slate-900">{contact.value || "-"}</td>
                       </tr>
                     ))}
@@ -853,7 +854,7 @@ export function CustomerProfile({
 
             {/* Documents Table style */}
             <div className="space-y-2">
-              <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("registeredVerificationDocuments", lang)}</h3>
+              <h3 className="text-[11px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("registeredVerificationDocuments", lang)}</h3>
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b">
@@ -873,7 +874,7 @@ export function CustomerProfile({
                         <td className="px-4 py-2">
                           {doc.upload ? (
                             <div className="flex items-center justify-between">
-                              <span className="font-mono text-[10px] text-slate-500">{doc.upload}</span>
+                              <span className="font-mono text-[11px] text-slate-500">{doc.upload}</span>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -887,14 +888,14 @@ export function CustomerProfile({
                                   document.body.removeChild(a);
                                   URL.revokeObjectURL(url);
                                 }}
-                                className="text-[9px] text-teal-600 font-bold hover:underline cursor-pointer flex items-center gap-0.5 ml-2"
+                                className="text-[11px] text-teal-600 font-bold hover:underline cursor-pointer flex items-center gap-0.5 ml-2"
                               >
                                 <DownloadActionIcon className="h-2.5 w-2.5" />
                                 {getLabel("downloadScan", lang)}
                               </button>
                             </div>
                           ) : (
-                            <span className="text-slate-400 italic text-[10px]">{getLabel("noScanUpload", lang)}</span>
+                            <span className="text-slate-400 italic text-[11px]">{getLabel("noScanUpload", lang)}</span>
                           )}
                         </td>
                       </tr>
@@ -912,7 +913,7 @@ export function CustomerProfile({
             {/* Additional Remarks Section */}
             {parsedMeta.remarks && (
               <div className="space-y-1.5 border rounded-lg p-3 bg-slate-50/50">
-                <h4 className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">{getLabel("remarksRegistryAuditorNotes", lang)}</h4>
+                <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{getLabel("remarksRegistryAuditorNotes", lang)}</h4>
                 <p className="text-xs text-slate-700 leading-relaxed font-medium">{parsedMeta.remarks}</p>
               </div>
             )}
@@ -921,7 +922,7 @@ export function CustomerProfile({
           {/* Footer Signature stamp block */}
           <div className="border-t pt-8 mt-12 flex justify-between text-xs select-none">
             <div className="space-y-1">
-              <p className="text-slate-400 uppercase text-[9px] font-bold">{getLabel("dateOfIssuance", lang)}</p>
+              <p className="text-slate-400 uppercase text-[11px] font-bold">{getLabel("dateOfIssuance", lang)}</p>
               <p className="font-bold text-slate-700 font-mono">
                 {new Date().toLocaleDateString(undefined, {
                   day: "2-digit",
@@ -931,11 +932,11 @@ export function CustomerProfile({
               </p>
             </div>
             <div className="space-y-1 text-right">
-              <p className="text-slate-400 uppercase text-[9px] font-bold">{t(lang, "acct.authorized_signature", "Authorized Signature")}</p>
+              <p className="text-slate-400 uppercase text-[11px] font-bold">{t(lang, "acct.authorized_signature", "Authorized Signature")}</p>
               <div className="h-8 flex items-end justify-end">
                 <div className="w-32 border-b border-dashed border-slate-400" />
               </div>
-              <p className="text-[9px] text-slate-400 italic">{getLabel("erpRegistrarOfficeStamp", lang)}</p>
+              <p className="text-[11px] text-slate-400 italic">{getLabel("erpRegistrarOfficeStamp", lang)}</p>
             </div>
           </div>
         </div>

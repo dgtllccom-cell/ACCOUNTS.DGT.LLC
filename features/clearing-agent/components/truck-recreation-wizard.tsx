@@ -54,6 +54,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { SavedText } from "@/components/i18n/saved-text";
 import { localizeName } from "@/lib/i18n/transliteration";
 import "./truck-registration.css";
 import { PersonPicker } from "@/components/erp/person-picker";
@@ -1680,7 +1681,7 @@ export function TruckRecreationWizard({
   };
 
   const Option1ActiveBadge = ({ status = "Active" }: { status?: string }) => (
-    <span className="inline-flex items-center rounded-full bg-emerald-500 text-white px-3 py-0.5 text-[10px] font-bold shadow-2xs">
+    <span className="inline-flex items-center rounded-full bg-emerald-500 text-white px-3 py-0.5 text-[11px] font-bold shadow-2xs whitespace-nowrap">
       {status || "Active"}
     </span>
   );
@@ -2066,7 +2067,7 @@ export function TruckRecreationWizard({
                 </svg>
               )}
             </div>
-            <span className="mt-1.5 inline-block rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-black tracking-wide text-white uppercase shadow-2xs">
+            <span className="mt-1.5 inline-block rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-black tracking-wide text-white uppercase shadow-2xs whitespace-nowrap">
               {trkStr(TRK_TEXT.permanentBadge[activeLang])}
             </span>
           </div>
@@ -2544,7 +2545,7 @@ export function TruckRecreationWizard({
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   {countryBreakdown[0]?.name || "United Arab Emirates"}
                 </span>
-                <span className="rounded-lg bg-orange-50 px-2 py-0.5 text-xs font-bold text-orange-700 dark:bg-orange-950/50 dark:text-orange-300">
+                <span className="rounded-lg bg-orange-50 px-2 py-0.5 text-xs font-bold text-orange-700 dark:bg-orange-950/50 dark:text-orange-300 whitespace-nowrap">
                   {countryBreakdown[0]?.count || 1} {tt("trk.trucks_count_suffix", "trucks")}
                 </span>
               </div>
@@ -2713,7 +2714,7 @@ export function TruckRecreationWizard({
                         {/* Truck Name */}
                         {visibleCols.truckName && (
                           <td className="py-3.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                            {nameText(row.truck_name) || "—"}
+                            <SavedText value={nameText(row.truck_name)} lang={activeLang} kind="name" />
                           </td>
                         )}
 
@@ -2726,26 +2727,26 @@ export function TruckRecreationWizard({
 
                         {/* Owner Name */}
                         <td className="py-3.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                          {getLocalizedOwner(row) || "—"}
+                          <SavedText value={getLocalizedOwner(row)} lang={activeLang} kind="name" />
                         </td>
 
                         {/* Company */}
                         {visibleCols.company && (
                           <td className="py-3.5 px-3 font-medium text-slate-600 dark:text-slate-300">
-                            {getLocalizedCompany(row) || "—"}
+                            <SavedText value={getLocalizedCompany(row)} lang={activeLang} kind="name" />
                           </td>
                         )}
 
                         {/* Transporter */}
                         {visibleCols.transporter && (
                           <td className="py-3.5 px-3 font-medium text-slate-600 dark:text-slate-300">
-                            {nameText(row.transporter_display_name) || "—"}
+                            <SavedText value={nameText(row.transporter_display_name)} lang={activeLang} kind="name" />
                           </td>
                         )}
 
                         {/* Driver */}
                         <td className="py-3.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                          {getLocalizedDriver(row) || "—"}
+                          <SavedText value={getLocalizedDriver(row)} lang={activeLang} kind="name" />
                         </td>
 
                         {/* Mobile */}
@@ -3020,7 +3021,7 @@ export function TruckRecreationWizard({
                             <div className="text-xs font-black text-slate-900 dark:text-white">
                               {pn(ownerDetails.customer_name)}
                             </div>
-                            <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
+                            <div className="text-[11px] text-blue-700 dark:text-blue-300 font-bold uppercase">
                               {tt("trk.w_registered_owner", "REGISTERED OWNER")}
                             </div>
                           </div>
@@ -3386,7 +3387,7 @@ export function TruckRecreationWizard({
                               <div className="text-xs font-black text-slate-900 dark:text-white">
                                 {pn(transporterDetails.customer_name)}
                               </div>
-                              <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
+                              <div className="text-[11px] text-blue-700 dark:text-blue-300 font-bold uppercase">
                                 {tt("trk.w_registered_transporter", "REGISTERED TRANSPORTER")}
                               </div>
                             </div>
@@ -3464,7 +3465,7 @@ export function TruckRecreationWizard({
                                   <div className="text-xs font-black text-slate-900 dark:text-white">
                                     {nm(companyDetails.name)}
                                   </div>
-                                  <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
+                                  <div className="text-[11px] text-blue-700 dark:text-blue-300 font-bold uppercase">
                                     {tt("trk.w_registered_company", "REGISTERED COMPANY")}
                                   </div>
                                 </div>
@@ -3635,16 +3636,16 @@ export function TruckRecreationWizard({
                                   <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <span>{pn(driverDetails.customer_name)}</span>
                                     {driverDetails.person_code && (
-                                      <span className="font-mono text-[10px] text-blue-700 dark:text-blue-300">
+                                      <span className="font-mono text-[11px] text-blue-700 dark:text-blue-300">
                                         ({driverDetails.person_code})
                                       </span>
                                     )}
                                   </div>
                                   <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase tracking-wider">
+                                    <span className="text-[11px] text-blue-700 dark:text-blue-300 font-bold uppercase tracking-wider">
                                       {tt("trk.w_registered_driver", "REGISTERED DRIVER")}
                                     </span>
-                                    <span className={`inline-block rounded-md px-1.5 py-0.2 text-[9px] font-bold ${statusBadgeClasses(form.status)}`}>
+                                    <span className={`inline-block rounded-md px-1.5 py-0.2 text-[11px] font-bold ${statusBadgeClasses(form.status)}`}>
                                       {statusLabel(form.status)}
                                     </span>
                                   </div>
@@ -3716,7 +3717,7 @@ export function TruckRecreationWizard({
                             <strong className="block text-xs font-black text-slate-800 dark:text-slate-200">
                               {tt("trk.w_driver_photograph", "Driver photograph")}
                             </strong>
-                            <p className="mt-0.5 text-[10.5px] text-slate-500">
+                            <p className="mt-0.5 text-[11px] text-slate-500">
                               {tt("trk.w_add_driver_photo_first_then_complete_d", "Add driver photo first, then complete driver details.")}
                             </p>
                             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -3729,7 +3730,7 @@ export function TruckRecreationWizard({
                                   className="sr-only"
                                 />
                               </label>
-                              <span className="text-[10px] text-slate-400">
+                              <span className="text-[11px] text-slate-400">
                                 {driverPhotoName || "📎 Photograph attachment · JPG/PNG ≤ 5 MB"}
                               </span>
                             </div>
@@ -3743,7 +3744,7 @@ export function TruckRecreationWizard({
                               <Phone className="h-3.5 w-3.5" />
                               <span>+ Contacts · WhatsApp / Mobile / Email</span>
                             </span>
-                            <span className="text-[10px] font-mono text-slate-400">
+                            <span className="text-[11px] font-mono text-slate-400">
                               {contacts.length} / 10 contacts
                             </span>
                           </summary>
@@ -3783,7 +3784,7 @@ export function TruckRecreationWizard({
                             })}
 
                             <div className="flex items-center justify-between pt-1">
-                              <span className="text-[10.5px] text-slate-400">
+                              <span className="text-[11px] text-slate-400">
                                 {contacts.length >= 10 ? "Maximum 10 contacts reached" : "Repeated types allowed"}
                               </span>
                               <button
@@ -4083,7 +4084,7 @@ export function TruckRecreationWizard({
                       <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
                         {tt("trk.w_drag_and_drop_files_here_or_click_to_u", "Drag & drop files here, or click to upload")}
                       </div>
-                      <div className="text-[10.5px] text-slate-400">
+                      <div className="text-[11px] text-slate-400">
                         PDF, JPG, PNG · Max 10 MB each · Session preview
                       </div>
                       <input
@@ -4105,7 +4106,7 @@ export function TruckRecreationWizard({
                           <Paperclip className="h-3.5 w-3.5" />
                           <span>📎 Documents · View / Download</span>
                         </span>
-                        <span className="text-[10.5px] font-mono text-slate-400">
+                        <span className="text-[11px] font-mono text-slate-400">
                           {documents.length} files
                         </span>
                       </summary>
@@ -4124,7 +4125,7 @@ export function TruckRecreationWizard({
                               <div className="flex items-center gap-2 min-w-0">
                                 <FileText className="h-4 w-4 shrink-0 text-blue-600" />
                                 <span className="truncate font-medium text-slate-800 dark:text-slate-200">{doc.name}</span>
-                                <span className="text-[10px] text-slate-400 shrink-0">
+                                <span className="text-[11px] text-slate-400 shrink-0">
                                   · {(doc.size / 1024).toFixed(0)} KB
                                 </span>
                               </div>

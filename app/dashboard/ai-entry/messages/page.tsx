@@ -202,7 +202,7 @@ export default function AIMessagesPage() {
                 <h1 className="text-lg font-black tracking-tight text-white">
                   {s.t("ai_messages", "AI Voice & Chat Messaging")}
                 </h1>
-                <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 border border-cyan-400/20 px-2 py-0.5 text-[10px] font-extrabold text-cyan-300">
+                <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 border border-cyan-400/20 px-2 py-0.5 text-[11px] font-extrabold text-cyan-300 whitespace-nowrap">
                   <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
                   ERP CO-PILOT
                 </span>
@@ -239,7 +239,7 @@ export default function AIMessagesPage() {
 
         {/* Quick Suggested Prompts Bar */}
         <div className="mt-3.5 flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1 shrink-0">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1 shrink-0">
             <Sparkles className="h-3 w-3 text-amber-400" />
             Quick Prompts:
           </span>
@@ -287,11 +287,11 @@ export default function AIMessagesPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full pt-2">
               <div className="p-3 rounded-xl border border-blue-900/40 bg-blue-950/20 text-left space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400">🎙️ Voice Enabled</span>
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-cyan-400">🎙️ Voice Enabled</span>
                 <p className="text-[11px] text-slate-300 font-medium">Click the microphone below and speak your daily financial instructions.</p>
               </div>
               <div className="p-3 rounded-xl border border-blue-900/40 bg-blue-950/20 text-left space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">⚡ Live ERP Intelligence</span>
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-400">⚡ Live ERP Intelligence</span>
                 <p className="text-[11px] text-slate-300 font-medium">Instant queries on branch cash positions, bills, and payment vouchers.</p>
               </div>
             </div>
@@ -316,7 +316,7 @@ export default function AIMessagesPage() {
                     : "bg-[#0c1a38] border border-blue-900/50 text-slate-200 rounded-bl-none shadow-black/40"
                 )}
               >
-                <div className="flex items-center justify-between gap-4 mb-1.5 opacity-60 text-[10px] font-bold">
+                <div className="flex items-center justify-between gap-4 mb-1.5 opacity-60 text-[11px] font-bold">
                   <span>{msg.type === "user" ? "You" : "ERP Assistant"}</span>
                   <div className="flex items-center gap-2">
                     {msg.type === "ai" && (

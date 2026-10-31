@@ -100,13 +100,13 @@ export function UaeCorporateTaxView({ lang }: { lang?: string }) {
                     return (
                       <tr key={r.id} data-testid="ct-row" data-status={r.status} onClick={() => setOpenId(r.id)} className="cursor-pointer border-t border-slate-100 hover:bg-blue-50/40 dark:border-slate-800 dark:hover:bg-blue-950/20">
                         <td className="px-3 py-2 font-mono font-semibold">{r.return_no}</td>
-                        <td className="px-3 py-2">{r.company_name ?? r.legal_name}<div className="font-mono text-[10px] text-slate-400" dir="ltr">{r.trn}</div></td>
+                        <td className="px-3 py-2">{r.company_name ?? r.legal_name}<div className="font-mono text-[11px] text-slate-400" dir="ltr">{r.trn}</div></td>
                         <td className="px-3 py-2 font-mono" dir="ltr">{d10(r.fy_start)} → {d10(r.fy_end)}</td>
                         <td className="px-3 py-2">
                           <span className="font-mono" dir="ltr">{d10(r.filing_deadline)}</span>
-                          {open && <span className={`ms-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${days < 0 ? "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300" : days <= 60 ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{days < 0 ? s.t("overdue_by", "overdue") : `${days} ${s.t("days_left", "days left")}`}</span>}
+                          {open && <span className={`ms-2 rounded-full px-1.5 py-0.5 text-[11px] font-bold ${days < 0 ? "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300" : days <= 60 ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{days < 0 ? s.t("overdue_by", "overdue") : `${days} ${s.t("days_left", "days left")}`}</span>}
                         </td>
-                        <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status]}`}>{statusLabel(r.status)}</span></td>
+                        <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.status]}`}>{statusLabel(r.status)}</span></td>
                         <td className="px-3 py-2 tabular-nums" dir="ltr">{AED(r.taxable_income)}</td>
                         <td className="px-3 py-2 font-semibold tabular-nums" dir="ltr">{AED(r.tax_payable)}</td>
                         <td className="px-3 py-2 tabular-nums">{r.missing_docs > 0 ? <span className="font-bold text-amber-700 dark:text-amber-300">{r.missing_docs}</span> : 0}</td>
@@ -206,7 +206,7 @@ function ReturnDetail({ s, id, statusLabel, onClose, setError, setNotice }: Comm
 
   const field = (key: string, label: string, props: Row = {}) => (
     <div>
-      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
+      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
       <input data-testid={`ct-w-${key}`} disabled={!editable} className={INP} value={w[key] ?? ""} onChange={(e) => setW({ ...w, [key]: e.target.value })} {...props} />
     </div>
   );
@@ -361,7 +361,7 @@ function DocRow({ s, doc, companyDocs, locked, onSave }: { s: ReturnType<typeof 
       <td className="px-3 py-1.5">
         <div className="flex gap-1">
           <input data-testid="ct-doc-notes" disabled={locked} className={INP} value={notes} onChange={(e) => setNotes(e.target.value)} />
-          {dirty && !locked && <button type="button" data-testid="ct-doc-save" onClick={() => void onSave(doc.doc_key, st, docId || null, notes || null)} className="rounded-lg bg-blue-600 px-2 py-1 text-[10px] font-bold text-white">{s.t("save", "Save")}</button>}
+          {dirty && !locked && <button type="button" data-testid="ct-doc-save" onClick={() => void onSave(doc.doc_key, st, docId || null, notes || null)} className="rounded-lg bg-blue-600 px-2 py-1 text-[11px] font-bold text-white">{s.t("save", "Save")}</button>}
         </div>
       </td>
     </tr>
@@ -421,5 +421,5 @@ function NewReturnModal({ s, onClose, onCreated }: { s: ReturnType<typeof useErp
 
 /** Label + control. Module-level so inputs keep focus while typing. */
 function L({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
+  return <div><label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
 }

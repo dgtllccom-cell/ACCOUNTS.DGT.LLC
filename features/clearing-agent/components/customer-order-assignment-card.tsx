@@ -68,7 +68,7 @@ export function CustomerOrderAssignmentCard({ lang, stage, orderNo, handover, cu
           <span>{tt("asg_title", "Assignment")} — {stage}</span>
           <span className="font-mono normal-case" dir="ltr">{orderNo}</span>
         </div>
-        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-bold ${chip.cls}`}>
+        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-bold ${chip.cls}`}>
           {chip.icon}
           {chip.label}
         </span>
@@ -76,30 +76,30 @@ export function CustomerOrderAssignmentCard({ lang, stage, orderNo, handover, cu
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11.5px]">
         <div>
-          <span className="block text-[10px] font-bold uppercase text-slate-400">{tt("asg_assigned_by", "Assigned by")}</span>
+          <span className="block text-[11px] font-bold uppercase text-slate-400">{tt("asg_assigned_by", "Assigned by")}</span>
           <span className="font-semibold text-slate-800 dark:text-slate-200">{handover.sender_name || "—"}{handover.source_branch_name ? ` · ${handover.source_branch_name}` : ""}</span>
         </div>
         <div>
-          <span className="block text-[10px] font-bold uppercase text-slate-400">{tt("asg_assigned_at", "Assigned on")}</span>
+          <span className="block text-[11px] font-bold uppercase text-slate-400">{tt("asg_assigned_at", "Assigned on")}</span>
           <span className="font-semibold text-slate-800 dark:text-slate-200" dir="ltr">{fmt(handover.created_at)}</span>
         </div>
         <div>
-          <span className="block text-[10px] font-bold uppercase text-slate-400">{tt("asg_assigned_to", "Assigned to")}</span>
+          <span className="block text-[11px] font-bold uppercase text-slate-400">{tt("asg_assigned_to", "Assigned to")}</span>
           <span className="font-semibold text-slate-800 dark:text-slate-200">{handover.receiver_name || "—"}</span>
         </div>
         <div>
-          <span className="block text-[10px] font-bold uppercase text-slate-400">{status === "completed" ? tt("asg_completed_on", "Completed on") : tt("asg_accepted_on", "Accepted on")}</span>
+          <span className="block text-[11px] font-bold uppercase text-slate-400">{status === "completed" ? tt("asg_completed_on", "Completed on") : tt("asg_accepted_on", "Accepted on")}</span>
           <span className="font-semibold text-slate-800 dark:text-slate-200" dir="ltr">{fmt(status === "completed" ? handover.completed_at : handover.accepted_at)}</span>
         </div>
         {legLabel ? (
           <div className="col-span-2">
-            <span className="block text-[10px] font-bold uppercase text-slate-400">{tt("asg_leg", "Route leg")}</span>
+            <span className="block text-[11px] font-bold uppercase text-slate-400">{tt("asg_leg", "Route leg")}</span>
             <span className="font-semibold text-slate-800 dark:text-slate-200">{legLabel}</span>
           </div>
         ) : null}
         {handover.instructions ? (
           <div className="col-span-2">
-            <span className="block text-[10px] font-bold uppercase text-slate-400">{tt("asg_instructions", "Instructions")}</span>
+            <span className="block text-[11px] font-bold uppercase text-slate-400">{tt("asg_instructions", "Instructions")}</span>
             <span className="text-slate-700 dark:text-slate-300">{handover.instructions}</span>
           </div>
         ) : null}
@@ -111,7 +111,7 @@ export function CustomerOrderAssignmentCard({ lang, stage, orderNo, handover, cu
       </div>
 
       <div className="text-[11.5px]">
-        <span className="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">{tt("asg_remaining", "Still to do")}</span>
+        <span className="block text-[11px] font-bold uppercase text-slate-400 mb-0.5">{tt("asg_remaining", "Still to do")}</span>
         {remaining.length === 0 ? (
           <span className="font-semibold text-emerald-700 dark:text-emerald-400">{tt("asg_nothing_left", "Nothing left — this stage is complete")}</span>
         ) : (

@@ -391,7 +391,7 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
                           <div className="font-mono font-bold text-blue-600 dark:text-blue-400">
                             {r.bill_no || "CB-PENDING"}
                           </div>
-                          <div className="text-[10px] text-slate-400 mt-0.5">
+                          <div className="text-[11px] text-slate-400 mt-0.5">
                             {r.bill_date ? new Date(r.bill_date).toLocaleDateString() : "-"}
                           </div>
                         </td>
@@ -408,7 +408,7 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
                           <div className="font-bold text-slate-900 dark:text-white">
                             {r.customer_name || s.t("reg_unspecified_customer", "Unspecified Customer")}
                           </div>
-                          <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                          <div className="text-[11px] font-mono text-slate-400 mt-0.5">
                             {r.customer_account_number || s.t("reg_linked_ledger", "A/C: Linked Ledger")}
                           </div>
                         </td>
@@ -418,7 +418,7 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
                           <div className="font-semibold text-slate-700 dark:text-slate-300">
                             {r.transport_mode ? coModeLabel(lang, r.transport_mode) : s.t("reg_road_corridor", "Road Corridor")}
                           </div>
-                          <div className="text-[10px] uppercase font-bold text-slate-400 mt-0.5">
+                          <div className="text-[11px] uppercase font-bold text-slate-400 mt-0.5">
                             {r.movement_type ? coMovementLabel(lang, r.movement_type) : _("com.mv_transit", "Transit")}
                           </div>
                         </td>
@@ -431,7 +431,7 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
                         {/* Status */}
                         <td className="py-3 px-3.5 text-center">
                           <span
-                            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
+                            className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase border ${
                               STATUS_STYLES[r.status] || STATUS_STYLES.draft
                             }`}
                           >

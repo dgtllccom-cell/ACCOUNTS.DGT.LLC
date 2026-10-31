@@ -751,7 +751,7 @@ export function LocationQuickCreateModal({
             {type === "area" && districtName && <div><span className="font-semibold text-slate-500 dark:text-slate-400">{t(lang, "lqm.district_word")}</span> {districtName}</div>}
             {type === "area" && <div><span className="font-semibold text-slate-500 dark:text-slate-400">{t(lang, "lqm.city_town_word")}</span> {cityName || t(lang, "lqm.selected_word")}</div>}
           </div>
-          <div className="mt-2 pt-1.5 border-t border-blue-200/60 dark:border-blue-900/40 text-[10.5px] font-semibold text-blue-700 dark:text-blue-300">
+          <div className="mt-2 pt-1.5 border-t border-blue-200/60 dark:border-blue-900/40 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
             {t(lang, "lqm.adding_word")} <span className="underline">{typeLabel}</span> {t(lang, "lqm.under_word")} {type === "area" ? (cityName || t(lang, "lqm.selected_city")) : type === "city" ? (stateName || t(lang, "lqm.selected_state")) : type === "district" ? (stateName || t(lang, "lqm.selected_state")) : (countryName || t(lang, "lqm.selected_country"))}
           </div>
         </div>
@@ -799,7 +799,7 @@ export function LocationQuickCreateModal({
               placeholder={t(lang, "lqm.zip_ph")}
             />
             {type === "area" && (
-              <p className="text-[10px] text-slate-500 leading-tight">
+              <p className="text-[11px] text-slate-500 leading-tight">
                 This postal code will be linked to the new area and available for future use with this City + State.
               </p>
             )}

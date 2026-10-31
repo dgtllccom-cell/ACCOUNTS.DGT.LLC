@@ -765,7 +765,7 @@ export function AccountProfileView({
                 <h2 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white uppercase tracking-tight">
                   {selectedRow.accountName}
                 </h2>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                   {selectedRow.status.toUpperCase()}
                 </span>
               </div>
@@ -795,7 +795,7 @@ export function AccountProfileView({
               <p className="text-[11px] font-black tracking-widest text-slate-800 dark:text-slate-200 uppercase">
                 {getLabel("trustComplianceGrowth", lang)}
               </p>
-              <span className="inline-block mt-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+              <span className="inline-block mt-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 Global Verified Profile
               </span>
             </div>
@@ -843,7 +843,7 @@ export function AccountProfileView({
                     <h3 className={cn("text-xs font-black uppercase tracking-tight truncate", isSelected ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-300")}>
                       {sec.title}
                     </h3>
-                    <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                    <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 truncate mt-0.5">
                       {sec.subtitle}
                     </p>
                   </div>
@@ -923,7 +923,7 @@ export function AccountProfileView({
                       >
                         {selectedRow.customer.customer_name}
                         {selectedRow.customer.customer_code && (
-                          <span className="font-mono text-[10px] text-slate-400">({selectedRow.customer.customer_code})</span>
+                          <span className="font-mono text-[11px] text-slate-400">({selectedRow.customer.customer_code})</span>
                         )}
                         <ExternalLink className="h-3 w-3 shrink-0" />
                       </button>
@@ -1014,7 +1014,7 @@ export function AccountProfileView({
                     {selectedRow.ledgerId && (
                       <Link
                         href={`/dashboard/ledger?ledgerId=${selectedRow.ledgerId}`}
-                        className="text-[10px] text-blue-500 hover:underline flex items-center gap-0.5 font-bold"
+                        className="text-[11px] text-blue-500 hover:underline flex items-center gap-0.5 font-bold"
                         title="View Ledger Statement"
                       >
                         <ExternalLink className="h-2.5 w-2.5" />
@@ -1028,7 +1028,7 @@ export function AccountProfileView({
                     <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedRow.journalCode || "JRN-2026-0089"}</span>
                     <Link
                       href="/dashboard/roznamcha"
-                      className="text-[10px] text-slate-400 hover:text-blue-500 flex items-center gap-0.5"
+                      className="text-[11px] text-slate-400 hover:text-blue-500 flex items-center gap-0.5"
                       title="View Journal Activity"
                     >
                       <ExternalLink className="h-2.5 w-2.5" />
@@ -1045,7 +1045,7 @@ export function AccountProfileView({
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Account Status:</span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">
                     Active (Posted)
                   </span>
                 </div>
@@ -1105,19 +1105,19 @@ export function AccountProfileView({
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                   <div className="p-2.5 rounded-lg bg-slate-50/60 dark:bg-slate-850 border border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Country</span>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase block">Country</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRow.countryName} ({selectedRow.countryCode || "-"})</span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-50/60 dark:bg-slate-850 border border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase block">State / Region</span>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase block">State / Region</span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.stateName || selectedRow.cityName || "Dubai"}</span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-50/60 dark:bg-slate-850 border border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Assigned Branch</span>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase block">Assigned Branch</span>
                     <span className="font-bold text-emerald-600 dark:text-emerald-400">{selectedRow.branchName} ({selectedRow.branchCode})</span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-50/60 dark:bg-slate-850 border border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Serials</span>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase block">Serials</span>
                     <span className="font-mono text-slate-700 dark:text-slate-300">C:{selectedRow.countrySerialNumber || "01"} / B:{selectedRow.branchSerialNumber || "01"}</span>
                   </div>
                 </div>
@@ -1131,7 +1131,7 @@ export function AccountProfileView({
                     <h4 className="text-xs font-black uppercase tracking-tight text-slate-900 dark:text-white">
                       {getLabel("linkedCompaniesTitle", lang)}
                     </h4>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 whitespace-nowrap">
                       {selectedRow.companies?.length || (selectedRow.companyName ? 1 : 0)} Linked
                     </span>
                   </div>
@@ -1140,7 +1140,7 @@ export function AccountProfileView({
                     variant="ghost"
                     size="sm"
                     asChild
-                    className="h-6 px-2 text-[10px] font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50"
+                    className="h-6 px-2 text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50"
                   >
                     <Link href={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}>
                       + Add Company
@@ -1151,7 +1151,7 @@ export function AccountProfileView({
                 {selectedRow.companies && selectedRow.companies.length > 0 ? (
                   <div className="overflow-x-auto border border-slate-200/80 dark:border-slate-800 rounded-xl">
                     <table className="w-full text-xs text-left">
-                      <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                      <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <Th className="py-2 px-3">Company Name</Th>
                           <Th className="py-2 px-3">Code</Th>
@@ -1182,12 +1182,12 @@ export function AccountProfileView({
                             </td>
                             <td className="py-2.5 px-3">
                               {comp.isPrimary ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-300 whitespace-nowrap">
                                   <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
                                   {getLabel("primaryCompany", lang)}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                                   {getLabel("linked", lang)}
                                 </span>
                               )}
@@ -1198,7 +1198,7 @@ export function AccountProfileView({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleOpenCompanyProfile(comp)}
-                                className="h-6 px-2 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
+                                className="h-6 px-2 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
                               >
                                 <Eye className="h-3 w-3 mr-1" />
                                 {getLabel("viewDetails", lang)}
@@ -1217,7 +1217,7 @@ export function AccountProfileView({
                           <Building2 className="h-3.5 w-3.5 text-amber-600" />
                           {selectedRow.companyName}
                         </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 whitespace-nowrap">
                           {getLabel("primaryCompany", lang)}
                         </span>
                       </div>
@@ -1236,7 +1236,7 @@ export function AccountProfileView({
                     <h4 className="text-xs font-black uppercase tracking-tight text-slate-900 dark:text-white">
                       {getLabel("linkedBanksTitle", lang)}
                     </h4>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                       {selectedRow.banks?.length || (selectedRow.bankName ? 1 : 0)} Linked
                     </span>
                   </div>
@@ -1245,7 +1245,7 @@ export function AccountProfileView({
                     variant="ghost"
                     size="sm"
                     asChild
-                    className="h-6 px-2 text-[10px] font-bold text-blue-700 dark:text-blue-400 hover:bg-blue-50"
+                    className="h-6 px-2 text-[11px] font-bold text-blue-700 dark:text-blue-400 hover:bg-blue-50"
                   >
                     <Link href={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}>
                       + Add Bank
@@ -1256,7 +1256,7 @@ export function AccountProfileView({
                 {selectedRow.banks && selectedRow.banks.length > 0 ? (
                   <div className="overflow-x-auto border border-slate-200/80 dark:border-slate-800 rounded-xl">
                     <table className="w-full text-xs text-left">
-                      <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                      <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <Th className="py-2 px-3">Bank Name</Th>
                           <Th className="py-2 px-3">Branch</Th>
@@ -1290,12 +1290,12 @@ export function AccountProfileView({
                             </td>
                             <td className="py-2.5 px-3">
                               {bank.isPrimary ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-900 border border-blue-300">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-900 border border-blue-300 whitespace-nowrap">
                                   <Star className="h-2.5 w-2.5 fill-blue-500 text-blue-500" />
                                   {getLabel("primaryBank", lang)}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                                   {getLabel("linked", lang)}
                                 </span>
                               )}
@@ -1306,7 +1306,7 @@ export function AccountProfileView({
                                 variant="ghost"
                                 size="sm"
                                 asChild
-                                className="h-6 px-2 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
+                                className="h-6 px-2 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
                               >
                                 <Link href={`/dashboard/banks?bankId=${bank.id}`}>
                                   <Eye className="h-3 w-3 mr-1" />
@@ -1327,7 +1327,7 @@ export function AccountProfileView({
                           <Landmark className="h-3.5 w-3.5 text-blue-600" />
                           {selectedRow.bankName}
                         </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 whitespace-nowrap">
                           {getLabel("primaryBank", lang)}
                         </span>
                       </div>
@@ -1346,7 +1346,7 @@ export function AccountProfileView({
                     <h4 className="text-xs font-black uppercase tracking-tight text-slate-900 dark:text-white">
                       {getLabel("linkedWarehousesTitle", lang)}
                     </h4>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                       {selectedRow.warehouses?.length || 0} Linked
                     </span>
                   </div>
@@ -1355,7 +1355,7 @@ export function AccountProfileView({
                     variant="ghost"
                     size="sm"
                     asChild
-                    className="h-6 px-2 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50"
+                    className="h-6 px-2 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50"
                   >
                     <Link href={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}>
                       + Add Warehouse
@@ -1366,7 +1366,7 @@ export function AccountProfileView({
                 {selectedRow.warehouses && selectedRow.warehouses.length > 0 ? (
                   <div className="overflow-x-auto border border-slate-200/80 dark:border-slate-800 rounded-xl">
                     <table className="w-full text-xs text-left">
-                      <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                      <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <Th className="py-2 px-3">Warehouse Name</Th>
                           <Th className="py-2 px-3">Code</Th>
@@ -1396,12 +1396,12 @@ export function AccountProfileView({
                             </td>
                             <td className="py-2.5 px-3">
                               {wh.isPrimary ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 whitespace-nowrap">
                                   <Star className="h-2.5 w-2.5 fill-emerald-500 text-emerald-500" />
                                   {getLabel("primaryWarehouse", lang)}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                                   {getLabel("linked", lang)}
                                 </span>
                               )}
@@ -1412,7 +1412,7 @@ export function AccountProfileView({
                                 variant="ghost"
                                 size="sm"
                                 asChild
-                                className="h-6 px-2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                                className="h-6 px-2 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950"
                               >
                                 <Link href={`/dashboard/warehouses?warehouseId=${wh.id}`}>
                                   <Eye className="h-3 w-3 mr-1" />
@@ -1446,14 +1446,14 @@ export function AccountProfileView({
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
                     {selectedRow.shippingLine && (
                       <div className="p-3 rounded-xl bg-sky-50/50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900">
-                        <span className="text-[10px] text-sky-700 dark:text-sky-300 font-bold uppercase block">{translateHeader(lang, "Shipping Line")}</span>
+                        <span className="text-[11px] text-sky-700 dark:text-sky-300 font-bold uppercase block">{translateHeader(lang, "Shipping Line")}</span>
                         <Link
                           href={`/dashboard/shipping-line?id=${selectedRow.shippingLine.id}`}
                           className="font-bold text-sky-900 dark:text-sky-100 hover:underline flex items-center gap-1 mt-1"
                         >
                           {selectedRow.shippingLine.name}
                           {selectedRow.shippingLine.shipping_line_code && (
-                            <span className="font-mono text-[10px]">({selectedRow.shippingLine.shipping_line_code})</span>
+                            <span className="font-mono text-[11px]">({selectedRow.shippingLine.shipping_line_code})</span>
                           )}
                           <ExternalLink className="h-3 w-3" />
                         </Link>
@@ -1466,10 +1466,10 @@ export function AccountProfileView({
                     )}
                     {selectedRow.linkedCountries && selectedRow.linkedCountries.length > 0 && (
                       <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-850 border border-slate-100 dark:border-slate-800 col-span-2">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1.5">Linked Operating Countries</span>
+                        <span className="text-[11px] text-slate-400 font-bold uppercase block mb-1.5">Linked Operating Countries</span>
                         <div className="flex flex-wrap gap-1.5">
                           {selectedRow.linkedCountries.map((c, i) => (
-                            <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                            <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
                               {c}
                             </span>
                           ))}
@@ -1577,10 +1577,10 @@ export function AccountProfileView({
                 </div>
                 {selectedRow.contacts && selectedRow.contacts.length > 0 && (
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Additional Communication Channels:</span>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase block">Additional Communication Channels:</span>
                     {selectedRow.contacts.map((c, i) => (
                       <div key={i} className="flex items-center justify-between p-1.5 rounded bg-slate-50 dark:bg-slate-850">
-                        <span className="font-medium text-slate-500 uppercase text-[10px]">{c.type}:</span>
+                        <span className="font-medium text-slate-500 uppercase text-[11px]">{c.type}:</span>
                         <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{c.value}</span>
                       </div>
                     ))}
@@ -1624,7 +1624,7 @@ export function AccountProfileView({
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
                   <thead>
-                    <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-bold uppercase text-[10px]">
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-bold uppercase text-[11px]">
                       <Th className="pb-2.5 font-bold">{getLabel("documentName", lang)}</Th>
                       <Th className="pb-2.5 font-bold">{getLabel("documentNumber", lang)}</Th>
                       <Th className="pb-2.5 font-bold">{getLabel("expiryDate", lang)}</Th>
@@ -1644,7 +1644,7 @@ export function AccountProfileView({
                         31 Dec 2027
                       </td>
                       <td className="py-2.5 text-right">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-200/60">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-200/60 whitespace-nowrap">
                           Valid
                         </span>
                       </td>
@@ -1661,7 +1661,7 @@ export function AccountProfileView({
                         Permanent
                       </td>
                       <td className="py-2.5 text-right">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-200/60">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-200/60 whitespace-nowrap">
                           Active
                         </span>
                       </td>
@@ -1678,7 +1678,7 @@ export function AccountProfileView({
                         15 Aug 2028
                       </td>
                       <td className="py-2.5 text-right">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-200/60">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-200/60 whitespace-nowrap">
                           Valid
                         </span>
                       </td>
@@ -1695,7 +1695,7 @@ export function AccountProfileView({
                         31 Dec 2026
                       </td>
                       <td className="py-2.5 text-right">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-200/60">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-200/60 whitespace-nowrap">
                           Verified
                         </span>
                       </td>
@@ -1756,25 +1756,25 @@ export function AccountProfileView({
               <div className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">{getLabel("oldBalance", lang)}</p>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase">{getLabel("oldBalance", lang)}</p>
                     <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 font-mono">
                       {fmtNumber(selectedRow.openingBalance)} {selectedRow.currency}
                     </p>
                   </div>
                   <div className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">{getLabel("creditLimit", lang)}</p>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase">{getLabel("creditLimit", lang)}</p>
                     <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 font-mono">
                       500,000.00 {selectedRow.currency}
                     </p>
                   </div>
                   <div className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">{getLabel("totalDebits", lang)}</p>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase">{getLabel("totalDebits", lang)}</p>
                     <p className="text-xs font-black text-rose-600 dark:text-rose-400 mt-0.5 font-mono">
                       {fmtNumber(selectedRow.debitTotal)} {selectedRow.currency}
                     </p>
                   </div>
                   <div className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">{getLabel("totalCredits", lang)}</p>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase">{getLabel("totalCredits", lang)}</p>
                     <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 mt-0.5 font-mono">
                       {fmtNumber(selectedRow.creditTotal)} {selectedRow.currency}
                     </p>
@@ -1814,7 +1814,7 @@ export function AccountProfileView({
               <Calendar className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{getLabel("date", lang) || "Date"}</p>
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{getLabel("date", lang) || "Date"}</p>
               <p className="text-xs font-black text-slate-900 dark:text-white mt-0.5">
                 <span suppressHydrationWarning>{fmtDateTime(new Date().toISOString())}</span>
               </p>
@@ -1827,7 +1827,7 @@ export function AccountProfileView({
               <User className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{getLabel("preparedBy", lang) || "Prepared By"}</p>
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{getLabel("preparedBy", lang) || "Prepared By"}</p>
               <p className="text-xs font-black text-slate-900 dark:text-white mt-0.5">
                 {data?.workspace.companyOwner || "Super Admin (Global Group)"}
               </p>
@@ -1840,12 +1840,12 @@ export function AccountProfileView({
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{getLabel("authorizedBy", lang) || "Authorized By"}</p>
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{getLabel("authorizedBy", lang) || "Authorized By"}</p>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="font-serif italic font-black text-blue-700 dark:text-blue-300 text-sm tracking-wide">
                   {data?.workspace.companyOwner || "Super Admin (Global Group)"}
                 </span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">
                   ✓ {getLabel("verifiedBadge", lang) || "VERIFIED"}
                 </span>
               </div>

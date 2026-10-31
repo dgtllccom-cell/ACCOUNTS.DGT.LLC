@@ -99,14 +99,14 @@ export function HrReportsHub({ lang }: { lang?: string }) {
 
         <div className="flex flex-wrap items-end gap-2 rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
           <div className="min-w-[14rem]">
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("rpt_select", "Report")}</label>
+            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("rpt_select", "Report")}</label>
             <select value={report} onChange={(e) => { setReport(e.target.value); setRows([]); }} className="w-full rounded-lg border border-slate-200 bg-transparent px-2.5 py-1.5 text-xs outline-none dark:border-slate-700 dark:bg-slate-800">
               {REPORTS.map((r) => <option key={r.id} value={r.id}>{s.t(`rpt_${r.id}`, r.id)}</option>)}
             </select>
           </div>
           {def.needs.includes("dates") ? (
             <div className="min-w-[15rem]">
-              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.tGlobal("datepick.date_range", "Date Range")}</label>
+              <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.tGlobal("datepick.date_range", "Date Range")}</label>
               <ErpDatePicker
                 mode="range"
                 lang={s.lang}
@@ -117,14 +117,14 @@ export function HrReportsHub({ lang }: { lang?: string }) {
             </div>
           ) : null}
           {def.needs.includes("period") || report === "expiring_documents" ? (
-            <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{report === "expiring_documents" ? s.t("rpt_until", "Until") : s.t("rpt_period", "Period (YYYY-MM)")}</label>
+            <div><label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{report === "expiring_documents" ? s.t("rpt_until", "Until") : s.t("rpt_period", "Period (YYYY-MM)")}</label>
               {report === "expiring_documents"
                 ? <ErpDatePicker mode="single" lang={s.lang} size="sm" value={{ from: to || null }} onApply={(v) => setTo(v.from ?? "")} />
                 : <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800" />}
             </div>
           ) : null}
           {def.needs.includes("employee") || ["attendance", "leave", "overtime"].includes(report) ? (
-            <div className="min-w-[14rem]"><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("employee", "Employee")}</label>
+            <div className="min-w-[14rem]"><label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("employee", "Employee")}</label>
               <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-transparent px-2.5 py-1.5 text-xs outline-none dark:border-slate-700 dark:bg-slate-800">
                 <option value="">{def.needs.includes("employee") ? s.t("select_employee", "Select employee…") : s.t("rpt_all_employees", "All employees")}</option>
                 {employees.map((e) => <option key={e.id} value={e.id}>{e.name} ({e.employee_code})</option>)}
@@ -132,7 +132,7 @@ export function HrReportsHub({ lang }: { lang?: string }) {
             </div>
           ) : null}
           {["leave", "gratuity"].includes(report) ? (
-            <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("status_label", "Status")}</label>
+            <div><label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("status_label", "Status")}</label>
               <input value={status} onChange={(e) => setStatus(e.target.value)} placeholder={s.t("rpt_any", "any")} className="w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800" /></div>
           ) : null}
           <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200">

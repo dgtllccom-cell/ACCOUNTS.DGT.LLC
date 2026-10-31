@@ -246,7 +246,7 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
       .replace(/\b(\w)(\w*)/g, (_m, a: string, b: string) => a.toUpperCase() + b)
       .replace(/\b(Po|So|Grn|Kyc|Fx|Trn|Iban|Vat|Hs)\b/g, (m) => m.toUpperCase());
   const normalizeCell = (raw: unknown, col: UniversalPrintColumn): string => {
-    let s = String(raw ?? "").trim();
+    const s = String(raw ?? "").trim();
     if (!s || s === "-") return s || "-";
     if (col.format === "currency" || col.format === "number" || col.format === "date" || col.format === "badge") return s;
     if (CURRENCY_RE.test(s)) return s.toUpperCase();                                  // usd -> USD

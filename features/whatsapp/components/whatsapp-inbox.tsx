@@ -105,7 +105,7 @@ export function WhatsAppInbox({ session }: Props) {
             </div>
             <div>
               <h1 className="text-sm font-semibold text-foreground">{tt("wa.inbox_title", "WhatsApp Inbox")}</h1>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 {conversations.filter((c) => c.status === "open").length} {tt("wa.open", "open")}
               </p>
             </div>

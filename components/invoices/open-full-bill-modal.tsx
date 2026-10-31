@@ -37,7 +37,8 @@ export function OpenFullBillModal({
   lang: propLang
 }: OpenFullBillModalProps) {
   const router = useRouter();
-  const activeLang = (propLang || useActiveLanguage() || "en") as LanguageCode;
+  const hookLang = useActiveLanguage();
+  const activeLang = (propLang || hookLang || "en") as LanguageCode;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
 
   const [activeTab, setActiveTab] = useState<string>("Overview");
@@ -335,7 +336,7 @@ export function OpenFullBillModal({
                     {translateHeader(activeLang, "Open Full Bill -")} <span className="font-mono text-blue-600 dark:text-blue-400">{poNumber}</span>
                   </h2>
                   <span className={cn(
-                    "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm",
+                    "px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider border shadow-sm",
                     isCompleted 
                       ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300"
                       : isPartiallyPaid
@@ -371,19 +372,19 @@ export function OpenFullBillModal({
           {/* Meta bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
             <div>
-              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{t("PO NUMBER")}</span>
+              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400">{t("PO NUMBER")}</span>
               <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{poNumber}</span>
             </div>
             <div>
-              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{t("BILL NUMBER")}</span>
+              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400">{t("BILL NUMBER")}</span>
               <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{billNumber}</span>
             </div>
             <div>
-              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{t("PURCHASE DATE")}</span>
+              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400">{t("PURCHASE DATE")}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{dateFormatted}</span>
             </div>
             <div>
-              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{t("BRANCH")}</span>
+              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400">{t("BRANCH")}</span>
               <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{branchCode}</span>
             </div>
           </div>
@@ -396,7 +397,7 @@ export function OpenFullBillModal({
           <div className="rounded-2xl bg-slate-950 dark:bg-slate-900 p-5 text-white shadow-md border border-slate-800">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">
                   {t("SELLER NAME")}: {supplierName}
                 </div>
                 <div className="mt-1 text-2xl font-black tracking-tight font-mono text-white">
@@ -409,19 +410,19 @@ export function OpenFullBillModal({
 
               <div className="flex items-center gap-2">
                 <div className="rounded-xl bg-slate-800/80 px-3.5 py-2 text-center border border-slate-700 min-w-[75px]">
-                  <div className="text-[9px] font-bold uppercase text-slate-400">{t("GOODS")}</div>
+                  <div className="text-[11px] font-bold uppercase text-slate-400">{t("GOODS")}</div>
                   <div className="text-sm font-black text-white">{goodsEntries.length}</div>
                 </div>
                 <div className="rounded-xl bg-slate-800/80 px-3.5 py-2 text-center border border-slate-700 min-w-[75px]">
-                  <div className="text-[9px] font-bold uppercase text-slate-400">{t("SYMBOL")}</div>
+                  <div className="text-[11px] font-bold uppercase text-slate-400">{t("SYMBOL")}</div>
                   <div className="text-sm font-black text-emerald-400">{statusBadge}</div>
                 </div>
                 <div className="rounded-xl bg-slate-800/80 px-3.5 py-2 text-center border border-slate-700 min-w-[75px]">
-                  <div className="text-[9px] font-bold uppercase text-slate-400">{t("RATE")}</div>
+                  <div className="text-[11px] font-bold uppercase text-slate-400">{t("RATE")}</div>
                   <div className="text-sm font-mono font-black text-white">{exchangeRate.toFixed(4)}</div>
                 </div>
                 <div className="rounded-xl bg-slate-800/80 px-3.5 py-2 text-center border border-slate-700 min-w-[75px]">
-                  <div className="text-[9px] font-bold uppercase text-slate-400">{t("LOCAL")}</div>
+                  <div className="text-[11px] font-bold uppercase text-slate-400">{t("LOCAL")}</div>
                   <div className="text-sm font-black text-white">{currency}</div>
                 </div>
               </div>
@@ -435,13 +436,13 @@ export function OpenFullBillModal({
               <div className="absolute right-3 bottom-2 text-6xl font-black text-blue-50 dark:text-blue-950/40 select-none pointer-events-none">
                 DR
               </div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
+              <div className="text-[11px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
                 {t("DEBIT ACCOUNT (DR)")}
               </div>
               <div className="mt-2 text-sm font-black text-slate-900 dark:text-slate-100 line-clamp-1">
                 {supplierName}
               </div>
-              <div className="mt-0.5 text-[10px] font-bold text-slate-400">
+              <div className="mt-0.5 text-[11px] font-bold text-slate-400">
                 LAST ACT: {dateFormatted}
               </div>
               <div className="mt-3 space-y-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800 pt-2">
@@ -455,13 +456,13 @@ export function OpenFullBillModal({
               <div className="absolute right-3 bottom-2 text-6xl font-black text-emerald-50 dark:text-emerald-950/40 select-none pointer-events-none">
                 CR
               </div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-red-600 dark:text-red-400">
+              <div className="text-[11px] font-black uppercase tracking-wider text-red-600 dark:text-red-400">
                 {t("CREDIT ACCOUNT (CR)")}
               </div>
               <div className="mt-2 text-sm font-black text-slate-900 dark:text-slate-100 line-clamp-1">
                 {buyerName}
               </div>
-              <div className="mt-0.5 text-[10px] font-bold text-slate-400">
+              <div className="mt-0.5 text-[11px] font-bold text-slate-400">
                 LAST ACT: {dateFormatted}
               </div>
               <div className="mt-3 space-y-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800 pt-2">
@@ -472,7 +473,7 @@ export function OpenFullBillModal({
 
             {/* Card 3: BILL SUMMARY */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 {t("BILL SUMMARY")}
               </div>
               <div className="mt-2.5 space-y-1.5 text-xs">
@@ -499,7 +500,7 @@ export function OpenFullBillModal({
 
             {/* Card 4: REMAINING BALANCE */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 {t("REMAINING BALANCE")}
               </div>
               <div className="mt-2.5 space-y-1.5 text-xs">
@@ -560,7 +561,7 @@ export function OpenFullBillModal({
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                  <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
                     <Th className="px-4 py-2.5">{t("INVOICE NO.")}</Th>
                     <Th className="px-4 py-2.5">{t("INVOICE DATE")}</Th>
                     <Th className="px-4 py-2.5">{t("ENDORSED TO")}</Th>
@@ -581,7 +582,7 @@ export function OpenFullBillModal({
                     <td className="px-4 py-3 text-right font-mono font-black text-red-600 dark:text-red-400">{remainingFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={cn(
-                        "px-2 py-0.5 rounded text-[9px] font-black uppercase",
+                        "px-2 py-0.5 rounded text-[11px] font-black uppercase",
                         isCompleted ? "bg-emerald-100 text-emerald-800" : isPartiallyPaid ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"
                       )}>
                         {statusBadge}
@@ -604,7 +605,7 @@ export function OpenFullBillModal({
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                  <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
                     <Th className="px-3 py-2.5 text-center w-10">#</Th>
                     <Th className="px-4 py-2.5">{t("GOODS NAME")}</Th>
                     <Th className="px-4 py-2.5 text-right">{t("QTY")}</Th>
@@ -629,7 +630,7 @@ export function OpenFullBillModal({
                         <td className="px-3 py-2 text-center font-bold text-slate-400">{index + 1}</td>
                         <td className="px-4 py-2 font-bold text-slate-800 dark:text-slate-200">
                           {g.goodsName || g.productName || "—"}
-                          {g.spec && <span className="block text-[10px] font-normal text-slate-400">({g.spec})</span>}
+                          {g.spec && <span className="block text-[11px] font-normal text-slate-400">({g.spec})</span>}
                         </td>
                         <td className="px-4 py-2 text-right font-mono font-semibold">{qty.toLocaleString()}</td>
                         <td className="px-4 py-2 text-right font-mono font-semibold">{gross.toLocaleString()}</td>
@@ -667,14 +668,14 @@ export function OpenFullBillModal({
                     <ArrowDownLeft className="h-4 w-4" />
                     {t("DEBIT ENTRIES (DR) - LIABILITY / BILL AMOUNT")}
                   </span>
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 whitespace-nowrap">
                     {debitEntries.length} {t("Records")}
                   </span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[9px] border-b border-slate-200 dark:border-slate-800">
+                      <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
                         <Th className="px-3 py-2 text-center w-10">{t("SR#")}</Th>
                         <Th className="px-3 py-2">{t("DATE")}</Th>
                         <Th className="px-3 py-2">{t("VOUCHER / REF NO.")}</Th>
@@ -724,7 +725,7 @@ export function OpenFullBillModal({
                     {t("CREDIT ENTRIES (CR) - PAYMENTS MADE TO SUPPLIER")}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 whitespace-nowrap">
                       {creditEntries.length} {t("Payments")}
                     </span>
                     <button
@@ -736,7 +737,7 @@ export function OpenFullBillModal({
                           router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(poNumber)}`);
                         }
                       }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] uppercase shadow-sm transition"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] uppercase shadow-sm transition"
                     >
                       <WalletCards className="h-3 w-3" />
                       <span>{t("Payment Entry")}</span>
@@ -746,7 +747,7 @@ export function OpenFullBillModal({
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[9px] border-b border-slate-200 dark:border-slate-800">
+                      <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
                         <Th className="px-3 py-2 text-center w-10">{t("SR#")}</Th>
                         <Th className="px-3 py-2">{t("DATE")}</Th>
                         <Th className="px-3 py-2">{t("VOUCHER / REF NO.")}</Th>
@@ -845,7 +846,7 @@ export function OpenFullBillModal({
               </span>
               <button
                 type="button"
-                className="px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 text-[10px] font-black uppercase transition border border-blue-200 dark:border-blue-800"
+                className="px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 text-[11px] font-black uppercase transition border border-blue-200 dark:border-blue-800"
               >
                 {t("VIEW ROZNAMCHA SUMMARY")}
               </button>
@@ -853,7 +854,7 @@ export function OpenFullBillModal({
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[9px] border-b border-slate-200 dark:border-slate-800">
+                  <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
                     <Th className="px-3 py-2 text-center w-10">{t("SR#")}</Th>
                     <Th className="px-3 py-2">{t("DATE")}</Th>
                     <Th className="px-3 py-2">{t("USER NAME")}</Th>
@@ -953,7 +954,7 @@ export function OpenFullBillModal({
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[9px] border-b border-slate-200 dark:border-slate-800">
+                  <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
                     <Th className="px-3 py-2 text-center w-10">{t("SR#")}</Th>
                     <Th className="px-3 py-2">{t("DATE")}</Th>
                     <Th className="px-3 py-2">{t("VOUCHER / REF NO.")}</Th>
@@ -987,7 +988,7 @@ export function OpenFullBillModal({
                           {e.remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td className="px-3 py-2 text-center">
-                          <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
                             {e.status}
                           </span>
                         </td>
@@ -1047,7 +1048,7 @@ export function OpenFullBillModal({
           {/* ── BOTTOM 4 KPI SUMMARY BAR ────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{t("TOTAL PURCHASE (BILL AMOUNT)")}</span>
+              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400">{t("TOTAL PURCHASE (BILL AMOUNT)")}</span>
               <div className="mt-1 text-lg font-black font-mono text-slate-900 dark:text-slate-100">
                 {totalPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
               </div>
@@ -1057,7 +1058,7 @@ export function OpenFullBillModal({
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{t("TOTAL PAID")}</span>
+              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400">{t("TOTAL PAID")}</span>
               <div className="mt-1 text-lg font-black font-mono text-emerald-600 dark:text-emerald-400">
                 {totalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
               </div>
@@ -1067,7 +1068,7 @@ export function OpenFullBillModal({
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{t("TOTAL REMAINING")}</span>
+              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400">{t("TOTAL REMAINING")}</span>
               <div className="mt-1 text-lg font-black font-mono text-red-600 dark:text-red-400">
                 {remainingFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
               </div>
@@ -1077,7 +1078,7 @@ export function OpenFullBillModal({
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
-              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{t("STATUS")}</span>
+              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400">{t("STATUS")}</span>
               <div className="mt-1">
                 <span className={cn(
                   "inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border shadow-sm",
@@ -1090,7 +1091,7 @@ export function OpenFullBillModal({
                   {statusBadge}
                 </span>
               </div>
-              <div className="text-[10px] text-slate-400 mt-1">
+              <div className="text-[11px] text-slate-400 mt-1">
                 {dateFormatted}
               </div>
             </div>
@@ -1098,28 +1099,28 @@ export function OpenFullBillModal({
 
           {/* ── TRANSPORT & LOGISTICS DETAILS ───────────────────── */}
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <span className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-3">
+            <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400 mb-3">
               {t("TRANSPORT & LOGISTICS DETAILS")}
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
               <div>
-                <span className="block text-[9px] font-bold text-slate-400">{t("Loading Country")}</span>
+                <span className="block text-[11px] font-bold text-slate-400">{t("Loading Country")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{form.loadingCountry || form.originCountry || countryName}</span>
               </div>
               <div>
-                <span className="block text-[9px] font-bold text-slate-400">{t("Loading Date")}</span>
+                <span className="block text-[11px] font-bold text-slate-400">{t("Loading Date")}</span>
                 <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{form.loadingDate || dateFormatted}</span>
               </div>
               <div>
-                <span className="block text-[9px] font-bold text-slate-400">{t("Receiving Country")}</span>
+                <span className="block text-[11px] font-bold text-slate-400">{t("Receiving Country")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{form.receivedCountry || form.destinationCountry || countryName}</span>
               </div>
               <div>
-                <span className="block text-[9px] font-bold text-slate-400">{t("Received Date")}</span>
+                <span className="block text-[11px] font-bold text-slate-400">{t("Received Date")}</span>
                 <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{form.receivedDate || dateFormatted}</span>
               </div>
               <div>
-                <span className="block text-[9px] font-bold text-slate-400">{t("Payment / Insurance Condition")}</span>
+                <span className="block text-[11px] font-bold text-slate-400">{t("Payment / Insurance Condition")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{form.paymentType || "Advance Payment"}</span>
               </div>
             </div>

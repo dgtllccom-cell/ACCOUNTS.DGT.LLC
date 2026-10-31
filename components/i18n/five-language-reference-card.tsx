@@ -84,7 +84,7 @@ export function FiveLanguageReferenceCard({ lang }: { lang?: string }) {
                 <td className={`py-1.5 font-mono ${s.textStart}`}>{r.code}</td>
                 <td className={`py-1.5 ${s.textStart}`}>{r.name}</td>
                 <td className={`py-1.5 ${s.textEnd}`}>
-                  <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                  <span className="rounded bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 whitespace-nowrap">
                     {s.t("status_active", "Active")}
                   </span>
                 </td>
@@ -94,7 +94,7 @@ export function FiveLanguageReferenceCard({ lang }: { lang?: string }) {
         </tbody>
       </table>
 
-      <p className="mt-3 text-[10px] text-muted-foreground">
+      <p className="mt-3 text-[11px] text-muted-foreground">
         {s.t("note_rtl", "Direction, alignment and font follow the active language automatically.")}
       </p>
     </section>

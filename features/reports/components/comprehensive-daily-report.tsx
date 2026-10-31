@@ -284,7 +284,7 @@ export function ComprehensiveDailyReportView() {
       {/* Top Filter Bar */}
       <div className="flex flex-wrap items-end gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm print:hidden">
         <div className="space-y-1 min-w-[15rem]">
-          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Date Range")}</label>
+          <label className="text-[11px] font-black uppercase text-slate-500">{tr("Date Range")}</label>
           <ErpDatePicker
             mode="range"
             lang={lang}
@@ -295,7 +295,7 @@ export function ComprehensiveDailyReportView() {
         </div>
 
         <div className="space-y-1 w-40">
-          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Country")}</label>
+          <label className="text-[11px] font-black uppercase text-slate-500">{tr("Country")}</label>
           <select value={countryId} onChange={e => setCountryId(e.target.value)} className="h-8 w-full rounded-md border border-slate-200 text-xs px-2 outline-none">
             <option value="all">{tr("All Countries")}</option>
             {countries.map(c => (
@@ -305,7 +305,7 @@ export function ComprehensiveDailyReportView() {
         </div>
 
         <div className="space-y-1 w-40">
-          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Branch")}</label>
+          <label className="text-[11px] font-black uppercase text-slate-500">{tr("Branch")}</label>
           <select value={branchId} onChange={e => setBranchId(e.target.value)} className="h-8 w-full rounded-md border border-slate-200 text-xs px-2 outline-none">
             <option value="all">{tr("All Branches")}</option>
             {branches.map(b => (
@@ -315,7 +315,7 @@ export function ComprehensiveDailyReportView() {
         </div>
 
         <div className="space-y-1 w-40">
-          <label className="text-[10px] font-black uppercase text-slate-500">{tr("User")}</label>
+          <label className="text-[11px] font-black uppercase text-slate-500">{tr("User")}</label>
           <select value={userId} onChange={e => setUserId(e.target.value)} className="h-8 w-full rounded-md border border-slate-200 text-xs px-2 outline-none">
             <option value="all">{tr("All Users")}</option>
             {users.map(u => (
@@ -325,7 +325,7 @@ export function ComprehensiveDailyReportView() {
         </div>
 
         <div className="space-y-1 w-32">
-          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Voucher Type")}</label>
+          <label className="text-[11px] font-black uppercase text-slate-500">{tr("Voucher Type")}</label>
           <select value={voucherType} onChange={e => setVoucherType(e.target.value)} className="h-8 w-full rounded-md border border-slate-200 text-xs px-2 outline-none">
             <option value="all">{tr("All")}</option>
             <option value="cr">{tr("Cash Receipt (CR)")}</option>
@@ -337,7 +337,7 @@ export function ComprehensiveDailyReportView() {
         </div>
         
         <div className="space-y-1 w-32">
-          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Currency Mode")}</label>
+          <label className="text-[11px] font-black uppercase text-slate-500">{tr("Currency Mode")}</label>
           <select value={targetCurrency} onChange={e => setTargetCurrency(e.target.value)} className="h-8 w-full rounded-md border border-slate-200 text-xs px-2 outline-none font-bold text-indigo-600 bg-indigo-50">
             <option value="USD">{tr("USD (Converted)")}</option>
             <option value="LOCAL">{tr("Local Currency")}</option>

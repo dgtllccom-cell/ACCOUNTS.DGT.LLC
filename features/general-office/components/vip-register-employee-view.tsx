@@ -331,25 +331,8 @@ export function VipRegisterEmployeeView() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 font-sans" dir={dir}>
-      {/* ── 1. Top Navigation & Breadcrumbs (Matching Image 1) ── */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="text-left">
-              <span className="block text-xs font-black text-slate-900 dark:text-white leading-tight">{translateHeader(lang, "Employee Management")}</span>
-              <span className="block text-[10px] text-slate-400 font-medium">Manage all company employees across branches and departments</span>
-            </div>
-        </div>
-
-        <nav className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-          <span className="hover:text-slate-800 transition cursor-pointer">{T("common.dashboard", "Dashboard")}</span>
-          <ChevronRight className="h-3 w-3 text-slate-400" />
-          <span className="hover:text-slate-800 transition cursor-pointer">{translateHeader(lang, "General Office")}</span>
-          <ChevronRight className="h-3 w-3 text-slate-400" />
-          <span className="hover:text-slate-800 transition cursor-pointer">Employees</span>
-          <ChevronRight className="h-3 w-3 text-slate-400" />
-          <span className="text-slate-900 font-bold dark:text-slate-200">Employee Directory & Registration</span>
-        </nav>
-      </div>
+      {/* (A small "Employee Management" title + a second breadcrumb used to sit here; the global page bar already shows the breadcrumb and
+          the title follows below, so the page showed the same heading three times, in English even in Urdu.) */}
 
       {/* ── 2. Top Title Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -463,7 +446,7 @@ export function VipRegisterEmployeeView() {
                 {T("empdir.all_countries_report", "All Countries Employee Report")}
               </h3>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#6366f1] text-white">
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-[#6366f1] text-white whitespace-nowrap">
               {T("hrm.super_admin_only", "Super Admin Only")}
             </span>
           </div>
@@ -517,7 +500,7 @@ export function VipRegisterEmployeeView() {
             ))}
           </select>
           <Globe className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
+          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 pointer-events-none">▼</span>
         </div>
 
         {/* All Branches Select */}
@@ -536,7 +519,7 @@ export function VipRegisterEmployeeView() {
             ))}
           </select>
           <Building2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
+          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 pointer-events-none">▼</span>
         </div>
 
         {/* All Departments Select */}
@@ -555,7 +538,7 @@ export function VipRegisterEmployeeView() {
             ))}
           </select>
           <Layers className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
+          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 pointer-events-none">▼</span>
         </div>
 
         {/* All Statuses Select */}
@@ -574,7 +557,7 @@ export function VipRegisterEmployeeView() {
             <option value="Inactive">{T("common.inactive", "Inactive")}</option>
           </select>
           <Users className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">▼</span>
+          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 pointer-events-none">▼</span>
         </div>
 
         {/* Date Range Box */}
@@ -752,7 +735,7 @@ export function VipRegisterEmployeeView() {
                         <div className="flex items-center gap-2.5">
                           <div
                             className={cn(
-                              "h-7 w-7 rounded-full bg-gradient-to-tr text-white text-[10px] font-black flex items-center justify-center shrink-0 shadow-xs",
+                              "h-7 w-7 rounded-full bg-gradient-to-tr text-white text-[11px] font-black flex items-center justify-center shrink-0 shadow-xs",
                               emp.avatarColor
                             )}
                           >
@@ -848,19 +831,19 @@ export function VipRegisterEmployeeView() {
                       {/* Status */}
                       <td className="py-3.5 px-3 whitespace-nowrap">
                         {emp.status === "Active" && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                             Active
                           </span>
                         )}
                         {emp.status === "On Leave" && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40">
                             <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                             On Leave
                           </span>
                         )}
                         {emp.status === "Inactive" && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40">
                             <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                             Inactive
                           </span>
@@ -1028,7 +1011,7 @@ export function VipRegisterEmployeeView() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Father's Name</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Father&apos;s Name</label>
                   <Input
                     value={formData.fatherName}
                     onChange={e => setFormData({ ...formData, fatherName: e.target.value })}
@@ -1191,35 +1174,35 @@ export function VipRegisterEmployeeView() {
 
             <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
               <div>
-                <span className="text-slate-400 text-[10px] block font-bold">DEPARTMENT</span>
+                <span className="text-slate-400 text-[11px] block font-bold">DEPARTMENT</span>
                 <span className="font-black text-slate-800 dark:text-slate-200">{viewEmployee.department}</span>
               </div>
               <div>
-                <span className="text-slate-400 text-[10px] block font-bold">BRANCH</span>
+                <span className="text-slate-400 text-[11px] block font-bold">BRANCH</span>
                 <span className="font-black text-slate-800 dark:text-slate-200">{viewEmployee.branch}</span>
               </div>
               <div>
-                <span className="text-slate-400 text-[10px] block font-bold">COUNTRY</span>
+                <span className="text-slate-400 text-[11px] block font-bold">COUNTRY</span>
                 <span className="font-black text-slate-800 dark:text-slate-200">{viewEmployee.country}</span>
               </div>
               <div>
-                <span className="text-slate-400 text-[10px] block font-bold">MONTHLY PAYROLL</span>
+                <span className="text-slate-400 text-[11px] block font-bold">MONTHLY PAYROLL</span>
                 <span className="font-black text-emerald-600 font-mono">{viewEmployee.salary || "N/A"}</span>
               </div>
               <div>
-                <span className="text-slate-400 text-[10px] block font-bold">MOBILE / WHATSAPP</span>
+                <span className="text-slate-400 text-[11px] block font-bold">MOBILE / WHATSAPP</span>
                 <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{viewEmployee.mobile}</span>
               </div>
               <div>
-                <span className="text-slate-400 text-[10px] block font-bold">EMAIL ADDRESS</span>
+                <span className="text-slate-400 text-[11px] block font-bold">EMAIL ADDRESS</span>
                 <span className="font-black text-blue-600 font-mono">{viewEmployee.email}</span>
               </div>
               <div>
-                <span className="text-slate-400 text-[10px] block font-bold">JOIN DATE</span>
+                <span className="text-slate-400 text-[11px] block font-bold">JOIN DATE</span>
                 <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{viewEmployee.joinDate}</span>
               </div>
               <div>
-                <span className="text-slate-400 text-[10px] block font-bold">STATUS</span>
+                <span className="text-slate-400 text-[11px] block font-bold">STATUS</span>
                 <span className="font-black text-emerald-600">{viewEmployee.status}</span>
               </div>
             </div>
@@ -1273,23 +1256,23 @@ export function VipRegisterEmployeeView() {
               </div>
               <div className="grid grid-cols-4 gap-2 text-center py-2">
                 <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200">
-                  <span className="text-[10px] text-slate-400 block font-bold">TOTAL STAFF</span>
+                  <span className="text-[11px] text-slate-400 block font-bold">TOTAL STAFF</span>
                   <span className="text-base font-black text-slate-900 dark:text-white">{employees.length}</span>
                 </div>
                 <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200">
-                  <span className="text-[10px] text-slate-400 block font-bold">ACTIVE WORKING</span>
+                  <span className="text-[11px] text-slate-400 block font-bold">ACTIVE WORKING</span>
                   <span className="text-base font-black text-emerald-600">
                     {employees.filter(e => e.status === "Active").length}
                   </span>
                 </div>
                 <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200">
-                  <span className="text-[10px] text-slate-400 block font-bold">ON LEAVE</span>
+                  <span className="text-[11px] text-slate-400 block font-bold">ON LEAVE</span>
                   <span className="text-base font-black text-amber-600">
                     {employees.filter(e => e.status === "On Leave").length}
                   </span>
                 </div>
                 <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200">
-                  <span className="text-[10px] text-slate-400 block font-bold">BRANCHES</span>
+                  <span className="text-[11px] text-slate-400 block font-bold">BRANCHES</span>
                   <span className="text-base font-black text-blue-600">5 Regional</span>
                 </div>
               </div>

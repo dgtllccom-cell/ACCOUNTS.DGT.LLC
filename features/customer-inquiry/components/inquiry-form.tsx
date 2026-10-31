@@ -194,7 +194,7 @@ export function InquiryForm({
               <div className="flex items-center gap-1.5 font-bold text-violet-700 dark:text-violet-300">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 {s.t("preview_title", "Preview — check and confirm before saving")}
-                <span className="ms-auto rounded-full bg-white dark:bg-slate-900 px-2 py-0.5 text-[10px]">
+                <span className="ms-auto rounded-full bg-white dark:bg-slate-900 px-2 py-0.5 text-[11px]">
                   {s.t("confidence", "Confidence")}: {Math.round((draft.confidence || 0) * 100)}%
                 </span>
               </div>
@@ -213,7 +213,7 @@ export function InquiryForm({
                         key={m.id}
                         type="button"
                         onClick={() => set("customerId", form.customerId === m.id ? null : m.id)}
-                        className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10.5px] font-bold ${form.customerId === m.id ? "border-emerald-400 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300" : "border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}
+                        className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-bold ${form.customerId === m.id ? "border-emerald-400 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300" : "border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}
                       >
                         <Link2 className="h-3 w-3" /> {m.label}
                       </button>

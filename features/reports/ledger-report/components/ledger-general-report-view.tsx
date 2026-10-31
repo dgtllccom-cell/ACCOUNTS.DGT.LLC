@@ -1354,7 +1354,7 @@ export function LedgerReportView({
                 </div>
                 <div className="flex justify-between items-start gap-3">
                   <span className="shrink-0">{th("USER ID:")}</span>
-                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono break-all no-underline">{sessionInfo?.user?.id || "—"}</span>
+                  <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase text-[11px] font-mono break-all no-underline">{sessionInfo?.user?.id || "—"}</span>
                 </div>
                 <div className="flex justify-between items-start gap-3">
                   <span className="shrink-0">{th("USER NAME:")}</span>
@@ -1370,7 +1370,7 @@ export function LedgerReportView({
                 </div>
                 <div className="flex justify-between items-center gap-3 mt-auto pt-1">
                   <span className="shrink-0">{th("STATUS:")}</span>
-                  <span className="shrink-0 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{th("ACTIVE")}</span>
+                  <span className="shrink-0 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">{th("ACTIVE")}</span>
                 </div>
               </>
             )}
@@ -1423,12 +1423,12 @@ export function LedgerReportView({
                   <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(totBalance)}</span>
                 </div>
                 {!isGlobal && summary?.mixedLocalCurrency ? (
-                  <div className="mt-1 rounded bg-amber-50/70 dark:bg-amber-950/30 p-1.5 text-[10px] text-amber-800 dark:text-amber-300 text-center">
+                  <div className="mt-1 rounded bg-amber-50/70 dark:bg-amber-950/30 p-1.5 text-[11px] text-amber-800 dark:text-amber-300 text-center">
                     {t(effectiveLang, "lgr.mixed_ccy", "Mixed local currencies — USD is the reliable consolidation.")}
                   </div>
                 ) : null}
                 {displayRows.length === 0 && !loading && (
-                  <div className="mt-1 rounded bg-emerald-50/60 dark:bg-emerald-950/30 p-1.5 text-[10px] text-emerald-800 dark:text-emerald-300 font-medium text-center">
+                  <div className="mt-1 rounded bg-emerald-50/60 dark:bg-emerald-950/30 p-1.5 text-[11px] text-emerald-800 dark:text-emerald-300 font-medium text-center">
                     {t(effectiveLang, "lgr.no_entries_range", "No financial entries available for the selected date range.")}
                   </div>
                 )}
@@ -1466,7 +1466,7 @@ export function LedgerReportView({
                   <span>{th("ROZNAMCHA ENTRIES:")}</span>
                   <span className="font-black text-blue-600 dark:text-blue-400">{summary?.roznamchaEntriesCount ?? 0}</span>
                 </div>
-                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
                   <span>{th("STATUS:")}</span>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">{th("ACTIVE")}</span>
                 </div>
@@ -1496,14 +1496,14 @@ export function LedgerReportView({
                   <span className="text-rose-600">{th("INACTIVE ACCOUNTS:")}</span>
                   <span className="font-black text-rose-600">{inactiveLedgers}</span>
                 </div>
-                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
                   <span>{th("TOTAL ACCOUNTS:")}</span>
                   <span className="font-bold text-slate-700 dark:text-slate-300">{totalLedgers}</span>
                 </div>
               </>
             )}
             {displayRows.length === 0 && !loading && (
-              <div className="mt-1 rounded bg-purple-50/60 dark:bg-purple-950/30 p-1.5 text-[10px] text-purple-800 dark:text-purple-300 font-medium text-center">
+              <div className="mt-1 rounded bg-purple-50/60 dark:bg-purple-950/30 p-1.5 text-[11px] text-purple-800 dark:text-purple-300 font-medium text-center">
                 {th("NO FINANCIAL ENTRIES AVAILABLE FOR THE SELECTED DATE RANGE.")}
               </div>
             )}
@@ -1561,7 +1561,7 @@ export function LedgerReportView({
                   <button
                     type="button"
                     onClick={() => setShowAllCountries(!showAllCountries)}
-                    className="w-full text-center text-[10.5px] uppercase font-bold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 py-0.5 hover:underline flex items-center justify-center gap-1 cursor-pointer"
+                    className="w-full text-center text-[11px] uppercase font-bold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 py-0.5 hover:underline flex items-center justify-center gap-1 cursor-pointer"
                   >
                     {showAllCountries ? th("HIDE COUNTRY-WISE REPORT") : th("VIEW COUNTRY-WISE REPORT")} <ChevronRight className="h-3 w-3" />
                   </button>
@@ -1589,7 +1589,7 @@ export function LedgerReportView({
                   <button
                     type="button"
                     onClick={() => setShowAllCountries(!showAllCountries)}
-                    className="w-full text-center text-[10.5px] uppercase font-bold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 py-0.5 hover:underline flex items-center justify-center gap-1 cursor-pointer"
+                    className="w-full text-center text-[11px] uppercase font-bold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 py-0.5 hover:underline flex items-center justify-center gap-1 cursor-pointer"
                   >
                     {showAllCountries ? th("HIDE BRANCH-WISE REPORT") : th("VIEW BRANCH-WISE REPORT")} <ChevronRight className="h-3 w-3" />
                   </button>
@@ -1613,7 +1613,7 @@ export function LedgerReportView({
                   <span>{th("OTHER ACCOUNTS:")}</span>
                   <span className="font-black text-slate-800 dark:text-slate-200">{accountKindCounts.other}</span>
                 </div>
-                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
                   <span>{th("REPORT VIEW:")}</span>
                   <span className="font-bold text-slate-700 dark:text-slate-300">{th("BRANCH ONLY")}</span>
                 </div>
@@ -1637,7 +1637,7 @@ export function LedgerReportView({
                       </span>
                       {getFlag(item.name)} {item.name}
                     </span>
-                    <span className="bg-white/20 text-[10px] font-bold px-2 py-0.5 rounded-full">{item.entries} {th("ENTRIES")}</span>
+                    <span className="bg-white/20 text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">{item.entries} {th("ENTRIES")}</span>
                   </div>
                   <div className="p-4 space-y-3 bg-white dark:bg-slate-950">
                     <div className="flex justify-between items-end border-b border-slate-100 dark:border-slate-800 pb-2">
@@ -1657,12 +1657,12 @@ export function LedgerReportView({
                       <span className="text-lg font-black text-slate-900 dark:text-slate-100">{fmtNumber(item.balance)}</span>
                     </div>
                     {effectiveScope === "super_admin" ? (
-                      <div className="flex justify-between items-center text-[10px] text-slate-400">
+                      <div className="flex justify-between items-center text-[11px] text-slate-400">
                         <span className="font-semibold">{t(effectiveLang, "lgr.balance_usd", "Balance (USD)")}</span>
                         <span className="font-bold font-mono">{fmtNumber(item.usdBalance)}</span>
                       </div>
                     ) : null}
-                    <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
                       <span className="font-semibold text-slate-500">{item.activeAccounts} {th("ACTIVE ACCOUNTS")}</span>
                       <span className="font-semibold text-slate-500">{item.branches.size} {th("BRANCHES")}</span>
                     </div>
@@ -1671,22 +1671,22 @@ export function LedgerReportView({
 
                 {/* Branch Details Expanded Content */}
                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 border-t border-slate-100 dark:border-slate-800 max-h-[300px] overflow-y-auto space-y-2">
-                  <div className="text-[10px] font-bold uppercase text-slate-500 mb-1 pl-1">{th("BRANCH BREAKDOWN")}</div>
+                  <div className="text-[11px] font-bold uppercase text-slate-500 mb-1 pl-1">{th("BRANCH BREAKDOWN")}</div>
                   {Array.from(item.branchData.values()).map((b) => (
                     <div key={b.name} className="bg-white dark:bg-slate-950 rounded-lg p-2.5 border border-slate-200 dark:border-slate-800 shadow-sm">
                       <div className="flex justify-between items-center mb-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
                         <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase truncate pr-2">{b.name}</span>
-                        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 rounded">{b.entries} {th("ENTRIES")}</span>
+                        <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 rounded">{b.entries} {th("ENTRIES")}</span>
                       </div>
-                      <div className="flex justify-between items-center text-[10px] mb-1">
+                      <div className="flex justify-between items-center text-[11px] mb-1">
                         <span className="font-semibold text-slate-500">{th("CREDIT")}:</span>
                         <span className="font-bold text-emerald-600">{fmtNumber(b.credit)}</span>
                       </div>
-                      <div className="flex justify-between items-center text-[10px] mb-1">
+                      <div className="flex justify-between items-center text-[11px] mb-1">
                         <span className="font-semibold text-slate-500">{th("DEBIT")}:</span>
                         <span className="font-bold text-rose-600">{fmtNumber(b.debit)}</span>
                       </div>
-                      <div className="flex justify-between items-center text-[10px] pt-1 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex justify-between items-center text-[11px] pt-1 border-t border-slate-100 dark:border-slate-800">
                         <span className="font-semibold text-slate-500">{th("BALANCE")}:</span>
                         <span className="font-bold text-blue-600">{fmtNumber(b.balance)}</span>
                       </div>
@@ -1969,19 +1969,19 @@ export function LedgerReportView({
           <div className="space-y-6">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "report.branch", "Branch")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "report.branch", "Branch")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{selectedLedger ? buildBranchLabel(selectedLedger) : "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "god.asset_category", "Category")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "god.asset_category", "Category")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{fmtKind(selectedLedger?.accountKind)}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "log.tbl_status", "Status")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "log.tbl_status", "Status")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{selectedLedger?.status === "active" ? "Active" : "Inactive"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "hr.pp_company", "Company")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "hr.pp_company", "Company")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{selectedLedger?.companyName || "-"}</span>
               </div>
             </div>
@@ -2036,15 +2036,15 @@ export function LedgerReportView({
 
             <div className="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl border dark:bg-slate-900/30 dark:border-slate-800">
               <div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "ledger.lgrv_debit_total", "Debit Total")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase">{t(lang, "ledger.lgrv_debit_total", "Debit Total")}</span>
                 <div className="text-sm font-extrabold text-rose-600 mt-0.5">{selectedLedger?.ledgerCurrency} {fmtNumber(displayedLines.reduce((sum, r) => sum + r.debit, 0))}</div>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "ledger.lgrv_credit_total", "Credit Total")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase">{t(lang, "ledger.lgrv_credit_total", "Credit Total")}</span>
                 <div className="text-sm font-extrabold text-emerald-600 mt-0.5">{selectedLedger?.ledgerCurrency} {fmtNumber(displayedLines.reduce((sum, r) => sum + r.credit, 0))}</div>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "bankroz.closing_balance", "Closing Balance")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase">{t(lang, "bankroz.closing_balance", "Closing Balance")}</span>
                 <div className={cn("text-sm font-extrabold mt-0.5", fmtBalance(displayedLines.length ? displayedLines[displayedLines.length - 1]!.runningBalance : 0, selectedLedger?.normalBalance).color)}>
                   {selectedLedger?.ledgerCurrency} {fmtBalance(displayedLines.length ? displayedLines[displayedLines.length - 1]!.runningBalance : 0, selectedLedger?.normalBalance).text}
                 </div>
@@ -2110,7 +2110,7 @@ function ReportHeader({
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-xs lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <nav className="flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 mb-1" aria-label={translateHeader(lang, "Breadcrumb")}>
+        <nav className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1" aria-label={translateHeader(lang, "Breadcrumb")}>
           <Link href="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline">
             {th("Dashboard")}
           </Link>
@@ -2120,7 +2120,7 @@ function ReportHeader({
           <span className="text-slate-700 dark:text-slate-300">{title}</span>
         </nav>
         <h1 className="text-sm font-black tracking-tight text-foreground">{title}</h1>
-        <p className="mt-0.5 text-[10.5px] text-muted-foreground max-w-xl">{subtitle}</p>
+        <p className="mt-0.5 text-[11px] text-muted-foreground max-w-xl">{subtitle}</p>
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
@@ -2151,7 +2151,7 @@ function StatCard({ label, value, tone }: { label: string; value: string; tone?:
   const color = tone ? tone : isDebit ? "text-rose-600" : isCredit || isActive ? "text-emerald-600" : "text-slate-900";
   return (
     <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
-      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{label}</div>
+      <div className="text-[11px] font-bold uppercase tracking-widest text-slate-500">{label}</div>
       <div className={cn("mt-1 text-2xl font-black tabular-nums tracking-tighter", color)}>{value}</div>
     </div>
   );
@@ -2189,7 +2189,7 @@ function Th({ children, className }: { children: React.ReactNode; className?: st
   const lang = useHeaderLanguage();
   const content = typeof children === "string" ? translateHeader(lang, children) : children;
   return (
-    <th className={cn("whitespace-nowrap px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500", className)}>
+    <th className={cn("whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-500", className)}>
       {content}
     </th>
   );

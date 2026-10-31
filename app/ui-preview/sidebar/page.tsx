@@ -39,7 +39,7 @@ export default function SidebarPreviewPage() {
               <li>• Overall look &amp; feel, colors and typography</li>
               <li>• Icons and menu spacing</li>
               <li>• Expand / collapse animation (click a group, e.g. Accounting, Purchase)</li>
-              <li>• "New Form Entry" section (Quick Create group, marked NEW)</li>
+              <li>• &quot;New Form Entry&quot; section (Quick Create group, marked NEW)</li>
               <li>• Search box (type to filter the menu)</li>
               <li>• Favourites &amp; Recent quick lists</li>
             </ul>

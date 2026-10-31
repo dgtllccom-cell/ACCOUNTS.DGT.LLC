@@ -153,7 +153,7 @@ export function PurchaseTransitLaneView({ lang, source }: { lang?: string; sourc
           {LANE_STATUSES.map((st) => (
             <button key={st} type="button" onClick={() => setStatus(status === st ? "" : st)} data-testid={`chip-${st}`}
               className={`${btnCls} ${status === st ? "bg-blue-600 text-white" : "border border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"}`}>
-              {stLabel(st)} <span className="rounded-full bg-black/10 px-1.5 text-[10px]">{summary[st] ?? 0}</span>
+              {stLabel(st)} <span className="rounded-full bg-black/10 px-1.5 text-[11px]">{summary[st] ?? 0}</span>
             </button>
           ))}
         </div>
@@ -182,7 +182,7 @@ export function PurchaseTransitLaneView({ lang, source }: { lang?: string; sourc
             {/* desktop table */}
             <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white md:block dark:border-slate-800 dark:bg-slate-900">
               <table className="w-full min-w-[1100px] text-start text-xs" data-testid="lane-table">
-                <thead className="border-b border-slate-100 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800">
+                <thead className="border-b border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800">
                   <tr>
                     <Th className="p-2.5" />
                     <Th className="p-2.5 text-start">{T("col_purchase", "Purchase no.")}</Th>
@@ -204,14 +204,14 @@ export function PurchaseTransitLaneView({ lang, source }: { lang?: string; sourc
                     return (
                       <tr key={r.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40" data-testid={`lane-row-${r.container_number || r.id}`}>
                         <td className="p-2.5"><input type="checkbox" checked={selected.has(r.id)} disabled={r.lane_status === "completed"} onChange={() => toggle(r.id)} aria-label={T("select", "Select")} /></td>
-                        <td className="p-2.5 font-mono font-bold text-blue-700" dir="ltr">{r.purchase_ref_no || "—"}<div className="text-[10px] font-normal text-slate-400">{r.source_type === "local_purchase" ? T("src_local", "Local Purchase") : T("src_booking", "Purchase Booking")}</div></td>
+                        <td className="p-2.5 font-mono font-bold text-blue-700" dir="ltr">{r.purchase_ref_no || "—"}<div className="text-[11px] font-normal text-slate-400">{r.source_type === "local_purchase" ? T("src_local", "Local Purchase") : T("src_booking", "Purchase Booking")}</div></td>
                         <td className="p-2.5 font-semibold" dir="auto">{r.supplier_name || "—"}</td>
                         <td className="p-2.5" dir="auto">{r.goods_name || "—"}</td>
                         <td className="p-2.5 font-mono" dir="ltr">{r.bl_number || "—"}</td>
                         <td className="p-2.5 font-mono font-bold" dir="ltr">{r.container_number || "—"}</td>
                         <td className="p-2.5 text-end font-mono font-bold">{Number(r.loaded_quantity).toLocaleString()} {r.unit || ""}</td>
                         <td className="p-2.5 text-end font-mono">{r.gross_weight != null ? Number(r.gross_weight).toLocaleString() : "—"} / {r.net_weight != null ? Number(r.net_weight).toLocaleString() : "—"}</td>
-                        <td className="p-2.5"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.lane_status] ?? ""}`} data-testid="lane-status">{stLabel(r.lane_status)}</span>{r.leg_no > 1 && <span className="ms-1 text-[10px] text-slate-400">{T("leg", "leg")} {r.leg_no}</span>}</td>
+                        <td className="p-2.5"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.lane_status] ?? ""}`} data-testid="lane-status">{stLabel(r.lane_status)}</span>{r.leg_no > 1 && <span className="ms-1 text-[11px] text-slate-400">{T("leg", "leg")} {r.leg_no}</span>}</td>
                         <td className="p-2.5" dir="auto">{r.current_location || r.expected_location || "—"}</td>
                         <td className="p-2.5" dir="auto">{ownerLabel(r, T)}</td>
                         <td className="p-2.5">
@@ -236,7 +236,7 @@ export function PurchaseTransitLaneView({ lang, source }: { lang?: string; sourc
                   <div key={r.id} className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900">
                     <div className="flex items-start justify-between gap-2">
                       <div><div className="font-mono font-black text-blue-700" dir="ltr">{r.purchase_ref_no || "—"}</div><div className="font-semibold" dir="auto">{r.supplier_name || "—"} · {r.goods_name || "—"}</div></div>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.lane_status] ?? ""}`}>{stLabel(r.lane_status)}</span>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.lane_status] ?? ""}`}>{stLabel(r.lane_status)}</span>
                     </div>
                     <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-slate-600 dark:text-slate-300">
                       <span>{T("col_bl", "BL no.")}: <b dir="ltr">{r.bl_number || "—"}</b></span>
@@ -428,7 +428,7 @@ function DetailDrawer({ T, s, stLabel, detail, busy, onClose, onAct, onTransfer,
       await onChanged();
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setLocal(false); }
   };
-  const kv = (k: string, v: React.ReactNode) => <div><dt className="text-[10px] font-bold uppercase text-slate-400">{k}</dt><dd className="font-semibold" dir="auto">{v ?? "—"}</dd></div>;
+  const kv = (k: string, v: React.ReactNode) => <div><dt className="text-[11px] font-bold uppercase text-slate-400">{k}</dt><dd className="font-semibold" dir="auto">{v ?? "—"}</dd></div>;
   const dispLabel: Record<string, string> = { warehouse: T("disp_warehouse", "Send to Warehouse"), re_export: T("disp_re_export", "Re-export"), sale_delivery: T("disp_sale", "Sell / Deliver"), continue_transit: T("disp_continue", "Continue Transit"), hold: T("disp_hold", "Hold at Current Location") };
   const exTypes = ["transport", "port", "customs", "clearing", "detention", "handling", "other"];
 
@@ -436,7 +436,7 @@ function DetailDrawer({ T, s, stLabel, detail, busy, onClose, onAct, onTransfer,
     <div className="fixed inset-0 z-[80] flex justify-end bg-slate-900/40" role="dialog" aria-modal="true" dir={s.dir} data-testid="lane-detail">
       <div className="h-full w-full max-w-xl overflow-y-auto bg-white p-4 shadow-2xl dark:bg-slate-900">
         <div className="mb-3 flex items-start justify-between gap-2">
-          <div><h3 className="text-sm font-black">{l.purchase_ref_no} · <span dir="ltr">{l.container_number || l.bl_number || "—"}</span></h3><span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[l.lane_status] ?? ""}`} data-testid="detail-status">{stLabel(l.lane_status)}</span></div>
+          <div><h3 className="text-sm font-black">{l.purchase_ref_no} · <span dir="ltr">{l.container_number || l.bl_number || "—"}</span></h3><span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[l.lane_status] ?? ""}`} data-testid="detail-status">{stLabel(l.lane_status)}</span></div>
           <button type="button" onClick={onClose} aria-label={T("close", "Close")}><X className="h-4 w-4" /></button>
         </div>
         <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
@@ -470,11 +470,11 @@ function DetailDrawer({ T, s, stLabel, detail, busy, onClose, onAct, onTransfer,
               <div className="mt-2 space-y-2">
                 <select value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)} className={inputCls} data-testid="disp-warehouse-select"><option value="">{T("pick_warehouse", "— Select warehouse —")}</option>{warehouses.map((w) => <option key={w.id} value={w.id}>{w.name}{w.code ? ` (${w.code})` : ""}</option>)}</select>
                 {needGoods && <select value={goodsId} onChange={(e) => setGoodsId(e.target.value)} className={inputCls} data-testid="disp-goods-select"><option value="">{T("pick_goods", "— Select the goods item —")}</option>{goods.map((g) => <option key={g.id} value={g.id}>{g.goods_name ?? g.name}</option>)}</select>}
-                <p className="text-[10.5px] text-slate-500">{T("disp_warehouse_hint", "Lane stock is reduced and the selected warehouse stock is increased — once.")}</p>
+                <p className="text-[11px] text-slate-500">{T("disp_warehouse_hint", "Lane stock is reduced and the selected warehouse stock is increased — once.")}</p>
               </div>
             )}
             {kind === "continue_transit" && <input value={nextDestination} onChange={(e) => setNextDestination(e.target.value)} placeholder={T("next_destination", "Next destination of the new route leg")} className={`${inputCls} mt-2`} data-testid="disp-next" dir="auto" />}
-            {kind === "sale_delivery" && <p className="mt-2 text-[10.5px] text-slate-500">{T("disp_sale_hint", "The load leaves the lane. No revenue is created here — the sale completes in Sales / Delivery.")}</p>}
+            {kind === "sale_delivery" && <p className="mt-2 text-[11px] text-slate-500">{T("disp_sale_hint", "The load leaves the lane. No revenue is created here — the sale completes in Sales / Delivery.")}</p>}
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={T("note", "Note")} className={`${inputCls} mt-2`} />
             <button type="button" disabled={local || busy} onClick={() => void dispose()} className={`${btnCls} mt-2 bg-rose-600 text-white hover:bg-rose-700`} data-testid="disp-confirm">{local ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}{T("disp_confirm", "Confirm final disposition")}</button>
           </div>
@@ -483,14 +483,14 @@ function DetailDrawer({ T, s, stLabel, detail, busy, onClose, onAct, onTransfer,
         {/* expenses */}
         <div className="mt-5" data-testid="expenses">
           <p className="mb-2 flex items-center gap-1.5 text-xs font-black"><ClipboardList className="h-4 w-4 text-blue-600" />{T("expenses", "Expenses on this load")}</p>
-          <p className="mb-2 text-[10.5px] text-slate-500">{T("expenses_hint", "Linked to Purchase → Loading → BL → Container → Lane → Agent/Branch. An internal branch is settled between branches (not a sale); an agent's payable bill line is created only after you review and confirm.")}</p>
+          <p className="mb-2 text-[11px] text-slate-500">{T("expenses_hint", "Linked to Purchase → Loading → BL → Container → Lane → Agent/Branch. An internal branch is settled between branches (not a sale); an agent's payable bill line is created only after you review and confirm.")}</p>
           {detail.expenses.length === 0 ? <p className="text-[11px] text-slate-400">{T("no_expenses", "No expenses yet.")}</p> : (
             <ul className="space-y-1.5">
               {detail.expenses.map((e) => (
                 <li key={e.id} className="rounded-lg border border-slate-200 p-2 text-[11px] dark:border-slate-700" data-testid={`expense-${e.status}`}>
                   <div className="flex flex-wrap items-center justify-between gap-1">
                     <span className="font-bold">{T("ex_" + e.expense_type, e.expense_type)} · <span dir="ltr">{Number(e.amount).toLocaleString()} {e.currency}</span></span>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold dark:bg-slate-800">{T("exs_" + e.status, e.status)}</span>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">{T("exs_" + e.status, e.status)}</span>
                   </div>
                   <div className="text-slate-500" dir="auto">{e.payee_name || e.payee_type} · {e.settlement === "inter_branch" ? T("settle_inter", "inter-branch settlement") : e.settlement === "agent_payable" ? T("settle_agent", "agent payable") : T("settle_none", "no settlement")}{e.bill_expense_line_id ? ` · ${T("bill_line", "bill line created (unposted)")}` : ""}</div>
                   {detail.canAct && (

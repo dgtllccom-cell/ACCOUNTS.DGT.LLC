@@ -28,7 +28,7 @@ export function ColumnCustomizerButton({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+        className="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
       >
         <Columns3 className="h-3 w-3" />
         {!compact && <span>{_("report.manage_columns", "Columns")}</span>}
@@ -50,12 +50,12 @@ export function ColumnCustomizerButton({
               <button
                 type="button"
                 onClick={prefs.reset}
-                className="rounded-md border border-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 whitespace-nowrap"
               >
                 {_("report.reset_default", "Reset to Default")}
               </button>
               {prefs.savedViewNames.map((v) => (
-                <span key={v} className="inline-flex items-center rounded-md border border-blue-200 bg-blue-50 text-[10px] font-bold text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
+                <span key={v} className="inline-flex items-center rounded-md border border-blue-200 bg-blue-50 text-[11px] font-bold text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
                   <button type="button" onClick={() => prefs.applyView(v)} className="px-1.5 py-0.5 hover:underline">{v}</button>
                   <button type="button" onClick={() => prefs.deleteView(v)} className="px-1 text-blue-400 hover:text-red-500">×</button>
                 </span>
@@ -72,7 +72,7 @@ export function ColumnCustomizerButton({
                 type="button"
                 onClick={() => { prefs.saveView(name); setName(""); }}
                 disabled={!name.trim()}
-                className="rounded-md bg-blue-600 px-2 py-1 text-[10px] font-bold text-white disabled:opacity-40"
+                className="rounded-md bg-blue-600 px-2 py-1 text-[11px] font-bold text-white disabled:opacity-40"
               >
                 {_("report.save_view", "Save")}
               </button>

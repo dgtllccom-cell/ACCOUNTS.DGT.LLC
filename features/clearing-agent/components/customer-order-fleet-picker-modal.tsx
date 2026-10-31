@@ -36,15 +36,19 @@ interface Props {
   onSelectTruck: (truck: FleetTruckItem) => void;
 }
 
-export function CustomerOrderFleetPickerModal({
-  open,
+export function CustomerOrderFleetPickerModal(props: Parameters<typeof CustomerOrderFleetPickerModalBody>[0]) {
+  // Guard before any hook: the body below may only mount when there is something to show.
+  if (!props.open) return null;
+  return <CustomerOrderFleetPickerModalBody {...props} />;
+}
+
+function CustomerOrderFleetPickerModalBody({
   onClose,
   lang,
   trucks = [],
   selectedTruckId,
   onSelectTruck
 }: Props) {
-  if (!open) return null;
 
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tt = (key: string, fb: string) => t(lang, ("com." + key) as never, fb);
@@ -159,7 +163,7 @@ export function CustomerOrderFleetPickerModal({
         {/* Filter Row */}
         <div className="mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           <div>
-            <label className="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">
+            <label className="block text-[11px] font-bold uppercase text-slate-400 mb-0.5">
               {tt("vehicle_type", "Vehicle Type")}
             </label>
             <select
@@ -175,7 +179,7 @@ export function CustomerOrderFleetPickerModal({
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">
+            <label className="block text-[11px] font-bold uppercase text-slate-400 mb-0.5">
               {tt("container_size", "Container Size")}
             </label>
             <select
@@ -191,7 +195,7 @@ export function CustomerOrderFleetPickerModal({
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">
+            <label className="block text-[11px] font-bold uppercase text-slate-400 mb-0.5">
               {tt("transporter", "Transporter")}
             </label>
             <select
@@ -223,7 +227,7 @@ export function CustomerOrderFleetPickerModal({
         {/* Fleet Master Table matching reference-06.jpeg */}
         <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs mb-4">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-[10.5px] font-black uppercase text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
+            <thead className="bg-slate-50 text-[11px] font-black uppercase text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
               <tr>
                 <th className="py-2.5 px-3 w-8 text-center"></th>
                 <th className="py-2.5 px-3 w-8 text-center">#</th>
@@ -288,12 +292,12 @@ export function CustomerOrderFleetPickerModal({
                       <td className="py-2.5 px-3 text-slate-700 dark:text-slate-200">{transporter}</td>
                       <td className="py-2.5 px-3 text-slate-800 dark:text-slate-100 font-semibold">{driver}</td>
                       <td className="py-2.5 px-3">
-                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 whitespace-nowrap">
                           {status}
                         </span>
                       </td>
                       <td className="py-2.5 px-3">
-                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 whitespace-nowrap">
                           {avail}
                         </span>
                       </td>

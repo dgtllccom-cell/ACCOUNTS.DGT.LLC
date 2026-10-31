@@ -262,7 +262,7 @@ export function PaymentReportView({
               {row.refNo}
             </span>
             {hasDiffOrder ? (
-              <span className="inline-flex items-center gap-1 font-mono text-[10px] text-slate-500 dark:text-slate-400">
+              <span className="inline-flex items-center gap-1 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                 <span
                   className={cn(
                     "rounded px-1 py-0.2 font-semibold",
@@ -317,7 +317,7 @@ export function PaymentReportView({
         return (
           <span
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider",
               isSupplier
                 ? "bg-indigo-100 text-indigo-800 border border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800"
                 : "bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800"
@@ -356,11 +356,11 @@ export function PaymentReportView({
 
         return (
           <div className="flex flex-col gap-0.5">
-            <span className={cn("inline-flex w-fit items-center rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider border", badgeStyle)}>
+            <span className={cn("inline-flex w-fit items-center rounded-md px-2 py-0.5 text-[11px] font-black uppercase tracking-wider border", badgeStyle)}>
               {kindLabel(row.paymentKind)}
             </span>
             {row.narration ? (
-              <span className="max-w-[170px] truncate text-[10px] text-slate-500 dark:text-slate-400" title={row.narration}>
+              <span className="max-w-[170px] truncate text-[11px] text-slate-500 dark:text-slate-400" title={row.narration}>
                 {row.narration}
               </span>
             ) : null}
@@ -375,7 +375,7 @@ export function PaymentReportView({
       render: (r: Record<string, unknown>) => {
         const row = r as unknown as PaymentRow;
         return (
-          <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
             {row.currency}
           </span>
         );
@@ -393,7 +393,7 @@ export function PaymentReportView({
               {money(Number(row.amount))}
             </span>
             {row.exchangeRate && row.exchangeRate !== 1 ? (
-              <span className="font-mono text-[9px] text-slate-400" title={`Ex. Rate: ${row.exchangeRate}`}>
+              <span className="font-mono text-[11px] text-slate-400" title={`Ex. Rate: ${row.exchangeRate}`}>
                 ≈ ${money(Number(row.baseAmount || row.amount))}
               </span>
             ) : null}
@@ -415,7 +415,7 @@ export function PaymentReportView({
         else if (st === "cancelled") badge = "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300";
 
         return (
-          <span className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider", badge)}>
+          <span className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-black uppercase tracking-wider", badge)}>
             {statusLabel(row.status)}
           </span>
         );
@@ -638,16 +638,16 @@ export function PaymentReportView({
                   <div className="flex items-center gap-2">
                     <span
                       className={cn(
-                        "rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider",
+                        "rounded-md px-2 py-0.5 text-[11px] font-black uppercase tracking-wider",
                         m.flow === "supplier_payment" ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                       )}
                     >
                       {m.flow === "supplier_payment" ? "Purchase Payment" : "Customer Receipt"}
                     </span>
-                    <span className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                    <span className="rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-300 whitespace-nowrap">
                       {kindLabel(m.paymentKind)}
                     </span>
-                    <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-300">
+                    <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-emerald-300 whitespace-nowrap">
                       {statusLabel(m.status)}
                     </span>
                   </div>
@@ -660,14 +660,14 @@ export function PaymentReportView({
                 </div>
 
                 <div className="text-end">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     {s.t("lbl_voucher_amount", "Voucher Amount")}
                   </div>
                   <div className="font-mono text-2xl font-black text-emerald-400 sm:text-3xl">
                     {money(m.amount)} <span className="text-sm text-slate-200">{m.currency}</span>
                   </div>
                   {m.exchangeRate && m.exchangeRate !== 1 ? (
-                    <div className="text-[10px] font-medium text-slate-400">
+                    <div className="text-[11px] font-medium text-slate-400">
                       Ex. Rate: {m.exchangeRate} &bull; Base: ${money(m.baseAmount || m.amount)} USD
                     </div>
                   ) : null}

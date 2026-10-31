@@ -145,7 +145,7 @@ export function QuickLocationModal({
             }
             className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
           />
-          <p className="text-[10.5px] text-slate-400">
+          <p className="text-[11px] text-slate-400">
             {t(lang, "locmaster.name_sub", "Saved name will appear in Settings and all ERP order forms.")}
           </p>
         </div>

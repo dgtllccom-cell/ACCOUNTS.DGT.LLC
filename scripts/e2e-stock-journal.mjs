@@ -47,7 +47,7 @@ console.log("scope", scope, "wh1", wh1?.warehouse_name, "wh2", wh2?.warehouse_na
 // ── the DEV booking (stands in for the booking wizard): TWO goods lines, form_data stored as a JSON STRING like most real DEV rows ──
 const poNo = `${TAG}-PO`;
 const formData = JSON.stringify({
-  form: { supplierName: "E2E Supplier", salesAccountName: "E2E Supplier A/C", manualBillNumber: TAG + "-M", purchaseCurrency: "USD" },
+  form: { supplierName: "E2E Supplier", salesAccountName: "E2E Supplier A/C", manualBillNumber: TAG + "-M", purchaseCurrency: "USD", paymentType: "Credit" }, // Credit goes straight to Loading; a bare status flag is no longer accepted as payment
   goodsEntries: [
     { goodsName: goods[0].goods_name, goodsId: goods[0].id, qtyNo: 100, qtyName: "BAGS" },
     { goodsName: goods[1].goods_name, goodsId: goods[1].id, qtyNo: 50, qtyName: "BAGS" },

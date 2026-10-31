@@ -221,11 +221,11 @@ export default function AiAssistantPage() {
                 <h1 className="text-xl font-bold tracking-tight text-white">
                   DGT ERP AI Business Assistant
                 </h1>
-                <span className="rounded-full bg-emerald-500/10 border border-emerald-400/30 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 flex items-center gap-1">
+                <span className="rounded-full bg-emerald-500/10 border border-emerald-400/30 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 flex items-center gap-1 whitespace-nowrap">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   RBAC & Isolation Protected
                 </span>
-                <span className="rounded-full bg-cyan-500/10 border border-cyan-400/30 px-2 py-0.5 text-xs font-semibold text-cyan-300">
+                <span className="rounded-full bg-cyan-500/10 border border-cyan-400/30 px-2 py-0.5 text-xs font-semibold text-cyan-300 whitespace-nowrap">
                   DEV TEST ONLY
                 </span>
               </div>
@@ -322,37 +322,37 @@ export default function AiAssistantPage() {
                       {isAi && (
                         <div className="flex flex-wrap items-center gap-2 mb-2 pb-2 border-b border-slate-800/80">
                           {m.answerType === "erp_record" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-bold text-emerald-400 whitespace-nowrap">
                               <CheckCircle2 className="h-3 w-3" />
                               ERP Record (Verified)
                             </span>
                           )}
                           {m.answerType === "public_external" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 border border-blue-500/30 px-2 py-0.5 text-[10px] font-bold text-blue-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 border border-blue-500/30 px-2 py-0.5 text-[11px] font-bold text-blue-400 whitespace-nowrap">
                               <Globe className="h-3 w-3" />
                               Public / External Information
                             </span>
                           )}
                           {m.answerType === "permission_denied" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-[10px] font-bold text-rose-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-[11px] font-bold text-rose-400 whitespace-nowrap">
                               <Lock className="h-3 w-3" />
                               Permission Denied (Logged)
                             </span>
                           )}
                           {m.answerType === "write_refused" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[11px] font-bold text-amber-400 whitespace-nowrap">
                               <ShieldAlert className="h-3 w-3" />
                               Read-Only Guard
                             </span>
                           )}
                           {m.answerType === "no_record" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-700 border border-slate-600 px-2 py-0.5 text-[10px] font-bold text-slate-300">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-700 border border-slate-600 px-2 py-0.5 text-[11px] font-bold text-slate-300 whitespace-nowrap">
                               <Search className="h-3 w-3" />
                               No Record Found
                             </span>
                           )}
                           {m.scope && (
-                            <span className="text-[10px] text-slate-400 font-mono">
+                            <span className="text-[11px] text-slate-400 font-mono">
                               • {m.scope}
                             </span>
                           )}
@@ -372,7 +372,7 @@ export default function AiAssistantPage() {
                               <Database className="h-3.5 w-3.5" />
                               Source Table: {m.sourceRecord.table}
                             </span>
-                            <span className="font-mono text-[10px] text-slate-400">
+                            <span className="font-mono text-[11px] text-slate-400">
                               ID: {m.sourceRecord.id.slice(0, 8)}...
                             </span>
                           </div>
@@ -417,7 +417,7 @@ export default function AiAssistantPage() {
                         </div>
                       )}
 
-                      <div className="mt-2 text-[10px] text-slate-400 flex justify-end">
+                      <div className="mt-2 text-[11px] text-slate-400 flex justify-end">
                         {m.timestamp}
                       </div>
                     </div>
@@ -499,7 +499,7 @@ export default function AiAssistantPage() {
                   New Account Setup Guidance
                 </div>
                 <p className="text-xs text-slate-300">
-                  When a user asks "United branch mein ek achcha sa code banana hai kis tarah banaa", the assistant provides structured step-by-step guidance rather than creating an unrelated purchase order draft.
+                  When a user asks &quot;United branch mein ek achcha sa code banana hai kis tarah banaa&quot;, the assistant provides structured step-by-step guidance rather than creating an unrelated purchase order draft.
                 </p>
                 <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 text-xs space-y-1.5 text-slate-300">
                   <div className="font-semibold text-cyan-300">Steps Prepared:</div>
@@ -616,7 +616,7 @@ export default function AiAssistantPage() {
                 <div>• Start, Pause, Resume, Stop controls with MM:SS audio timer.</div>
                 <div>• Verbatim transcription in 5 languages (English, Urdu, Pashto, Farsi, Arabic).</div>
                 <div>• NEVER silently rewrites, translates, or alters spoken text without user intent.</div>
-                <div>• User reviews transcript in modal and decides to "Append" or "Replace".</div>
+                <div>• User reviews transcript in modal and decides to &quot;Append&quot; or &quot;Replace&quot;.</div>
               </div>
             </div>
           </div>
@@ -648,7 +648,7 @@ export default function AiAssistantPage() {
 
             <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950 flex-1 overflow-x-auto">
               <table className="w-full text-xs text-left">
-                <thead className="bg-slate-900 border-b border-slate-800 text-slate-400 uppercase font-mono text-[10px]">
+                <thead className="bg-slate-900 border-b border-slate-800 text-slate-400 uppercase font-mono text-[11px]">
                   <tr>
                     <Th className="px-4 py-3">Timestamp</Th>
                     <Th className="px-4 py-3">User</Th>
@@ -675,11 +675,11 @@ export default function AiAssistantPage() {
                         <td className="px-4 py-2.5 font-medium text-white whitespace-nowrap">
                           {log.user_name}
                         </td>
-                        <td className="px-4 py-2.5 uppercase font-mono text-[10px]">
+                        <td className="px-4 py-2.5 uppercase font-mono text-[11px]">
                           {log.detected_language}
                         </td>
                         <td className="px-4 py-2.5 whitespace-nowrap">
-                          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-mono border border-slate-700">
+                          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-mono border border-slate-700">
                             {log.query_type}
                           </span>
                         </td>

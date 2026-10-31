@@ -35,7 +35,7 @@
 .dgt-cj-ctrl-icon { width: 32px; padding: 0; }
 .dgt-cj-primary { background: var(--cj-blue); border-color: var(--cj-blue); color: #fff; }
 .dgt-cj-primary:hover { background: #0046d6; border-color: #0046d6; }
-.dgt-cj-count { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 20px; background: var(--cj-blue); color: #fff; font-size: 9.5px; }
+.dgt-cj-count { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 20px; background: var(--cj-blue); color: #fff; font-size: 11px; }
 .dgt-cj-chev { width: 13px; height: 13px; opacity: .7; }
 .dgt-cj-filters-btn { background: var(--cj-chip); border-color: color-mix(in srgb, var(--cj-blue) 35%, var(--cj-border)); }
 [dir="rtl"] .dgt-cj-flip { transform: scaleX(-1); }
@@ -43,7 +43,7 @@
 /* ───────── three-dot menu ───────── */
 .dgt-cj-menu { position: relative; display: inline-block; }
 .dgt-cj-menu-panel { position: absolute; inset-inline-end: 0; top: calc(100% + 6px); z-index: 60; min-width: 210px; padding: 8px; border: 1px solid var(--cj-border); border-radius: 12px; background: var(--cj-surface); box-shadow: var(--cj-pop); }
-.dgt-cj-menu-label { padding: 4px 8px 8px; font-size: 9.5px; letter-spacing: .6px; font-weight: 800; text-transform: uppercase; color: var(--cj-muted); }
+.dgt-cj-menu-label { padding: 4px 8px 8px; font-size: 11px; letter-spacing: .6px; font-weight: 800; text-transform: uppercase; color: var(--cj-muted); }
 .dgt-cj-menu-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--cj-ink); font-size: 12px; font-weight: 600; text-align: start; cursor: pointer; }
 .dgt-cj-menu-item:hover:not(:disabled) { background: var(--cj-soft); color: var(--cj-blue); }
 .dgt-cj-menu-item:disabled { opacity: .45; cursor: not-allowed; }
@@ -52,7 +52,7 @@
 /* ───────── filters dialog ───────── */
 .dgt-cj-filter-body { display: flex; flex-direction: column; gap: 14px; padding: 4px 2px 2px; }
 .dgt-cj-filter-sub { margin: 0; font-size: 12px; color: var(--cj-muted); }
-.dgt-cj-filter-caption { font-size: 9.5px; font-weight: 800; letter-spacing: 1px; color: var(--cj-muted); }
+.dgt-cj-filter-caption { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--cj-muted); }
 .dgt-cj-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .dgt-cj-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .dgt-cj-field > span { font-size: 11px; font-weight: 700; color: var(--cj-ink); }
@@ -72,8 +72,8 @@
 .dgt-cj-debit { color: var(--cj-red); }
 .dgt-cj-sum-counts { display: flex; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--cj-border); font-size: 11px; color: var(--cj-muted); }
 .dgt-cj-sum-counts b { color: var(--cj-ink); }
-.dgt-cj-note { color: #b97100; font-size: 10.5px; }
-.dgt-cj-scope { color: var(--cj-muted); font-size: 10.5px; }
+.dgt-cj-note { color: #b97100; font-size: 11px; }
+.dgt-cj-scope { color: var(--cj-muted); font-size: 11px; }
 
 /* ───────── journal table footer ───────── */
 .dgt-cj-pager { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 10px 14px; border-top: 1px solid var(--cj-border); font-size: 11px; color: var(--cj-muted); }

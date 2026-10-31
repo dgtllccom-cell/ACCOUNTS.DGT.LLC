@@ -32,6 +32,13 @@ payment dot black and never moves stock.
 - Reverse — `POST .../reverse` (reason required) before issue; restores reservation / warehouse move.
 - Customs — `POST .../customs` when no Clearing order carries the container / B/L.
 
+## Payment rule for Confirmed Stock
+A loading's quantity is eligible for Confirm Stock only when it is received, customs-cleared and — for Advance / Endorsement bills — that loading's
+Remaining Payment is complete (`lib/services/purchase-loading-payment-service.ts`, pure rules in `lib/purchases/loaded-payable.ts`). The row shows
+Paid / Balance, a held row is tagged "Awaiting Remaining Payment", and `confirmStock` refuses it server-side (`409 PAYMENT_NOT_COMPLETE`). Credit and
+other conditions are not held by this rule. Advance money is allocated to loadings by quantity share; every Remaining payment is tied to its loading.
+End-to-end check: `scripts/dev/advance-to-confirmed-stock-e2e.mjs` (DEV only, throw-away USD 100,000 / 2,000-carton bill).
+
 ## Verification
 `scripts/e2e-stock-journal.mjs` (53 API checks) and `scripts/e2e-stock-journal-ui.mjs` (desktop EN/UR/AR/FA/PS, iPhone,
 Samsung, iPad EN/UR, wide EN) run on the DEV database only and clean up after themselves.

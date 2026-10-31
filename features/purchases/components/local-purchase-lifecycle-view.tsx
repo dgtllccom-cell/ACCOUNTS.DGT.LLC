@@ -51,8 +51,8 @@ export function LocalPurchaseLifecycleView({ purchaseId, lang }: { purchaseId: s
 
   const p = d.purchase;
   const lotRef = (id: string) => d.lots.find((l: Json) => l.id === id)?.lot_ref ?? "";
-  const th = `p-2 ${s.textStart} text-[10px] font-bold uppercase text-slate-500`;
-  const thEnd = `p-2 ${s.textEnd} text-[10px] font-bold uppercase text-slate-500`;
+  const th = `p-2 ${s.textStart} text-[11px] font-bold uppercase text-slate-500`;
+  const thEnd = `p-2 ${s.textEnd} text-[11px] font-bold uppercase text-slate-500`;
   const purposeLabel = (x: string) => s.t(`purpose_${x}`, x.replace(/_/g, " "));
   const stateLabel = (x: string) => s.t(`state_${x}`, x.replace("_", " "));
 
@@ -91,12 +91,12 @@ export function LocalPurchaseLifecycleView({ purchaseId, lang }: { purchaseId: s
 
         <Sec title={s.t("lc_purchase", "Purchase and supplier")}>
           <dl className="grid gap-3 sm:grid-cols-3">
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("supplier", "Supplier")}</dt><dd className="font-semibold">{p.supplier || "—"}</dd></div>
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("lc_goods", "Goods")}</dt><dd className="font-semibold">{p.goods}</dd></div>
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("lc_bill", "Bill / lot no.")}</dt><dd className="font-semibold">{p.manualBillNo || "—"} / {p.lotNo || "—"}</dd></div>
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("lc_amount", "Amount")}</dt><dd className="font-semibold">{p.currency} {fmt(p.finalCost)}</dd></div>
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("lc_posted_at", "Posted")}</dt><dd className="font-semibold">{dt(p.postedAt)}</dd></div>
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("lc_charges", "Additional charges")}</dt><dd className="font-semibold">{(d.extraCharges as Json[]).length ? (d.extraCharges as Json[]).map((c) => `${c.label} ${fmt(c.amount)}${c.allocate ? " ✓" : ""}`).join(" · ") : "—"}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("supplier", "Supplier")}</dt><dd className="font-semibold">{p.supplier || "—"}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("lc_goods", "Goods")}</dt><dd className="font-semibold">{p.goods}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("lc_bill", "Bill / lot no.")}</dt><dd className="font-semibold">{p.manualBillNo || "—"} / {p.lotNo || "—"}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("lc_amount", "Amount")}</dt><dd className="font-semibold">{p.currency} {fmt(p.finalCost)}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("lc_posted_at", "Posted")}</dt><dd className="font-semibold">{dt(p.postedAt)}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("lc_charges", "Additional charges")}</dt><dd className="font-semibold">{(d.extraCharges as Json[]).length ? (d.extraCharges as Json[]).map((c) => `${c.label} ${fmt(c.amount)}${c.allocate ? " ✓" : ""}`).join(" · ") : "—"}</dd></div>
           </dl>
         </Sec>
 
@@ -119,7 +119,7 @@ export function LocalPurchaseLifecycleView({ purchaseId, lang }: { purchaseId: s
           ) : <p className="text-slate-500">{s.t("lc_not_posted", "Not posted yet.")}</p>}
           {(d.payableActivity as Json[]).length ? (
             <>
-              <div className="mt-3 mb-1 text-[10px] font-bold uppercase text-slate-500">{s.t("lc_settlements", "Recent entries on the supplier payable account (payments and settlements)")}</div>
+              <div className="mt-3 mb-1 text-[11px] font-bold uppercase text-slate-500">{s.t("lc_settlements", "Recent entries on the supplier payable account (payments and settlements)")}</div>
               <table className="w-full">
                 <thead><tr><th className={th}>{s.t("lc_date", "Date")}</th><th className={th}>{s.t("lc_voucher", "Voucher")}</th><th className={th}>{s.t("lc_narration", "Narration")}</th><th className={thEnd}>{s.t("lc_dr", "Debit")}</th><th className={thEnd}>{s.t("lc_cr", "Credit")}</th></tr></thead>
                 <tbody>
@@ -172,9 +172,9 @@ export function LocalPurchaseLifecycleView({ purchaseId, lang }: { purchaseId: s
 
         <Sec title={s.t("lc_loading", "Loading, container / truck, BL and customs")}>
           <dl className="grid gap-3 sm:grid-cols-3">
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("ship_mode", "Transport mode")}</dt><dd className="font-semibold">{d.loading.shippingMode || "—"}</dd></div>
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("truck", "Truck / vehicle")}</dt><dd className="font-semibold">{d.loading.truckNo || d.loading.details?.truckNo || "—"} {d.loading.driverName || d.loading.details?.driverName ? `· ${d.loading.driverName || d.loading.details?.driverName}` : ""}</dd></div>
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("loading_date", "Loading date")}</dt><dd className="font-semibold">{dOnly(d.loading.loadingDate)}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("ship_mode", "Transport mode")}</dt><dd className="font-semibold">{d.loading.shippingMode || "—"}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("truck", "Truck / vehicle")}</dt><dd className="font-semibold">{d.loading.truckNo || d.loading.details?.truckNo || "—"} {d.loading.driverName || d.loading.details?.driverName ? `· ${d.loading.driverName || d.loading.details?.driverName}` : ""}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("loading_date", "Loading date")}</dt><dd className="font-semibold">{dOnly(d.loading.loadingDate)}</dd></div>
           </dl>
           {(d.sales as Json[]).filter((x) => x.shipping && Object.keys(x.shipping).length).map((x) => (
             <div key={x.id} className="mt-2 rounded-lg bg-slate-50 p-2 text-[11px] dark:bg-slate-800/60">

@@ -140,7 +140,7 @@ export function StorageUpgradeModal({
                   }`}
                 >
                   {p.highlight && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-0.5 text-[11px] font-semibold text-white shadow">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-0.5 text-[11px] font-semibold text-white shadow whitespace-nowrap">
                       Most Popular
                     </div>
                   )}

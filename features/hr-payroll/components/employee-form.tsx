@@ -939,7 +939,7 @@ export function EmployeeForm({
                 <div className="flex items-center gap-2.5">
                   <span className="inline-block h-3 w-3 rounded-full bg-emerald-500 animate-pulse shadow-sm" />
                   <div>
-                    <div className="text-[10px] font-black tracking-widest text-emerald-700 dark:text-emerald-400 uppercase">
+                    <div className="text-[11px] font-black tracking-widest text-emerald-700 dark:text-emerald-400 uppercase">
                       {th("RECORD TYPE: EMPLOYEE")}
                     </div>
                     <div className="text-xs font-black text-slate-800 dark:text-slate-200">
@@ -948,7 +948,7 @@ export function EmployeeForm({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono font-extrabold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs">
+                  <span className="text-[11px] font-mono font-extrabold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs">
                     {catLabel(category)}
                   </span>
                 </div>
@@ -966,7 +966,7 @@ export function EmployeeForm({
                         {fullName || <span className="text-slate-400 font-normal italic">{translateHr("No Person Selected", lang)}</span>}
                       </div>
                       {selectedPersonObj?.person_code && (
-                        <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                           {selectedPersonObj.person_code}
                         </span>
                       )}
@@ -1015,12 +1015,12 @@ export function EmployeeForm({
                   : "bg-slate-50/50 dark:bg-slate-900/30 border-dashed border-slate-200 dark:border-slate-800/60 opacity-80"
               }`}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                     <MapPin className="h-3.5 w-3.5 text-emerald-600" />
                     <span>2. {translateHr("Location & Branch", lang)}</span>
                   </span>
                   {activeStep >= 2 && (
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded">
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded whitespace-nowrap">
                       {t(lang, "hr.step_configured", "Configured")}
                     </span>
                   )}
@@ -1028,25 +1028,25 @@ export function EmployeeForm({
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "rozrep.country", "Country")}:</span>
+                    <span className="text-[11px] text-slate-400 font-semibold">{t(lang, "rozrep.country", "Country")}:</span>
                     <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
                       {selectedCountryObj?.name || <span className="text-slate-400 font-normal">{th("Pending Selection")}</span>}
                     </div>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "hr.f_main_branch", "Main Branch")}:</span>
+                    <span className="text-[11px] text-slate-400 font-semibold">{t(lang, "hr.f_main_branch", "Main Branch")}:</span>
                     <div className="font-bold text-slate-800 dark:text-slate-200 truncate">
                       {selectedMainBranchObj ? selectedMainBranchObj.name : <span className="text-slate-400 font-normal">{th("Default Main")}</span>}
                     </div>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "hr.f_city_branch", "City Branch")}:</span>
+                    <span className="text-[11px] text-slate-400 font-semibold">{t(lang, "hr.f_city_branch", "City Branch")}:</span>
                     <div className="font-bold text-emerald-700 dark:text-emerald-400 truncate">
                       {selectedCityBranchObj ? selectedCityBranchObj.name : <span className="text-slate-400 font-normal">{th("All Branches")}</span>}
                     </div>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "hr.f_reporting_manager", "Reporting Manager")}:</span>
+                    <span className="text-[11px] text-slate-400 font-semibold">{t(lang, "hr.f_reporting_manager", "Reporting Manager")}:</span>
                     <div className="font-bold text-indigo-700 dark:text-indigo-400 truncate">
                       {selectedManagerObj ? `${selectedManagerObj.person?.customer_name || selectedManagerObj.employee_code}` : <span className="text-slate-400 font-normal">{th("Direct to Board")}</span>}
                     </div>
@@ -1061,12 +1061,12 @@ export function EmployeeForm({
                   : "bg-slate-50/50 dark:bg-slate-900/30 border-dashed border-slate-200 dark:border-slate-800/60 opacity-80"
               }`}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5 text-blue-600" />
                     <span>3. {translateHr("Shift & Timelines", lang)}</span>
                   </span>
                   {activeStep >= 3 && (
-                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-1.5 py-0.5 rounded">
+                    <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-1.5 py-0.5 rounded whitespace-nowrap">
                       {th("Active")}
                     </span>
                   )}
@@ -1093,12 +1093,12 @@ export function EmployeeForm({
                   : "bg-slate-50/50 dark:bg-slate-900/30 border-dashed border-slate-200 dark:border-slate-800/60 opacity-80"
               }`}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                     <BadgeDollarSign className="h-3.5 w-3.5 text-emerald-600" />
                     <span>4. {translateHr("Salary / Compensation", lang)}</span>
                   </span>
                   {activeStep >= 4 && (
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded">
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded whitespace-nowrap">
                       {t(lang, "hr.step_calculated", "Calculated")}
                     </span>
                   )}
@@ -1112,21 +1112,21 @@ export function EmployeeForm({
                   <div className="space-y-2 text-xs">
                     <div className="grid grid-cols-3 gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-[11px]">
                       <div>
-                        <span className="text-slate-400 block text-[10px] font-medium">Basic ({salaryCurrency})</span>
+                        <span className="text-slate-400 block text-[11px] font-medium">Basic ({salaryCurrency})</span>
                         <strong className="text-slate-900 dark:text-slate-100">{Number(basicSalary || 0).toLocaleString()}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px] font-medium">{th("Allowances")}</span>
+                        <span className="text-slate-400 block text-[11px] font-medium">{th("Allowances")}</span>
                         <strong className="text-emerald-600">+{totalAllowances.toLocaleString()}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px] font-medium">{th("Net Payroll")}</span>
+                        <span className="text-slate-400 block text-[11px] font-medium">{th("Net Payroll")}</span>
                         <strong className="text-emerald-700 dark:text-emerald-400 font-extrabold">{netSalary.toLocaleString()} {salaryCurrency}</strong>
                       </div>
                     </div>
 
                     {(salaryExpenseAccountId || employeePayableAccountId) && (
-                      <div className="pt-1 text-[10px] text-slate-500 space-y-0.5">
+                      <div className="pt-1 text-[11px] text-slate-500 space-y-0.5">
                         {salaryExpenseAccountId && (
                           <div className="truncate">{th("GL Expense")}: <span className="font-mono text-slate-700 dark:text-slate-300">{ledgers.find(l => l.id === salaryExpenseAccountId)?.name || th("Mapped")}</span></div>
                         )}
@@ -1271,7 +1271,7 @@ export function EmployeeForm({
 
                   {/* Quick Role Selection Chips */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">{th("Quick Roles")}:</span>
+                    <span className="text-[11px] font-bold text-slate-400 uppercase">{th("Quick Roles")}:</span>
                     {[
                       { role: "Manager", dept: "Operations" },
                       { role: "Accountant", dept: "Finance" },
@@ -1288,7 +1288,7 @@ export function EmployeeForm({
                           setDesignation(item.role);
                           setDepartment(item.dept);
                         }}
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border transition ${
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border transition ${
                           designation === item.role
                             ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
                             : "bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-emerald-400"
@@ -1302,7 +1302,7 @@ export function EmployeeForm({
 
                 {/* Packet Summary Box */}
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
-                  <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step1_preview", "STEP 1 PACKET PREVIEW")}</div>
+                  <div className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">{t(lang, "hr.f_step1_preview", "STEP 1 PACKET PREVIEW")}</div>
                   <div className="grid grid-cols-3 gap-2 text-[11px]">
                     <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_category", "Category:")}</span> <span className="font-bold text-emerald-600">{catLabel(category)}</span></div>
                     <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span> <span className="font-bold truncate block">{fullName || t(lang, "hr.f_not_selected", "Not Selected")}</span></div>
@@ -1389,7 +1389,7 @@ export function EmployeeForm({
 
                 {/* Packet Summary Box */}
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
-                  <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step2_preview", "Step 2 Packet Preview")}</div>
+                  <div className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">{t(lang, "hr.f_step2_preview", "Step 2 Packet Preview")}</div>
                   <div className="grid grid-cols-3 gap-2 text-[11px]">
                     <div><span className="font-semibold text-slate-400">{t(lang, "common.country", "Country")}:</span> {selectedCountryObj?.name || "-"}</div>
                     <div>
@@ -1475,7 +1475,7 @@ export function EmployeeForm({
 
                 {/* Packet Summary Box */}
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
-                  <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step3_preview", "Step 3 Packet Preview")}</div>
+                  <div className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">{t(lang, "hr.f_step3_preview", "Step 3 Packet Preview")}</div>
                   <div className="grid grid-cols-3 gap-2 text-[11px]">
                     <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_joining_date", "Joining:")}</span> {joiningDate || "-"}</div>
                     <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_type", "Type:")}</span> {employmentType}</div>
@@ -1630,7 +1630,7 @@ export function EmployeeForm({
                     </select>
                   </div>
                 </div>
-                <p className="text-[10.5px] leading-relaxed text-slate-500 dark:text-slate-400 pt-1">
+                <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 pt-1">
                   {t(lang, "hr.f_payroll_acc_hint", "On salary posting the entry is: DR the Branch Employee Expense account, CR the Employee account (e.g. salary 5,000 → DR 5,000 / CR 5,000). Both accounts are chosen from your permitted scope — nothing is auto-created.")}
                 </p>
               </div>
@@ -1672,7 +1672,7 @@ export function EmployeeForm({
                   {(fullName || "?").charAt(0)}
                 </div>
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                  <div className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
                     {th("RECORD TYPE: EMPLOYEE MASTER")}
                   </div>
                   <h1 className="text-xl font-black text-slate-900 dark:text-slate-100">
@@ -1773,7 +1773,7 @@ export function EmployeeForm({
                       <span className="font-black text-sm text-emerald-700 dark:text-emerald-400">{netSalary.toLocaleString()} {salaryCurrency}</span>
                     </div>
                     {salaryExpenseAccountId && (
-                      <div className="text-[10px] text-slate-500 pt-0.5 truncate">
+                      <div className="text-[11px] text-slate-500 pt-0.5 truncate">
                         {th("GL Expense")}: <span className="font-mono">{ledgers.find(l => l.id === salaryExpenseAccountId)?.name || th("Mapped")}</span>
                       </div>
                     )}

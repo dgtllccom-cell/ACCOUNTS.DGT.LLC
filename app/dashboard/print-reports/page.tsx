@@ -1121,7 +1121,7 @@ export default function PrintReportsHubPage() {
                       <KpiIcon className={`h-5 w-5 ${kpi.color} shrink-0`} />
                       <div>
                         <div className="text-lg font-black text-slate-900 dark:text-white leading-none">{kpi.value}</div>
-                        <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">{kpi.label}</div>
+                        <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">{kpi.label}</div>
                       </div>
                     </CardContent>
                   </Card>
@@ -1162,7 +1162,7 @@ export default function PrintReportsHubPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-800 dark:bg-slate-950 text-white font-extrabold uppercase text-[10px] border-b border-slate-700">
+                <tr className="bg-slate-800 dark:bg-slate-950 text-white font-extrabold uppercase text-[11px] border-b border-slate-700">
                   <Th className="px-3 py-3 text-center w-12">+ / -</Th>
                   <Th className="px-4 py-3 min-w-[200px]">Report / Form Name</Th>
                   <Th className="px-3 py-3">Assigned Country</Th>
@@ -1206,7 +1206,7 @@ export default function PrintReportsHubPage() {
                             <div className={`p-2 rounded-xl bg-gradient-to-r ${card.color} text-white shrink-0 shadow-xs`}><Icon className="h-4 w-4" /></div>
                             <div>
                               <span className="font-extrabold text-slate-900 dark:text-white block text-xs group-hover:text-blue-600 transition-colors">{card.title}</span>
-                              <span className="text-[10px] text-slate-500 font-medium">{card.subtitle}</span>
+                              <span className="text-[11px] text-slate-500 font-medium">{card.subtitle}</span>
                             </div>
                           </div>
                         </td>
@@ -1222,7 +1222,7 @@ export default function PrintReportsHubPage() {
                         {/* Branch Name & Code */}
                         <td className="px-3 py-3">
                           <div className="font-extrabold text-slate-900 dark:text-white text-xs">{card.branchName}</div>
-                          <div className="text-[10px] font-mono text-blue-600 dark:text-blue-400 font-bold">{card.branchCode}</div>
+                          <div className="text-[11px] font-mono text-blue-600 dark:text-blue-400 font-bold">{card.branchCode}</div>
                         </td>
 
                         {/* Records in scope */}
@@ -1240,7 +1240,7 @@ export default function PrintReportsHubPage() {
 
                         {/* Active Users Count */}
                         <td className="px-3 py-3 text-center">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-200 dark:border-emerald-800">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                             <UserCheck className="h-3 w-3" /> {card.activeUsersCount} {tp("common.active", "Active")}
                           </span>
                         </td>
@@ -1258,7 +1258,7 @@ export default function PrintReportsHubPage() {
                           </Button>
                           {isMenuOpen && (
                             <div className="absolute right-4 top-12 z-[120] w-56 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 text-left animate-in fade-in zoom-in-95 duration-100">
-                              <div className="px-2.5 py-1 text-[9px] font-black uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">{tp("prep.report_actions", "Report Actions")}</div>
+                              <div className="px-2.5 py-1 text-[11px] font-black uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">{tp("prep.report_actions", "Report Actions")}</div>
                               <button
                                 type="button"
                                 onClick={() => { card.onPrint(); setActiveMenuId(null); }}
@@ -1305,7 +1305,7 @@ export default function PrintReportsHubPage() {
                                   <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
                                     {card.dataCount > 0 ? `${card.dataCount} ${tp("prep.live_records_ready", "live records ready for this report")}` : tp("prep.waiting_for_data", "Waiting for data — this report will populate once records exist in scope")}
                                   </span>
-                                  <span className="text-[10px] text-slate-500 font-semibold">
+                                  <span className="text-[11px] text-slate-500 font-semibold">
                                     {tp("prep.last_activity", "Last activity:")} {card.lastActiveTime}
                                   </span>
                                 </div>
@@ -1313,7 +1313,7 @@ export default function PrintReportsHubPage() {
 
                               {/* Active branches in scope (from the live activity summary) */}
                               <div>
-                                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
+                                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
                                   <Building2 className="h-3 w-3 text-blue-500" /> {tp("prep.active_branches", "Active Branches")} {card.countryName !== "—" ? `— ${card.countryName}` : ""}
                                 </div>
                                 {card.subBranches.length === 0 && (
@@ -1325,7 +1325,7 @@ export default function PrintReportsHubPage() {
                                 <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
                                   <table className="w-full text-left text-xs border-collapse">
                                     <thead>
-                                      <tr className="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-[9.5px] font-black uppercase">
+                                      <tr className="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-[11px] font-black uppercase">
                                         <Th className="px-3 py-2">{translateHeader(lang, "Branch Name")}</Th>
                                         <Th className="px-3 py-2">Branch Code</Th>
                                         <Th className="px-3 py-2 text-center">Status</Th>
@@ -1341,7 +1341,7 @@ export default function PrintReportsHubPage() {
                                           <td className="px-3 py-2 font-bold text-slate-900 dark:text-white">{sub.name}</td>
                                           <td className="px-3 py-2 font-mono text-blue-600 dark:text-blue-400 font-bold">{sub.code}</td>
                                           <td className="px-3 py-2 text-center">
-                                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
                                               {sub.status}
                                             </span>
                                           </td>
@@ -1352,7 +1352,7 @@ export default function PrintReportsHubPage() {
                                             <button
                                               type="button"
                                               onClick={card.onPrint}
-                                              className="px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] transition-all shadow-xs"
+                                              className="px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] transition-all shadow-xs"
                                             >
                                               {tp("prep.open_form_report", "Open Form / Report")}
                                             </button>
@@ -1391,19 +1391,19 @@ export default function PrintReportsHubPage() {
                       <div className="p-2 rounded-xl bg-white/10 backdrop-blur-xs"><Icon className="h-6 w-6 text-white" /></div>
                       <div>
                         <h3 className="text-sm font-black tracking-tight leading-snug">{card.title}</h3>
-                        <p className="text-[10px] text-white/80 font-medium">{card.subtitle}</p>
+                        <p className="text-[11px] text-white/80 font-medium">{card.subtitle}</p>
                       </div>
                     </div>
                   </div>
                   <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center justify-between text-[10px]">
+                    <div className="flex items-center justify-between text-[11px]">
                       <span className={`px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${card.badgeColor}`}>{card.format}</span>
                       <span className={`font-bold flex items-center gap-1 ${card.dataCount > 0 ? "text-emerald-600" : "text-slate-400"}`}>
                         {card.dataCount > 0 ? <><CheckCircle2 className="h-3 w-3" /> {card.dataCount} {t(lang, "prr.rows", "rows")}</> : t(lang, "prr.awaiting_data", "Awaiting data")}
                       </span>
                     </div>
                     <p className="text-xs text-slate-600 dark:text-slate-350 leading-relaxed font-normal">{card.description}</p>
-                    <div className="text-[10px] font-bold text-slate-500">
+                    <div className="text-[11px] font-bold text-slate-500">
                       {t(lang, "common.country", "Country")}: <span className="text-slate-900 dark:text-white font-extrabold">{card.countryName}</span> • {t(lang, "common.branch", "Branch")}: <span className="text-blue-600 font-mono font-bold">{card.branchCode}</span>
                     </div>
                   </CardContent>

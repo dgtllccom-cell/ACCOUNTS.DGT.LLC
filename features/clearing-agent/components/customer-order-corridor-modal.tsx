@@ -65,8 +65,13 @@ interface Props {
   }) => void;
 }
 
-export function CustomerOrderCorridorModal({
-  open,
+export function CustomerOrderCorridorModal(props: Parameters<typeof CustomerOrderCorridorModalBody>[0]) {
+  // Guard before any hook: the body below may only mount when there is something to show.
+  if (!props.open) return null;
+  return <CustomerOrderCorridorModalBody {...props} />;
+}
+
+function CustomerOrderCorridorModalBody({
   onClose,
   lang,
   originCountryId,
@@ -85,7 +90,6 @@ export function CustomerOrderCorridorModal({
   ports,
   onApplyRoute
 }: Props) {
-  if (!open) return null;
 
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tt = (key: string, fb: string) => t(lang, ("com." + key) as never, fb);
@@ -302,11 +306,11 @@ export function CustomerOrderCorridorModal({
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3">
             {/* Origin Side */}
             <div className="space-y-2 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-              <span className="text-[10.5px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">
                 {tt("from_origin", "From (Origin)")}
               </span>
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("country", "Country")} *
                 </label>
                 <select
@@ -324,7 +328,7 @@ export function CustomerOrderCorridorModal({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("port_or_city", "Port / City")} *
                 </label>
                 <select
@@ -358,11 +362,11 @@ export function CustomerOrderCorridorModal({
 
             {/* Destination Side */}
             <div className="space-y-2 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-              <span className="text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
                 {tt("to_destination", "To (Destination)")}
               </span>
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("country", "Country")} *
                 </label>
                 <select
@@ -380,7 +384,7 @@ export function CustomerOrderCorridorModal({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                   {tt("port_or_city", "Port / City")} *
                 </label>
                 <select
@@ -511,7 +515,7 @@ export function CustomerOrderCorridorModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div className="sm:col-span-2">
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+              <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                 {tt("route_name", "Route Name")} *
               </label>
               <input
@@ -523,7 +527,7 @@ export function CustomerOrderCorridorModal({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+              <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                 {tt("transport_mode", "Transport Mode")}
               </label>
               <select
@@ -540,7 +544,7 @@ export function CustomerOrderCorridorModal({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+              <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                 {tt("estimated_transit_time", "Estimated Transit Time (Days)")}
               </label>
               <input
@@ -553,7 +557,7 @@ export function CustomerOrderCorridorModal({
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+              <label className="block text-[11px] font-bold uppercase text-slate-500 mb-0.5">
                 {tt("route_remarks", "Remarks")}
               </label>
               <input

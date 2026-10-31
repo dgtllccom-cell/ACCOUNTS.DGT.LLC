@@ -79,22 +79,22 @@ export function RouteBorderInsuranceReportView({ lang }: { lang?: string }) {
 
       <section className="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:grid-cols-5">
         <div>
-          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("filter_country", "Country")}</label>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("filter_country", "Country")}</label>
           <select data-testid="rbi-f-country" className={INP} value={countryId} onChange={(e) => setCountryId(e.target.value)}>
             <option value="">{s.t("all_countries", "All Countries")}</option>
             {countries.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("filter_from_date", "From date")}</label>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("filter_from_date", "From date")}</label>
           <input data-testid="rbi-f-from" type="date" className={INP} value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
         </div>
         <div>
-          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("filter_to_date", "To date")}</label>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("filter_to_date", "To date")}</label>
           <input data-testid="rbi-f-to" type="date" className={INP} value={toDate} onChange={(e) => setToDate(e.target.value)} />
         </div>
         <div>
-          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("filter_clearance_type", "Clearance type")}</label>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("filter_clearance_type", "Clearance type")}</label>
           <select data-testid="rbi-f-clearance" className={INP} value={clearanceType} onChange={(e) => setClearanceType(e.target.value)}>
             <option value="">{s.t("all_types", "All Types")}</option>
             <option value="import">{s.t("clearance_import", "Import")}</option>
@@ -141,11 +141,11 @@ export function RouteBorderInsuranceReportView({ lang }: { lang?: string }) {
                   <td className="px-3 py-2">{customsLabel(r.customs_status)}</td>
                   <td className="px-3 py-2 tabular-nums" dir="ltr">{r.duty_amount != null ? `${r.duty_currency ?? ""} ${Number(r.duty_amount).toLocaleString()}` : "—"}</td>
                   <td className="px-3 py-2">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${INSURANCE_TONE[r.insurance_status] ?? INSURANCE_TONE.not_required}`}>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${INSURANCE_TONE[r.insurance_status] ?? INSURANCE_TONE.not_required}`}>
                       {r.insurance_status === "missing" ? <ShieldAlert className="h-3 w-3" /> : r.insurance_status === "covered" ? <ShieldCheck className="h-3 w-3" /> : null}
                       {insLabel(r.insurance_status)}
                     </span>
-                    {r.policy_no && <div className="mt-0.5 text-[10px] text-slate-400">{r.policy_no} · {r.insurer_name}</div>}
+                    {r.policy_no && <div className="mt-0.5 text-[11px] text-slate-400">{r.policy_no} · {r.insurer_name}</div>}
                   </td>
                   <td className="px-3 py-2 font-mono text-slate-500">{r.coverage_to ? new Date(r.coverage_to).toLocaleDateString() : "—"}</td>
                 </tr>

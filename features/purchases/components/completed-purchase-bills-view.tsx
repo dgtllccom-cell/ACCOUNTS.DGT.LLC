@@ -315,7 +315,7 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
       <div className="dgt-purchase-table-skin rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs whitespace-nowrap">
-            <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-900/60 dark:border-slate-800">
+            <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-900/60 dark:border-slate-800">
               <tr>
                 <Th className="px-4 py-3">{tt("cpb.po_no", "Purchase Bill No.")}</Th>
                 <Th className="px-4 py-3">{tt("cpb.manual_no", "Manual Bill No.")}</Th>
@@ -352,7 +352,7 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                       <div>{details.countryName}</div>
-                      <div className="text-[10px] text-slate-400 font-semibold">{details.branchName}</div>
+                      <div className="text-[11px] text-slate-400 font-semibold">{details.branchName}</div>
                     </td>
                     <td className="px-4 py-3 text-right font-mono font-bold text-slate-700 dark:text-slate-200">
                       {details.contractQty.toLocaleString()} {details.unitLabel}
@@ -362,13 +362,13 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
                     </td>
                     <td className="px-4 py-3 text-right font-mono font-bold text-slate-800 dark:text-slate-100">
                       <div>${details.purchaseAmountFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                      <div className="text-[9.5px] text-slate-400">@ {details.exRate.toFixed(2)}</div>
+                      <div className="text-[11px] text-slate-400">@ {details.exRate.toFixed(2)}</div>
                     </td>
                     <td className="px-4 py-3 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">
                       {details.totalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {details.localCurrency}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
+                      <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-black uppercase text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
                         0.00 {details.localCurrency}
                       </span>
                     </td>

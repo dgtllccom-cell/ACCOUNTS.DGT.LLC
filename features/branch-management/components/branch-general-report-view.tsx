@@ -269,7 +269,7 @@ function UserCountButton({
       aria-label={title}
       onClick={onClick}
       className={cn(
-        "inline-flex items-center justify-center gap-1 rounded-md border px-2 py-1 text-[9px] font-black tabular-nums transition-all",
+        "inline-flex items-center justify-center gap-1 rounded-md border px-2 py-1 text-[11px] font-black tabular-nums transition-all",
         expanded
           ? "border-indigo-300 bg-indigo-600 text-white shadow-sm"
           : "border-indigo-100 bg-indigo-50 text-indigo-700 hover:border-indigo-300 hover:bg-indigo-100"
@@ -277,7 +277,7 @@ function UserCountButton({
     >
       <Users className="h-3 w-3" />
       {count}
-      <span className="text-[10px] leading-none">{expanded ? "-" : "+"}</span>
+      <span className="text-[11px] leading-none">{expanded ? "-" : "+"}</span>
     </button>
   );
 }
@@ -310,7 +310,7 @@ function BranchUsersPanel({
             <Users className="h-4 w-4" />
             {title}
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-1 text-[10px] font-bold text-slate-500">
+          <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] font-bold text-slate-500">
             {hierarchy.map((item, index) => (
               <span key={`${item}-${index}`} className="inline-flex items-center gap-1">
                 <span className="rounded bg-white px-1.5 py-0.5 text-slate-700 ring-1 ring-slate-200">{item || "-"}</span>
@@ -321,7 +321,7 @@ function BranchUsersPanel({
         </div>
         <div className="flex items-start gap-2">
           <div className="rounded-lg border border-indigo-100 bg-white px-3 py-1.5 text-right shadow-sm">
-            <div className="text-[9px] font-black uppercase text-slate-400">{tt("bgr.total_users", "Total Users")}</div>
+            <div className="text-[11px] font-black uppercase text-slate-400">{tt("bgr.total_users", "Total Users")}</div>
             <div className="text-sm font-black text-indigo-700">{users.length}</div>
           </div>
           {onClose ? (
@@ -343,14 +343,14 @@ function BranchUsersPanel({
           <div className="mb-2 grid gap-2 md:grid-cols-3">
             {Object.entries(grouped).map(([group, list]) => (
               <div key={group} className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
-                <div className="text-[9px] font-black uppercase tracking-wide text-slate-500">{group}</div>
+                <div className="text-[11px] font-black uppercase tracking-wide text-slate-500">{group}</div>
                 <div className="mt-1 text-sm font-black text-slate-900">{list.length}</div>
               </div>
             ))}
           </div>
 
           <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-            <table className="w-full border-collapse text-[9px]">
+            <table className="w-full border-collapse text-[11px]">
               <thead>
                 <tr className="border-b bg-slate-50 text-center font-black uppercase tracking-wide text-slate-500">
                   <Th className="border-r p-2">SR.</Th>
@@ -404,13 +404,13 @@ function BranchUsersPanel({
                           <MoreHorizontal className="h-4 w-4 text-slate-600" />
                         </button>
                         <div className="action-dropdown-content hidden absolute right-0 z-50 mt-1 w-32 rounded-md bg-white p-1 shadow-lg ring-1 ring-black ring-opacity-5">
-                          <button onClick={() => openUserEdit(user.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[10px] font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700">
+                          <button onClick={() => openUserEdit(user.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[11px] font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700">
                             <PencilLine className="h-3 w-3" /> {tt("bgr.edit", "Edit")}
                           </button>
-                          <button onClick={() => alert(`Block User: ${user.username}`)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[10px] font-bold text-slate-700 hover:bg-rose-50 hover:text-rose-700">
+                          <button onClick={() => alert(`Block User: ${user.username}`)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[11px] font-bold text-slate-700 hover:bg-rose-50 hover:text-rose-700">
                             <Ban className="h-3 w-3" /> {tt("bgr.block", "Block")}
                           </button>
-                          <button onClick={() => openUserProfile(user.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[10px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
+                          <button onClick={() => openUserProfile(user.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
                             <Eye className="h-3 w-3" /> {tt("bgr.open_btn", "Open")}
                           </button>
                         </div>
@@ -423,7 +423,7 @@ function BranchUsersPanel({
           </div>
         </>
       ) : (
-        <div className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-center text-[10px] font-bold text-slate-400">
+        <div className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-center text-[11px] font-bold text-slate-400">
           {tt("bgr.no_users", "No users are assigned to this hierarchy level yet.")}
         </div>
       )}
@@ -450,7 +450,7 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
             <LogIn className="h-4 w-4" />
             {tt("bgr.login_access_list", "Login Access List")}
           </div>
-          <div className="mt-1 text-[10px] font-bold text-slate-500">
+          <div className="mt-1 text-[11px] font-bold text-slate-500">
             {tt("bgr.login_desc", "Country, main branch, city branch and user login details for Super Admin review.")}
           </div>
         </div>
@@ -462,7 +462,7 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
             onClick={() => {
               window.location.href = "/auth/login";
             }}
-            className="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-[10px] font-black text-blue-700 shadow-sm hover:bg-blue-50"
+            className="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-[11px] font-black text-blue-700 shadow-sm hover:bg-blue-50"
           >
             {tt("bgr.open_login", "Open Login Page")}
           </button>
@@ -482,7 +482,7 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
 
       {sortedUsers.length ? (
         <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-          <table className="min-w-[1250px] w-full border-collapse text-[9px]">
+          <table className="min-w-[1250px] w-full border-collapse text-[11px]">
             <thead>
               <tr className="border-b bg-slate-50 text-center font-black uppercase tracking-wide text-slate-500">
                 <Th className="border-r p-2 text-left">Country Login</Th>
@@ -521,7 +521,7 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
                       onClick={() => {
                         window.location.href = `/auth/login?username=${encodeURIComponent(user.username || "")}`;
                       }}
-                      className="rounded border border-blue-200 bg-white px-2 py-1 text-[9px] font-black text-blue-700 hover:bg-blue-50"
+                      className="rounded border border-blue-200 bg-white px-2 py-1 text-[11px] font-black text-blue-700 hover:bg-blue-50"
                     >
                       {tt("bgr.login_btn", "Login")}
                     </button>
@@ -532,7 +532,7 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
           </table>
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-center text-[10px] font-bold text-slate-400">
+        <div className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-center text-[11px] font-bold text-slate-400">
           {tt("bgr.no_login_users", "No login users found.")}
         </div>
       )}
@@ -591,7 +591,7 @@ function ActionDropdownMenu({
           "rounded-xl border border-slate-200 bg-white py-1.5 shadow-2xl ring-1 ring-black/5",
           "animate-in fade-in slide-in-from-top-1 duration-100"
         )}>
-          <div className="px-3 pb-1.5 pt-0.5 text-[8px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 mb-1">
+          <div className="px-3 pb-1.5 pt-0.5 text-[11px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 mb-1">
             {tt("bgr.actions", "Actions")}
           </div>
           {children}
@@ -626,7 +626,7 @@ function ActionItem({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-2.5 px-3 py-2 text-[10px] font-semibold text-left transition-colors rounded-none first:rounded-t-lg last:rounded-b-lg disabled:opacity-40 disabled:cursor-not-allowed",
+        "flex w-full items-center gap-2.5 px-3 py-2 text-[11px] font-semibold text-left transition-colors rounded-none first:rounded-t-lg last:rounded-b-lg disabled:opacity-40 disabled:cursor-not-allowed",
         colorMap[color]
       )}
     >
@@ -668,7 +668,7 @@ function ReportMetricCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{title}</div>
+          <div className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">{title}</div>
           <div className="mt-2 text-2xl font-black tracking-tight text-slate-950">{value}</div>
         </div>
         <div className={cn("rounded-2xl bg-gradient-to-br p-2.5 shadow-sm ring-1 transition-transform duration-200 group-hover:scale-105", toneClasses[tone])}>
@@ -1125,7 +1125,7 @@ export function BranchGeneralReportView({
       {/* Title Slot Portal */}
       {titleSlot && createPortal(
         <div className="min-w-[120px]">
-          <div className="text-[8px] font-black uppercase tracking-wider text-slate-400 leading-none">
+          <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 leading-none">
             {isSuperAdmin
               ? tt("bgr.super_admin", "Super Admin")
               : isCountryAdmin
@@ -1147,7 +1147,7 @@ export function BranchGeneralReportView({
           {/* Category Selector */}
           <select
             id="searchType"
-            className="h-7 rounded-lg border border-slate-300 bg-white px-2 text-[9px] font-extrabold text-slate-700 shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="h-7 rounded-lg border border-slate-300 bg-white px-2 text-[11px] font-extrabold text-slate-700 shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
             value={searchType}
             onChange={(e) => setSearchType(e.target.value)}
           >
@@ -1164,7 +1164,7 @@ export function BranchGeneralReportView({
               type="text"
               id="branchSearch"
               placeholder={tt("bgr.search_ph", "Search...")}
-              className="w-full bg-transparent border-none outline-none text-[9px] font-semibold placeholder:text-slate-400"
+              className="w-full bg-transparent border-none outline-none text-[11px] font-semibold placeholder:text-slate-400"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -1177,7 +1177,7 @@ export function BranchGeneralReportView({
             type="button"
             title={`Operating Countries: ${visibleSummary.totalCountries}`}
             className={cn(
-              "h-7 px-2 rounded-lg border text-[9px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-indigo-500",
+              "h-7 px-2 rounded-lg border text-[11px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-indigo-500",
               searchType === "country"
                 ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
                 : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
@@ -1186,7 +1186,7 @@ export function BranchGeneralReportView({
           >
             <span>{tt("bgr.countries_btn", "Countries")}</span>
             <span className={cn(
-              "px-1 py-0.2 rounded font-mono text-[8px] font-extrabold leading-none",
+              "px-1 py-0.2 rounded font-mono text-[11px] font-extrabold leading-none",
               searchType === "country" ? "bg-indigo-500/40 text-white" : "bg-slate-100 text-slate-600"
             )}>
               {visibleSummary.totalCountries}
@@ -1197,7 +1197,7 @@ export function BranchGeneralReportView({
             type="button"
             title={`Total Branches: ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} (${visibleSummary.totalMainBranches} Main + ${visibleSummary.totalCityBranches} City)`}
             className={cn(
-              "h-7 px-2 rounded-lg border text-[9px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-indigo-500",
+              "h-7 px-2 rounded-lg border text-[11px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-indigo-500",
               searchType === "branch"
                 ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
                 : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
@@ -1206,7 +1206,7 @@ export function BranchGeneralReportView({
           >
             <span>{tt("bgr.branches_btn", "Branches")}</span>
             <span className={cn(
-              "px-1 py-0.2 rounded font-mono text-[8px] font-extrabold leading-none",
+              "px-1 py-0.2 rounded font-mono text-[11px] font-extrabold leading-none",
               searchType === "branch" ? "bg-indigo-500/40 text-white" : "bg-slate-100 text-slate-600"
             )}>
               {visibleSummary.totalMainBranches + visibleSummary.totalCityBranches}
@@ -1217,7 +1217,7 @@ export function BranchGeneralReportView({
             type="button"
             title={`Assigned ERP Users: ${visibleSummary.totalUsers}`}
             className={cn(
-              "h-7 px-2 rounded-lg border text-[9px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-indigo-500",
+              "h-7 px-2 rounded-lg border text-[11px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-indigo-500",
               expandedUserScope === "all-users"
                 ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
                 : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
@@ -1226,7 +1226,7 @@ export function BranchGeneralReportView({
           >
             <span>{tt("bgr.users_btn", "Users")}</span>
             <span className={cn(
-              "px-1 py-0.2 rounded font-mono text-[8px] font-extrabold leading-none",
+              "px-1 py-0.2 rounded font-mono text-[11px] font-extrabold leading-none",
               expandedUserScope === "all-users" ? "bg-indigo-500/40 text-white" : "bg-slate-100 text-slate-600"
             )}>
               {visibleSummary.totalUsers}
@@ -1236,7 +1236,7 @@ export function BranchGeneralReportView({
           <button
             type="button"
             className={cn(
-              "h-7 px-2 rounded-lg border text-[9px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-blue-500",
+              "h-7 px-2 rounded-lg border text-[11px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-blue-500",
               expandedUserScope === "login-list"
                 ? "bg-blue-600 border-blue-600 text-white shadow-sm"
                 : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
@@ -1250,7 +1250,7 @@ export function BranchGeneralReportView({
           <button
             type="button"
             className={cn(
-              "h-7 px-2 rounded-lg border text-[9px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-emerald-500",
+              "h-7 px-2 rounded-lg border text-[11px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-emerald-500",
               (!searchType && !searchQuery)
                 ? "bg-emerald-600 border-emerald-600 text-white shadow-sm"
                 : "bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100/80"
@@ -1271,7 +1271,7 @@ export function BranchGeneralReportView({
               type="button"
               variant="default"
               size="sm"
-              className="h-7 text-[9px] font-bold gap-1 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs focus:ring-1 focus:ring-indigo-500 transition-colors py-0 px-2"
+              className="h-7 text-[11px] font-bold gap-1 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs focus:ring-1 focus:ring-indigo-500 transition-colors py-0 px-2"
               onClick={() => setNewMenuOpen(prev => !prev)}
             >
               <span>{tt("bgr.new_setup", "+ New Setup")}</span>
@@ -1282,7 +1282,7 @@ export function BranchGeneralReportView({
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setNewMenuOpen(false)}></div>
                 <div className="absolute right-0 mt-1.5 w-52 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 z-50 animate-in fade-in slide-in-from-top-1 duration-150 font-sans">
-                  <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">
+                  <div className="px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">
                     {tt("bgr.select_level", "Select Hierarchy Level")}
                   </div>
                   <button
@@ -1321,7 +1321,7 @@ export function BranchGeneralReportView({
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 text-[9px] font-bold gap-1 bg-white border-slate-300 hover:bg-slate-50 focus:ring-1 focus:ring-indigo-500 py-0 px-2"
+            className="h-7 text-[11px] font-bold gap-1 bg-white border-slate-300 hover:bg-slate-50 focus:ring-1 focus:ring-indigo-500 py-0 px-2"
             onClick={() => { import("@/lib/reports/print-dom-fragment").then((m) => { if (!m.printDomFragmentViaModal("branch-general-report-shell", tt("bgr.title", "Branch General Report"), { lang })) window.print(); }); }}
           >
             <Printer className="h-3 w-3" />
@@ -1332,7 +1332,7 @@ export function BranchGeneralReportView({
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 text-[9px] font-bold gap-1 bg-white border-slate-300 hover:bg-slate-50 focus:ring-1 focus:ring-indigo-500 py-0 px-2"
+            className="h-7 text-[11px] font-bold gap-1 bg-white border-slate-300 hover:bg-slate-50 focus:ring-1 focus:ring-indigo-500 py-0 px-2"
             onClick={() => {
               const link = document.createElement("a");
               link.href = "/exports/DGT_Standard_Branch_Users.pdf";
@@ -1348,7 +1348,7 @@ export function BranchGeneralReportView({
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 text-[9px] font-bold gap-1 bg-white border-slate-300 hover:bg-slate-50 focus:ring-1 focus:ring-indigo-500 py-0 px-2"
+            className="h-7 text-[11px] font-bold gap-1 bg-white border-slate-300 hover:bg-slate-50 focus:ring-1 focus:ring-indigo-500 py-0 px-2"
             onClick={() => setExpandedView((current) => !current)}
           >
             {expandedView ? <Minimize2 className="h-3 w-3" /> : <Expand className="h-3 w-3" />}
@@ -1362,13 +1362,13 @@ export function BranchGeneralReportView({
       {!actionsSlot && (
         <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs mb-4">
           <div className="min-w-[180px]">
-            <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+            <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">
               {tt("bgr.super_admin", "Super Admin")}
             </div>
             <h1 className="text-sm font-black tracking-tight text-slate-900 leading-none mt-0.5">
               {title}
             </h1>
-            <div className="text-[9px] font-bold text-slate-500 mt-1">
+            <div className="text-[11px] font-bold text-slate-500 mt-1">
               {subtitle || tt("bgr.fallback_hierarchy", "Super Admin - Countries - Main Branches - City Branches")}
             </div>
           </div>
@@ -1497,7 +1497,7 @@ export function BranchGeneralReportView({
             </>
           )}
 
-          <span className="ml-auto rounded-full bg-slate-50 px-3 py-1 text-[10px] font-bold normal-case tracking-normal text-slate-500 ring-1 ring-slate-100">{tt("bgr.hint", "Use user count or Actions for details")}</span>
+          <span className="ml-auto rounded-full bg-slate-50 px-3 py-1 text-[11px] font-bold normal-case tracking-normal text-slate-500 ring-1 ring-slate-100">{tt("bgr.hint", "Use user count or Actions for details")}</span>
         </div>
       </div>
       {/* Main Report Table Container */}
@@ -1513,7 +1513,7 @@ export function BranchGeneralReportView({
             <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-100">
               <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left bg-white">
                 <thead>
-                  <tr className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 font-black text-[10px] tracking-[0.14em] text-center uppercase shadow-sm">
+                  <tr className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 font-black text-[11px] tracking-[0.14em] text-center uppercase shadow-sm">
                     <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-left">Super Code</Th>
                     <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Main Branch</Th>
                     <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Company</Th>
@@ -1543,7 +1543,7 @@ export function BranchGeneralReportView({
 
                       return (
                         <Fragment key={branch.id}>
-                        <tr className="border-b border-slate-100 text-[10px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
+                        <tr className="border-b border-slate-100 text-[11px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
                           <td className="p-2.5 border-r border-slate-200 font-bold text-slate-900 text-left">{branch.code}</td>
                           <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-800">{branch.name}</td>
                           <td className="p-2.5 border-r border-slate-200">{branch.companyName}</td>
@@ -1572,7 +1572,7 @@ export function BranchGeneralReportView({
                                     <PhoneCall className="h-2.5 w-2.5" />
                                   </button>
                                   {activeContactPopup?.id === branch.id && activeContactPopup.type === "phone" && (
-                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
+                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[11px] shadow-lg whitespace-nowrap popup-content font-semibold">
                                       {phoneContact}
                                     </div>
                                   )}
@@ -1587,7 +1587,7 @@ export function BranchGeneralReportView({
                                     <Mail className="h-2.5 w-2.5" />
                                   </button>
                                   {activeContactPopup?.id === branch.id && activeContactPopup.type === "email" && (
-                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
+                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[11px] shadow-lg whitespace-nowrap popup-content font-semibold">
                                       {emailContact}
                                     </div>
                                   )}
@@ -1598,7 +1598,7 @@ export function BranchGeneralReportView({
                           <td className="p-2.5">
                             <button
                               onClick={() => openSuperAdminBranchEdit(branch.id)}
-                              className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[9px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all"
+                              className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all whitespace-nowrap"
                             >
                               {tt("bgr.edit", "Edit")}
                             </button>
@@ -1623,7 +1623,7 @@ export function BranchGeneralReportView({
                     // No dedicated Super Admin branch row in the dataset — show the real
                     // enterprise-wide totals (same source as the KPI cards) instead of a
                     // fabricated "SA-001 / 95+ users / 4 Country" placeholder.
-                    <tr className="border-b border-slate-100 text-[10px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
+                    <tr className="border-b border-slate-100 text-[11px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
                       <td className="p-2.5 border-r border-slate-200 font-bold text-slate-900 text-left">{tt("bgr.enterprise_wide", "Enterprise-wide")}</td>
                       <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-800">{t(lang, "role.super_admin", "Super Admin")}</td>
                       <td className="p-2.5 border-r border-slate-200">—</td>
@@ -1649,11 +1649,11 @@ export function BranchGeneralReportView({
           <div className="flex items-center justify-between mb-3">
             <div>
               <h3 className="text-xs font-black text-slate-950 uppercase tracking-[0.16em]">{tt("bgr.country_report", "Country Report")}</h3>
-              <p className="text-[10px] font-semibold text-slate-500 mt-0.5">{tt("bgr.country_report_desc", "Expandable country, main branch, city branch and user hierarchy")}</p>
+              <p className="text-[11px] font-semibold text-slate-500 mt-0.5">{tt("bgr.country_report_desc", "Expandable country, main branch, city branch and user hierarchy")}</p>
             </div>
             <button
               onClick={exportCsv}
-              className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition-all"
+              className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition-all"
             >
               <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
               {tt("bgr.export", "Export")}
@@ -1662,7 +1662,7 @@ export function BranchGeneralReportView({
           <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-100">
             <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left bg-white">
               <thead>
-                <tr className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 font-black text-[10px] tracking-[0.14em] text-center uppercase shadow-sm">
+                <tr className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 font-black text-[11px] tracking-[0.14em] text-center uppercase shadow-sm">
                   <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Main Branch Code</Th>
                   <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-left">Country Name</Th>
                   <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">SA Code</Th>
@@ -1699,13 +1699,13 @@ export function BranchGeneralReportView({
                       <Fragment key={country.id}>
                         
                         {/* Parent Row — 14 columns */}
-                        <tr className="border-b border-slate-100 text-[10px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
+                        <tr className="border-b border-slate-100 text-[11px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
                           <td className="p-2 border-r border-slate-200 font-bold text-slate-900">{mainBranch?.code || country.code}</td>
                           <td className="p-2 border-r border-slate-200 text-left">
                             <div className="relative popup-trigger inline-block">
                               <div
                                 onClick={() => setActiveProductPopup(activeProductPopup === country.id ? null : country.id)}
-                                className="inline-flex items-center gap-1 bg-indigo-50/60 border border-indigo-100/80 px-2 py-0.5 rounded-full font-bold text-indigo-700 cursor-pointer text-[9px] hover:bg-indigo-100 hover:text-indigo-800 transition-all"
+                                className="inline-flex items-center gap-1 bg-indigo-50/60 border border-indigo-100/80 px-2 py-0.5 rounded-full font-bold text-indigo-700 cursor-pointer text-[11px] hover:bg-indigo-100 hover:text-indigo-800 transition-all whitespace-nowrap"
                               >
                                 <Link
                                   href={`/dashboard/branch-management/country/${country.id}`}
@@ -1719,8 +1719,8 @@ export function BranchGeneralReportView({
                               </div>
                               {activeProductPopup === country.id && (
                                 <div className="absolute top-6 left-0 z-50 bg-white border border-slate-200 rounded-lg p-2.5 shadow-xl popup-content min-w-[150px] text-left">
-                                  <div className="text-[10px] font-bold text-slate-950 border-b pb-1 mb-1">{tt("bgr.branch_services", "Branch Services")}</div>
-                                  <ul className="space-y-1 font-semibold text-[9px] text-slate-600">
+                                  <div className="text-[11px] font-bold text-slate-950 border-b pb-1 mb-1">{tt("bgr.branch_services", "Branch Services")}</div>
+                                  <ul className="space-y-1 font-semibold text-[11px] text-slate-600">
                                     {tags.map((tag) => (
                                       <li key={tag} className="flex items-center gap-1">
                                         <span className="h-1 w-1 rounded-full bg-indigo-500"></span>
@@ -1761,13 +1761,13 @@ export function BranchGeneralReportView({
                                     <Mail className="h-2.5 w-2.5" />
                                   </button>
                                   {activeContactPopup?.id === country.id && activeContactPopup.type === "email" && (
-                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
+                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[11px] shadow-lg whitespace-nowrap popup-content font-semibold">
                                       {mainBranch?.email || emailContact}
                                     </div>
                                   )}
                                 </div>
                               ) : (
-                                <span className="text-[8px] text-slate-400">—</span>
+                                <span className="text-[11px] text-slate-400">—</span>
                               )}
                               {phoneContact ? (
                                 <div className="relative popup-trigger">
@@ -1778,7 +1778,7 @@ export function BranchGeneralReportView({
                                     <PhoneCall className="h-2.5 w-2.5" />
                                   </button>
                                   {activeContactPopup?.id === country.id && activeContactPopup.type === "phone" && (
-                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
+                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[11px] shadow-lg whitespace-nowrap popup-content font-semibold">
                                       {phoneContact}
                                     </div>
                                   )}
@@ -1788,7 +1788,7 @@ export function BranchGeneralReportView({
                           </td>
                           <td className="p-2 border-r border-slate-200">
                             <span className={cn(
-                              "rounded-full px-2 py-0.5 text-[8px] font-black",
+                              "rounded-full px-2 py-0.5 text-[11px] font-black",
                               (mainBranch?.status || "active").toLowerCase() === "active"
                                 ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
                                 : "bg-rose-50 text-rose-700 ring-1 ring-rose-100"
@@ -1801,7 +1801,7 @@ export function BranchGeneralReportView({
                               <button
                                 type="button"
                                 onClick={() => setBranchDetailModal({ country, branch: mainBranch || { id: country.id, name: `${country.name} Main Branch`, code: country.code, localCurrency: country.currency, status: country.status, isMain: true, cityBranches: [] } })}
-                                className="inline-flex items-center gap-0.5 rounded border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[8.5px] font-black text-emerald-700 shadow-xs hover:bg-emerald-100 hover:border-emerald-400 transition-all"
+                                className="inline-flex items-center gap-0.5 rounded border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-black text-emerald-700 shadow-xs hover:bg-emerald-100 hover:border-emerald-400 transition-all whitespace-nowrap"
                                 title={tt("bgr.view", "View")}
                               >
                                 <Eye className="h-2.5 w-2.5" />
@@ -1812,7 +1812,7 @@ export function BranchGeneralReportView({
                                 onClick={() => {
                                   window.location.href = `/dashboard/settings/countries?edit=${encodeURIComponent(country.id)}`;
                                 }}
-                                className="inline-flex items-center gap-0.5 rounded border border-indigo-200 bg-white px-2 py-0.5 text-[8.5px] font-bold text-indigo-700 shadow-xs hover:bg-indigo-50 transition-all"
+                                className="inline-flex items-center gap-0.5 rounded border border-indigo-200 bg-white px-2 py-0.5 text-[11px] font-bold text-indigo-700 shadow-xs hover:bg-indigo-50 transition-all whitespace-nowrap"
                                 title={tt("bgr.edit", "Edit")}
                               >
                                 <PencilLine className="h-2.5 w-2.5" />
@@ -1826,7 +1826,7 @@ export function BranchGeneralReportView({
                                   scopeName: country.name,
                                   parentHierarchy: [country.name]
                                 })}
-                                className="inline-flex items-center gap-0.5 rounded border border-purple-300 bg-purple-50 px-2 py-0.5 text-[8.5px] font-black text-purple-700 shadow-xs hover:bg-purple-100 hover:border-purple-400 transition-all cursor-pointer"
+                                className="inline-flex items-center gap-0.5 rounded border border-purple-300 bg-purple-50 px-2 py-0.5 text-[11px] font-black text-purple-700 shadow-xs hover:bg-purple-100 hover:border-purple-400 transition-all cursor-pointer whitespace-nowrap"
                                 title="Rules & Permission Management"
                               >
                                 <Shield className="h-2.5 w-2.5 text-purple-600" />
@@ -1835,7 +1835,7 @@ export function BranchGeneralReportView({
                               <button
                                 type="button"
                                 onClick={() => toggleUserScope(countryUserScopeId)}
-                                className="inline-flex items-center gap-0.5 rounded border border-slate-300 bg-white px-2 py-0.5 text-[8.5px] font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition-all"
+                                className="inline-flex items-center gap-0.5 rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition-all whitespace-nowrap"
                                 title="View / manage users"
                               >
                                 <Users className="h-2.5 w-2.5 text-slate-600" />
@@ -1844,7 +1844,7 @@ export function BranchGeneralReportView({
                               <button
                                 type="button"
                                 onClick={(e) => openActionDropdown(country.id, e.currentTarget)}
-                                className="action-dropdown-trigger inline-flex items-center gap-0.5 rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[8.5px] font-bold text-slate-600 hover:bg-slate-100"
+                                className="action-dropdown-trigger inline-flex items-center gap-0.5 rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-100 whitespace-nowrap"
                                 title={tt("bgr.actions", "Actions")}
                               >
                                 <MoreHorizontal className="h-2.5 w-2.5" />
@@ -1927,7 +1927,7 @@ export function BranchGeneralReportView({
                               <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm ring-1 ring-slate-100">
                                 <table className="w-full text-left border-collapse">
                                   <thead>
-                                    <tr className="bg-slate-100 border-b text-slate-600 font-black text-[9px] text-center tracking-[0.14em] uppercase">
+                                    <tr className="bg-slate-100 border-b text-slate-600 font-black text-[11px] text-center tracking-[0.14em] uppercase">
                                       <Th className="p-2 border-r border-slate-200 text-left">Country</Th>
                                       <Th className="p-2 border-r border-slate-200 text-left">Main Branch</Th>
                                       <Th className="p-2 border-r border-slate-200 text-left">City Branch</Th>
@@ -1950,7 +1950,7 @@ export function BranchGeneralReportView({
 
                                         return (
                                           <Fragment key={cityBranch.id}>
-                                            <tr className="border-b border-slate-100 text-[9px] text-slate-700 odd:bg-white even:bg-slate-50/50 hover:bg-sky-50/70">
+                                            <tr className="border-b border-slate-100 text-[11px] text-slate-700 odd:bg-white even:bg-slate-50/50 hover:bg-sky-50/70">
                                               <td className="p-2 border-r border-slate-200 text-left font-semibold">{country.name}</td>
                                               <td className="p-2 border-r border-slate-200 text-left font-semibold text-slate-500">{mainBranch.name}</td>
                                               <td className="p-2 border-r border-slate-200 text-left font-bold text-slate-800">
@@ -1964,7 +1964,7 @@ export function BranchGeneralReportView({
                                                 {countryAdminUser ? (
                                                   <div>
                                                     <div className="font-bold text-slate-800">{countryAdminUser.name}</div>
-                                                    <div className="text-[7.5px] text-slate-400 font-medium font-mono">{countryAdminUser.email}</div>
+                                                    <div className="text-[11px] text-slate-400 font-medium font-mono">{countryAdminUser.email}</div>
                                                   </div>
                                                 ) : (
                                                   <span className="text-slate-400 font-medium">-</span>
@@ -1974,7 +1974,7 @@ export function BranchGeneralReportView({
                                                 {branchAdminUser ? (
                                                   <div>
                                                     <div className="font-bold text-slate-800">{branchAdminUser.name}</div>
-                                                    <div className="text-[7.5px] text-slate-400 font-medium font-mono">{branchAdminUser.email}</div>
+                                                    <div className="text-[11px] text-slate-400 font-medium font-mono">{branchAdminUser.email}</div>
                                                   </div>
                                                 ) : (
                                                   <span className="text-slate-400 font-medium">-</span>
@@ -1991,7 +1991,7 @@ export function BranchGeneralReportView({
                                                         <PhoneCall className="h-2 w-2" />
                                                       </button>
                                                       {activeContactPopup?.id === cityBranch.id && activeContactPopup.type === "phone" && (
-                                                        <div className="absolute top-5 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[8px] shadow-lg whitespace-nowrap popup-content font-semibold">
+                                                        <div className="absolute top-5 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[11px] shadow-lg whitespace-nowrap popup-content font-semibold">
                                                           {phoneContact}
                                                         </div>
                                                       )}
@@ -2006,7 +2006,7 @@ export function BranchGeneralReportView({
                                                         <Mail className="h-2 w-2" />
                                                       </button>
                                                       {activeContactPopup?.id === cityBranch.id && activeContactPopup.type === "email" && (
-                                                        <div className="absolute top-5 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[8px] shadow-lg whitespace-nowrap popup-content font-semibold">
+                                                        <div className="absolute top-5 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[11px] shadow-lg whitespace-nowrap popup-content font-semibold">
                                                           {emailContact}
                                                         </div>
                                                       )}
@@ -2015,13 +2015,13 @@ export function BranchGeneralReportView({
                                                   <button
                                                     onClick={() => viewCityBranch(cityBranch.id, country.name, cityBranch.cityName)}
                                                     disabled={viewLoadingId !== null}
-                                                    className="rounded border border-emerald-200 bg-white px-2 py-0.5 text-[8px] font-bold text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300 shadow-sm transition-all"
+                                                    className="rounded border border-emerald-200 bg-white px-2 py-0.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300 shadow-sm transition-all whitespace-nowrap"
                                                   >
                                                     {viewLoadingId === cityBranch.id ? "..." : tt("bgr.view", "View")}
                                                   </button>
                                                   <button
                                                     onClick={() => openCityBranchEdit(cityBranch.id)}
-                                                    className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[8px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all"
+                                                    className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all whitespace-nowrap"
                                                   >
                                                     {tt("bgr.edit", "Edit")}
                                                   </button>
@@ -2033,7 +2033,7 @@ export function BranchGeneralReportView({
                                                       scopeName: `${cityBranch.cityName || ""} - ${cityBranch.name}`,
                                                       parentHierarchy: [country.name, mainBranch?.name || "Main Branch", cityBranch.name]
                                                     })}
-                                                    className="rounded border border-purple-300 bg-purple-50 px-2 py-0.5 text-[8px] font-black text-purple-700 hover:bg-purple-100 hover:border-purple-400 shadow-sm transition-all inline-flex items-center gap-0.5 cursor-pointer"
+                                                    className="rounded border border-purple-300 bg-purple-50 px-2 py-0.5 text-[11px] font-black text-purple-700 hover:bg-purple-100 hover:border-purple-400 shadow-sm transition-all inline-flex items-center gap-0.5 cursor-pointer whitespace-nowrap"
                                                     title={`Rules & Permissions for ${cityBranch.name}`}
                                                   >
                                                     <Shield className="h-2.5 w-2.5 text-purple-600" />
@@ -2042,7 +2042,7 @@ export function BranchGeneralReportView({
                                                   <button
                                                     type="button"
                                                     onClick={() => toggleUserScope(cityUserScopeId)}
-                                                    className="rounded border border-slate-200 bg-white px-2 py-0.5 text-[8px] font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition-all inline-flex items-center gap-0.5"
+                                                    className="rounded border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition-all inline-flex items-center gap-0.5 whitespace-nowrap"
                                                     title={`View users for ${cityBranch.name}`}
                                                   >
                                                     <Users className="h-2.5 w-2.5 text-slate-600" />
@@ -2052,7 +2052,7 @@ export function BranchGeneralReportView({
                                                     type="button"
                                                     onClick={() => handleDeleteCityBranch(cityBranch.id, cityBranch.name, cityBranch.code)}
                                                     disabled={deletingBranchId === cityBranch.id}
-                                                    className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[8px] font-bold text-rose-700 hover:bg-rose-100 hover:border-rose-300 shadow-sm transition-all inline-flex items-center gap-0.5"
+                                                    className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[11px] font-bold text-rose-700 hover:bg-rose-100 hover:border-rose-300 shadow-sm transition-all inline-flex items-center gap-0.5 whitespace-nowrap"
                                                     title={`Delete / Deactivate branch ${cityBranch.name}`}
                                                   >
                                                     <Trash2 className="h-2.5 w-2.5" />
@@ -2111,7 +2111,7 @@ export function BranchGeneralReportView({
             <div className="sticky top-0 z-20 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 px-6 py-4 shadow-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[9px] font-black uppercase tracking-[0.24em] text-indigo-300">{tt("bgr.branch_details_report", "Branch Details Report")}</div>
+                  <div className="text-[11px] font-black uppercase tracking-[0.24em] text-indigo-300">{tt("bgr.branch_details_report", "Branch Details Report")}</div>
                   <h2 className="mt-1 text-lg font-black text-white tracking-tight">{branchDetailModal.branch.name}</h2>
                   <p className="mt-0.5 text-[11px] font-semibold text-slate-400">{branchDetailModal.country.name} &bull; {branchDetailModal.branch.code}</p>
                 </div>
@@ -2123,7 +2123,7 @@ export function BranchGeneralReportView({
             <div className="p-6 space-y-6">
               {/* Main Branch Summary */}
               <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5 shadow-sm ring-1 ring-slate-100">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-700 mb-4 flex items-center gap-2">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-indigo-700 mb-4 flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4" /> {tt("bgr.main_branch_info", "Main Branch Information")}
                 </h3>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -2145,10 +2145,10 @@ export function BranchGeneralReportView({
                     { label: tt("bgr.lbl_created", "Created"), value: branchDetailModal.branch.createdAt ? new Date(branchDetailModal.branch.createdAt).toLocaleDateString() : "-" },
                   ].map(({ label, value }, idx) => (
                     <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-                      <div className="text-[8px] font-black uppercase tracking-wider text-slate-400">{label}</div>
+                      <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">{label}</div>
                       <div className="mt-1 text-[11px] font-bold text-slate-900 break-all">
                         {label === "Status" ? (
-                          <span className={cn("rounded-full px-2.5 py-0.5 text-[9px] font-black",
+                          <span className={cn("rounded-full px-2.5 py-0.5 text-[11px] font-black",
                             (value || "active").toLowerCase() === "active"
                               ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
                               : "bg-rose-50 text-rose-700 ring-1 ring-rose-100"
@@ -2162,14 +2162,14 @@ export function BranchGeneralReportView({
 
               {/* City Branches Table */}
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-700 mb-4 flex items-center gap-2">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-sky-700 mb-4 flex items-center gap-2">
                   <Landmark className="h-4 w-4" /> {tt("bgr.city_branches_section", "City Branches")} ({branchDetailModal.branch.cityBranches?.length ?? 0})
                 </h3>
                 {branchDetailModal.branch.cityBranches?.length ? (
                   <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
                     <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left bg-white">
                       <thead>
-                        <tr className="sticky top-0 z-10 bg-slate-900 text-white font-black text-[9px] tracking-[0.14em] text-center uppercase shadow-sm">
+                        <tr className="sticky top-0 z-10 bg-slate-900 text-white font-black text-[11px] tracking-[0.14em] text-center uppercase shadow-sm">
                           <Th className="p-2.5 border-r border-slate-700/70">SR.</Th>
                           <Th className="p-2.5 border-r border-slate-200">City Branch Code</Th>
                           <Th className="p-2.5 border-r border-slate-200 text-left">City Branch Name</Th>
@@ -2187,28 +2187,28 @@ export function BranchGeneralReportView({
                           const cbWhatsApp = findContactValue(cityBranch.contacts, "whatsapp") || "";
                           const managerUser = cityBranch.users?.find(u => u.role === "city_branch_admin") || cityBranch.users?.[0];
                           return (
-                            <tr key={cityBranch.id} className="border-b border-slate-100 text-[10px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-sky-50/70 transition-colors">
+                            <tr key={cityBranch.id} className="border-b border-slate-100 text-[11px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-sky-50/70 transition-colors">
                               <td className="p-2.5 border-r border-slate-200 font-bold">{idx + 1}</td>
                               <td className="p-2.5 border-r border-slate-200 font-mono font-bold text-slate-900">{cityBranch.code}</td>
                               <td className="p-2.5 border-r border-slate-200 text-left">
                                 <div className="font-bold text-slate-900">{cityBranch.name}</div>
-                                <div className="text-[8px] text-slate-500 font-medium">{cityBranch.cityName}</div>
+                                <div className="text-[11px] text-slate-500 font-medium">{cityBranch.cityName}</div>
                               </td>
                               <td className="p-2.5 border-r border-slate-200">
                                 <div className="font-bold text-slate-800">{cityBranch.managerName || managerUser?.name || "-"}</div>
-                                {managerUser?.email && <div className="text-[7.5px] text-slate-400 font-mono mt-0.5">{managerUser.email}</div>}
+                                {managerUser?.email && <div className="text-[11px] text-slate-400 font-mono mt-0.5">{managerUser.email}</div>}
                               </td>
                               <td className="p-2.5 border-r border-slate-200 tabular-nums font-bold">{cityBranch.users?.length ?? cityBranch.userCount ?? 0}</td>
                               <td className="p-2.5 border-r border-slate-200 tabular-nums font-bold">{cityBranch.accountsCount ?? 0}</td>
                               <td className="p-2.5 border-r border-slate-200">
-                                <span className={cn("rounded-full px-2 py-0.5 text-[8px] font-black",
+                                <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-black",
                                   (cityBranch.status || "active").toLowerCase() === "active"
                                     ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
                                     : "bg-rose-50 text-rose-700 ring-1 ring-rose-100"
                                 )}>{(cityBranch.status || "Active").charAt(0).toUpperCase() + (cityBranch.status || "Active").slice(1)}</span>
                               </td>
                               <td className="p-2.5">
-                                <div className="flex flex-col items-center gap-1 text-[8px]">
+                                <div className="flex flex-col items-center gap-1 text-[11px]">
                                   {cbEmail && <div className="flex items-center gap-1 text-indigo-700"><Mail className="h-2.5 w-2.5" /><span className="font-semibold">{cbEmail}</span></div>}
                                   {cbPhone && <div className="flex items-center gap-1 text-emerald-700"><PhoneCall className="h-2.5 w-2.5" /><span className="font-semibold">{cbPhone}</span></div>}
                                   {cbWhatsApp && <div className="flex items-center gap-1 text-green-700"><PhoneCall className="h-2.5 w-2.5" /><span className="font-semibold">WA: {cbWhatsApp}</span></div>}

@@ -36,7 +36,7 @@ export function PersonDuplicateWarningModal({
       <div className="p-5 space-y-4 text-xs text-slate-800 dark:text-slate-200">
         <p className="text-slate-600 dark:text-slate-300">
           {t(lang, "erp.person_dup_desc", "We found existing person record(s) that may match")}{" "}
-          <strong className="text-slate-900 dark:text-white">"{searchedName}"</strong>.{" "}
+          <strong className="text-slate-900 dark:text-white">&quot;{searchedName}&quot;</strong>.{" "}
           {t(lang, "erp.person_dup_desc2", "Use the existing Person ID instead of creating a duplicate, or continue if this is genuinely a different person.")}
         </p>
 
@@ -50,10 +50,10 @@ export function PersonDuplicateWarningModal({
                 <div className="font-bold text-slate-900 dark:text-white truncate">
                   {c.name}
                   {c.personCode ? (
-                    <span className="ms-2 font-mono text-[10px] font-black text-amber-700 dark:text-amber-400">{c.personCode}</span>
+                    <span className="ms-2 font-mono text-[11px] font-black text-amber-700 dark:text-amber-400">{c.personCode}</span>
                   ) : null}
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-3 mt-0.5">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-3 mt-0.5">
                   {c.fatherName ? <span>{t(lang, "erp.person_dup_father", "Father")}: {c.fatherName}</span> : null}
                   {c.mobile ? <span dir="ltr">{t(lang, "erp.person_dup_mobile", "Mobile")}: {c.mobile}</span> : null}
                   {c.email ? <span dir="ltr">{t(lang, "erp.person_dup_email", "Email")}: {c.email}</span> : null}

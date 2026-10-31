@@ -90,7 +90,7 @@ function formatCell(value: any, format?: string, currency?: string): React.React
     const statusKey = String(value).toLowerCase();
     const colorClass = STATUS_COLORS[statusKey] ?? "bg-slate-100 text-slate-600";
     return (
-      <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider", colorClass)}>
+      <span className={cn("text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider", colorClass)}>
         {value}
       </span>
     );
@@ -235,7 +235,7 @@ export function ReportDataTable({
                       col.width
                     )}
                     onClick={() => col.sortable && handleSort(col.key)}
-                    style={{ letterSpacing: "0.04em", fontSize: "10px" }}
+                    style={{ letterSpacing: "0.04em", fontSize: "11px" }}
                   >
                     <div className="flex items-center gap-1.5">
                       {col.label}
@@ -261,7 +261,7 @@ export function ReportDataTable({
                       onClick={(event) => event.stopPropagation()}
                       placeholder={_("report.search")}
                       aria-label={`${_("report.search")} ${column.label}`}
-                      className="w-full min-w-[70px] rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-[10px] font-medium text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs transition-all"
+                      className="w-full min-w-[70px] rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs transition-all"
                     />
                   </Th>
                 ))}
@@ -540,7 +540,7 @@ export function getColumnsForReportType(reportType: string, lang: SupportedLangu
           render: (row, _lang, openRow) => (
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300"
+              className="inline-flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300"
               onClick={(event) => {
                 event.stopPropagation();
                 openRow?.(row);

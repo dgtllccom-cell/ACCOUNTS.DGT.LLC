@@ -262,7 +262,7 @@ export function ComposeModal({
                 >
                   <Paperclip className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                   <span className="max-w-[150px] truncate">{att.name}</span>
-                  <span className="text-[10px] text-slate-400 tabular-nums">({(att.size / 1024).toFixed(1)} {tt("mail.kb_size", "KB")})</span>
+                  <span className="text-[11px] text-slate-400 tabular-nums">({(att.size / 1024).toFixed(1)} {tt("mail.kb_size", "KB")})</span>
                   <button
                     type="button"
                     onClick={() => removeAttachment(idx)}

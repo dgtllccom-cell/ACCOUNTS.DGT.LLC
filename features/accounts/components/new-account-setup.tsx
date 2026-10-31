@@ -986,6 +986,8 @@ export function NewAccountSetup({
         if (!cancelled && json?.ok && (json?.data || json?.customer)) {
           const cust = json.data?.customer ?? json.data ?? json.customer;
           setCustomerDetail(cust);
+          // the linked-customer card reads the same record — keep it in the selected language as well
+          setLinkedCustomerObj(cust);
           // the "Linked" label follows the language too (approved variant for this language, else the saved name) —
           // it was set once when the customer was picked and kept the previous language after a switch
           if (cust?.customer_name) setLinkedCustomerName(cust.customer_name);
@@ -1754,17 +1756,17 @@ export function NewAccountSetup({
               <h1 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
                 {initialAccountId ? getLabel("editAccountSetup", lang) : getLabel("newAccountReport", lang)}
               </h1>
-              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-black uppercase text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
+              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-black uppercase text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300 whitespace-nowrap">
                 ● {getLabel("draft", lang)}
               </span>
             </div>
-            <p className="text-[10.5px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
               {getLabel("headerSubtitle", lang)}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10.5px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
               <Calendar className="h-3 w-3 text-slate-400" />
               <span suppressHydrationWarning>{fmtDate(new Date().toISOString())}</span>
             </div>
@@ -1793,7 +1795,7 @@ export function NewAccountSetup({
           <div>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               {getLabel("askAiAssistant", lang)}
-              <span className="inline-flex items-center rounded-full bg-blue-500/20 border border-blue-400/30 px-2 py-0.5 text-[10px] font-medium text-blue-300">
+              <span className="inline-flex items-center rounded-full bg-blue-500/20 border border-blue-400/30 px-2 py-0.5 text-[11px] font-medium text-blue-300">
                 5 Languages
               </span>
             </h3>
@@ -1881,7 +1883,7 @@ export function NewAccountSetup({
                 <span className={cn("text-xs font-bold truncate", active ? "text-blue-600 dark:text-blue-400" : "text-slate-900 dark:text-white")}>
                   {s.title}
                 </span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
                   {s.subtitle}
                 </span>
               </div>
@@ -1969,7 +1971,7 @@ export function NewAccountSetup({
                     {!erpScope.domainLocked && <option value="inter_country">{getLabel("interCountryDomain", lang)}</option>}
                   </select>
                   {erpScope.domainLocked && (
-                    <p className="text-[10px] font-semibold text-slate-500">{getLabel("scopeLockedDomain", lang)}</p>
+                    <p className="text-[11px] font-semibold text-slate-500">{getLabel("scopeLockedDomain", lang)}</p>
                   )}
                 </div>
 
@@ -2012,7 +2014,7 @@ export function NewAccountSetup({
               {primaryType === "customers_trade" && (
                 <div className="rounded-xl bg-blue-50/50 dark:bg-blue-950/30 p-3 border border-blue-200/60 dark:border-blue-800/60 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shrink-0">ℹ</span>
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white shrink-0">ℹ</span>
                     <div>
                       <Label htmlFor="tradeKind" className="text-xs font-bold text-slate-800 dark:text-slate-200">
                         {getLabel("entityTypeLabel", lang)} *
@@ -2048,7 +2050,7 @@ export function NewAccountSetup({
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                         {getLabel("accountRequirementsTitle", lang)}
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 whitespace-nowrap">
                           {[companyRequired, bankRequired, warehouseRequired].filter(Boolean).length} / 3 {getLabel("linkedMastersActive", lang)}
                         </span>
                       </h4>
@@ -2073,7 +2075,7 @@ export function NewAccountSetup({
                       <div className="flex items-center gap-1.5">
                         <Layers className="h-3.5 w-3.5 text-blue-500" />
                         <span>{getLabel("selectLinkedMastersDropdown", lang)}</span>
-                        <span className="ml-1 px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-200">
+                        <span className="ml-1 px-1.5 py-0.2 text-[11px] font-bold rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-200">
                           {[companyRequired, bankRequired, warehouseRequired].filter(Boolean).length}
                         </span>
                       </div>
@@ -2098,7 +2100,7 @@ export function NewAccountSetup({
                                 setBankRequired(true);
                                 setWarehouseRequired(true);
                               }}
-                              className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+                              className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-semibold"
                             >
                               {getLabel("selectAll", lang)}
                             </button>
@@ -2110,7 +2112,7 @@ export function NewAccountSetup({
                                 setBankRequired(false);
                                 setWarehouseRequired(false);
                               }}
-                              className="text-[10px] text-slate-500 hover:underline font-semibold"
+                              className="text-[11px] text-slate-500 hover:underline font-semibold"
                             >
                               {getLabel("clearAll", lang)}
                             </button>
@@ -2141,11 +2143,11 @@ export function NewAccountSetup({
                                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                                   {getLabel("companyRequiredLabel", lang)}
                                 </span>
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                <span className="text-[11px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
                                   Step 3
                                 </span>
                               </div>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                                 {getLabel("companyRequiredDesc", lang)}
                               </p>
                             </div>
@@ -2158,7 +2160,7 @@ export function NewAccountSetup({
                                 setLinkedMastersMenuOpen(false);
                                 setCurrentStep(3);
                               }}
-                              className="shrink-0 text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline px-1.5 py-0.5 bg-blue-100/70 dark:bg-blue-900/50 rounded"
+                              className="shrink-0 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline px-1.5 py-0.5 bg-blue-100/70 dark:bg-blue-900/50 rounded whitespace-nowrap"
                             >
                               {getLabel("openStepDirectly", lang)} →
                             </button>
@@ -2189,11 +2191,11 @@ export function NewAccountSetup({
                                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                                   {getLabel("bankRequiredLabel", lang)}
                                 </span>
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                <span className="text-[11px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
                                   Step 4
                                 </span>
                               </div>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                                 {getLabel("bankRequiredDesc", lang)}
                               </p>
                             </div>
@@ -2206,7 +2208,7 @@ export function NewAccountSetup({
                                 setLinkedMastersMenuOpen(false);
                                 setCurrentStep(4);
                               }}
-                              className="shrink-0 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline px-1.5 py-0.5 bg-emerald-100/70 dark:bg-emerald-900/50 rounded"
+                              className="shrink-0 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline px-1.5 py-0.5 bg-emerald-100/70 dark:bg-emerald-900/50 rounded whitespace-nowrap"
                             >
                               {getLabel("openStepDirectly", lang)} →
                             </button>
@@ -2237,11 +2239,11 @@ export function NewAccountSetup({
                                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                                   {getLabel("warehouseRequiredLabel", lang)}
                                 </span>
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                <span className="text-[11px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
                                   Step 5
                                 </span>
                               </div>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                                 {getLabel("warehouseRequiredDesc", lang)}
                               </p>
                             </div>
@@ -2254,14 +2256,14 @@ export function NewAccountSetup({
                                 setLinkedMastersMenuOpen(false);
                                 setCurrentStep(5);
                               }}
-                              className="shrink-0 text-[10px] font-semibold text-purple-600 dark:text-purple-400 hover:underline px-1.5 py-0.5 bg-purple-100/70 dark:bg-purple-900/50 rounded"
+                              className="shrink-0 text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:underline px-1.5 py-0.5 bg-purple-100/70 dark:bg-purple-900/50 rounded whitespace-nowrap"
                             >
                               {getLabel("openStepDirectly", lang)} →
                             </button>
                           )}
                         </div>
 
-                        <div className="pt-1.5 px-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                        <div className="pt-1.5 px-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
                           <span>{activeStepDefs.length} {lang === "ur" ? "مراحل شامل" : "total steps active"}</span>
                           <button
                             type="button"
@@ -2296,7 +2298,7 @@ export function NewAccountSetup({
                       ))}
                   </select>
                   {countryLocked && (
-                    <p className="text-[10px] font-semibold text-slate-500">{getLabel("scopeLockedCountry", lang)}</p>
+                    <p className="text-[11px] font-semibold text-slate-500">{getLabel("scopeLockedCountry", lang)}</p>
                   )}
                 </div>
 
@@ -2305,7 +2307,7 @@ export function NewAccountSetup({
                     <div className="h-full flex flex-col justify-end">
                       <div className="rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 p-3 text-xs space-y-1.5 shadow-xs">
                         <div className="flex items-center gap-2">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shrink-0">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white shrink-0">
                             {operationalDomain === "shipping" ? "⚓" : "🌐"}
                           </span>
                           <span className="font-bold text-blue-900 dark:text-blue-200">
@@ -2445,7 +2447,7 @@ export function NewAccountSetup({
                       variant="outline"
                       size="sm"
                       onClick={() => router.push("/dashboard/new-entry/shipping-line")}
-                      className="h-6 text-[10px] px-2 text-blue-700 hover:bg-blue-50 border-blue-300 dark:border-blue-700 dark:text-blue-300"
+                      className="h-6 text-[11px] px-2 text-blue-700 hover:bg-blue-50 border-blue-300 dark:border-blue-700 dark:text-blue-300"
                     >
                       <Plus className="h-3 w-3 mr-1" />
                       {getLabel("newShippingLine", lang)}
@@ -2492,7 +2494,7 @@ export function NewAccountSetup({
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-900 dark:text-slate-100">{shippingLineDetail.name}</span>
                           {shippingLineDetail.shipping_line_code && (
-                            <span className="font-mono text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded font-semibold">
+                            <span className="font-mono text-[11px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded font-semibold whitespace-nowrap">
                               {shippingLineDetail.shipping_line_code}
                             </span>
                           )}
@@ -2537,7 +2539,7 @@ export function NewAccountSetup({
                       </p>
                     </div>
                   </div>
-                  <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-200">
+                  <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-200 whitespace-nowrap">
                     {linkedCountries.length} / {countries.length} {getLabel("countriesLinked", lang)}
                   </span>
                 </div>
@@ -2580,7 +2582,7 @@ export function NewAccountSetup({
                           <button
                             type="button"
                             onClick={() => setLinkedCountries(countries.map((c) => c.id))}
-                            className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 hover:underline px-1.5 py-0.5 rounded"
+                            className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 hover:underline px-1.5 py-0.5 rounded whitespace-nowrap"
                           >
                             ✓ {getLabel("selectAll", lang)}
                           </button>
@@ -2588,7 +2590,7 @@ export function NewAccountSetup({
                           <button
                             type="button"
                             onClick={() => setLinkedCountries([])}
-                            className="text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 hover:underline px-1.5 py-0.5 rounded"
+                            className="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 hover:underline px-1.5 py-0.5 rounded whitespace-nowrap"
                           >
                             ✕ {getLabel("clearAll", lang)}
                           </button>
@@ -2623,7 +2625,7 @@ export function NewAccountSetup({
                                   <span className="block text-xs font-bold truncate">
                                     {localizeTerm(c.name, lang)}
                                   </span>
-                                  <span className="text-[10px] text-slate-500 font-mono">
+                                  <span className="text-[11px] text-slate-500 font-mono">
                                     {c.iso2 || "-"} {c.currency_code ? `• ${c.currency_code}` : ""}
                                   </span>
                                 </div>
@@ -2690,7 +2692,7 @@ export function NewAccountSetup({
                         <button
                           type="button"
                           onClick={handleOpenEditCategory}
-                          className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
                         >
                           <Pencil className="h-2.5 w-2.5" />
                           {getLabel("editCategory", lang)}
@@ -2699,7 +2701,7 @@ export function NewAccountSetup({
                       <button
                         type="button"
                         onClick={handleOpenAddCategory}
-                        className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline"
                       >
                         <Plus className="h-3 w-3" />
                         {getLabel("addCategory", lang)}
@@ -2752,7 +2754,7 @@ export function NewAccountSetup({
                     <Label htmlFor="localAccountCode" className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       {getLabel("localAccountCodeAuto", lang)}
                     </Label>
-                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                    <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
                       {branchInfo?.code || selectedCountry?.iso2 || ""}
                     </span>
                   </div>
@@ -2763,7 +2765,7 @@ export function NewAccountSetup({
                     readOnly
                     className="bg-blue-50/60 dark:bg-blue-950/30 font-mono text-xs font-bold text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 shadow-xs"
                   />
-                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <HelpCircle className="h-3 w-3 text-blue-500 shrink-0" />
                     <span>{getLabel("autoGeneratedFromSystem", lang)}</span>
                   </p>
@@ -2775,7 +2777,7 @@ export function NewAccountSetup({
                     <Label htmlFor="globalAccountNumber" className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       {getLabel("globalAccountNumber", lang)}
                     </Label>
-                    <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                       GLOBAL
                     </span>
                   </div>
@@ -2786,7 +2788,7 @@ export function NewAccountSetup({
                     readOnly
                     className="bg-emerald-50/40 dark:bg-emerald-950/20 font-mono text-xs font-bold text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 shadow-xs"
                   />
-                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <HelpCircle className="h-3 w-3 text-emerald-500 shrink-0" />
                     <span>{getLabel("autoGeneratedFromSystem", lang)}</span>
                   </p>
@@ -2801,7 +2803,7 @@ export function NewAccountSetup({
                   </Label>
                   <span
                     dir="ltr"
-                    className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                    className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap"
                   >
                     {getLabel("manualReferenceBadge", lang)}
                   </span>
@@ -2814,7 +2816,7 @@ export function NewAccountSetup({
                   placeholder={getLabel("manualReferencePlaceholder", lang)}
                   className="h-9 text-xs font-mono text-left tracking-wider font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 placeholder:font-mono"
                 />
-                <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   {getLabel("manualReferenceHint", lang)}
                 </p>
               </div>
@@ -2842,7 +2844,7 @@ export function NewAccountSetup({
                       {getLabel("accountAddress", lang)}
                     </span>
                   </div>
-                  <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                  <span className="text-[11px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                     {getLabel("linkedToLocationMaster", lang)}
                   </span>
                 </div>
@@ -2981,7 +2983,7 @@ export function NewAccountSetup({
                     return (
                       <div key={idx} className="flex gap-2 items-end">
                         <div className="w-1/3 space-y-1">
-                          <Label className="text-[10px] font-semibold text-slate-500">{getLabel("type", lang)}</Label>
+                          <Label className="text-[11px] font-semibold text-slate-500">{getLabel("type", lang)}</Label>
                           <select
                             value={isCustom ? "Custom" : contact.type}
                             onChange={(e) => {
@@ -3001,7 +3003,7 @@ export function NewAccountSetup({
                           </select>
                         </div>
                         <div className="flex-1 space-y-1">
-                          <Label className="text-[10px] font-semibold text-slate-500">{getLabel("contactValue", lang)}</Label>
+                          <Label className="text-[11px] font-semibold text-slate-500">{getLabel("contactValue", lang)}</Label>
                           <Input
                             dir="ltr"
                             value={contact.value}
@@ -3020,7 +3022,7 @@ export function NewAccountSetup({
                             className={`h-9 text-xs font-mono text-left ${contactErrorKey(contact.type, contact.value) ? "border-rose-400 focus-visible:ring-rose-400" : ""}`}
                           />
                           {contactErrorKey(contact.type, contact.value) && (
-                            <p className="text-[10px] font-semibold text-rose-500">{getLabel(contactErrorKey(contact.type, contact.value)!, lang)}</p>
+                            <p className="text-[11px] font-semibold text-rose-500">{getLabel(contactErrorKey(contact.type, contact.value)!, lang)}</p>
                           )}
                         </div>
                         {contacts.length > 1 && (
@@ -3158,7 +3160,9 @@ export function NewAccountSetup({
                   <CustomerAccountCard
                     account={{
                       id: linkedCustomerId,
-                      name: linkedCustomerObj?.customer_name || linkedCustomerName || linkedCustomerId,
+                      // the language-refreshed name first (approved variant for this language, else the saved name)
+                      // (while the record loads: "Loading…", never the raw record id)
+                      name: linkedCustomerName || linkedCustomerObj?.customer_name || getLabel("loading", lang),
                       code: linkedCustomerObj?.person_code,
                       companyName: linkedCustomerObj?.company_name,
                       phone: linkedCustomerObj?.mobile || linkedCustomerObj?.whatsapp,
@@ -3301,7 +3305,7 @@ export function NewAccountSetup({
                     {getLabel("linkedCompaniesTitle", lang)} ({linkedCompanies.length})
                   </h3>
                   {linkedCompanies.length > 0 && (
-                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                       ✓ {lang === "ur" ? "مربوط" : "Connected"}
                     </span>
                   )}
@@ -3331,14 +3335,14 @@ export function NewAccountSetup({
                                 <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
                                 <div>
                                   <span>{comp.name}</span>
-                                  {comp.code && <span className="ml-2 text-[10px] font-mono text-slate-400 font-normal">({comp.code})</span>}
+                                  {comp.code && <span className="ml-2 text-[11px] font-mono text-slate-400 font-normal">({comp.code})</span>}
                                 </div>
                               </div>
                             </td>
                             <td className="p-3 text-slate-600 dark:text-slate-300">{comp.country || "-"}</td>
                             <td className="p-3">
                               {comp.isPrimary ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-bold text-[10px]">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-bold text-[11px] whitespace-nowrap">
                                   ★ {getLabel("primaryCompany", lang)}
                                 </span>
                               ) : (
@@ -3358,7 +3362,7 @@ export function NewAccountSetup({
                                       })
                                       .catch(() => null);
                                   }}
-                                  className="text-[10px] font-bold text-slate-500 hover:text-blue-600 hover:underline cursor-pointer"
+                                  className="text-[11px] font-bold text-slate-500 hover:text-blue-600 hover:underline cursor-pointer"
                                 >
                                   {getLabel("setAsPrimary", lang)}
                                 </button>
@@ -3537,7 +3541,7 @@ export function NewAccountSetup({
                     {getLabel("linkedBanksTitle", lang)} ({linkedBanks.length})
                   </h3>
                   {linkedBanks.length > 0 && (
-                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                       ✓ {lang === "ur" ? "مربوط" : "Connected"}
                     </span>
                   )}
@@ -3575,7 +3579,7 @@ export function NewAccountSetup({
                             </td>
                             <td className="p-3">
                               {bank.isPrimary ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-[10px]">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] whitespace-nowrap">
                                   ★ {getLabel("primaryBank", lang)}
                                 </span>
                               ) : (
@@ -3595,7 +3599,7 @@ export function NewAccountSetup({
                                       })
                                       .catch(() => null);
                                   }}
-                                  className="text-[10px] font-bold text-slate-500 hover:text-emerald-600 hover:underline cursor-pointer"
+                                  className="text-[11px] font-bold text-slate-500 hover:text-emerald-600 hover:underline cursor-pointer"
                                 >
                                   {getLabel("setAsPrimary", lang)}
                                 </button>
@@ -3751,7 +3755,7 @@ export function NewAccountSetup({
                     {getLabel("linkedWarehousesTitle", lang)} ({linkedWarehouses.length})
                   </h3>
                   {linkedWarehouses.length > 0 && (
-                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                       ✓ {lang === "ur" ? "مربوط" : "Connected"}
                     </span>
                   )}
@@ -3781,14 +3785,14 @@ export function NewAccountSetup({
                                 <Warehouse className="h-4 w-4 text-purple-600 shrink-0" />
                                 <div>
                                   <span>{wh.name}</span>
-                                  {wh.address && <p className="text-[10px] text-slate-400 font-normal truncate max-w-xs">{wh.address}</p>}
+                                  {wh.address && <p className="text-[11px] text-slate-400 font-normal truncate max-w-xs">{wh.address}</p>}
                                 </div>
                               </div>
                             </td>
                             <td className="p-3 font-mono text-[11px] text-slate-500">{wh.code || "-"}</td>
                             <td className="p-3">
                               {wh.isPrimary ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-bold text-[10px]">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-bold text-[11px] whitespace-nowrap">
                                   ★ {getLabel("primaryWarehouse", lang)}
                                 </span>
                               ) : (
@@ -3800,7 +3804,7 @@ export function NewAccountSetup({
                                     );
                                     setLinkedWarehouseId(wh.id);
                                   }}
-                                  className="text-[10px] font-bold text-slate-500 hover:text-purple-600 hover:underline"
+                                  className="text-[11px] font-bold text-slate-500 hover:text-purple-600 hover:underline"
                                 >
                                   {getLabel("setAsPrimary", lang)}
                                 </button>
@@ -3930,10 +3934,10 @@ export function NewAccountSetup({
                       <b>{getLabel("linkedCompaniesTitle", lang)} ({linkedCompanies.length}):</b>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {linkedCompanies.map((c) => (
-                          <span key={c.id} className="inline-flex items-center gap-1 rounded-lg bg-blue-50 dark:bg-blue-950 px-2 py-0.5 text-[11px] font-semibold text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+                          <span key={c.id} className="inline-flex items-center gap-1 rounded-lg bg-blue-50 dark:bg-blue-950 px-2 py-0.5 text-[11px] font-semibold text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                             {c.isPrimary && <span className="text-blue-600 font-bold">★</span>}
                             <span>{c.name}</span>
-                            {c.country && <span className="text-[10px] text-blue-500 font-normal">({c.country})</span>}
+                            {c.country && <span className="text-[11px] text-blue-500 font-normal">({c.country})</span>}
                           </span>
                         ))}
                       </div>
@@ -3948,11 +3952,11 @@ export function NewAccountSetup({
                       <b>{getLabel("linkedBanksTitle", lang)} ({linkedBanks.length}):</b>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {linkedBanks.map((b) => (
-                          <span key={b.id} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">
+                          <span key={b.id} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                             {b.isPrimary && <span className="text-emerald-600 font-bold">★</span>}
                             <span>{b.name}</span>
-                            {b.branchName && <span className="text-[10px] text-emerald-600 font-normal">• {b.branchName}</span>}
-                            {b.accountNumber && <span className="text-[10px] font-mono text-emerald-600 font-normal">• {b.accountNumber}</span>}
+                            {b.branchName && <span className="text-[11px] text-emerald-600 font-normal">• {b.branchName}</span>}
+                            {b.accountNumber && <span className="text-[11px] font-mono text-emerald-600 font-normal">• {b.accountNumber}</span>}
                           </span>
                         ))}
                       </div>
@@ -3976,7 +3980,7 @@ export function NewAccountSetup({
                         {linkedCountries.map((cId) => {
                           const matched = countries.find((c) => c.id === cId);
                           return (
-                            <span key={cId} className="inline-flex items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200">
+                            <span key={cId} className="inline-flex items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 whitespace-nowrap">
                               {localizeTerm(matched?.name || cId, lang)} ({matched?.iso2 || "-"})
                             </span>
                           );
@@ -4003,7 +4007,7 @@ export function NewAccountSetup({
                         >
                           {wh.isPrimary && <span className="text-purple-600 font-bold">★</span>}
                           <span>{wh.name}</span>
-                          {wh.code && <span className="font-mono text-[10px] text-purple-500">({wh.code})</span>}
+                          {wh.code && <span className="font-mono text-[11px] text-purple-500">({wh.code})</span>}
                         </span>
                       ))
                     ) : (

@@ -160,7 +160,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 function F({ s, k, label, v }: { s: ReturnType<typeof useErpScreen>; k: string; label: string; v: any }) {
   return (
     <div>
-      <dt className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t(k, label)}</dt>
+      <dt className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t(k, label)}</dt>
       <dd className="font-semibold text-slate-700 dark:text-slate-200">{v == null || v === "" ? "—" : String(v)}</dd>
     </div>
   );

@@ -83,11 +83,11 @@ export function DgtConnectWidget({ currentUserId }: { currentUserId: string }) {
                   : tt("dgtc.title", "DGT Connect")}
               </div>
               {view === "thread" && active?.kind === "direct" && (
-                <div className={cn("text-[10px] font-bold", presenceDot(active.peerPresence))}>
+                <div className={cn("text-[11px] font-bold", presenceDot(active.peerPresence))}>
                   {active.peerPresence === "online" ? tt("dgtc.online", "Online") : tt("dgtc.offline", "Offline")}
                 </div>
               )}
-              {view === "list" && <div className="text-[10px] font-medium text-slate-400">{tt("dgtc.subtitle", "Internal ERP chat")}</div>}
+              {view === "list" && <div className="text-[11px] font-medium text-slate-400">{tt("dgtc.subtitle", "Internal ERP chat")}</div>}
             </div>
             {view === "list" && (
               <button onClick={() => { setView("new"); void c.loadDirectory(); }} className="rounded-lg p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40" aria-label={tt("dgtc.new_chat", "New chat")}>
@@ -171,7 +171,7 @@ export function DgtConnectWidget({ currentUserId }: { currentUserId: string }) {
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
         {!open && c.unreadTotal > 0 && (
-          <span className="absolute -top-1 -end-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-black text-white">
+          <span className="absolute -top-1 -end-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-black text-white whitespace-nowrap">
             {c.unreadTotal > 99 ? "99+" : c.unreadTotal}
           </span>
         )}
@@ -231,14 +231,14 @@ function ConversationListView({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">{conv.displayName}</span>
-                  <span className="shrink-0 text-[9px] font-medium text-slate-400">{timeShort(conv.lastMessageAt)}</span>
+                  <span className="shrink-0 text-[11px] font-medium text-slate-400">{timeShort(conv.lastMessageAt)}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="line-clamp-1 text-[11px] text-slate-500">
                     {typing.length ? <em className="text-emerald-600">{tt("dgtc.typing", "typing…")}</em> : (conv.lastMessagePreview || "")}
                   </span>
                   {unread > 0 && (
-                    <span className="flex h-4 min-w-[16px] shrink-0 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-black text-white">{unread}</span>
+                    <span className="flex h-4 min-w-[16px] shrink-0 items-center justify-center rounded-full bg-blue-600 px-1 text-[11px] font-black text-white leading-none whitespace-nowrap">{unread}</span>
                   )}
                 </div>
               </div>
@@ -298,12 +298,12 @@ function NewConversationView({
           className="m-2 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs outline-none dark:border-slate-800 dark:bg-slate-900"
         />
       )}
-      <p className="px-3 pb-1 pt-2 text-[10px] font-medium text-slate-400">{tt("dgtc.scope_note", "You can message users within your assigned scope.")}</p>
+      <p className="px-3 pb-1 pt-2 text-[11px] font-medium text-slate-400">{tt("dgtc.scope_note", "You can message users within your assigned scope.")}</p>
       <div className="flex-1 overflow-y-auto">
         {rows.length === 0 && <p className="p-4 text-center text-xs text-slate-400">{tt("dgtc.no_results", "No results")}</p>}
         {rows.map((row, i) => {
-          if (row.type === "country") return <div key={i} className="bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500 dark:bg-slate-900">{row.label}</div>;
-          if (row.type === "branch") return <div key={i} className="px-4 py-1 text-[10px] font-bold text-slate-400">{row.label}</div>;
+          if (row.type === "country") return <div key={i} className="bg-slate-50 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:bg-slate-900">{row.label}</div>;
+          if (row.type === "branch") return <div key={i} className="px-4 py-1 text-[11px] font-bold text-slate-400">{row.label}</div>;
           const u = row.u;
           return (
             <button
@@ -317,7 +317,7 @@ function NewConversationView({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-xs font-bold text-slate-800 dark:text-slate-200">{u.name}</div>
-                <div className="truncate text-[10px] text-slate-400">{u.role ?? ""}</div>
+                <div className="truncate text-[11px] text-slate-400">{u.role ?? ""}</div>
               </div>
               {mode === "group" && selected.includes(u.id) && <Check className="h-4 w-4 text-blue-600" />}
             </button>
@@ -378,7 +378,7 @@ function MessageThreadView({
       <div className="flex items-center justify-end gap-1 border-b border-slate-100 px-2 py-1 dark:border-slate-800">
         <button
           onClick={() => setTranslateView(!translateView)}
-          className={cn("flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold", translateView ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500 dark:bg-slate-900")}
+          className={cn("flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold", translateView ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500 dark:bg-slate-900")}
         >
           <Languages className="h-3 w-3" /> {tt("dgtc.translate", "Translate")}
         </button>
@@ -386,7 +386,7 @@ function MessageThreadView({
 
       <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto p-3">
         {messages.length >= 40 && (
-          <button onClick={() => onLoadMore(messages[0].createdAt)} className="mx-auto block rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-500 dark:bg-slate-900">
+          <button onClick={() => onLoadMore(messages[0].createdAt)} className="mx-auto block rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-500 dark:bg-slate-900">
             {tt("dgtc.load_more", "Load earlier messages")}
           </button>
         )}
@@ -402,7 +402,7 @@ function MessageThreadView({
             <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
               <div className={cn("max-w-[78%] rounded-2xl px-3 py-1.5", mine ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100")}>
                 {conversation?.kind === "group" && !mine && (
-                  <div className="mb-0.5 text-[10px] font-black text-blue-600 dark:text-blue-300">{m.senderName}</div>
+                  <div className="mb-0.5 text-[11px] font-black text-blue-600 dark:text-blue-300">{m.senderName}</div>
                 )}
                 {m.kind === "attachment" && m.attachment && (
                   <a href={m.attachment.dataUrl || m.attachment.url || "#"} download={m.attachment.name} className="mb-1 flex items-center gap-1.5 rounded-lg bg-black/10 px-2 py-1 text-[11px] font-bold underline">
@@ -417,11 +417,11 @@ function MessageThreadView({
                 )}
                 {displayBody && <div className="whitespace-pre-wrap break-words text-xs">{displayBody}</div>}
                 {translateView && m.translated && !m.deletedAt && (
-                  <button onClick={() => setShowOriginal((s) => ({ ...s, [m.id]: !s[m.id] }))} className={cn("mt-0.5 text-[9px] font-bold underline", mine ? "text-blue-100" : "text-slate-400")}>
+                  <button onClick={() => setShowOriginal((s) => ({ ...s, [m.id]: !s[m.id] }))} className={cn("mt-0.5 text-[11px] font-bold underline", mine ? "text-blue-100" : "text-slate-400")}>
                     {showOrig ? tt("dgtc.translated", "Translated") : `${tt("dgtc.show_original", "Show original")} (${m.bodyLang.toUpperCase()})`}
                   </button>
                 )}
-                <div className={cn("mt-0.5 flex items-center gap-1 text-[8.5px]", mine ? "text-blue-100" : "text-slate-400")}>
+                <div className={cn("mt-0.5 flex items-center gap-1 text-[11px]", mine ? "text-blue-100" : "text-slate-400")}>
                   <span>{timeShort(m.createdAt)}</span>
                   {mine && (m.readCount > 0 ? <CheckCheck className="h-3 w-3 text-sky-300" /> : m.deliveredCount > 0 ? <CheckCheck className="h-3 w-3" /> : <Check className="h-3 w-3" />)}
                 </div>

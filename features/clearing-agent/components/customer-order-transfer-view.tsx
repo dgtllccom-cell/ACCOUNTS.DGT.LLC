@@ -43,11 +43,12 @@ import {
 
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
-import { translateHeader } from "@/lib/i18n/table-headers";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { coModeLabel, coMovementLabel, coStatusLabel } from "./customer-order-i18n";
 import { useBranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import { Th } from "@/components/ui/translated-th";
+import { GENERAL_RECEIVED_BILLS_HREF, OrderBillStatusCell, orderBillHref, useOrderBillStatus, type OrderBillType } from "./order-bill-status";
 
 interface OrderLeg {
   id?: string;
@@ -104,14 +105,22 @@ interface CustomerOrder {
     receiver_user_id?: string;
     sender_user_id?: string;
   };
+  /** the saved latest expense-bill transfer of the order + whether the Clearing Agent desk received it (server, persisted) */
+  expense_transfer?: { destination: string; destinationLabel: string; date: string; user: string; userId: string | null; branchName: string | null; memo: string | null } | null;
+  general_received?: boolean;
 }
+
+type TransferTarget = "customs" | "truck" | "customer" | "other" | "clearing_agent";
 
 interface TransferRecord {
   date: string;
   user: string;
   userId?: string;
   branchName?: string;
+  /** stored English label — the received checks look for "General Received Bill" in it */
   destination: string;
+  /** destination code, shown through the dictionary */
+  target?: TransferTarget;
   memo?: string;
 }
 
@@ -138,7 +147,7 @@ export function CustomerOrderTransferView() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
-  const [transferTarget, setTransferTarget] = useState<"customs" | "truck" | "customer" | "other" | "clearing_agent" | null>(null);
+  const [transferTarget, setTransferTarget] = useState<TransferTarget | null>(null);
   
   // Hierarchical scope filter state for modal
   const [filterCountryId, setFilterCountryId] = useState<string>("all");
@@ -155,6 +164,17 @@ export function CustomerOrderTransferView() {
   const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
 
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+
+  // one expense bill / desk, in the active language (modal title, toast, transfer badges)
+  const billLabel = (target: TransferTarget | null | undefined) =>
+    target === "clearing_agent" ? tt("cotr.clearing_agent_general_bill", "Clearing Agent (General Received Bill)")
+    : target === "customs" ? tt("cotr.customs_expenses_bill_one", "Customs Bill")
+    : target === "truck" ? tt("cotr.truck_expenses_bill_one", "Truck Expenses Bill")
+    : target === "customer" ? tt("cotr.customer_expenses_bill_one", "Customer Expenses Bill")
+    : target === "other" ? tt("cotr.other_expenses_bill_one", "Other Expenses Bill")
+    : "";
+  const transferDestLabel = (rec: TransferRecord) => (rec.target ? billLabel(rec.target) : rec.destination);
+  const kg = tt("cotr.unit_kg", "kg");
 
   // Auto-clear toast
   useEffect(() => {
@@ -184,6 +204,17 @@ export function CustomerOrderTransferView() {
       const jsonOrder = await resOrder.json();
       if (jsonOrder.success && Array.isArray(jsonOrder.data)) {
         setOrders(jsonOrder.data);
+        // the saved transfers are the truth (they survive a reload); the on-screen history is rebuilt from them
+        const saved: Record<string, TransferRecord> = {};
+        const received: string[] = [];
+        for (const o of jsonOrder.data as CustomerOrder[]) {
+          if (o.expense_transfer) {
+            saved[o.id] = { date: o.expense_transfer.date, user: o.expense_transfer.user, userId: o.expense_transfer.userId ?? undefined, branchName: o.expense_transfer.branchName ?? undefined, destination: o.expense_transfer.destinationLabel, target: o.expense_transfer.destination as TransferTarget, memo: o.expense_transfer.memo ?? undefined };
+          }
+          if (o.general_received) received.push(o.id);
+        }
+        setTransferHistory(saved);
+        setGeneralReceivedOrderIds(received);
       }
 
       if (resUsers) {
@@ -322,6 +353,24 @@ export function CustomerOrderTransferView() {
     return orders.find((o) => o.id === selectedOrderId) || null;
   }, [orders, selectedOrderId]);
 
+  // the selected order's expense bills per bill type (the real bills: attached, reference = the order number)
+  const selectedOrderBills = useOrderBillStatus(useMemo(() => (selectedOrder?.order_no ? [selectedOrder.order_no] : []), [selectedOrder?.order_no]));
+  const billStatusFor = (type: OrderBillType) =>
+    selectedOrder ? (
+      <div className="mt-1" data-testid={`transfer-bill-status-${type}`}>
+        <OrderBillStatusCell
+          lang={lang}
+          type={type}
+          orderBills={selectedOrderBills.bills[selectedOrder.order_no]?.[type]}
+          denied={selectedOrderBills.denied.includes(type)}
+          loading={selectedOrderBills.loading}
+          link={{ orderId: selectedOrder.id, orderNo: selectedOrder.order_no, customerId: selectedOrder.customer_id, truckNo: selectedOrder.truck_number, driver: selectedOrder.truck_driver_name }}
+          compact
+          onCreate={() => { setTransferTarget(type); setTransferModalOpen(true); }}
+        />
+      </div>
+    ) : null;
+
   // Filter orders by search, status, mode, and queue tab
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -383,16 +432,44 @@ export function CustomerOrderTransferView() {
     };
   }, [orders, generalReceivedOrderIds, transferHistory]);
 
+  // Save a transfer on the server (the order's activity log) — the screen only shows it after it is saved
+  const persistTransfer = async (orderId: string, body: Record<string, unknown>) => {
+    const res = await fetch(`/api/erp/clearing-agent/customer-order/${encodeURIComponent(orderId)}/expense-transfer`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.success) throw new Error(json?.error || `HTTP ${res.status}`);
+    return json.data as { destinationLabel: string };
+  };
+  const isUuid = (v: unknown) => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+
   // 1-Click Fast Transfer to Clearing Agent ("Tuck! Transfer bhej diya")
-  const handleQuickTransferToClearingAgent = (order: CustomerOrder) => {
+  const handleQuickTransferToClearingAgent = async (order: CustomerOrder) => {
     const defaultOfficer =
       filteredUsers.find((u) => u.id === transferUserId) ||
       filteredUsers[0] ||
       assignableUsers.find((u) => u.id === userContext?.userId) ||
       assignableUsers[0];
 
-    const officerName = defaultOfficer ? defaultOfficer.name : userContext?.userName || "Clearing Officer";
-    const officerBranch = defaultOfficer?.branchName || defaultOfficer?.cityBranchName || userContext?.branchName || "Main Branch";
+    const officerName = defaultOfficer ? defaultOfficer.name : userContext?.userName || tt("cotr.fallback_clearing_officer", "Clearing Officer");
+    const officerBranch = defaultOfficer?.branchName || defaultOfficer?.cityBranchName || userContext?.branchName || tt("cotr.fallback_main_branch", "Main Branch");
+
+    try {
+      await persistTransfer(order.id, {
+        destination: "clearing_agent",
+        assignedUserId: isUuid(defaultOfficer?.id) ? defaultOfficer?.id : null,
+        assignedUser: officerName,
+        assignedBranch: officerBranch,
+        date: transferDate || new Date().toISOString().split("T")[0],
+        memo: tt("cotr.general_received_memo", "Received in Clearing Agent General Bills desk for onward routing."),
+      });
+    } catch {
+      setToastMessage(tt("obill.transfer_failed", "The transfer could not be saved. Nothing was changed — please try again."));
+      return;
+    }
 
     // Add to General Received Bills set
     setGeneralReceivedOrderIds((prev) => Array.from(new Set([...prev, order.id])));
@@ -406,13 +483,14 @@ export function CustomerOrderTransferView() {
         userId: defaultOfficer?.id,
         branchName: officerBranch,
         destination: "Clearing Agent (General Received Bill)",
-        memo: tt("general_received_memo", "Received in Clearing Agent General Bills desk for onward routing.")
+        target: "clearing_agent",
+        memo: tt("cotr.general_received_memo", "Received in Clearing Agent General Bills desk for onward routing.")
       }
     }));
 
     // Trigger instant feedback toast
     setToastMessage(
-      tt("tuck_transferred_toast", "Tuck! Order {orderNo} transferred to Clearing Agent General Received Bills.").replace("{orderNo}", order.order_no)
+      tt("cotr.tuck_transferred_toast", "Tuck! Order {orderNo} transferred to Clearing Agent General Received Bills.").replace("{orderNo}", order.order_no)
     );
   };
 
@@ -425,9 +503,9 @@ export function CustomerOrderTransferView() {
 
     if (isGeneralReceived) {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2.5 py-0.5 text-[11px] font-bold text-cyan-700 border border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-800">
+        <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2.5 py-0.5 text-[11px] font-bold text-cyan-700 border border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-800 whitespace-nowrap">
           <Inbox className="h-3 w-3" />
-          {tt("status_general_received", "General Received Bill")}
+          {tt("cotr.status_general_received", "General Received Bill")}
         </span>
       );
     }
@@ -435,24 +513,24 @@ export function CustomerOrderTransferView() {
     const s = (status || stage || "pending").toLowerCase();
     if (s.includes("completed")) {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800">
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800 whitespace-nowrap">
           <CheckCircle2 className="h-3 w-3" />
-          {tt("status_completed", "Completed")}
+          {tt("cotr.status_completed", "Completed")}
         </span>
       );
     }
     if (s.includes("confirm") || s.includes("accepted") || s === "1c") {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800">
+        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800 whitespace-nowrap">
           <Clock className="h-3 w-3" />
-          {tt("status_confirmed", "Confirmed")}
+          {tt("cotr.status_confirmed", "Confirmed")}
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800">
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800 whitespace-nowrap">
         <Clock className="h-3 w-3" />
-        {status || "Draft"}
+        {coStatusLabel(lang, status) || tt("cotr.status_draft", "Draft")}
       </span>
     );
   };
@@ -465,13 +543,13 @@ export function CustomerOrderTransferView() {
     <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-slate-50/50 dark:bg-slate-950 p-4 md:p-6 lg:p-8 space-y-6">
       {/* Toast Notification Banner */}
       {toastMessage && (
-        <div className="fixed top-5 right-5 z-50 animate-in slide-in-from-top-3 flex items-center gap-2.5 bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-bold border border-emerald-400/40">
+        <div className="fixed top-5 end-5 z-50 animate-in slide-in-from-top-3 flex items-center gap-2.5 bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-bold border border-emerald-400/40">
           <CheckCircle2 className="h-4 w-4" />
           <span>{toastMessage}</span>
           <button
             type="button"
             onClick={() => setToastMessage(null)}
-            className="ml-2 hover:bg-emerald-700 rounded-md p-1"
+            className="ms-2 hover:bg-emerald-700 rounded-md p-1"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -483,24 +561,24 @@ export function CustomerOrderTransferView() {
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
             <Link href="/dashboard" className="hover:text-blue-600 transition">
-              {tt("nav_dashboard", "Dashboard")}
+              {tt("cotr.nav_dashboard", "Dashboard")}
             </Link>
             <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
-            <span>{tt("nav_shipping_clearing", "Shipping & Clearing")}</span>
+            <span>{tt("cotr.nav_shipping_clearing", "Shipping & Clearing")}</span>
             <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
             <span className="text-slate-900 dark:text-white font-bold">
-              {tt("nav_customer_order_transfer", "Customer Order Transfer")}
+              {tt("cotr.nav_customer_order_transfer", "Customer Order Transfer")}
             </span>
           </div>
           <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
             <span className="p-2 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20">
               <ArrowRightLeft className="h-5 w-5" />
             </span>
-            {tt("nav_customer_order_transfer", "Customer Order Transfer")}
+            {tt("cotr.nav_customer_order_transfer", "Customer Order Transfer")}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {tt(
-              "order_transfer_subtitle",
+              "cotr.order_transfer_subtitle",
               "Transfer, route and manage customer orders across General Received Bills, Customs, Truck, Customer and Other Expense bills"
             )}
           </p>
@@ -514,14 +592,14 @@ export function CustomerOrderTransferView() {
             className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 shadow-xs transition"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span>{tt("refresh", "Refresh")}</span>
+            <span>{tt("cotr.refresh", "Refresh")}</span>
           </button>
           <Link
             href="/dashboard/clearing-agent/customer-order"
             className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 transition"
           >
             <Plus className="h-4 w-4" />
-            <span>{tt("new_order", "New Customer Order")}</span>
+            <span>{tt("cotr.new_order", "New Customer Order")}</span>
           </Link>
         </div>
       </div>
@@ -531,7 +609,7 @@ export function CustomerOrderTransferView() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/90 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              {tt("total_orders", "Total Orders")}
+              {tt("cotr.total_orders", "Total Orders")}
             </span>
             <FileText className="h-4 w-4 text-blue-500" />
           </div>
@@ -543,7 +621,7 @@ export function CustomerOrderTransferView() {
         <div className="rounded-2xl border border-cyan-200/80 bg-white p-4 dark:border-cyan-900/50 dark:bg-slate-900/90 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-              {tt("general_received_bills", "General Received Bills")}
+              {tt("cotr.general_received_bills", "General Received Bills")}
             </span>
             <Inbox className="h-4 w-4 text-cyan-500" />
           </div>
@@ -555,7 +633,7 @@ export function CustomerOrderTransferView() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/90 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500">
-              {tt("transferred_bills_kpi", "Transferred Bills")}
+              {tt("cotr.transferred_bills_kpi", "Transferred Bills")}
             </span>
             <ArrowRightLeft className="h-4 w-4 text-amber-500" />
           </div>
@@ -567,7 +645,7 @@ export function CustomerOrderTransferView() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/90 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-500">
-              {tt("road_transport", "Road Fleet")}
+              {tt("cotr.road_transport", "Road Fleet")}
             </span>
             <Truck className="h-4 w-4 text-indigo-500" />
           </div>
@@ -593,8 +671,8 @@ export function CustomerOrderTransferView() {
               }`}
             >
               <FileText className="h-3.5 w-3.5" />
-              <span>{tt("queue_all_orders", "All Customer Orders")}</span>
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <span>{tt("cotr.queue_all_orders", "All Customer Orders")}</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                 {orders.length}
               </span>
             </button>
@@ -609,8 +687,8 @@ export function CustomerOrderTransferView() {
               }`}
             >
               <Inbox className="h-3.5 w-3.5 text-cyan-500" />
-              <span>{tt("queue_general_received", "General Received Bills (Clearing Agent)")}</span>
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-mono font-bold">
+              <span>{tt("cotr.queue_general_received", "General Received Bills (Clearing Agent)")}</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[11px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-mono font-bold whitespace-nowrap">
                 {stats.generalReceived}
               </span>
             </button>
@@ -625,8 +703,8 @@ export function CustomerOrderTransferView() {
               }`}
             >
               <ArrowRightLeft className="h-3.5 w-3.5 text-amber-500" />
-              <span>{tt("queue_transferred", "Transferred Expense Bills")}</span>
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 font-mono font-bold">
+              <span>{tt("cotr.queue_transferred", "Transferred Expense Bills")}</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[11px] bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 font-mono font-bold whitespace-nowrap">
                 {stats.transferred}
               </span>
             </button>
@@ -638,7 +716,7 @@ export function CustomerOrderTransferView() {
               <Search className="absolute left-3 rtl:left-auto rtl:right-3 top-2.5 h-4 w-4 text-slate-400" />
               <input
                 type="text"
-                placeholder={tt("search_transfer_placeholder", "Search by order no, customer, route, truck...")}
+                placeholder={tt("cotr.search_transfer_placeholder", "Search by order no, customer, route, truck...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-9 pr-3 rtl:pl-3 rtl:pr-9 text-xs text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-hidden dark:border-slate-800 dark:bg-slate-800/50 dark:text-white"
@@ -651,10 +729,10 @@ export function CustomerOrderTransferView() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 cursor-pointer"
               >
-                <option value="all">{tt("all_statuses", "All Statuses")}</option>
-                <option value="draft">{tt("status_draft", "Draft")}</option>
-                <option value="confirmed">{tt("status_confirmed", "Confirmed")}</option>
-                <option value="completed">{tt("status_completed", "Completed")}</option>
+                <option value="all">{tt("cotr.all_statuses", "All Statuses")}</option>
+                <option value="draft">{tt("cotr.status_draft", "Draft")}</option>
+                <option value="confirmed">{tt("cotr.status_confirmed", "Confirmed")}</option>
+                <option value="completed">{tt("cotr.status_completed", "Completed")}</option>
               </select>
 
               <select
@@ -662,10 +740,10 @@ export function CustomerOrderTransferView() {
                 onChange={(e) => setModeFilter(e.target.value)}
                 className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 cursor-pointer"
               >
-                <option value="all">{tt("all_modes", "All Modes")}</option>
-                <option value="road">{tt("mode_road", "By Road")}</option>
-                <option value="sea">{tt("mode_sea", "By Sea")}</option>
-                <option value="air">{tt("mode_air", "By Air")}</option>
+                <option value="all">{tt("cotr.all_modes", "All Modes")}</option>
+                <option value="road">{tt("cotr.mode_road", "By Road")}</option>
+                <option value="sea">{tt("cotr.mode_sea", "By Sea")}</option>
+                <option value="air">{tt("cotr.mode_air", "By Air")}</option>
               </select>
             </div>
           </div>
@@ -675,13 +753,13 @@ export function CustomerOrderTransferView() {
             <table className="w-full text-left rtl:text-right text-xs">
               <thead className="bg-slate-50/70 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-800/40 dark:border-slate-800 dark:text-slate-400">
                 <tr>
-                  <Th className="py-3 px-4">{tt("order_no", "Order No")}</Th>
-                  <Th className="py-3 px-4">{tt("customer", "Customer / Party")}</Th>
-                  <Th className="py-3 px-4">{tt("route", "Route (From → To)")}</Th>
-                  <Th className="py-3 px-4">{tt("cargo_manifest", "Cargo Manifest")}</Th>
-                  <Th className="py-3 px-4">{tt("fleet_driver", "Fleet / Driver")}</Th>
-                  <Th className="py-3 px-4">{tt("status_and_routing", "Status & Routing")}</Th>
-                  <Th className="py-3 px-4 text-center">{tt("actions", "Actions")}</Th>
+                  <Th className="py-3 px-4">{tt("cotr.order_no", "Order No")}</Th>
+                  <Th className="py-3 px-4">{tt("cotr.customer", "Customer / Party")}</Th>
+                  <Th className="py-3 px-4">{tt("cotr.route", "Route (From → To)")}</Th>
+                  <Th className="py-3 px-4">{tt("cotr.cargo_manifest", "Cargo Manifest")}</Th>
+                  <Th className="py-3 px-4">{tt("cotr.fleet_driver", "Fleet / Driver")}</Th>
+                  <Th className="py-3 px-4">{tt("cotr.status_and_routing", "Status & Routing")}</Th>
+                  <Th className="py-3 px-4 text-center">{tt("cotr.actions", "Actions")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
@@ -689,7 +767,7 @@ export function CustomerOrderTransferView() {
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-slate-400">
                       <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-500" />
-                      <span>{tt("loading_orders", "Loading customer orders...")}</span>
+                      <span>{tt("cotr.loading_orders", "Loading customer orders...")}</span>
                     </td>
                   </tr>
                 ) : filteredOrders.length === 0 ? (
@@ -697,12 +775,12 @@ export function CustomerOrderTransferView() {
                     <td colSpan={7} className="py-12 text-center text-slate-400">
                       <FileText className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
                       <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
-                        {tt("no_orders_found", "No customer orders found")}
+                        {tt("cotr.no_orders_found", "No customer orders found")}
                       </p>
                       <p className="text-xs text-slate-400 mt-1">
                         {queueTab === "general_received"
-                          ? tt("no_general_received_hint", "No orders currently received in Clearing Agent General Received Bills queue.")
-                          : tt("create_first_order_hint", "Create a new customer order or transfer to expense bills.")}
+                          ? tt("cotr.no_general_received_hint", "No orders currently received in Clearing Agent General Received Bills queue.")
+                          : tt("cotr.create_first_order_hint", "Create a new customer order or transfer to expense bills.")}
                       </p>
                     </td>
                   </tr>
@@ -711,9 +789,9 @@ export function CustomerOrderTransferView() {
                     const fromLoc = order.loading_country_name || "-";
                     const toLoc = order.receiving_country_name || "-";
                     const cargoWeight = order.goods_gross_weight
-                      ? `${Number(order.goods_gross_weight).toLocaleString()} kg`
+                      ? `${Number(order.goods_gross_weight).toLocaleString()} ${kg}`
                       : order.goods_net_weight
-                      ? `${Number(order.goods_net_weight).toLocaleString()} kg`
+                      ? `${Number(order.goods_net_weight).toLocaleString()} ${kg}`
                       : "-";
 
                     const isGeneralReceived =
@@ -737,7 +815,7 @@ export function CustomerOrderTransferView() {
                           >
                             {order.order_no}
                           </button>
-                          <div className="text-[10px] text-slate-400 mt-0.5">
+                          <div className="text-[11px] text-slate-400 mt-0.5">
                             {order.created_at ? new Date(order.created_at).toLocaleDateString() : "-"}
                           </div>
                         </td>
@@ -745,11 +823,11 @@ export function CustomerOrderTransferView() {
                         {/* Customer */}
                         <td className="py-3 px-4">
                           <div className="font-bold text-slate-900 dark:text-white">
-                            {order.customer_name || tt("customer_unspecified", "Unspecified Customer")}
+                            {order.customer_name || tt("cotr.customer_unspecified", "Unspecified Customer")}
                           </div>
                           {order.movement_type ? (
-                            <span className="inline-block mt-0.5 text-[10px] uppercase font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                              {order.movement_type}
+                            <span className="inline-block mt-0.5 text-[11px] uppercase font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded whitespace-nowrap">
+                              {coMovementLabel(lang, order.movement_type)}
                             </span>
                           ) : null}
                         </td>
@@ -762,17 +840,17 @@ export function CustomerOrderTransferView() {
                             <span>{toLoc}</span>
                           </div>
                           {order.route_name ? (
-                            <div className="text-[10px] text-slate-400 mt-0.5">{order.route_name}</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">{order.route_name}</div>
                           ) : null}
                         </td>
 
                         {/* Cargo */}
                         <td className="py-3 px-4">
                           <div className="font-bold text-slate-900 dark:text-white">
-                            {order.goods_name || tt("general_cargo", "General Cargo")}
+                            {order.goods_name || tt("cotr.general_cargo", "General Cargo")}
                           </div>
                           <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {order.goods_quantity ? `${order.goods_quantity} ${order.goods_unit || "pkgs"}` : ""}
+                            {order.goods_quantity ? `${order.goods_quantity} ${order.goods_unit || tt("cotr.unit_pkgs", "pkgs")}` : ""}
                             {cargoWeight !== "-" ? ` • ${cargoWeight}` : ""}
                           </div>
                         </td>
@@ -792,8 +870,8 @@ export function CustomerOrderTransferView() {
                         <td className="py-3 px-4 space-y-1">
                           <div>{getStatusBadge(order.status, order.current_stage, order.id)}</div>
                           {transferRec && (
-                            <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 truncate max-w-[180px]">
-                              <span>✓ {transferRec.destination}</span>
+                            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 truncate max-w-[180px]">
+                              <span>✓ {transferDestLabel(transferRec)}</span>
                             </div>
                           )}
                         </td>
@@ -805,10 +883,10 @@ export function CustomerOrderTransferView() {
                               type="button"
                               onClick={() => setSelectedOrderId(order.id)}
                               className="inline-flex items-center gap-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1.5 text-xs shadow-xs transition cursor-pointer"
-                              title={tt("inspect_order_transfer", "Open order transfer workspace")}
+                              title={tt("cotr.inspect_order_transfer", "Open order transfer workspace")}
                             >
                               <Eye className="h-3.5 w-3.5" />
-                              <span>{tt("view_and_transfer", "View & Transfer")}</span>
+                              <span>{tt("cotr.view_and_transfer", "View & Transfer")}</span>
                             </button>
 
                             {/* 1-Click Fast Tuck Transfer to Clearing Agent */}
@@ -817,10 +895,10 @@ export function CustomerOrderTransferView() {
                                 type="button"
                                 onClick={() => handleQuickTransferToClearingAgent(order)}
                                 className="inline-flex items-center gap-1 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-2.5 py-1.5 text-xs shadow-xs transition cursor-pointer"
-                                title={tt("quick_transfer_clearing_title", "Tuck! Instant transfer to Clearing Agent General Received Bills")}
+                                title={tt("cotr.quick_transfer_clearing_title", "Tuck! Instant transfer to Clearing Agent General Received Bills")}
                               >
                                 <Zap className="h-3.5 w-3.5 text-yellow-300" />
-                                <span>{translateHeader(lang, "Truck Transfer")}</span>
+                                <span>{tt("com.ls_truck_transfer", "Truck Transfer")}</span>
                               </button>
                             )}
                           </div>
@@ -856,14 +934,14 @@ export function CustomerOrderTransferView() {
               currentTransfer?.user ||
               selectedUserObj?.name ||
               userContext?.userName ||
-              "Assigned Officer";
+              tt("cotr.assigned_officer_lbl", "Assigned Officer");
 
             const assignedBranchName =
               currentTransfer?.branchName ||
               selectedUserObj?.branchName ||
               selectedUserObj?.cityBranchName ||
               userContext?.branchName ||
-              "Main Branch";
+              tt("cotr.fallback_main_branch", "Main Branch");
 
             const activeDate = currentTransfer?.date || transferDate || new Date().toISOString().split("T")[0];
 
@@ -878,7 +956,7 @@ export function CustomerOrderTransferView() {
                       className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700 transition cursor-pointer"
                     >
                       <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-                      <span>{tt("back_to_orders", "Back to Orders")}</span>
+                      <span>{tt("cotr.back_to_orders", "Back to Orders")}</span>
                     </button>
 
                     <div className="h-4 w-px bg-slate-700 hidden sm:block" />
@@ -886,7 +964,7 @@ export function CustomerOrderTransferView() {
                     {/* Active Bill Glowing Tag */}
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs font-black uppercase tracking-wider">
                       <span className="h-2 w-2 rounded-full bg-blue-400 animate-ping" />
-                      <span>{tt("active_bill_under_transfer", "Active Bill for Transfer")}</span>
+                      <span>{tt("cotr.active_bill_under_transfer", "Active Bill for Transfer")}</span>
                     </div>
 
                     {/* Order / Bill Number */}
@@ -901,7 +979,7 @@ export function CustomerOrderTransferView() {
                           setCopiedOrderId(selectedOrder.id);
                         }}
                         className="p-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition cursor-pointer"
-                        title={tt("copy_order_no", "Copy order number")}
+                        title={tt("cotr.copy_order_no", "Copy order number")}
                       >
                         {copiedOrderId === selectedOrder.id ? (
                           <Check className="h-3.5 w-3.5 text-emerald-400" />
@@ -913,14 +991,14 @@ export function CustomerOrderTransferView() {
 
                     {/* Bill Classification Badge */}
                     {isGenReceived ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 px-3 py-0.5 text-xs font-bold">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 px-3 py-0.5 text-xs font-bold whitespace-nowrap">
                         <Inbox className="h-3 w-3" />
-                        <span>{tt("general_received_bill_desk", "General Received Bill Desk")}</span>
+                        <span>{tt("cotr.general_received_bill_desk", "General Received Bill Desk")}</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 px-3 py-0.5 text-xs font-semibold">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 px-3 py-0.5 text-xs font-semibold whitespace-nowrap">
                         <FileText className="h-3 w-3" />
-                        <span>{tt("customer_commercial_order", "Customer Commercial Order")}</span>
+                        <span>{tt("cotr.customer_commercial_order", "Customer Commercial Order")}</span>
                       </span>
                     )}
                   </div>
@@ -930,12 +1008,12 @@ export function CustomerOrderTransferView() {
                     {currentTransfer ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        <span>{tt("transferred_to_dest", "Transferred")}: {currentTransfer.destination}</span>
+                        <span>{tt("cotr.transferred_to_dest", "Transferred")}: {transferDestLabel(currentTransfer)}</span>
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/40">
                         <Clock className="h-3.5 w-3.5" />
-                        <span>{tt("ready_for_transfer", "Ready for Transfer")}</span>
+                        <span>{tt("cotr.ready_for_transfer", "Ready for Transfer")}</span>
                       </span>
                     )}
 
@@ -945,7 +1023,7 @@ export function CustomerOrderTransferView() {
                       className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700 transition cursor-pointer"
                     >
                       <Printer className="h-3.5 w-3.5" />
-                      <span>{tt("print", "Print")}</span>
+                      <span>{tt("cotr.print", "Print")}</span>
                     </button>
                   </div>
                 </div>
@@ -954,25 +1032,25 @@ export function CustomerOrderTransferView() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs">
                   {/* Card 1: Booking Customer & Chart of Accounts */}
                   <div className="rounded-xl border border-slate-700/80 bg-slate-800/60 p-3 space-y-1">
-                    <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                       <User className="h-3 w-3 text-blue-400" />
-                      <span>{tt("customer_and_ledger", "Customer & Ledger")}</span>
+                      <span>{tt("cotr.customer_and_ledger", "Customer & Ledger")}</span>
                     </span>
                     <div className="font-bold text-sm text-white truncate">
-                      {selectedOrder.customer_name || tt("customer_unspecified", "Unspecified")}
+                      {selectedOrder.customer_name || tt("cotr.customer_unspecified_short", "Unspecified")}
                     </div>
                     <div className="font-mono text-[11px] text-blue-300 truncate">
                       {linkedAccount
                         ? `${linkedAccount.code ? `#${linkedAccount.code} ` : ""}${linkedAccount.name}`
-                        : tt("linked_customer_account", "Account: Linked Customer Ledger")}
+                        : tt("cotr.linked_customer_account", "Account: Linked Customer Ledger")}
                     </div>
                   </div>
 
                   {/* Card 2: Route & Transit Corridor */}
                   <div className="rounded-xl border border-slate-700/80 bg-slate-800/60 p-3 space-y-1">
-                    <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                       <MapPin className="h-3 w-3 text-emerald-400" />
-                      <span>{tt("route_corridor", "Transit Corridor")}</span>
+                      <span>{tt("cotr.route_corridor", "Transit Corridor")}</span>
                     </span>
                     <div className="font-bold text-sm text-white flex items-center gap-1.5 truncate">
                       <span>{selectedOrder.loading_country_name || "-"}</span>
@@ -980,32 +1058,32 @@ export function CustomerOrderTransferView() {
                       <span>{selectedOrder.receiving_country_name || "-"}</span>
                     </div>
                     <div className="text-[11px] text-slate-300 truncate">
-                      {selectedOrder.route_name || selectedOrder.transport_mode?.toUpperCase() || "Road Transport Corridor"}
+                      {selectedOrder.route_name || coModeLabel(lang, selectedOrder.transport_mode) || tt("cotr.fallback_road_corridor", "Road Transport Corridor")}
                     </div>
                   </div>
 
                   {/* Card 3: Cargo Manifest & Gross Weight */}
                   <div className="rounded-xl border border-slate-700/80 bg-slate-800/60 p-3 space-y-1">
-                    <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                       <Boxes className="h-3 w-3 text-amber-400" />
-                      <span>{tt("cargo_and_weight", "Cargo & Weight")}</span>
+                      <span>{tt("cotr.cargo_and_weight", "Cargo & Weight")}</span>
                     </span>
                     <div className="font-bold text-sm text-white truncate">
-                      {selectedOrder.goods_name || tt("general_cargo", "General Cargo")}
+                      {selectedOrder.goods_name || tt("cotr.general_cargo", "General Cargo")}
                     </div>
                     <div className="text-[11px] text-amber-300 font-mono font-bold truncate">
                       {selectedOrder.goods_gross_weight
-                        ? `${Number(selectedOrder.goods_gross_weight).toLocaleString()} kg`
-                        : `${selectedOrder.goods_quantity || "1"} ${selectedOrder.goods_unit || "pkgs"}`}
+                        ? `${Number(selectedOrder.goods_gross_weight).toLocaleString()} ${kg}`
+                        : `${selectedOrder.goods_quantity || "1"} ${selectedOrder.goods_unit || tt("cotr.unit_pkgs", "pkgs")}`}
                       {selectedOrder.goods_chs_code ? ` • HS: ${selectedOrder.goods_chs_code}` : ""}
                     </div>
                   </div>
 
                   {/* Card 4: Assigned Handler & Branch (NEVER BLANK!) */}
                   <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/30 p-3 space-y-1">
-                    <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
                       <ShieldCheck className="h-3 w-3 text-emerald-400" />
-                      <span>{tt("assigned_handler_title", "Assigned Handler & Branch")}</span>
+                      <span>{tt("cotr.assigned_handler_title", "Assigned Handler & Branch")}</span>
                     </span>
                     <div className="font-bold text-sm text-emerald-200 flex items-center gap-1.5 truncate">
                       <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
@@ -1028,11 +1106,11 @@ export function CustomerOrderTransferView() {
               <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3 dark:border-blue-900/60 dark:bg-blue-950/20">
                 <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300 font-black text-xs">
                   <ArrowRightLeft className="h-3.5 w-3.5" />
-                  <span>{tt("transfer_destinations_title", "Transfer Order & Route Expenses")}</span>
+                  <span>{tt("cotr.transfer_destinations_title", "Transfer Order & Route Expenses")}</span>
                 </div>
-                <p className="text-[10.5px] text-blue-700/80 dark:text-blue-300/80 mt-0.5 leading-snug">
+                <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80 mt-0.5 leading-snug">
                   {tt(
-                    "transfer_destinations_desc",
+                    "cotr.transfer_destinations_desc",
                     "Select an expense bill destination to assign an officer and transfer this order."
                   )}
                 </p>
@@ -1050,11 +1128,11 @@ export function CustomerOrderTransferView() {
                     <div className="rounded-xl border-2 border-cyan-400 bg-cyan-50 dark:bg-cyan-950/30 p-3 text-xs space-y-1">
                       <div className="flex items-center gap-1.5 font-black text-cyan-800 dark:text-cyan-200">
                         <Inbox className="h-4 w-4 text-cyan-600" />
-                        <span>{tt("received_in_general_desk_banner", "📥 General Received Bill — Clearing Agent Desk")}</span>
+                        <span>{tt("cotr.received_in_general_desk_banner", "📥 General Received Bill — Clearing Agent Desk")}</span>
                       </div>
                       <p className="text-[11px] text-cyan-700 dark:text-cyan-300">
                         {tt(
-                          "received_routing_guidance",
+                          "cotr.received_routing_guidance",
                           "Bill received by Clearing Agent. Choose where to route it onward below:"
                         )}
                       </p>
@@ -1086,27 +1164,18 @@ export function CustomerOrderTransferView() {
                         </span>
                         <div className="min-w-0">
                           <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
-                            {tt("clearing_agent_general_bill", "Clearing Agent (General Received Bill)")}
+                            {tt("cotr.clearing_agent_general_bill", "Clearing Agent (General Received Bill)")}
                           </h4>
-                          <p className="text-[10px] text-slate-400 truncate">
-                            {tt("clearing_general_desc", "Route into General Received Bills desk")}
+                          <p className="text-[11px] text-slate-400 truncate">
+                            {tt("cotr.clearing_general_desc", "Route into General Received Bills desk")}
                           </p>
                         </div>
                       </div>
 
                       {isGenReceived ? (
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-cyan-200 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">
-                            ✓ {tt("received_badge", "Received")}
-                          </span>
-                          <Link
-                            href={`/dashboard/clearing-agent/general-received-bill?orderId=${selectedOrder.id}`}
-                            className="inline-flex items-center gap-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            <span>{tt("open_bill_desk", "Open Desk")}</span>
-                          </Link>
-                        </div>
+                        <span className="shrink-0 px-2 py-0.5 rounded text-[11px] font-bold bg-cyan-200 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200 whitespace-nowrap">
+                          ✓ {tt("cotr.received_badge", "Received")}
+                        </span>
                       ) : (
                         <button
                           type="button"
@@ -1114,11 +1183,18 @@ export function CustomerOrderTransferView() {
                           className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
                         >
                           <Zap className="h-3 w-3 text-yellow-300" />
-                          <span>{translateHeader(lang, "Truck Transfer")}</span>
+                          <span>{tt("com.ls_truck_transfer", "Truck Transfer")}</span>
                         </button>
                       )}
                     </div>
 
+                    <Link
+                      href={`${GENERAL_RECEIVED_BILLS_HREF}?orderId=${encodeURIComponent(selectedOrder.id)}` as never}
+                      className="flex w-full items-center justify-center gap-1 text-[11px] font-bold text-cyan-700 hover:underline dark:text-cyan-300"
+                      data-testid="open-general-received-bills"
+                    >
+                      <Inbox className="h-3 w-3" />{tt("obill.open_general_received", "Open General Received Bills desk")}
+                    </Link>
                     {!isGenReceived && (
                       <button
                         type="button"
@@ -1126,9 +1202,9 @@ export function CustomerOrderTransferView() {
                           setTransferTarget("clearing_agent");
                           setTransferModalOpen(true);
                         }}
-                        className="w-full text-center text-[10px] font-semibold text-cyan-600 dark:text-cyan-400 hover:underline pt-1 cursor-pointer"
+                        className="w-full text-center text-[11px] font-semibold text-cyan-600 dark:text-cyan-400 hover:underline pt-1 cursor-pointer"
                       >
-                        {tt("configure_officer_transfer", "Configure Handler & Stage Transfer &rarr;")}
+                        {tt("cotr.configure_officer_transfer", "Configure Handler & Stage Transfer →")}
                       </button>
                     )}
                   </div>
@@ -1136,186 +1212,130 @@ export function CustomerOrderTransferView() {
               })()}
 
               {/* Destination 1: Customs Duty & Expenses */}
-              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-amber-400 dark:hover:border-amber-600 transition space-y-2">
-                <div className="flex items-center justify-between gap-2.5">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="p-1.5 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
-                      <Landmark className="h-3.5 w-3.5" />
-                    </span>
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
-                        {tt("customs_expenses_bill", "Customs Bills")}
-                      </h4>
-                      <p className="text-[10px] text-slate-400 truncate">
-                        {tt("customs_bill_desc", "Tariff clearance & border duty")}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Link
-                      href={`/dashboard/clearing-agent/customs-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(selectedOrder.order_no)}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(selectedOrder.customer_name || "")}&loadingCountry=${encodeURIComponent(selectedOrder.loading_country_name || "")}&receivingCountry=${encodeURIComponent(selectedOrder.receiving_country_name || "")}&goodsName=${encodeURIComponent(selectedOrder.goods_name || "")}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition"
-                    >
-                      <span>{tt("open_bill_btn", "Open Bill")}</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTransferTarget("customs");
-                        setTransferModalOpen(true);
-                      }}
-                      className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
-                    >
-                      <span>{tt("transfer_btn", "Transfer")}</span>
-                      <ArrowRight className="h-3 w-3 rtl:rotate-180" />
-                    </button>
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-amber-400 dark:hover:border-amber-600 transition flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="p-1.5 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
+                    <Landmark className="h-3.5 w-3.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
+                      {tt("obill.type_customs", "Customs Bills")}
+                    </h4>
+                    <p className="text-[11px] text-slate-400 truncate">
+                      {tt("cotr.customs_bill_desc", "Tariff clearance & border duty")}
+                    </p>
+                    {billStatusFor("customs")}
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTransferTarget("customs");
+                    setTransferModalOpen(true);
+                  }}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
+                >
+                  <span>{tt("cotr.transfer_btn", "Transfer")}</span>
+                  <ArrowRight className="h-3 w-3 rtl:rotate-180" />
+                </button>
               </div>
 
               {/* Destination 2: Truck Expenses Bills */}
-              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-blue-400 dark:hover:border-blue-600 transition space-y-2">
-                <div className="flex items-center justify-between gap-2.5">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="p-1.5 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 shrink-0">
-                      <Truck className="h-3.5 w-3.5" />
-                    </span>
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
-                        {tt("truck_expenses_bill", "Truck Expenses Bills")}
-                      </h4>
-                      <p className="text-[10px] text-slate-400 truncate">
-                        {tt("truck_bill_desc", "Freight, tolls & driver advance")}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Link
-                      href={`/dashboard/clearing-agent/truck-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(selectedOrder.order_no)}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(selectedOrder.customer_name || "")}&truckNo=${encodeURIComponent(selectedOrder.truck_number || "")}&driver=${encodeURIComponent(selectedOrder.truck_driver_name || "")}&loadingCountry=${encodeURIComponent(selectedOrder.loading_country_name || "")}&receivingCountry=${encodeURIComponent(selectedOrder.receiving_country_name || "")}&goodsName=${encodeURIComponent(selectedOrder.goods_name || "")}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition"
-                    >
-                      <span>{tt("open_bill_btn", "Open Bill")}</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTransferTarget("truck");
-                        setTransferModalOpen(true);
-                      }}
-                      className="inline-flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
-                    >
-                      <span>{tt("transfer_btn", "Transfer")}</span>
-                      <ArrowRight className="h-3 w-3 rtl:rotate-180" />
-                    </button>
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-blue-400 dark:hover:border-blue-600 transition flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="p-1.5 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 shrink-0">
+                    <Truck className="h-3.5 w-3.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
+                      {tt("obill.type_truck", "Truck Expenses Bills")}
+                    </h4>
+                    <p className="text-[11px] text-slate-400 truncate">
+                      {tt("cotr.truck_bill_desc", "Freight, tolls & driver advance")}
+                    </p>
+                    {billStatusFor("truck")}
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTransferTarget("truck");
+                    setTransferModalOpen(true);
+                  }}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
+                >
+                  <span>{tt("cotr.transfer_btn", "Transfer")}</span>
+                  <ArrowRight className="h-3 w-3 rtl:rotate-180" />
+                </button>
               </div>
 
               {/* Destination 3: Customer Expenses Bills */}
-              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-emerald-400 dark:hover:border-emerald-600 transition space-y-2">
-                <div className="flex items-center justify-between gap-2.5">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
-                      <Receipt className="h-3.5 w-3.5" />
-                    </span>
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
-                        {tt("customer_expenses_bill", "Customer Expenses Bills")}
-                      </h4>
-                      <p className="text-[10px] text-slate-400 truncate">
-                        {tt("customer_bill_desc", "Direct client disbursements")}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Link
-                      href={`/dashboard/clearing-agent/customer-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(selectedOrder.order_no)}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(selectedOrder.customer_name || "")}&loadingCountry=${encodeURIComponent(selectedOrder.loading_country_name || "")}&receivingCountry=${encodeURIComponent(selectedOrder.receiving_country_name || "")}&goodsName=${encodeURIComponent(selectedOrder.goods_name || "")}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition"
-                    >
-                      <span>{tt("open_bill_btn", "Open Bill")}</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTransferTarget("customer");
-                        setTransferModalOpen(true);
-                      }}
-                      className="inline-flex items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
-                    >
-                      <span>{tt("transfer_btn", "Transfer")}</span>
-                      <ArrowRight className="h-3 w-3 rtl:rotate-180" />
-                    </button>
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-emerald-400 dark:hover:border-emerald-600 transition flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
+                    <Receipt className="h-3.5 w-3.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
+                      {tt("obill.type_customer", "Customer Expenses Bills")}
+                    </h4>
+                    <p className="text-[11px] text-slate-400 truncate">
+                      {tt("cotr.customer_bill_desc", "Direct client disbursements")}
+                    </p>
+                    {billStatusFor("customer")}
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTransferTarget("customer");
+                    setTransferModalOpen(true);
+                  }}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
+                >
+                  <span>{tt("cotr.transfer_btn", "Transfer")}</span>
+                  <ArrowRight className="h-3 w-3 rtl:rotate-180" />
+                </button>
               </div>
 
               {/* Destination 4: Other Expenses Bills */}
-              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-purple-400 dark:hover:border-purple-600 transition space-y-2">
-                <div className="flex items-center justify-between gap-2.5">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 shrink-0">
-                      <FileText className="h-3.5 w-3.5" />
-                    </span>
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
-                        {tt("other_expenses_bill", "Other Expenses Bills")}
-                      </h4>
-                      <p className="text-[10px] text-slate-400 truncate">
-                        {tt("other_bill_desc", "Inspection, lab, seals & fees")}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Link
-                      href={`/dashboard/clearing-agent/other-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(selectedOrder.order_no)}&customerName=${encodeURIComponent(selectedOrder.customer_name || "")}&loadingCountry=${encodeURIComponent(selectedOrder.loading_country_name || "")}&receivingCountry=${encodeURIComponent(selectedOrder.receiving_country_name || "")}&goodsName=${encodeURIComponent(selectedOrder.goods_name || "")}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition"
-                    >
-                      <span>{tt("open_bill_btn", "Open Bill")}</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTransferTarget("other");
-                        setTransferModalOpen(true);
-                      }}
-                      className="inline-flex items-center gap-1 rounded-lg border border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
-                    >
-                      <span>{tt("transfer_btn", "Transfer")}</span>
-                      <ArrowRight className="h-3 w-3 rtl:rotate-180" />
-                    </button>
+              <div className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs hover:border-purple-400 dark:hover:border-purple-600 transition flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 shrink-0">
+                    <FileText className="h-3.5 w-3.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight truncate">
+                      {tt("obill.type_other", "Other Expenses Bills")}
+                    </h4>
+                    <p className="text-[11px] text-slate-400 truncate">
+                      {tt("cotr.other_bill_desc", "Inspection, lab, seals & fees")}
+                    </p>
+                    {billStatusFor("other")}
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTransferTarget("other");
+                    setTransferModalOpen(true);
+                  }}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold px-2.5 py-1 text-[11px] shadow-2xs transition cursor-pointer"
+                >
+                  <span>{tt("cotr.transfer_btn", "Transfer")}</span>
+                  <ArrowRight className="h-3 w-3 rtl:rotate-180" />
+                </button>
               </div>
 
               {/* Additional Operations: Handover & Official Customer Invoice */}
               <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
-                {/* Open General Received Bill — shown when order is in General Received queue */}
-                {(() => {
-                  const isGenReceived =
-                    generalReceivedOrderIds.includes(selectedOrder.id) ||
-                    transferHistory[selectedOrder.id]?.destination?.includes("General Received Bill") ||
-                    selectedOrder.current_stage === "general_received_bill";
-                  return isGenReceived ? (
-                    <Link
-                      href={`/dashboard/clearing-agent/general-received-bill?orderId=${selectedOrder.id}`}
-                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl border-2 border-cyan-400 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 dark:border-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 font-bold py-2 text-xs transition"
-                    >
-                      <Inbox className="h-3.5 w-3.5" />
-                      <span>{tt("open_general_received_bill", "Open General Received Bill Desk")}</span>
-                    </Link>
-                  ) : null;
-                })()}
                 <button
                   type="button"
                   onClick={() => setHandoverModalOpen(true)}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300 font-bold py-1.5 text-xs transition cursor-pointer"
                 >
                   <UserCheck className="h-3.5 w-3.5" />
-                  <span>{tt("assign_handover_order", "Assign / Handover to User")}</span>
+                  <span>{tt("cotr.assign_handover_order", "Assign / Handover to User")}</span>
                 </button>
 
                 <Link
@@ -1323,7 +1343,7 @@ export function CustomerOrderTransferView() {
                   className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 font-bold py-1.5 text-xs transition"
                 >
                   <Receipt className="h-3.5 w-3.5" />
-                  <span>{tt("create_customer_invoice", "Create Customer Invoice")}</span>
+                  <span>{tt("cotr.create_customer_invoice", "Create Customer Invoice")}</span>
                 </Link>
               </div>
             </div>
@@ -1353,27 +1373,27 @@ export function CustomerOrderTransferView() {
                         </div>
                         <div>
                           <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <span>{tt("commercial_accounts_desk", "Commercial & Financial Ledger Desk")}</span>
-                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                              Verified
+                            <span>{tt("cotr.commercial_accounts_desk", "Commercial & Financial Ledger Desk")}</span>
+                            <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 whitespace-nowrap">
+                              {tt("cotr.badge_verified", "Verified")}
                             </span>
                           </div>
-                          <span className="text-[10px] text-slate-400">
-                            {selectedOrder.created_at ? new Date(selectedOrder.created_at).toLocaleDateString() : "Active Record"}
+                          <span className="text-[11px] text-slate-400">
+                            {selectedOrder.created_at ? new Date(selectedOrder.created_at).toLocaleDateString() : tt("cotr.active_record", "Active Record")}
                           </span>
                         </div>
                       </div>
                       {custInfo?.code && (
-                        <span className="font-mono text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded">
-                          Cust: {custInfo.code}
+                        <span className="font-mono text-[11px] text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded">
+                          {tt("cotr.cust_code_prefix", "Cust:")} {custInfo.code}
                         </span>
                       )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                       <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold block">
-                          {tt("customer_name", "Customer / Booking Party")}
+                        <span className="text-[11px] text-slate-400 uppercase font-bold block">
+                          {tt("cotr.customer_name", "Customer / Booking Party")}
                         </span>
                         <span className="font-bold text-slate-900 dark:text-white mt-0.5 block truncate">
                           {selectedOrder.customer_name || custInfo?.name || "-"}
@@ -1381,19 +1401,19 @@ export function CustomerOrderTransferView() {
                       </div>
 
                       <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold block">
-                          {tt("account_ledger", "Accounting Ledger")}
+                        <span className="text-[11px] text-slate-400 uppercase font-bold block">
+                          {tt("cotr.account_ledger", "Accounting Ledger")}
                         </span>
                         <span className="font-mono font-bold text-blue-600 dark:text-blue-400 mt-0.5 block truncate">
                           {linkedAccount
                             ? `${linkedAccount.code ? `#${linkedAccount.code} ` : ""}${linkedAccount.name}`
-                            : tt("pending_ledger_assignment", "Pending Ledger Link")}
+                            : tt("cotr.pending_ledger_assignment", "Pending Ledger Link")}
                         </span>
                       </div>
 
                       <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold block">
-                          {tt("contact_and_phone", "Contact & Mobile")}
+                        <span className="text-[11px] text-slate-400 uppercase font-bold block">
+                          {tt("cotr.contact_and_phone", "Contact & Mobile")}
                         </span>
                         <span className="text-slate-700 dark:text-slate-300 mt-0.5 block truncate">
                           {custInfo?.phone || custInfo?.mobile || custInfo?.email || "—"}
@@ -1413,13 +1433,13 @@ export function CustomerOrderTransferView() {
                     </div>
                     <div>
                       <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span>{tt("transit_route_desk", "Transit Logistics & Corridor Desk")}</span>
-                        <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                          {selectedOrder.movement_type || "TRANSIT"}
+                        <span>{tt("cotr.transit_route_desk", "Transit Logistics & Corridor Desk")}</span>
+                        <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
+                          {coMovementLabel(lang, selectedOrder.movement_type || "transit")}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-400">
-                        {tt("origin_destination_tracking", "Origin to Destination Route Tracking")}
+                      <span className="text-[11px] text-slate-400">
+                        {tt("cotr.origin_destination_tracking", "Origin to Destination Route Tracking")}
                       </span>
                     </div>
                   </div>
@@ -1427,8 +1447,8 @@ export function CustomerOrderTransferView() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                   <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">
-                      {tt("origin_country_loading", "Loading Location / Origin")}
+                    <span className="text-[11px] text-slate-400 uppercase font-bold block">
+                      {tt("cotr.origin_country_loading", "Loading Location / Origin")}
                     </span>
                     <span className="font-bold text-slate-900 dark:text-white mt-0.5 block">
                       {selectedOrder.loading_country_name || "-"}
@@ -1436,8 +1456,8 @@ export function CustomerOrderTransferView() {
                   </div>
 
                   <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">
-                      {tt("destination_country_border", "Discharge / Receiving Border")}
+                    <span className="text-[11px] text-slate-400 uppercase font-bold block">
+                      {tt("cotr.destination_country_border", "Discharge / Receiving Border")}
                     </span>
                     <span className="font-bold text-slate-900 dark:text-white mt-0.5 block">
                       {selectedOrder.receiving_country_name || "-"}
@@ -1447,7 +1467,7 @@ export function CustomerOrderTransferView() {
 
                 {selectedOrder.route_name && (
                   <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-[11px] text-slate-600 dark:text-slate-300">
-                    <strong>{tt("corridor_path", "Corridor Path")}: </strong>
+                    <strong>{tt("cotr.corridor_path", "Corridor Path")}: </strong>
                     <span>{selectedOrder.route_name}</span>
                   </div>
                 )}
@@ -1462,13 +1482,13 @@ export function CustomerOrderTransferView() {
                     </div>
                     <div>
                       <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span>{tt("cargo_manifest_desk", "Cargo Manifest & Customs Classification")}</span>
-                        <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                          Declared Goods
+                        <span>{tt("cotr.cargo_manifest_desk", "Cargo Manifest & Customs Classification")}</span>
+                        <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 whitespace-nowrap">
+                          {tt("cotr.badge_declared_goods", "Declared Goods")}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-400">
-                        {tt("weight_and_quantity_specs", "Weight & Quantity Specifications")}
+                      <span className="text-[11px] text-slate-400">
+                        {tt("cotr.weight_and_quantity_specs", "Weight & Quantity Specifications")}
                       </span>
                     </div>
                   </div>
@@ -1476,30 +1496,30 @@ export function CustomerOrderTransferView() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                   <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">{tt("item_name", "Item Name")}</span>
+                    <span className="text-[11px] text-slate-400 uppercase font-bold block">{tt("cotr.item_name", "Item Name")}</span>
                     <span className="font-bold text-slate-900 dark:text-white mt-0.5 block truncate">
                       {selectedOrder.goods_name || "-"}
                     </span>
                   </div>
 
                   <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">{tt("chs_code", "CHS / HS Code")}</span>
+                    <span className="text-[11px] text-slate-400 uppercase font-bold block">{tt("cotr.chs_code", "CHS / HS Code")}</span>
                     <span className="font-mono font-bold text-slate-900 dark:text-white mt-0.5 block">
                       {selectedOrder.goods_chs_code || "-"}
                     </span>
                   </div>
 
                   <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">{tt("quantity", "Quantity")}</span>
+                    <span className="text-[11px] text-slate-400 uppercase font-bold block">{tt("cotr.quantity", "Quantity")}</span>
                     <span className="font-bold text-slate-900 dark:text-white mt-0.5 block">
                       {selectedOrder.goods_quantity ? `${selectedOrder.goods_quantity} ${selectedOrder.goods_unit || ""}` : "-"}
                     </span>
                   </div>
 
                   <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">{tt("gross_weight", "Gross Weight")}</span>
+                    <span className="text-[11px] text-slate-400 uppercase font-bold block">{tt("cotr.gross_weight", "Gross Weight")}</span>
                     <span className="font-bold text-blue-600 dark:text-blue-400 mt-0.5 block">
-                      {selectedOrder.goods_gross_weight ? `${Number(selectedOrder.goods_gross_weight).toLocaleString()} kg` : "-"}
+                      {selectedOrder.goods_gross_weight ? `${Number(selectedOrder.goods_gross_weight).toLocaleString()} ${kg}` : "-"}
                     </span>
                   </div>
                 </div>
@@ -1514,13 +1534,13 @@ export function CustomerOrderTransferView() {
                     </div>
                     <div>
                       <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span>{tt("fleet_haulier_desk", "Transport Operations & Vehicle Dispatch")}</span>
-                        <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                          Road Freight
+                        <span>{tt("cotr.fleet_haulier_desk", "Transport Operations & Vehicle Dispatch")}</span>
+                        <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 whitespace-nowrap">
+                          {tt("cotr.badge_road_freight", "Road Freight")}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-400">
-                        {tt("vehicle_and_driver_record", "Driver, Vehicle & Transporter Assignment")}
+                      <span className="text-[11px] text-slate-400">
+                        {tt("cotr.vehicle_and_driver_record", "Driver, Vehicle & Transporter Assignment")}
                       </span>
                     </div>
                   </div>
@@ -1528,28 +1548,28 @@ export function CustomerOrderTransferView() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                   <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">{tt("truck_no", "Truck No")}</span>
+                    <span className="text-[11px] text-slate-400 uppercase font-bold block">{tt("cotr.truck_no", "Truck No")}</span>
                     <span className="font-mono font-bold text-slate-900 dark:text-white mt-0.5 block">
                       {selectedOrder.truck_number || "-"}
                     </span>
                   </div>
 
                   <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">{tt("driver_name", "Driver Name")}</span>
+                    <span className="text-[11px] text-slate-400 uppercase font-bold block">{tt("cotr.driver_name", "Driver Name")}</span>
                     <span className="font-bold text-slate-900 dark:text-white mt-0.5 block truncate">
                       {selectedOrder.truck_driver_name || "-"}
                     </span>
                   </div>
 
                   <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">{tt("driver_mobile", "Driver Contact")}</span>
+                    <span className="text-[11px] text-slate-400 uppercase font-bold block">{tt("cotr.driver_mobile", "Driver Contact")}</span>
                     <span className="font-mono text-slate-800 dark:text-slate-200 mt-0.5 block">
                       {selectedOrder.truck_driver_mobile || "-"}
                     </span>
                   </div>
 
                   <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">{tt("transport_co", "Transporter")}</span>
+                    <span className="text-[11px] text-slate-400 uppercase font-bold block">{tt("cotr.transport_co", "Transporter")}</span>
                     <span className="font-bold text-slate-900 dark:text-white mt-0.5 block truncate">
                       {selectedOrder.truck_transport_company || "-"}
                     </span>
@@ -1565,10 +1585,10 @@ export function CustomerOrderTransferView() {
                       💬
                     </div>
                     <span className="text-xs font-bold text-slate-900 dark:text-white">
-                      {tt("operational_remarks_desk", "Clearing Agent Operational Remarks & Client Notes")}
+                      {tt("cotr.operational_remarks_desk", "Clearing Agent Operational Remarks & Client Notes")}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed pl-2">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed ps-2">
                     {selectedOrder.remarks}
                   </p>
                 </div>
@@ -1586,13 +1606,13 @@ export function CustomerOrderTransferView() {
                         </div>
                         <div>
                           <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <span>{tt("transfer_audit_registry", "Order Transfer Registry & Audit Log")}</span>
-                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300">
-                              Audit Trail
+                            <span>{tt("cotr.transfer_audit_registry", "Order Transfer Registry & Audit Log")}</span>
+                            <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300 whitespace-nowrap">
+                              {tt("cotr.badge_audit_trail", "Audit Trail")}
                             </span>
                           </div>
-                          <span className="text-[10px] text-slate-400">
-                            {tt("transfer_audit_desc", "Track all transfers, officers assigned, and expense destinations")}
+                          <span className="text-[11px] text-slate-400">
+                            {tt("cotr.transfer_audit_desc", "Track all transfers, officers assigned, and expense destinations")}
                           </span>
                         </div>
                       </div>
@@ -1603,23 +1623,23 @@ export function CustomerOrderTransferView() {
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
                             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                            <span>{currentTransfer.destination}</span>
+                            <span>{transferDestLabel(currentTransfer)}</span>
                           </span>
-                          <span className="text-[10px] font-mono text-slate-400">{currentTransfer.date}</span>
+                          <span className="text-[11px] font-mono text-slate-400">{currentTransfer.date}</span>
                         </div>
                         <div className="text-slate-700 dark:text-slate-300">
-                          {tt("assigned_officer_lbl", "Assigned Officer")}: <strong>{currentTransfer.user}</strong>
+                          {tt("cotr.assigned_officer_lbl", "Assigned Officer")}: <strong>{currentTransfer.user}</strong>
                           {currentTransfer.branchName ? ` (${currentTransfer.branchName})` : ""}
                         </div>
                         {currentTransfer.memo && (
                           <div className="text-[11px] text-slate-500 italic">
-                            "{currentTransfer.memo}"
+                            &quot;{currentTransfer.memo}&quot;
                           </div>
                         )}
                       </div>
                     ) : (
                       <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-850/60 text-xs text-slate-400 text-center">
-                        {tt("no_prior_transfers", "No prior transfer records logged for this order. Ready to route above.")}
+                        {tt("cotr.no_prior_transfers", "No prior transfer records logged for this order. Ready to route above.")}
                       </div>
                     )}
                   </div>
@@ -1642,16 +1662,8 @@ export function CustomerOrderTransferView() {
                 </span>
                 <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
                   {transferTarget === "clearing_agent"
-                    ? tt("clearing_general_transfer_title", "Clearing Agent General Transfer Form")
-                    : `${tt("transfer_to_prefix", "Transfer Order to")} ${
-                        transferTarget === "customs"
-                          ? tt("customs_expenses_bill", "Customs Bill")
-                          : transferTarget === "truck"
-                          ? tt("truck_expenses_bill", "Truck Expenses Bill")
-                          : transferTarget === "customer"
-                          ? tt("customer_expenses_bill", "Customer Expenses Bill")
-                          : tt("other_expenses_bill", "Other Expenses Bill")
-                      }`}
+                    ? tt("cotr.clearing_general_transfer_title", "Clearing Agent General Transfer Form")
+                    : tt("cotr.transfer_to_dest", "Transfer Order to {dest}").replace("{dest}", billLabel(transferTarget))}
                 </h3>
               </div>
               <button
@@ -1669,16 +1681,16 @@ export function CustomerOrderTransferView() {
                 <span className="font-mono font-black text-blue-600 dark:text-blue-400">
                   {selectedOrder.order_no}
                 </span>
-                <span className="text-[10px] font-bold text-slate-500">
-                  {selectedOrder.customer_name || "Customer"}
+                <span className="text-[11px] font-bold text-slate-500">
+                  {selectedOrder.customer_name || tt("cotr.fallback_customer", "Customer")}
                 </span>
               </div>
               <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400">
                 <span>
-                  {tt("route", "Route")}: {selectedOrder.loading_country_name || "-"} → {selectedOrder.receiving_country_name || "-"}
+                  {tt("cotr.route_short", "Route")}: {selectedOrder.loading_country_name || "-"} {isRtl ? "←" : "→"} {selectedOrder.receiving_country_name || "-"}
                 </span>
                 <span>
-                  {tt("cargo", "Cargo")}: {selectedOrder.goods_name || "General Cargo"}
+                  {tt("cotr.cargo", "Cargo")}: {selectedOrder.goods_name || tt("cotr.general_cargo", "General Cargo")}
                 </span>
               </div>
             </div>
@@ -1691,7 +1703,7 @@ export function CustomerOrderTransferView() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 mb-1">
-                      {tt("step_country_superadmin", "1. Country Scope (Super Admin)")}
+                      {tt("cotr.step_country_superadmin", "1. Country Scope (Super Admin)")}
                     </label>
                     <select
                       value={filterCountryId}
@@ -1701,7 +1713,7 @@ export function CustomerOrderTransferView() {
                       }}
                       className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 cursor-pointer"
                     >
-                      <option value="all">{tt("all_countries_opt", "All Countries")}</option>
+                      <option value="all">{tt("cotr.all_countries_opt", "All Countries")}</option>
                       {availableCountries.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
@@ -1712,14 +1724,14 @@ export function CustomerOrderTransferView() {
 
                   <div>
                     <label className="block text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 mb-1">
-                      {tt("step_branch_superadmin", "2. Branch Scope")}
+                      {tt("cotr.step_branch_superadmin", "2. Branch Scope")}
                     </label>
                     <select
                       value={filterBranchId}
                       onChange={(e) => setFilterBranchId(e.target.value)}
                       className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 cursor-pointer"
                     >
-                      <option value="all">{tt("all_branches_opt", "All Branches")}</option>
+                      <option value="all">{tt("cotr.all_branches_opt", "All Branches")}</option>
                       {availableBranches.map((b) => (
                         <option key={b.id} value={b.id}>
                           {b.name}
@@ -1732,19 +1744,19 @@ export function CustomerOrderTransferView() {
                 /* Country Admin: Country fixed, selects Branch */
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                    <span className="font-bold">{tt("country_scope_fixed", "Country Scope")}:</span>
-                    <span className="font-semibold">{userContext?.country || "Current Country"}</span>
+                    <span className="font-bold">{tt("cotr.country_scope_fixed", "Country Scope")}:</span>
+                    <span className="font-semibold">{userContext?.country || tt("cotr.fallback_current_country", "Current Country")}</span>
                   </div>
                   <div>
                     <label className="block text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 mb-1">
-                      {tt("select_branch_countryadmin", "Select Branch Scope")}
+                      {tt("cotr.select_branch_countryadmin", "Select Branch Scope")}
                     </label>
                     <select
                       value={filterBranchId}
                       onChange={(e) => setFilterBranchId(e.target.value)}
                       className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 cursor-pointer"
                     >
-                      <option value="all">{tt("all_country_branches", "All Branches in Country")}</option>
+                      <option value="all">{tt("cotr.all_country_branches", "All Branches in Country")}</option>
                       {availableBranches.map((b) => (
                         <option key={b.id} value={b.id}>
                           {b.name}
@@ -1756,9 +1768,9 @@ export function CustomerOrderTransferView() {
               ) : (
                 /* Branch User: Locked to Own Branch */
                 <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase">{tt("branch_scope_locked", "Branch Scope")}:</span>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase">{tt("cotr.branch_scope_locked", "Branch Scope")}:</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">
-                    {userContext?.branchName || "My Branch"}
+                    {userContext?.branchName || tt("cotr.fallback_my_branch", "My Branch")}
                   </span>
                 </div>
               )}
@@ -1766,7 +1778,7 @@ export function CustomerOrderTransferView() {
               {/* STEP 3: Assign to User Dropdown (NEVER BLANK!) */}
               <div>
                 <label className="block text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 mb-1">
-                  {tt("assign_responsible_user", "Select Responsible Officer *")}
+                  {tt("cotr.assign_responsible_user", "Select Responsible Officer *")}
                 </label>
                 <select
                   value={transferUserId}
@@ -1774,7 +1786,7 @@ export function CustomerOrderTransferView() {
                   className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 cursor-pointer"
                 >
                   {filteredUsers.length === 0 ? (
-                    <option value="">{tt("no_users_in_branch", "No users in selected branch")}</option>
+                    <option value="">{tt("cotr.no_users_in_branch", "No users in selected branch")}</option>
                   ) : (
                     filteredUsers.map((u) => (
                       <option key={u.id} value={u.id}>
@@ -1797,20 +1809,20 @@ export function CustomerOrderTransferView() {
                       <span className="truncate">{selectedUserObj.name}</span>
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     </div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1">
-                      <span>{selectedUserObj.role || "Officer"}</span>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1">
+                      <span>{selectedUserObj.role || tt("cotr.fallback_officer", "Officer")}</span>
                       <span>•</span>
                       <span>
                         {selectedUserObj.branchName ||
                           selectedUserObj.cityBranchName ||
                           selectedUserObj.countryBranchName ||
                           userContext?.branchName ||
-                          "Branch"}
+                          tt("cotr.fallback_branch", "Branch")}
                       </span>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 shrink-0">
-                    {tt("assigned_badge", "Active Assignee")}
+                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 shrink-0 whitespace-nowrap">
+                    {tt("cotr.assigned_badge", "Active Assignee")}
                   </span>
                 </div>
               )}
@@ -1818,7 +1830,7 @@ export function CustomerOrderTransferView() {
               {/* Transfer Date */}
               <div>
                 <label className="block text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 mb-1">
-                  {tt("transfer_date_label", "Transfer Date *")}
+                  {tt("cotr.transfer_date_label", "Transfer Date *")}
                 </label>
                 <input
                   type="date"
@@ -1832,18 +1844,18 @@ export function CustomerOrderTransferView() {
               {transferTarget === "clearing_agent" && (
                 <div>
                   <label className="block text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 mb-1">
-                    {tt("clearing_routing_stage", "Clearing Agent Routing Stage")}
+                    {tt("cotr.clearing_routing_stage", "Clearing Agent Routing Stage")}
                   </label>
                   <select
                     value={clearingRoutingStage}
                     onChange={(e) => setClearingRoutingStage(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 cursor-pointer"
                   >
-                    <option value="customs_clearance">🏛️ Customs Clearance & Border Duty</option>
-                    <option value="general_received_bill">📥 General Received Bill Queue</option>
-                    <option value="warehouse_transfer">🏢 Warehouse Storage & Transfer</option>
-                    <option value="truck_dispatch">🚚 Truck Haulage & Road Dispatch</option>
-                    <option value="shipping_pipeline">🚢 Full Shipping Clearing Pipeline</option>
+                    <option value="customs_clearance">{tt("cotr.stage_customs_clearance", "🏛️ Customs Clearance & Border Duty")}</option>
+                    <option value="general_received_bill">{tt("cotr.stage_general_received_bill", "📥 General Received Bill Queue")}</option>
+                    <option value="warehouse_transfer">{tt("cotr.stage_warehouse_transfer", "🏢 Warehouse Storage & Transfer")}</option>
+                    <option value="truck_dispatch">{tt("cotr.stage_truck_dispatch", "🚚 Truck Haulage & Road Dispatch")}</option>
+                    <option value="shipping_pipeline">{tt("cotr.stage_shipping_pipeline", "🚢 Full Shipping Clearing Pipeline")}</option>
                   </select>
                 </div>
               )}
@@ -1851,14 +1863,14 @@ export function CustomerOrderTransferView() {
               {/* Transfer Memo */}
               <div>
                 <label className="block text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 mb-1">
-                  {tt("transfer_memo_label", "Transfer Memo / Operational Instructions")}
+                  {tt("cotr.transfer_memo_label", "Transfer Memo / Operational Instructions")}
                 </label>
                 <textarea
                   rows={2}
                   value={transferMemo}
                   onChange={(e) => setTransferMemo(e.target.value)}
                   placeholder={tt(
-                    "transfer_memo_placeholder",
+                    "cotr.transfer_memo_placeholder",
                     "Enter specific notes, duty tariff numbers, or handling remarks..."
                   )}
                   className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
@@ -1873,22 +1885,38 @@ export function CustomerOrderTransferView() {
                 onClick={() => setTransferModalOpen(false)}
                 className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
-                {tt("btn_cancel", "Cancel")}
+                {tt("cotr.btn_cancel", "Cancel")}
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   const targetUser =
                     filteredUsers.find((u) => u.id === transferUserId) ||
                     assignableUsers.find((u) => u.id === transferUserId);
                   const userName = targetUser
                     ? targetUser.name || targetUser.fullName || targetUser.full_name
-                    : userContext?.userName || "Assigned Officer";
+                    : userContext?.userName || tt("cotr.assigned_officer_lbl", "Assigned Officer");
                   const branchName =
                     targetUser?.branchName ||
                     targetUser?.cityBranchName ||
                     userContext?.branchName ||
-                    "Main Branch";
+                    tt("cotr.fallback_main_branch", "Main Branch");
+
+                  // Save the transfer first: a failed save changes nothing and keeps the dialog open
+                  try {
+                    await persistTransfer(selectedOrder.id, {
+                      destination: transferTarget,
+                      assignedUserId: isUuid(transferUserId) ? transferUserId : null,
+                      assignedUser: userName,
+                      assignedBranch: branchName,
+                      date: transferDate,
+                      memo: transferMemo,
+                      routingStage: transferTarget === "clearing_agent" ? clearingRoutingStage : null,
+                    });
+                  } catch {
+                    setToastMessage(tt("obill.transfer_failed", "The transfer could not be saved. Nothing was changed — please try again."));
+                    return;
+                  }
 
                   // Mark in General Received Bills if clearing agent
                   if (transferTarget === "clearing_agent") {
@@ -1907,84 +1935,41 @@ export function CustomerOrderTransferView() {
                         transferTarget === "clearing_agent"
                           ? `Clearing Agent (General Received Bill)`
                           : `${transferTarget?.toUpperCase()} Bill`,
+                      target: transferTarget ?? undefined,
                       memo: transferMemo
                     }
                   }));
 
                   setToastMessage(
-                    tt("order_transferred_toast", "Order {orderNo} successfully transferred to {dest}.").replace(
+                    tt("cotr.order_transferred_toast", "Order {orderNo} successfully transferred to {dest}.").replace(
                       "{orderNo}",
                       selectedOrder.order_no
-                    ).replace("{dest}", transferTarget?.toUpperCase() || "")
+                    ).replace("{dest}", billLabel(transferTarget))
                   );
 
                   setTransferModalOpen(false);
 
-                  // Navigate to destination if requested
-                  if (transferTarget === "customs") {
-                    router.push(
-                      `/dashboard/clearing-agent/customs-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
-                        selectedOrder.order_no
-                      )}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(
-                        selectedOrder.customer_name || ""
-                      )}&loadingCountry=${encodeURIComponent(
-                        selectedOrder.loading_country_name || ""
-                      )}&receivingCountry=${encodeURIComponent(
-                        selectedOrder.receiving_country_name || ""
-                      )}&goodsName=${encodeURIComponent(
-                        selectedOrder.goods_name || ""
-                      )}&assignedUserId=${transferUserId}&date=${transferDate}`
-                    );
-                  } else if (transferTarget === "truck") {
-                    router.push(
-                      `/dashboard/clearing-agent/truck-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
-                        selectedOrder.order_no
-                      )}&truckNo=${encodeURIComponent(selectedOrder.truck_number || "")}&driver=${encodeURIComponent(
-                        selectedOrder.truck_driver_name || ""
-                      )}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(
-                        selectedOrder.customer_name || ""
-                      )}&loadingCountry=${encodeURIComponent(
-                        selectedOrder.loading_country_name || ""
-                      )}&receivingCountry=${encodeURIComponent(
-                        selectedOrder.receiving_country_name || ""
-                      )}&goodsName=${encodeURIComponent(
-                        selectedOrder.goods_name || ""
-                      )}&assignedUserId=${transferUserId}&date=${transferDate}`
-                    );
-                  } else if (transferTarget === "customer") {
-                    router.push(
-                      `/dashboard/clearing-agent/customer-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
-                        selectedOrder.order_no
-                      )}&customerId=${selectedOrder.customer_id || ""}&customerName=${encodeURIComponent(
-                        selectedOrder.customer_name || ""
-                      )}&loadingCountry=${encodeURIComponent(
-                        selectedOrder.loading_country_name || ""
-                      )}&receivingCountry=${encodeURIComponent(
-                        selectedOrder.receiving_country_name || ""
-                      )}&goodsName=${encodeURIComponent(
-                        selectedOrder.goods_name || ""
-                      )}&assignedUserId=${transferUserId}&date=${transferDate}`
-                    );
-                  } else if (transferTarget === "other") {
-                    router.push(
-                      `/dashboard/clearing-agent/other-expenses?orderId=${selectedOrder.id}&orderNo=${encodeURIComponent(
-                        selectedOrder.order_no
-                      )}&customerName=${encodeURIComponent(
-                        selectedOrder.customer_name || ""
-                      )}&loadingCountry=${encodeURIComponent(
-                        selectedOrder.loading_country_name || ""
-                      )}&receivingCountry=${encodeURIComponent(
-                        selectedOrder.receiving_country_name || ""
-                      )}&goodsName=${encodeURIComponent(
-                        selectedOrder.goods_name || ""
-                      )}&assignedUserId=${transferUserId}&date=${transferDate}`
-                    );
+                  // Open the destination on this order: the expense bill page reads the order (scope-checked) and opens its entry
+                  // form attached to it; the Clearing Agent desk opens the General Received Bills with this order first.
+                  if (transferTarget === "clearing_agent") {
+                    router.push(`${GENERAL_RECEIVED_BILLS_HREF}?orderId=${encodeURIComponent(selectedOrder.id)}` as never);
+                  } else if (transferTarget) {
+                    router.push(orderBillHref(transferTarget, {
+                      orderId: selectedOrder.id,
+                      orderNo: selectedOrder.order_no,
+                      customerId: selectedOrder.customer_id,
+                      truckNo: transferTarget === "truck" ? selectedOrder.truck_number : null,
+                      driver: transferTarget === "truck" ? selectedOrder.truck_driver_name : null,
+                      assignedUserId: transferUserId,
+                      assignedUser: userName,
+                      date: transferDate,
+                    }) as never);
                   }
                 }}
                 className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5"
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>{tt("confirm_and_proceed", "Confirm & Proceed")}</span>
+                <span>{tt("cotr.confirm_and_proceed", "Confirm & Proceed")}</span>
               </button>
             </div>
           </div>
@@ -2001,7 +1986,7 @@ export function CustomerOrderTransferView() {
           sourceId={selectedOrder.id}
           targetUrl={`/dashboard/clearing-agent/order-transfer?orderId=${selectedOrder.id}`}
           defaultTask={tt(
-            "handover_transfer_task",
+            "cotr.handover_transfer_task",
             "Please review and process expense transfers for customer order {orderNo}."
           ).replace("{orderNo}", selectedOrder.order_no)}
           sourceCountryId={selectedOrder.country_id || selectedOrder.loading_country_id || null}

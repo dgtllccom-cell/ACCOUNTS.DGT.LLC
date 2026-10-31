@@ -571,7 +571,7 @@ export function ChinaEmblem({ className = "w-24 h-24" }: EmblemProps) {
         fontWeight="900"
         letterSpacing="2"
       >
-        PEOPLE'S REPUBLIC OF CHINA
+        PEOPLE&apos;S REPUBLIC OF CHINA
       </text>
     </svg>
   );

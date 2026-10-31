@@ -119,9 +119,9 @@ export const ERP_STATUS_COLORS: Record<string, { bg: string; text: string; borde
  */
 export function getStatusBadgeClass(status: string): string {
   const cfg = ERP_STATUS_COLORS[status];
-  if (!cfg) return "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
+  if (!cfg) return "px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
   return cn(
-    "px-2.5 py-0.5 rounded-full text-[10px] font-bold border",
+    "px-2.5 py-0.5 rounded-full text-[11px] font-bold border",
     cfg.bg, cfg.text, cfg.border
   );
 }
@@ -133,7 +133,7 @@ export function StatusBadge({ status, className }: { status: string; className?:
   const cfg = ERP_STATUS_COLORS[status] ?? ERP_STATUS_COLORS["Draft"];
   return (
     <span className={cn(
-      "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap",
+      "inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border whitespace-nowrap",
       cfg.bg, cfg.text, cfg.border,
       className
     )}>
@@ -173,7 +173,7 @@ export function ReportStatusLegend({
     )}>
       {/* Status Legend */}
       <div className="flex-1">
-        <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+        <p className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
           {tr("STATUS LEGEND")}
         </p>
         <div className="flex flex-wrap gap-x-5 gap-y-1.5">
@@ -195,7 +195,7 @@ export function ReportStatusLegend({
       {/* Notes */}
       {notes && notes.length > 0 && (
         <div className="sm:max-w-sm">
-          <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+          <p className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
             {tr("NOTE")}
           </p>
           <ul className="space-y-1">

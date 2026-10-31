@@ -305,7 +305,7 @@ export function WarehouseManagement() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500 dark:text-slate-400">{tt("wh.role", "Role")}</span>
-                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 whitespace-nowrap">
                   {isSuperAdmin ? tt("wh.super_admin", "Super Admin") : (session?.scopes?.summary?.scopeLabel || "—")}
                 </span>
               </div>
@@ -377,7 +377,7 @@ export function WarehouseManagement() {
             <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/70 via-white to-blue-50/20 p-4 shadow-sm dark:border-blue-950/60 dark:from-blue-950/30 dark:via-slate-900 dark:to-slate-900">
               <div className="flex items-center justify-between pb-3 border-b border-blue-100/70 dark:border-blue-900/40">
                 <span className="text-xs font-bold text-blue-950 dark:text-blue-200">{tt("wh.all_countries_report", "All Countries Warehouse Report")}</span>
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider">
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider whitespace-nowrap">
                   {tt("wh.super_admin_only", "Super Admin Only")}
                 </span>
               </div>
@@ -648,11 +648,11 @@ export function WarehouseManagement() {
                         </td>
                         <td className="px-3 py-2.5">
                           {w.status === "Active" ? (
-                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300">
+                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300 whitespace-nowrap">
                               {tt("common.active", "Active")}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300">
+                            <span className="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300 whitespace-nowrap">
                               {tt("common.inactive", "Inactive")}
                             </span>
                           )}
@@ -774,23 +774,23 @@ export function WarehouseManagement() {
         >
           <div className="grid gap-3 md:grid-cols-2 text-xs">
             <div className="rounded-xl border bg-slate-50 p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tt("wh.warehouse_name_label", "Warehouse Name")}</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{tt("wh.warehouse_name_label", "Warehouse Name")}</div>
               <div className="mt-1 text-sm font-bold text-slate-900">{viewWarehouse.warehouse_name}</div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tt("wh.col_owner", "Owner")}</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{tt("wh.col_owner", "Owner")}</div>
               <div className="mt-1 text-sm font-bold text-slate-900">{viewWarehouse.owner_name || "-"}</div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tt("wh.col_type", "Warehouse Type")}</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{tt("wh.col_type", "Warehouse Type")}</div>
               <div className="mt-1 text-xs font-semibold text-slate-800">{viewWarehouse.warehouse_type ? translateHeader(lang, viewWarehouse.warehouse_type) : "—"}</div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tt("common.status", "Status")}</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{tt("common.status", "Status")}</div>
               <div className="mt-1 text-xs font-bold text-emerald-600">{viewWarehouse.status}</div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3 md:col-span-2">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tt("wh.address", "Address")}</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{tt("wh.address", "Address")}</div>
               <div className="mt-1 text-xs text-slate-700">{viewWarehouse.full_address || tt("wh.no_address", "No address recorded")}</div>
             </div>
           </div>

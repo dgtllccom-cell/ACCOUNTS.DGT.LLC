@@ -60,7 +60,7 @@ export function MailPageHeader({
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                 {title}
               </h1>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                 DGT Mail Enterprise
               </span>

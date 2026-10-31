@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
       goodsName,
       goodsId,
       lotId: p.get("lotId"),
+      excludeOrderId: p.get("excludeOrderId"),
       lang,
       limit: p.get("limit") ? Number(p.get("limit")) : undefined,
     });

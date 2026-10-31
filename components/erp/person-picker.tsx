@@ -70,7 +70,7 @@ function toOption(row: PersonRow, lang: string = "en", bilingual: boolean = fals
 
   const fatherPrefix = lang === "ur" ? "ولدیت:" : lang === "ar" ? "الوالد:" : lang === "fa" ? "فرزند:" : lang === "ps" ? "د پلار نوم:" : "S/O:";
 
-  let secondaryParts: string[] = [];
+  const secondaryParts: string[] = [];
   if (nativeName && nativeName !== name) secondaryParts.push(nativeName);
   if (father) secondaryParts.push(`${fatherPrefix} ${father}`);
   if (empDesig) {
@@ -82,7 +82,7 @@ function toOption(row: PersonRow, lang: string = "en", bilingual: boolean = fals
   const secondaryText = secondaryParts.length > 0 ? secondaryParts.join(" · ") : undefined;
 
   // Format clean name display with proper localization
-  let extraBits: string[] = [];
+  const extraBits: string[] = [];
   if (displayCode) extraBits.push(displayCode);
   if (father) extraBits.push(`${fatherPrefix} ${father}`);
   if (empDesig) extraBits.push(empDesig);
@@ -396,7 +396,7 @@ export function PersonPicker({
               type="button"
               onClick={() => setFilterByCountry(false)}
               className={cn(
-                "px-2.5 py-0.5 rounded-md text-[10.5px] font-bold transition",
+                "px-2.5 py-0.5 rounded-md text-[11px] font-bold transition",
                 !filterByCountry
                   ? "bg-blue-600 text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -408,7 +408,7 @@ export function PersonPicker({
               type="button"
               onClick={() => setFilterByCountry(true)}
               className={cn(
-                "px-2.5 py-0.5 rounded-md text-[10.5px] font-bold transition",
+                "px-2.5 py-0.5 rounded-md text-[11px] font-bold transition",
                 filterByCountry
                   ? "bg-blue-600 text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -461,14 +461,14 @@ export function PersonPicker({
                   {viewName}
                 </h3>
                 {viewPerson.person_code ? (
-                  <p className="text-[10px] font-mono font-black text-blue-600 dark:text-blue-400 mt-0.5">{viewPerson.person_code}</p>
+                  <p className="text-[11px] font-mono font-black text-blue-600 dark:text-blue-400 mt-0.5">{viewPerson.person_code}</p>
                 ) : null}
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                   {t(lang, "hr.pp_company", "Company")}: <span className="font-bold text-slate-700 dark:text-slate-300">{viewPerson.company_name ? localizeName(viewPerson.company_name, lang) : t(lang, "hr.pp_independent", "Independent Account")}</span>
                 </p>
               </div>
               <div className="text-end">
-                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900">
+                <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900">
                   {t(lang, "hr.pp_active_master", "Active Master")}
                 </span>
               </div>
@@ -476,23 +476,23 @@ export function PersonPicker({
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-950">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "erp.person_dup_father", "Father")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "erp.person_dup_father", "Father")}</span>
                 <span className="font-bold text-slate-800 dark:text-white text-sm">{viewPerson.father_name || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_mobile_phone", "Mobile Phone")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_mobile_phone", "Mobile Phone")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-white text-sm" dir="ltr">{viewPerson.mobile || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "sed.f_whatsapp", "WhatsApp")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "sed.f_whatsapp", "WhatsApp")}</span>
                 <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm" dir="ltr">{viewPerson.whatsapp || viewPerson.mobile || "—"}</span>
               </div>
               <div className="sm:col-span-2">
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_email_address", "Email Address")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_email_address", "Email Address")}</span>
                 <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-xs" dir="ltr">{viewPerson.email || "—"}</span>
               </div>
               <div className="sm:col-span-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_address_location", "Address / Location")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_address_location", "Address / Location")}</span>
                 <span className="font-medium text-slate-800 dark:text-slate-200 text-xs">{viewPerson.address ? localizeTerm(viewPerson.address, lang) : "—"}</span>
               </div>
             </div>

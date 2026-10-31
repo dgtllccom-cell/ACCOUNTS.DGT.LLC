@@ -172,7 +172,7 @@ export function DeletedRecordDetailDialog({
               {tt("aud.deletion_reason", "Deletion Reason Stated by Operator:")}
             </div>
             <p className="text-xs text-rose-900 dark:text-rose-200 italic font-medium">
-              "{record.reason || "Soft deleted from operational view and archived in Super Admin Vault."}"
+              &quot;{record.reason || "Soft deleted from operational view and archived in Super Admin Vault."}&quot;
             </p>
           </div>
 
@@ -194,7 +194,7 @@ export function DeletedRecordDetailDialog({
                       typeof val === "object" && val !== null ? JSON.stringify(val, null, 2) : String(val ?? "—");
                     return (
                       <div key={idx} className="p-2.5 flex flex-col border-b last:border-b-0">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                           {key.replace(/_/g, " ")}
                         </span>
                         <span className="text-xs font-medium font-mono text-slate-800 dark:text-slate-200 mt-0.5 break-all whitespace-pre-wrap">

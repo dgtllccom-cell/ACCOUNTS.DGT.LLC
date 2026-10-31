@@ -264,7 +264,7 @@ export function ProfessionalReportViewer<T>({
                           {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
                         </div>
                       </div>
-                      <div className={cn("text-[10px] text-gray-500 flex flex-col gap-0.5", dir === "rtl" ? "text-left" : "text-right")}>
+                      <div className={cn("text-[11px] text-gray-500 flex flex-col gap-0.5", dir === "rtl" ? "text-left" : "text-right")}>
                         {filters && Object.entries(filters).map(([k, v]) => v ? <div key={k}>{translateHeader(lang, k)}: <span className="font-semibold text-gray-700">{v}</span></div> : null)}
                         <div className="mt-1">{t(lang, "pv.date_label", "Date")}: {new Date().toLocaleString()}</div>
                         <div>{t(lang, "pv.page_of", "Page {page} of {total}").replace("{page}", String(pageIndex + 1)).replace("{total}", String(totalPages))}</div>
@@ -273,7 +273,7 @@ export function ProfessionalReportViewer<T>({
 
                     {/* Table */}
                     <div className="flex-1">
-                      <table className="w-full text-left border-collapse text-[10px] leading-snug">
+                      <table className="w-full text-left border-collapse text-[11px] leading-snug">
                         <thead>
                           <tr className="border-y-2 border-gray-800 bg-gray-50">
                             {columns.map((c) => (
@@ -310,7 +310,7 @@ export function ProfessionalReportViewer<T>({
                             const label = translateHeader(lang, humanized);
                             return (
                               <div key={k} className="flex flex-col border rounded px-3 py-2 bg-gray-50 shadow-sm">
-                                <span className="text-[10px] text-gray-500 uppercase font-semibold">{label}</span>
+                                <span className="text-[11px] text-gray-500 uppercase font-semibold">{label}</span>
                                 <span className="font-bold text-gray-900 mt-1">
                                   {typeof v === 'number' ? new Intl.NumberFormat().format(v) : v}
                                 </span>
@@ -322,7 +322,7 @@ export function ProfessionalReportViewer<T>({
                     )}
 
                     {/* Footer */}
-                    <div className="mt-6 pt-3 text-center text-[9px] text-gray-400 border-t border-gray-100 uppercase tracking-widest">
+                    <div className="mt-6 pt-3 text-center text-[11px] text-gray-400 border-t border-gray-100 uppercase tracking-widest">
                       {t(lang, "pv.footer_note", "This is a computer-generated report. Please verify before official use.")}
                     </div>
                   </div>

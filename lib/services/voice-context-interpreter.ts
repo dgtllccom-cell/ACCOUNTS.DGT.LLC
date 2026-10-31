@@ -104,7 +104,7 @@ export class VoiceContextInterpreter {
     const cleaned = normalizeDigits(transcript).toLowerCase().trim();
     const warnings: string[] = [];
     const fields: Record<string, string | number | null> = {};
-    let confidence = 0.55;
+    const confidence = 0.55;
 
     // Extract common fields
     let amounts = cleaned.match(AMOUNT_PATTERN) || [];

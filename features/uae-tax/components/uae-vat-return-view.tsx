@@ -224,7 +224,7 @@ export function UaeVatReturnView({ lang: langProp }: { lang?: SupportedLanguage 
                       <td className="px-4 py-2 font-mono font-bold text-slate-700 dark:text-slate-200">{r.period_code}</td>
                       <td className="px-4 py-2 text-right tabular-nums font-bold">{fmtAed(r.box12_net_vat_payable)}</td>
                       <td className="px-4 py-2">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${r.status === "filed" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800"}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${r.status === "filed" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800"}`}>
                           {s.t(`vr_status_${r.status}`, r.status)}
                         </span>
                       </td>

@@ -147,7 +147,7 @@ export function CrmPipelineBoard({ lang }: { lang?: string }) {
               <div key={stage} className={`rounded-2xl border p-2.5 ${STAGE_TONE[stage]}`} data-testid={`pipe-col-${stage}`}>
                 <div className="mb-2 flex items-center justify-between px-1">
                   <h3 className="text-[11px] font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">{stageLabel[stage]}</h3>
-                  <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-900/50 dark:text-slate-300">{rows.length}</span>
+                  <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-900/50 dark:text-slate-300 whitespace-nowrap">{rows.length}</span>
                 </div>
                 <div className="space-y-2">
                   {rows.length === 0 ? (
@@ -155,19 +155,19 @@ export function CrmPipelineBoard({ lang }: { lang?: string }) {
                   ) : rows.map((r) => (
                     <div key={r.id} data-testid="pipe-card" data-id={r.id} className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                       <a href={`/dashboard/customer-inquiries?id=${r.id}`} className="block text-[11px] font-bold text-slate-900 hover:underline dark:text-slate-100">{r.customer_name}</a>
-                      {r.company_name && <div className="text-[10px] text-slate-400">{r.company_name}</div>}
-                      <div className="mt-1 font-mono text-[10px] text-slate-400">{r.inquiry_no}</div>
-                      {r.assignee_name && <div className="mt-1 text-[10px] text-slate-500">{s.t("assigned", "Assigned")}: {r.assignee_name}</div>}
+                      {r.company_name && <div className="text-[11px] text-slate-400">{r.company_name}</div>}
+                      <div className="mt-1 font-mono text-[11px] text-slate-400">{r.inquiry_no}</div>
+                      {r.assignee_name && <div className="mt-1 text-[11px] text-slate-500">{s.t("assigned", "Assigned")}: {r.assignee_name}</div>}
                       {stage === "quotation_sent" && r.quotation_value != null && (
                         <div className="mt-1 text-[11px] font-bold text-amber-700 dark:text-amber-300">{r.quotation_currency} {Number(r.quotation_value).toLocaleString()}</div>
                       )}
-                      {stage === "lost" && r.lost_reason && <div className="mt-1 text-[10px] text-rose-600 dark:text-rose-300">{r.lost_reason}</div>}
+                      {stage === "lost" && r.lost_reason && <div className="mt-1 text-[11px] text-rose-600 dark:text-rose-300">{r.lost_reason}</div>}
                       {stage !== "won" && stage !== "lost" && (
                         <div className="mt-2 flex gap-1">
-                          <button type="button" disabled={busy} data-testid="pipe-advance" onClick={() => void advance(r)} className="flex-1 rounded-lg bg-blue-700 px-2 py-1 text-[10px] font-bold text-white disabled:opacity-50">
+                          <button type="button" disabled={busy} data-testid="pipe-advance" onClick={() => void advance(r)} className="flex-1 rounded-lg bg-blue-700 px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50">
                             {s.t("advance_to", "Move to")} {stageLabel[NEXT_STAGE[stage as Stage]!]}
                           </button>
-                          <button type="button" disabled={busy} data-testid="pipe-lost" onClick={() => markLost(r)} className="rounded-lg border border-rose-300 px-2 py-1 text-[10px] font-bold text-rose-700 disabled:opacity-50 dark:border-rose-800 dark:text-rose-300">
+                          <button type="button" disabled={busy} data-testid="pipe-lost" onClick={() => markLost(r)} className="rounded-lg border border-rose-300 px-2 py-1 text-[11px] font-bold text-rose-700 disabled:opacity-50 dark:border-rose-800 dark:text-rose-300">
                             {s.t("mark_lost", "Lost")}
                           </button>
                         </div>
@@ -190,17 +190,17 @@ export function CrmPipelineBoard({ lang }: { lang?: string }) {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("quotation_value", "Quotation Value")}</label>
+                <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("quotation_value", "Quotation Value")}</label>
                 <input data-testid="pipe-quote-value" type="number" min={0} className={INP} value={quote.value} onChange={(e) => setQuote({ ...quote, value: e.target.value })} />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("currency", "Currency")}</label>
+                <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("currency", "Currency")}</label>
                 <select className={INP} value={quote.currency} onChange={(e) => setQuote({ ...quote, currency: e.target.value })}>
                   {["AED", "USD", "PKR", "AFN", "SAR"].map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
             </div>
-            <p className="mt-2 text-[10px] text-slate-400">{s.t("quotation_optional", "Optional — leave blank if the value is not decided yet.")}</p>
+            <p className="mt-2 text-[11px] text-slate-400">{s.t("quotation_optional", "Optional — leave blank if the value is not decided yet.")}</p>
             <div className="mt-4 flex gap-2">
               <button type="button" disabled={busy} data-testid="pipe-quote-save" onClick={() => void submitQuote()} className="flex-1 rounded-lg bg-blue-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{busy ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : s.tGlobal("common.save", "Save")}</button>
               <button type="button" onClick={() => setQuoteModal(null)} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-600 dark:border-slate-700 dark:text-slate-300">{s.tGlobal("common.cancel", "Cancel")}</button>
@@ -216,7 +216,7 @@ export function CrmPipelineBoard({ lang }: { lang?: string }) {
               <h3 className="text-sm font-bold">{s.t("mark_lost", "Lost")} · {lostModal.customer_name}</h3>
               <button type="button" aria-label={s.tGlobal("common.close", "Close")} onClick={() => setLostModal(null)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
             </div>
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("lost_reason", "Reason (optional)")}</label>
+            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("lost_reason", "Reason (optional)")}</label>
             <textarea data-testid="pipe-lost-reason" rows={3} className={INP} value={lostReason} onChange={(e) => setLostReason(e.target.value)} />
             <div className="mt-4 flex gap-2">
               <button type="button" disabled={busy} data-testid="pipe-lost-save" onClick={() => void submitLost()} className="flex-1 rounded-lg bg-rose-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{busy ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : s.tGlobal("common.confirm", "Confirm")}</button>

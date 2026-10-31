@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { apiGet } from "@/lib/api/client";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import {
@@ -156,29 +157,22 @@ export default function InterCountryTransfersPage() {
   const finalCalculatedAmount = (Number(amount || 0) * Number(exchangeRate || 1)).toFixed(2);
 
   // Fetch reference metadata: countries, ledgers, authoritative 4 country accounts
+  // The ERP APIs answer { ok, data: {...} }; the raw fetch() this page used read the envelope as if it were the payload, so
+  // `countries` became an object and `countries.map` crashed the whole page. apiGet unwraps the envelope (and sends the language
+  // header); each list is checked to really be an array before it reaches state.
   const fetchMetadata = useCallback(async () => {
-    try {
-      const [cRes, lRes, aRes] = await Promise.all([
-        fetch("/api/erp/locations"),
-        fetch("/api/erp/accounting/ledgers"),
-        fetch("/api/erp/accounting/inter-country-transfers?action=country-accounts"),
-      ]);
-      if (cRes.ok) {
-        const cData = await cRes.json();
-        const rawCountries = cData.countries || cData || [];
-        setCountries(rawCountries);
-      }
-      if (lRes.ok) {
-        const lData = await lRes.json();
-        setLedgers(lData.ledgers || lData || []);
-      }
-      if (aRes.ok) {
-        const aData = await aRes.json();
-        setCountryAccounts(aData.countryAccounts || []);
-      }
-    } catch (e) {
-      console.warn("Failed to load metadata", e);
-    }
+    const list = <T,>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
+    const [c, l, a] = await Promise.allSettled([
+      apiGet<{ countries?: Country[] }>("/api/erp/locations/countries"),
+      apiGet<{ ledgers?: Ledger[] }>("/api/erp/accounting/ledgers"),
+      apiGet<{ countryAccounts?: typeof countryAccounts }>("/api/erp/accounting/inter-country-transfers?action=country-accounts"),
+    ]);
+    if (c.status === "fulfilled") setCountries(list<Country>(c.value?.countries));
+    else console.warn("Failed to load countries", c.reason);
+    if (l.status === "fulfilled") setLedgers(list<Ledger>(l.value?.ledgers));
+    else console.warn("Failed to load ledgers", l.reason);
+    if (a.status === "fulfilled") setCountryAccounts(list(a.value?.countryAccounts) as typeof countryAccounts);
+    else console.warn("Failed to load country accounts", a.reason);
   }, []);
 
   // Fetch transfers filtered by active tab
@@ -189,13 +183,10 @@ export default function InterCountryTransfersPage() {
       params.set("tab", activeTab);
       if (activeCountryId) params.set("countryId", activeCountryId);
 
-      const res = await fetch(`/api/erp/accounting/inter-country-transfers?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setTransfers(data.transfers || []);
-        if (typeof data.pendingIncomingCount === "number") {
-          setPendingIncomingCount(data.pendingIncomingCount);
-        }
+      const data = await apiGet<{ transfers?: TransferRecord[]; pendingIncomingCount?: number }>(`/api/erp/accounting/inter-country-transfers?${params.toString()}`);
+      setTransfers(Array.isArray(data?.transfers) ? data.transfers : []);
+      if (typeof data?.pendingIncomingCount === "number") {
+        setPendingIncomingCount(data.pendingIncomingCount);
       }
     } catch (e) {
       console.warn("Failed to load transfers", e);
@@ -566,7 +557,7 @@ export default function InterCountryTransfersPage() {
                 <span className="flex items-center gap-1.5">
                   <span className="text-base">{item.flag}</span> {item.name}
                 </span>
-                <span className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono font-bold">
+                <span className="px-1.5 py-0.5 rounded bg-muted text-[11px] font-mono font-bold whitespace-nowrap">
                   {liveAcct?.currency || item.currency}
                 </span>
               </div>
@@ -607,7 +598,7 @@ export default function InterCountryTransfersPage() {
                 <span>{t(tItem.label.toUpperCase())}</span>
                 {typeof tItem.count === "number" && tItem.count > 0 && (
                   <span
-                    className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    className={`ml-1 px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
                       isSelected ? "bg-white text-primary" : tItem.badgeColor || "bg-amber-100 text-amber-800"
                     }`}
                   >
@@ -748,31 +739,31 @@ export default function InterCountryTransfersPage() {
                           <div className="space-y-0.5 text-xs">
                             {tr.bill_number && (
                               <div className="flex items-center gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground">Bill:</span>
+                                <span className="text-[11px] uppercase font-bold text-muted-foreground">Bill:</span>
                                 <span className="font-mono font-medium">{tr.bill_number}</span>
                               </div>
                             )}
                             {tr.container_number && (
                               <div className="flex items-center gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground">Cont:</span>
+                                <span className="text-[11px] uppercase font-bold text-muted-foreground">Cont:</span>
                                 <span className="font-mono font-medium text-blue-600 dark:text-blue-400">{tr.container_number}</span>
                               </div>
                             )}
                             {tr.bl_number && (
                               <div className="flex items-center gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground">BL:</span>
+                                <span className="text-[11px] uppercase font-bold text-muted-foreground">BL:</span>
                                 <span className="font-mono font-medium text-emerald-600 dark:text-emerald-400">{tr.bl_number}</span>
                               </div>
                             )}
                             {tr.job_number && (
                               <div className="flex items-center gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground">Job:</span>
+                                <span className="text-[11px] uppercase font-bold text-muted-foreground">Job:</span>
                                 <span className="font-mono font-medium">{tr.job_number}</span>
                               </div>
                             )}
                             {tr.order_reference && (
                               <div className="flex items-center gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground">Ord:</span>
+                                <span className="text-[11px] uppercase font-bold text-muted-foreground">Ord:</span>
                                 <span className="font-mono font-medium">{tr.order_reference}</span>
                               </div>
                             )}
@@ -1440,7 +1431,7 @@ export default function InterCountryTransfersPage() {
 
               {/* All References */}
               <div className="p-3 rounded-lg border border-border space-y-1.5">
-                <div className="font-semibold text-muted-foreground uppercase text-[10px]">Reference Audit</div>
+                <div className="font-semibold text-muted-foreground uppercase text-[11px]">Reference Audit</div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                   {selectedTransfer.bill_number && (
                     <div><span className="text-muted-foreground">Bill No:</span> <span className="font-mono font-medium">{selectedTransfer.bill_number}</span></div>
@@ -1466,7 +1457,7 @@ export default function InterCountryTransfersPage() {
               {/* Roznamcha Vouchers */}
               {(selectedTransfer.sender_roznamcha_entry_id || selectedTransfer.receiver_roznamcha_entry_id) && (
                 <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-1">
-                  <div className="font-semibold text-[10px] text-primary uppercase">Roznamcha Posting Audit</div>
+                  <div className="font-semibold text-[11px] text-primary uppercase">Roznamcha Posting Audit</div>
                   {selectedTransfer.sender_roznamcha_entry_id && (
                     <div className="text-[11px] font-mono">
                       Sender Voucher ID: <span className="font-bold">{selectedTransfer.sender_roznamcha_entry_id}</span>

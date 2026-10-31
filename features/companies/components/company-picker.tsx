@@ -216,20 +216,20 @@ export function CompanyPicker({
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{t(lang, "creg.cp_legal_name_colon", "Legal Name:")} {viewCompany.legal_name ? localizeName(viewCompany.legal_name, lang) : "—"}</p>
               </div>
               <div className="text-right">
-                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900">
+                <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900">
                   {viewCompany.is_active ? t(lang, "hr.pp_active_master", "Active Master") : t(lang, "god.inactive", "Inactive")}
                 </span>
-                <p className="text-[10px] text-slate-400 mt-1">{t(lang, "purchase.currency_colon_label", "Currency:")} <span className="font-bold text-slate-800 dark:text-white">{viewCompany.base_currency}</span></p>
+                <p className="text-[11px] text-slate-400 mt-1">{t(lang, "purchase.currency_colon_label", "Currency:")} <span className="font-bold text-slate-800 dark:text-white">{viewCompany.base_currency}</span></p>
               </div>
             </div>
 
             {/* Owner Details Card */}
             <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3.5 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                <span className="text-[11px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
                   {t(lang, "creg.cp_owner_investor_master_details", "Owner / Investor Master Details")}
                 </span>
-                <span className="text-[10px] font-bold text-slate-500">
+                <span className="text-[11px] font-bold text-slate-500">
                   {t(lang, "creg.cp_total_registered_companies_colon", "Total Registered Companies:")} {ownerCompanies.length}
                 </span>
               </div>
@@ -241,7 +241,7 @@ export function CompanyPicker({
             {/* Attached / Registered Companies by same Owner */}
             {ownerCompanies.length > 1 && (
               <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                <p className="text-[11px] font-black uppercase tracking-wider text-slate-500">
                   {t(lang, "creg.cp_other_companies_owned_by", "Other Companies Owned by")} {viewCompany.owner_name} ({ownerCompanies.length})
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -256,7 +256,7 @@ export function CompanyPicker({
                     >
                       <div>
                         <p className="font-extrabold text-slate-800 dark:text-white">{c.name}</p>
-                        <p className="text-[10px] text-slate-500">{c.city_name || c.country_name || "UAE"} • {c.base_currency}</p>
+                        <p className="text-[11px] text-slate-500">{c.city_name || c.country_name || "UAE"} • {c.base_currency}</p>
                       </div>
                       <button
                         type="button"
@@ -264,7 +264,7 @@ export function CompanyPicker({
                           onValueChange(c.id);
                           setViewCompany(null);
                         }}
-                        className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+                        className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
                       >
                         {t(lang, "common.select", "Select")}
                       </button>
@@ -277,29 +277,29 @@ export function CompanyPicker({
             {/* Grid Specs */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 bg-slate-50/50 dark:bg-slate-900/50">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "company_form.business_type_label", "Business Type")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "company_form.business_type_label", "Business Type")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewCompany.business_type || "Commercial Trading"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "creg.cp_country_city", "Country / City")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "creg.cp_country_city", "Country / City")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewCompany.country_name || "UAE"} {viewCompany.city_name ? `/ ${viewCompany.city_name}` : ""}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "bdash.base_currency", "Base Currency")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "bdash.base_currency", "Base Currency")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewCompany.base_currency}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "purchase.f_address", "Address")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "purchase.f_address", "Address")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewCompany.address || "-"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "creg.cp_tax_registration_id", "Tax / Registration ID")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "creg.cp_tax_registration_id", "Tax / Registration ID")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-white">
                   {viewCompany.registrations?.map(r => r.value).join(", ") || t(lang, "creg.cp_standard_registration", "Standard Registration")}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "creg.primary_contact", "Primary Contact")}</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "creg.primary_contact", "Primary Contact")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">
                   {viewCompany.contacts?.map(ct => ct.value).join(", ") || "-"}
                 </span>

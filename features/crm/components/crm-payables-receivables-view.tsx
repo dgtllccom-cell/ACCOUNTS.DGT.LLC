@@ -321,7 +321,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
                 >
                   <div className="flex items-center justify-between text-[11px] mb-1">
                     <span className="font-extrabold text-blue-200 uppercase">{dayTitle}</span>
-                    <span className="font-mono text-[10px] text-slate-300">{f.date.slice(5)}</span>
+                    <span className="font-mono text-[11px] text-slate-300">{f.date.slice(5)}</span>
                   </div>
 
                   <div className="space-y-1">
@@ -347,7 +347,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
 
                     {/* Net Daily Flow */}
                     <div className="pt-1 border-t border-white/10 flex items-center justify-between text-[11px] font-mono font-bold">
-                      <span className="text-slate-400 text-[10px]">Net:</span>
+                      <span className="text-slate-400 text-[11px]">Net:</span>
                       <span className={cn(f.netCashFlow >= 0 ? "text-emerald-300" : "text-rose-300")}>
                         {f.netCashFlow >= 0 ? "+" : ""}{f.netCashFlow.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </span>
@@ -558,14 +558,14 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
                     <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
                       {pt(`cat_${cat.categoryKey}`, cat.categoryLabelEn)}
                     </span>
-                    <Badge variant="outline" className="text-[10px] font-mono">
+                    <Badge variant="outline" className="text-[11px] font-mono">
                       {cat.count}
                     </Badge>
                   </div>
                   <div className="text-base font-black font-mono text-rose-600 dark:text-rose-400">
                     {cat.totalOutstanding > 0 ? cat.totalOutstanding.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "0"}
                   </div>
-                  <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500 font-medium">
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500 font-medium">
                     <span>Due: {cat.dueToday.toLocaleString()}</span>
                     <span className="text-rose-600">Overdue: {cat.overdue.toLocaleString()}</span>
                   </div>
@@ -598,14 +598,14 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
                     <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
                       {pt(`cat_sales_${cat.categoryKey}`, cat.categoryLabelEn)}
                     </span>
-                    <Badge variant="outline" className="text-[10px] font-mono">
+                    <Badge variant="outline" className="text-[11px] font-mono">
                       {cat.count}
                     </Badge>
                   </div>
                   <div className="text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
                     {cat.totalOutstanding > 0 ? cat.totalOutstanding.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "0"}
                   </div>
-                  <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500 font-medium">
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500 font-medium">
                     <span>Due: {cat.dueToday.toLocaleString()}</span>
                     <span className="text-rose-600">Overdue: {cat.overdue.toLocaleString()}</span>
                   </div>
@@ -704,7 +704,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
 
           <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
             <table className="w-full min-w-[1000px] border-collapse text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-[10.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 <tr>
                   <th className="py-2.5 px-3">{pt("bill_or_invoice_no", "Bill #")}</th>
                   <th className="py-2.5 px-3">{pt("supplier_or_customer", "Supplier Name")}</th>
@@ -734,7 +734,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
                       </td>
                       <td className="py-2.5 px-3 font-bold">{item.supplierOrCustomerName}</td>
                       <td className="py-2.5 px-2">
-                        <Badge variant="outline" className="text-[10px] capitalize">
+                        <Badge variant="outline" className="text-[11px] capitalize">
                           {item.category}
                         </Badge>
                       </td>
@@ -781,7 +781,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
                         <Badge
                           variant="secondary"
                           className={cn(
-                            "text-[10px] font-bold",
+                            "text-[11px] font-bold",
                             item.statusBadgeVariant === "emerald" && "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
                             item.statusBadgeVariant === "amber" && "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
                             item.statusBadgeVariant === "rose" && "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
@@ -869,7 +869,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
 
           <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
             <table className="w-full min-w-[1000px] border-collapse text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-[10.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 <tr>
                   <th className="py-2.5 px-3">{pt("bill_or_invoice_no", "Invoice #")}</th>
                   <th className="py-2.5 px-3">{pt("supplier_or_customer", "Customer Name")}</th>
@@ -899,7 +899,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
                       </td>
                       <td className="py-2.5 px-3 font-bold">{item.supplierOrCustomerName}</td>
                       <td className="py-2.5 px-2">
-                        <Badge variant="outline" className="text-[10px] capitalize">
+                        <Badge variant="outline" className="text-[11px] capitalize">
                           {item.category}
                         </Badge>
                       </td>
@@ -946,7 +946,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
                         <Badge
                           variant="secondary"
                           className={cn(
-                            "text-[10px] font-bold",
+                            "text-[11px] font-bold",
                             item.statusBadgeVariant === "emerald" && "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
                             item.statusBadgeVariant === "amber" && "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
                             item.statusBadgeVariant === "rose" && "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
@@ -1034,7 +1034,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
 
           <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
             <table className="w-full min-w-[700px] border-collapse text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-[10.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 <tr>
                   <th className="py-2 px-3">Module</th>
                   <th className="py-2 px-3">{pt("bill_or_invoice_no", "Ref #")}</th>
@@ -1050,7 +1050,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
                 {data.recentHistory.map((h) => (
                   <tr key={h.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30">
                     <td className="py-2 px-3">
-                      <Badge variant="outline" className={cn("text-[9.5px] font-bold uppercase", h.module === "purchase" ? "text-rose-600 border-rose-300" : "text-emerald-600 border-emerald-300")}>
+                      <Badge variant="outline" className={cn("text-[11px] font-bold uppercase", h.module === "purchase" ? "text-rose-600 border-rose-300" : "text-emerald-600 border-emerald-300")}>
                         {h.module}
                       </Badge>
                     </td>
@@ -1063,7 +1063,7 @@ export function CrmPayablesReceivablesView({ onBackToOverview }: CrmPayablesRece
                     <td className="py-2 px-3 text-center font-mono">{h.paymentDate}</td>
                     <td className="py-2 px-3 text-center font-mono text-slate-500">{h.agreedDueDate || "—"}</td>
                     <td className="py-2 px-2 text-center">
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-bold">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold whitespace-nowrap">
                         {h.status}
                       </span>
                     </td>

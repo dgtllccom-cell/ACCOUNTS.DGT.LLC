@@ -362,7 +362,7 @@ export function BulkAccountImport({
             <p className="text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
               {s.t("step1", "1. Target Account Scope Destination")}
             </p>
-            <span className="text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400">
+            <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
               {s.t("sync_header_hint", "Also selectable in the top action bar ↗")}
             </span>
           </div>

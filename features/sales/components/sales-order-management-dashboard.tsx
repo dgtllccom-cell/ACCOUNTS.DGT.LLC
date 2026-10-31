@@ -201,7 +201,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
 
   // Aggregated totals matching requested dashboard summary stats
   const dashboardStats = useMemo(() => {
-    let totalSalesOrders = orders.length;
+    const totalSalesOrders = orders.length;
     let totalSalesAmount = 0; // Purchase Currency
     let totalInvoiceAmount = 0; // Purchase Currency
     let totalFinalCurrencyAmount = 0; // Final Currency AED
@@ -404,9 +404,9 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
         {/* Card 1: Sales Orders Count & Pending Transfers */}
         <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/20 border border-blue-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_total_sales_orders", "Total Sales Orders")}</span>
+            <span className="text-[11px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_total_sales_orders", "Total Sales Orders")}</span>
             <span className="text-2xl font-black text-blue-700 font-sans">{dashboardStats.totalSalesOrders} {t(activeLang, "sales.sodash_orders_suffix", "Orders")}</span>
-            <span className="text-[9.5px] text-indigo-500 font-bold block">{t(activeLang, "sales.sodash_pending_transfers_colon", "Pending Transfers:")} {dashboardStats.pendingTransfers}</span>
+            <span className="text-[11px] text-indigo-500 font-bold block">{t(activeLang, "sales.sodash_pending_transfers_colon", "Pending Transfers:")} {dashboardStats.pendingTransfers}</span>
           </div>
           <div className="bg-blue-100 text-blue-700 p-2.5 rounded-xl">
             <Boxes className="h-6 w-6" />
@@ -416,9 +416,9 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
         {/* Card 2: Sales Amount & Invoice Amount */}
         <div className="bg-gradient-to-br from-emerald-50/50 to-teal-50/20 border border-emerald-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_original_total_sales", "Original Total Sales")}</span>
+            <span className="text-[11px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_original_total_sales", "Original Total Sales")}</span>
             <span className="text-xl font-black text-emerald-700 font-sans">${dashboardStats.totalSalesAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-            <span className="text-[9.5px] text-teal-600 font-bold block">{t(activeLang, "sales.sodash_invoice_amount_colon", "Invoice Amount:")} ${dashboardStats.totalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span className="text-[11px] text-teal-600 font-bold block">{t(activeLang, "sales.sodash_invoice_amount_colon", "Invoice Amount:")} ${dashboardStats.totalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
           <div className="bg-emerald-100 text-emerald-700 p-2.5 rounded-xl">
             <BadgeDollarSign className="h-6 w-6" />
@@ -428,9 +428,9 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
         {/* Card 3: Final Currency & Payments Received */}
         <div className="bg-gradient-to-br from-purple-50/50 to-pink-50/20 border border-purple-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_final_currency_value", "Final Currency Value")}</span>
+            <span className="text-[11px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_final_currency_value", "Final Currency Value")}</span>
             <span className="text-xl font-black text-purple-700 font-sans">{dashboardStats.totalFinalCurrencyAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
-            <span className="text-[9.5px] text-pink-600 font-bold block">{t(activeLang, "sales.sodash_payments_recd_colon", "Payments Recd:")} {dashboardStats.totalPaymentsReceived.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
+            <span className="text-[11px] text-pink-600 font-bold block">{t(activeLang, "sales.sodash_payments_recd_colon", "Payments Recd:")} {dashboardStats.totalPaymentsReceived.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
           </div>
           <div className="bg-purple-100 text-purple-700 p-2.5 rounded-xl">
             <CheckCircle2 className="h-6 w-6" />
@@ -440,9 +440,9 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
         {/* Card 4: Outstanding Receivables & Finalized Orders */}
         <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/20 border border-amber-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_outstanding_receivables", "Outstanding Receivables")}</span>
+            <span className="text-[11px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_outstanding_receivables", "Outstanding Receivables")}</span>
             <span className="text-xl font-black text-amber-700 font-sans">{dashboardStats.outstandingReceivables.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
-            <span className="text-[9.5px] text-orange-600 font-bold block">{t(activeLang, "sales.sodash_finalized_orders_colon", "Finalized Orders:")} {dashboardStats.finalizedOrders}</span>
+            <span className="text-[11px] text-orange-600 font-bold block">{t(activeLang, "sales.sodash_finalized_orders_colon", "Finalized Orders:")} {dashboardStats.finalizedOrders}</span>
           </div>
           <div className="bg-amber-100 text-amber-700 p-2.5 rounded-xl">
             <Clock3 className="h-6 w-6" />
@@ -464,7 +464,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                 <Th colSpan={1} className="px-3 py-2 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 font-extrabold">Actions</Th>
               </tr>
               {/* Column Headers Row */}
-              <tr className="bg-slate-50/80 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[10px]">
+              <tr className="bg-slate-50/80 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px]">
                 {/* General */}
                 <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Journal Serial</Th>
                 <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Country Serial</Th>
@@ -534,9 +534,9 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                   return (
                     <tr key={order.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800/80">
                       {/* General Information */}
-                      <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">{order.super_admin_serial_number || raw.traceability?.superAdminSerialNumber || "—"}</td>
-                      <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">{order.country_transaction_serial_number || raw.traceability?.countryTransactionSerialNumber || "—"}</td>
-                      <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">{order.branch_transaction_serial_number || raw.traceability?.branchTransactionSerialNumber || "—"}</td>
+                      <td className="px-3 py-2.5 font-mono text-[11px] text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">{order.super_admin_serial_number || raw.traceability?.superAdminSerialNumber || "—"}</td>
+                      <td className="px-3 py-2.5 font-mono text-[11px] text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">{order.country_transaction_serial_number || raw.traceability?.countryTransactionSerialNumber || "—"}</td>
+                      <td className="px-3 py-2.5 font-mono text-[11px] text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">{order.branch_transaction_serial_number || raw.traceability?.branchTransactionSerialNumber || "—"}</td>
                       <td className="px-3 py-2.5 font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-100 dark:border-slate-800">{order.sales_order_no}</td>
                       <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800 font-mono">{order.order_date}</td>
                       <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100 border-r border-slate-100 dark:border-slate-800 truncate max-w-[120px]" title={order.customer_name || "-"}>{localized(order, "customer_name", order.customer_name || "—")}</td>
@@ -566,7 +566,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                       <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">${invoiceAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-slate-100 dark:border-slate-800">{order.currency_code} {finalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       <td className="px-3 py-2.5 border-r border-slate-100 dark:border-slate-800 text-center">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
                           postingState.visualStatus === "red"
                             ? "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40"
                             : "bg-[#0F172A] text-white border border-slate-900 dark:bg-slate-800 dark:text-slate-100"
@@ -575,7 +575,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                         </span>
                       </td>
                       <td className="px-3 py-2.5 border-r border-slate-100 dark:border-slate-800 text-center">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
                           postingState.visualStatus === "red"
                             ? "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40"
                             : order.sales_status === "draft"

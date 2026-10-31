@@ -35,7 +35,7 @@ export function CompanyDuplicateWarningModal({
       <div className="p-5 space-y-4 text-xs text-slate-800 dark:text-slate-200">
         <p className="text-slate-600 dark:text-slate-300">
           {t(lang, "erp.company_dup_desc", "We found existing company record(s) that may match")}{" "}
-          <strong className="text-slate-900 dark:text-white">"{searchedName}"</strong>.{" "}
+          <strong className="text-slate-900 dark:text-white">&quot;{searchedName}&quot;</strong>.{" "}
           {t(lang, "erp.company_dup_desc2", "Use the existing Company ID instead of creating a duplicate, or continue if this is genuinely a different company.")}
         </p>
 
@@ -49,10 +49,10 @@ export function CompanyDuplicateWarningModal({
                 <div className="font-bold text-slate-900 dark:text-white truncate">
                   {localizeName(c.name, lang)}
                   {c.companyCode ? (
-                    <span className="ms-2 font-mono text-[10px] font-black text-amber-700 dark:text-amber-400">{c.companyCode}</span>
+                    <span className="ms-2 font-mono text-[11px] font-black text-amber-700 dark:text-amber-400">{c.companyCode}</span>
                   ) : null}
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-3 mt-0.5">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-3 mt-0.5">
                   {c.legalName ? <span>{t(lang, "erp.company_dup_legal_name", "Legal Name")}: {localizeName(c.legalName, lang)}</span> : null}
                   {c.ownerName ? <span>{t(lang, "erp.company_dup_owner", "Owner")}: {c.ownerName}</span> : null}
                 </div>

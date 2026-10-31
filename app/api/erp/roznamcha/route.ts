@@ -16,7 +16,7 @@ import { revalidatePath } from "next/cache";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, trustedTranslationMap } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -284,14 +284,14 @@ export async function GET(request: NextRequest) {
       // any Supabase client (admin or per-request) silently returns zero rows here (same
       // root cause fixed in lib/services/ledger-report-service.ts). Try direct Postgres first.
       const viaPg = await withLocalPg(async (sql) => sql`
-        select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+        select record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source::text as source, corrected_by
         from public.record_translations
         where record_table = 'roznamcha_entries' and record_id = any(${entryIds}::uuid[]) and deleted_at is null
       `);
       let translationRows: any[] | null = viaPg;
       if (!translationRows) {
         const { data, error: translationError } = await supabase.from("record_translations")
-          .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
+          .select("record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source, corrected_by")
           .eq("record_table", "roznamcha_entries").in("record_id", entryIds).is("deleted_at", null);
         if (translationError) throw new Error(translationError.message);
         translationRows = data;
@@ -300,7 +300,8 @@ export async function GET(request: NextRequest) {
         const entry = entries.find((item: any) => item.id === row.record_id) as any;
         if (entry) {
           entry.translations ||= {};
-          entry.translations[row.field_name] = { en: row.english_text, ur: row.urdu_text, ar: row.arabic_text, fa: row.persian_text, ps: row.pashto_text };
+          // approved languages only (central trust rule) — a missing language shows the saved text
+          entry.translations[row.field_name] = trustedTranslationMap("roznamcha_entries", row.field_name, row.original_text, row);
         }
       }
     }

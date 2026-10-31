@@ -503,7 +503,7 @@ function Kpi({ label, value, accent }: { label: string; value: string; accent?: 
       : "border-s-slate-400";
   return (
     <div className={`rounded-lg border border-border bg-card px-3 py-2 border-s-4 ${bar}`}>
-      <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-0.5 text-base font-black text-foreground">{value}</div>
     </div>
   );
@@ -514,7 +514,7 @@ function StatChip({ label, value, tone }: { label: string; value: string; tone?:
     tone === "emerald" ? "border-s-emerald-500" : tone === "amber" ? "border-s-amber-500" : tone === "red" ? "border-s-red-500" : tone === "blue" ? "border-s-blue-500" : "border-s-slate-400";
   return (
     <div className={`rounded-lg border border-border bg-background px-3 py-1.5 border-s-4 ${bar}`}>
-      <div className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="text-sm font-black text-foreground">{value}</div>
     </div>
   );

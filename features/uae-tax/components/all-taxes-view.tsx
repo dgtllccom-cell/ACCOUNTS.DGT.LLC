@@ -70,7 +70,7 @@ export function AllTaxesView({ lang: langProp }: { lang?: SupportedLanguage }) {
                     <Globe className="h-4 w-4" />
                   </span>
                   <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
                       active
                         ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
                         : "bg-slate-100 text-slate-500 dark:bg-slate-800"

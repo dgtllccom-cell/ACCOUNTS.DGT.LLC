@@ -684,7 +684,7 @@ export function AccountSetupReport({
                 <Filter className="h-3.5 w-3.5 text-blue-600" />
                 <span>{tr("Filters")}</span>
                 {activeFilterCount > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-blue-600 text-white">
+                  <span className="px-1.5 py-0.2 rounded-full text-[11px] font-black bg-blue-600 text-white">
                     {activeFilterCount}
                   </span>
                 )}
@@ -715,7 +715,7 @@ export function AccountSetupReport({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     {/* Country */}
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                         {t(lang, "common.country", "Country")}
                       </label>
                       <select
@@ -731,7 +731,7 @@ export function AccountSetupReport({
 
                     {/* Branch */}
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                         {t(lang, "common.branch", "Branch")}
                       </label>
                       <select
@@ -746,7 +746,7 @@ export function AccountSetupReport({
 
                     {/* Account Type */}
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                         {tr("Account Type")}
                       </label>
                       <select
@@ -761,7 +761,7 @@ export function AccountSetupReport({
 
                     {/* Currency */}
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                         {t(lang, "asr.currency", "Currency")}
                       </label>
                       <select
@@ -776,7 +776,7 @@ export function AccountSetupReport({
 
                     {/* Status */}
                     <div className="sm:col-span-2">
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                         {t(lang, "common.status", "Status")}
                       </label>
                       <select
@@ -882,7 +882,7 @@ export function AccountSetupReport({
 
                   {/* Custom From / To */}
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                       {tr("Custom Range")}
                     </span>
                     <div className="flex items-center gap-2">
@@ -1027,7 +1027,7 @@ export function AccountSetupReport({
                   <Landmark className="h-3.5 w-3.5 text-amber-600" />
                   {t(lang, "asr.all_countries_report", "All Countries Account Report")}
                 </span>
-                <span className="px-1.5 py-0.5 text-[9px] font-black uppercase rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                <span className="px-1.5 py-0.5 text-[11px] font-black uppercase rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 whitespace-nowrap">
                   {t(lang, "asr.super_admin_only", "Super Admin Only")}
                 </span>
               </div>
@@ -1050,7 +1050,7 @@ export function AccountSetupReport({
             {tr("Active Filters")}:
           </span>
           {country !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs whitespace-nowrap">
               <span>{translateCountry(country, lang)}</span>
               <button type="button" onClick={() => setCountry("all")} className="hover:text-blue-900 cursor-pointer">
                 <X className="h-3 w-3" />
@@ -1058,7 +1058,7 @@ export function AccountSetupReport({
             </span>
           )}
           {branch !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs whitespace-nowrap">
               <span>{branch}</span>
               <button type="button" onClick={() => setBranch("all")} className="hover:text-blue-900 cursor-pointer">
                 <X className="h-3 w-3" />
@@ -1066,7 +1066,7 @@ export function AccountSetupReport({
             </span>
           )}
           {accType !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs whitespace-nowrap">
               <span>{tv(accType)}</span>
               <button type="button" onClick={() => setAccType("all")} className="hover:text-blue-900 cursor-pointer">
                 <X className="h-3 w-3" />
@@ -1074,7 +1074,7 @@ export function AccountSetupReport({
             </span>
           )}
           {currencyFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs whitespace-nowrap">
               <span>{currencyFilter}</span>
               <button type="button" onClick={() => setCurrencyFilter("all")} className="hover:text-blue-900 cursor-pointer">
                 <X className="h-3 w-3" />
@@ -1082,7 +1082,7 @@ export function AccountSetupReport({
             </span>
           )}
           {statusFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800 shadow-2xs whitespace-nowrap">
               <span>{statusFilter}</span>
               <button type="button" onClick={() => setStatusFilter("all")} className="hover:text-blue-900 cursor-pointer">
                 <X className="h-3 w-3" />
@@ -1107,7 +1107,7 @@ export function AccountSetupReport({
             <h2 className="text-sm font-black text-slate-900 dark:text-white">
               {t(lang, "asr.register_title", "Chart of Accounts Register")}
             </h2>
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
               {filtered.length} {t(lang, "asr.records", "records")}
             </span>
           </div>
@@ -1224,7 +1224,7 @@ export function AccountSetupReport({
                         <span className="font-bold text-slate-900 dark:text-white">{row.accountName}</span>
                       </td>
                       <td className="p-3">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                           {tv(row.subType || row.accountCategory)}
                         </span>
                       </td>
@@ -1246,7 +1246,7 @@ export function AccountSetupReport({
                       <td className="p-3 text-center">
                         <span
                           className={cn(
-                            "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                            "px-2 py-0.5 rounded-full text-[11px] font-bold",
                             isActive
                               ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
                               : "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800"

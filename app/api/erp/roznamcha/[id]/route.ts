@@ -6,7 +6,7 @@ import { uuidSchema } from "@/lib/api/erp-validation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { revalidatePath } from "next/cache";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, trustedTranslationMap } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       `;
 
       const translationRows = await sql`
-        select field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+        select field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source::text as source, corrected_by
         from public.record_translations
         where record_table = 'roznamcha_entries' and record_id = ${id} and deleted_at is null
       `;
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       const translations = Object.fromEntries(
         (translationRows || []).map((r: any) => [
           r.field_name,
-          { en: r.english_text, ur: r.urdu_text, ar: r.arabic_text, fa: r.persian_text, ps: r.pashto_text }
+          trustedTranslationMap("roznamcha_entries", r.field_name, r.original_text, r)
         ])
       );
 
@@ -218,7 +218,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const safeLines = (lines ?? []) as RoznamchaLine[];
     const { data: translationRows } = await supabase
       .from("record_translations")
-      .select("field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
+      .select("field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source, corrected_by")
       .eq("record_table", "roznamcha_entries")
       .eq("record_id", id)
       .is("deleted_at", null);
@@ -226,13 +226,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const translations = Object.fromEntries(
       (translationRows || []).map((row: any) => [
         row.field_name,
-        {
-          en: row.english_text,
-          ur: row.urdu_text,
-          ar: row.arabic_text,
-          fa: row.persian_text,
-          ps: row.pashto_text
-        }
+        trustedTranslationMap("roznamcha_entries", row.field_name, row.original_text, row)
       ])
     );
 

@@ -503,12 +503,12 @@ export default function KycReportsPage() {
               <h1 className="text-sm sm:text-base font-black text-foreground tracking-tight whitespace-nowrap">
                 {tUI("kycManagement")}
               </h1>
-              <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
+              <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 shrink-0" />
                 {metrics.compliant} {tUI("compliant")}
               </span>
             </div>
-            <p className="text-[10px] text-muted-foreground font-semibold -mt-0.5 hidden sm:block">{t(activeLang, "kyc.master_record_audit_center", "Master Record Audit Center")}</p>
+            <p className="text-[11px] text-muted-foreground font-semibold -mt-0.5 hidden sm:block">{t(activeLang, "kyc.master_record_audit_center", "Master Record Audit Center")}</p>
           </div>
         </div>
 
@@ -700,7 +700,7 @@ export default function KycReportsPage() {
             {isDateMenuOpen && (
               <div className="absolute left-0 mt-1.5 w-72 rounded-2xl bg-card border border-border/80 shadow-2xl p-3 z-50 text-xs space-y-3 font-sans">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{tUI("quick_presets")}</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">{tUI("quick_presets")}</span>
                   <div className="grid grid-cols-2 gap-1 mt-1.5">
                     {[
                       { key: "all", label: tUI("date_all") },
@@ -731,7 +731,7 @@ export default function KycReportsPage() {
                 </div>
 
                 <div className="border-t border-border/60 pt-2.5 space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Date to Date (Custom)</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">Date to Date (Custom)</span>
                   <ErpDatePicker
                     mode="range"
                     lang={activeLang}
@@ -826,7 +826,7 @@ export default function KycReportsPage() {
                   <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
                     {translateHeader(activeLang, "Branch & User Details")}
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">Selected Scope</p>
+                  <p className="text-[11px] text-slate-400 font-medium">Selected Scope</p>
                 </div>
               </div>
             </div>
@@ -837,21 +837,21 @@ export default function KycReportsPage() {
                   <div className="text-2xl font-black text-slate-900 dark:text-slate-100">
                     {scopeTotals.countryBranches ? scopeTotals.countryBranches * 18 : 90}
                   </div>
-                  <div className="text-[10px] font-bold text-slate-400">{translateHeader(activeLang, "Total Branches")}</div>
+                  <div className="text-[11px] font-bold text-slate-400">{translateHeader(activeLang, "Total Branches")}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-black text-emerald-600">
                     {scopeTotals.cityBranches ? scopeTotals.cityBranches * 12 : 62}
                   </div>
-                  <div className="text-[10px] font-bold text-slate-400">{translateHeader(activeLang, "Active Branches")}</div>
+                  <div className="text-[11px] font-bold text-slate-400">{translateHeader(activeLang, "Active Branches")}</div>
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="inline-block text-[9.5px] font-black uppercase text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
+                <div className="inline-block text-[11px] font-black uppercase text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                   {sessionCtx?.branchName || "DUBAI HEAD OFFICE"}
                 </div>
-                <div className="text-[9px] text-slate-400 font-medium mt-0.5">Current Branch</div>
+                <div className="text-[11px] text-slate-400 font-medium mt-0.5">Current Branch</div>
               </div>
             </div>
           </div>
@@ -883,7 +883,7 @@ export default function KycReportsPage() {
                   <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
                     KYC & Compliance Summary
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">Overall Status</p>
+                  <p className="text-[11px] text-slate-400 font-medium">Overall Status</p>
                 </div>
               </div>
             </div>
@@ -891,15 +891,15 @@ export default function KycReportsPage() {
             <div className="mt-3 flex items-baseline justify-between">
               <div>
                 <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{metrics.total ?? 0}</div>
-                <div className="text-[10px] font-bold text-slate-400">Total Audited</div>
+                <div className="text-[11px] font-bold text-slate-400">Total Audited</div>
               </div>
               <div>
                 <div className="text-2xl font-black text-emerald-600">{metrics.compliant ?? 0}</div>
-                <div className="text-[10px] font-bold text-emerald-600/80">Compliant & Verified</div>
+                <div className="text-[11px] font-bold text-emerald-600/80">Compliant & Verified</div>
               </div>
               <div>
                 <div className="text-2xl font-black text-rose-600">{metrics.incomplete ?? 0}</div>
-                <div className="text-[10px] font-bold text-rose-600/80">{translateHeader(activeLang, "Action Required")}</div>
+                <div className="text-[11px] font-bold text-rose-600/80">{translateHeader(activeLang, "Action Required")}</div>
               </div>
             </div>
           </div>
@@ -928,7 +928,7 @@ export default function KycReportsPage() {
                   <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
                     Audit & Grace Period Summary
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">Timeliness & Exceptions</p>
+                  <p className="text-[11px] text-slate-400 font-medium">Timeliness & Exceptions</p>
                 </div>
               </div>
             </div>
@@ -936,15 +936,15 @@ export default function KycReportsPage() {
             <div className="mt-3 flex items-baseline justify-between">
               <div>
                 <div className="text-2xl font-black text-amber-600">{metrics.nearExpiry ?? 0}</div>
-                <div className="text-[10px] font-bold text-amber-600/80">Near Expiry</div>
+                <div className="text-[11px] font-bold text-amber-600/80">Near Expiry</div>
               </div>
               <div>
                 <div className="text-2xl font-black text-purple-600">15</div>
-                <div className="text-[10px] font-bold text-purple-600/80">Grace Allowed</div>
+                <div className="text-[11px] font-bold text-purple-600/80">Grace Allowed</div>
               </div>
               <div>
                 <div className="text-2xl font-black text-slate-700 dark:text-slate-300">0</div>
-                <div className="text-[10px] font-bold text-slate-400">Audit Policy</div>
+                <div className="text-[11px] font-bold text-slate-400">Audit Policy</div>
               </div>
             </div>
           </div>
@@ -973,7 +973,7 @@ export default function KycReportsPage() {
                   <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
                     Entities / Branches & Compliance Report
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">Audit Coverage</p>
+                  <p className="text-[11px] text-slate-400 font-medium">Audit Coverage</p>
                 </div>
               </div>
             </div>
@@ -981,19 +981,19 @@ export default function KycReportsPage() {
             <div className="mt-3 flex items-baseline justify-between">
               <div>
                 <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{items.length}</div>
-                <div className="text-[10px] font-bold text-slate-400">Total Entities</div>
+                <div className="text-[11px] font-bold text-slate-400">Total Entities</div>
               </div>
               <div>
                 <div className="text-2xl font-black text-blue-600">
                   {items.filter(i => i.type === "country_branch").length}
                 </div>
-                <div className="text-[10px] font-bold text-blue-600/80">Country Branches</div>
+                <div className="text-[11px] font-bold text-blue-600/80">Country Branches</div>
               </div>
               <div>
                 <div className="text-2xl font-black text-emerald-600">
                   {items.filter(i => i.type !== "country_branch").length}
                 </div>
-                <div className="text-[10px] font-bold text-emerald-600/80">City Branches & Users</div>
+                <div className="text-[11px] font-bold text-emerald-600/80">City Branches & Users</div>
               </div>
             </div>
           </div>
@@ -1030,7 +1030,7 @@ export default function KycReportsPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left text-foreground">
-            <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border/60">
+            <thead className="bg-muted/40 text-muted-foreground uppercase text-[11px] font-bold tracking-wider border-b border-border/60">
               <tr>
                 <Th className="px-5 py-3.5">{tUI("entityRecordTitle")}</Th>
                 <Th className="px-5 py-3.5">{tUI("entityTypeLocation")}</Th>
@@ -1064,14 +1064,14 @@ export default function KycReportsPage() {
                         {item.type === "new_account" && <FileText className="h-4 w-4 text-purple-600 dark:text-purple-400" />}
                         <span>{item.name}</span>
                       </div>
-                      <div className="text-[10px] font-mono text-muted-foreground mt-0.5 flex items-center gap-2">
+                      <div className="text-[11px] font-mono text-muted-foreground mt-0.5 flex items-center gap-2">
                         <span>{tUI("codeLabel")}: {item.code || "N/A"}</span>
                         {item.email && <span>&bull; {item.email}</span>}
                       </div>
                     </td>
 
                     <td className="px-5 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-muted text-foreground border border-border/60 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-muted text-foreground border border-border/60 whitespace-nowrap">
                         {getKycEntityLabel(item.type, activeLang)}
                       </span>
                       <p className="text-[11px] font-semibold text-muted-foreground mt-1 whitespace-nowrap">{item.countryName}</p>
@@ -1081,20 +1081,20 @@ export default function KycReportsPage() {
                       {item.missingRequirements.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {item.missingRequirements.map((req, idx) => (
-                            <span key={idx} className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
+                            <span key={idx} className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 whitespace-nowrap">
                               ⚠ {req}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                           <CheckCircle2 className="h-3.5 w-3.5" /> {tUI("allRequirementsVerified")}
                         </span>
                       )}
                     </td>
 
                     <td className="px-5 py-4 min-w-[160px]">
-                      <div className="flex items-center justify-between text-[10px] font-bold mb-1">
+                      <div className="flex items-center justify-between text-[11px] font-bold mb-1">
                         <span className={cn(
                           item.status === "compliant" ? "text-emerald-600 dark:text-emerald-400" :
                           item.status === "suspended" ? "text-rose-600 dark:text-rose-400" :
@@ -1119,7 +1119,7 @@ export default function KycReportsPage() {
 
                     <td className="px-5 py-4">
                       <span className={cn(
-                        "px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase border inline-flex items-center gap-1",
+                        "px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase border inline-flex items-center gap-1",
                         item.status === "compliant"
                           ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
                           : item.status === "suspended"
@@ -1166,7 +1166,7 @@ export default function KycReportsPage() {
           <div className="bg-card text-card-foreground border border-border/80 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">{tUI("kycVerificationPortal")}</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">{tUI("kycVerificationPortal")}</span>
                 <h3 className="text-base font-extrabold text-foreground">{activeItem.name}</h3>
               </div>
               <button onClick={() => setActiveItem(null)} className="p-1 rounded-lg text-muted-foreground hover:bg-muted">
@@ -1237,7 +1237,7 @@ export default function KycReportsPage() {
               <div className="space-y-2 pt-2 border-t border-border/60">
                 <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
                   <span>{tUI("attachedComplianceDocuments")}</span>
-                  <span className="text-[10px] text-muted-foreground">NTN, Trade License, CNIC/Passport</span>
+                  <span className="text-[11px] text-muted-foreground">NTN, Trade License, CNIC/Passport</span>
                 </Label>
 
                 <div className="flex gap-2">

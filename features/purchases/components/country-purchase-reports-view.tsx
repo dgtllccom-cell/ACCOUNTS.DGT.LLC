@@ -185,19 +185,19 @@ export function CountryPurchaseReportsView() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
-          <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{tt("creports.total_records", "Total Records")}</div>
+          <div className="text-[11px] font-black uppercase tracking-widest text-slate-500">{tt("creports.total_records", "Total Records")}</div>
           <div className="text-lg font-black text-slate-900 dark:text-white">{rows.length}</div>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
-          <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{tt("creports.purchase_amount", "Purchase Amount")}</div>
+          <div className="text-[11px] font-black uppercase tracking-widest text-slate-500">{tt("creports.purchase_amount", "Purchase Amount")}</div>
           <div className="text-lg font-black text-slate-900 dark:text-white">{money(totals.purchaseAmount)}</div>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
-          <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{tt("creports.remaining_payment", "Remaining Payment")}</div>
+          <div className="text-[11px] font-black uppercase tracking-widest text-slate-500">{tt("creports.remaining_payment", "Remaining Payment")}</div>
           <div className="text-lg font-black text-amber-600">{money(totals.remaining)}</div>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
-          <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{tt("creports.received_qty", "Received Qty")}</div>
+          <div className="text-[11px] font-black uppercase tracking-widest text-slate-500">{tt("creports.received_qty", "Received Qty")}</div>
           <div className="text-lg font-black text-emerald-600">{totals.receivedQty.toLocaleString()} / {totals.purchasedQty.toLocaleString()}</div>
         </div>
       </div>
@@ -205,7 +205,7 @@ export function CountryPurchaseReportsView() {
       <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
         <table className="w-full min-w-[1600px] text-xs">
           <thead className="bg-slate-50 dark:bg-slate-900">
-            <tr className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+            <tr className="text-[11px] font-black uppercase tracking-wider text-slate-500">
               {columns.map((c) => (
                 <Th key={c.key} className={`px-3 py-2 ${c.isNumeric ? "text-end" : "text-start"}`}>{c.label}</Th>
               ))}

@@ -156,7 +156,7 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
               <h1 className="text-xl md:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
                 {t(lang, "crm.menu_reports", "CRM Universal Reports & Due Center")}
               </h1>
-              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="bg-emerald-100 text-emerald-800 text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap">
                 {t(lang, "crmr.enterprise_live", "Enterprise Live")}
               </span>
             </div>
@@ -167,7 +167,7 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
         </div>
 
         {/* Global Serials Bar */}
-        <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+        <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
           <span className="text-slate-500">GS: <strong className="text-slate-800 dark:text-slate-200">GS-CRM-REP-01</strong></span>
           <span className="text-slate-300">|</span>
           <span className="text-slate-500">USER: <strong className="text-blue-600">{session.fullName || session.email || "SUPERADMIN"}</strong></span>
@@ -192,7 +192,7 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
               }`}
             >
               <Icon className={`h-4 w-4 mb-1.5 ${active ? "text-white" : "text-blue-600"}`} />
-              <span className="text-[10px] font-bold leading-tight">
+              <span className="text-[11px] font-bold leading-tight">
                 {t(lang, rt.labelKey, rt.defaultLabel)}
               </span>
             </button>
@@ -251,25 +251,25 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
       {/* KPI Stats Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_records", "Total Records")}</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_records", "Total Records")}</span>
           <p className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1 font-mono">
             {data?.recordCount || 0}
           </p>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_value", "Total Value")}</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_value", "Total Value")}</span>
           <p className="text-2xl font-black text-blue-600 mt-1 font-mono">
             {Number(data?.totalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </p>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_settled_paid", "Total Settled / Paid")}</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_settled_paid", "Total Settled / Paid")}</span>
           <p className="text-2xl font-black text-emerald-600 mt-1 font-mono">
             {Number(data?.totalPaid || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </p>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_outstanding_due", "Total Outstanding Due")}</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{t(lang, "crm.total_outstanding_due", "Total Outstanding Due")}</span>
           <p className="text-2xl font-black text-rose-600 mt-1 font-mono">
             {Number(data?.totalRemaining || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </p>
@@ -280,7 +280,7 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full text-xs text-slate-800 dark:text-slate-200">
-            <thead className="bg-slate-50 dark:bg-slate-950 text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+            <thead className="bg-slate-50 dark:bg-slate-950 text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <Th className="px-3 py-3 text-center w-12">#</Th>
                 <Th className="px-3 py-3 text-left">{th("Serial / Ref")}</Th>
@@ -314,20 +314,20 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
                     <td className="px-3 py-2.5 text-center font-mono text-slate-400">{r.srNo}</td>
                     <td className="px-3 py-2.5 font-mono">
                       <div className="font-bold text-slate-900 dark:text-slate-100">{r.referenceNo}</div>
-                      <div className="text-[9px] text-slate-400">{r.globalSerial}</div>
+                      <div className="text-[11px] text-slate-400">{r.globalSerial}</div>
                     </td>
                     <td className="px-3 py-2.5">
-                      <span className="px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 rounded font-bold text-[10px]">
+                      <span className="px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 rounded font-bold text-[11px] whitespace-nowrap">
                         {r.itemType}
                       </span>
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="font-bold text-slate-900 dark:text-slate-100">{r.partyName}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">{r.partyPhone}</div>
+                      <div className="text-[11px] text-slate-400 font-mono">{r.partyPhone}</div>
                     </td>
                     <td className="px-3 py-2.5 text-[11px]">
                       <div>{r.countryName}</div>
-                      <div className="text-[9px] text-slate-400">{r.branchName}</div>
+                      <div className="text-[11px] text-slate-400">{r.branchName}</div>
                     </td>
                     <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-700 dark:text-slate-300">
                       {r.dueDate}
@@ -342,7 +342,7 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
                       {r.remainingAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-3 py-2.5 text-center">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-black uppercase ${
                         r.status === "Completed"
                           ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                           : r.urgency === "overdue"

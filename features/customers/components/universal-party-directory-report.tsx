@@ -20,6 +20,7 @@ import { apiGet } from "@/lib/api/client";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
+import { SavedText } from "@/components/i18n/saved-text";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { PartyAffiliationSummary } from "@/lib/services/party-360-service";
 import { Party360Modal } from "./party-360-modal";
@@ -330,9 +331,9 @@ export function UniversalPartyDirectoryReport({
 
                       <td className="p-3.5 font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <span>{urduName}</span>
+                          <SavedText value={urduName} lang={lang} kind="name" />
                           {party.partyType === "Owner" && (
-                            <span className="rounded-full bg-amber-100 text-amber-800 px-1.5 py-0.2 text-[10px] font-bold">
+                            <span className="rounded-full bg-amber-100 text-amber-800 px-1.5 py-0.2 text-[11px] font-bold">
                               👑 {t(lang, "upd.owner_badge", "Owner")}
                             </span>
                           )}
@@ -340,7 +341,7 @@ export function UniversalPartyDirectoryReport({
                       </td>
 
                       <td className="p-3.5 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        {fatherUrdu}
+                        <SavedText value={party.fatherName} lang={lang} kind="name" fallback={fatherUrdu} />
                       </td>
 
                       <td className="p-3.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">
@@ -348,7 +349,7 @@ export function UniversalPartyDirectoryReport({
                       </td>
 
                       <td className="p-3.5 text-slate-500 max-w-xs truncate">
-                        {party.address || "-"}
+                        <SavedText value={party.address} lang={lang} fallback="-" />
                       </td>
 
                       {/* Linked Companies */}

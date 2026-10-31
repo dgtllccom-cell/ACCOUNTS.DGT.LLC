@@ -3144,6 +3144,10 @@ export function registerUiDictionaryFallback(get: () => UiDicts): void {
   uiDictionaries = get;
   uiReverseIndex = null;
 }
+/** The central dictionaries once lib/i18n/ui.ts has loaded (null before) — read by the saved-value vocabulary in table-values.ts. */
+export function registeredUiDictionaries(): UiDicts | null {
+  return uiDictionaries ? uiDictionaries() : null;
+}
 function fromUiDictionary(code: string, norm: string): string | null {
   if (!uiDictionaries) return null;
   const dicts = uiDictionaries();

@@ -251,7 +251,7 @@ function MasterSelectPopover({
 
   return (
     <div className="relative w-full" ref={containerRef}>
-      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{label}</label>
+      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{label}</label>
       
       <button
         type="button"
@@ -280,7 +280,7 @@ function MasterSelectPopover({
 
           <div className="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
             {filtered.length === 0 ? (
-              <div className="p-2 text-[10px] text-slate-400 text-center font-medium">{t(msLang, "lp.no_matches_found", "No matches found")}</div>
+              <div className="p-2 text-[11px] text-slate-400 text-center font-medium">{t(msLang, "lp.no_matches_found", "No matches found")}</div>
             ) : (
               filtered.map(opt => {
                 const isSelected = opt.id === value || opt.name === value;
@@ -2457,11 +2457,11 @@ export function LocalPurchaseView({
                   <h1 className="truncate text-xs font-black text-slate-900 dark:text-slate-100 sm:text-sm">
                     {t(lang, "lp.voucher_title", "Local Purchase Booking Voucher")}
                   </h1>
-                  <span className="px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800">
+                  <span className="px-1.5 py-0.5 rounded text-[11px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800 whitespace-nowrap">
                     {editingPurchaseId ? t(lang, "lp.editing_draft", "EDITING DRAFT") : t(lang, "purchase.draft_badge", "DRAFT")}
                   </span>
                 </div>
-                <p className="hidden md:block truncate text-[9.5px] font-medium text-slate-400">
+                <p className="hidden md:block truncate text-[11px] font-medium text-slate-400">
                   {activeBranch?.companyName || "Damaan Business Group"} &mdash; {activeBranch?.name || "—"} ({[scopeLabels.country, scopeLabels.city].filter(Boolean).join(", ") || "—"})
                 </p>
               </div>
@@ -2473,7 +2473,7 @@ export function LocalPurchaseView({
             <button
               type="button"
               onClick={() => setCurrentStep(1)}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 transition-all ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase flex items-center gap-1 transition-all ${
                 currentStep === 1
                   ? "bg-teal-700 text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/80 dark:text-slate-400 dark:hover:text-slate-200"
@@ -2489,7 +2489,7 @@ export function LocalPurchaseView({
                 if (currentStep === 1 && !validateBookingStep()) return;
                 setCurrentStep(2);
               }}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 transition-all ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase flex items-center gap-1 transition-all ${
                 currentStep === 2
                   ? "bg-teal-700 text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/80 dark:text-slate-400 dark:hover:text-slate-200"
@@ -2506,7 +2506,7 @@ export function LocalPurchaseView({
                 if (!validateGoodsStep()) return;
                 setCurrentStep(3);
               }}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 transition-all ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase flex items-center gap-1 transition-all ${
                 currentStep === 3
                   ? "bg-teal-700 text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/80 dark:text-slate-400 dark:hover:text-slate-200"
@@ -2524,7 +2524,7 @@ export function LocalPurchaseView({
                 if (!validatePaymentLoadingStep()) return;
                 setCurrentStep(4);
               }}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 transition-all ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase flex items-center gap-1 transition-all ${
                 currentStep === 4
                   ? "bg-teal-700 text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/80 dark:text-slate-400 dark:hover:text-slate-200"
@@ -2541,7 +2541,7 @@ export function LocalPurchaseView({
               variant="outline"
               size="sm"
               onClick={() => setIsTopActionsOpen((prev) => !prev)}
-              className="h-8 gap-1 rounded-xl border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              className="h-8 gap-1 rounded-xl border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
               <MoreVertical className="h-3.5 w-3.5 text-slate-500" />
               <span>{t(lang, "pa.actions", "Actions")}</span>
@@ -2661,7 +2661,7 @@ export function LocalPurchaseView({
                   {currentStep === 4 && <><CheckCircle2 className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.step4_header", "STEP 4: VERIFY & POST")}</>}
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <span className="text-[9.5px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700">
+                  <span className="text-[11px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 whitespace-nowrap">
                     {t(lang, "purchase.draft_badge", "DRAFT")}
                   </span>
                   <button
@@ -2681,7 +2681,7 @@ export function LocalPurchaseView({
               {currentStep === 1 && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="border-l-2 border-blue-600 pl-2">
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t(lang, "lp.bill_accounts_info", "1. Bill & Accounts Information")}</h4>
+                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{t(lang, "lp.bill_accounts_info", "1. Bill & Accounts Information")}</h4>
                   </div>
 
                   <div className="flex justify-end">
@@ -2701,7 +2701,7 @@ export function LocalPurchaseView({
                   <div className="space-y-3">
                     {/* 1. Sales Account (CR) */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.sales_account_cr", "Sales Account (CR) *")}</label>
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.sales_account_cr", "Sales Account (CR) *")}</label>
                       <SearchSelect
                         value={salesAccountNo}
                         onValueChange={(val) => setSalesAccountNo(val)}
@@ -2729,7 +2729,7 @@ export function LocalPurchaseView({
 
                     {/* 2. Purchase Account (DR) */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.purchase_account_dr", "Purchase Account (DR) *")}</label>
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.purchase_account_dr", "Purchase Account (DR) *")}</label>
                       <SearchSelect
                         value={purchaseAccountNo}
                         onValueChange={(val) => setPurchaseAccountNo(val)}
@@ -2758,14 +2758,14 @@ export function LocalPurchaseView({
                     {/* 3. Broker / Agent Selection (Yes / No) */}
                     <div className="rounded-xl border border-slate-200 p-2.5 bg-slate-50/50 space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-bold text-slate-700 uppercase flex items-center gap-1">
+                        <label className="text-[11px] font-bold text-slate-700 uppercase flex items-center gap-1">
                           <User className="h-3 w-3 text-purple-600" /> {t(lang, "lp.broker_involved", "Broker / Agent")}
                         </label>
                         <div className="flex items-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => { setHasBroker(false); setBrokerAccountNo(""); setTempBrokerName(""); }}
-                            className={`px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase transition ${
+                            className={`px-2.5 py-0.5 rounded text-[11px] font-extrabold uppercase transition ${
                               !hasBroker ? "bg-slate-700 text-white shadow-2xs" : "bg-white text-slate-500 border border-slate-200 hover:bg-slate-100"
                             }`}
                           >
@@ -2774,7 +2774,7 @@ export function LocalPurchaseView({
                           <button
                             type="button"
                             onClick={() => setHasBroker(true)}
-                            className={`px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase transition ${
+                            className={`px-2.5 py-0.5 rounded text-[11px] font-extrabold uppercase transition ${
                               hasBroker ? "bg-purple-600 text-white shadow-2xs" : "bg-white text-slate-500 border border-slate-200 hover:bg-slate-100"
                             }`}
                           >
@@ -2786,8 +2786,8 @@ export function LocalPurchaseView({
                       {hasBroker && (
                         <div className="pt-2 border-t border-slate-200 space-y-2 animate-in fade-in duration-150">
                           <div className="flex items-center gap-3">
-                            <label className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "lp.broker_type", "Account Type:")}</label>
-                            <label className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 cursor-pointer">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase">{t(lang, "lp.broker_type", "Account Type:")}</label>
+                            <label className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 cursor-pointer">
                               <input
                                 type="radio"
                                 name="brokerType"
@@ -2797,7 +2797,7 @@ export function LocalPurchaseView({
                               />
                               {t(lang, "lp.permanent_account", "Permanent Account")}
                             </label>
-                            <label className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 cursor-pointer">
+                            <label className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 cursor-pointer">
                               <input
                                 type="radio"
                                 name="brokerType"
@@ -2836,7 +2836,7 @@ export function LocalPurchaseView({
                           ) : (
                             <div className="grid grid-cols-2 gap-2 bg-white p-2 rounded-lg border border-purple-100">
                               <div>
-                                <label className="block text-[8.5px] font-bold text-slate-500 uppercase mb-0.5">{t(lang, "lp.broker_name", "Broker Name *")}</label>
+                                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{t(lang, "lp.broker_name", "Broker Name *")}</label>
                                 <input
                                   value={tempBrokerName}
                                   onChange={e => setTempBrokerName(e.target.value)}
@@ -2845,7 +2845,7 @@ export function LocalPurchaseView({
                                 />
                               </div>
                               <div>
-                                <label className="block text-[8.5px] font-bold text-slate-500 uppercase mb-0.5">{t(lang, "lp.broker_phone", "Phone / Contact")}</label>
+                                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-0.5">{t(lang, "lp.broker_phone", "Phone / Contact")}</label>
                                 <input
                                   value={tempBrokerPhone}
                                   onChange={e => setTempBrokerPhone(e.target.value)}
@@ -2861,7 +2861,7 @@ export function LocalPurchaseView({
 
                     {/* 3a. Contract No. */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
                         {t(lang, "lp.contract_no", "Contract No.")}
                       </label>
                       <input
@@ -2875,7 +2875,7 @@ export function LocalPurchaseView({
 
                     {/* Origin Country */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
                         <Globe className="h-3 w-3 text-blue-600" /> {t(lang, "lp.origin_country", "Origin Country")}
                       </label>
                       <select
@@ -2892,7 +2892,7 @@ export function LocalPurchaseView({
 
                     {/* Remarks / Terms Notes */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remarks_label", "Remarks / Terms Notes")}</label>
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remarks_label", "Remarks / Terms Notes")}</label>
                       <textarea
                         rows={2}
                         value={remarks}
@@ -2904,7 +2904,7 @@ export function LocalPurchaseView({
 
                     <div className="flex gap-2 pt-2">
                       <Button type="button" onClick={() => { if (!validateBookingStep()) return; setCurrentStep(2); }}
-                        className="w-full h-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm">
+                        className="w-full h-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[11px] font-extrabold flex items-center justify-center gap-1 shadow-sm">
                         {t(lang, "lp.next_goods_entry", "Next: Goods Entry")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                       </Button>
                     </div>
@@ -2916,13 +2916,13 @@ export function LocalPurchaseView({
               {currentStep === 2 && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="border-l-2 border-emerald-600 pl-2">
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t(lang, "lp.goods_entry_section", "2. Goods Entry & Pricing Metrics")}</h4>
+                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{t(lang, "lp.goods_entry_section", "2. Goods Entry & Pricing Metrics")}</h4>
                   </div>
 
                   <div className="space-y-3">
                     {/* 1. Goods Name */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.goods_selection", "Goods Selection (Goods Name) *")}</label>
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.goods_selection", "Goods Selection (Goods Name) *")}</label>
                       <select
                         value={goodsId}
                         onChange={e => {
@@ -2952,7 +2952,7 @@ export function LocalPurchaseView({
                                         {/* HS Code & Allot Name/ID — Prototype Step 2 fields */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.hs_code", "HS Code")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.hs_code", "HS Code")}</label>
                         <input
                           value={hsCode}
                           onChange={e => setHsCode(e.target.value)}
@@ -2961,7 +2961,7 @@ export function LocalPurchaseView({
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.allot_id", "Allot Name / ID")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.allot_id", "Allot Name / ID")}</label>
                         <input
                           value={allotId}
                           onChange={e => setAllotId(e.target.value)}
@@ -2974,7 +2974,7 @@ export function LocalPurchaseView({
 {/* 2. Chassis / Lot Code */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.chassis_lot", "Chassis / Lot Code")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.chassis_lot", "Chassis / Lot Code")}</label>
                         <input
                           value={chassisCode}
                           onChange={e => setChassisCode(e.target.value)}
@@ -2984,7 +2984,7 @@ export function LocalPurchaseView({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.lot_mark", "Lot Number / Mark")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.lot_mark", "Lot Number / Mark")}</label>
                         <input
                           value={lotNo}
                           onChange={e => setLotNo(e.target.value)}
@@ -2998,7 +2998,7 @@ export function LocalPurchaseView({
                     <div className="grid grid-cols-2 gap-3">
                       {/* Brand with popover + New Brand */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.brand_label", "Brand")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.brand_label", "Brand")}</label>
                         {brandOptions.length > 0 ? (
                           <MasterSelectPopover
                             label=""
@@ -3020,7 +3020,7 @@ export function LocalPurchaseView({
                             />
                             {selectedGood && (
                               <button type="button" onClick={() => setIsAddingBrandModal(true)}
-                                className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1">
+                                className="text-[11px] font-bold text-blue-600 hover:underline flex items-center gap-1">
                                 <Plus className="h-3 w-3" /> {th("Add Brand")}
                               </button>
                             )}
@@ -3030,7 +3030,7 @@ export function LocalPurchaseView({
 
                       {/* Size with popover + New Size */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.size_spec", "Size Specification")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.size_spec", "Size Specification")}</label>
                         {sizeOptions.length > 0 ? (
                           <MasterSelectPopover
                             label=""
@@ -3052,7 +3052,7 @@ export function LocalPurchaseView({
                             />
                             {selectedGood && (
                               <button type="button" onClick={() => setIsAddingSizeModal(true)}
-                                className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1">
+                                className="text-[11px] font-bold text-blue-600 hover:underline flex items-center gap-1">
                                 <Plus className="h-3 w-3" /> {th("Add Size")}
                               </button>
                             )}
@@ -3064,7 +3064,7 @@ export function LocalPurchaseView({
                                         {/* Variety + Quality/Extra Details — Prototype Step 2 fields */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.variety", "Variety")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.variety", "Variety")}</label>
                         <input
                           value={variety}
                           onChange={e => setVariety(e.target.value)}
@@ -3073,7 +3073,7 @@ export function LocalPurchaseView({
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.quality_extra", "Quality / Extra Details")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.quality_extra", "Quality / Extra Details")}</label>
                         <input
                           value={qualityDetails}
                           onChange={e => setQualityDetails(e.target.value)}
@@ -3086,7 +3086,7 @@ export function LocalPurchaseView({
 {/* 5. Quantity Type & 6. Quantity Number */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.qty_type", "Quantity Type (Packing)")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.qty_type", "Quantity Type (Packing)")}</label>
                         <select
                           value={quantityName}
                           onChange={e => setQuantityName(e.target.value)}
@@ -3097,7 +3097,7 @@ export function LocalPurchaseView({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.qty_count", "Quantity Number (Count) *")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.qty_count", "Quantity Number (Count) *")}</label>
                         <input
                           type="number"
                           value={quantityCount}
@@ -3111,7 +3111,7 @@ export function LocalPurchaseView({
                     {/* 7. Weight per Quantity (KG) + Empty Tare (KG) */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wt_per_pkg", "Weight per Quantity (KG) *")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wt_per_pkg", "Weight per Quantity (KG) *")}</label>
                         <input
                           type="number"
                           step="any"
@@ -3123,7 +3123,7 @@ export function LocalPurchaseView({
                       </div>
 
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.empty_tare", "1 Empty Tare Weight (KG)")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.empty_tare", "1 Empty Tare Weight (KG)")}</label>
                         <input
                           type="number"
                           step="any"
@@ -3137,7 +3137,7 @@ export function LocalPurchaseView({
 
                     {/* 8. Total Weight (Auto Calculate) */}
                     <div className="p-2.5 bg-blue-50/60 border border-blue-100 rounded-xl">
-                      <label className="block text-[9px] font-bold text-blue-700 uppercase mb-1">Total Weight (Auto Calculate)</label>
+                      <label className="block text-[11px] font-bold text-blue-700 uppercase mb-1">Total Weight (Auto Calculate)</label>
                       <input
                         readOnly
                         value={`${netWeight.toLocaleString()} KG (Net Weight)`}
@@ -3148,7 +3148,7 @@ export function LocalPurchaseView({
                     {/* 9. Divide Type & 10. Divide Value */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.divide_type", "Divide Type")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.divide_type", "Divide Type")}</label>
                         <select
                           value={divideType}
                           onChange={e => setDivideType(e.target.value)}
@@ -3161,7 +3161,7 @@ export function LocalPurchaseView({
                       </div>
 
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.divide_value", "Divide Value (KG)")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.divide_value", "Divide Value (KG)")}</label>
                         <input
                           type="number"
                           step="any"
@@ -3175,7 +3175,7 @@ export function LocalPurchaseView({
 
                     {/* 11. Total Divide Units (Auto Calculate) */}
                     <div className="p-2.5 bg-purple-50/60 border border-purple-100 rounded-xl">
-                      <label className="block text-[9px] font-bold text-purple-700 uppercase mb-1">{t(lang, "lp.total_divide_auto", "Total Divide Units (Auto Calculate)")}</label>
+                      <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1">{t(lang, "lp.total_divide_auto", "Total Divide Units (Auto Calculate)")}</label>
                       <input
                         readOnly
                         value={`${numbers.toLocaleString()} Packs/Units`}
@@ -3186,7 +3186,7 @@ export function LocalPurchaseView({
                     {/* 12. Price Type & 13. Unit Price */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.price_type", "Price Type (Rate Basis)")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.price_type", "Price Type (Rate Basis)")}</label>
                         <select
                           value={rateType}
                           onChange={e => setRateType(e.target.value as any)}
@@ -3198,7 +3198,7 @@ export function LocalPurchaseView({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.unit_price_rate", "Unit Price Rate *")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.unit_price_rate", "Unit Price Rate *")}</label>
                         <input
                           type="number"
                           step="any"
@@ -3213,7 +3213,7 @@ export function LocalPurchaseView({
                     {/* 14. Final Amount (Auto Calculate) & 15. Tax Type */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.final_amount_auto", "Final Amount (Auto Calculate)")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.final_amount_auto", "Final Amount (Auto Calculate)")}</label>
                         <input
                           readOnly
                           value={`${purchaseCurrency} ${finalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
@@ -3222,7 +3222,7 @@ export function LocalPurchaseView({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.tax_type_option", "Tax Type Option")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.tax_type_option", "Tax Type Option")}</label>
                         <select
                           value={applyTax}
                           onChange={e => setApplyTax(e.target.value)}
@@ -3238,7 +3238,7 @@ export function LocalPurchaseView({
                     {applyTax === "Yes" && (
                       <div className="grid grid-cols-2 gap-3 p-2.5 bg-amber-50/60 border border-amber-200 rounded-xl">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.tax_pct", "Tax Percentage (%)")}</label>
+                          <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.tax_pct", "Tax Percentage (%)")}</label>
                           <input
                             type="number"
                             value={taxPercentage}
@@ -3247,7 +3247,7 @@ export function LocalPurchaseView({
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.calc_tax", "Calculated Tax Amount")}</label>
+                          <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.calc_tax", "Calculated Tax Amount")}</label>
                           <input
                             readOnly
                             value={`${purchaseCurrency} ${taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
@@ -3261,7 +3261,7 @@ export function LocalPurchaseView({
                   
                     {/* Quality Report Reference — Prototype Step 2 field */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.quality_report_ref", "Quality Report Reference")}</label>
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.quality_report_ref", "Quality Report Reference")}</label>
                       <input
                         value={qualityReportRef}
                         onChange={e => setQualityReportRef(e.target.value)}
@@ -3282,14 +3282,14 @@ export function LocalPurchaseView({
                     <Button
                       type="button"
                       onClick={handleAddLineItem}
-                      className="w-1/3 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm"
+                      className="w-1/3 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-extrabold flex items-center justify-center gap-1 shadow-sm"
                     >
                       <Plus className="h-3.5 w-3.5" /> {t(lang, "lp.add_item_to_list", "Add Item to List")}
                     </Button>
                     <Button
                       type="button"
                       onClick={() => { if (!validateGoodsStep()) return; setCurrentStep(3); }}
-                      className="w-1/3 h-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm"
+                      className="w-1/3 h-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[11px] font-extrabold flex items-center justify-center gap-1 shadow-sm"
                     >
                       {t(lang, "lp.step3_tab", "Next: Payment & Loading")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                     </Button>
@@ -3301,7 +3301,7 @@ export function LocalPurchaseView({
               {currentStep === 3 && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="border-l-2 border-blue-600 pl-2">
-                    <h4 className="text-[10px] font-black uppercase tracking-wider text-blue-600">
+                    <h4 className="text-[11px] font-black uppercase tracking-wider text-blue-600">
                       {t(lang, "lp.step3_header", "STEP 3: PAYMENT & LOADING DETAILS")}
                     </h4>
                   </div>
@@ -3309,10 +3309,10 @@ export function LocalPurchaseView({
                   {/* 1. Payment Details Box */}
                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 space-y-3 shadow-2xs">
                     <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                      <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                         <CreditCard className="h-3.5 w-3.5 text-blue-600" /> {t(lang, "lp.card_payment_details", "PAYMENT DETAILS")}
                       </span>
-                      <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300">
+                      <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">
                         {paymentMode}
                       </span>
                     </div>
@@ -3320,7 +3320,7 @@ export function LocalPurchaseView({
                     {/* Mode & Paying Account */}
                     <div className="grid grid-cols-2 gap-2.5">
                       <div>
-                        <label className="block text-[9.5px] font-bold text-slate-500 uppercase mb-1">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
                           {t(lang, "lp.payment_condition", "Payment Condition *")}
                         </label>
                         <select
@@ -3337,14 +3337,14 @@ export function LocalPurchaseView({
                       </div>
 
                       <div>
-                        <label className="block text-[9.5px] font-bold text-slate-500 uppercase mb-1">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
                           {t(lang, "lp.paying_account", "Purchase & Supplier Ledgers")}
                         </label>
                         <div className="w-full h-8.5 rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800/60 px-2.5 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
                           <span className="truncate">
                             <span className="text-blue-600 dark:text-blue-400 font-bold">DR:</span> {purchaseAccountNo || "—"} &bull; <span className="text-emerald-600 dark:text-emerald-400 font-bold">CR:</span> {salesAccountNo || brokerAccountNo || "—"}
                           </span>
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider ml-1 shrink-0">
+                          <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1 shrink-0">
                             {t(lang, "lp.select_paying_account", "From Step 1")}
                           </span>
                         </div>
@@ -3355,7 +3355,7 @@ export function LocalPurchaseView({
                     {paymentMode !== "Advance" && (
                       <div className="grid grid-cols-2 gap-2.5">
                         <div>
-                          <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">
+                          <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
                             {paymentMode === "Credit" ? t(lang, "lp.due_date", "Due Date") : t(lang, "lp.payment_date", "Payment Date")}
                           </label>
                           <input
@@ -3366,7 +3366,7 @@ export function LocalPurchaseView({
                           />
                         </div>
                         <div>
-                          <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">
+                          <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
                             {t(lang, "lp.payment_instrument", "Instrument / Type")}
                           </label>
                           <select
@@ -3388,7 +3388,7 @@ export function LocalPurchaseView({
                       <div className="space-y-2">
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_pct", "Advance %")}</label>
+                            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_pct", "Advance %")}</label>
                             <input
                               type="number"
                               step="any"
@@ -3398,7 +3398,7 @@ export function LocalPurchaseView({
                             />
                           </div>
                           <div>
-                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_amount", "Advance Amount")}</label>
+                            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_amount", "Advance Amount")}</label>
                             <input
                               type="number"
                               step="any"
@@ -3410,7 +3410,7 @@ export function LocalPurchaseView({
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_due_date", "Advance Due Date")}</label>
+                            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_due_date", "Advance Due Date")}</label>
                             <input
                               type="date"
                               value={advancePaymentDate}
@@ -3419,7 +3419,7 @@ export function LocalPurchaseView({
                             />
                           </div>
                           <div>
-                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remaining_due_date", "Remaining Due Date")}</label>
+                            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remaining_due_date", "Remaining Due Date")}</label>
                             <input
                               type="date"
                               value={remainingDueDate}
@@ -3432,7 +3432,7 @@ export function LocalPurchaseView({
                     )}
 
                     {/* Financial Summary Box */}
-                    <div className="p-2 bg-slate-50 dark:bg-slate-800/40 rounded-lg text-[9px] space-y-1 border border-slate-100 dark:border-slate-800">
+                    <div className="p-2 bg-slate-50 dark:bg-slate-800/40 rounded-lg text-[11px] space-y-1 border border-slate-100 dark:border-slate-800">
                       <div className="flex justify-between">
                         <span className="text-slate-500">{t(lang, "lp.total_bill_cost", "Total Bill")}:</span>
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{purchaseCurrency} {combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -3455,17 +3455,17 @@ export function LocalPurchaseView({
                   {/* 2. Loading & Transport Details Box */}
                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 space-y-3 shadow-2xs">
                     <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                      <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                         <Truck className="h-3.5 w-3.5 text-emerald-600" /> {t(lang, "lp.card_loading_details", "LOADING & TRANSPORT DETAILS")}
                       </span>
-                      <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
+                      <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                         {shipmentType}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2.5">
                       <div>
-                        <label className="block text-[9.5px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.shipment_type", "Transport Mode *")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.shipment_type", "Transport Mode *")}</label>
                         <select
                           value={shipmentType}
                           onChange={e => {
@@ -3482,7 +3482,7 @@ export function LocalPurchaseView({
                       </div>
 
                       <div>
-                        <label className="block text-[9.5px] font-bold text-slate-500 uppercase mb-1">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
                           {t(lang, "lp.loading_date", "Loading / Dispatch Date")}
                         </label>
                         <input
@@ -3496,7 +3496,7 @@ export function LocalPurchaseView({
 
                     <div className="grid grid-cols-2 gap-2.5">
                       <div>
-                        <label className="block text-[9.5px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.truck_no", "Truck No.")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.truck_no", "Truck No.")}</label>
                         <input
                           type="text"
                           value={truckNo}
@@ -3506,7 +3506,7 @@ export function LocalPurchaseView({
                         />
                       </div>
                       <div>
-                        <label className="block text-[9.5px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.driver_name", "Driver Name")}</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.driver_name", "Driver Name")}</label>
                         <input
                           type="text"
                           value={driverName}
@@ -3522,7 +3522,7 @@ export function LocalPurchaseView({
                       <div className="rounded-xl border border-purple-200 bg-purple-50/40 p-2.5 space-y-2">
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-[8.5px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_master", "Warehouse Master")}</label>
+                            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_master", "Warehouse Master")}</label>
                             <select
                               value={selectedWarehouseId}
                               onChange={e => {
@@ -3541,7 +3541,7 @@ export function LocalPurchaseView({
                             </select>
                           </div>
                           <div>
-                            <label className="block text-[8.5px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.warehouse_plot", "Plot / Bay No.")}</label>
+                            <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.warehouse_plot", "Plot / Bay No.")}</label>
                             <input
                               value={warehousePlotNo}
                               onChange={e => setWarehousePlotNo(e.target.value)}
@@ -3552,7 +3552,7 @@ export function LocalPurchaseView({
                         </div>
 
                         <div>
-                          <label className="block text-[8.5px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_account_link", "Link with Warehouse Account *")}</label>
+                          <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_account_link", "Link with Warehouse Account *")}</label>
                           <select
                             value={warehouseAccountNo}
                             onChange={e => setWarehouseAccountNo(e.target.value)}
@@ -3572,10 +3572,10 @@ export function LocalPurchaseView({
                     {/* Export Shipment Notice */}
                     {shipmentType === "Export Shipment" && (
                       <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-2.5 text-xs text-amber-800 space-y-1">
-                        <p className="text-[9.5px] font-extrabold uppercase flex items-center gap-1">
+                        <p className="text-[11px] font-extrabold uppercase flex items-center gap-1">
                           <Flag className="h-3 w-3 text-amber-600" /> Export Shipment Workflow
                         </p>
-                        <p className="text-[9px] leading-relaxed">
+                        <p className="text-[11px] leading-relaxed">
                           Designated for export. Customs documents, container loading, and shipment tracking will sync with the Export Module.
                         </p>
                       </div>
@@ -3585,19 +3585,19 @@ export function LocalPurchaseView({
                   {/* + Add Charge — informational rows, never posted silently */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-2.5 space-y-2 bg-slate-50/60 dark:bg-slate-800/30">
                     <div className="flex items-center justify-between">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                      <p className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                         {t(lang, "lp.charges_title", "Additional Charges")}
                       </p>
                       <button
                         type="button"
                         onClick={() => setExtraCharges(prev => [...prev, { id: `chg-${Date.now()}-${prev.length}`, label: "", amount: "", allocate: false }])}
-                        className="h-7 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black"
+                        className="h-7 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black"
                       >
                         + {t(lang, "lp.add_charge", "Add Charge")}
                       </button>
                     </div>
                     {extraCharges.length === 0 && (
-                      <p className="text-[9.5px] text-slate-400">{t(lang, "lp.charges_empty", "No additional charges. Add freight, unloading or any other cost for this bill.")}</p>
+                      <p className="text-[11px] text-slate-400">{t(lang, "lp.charges_empty", "No additional charges. Add freight, unloading or any other cost for this bill.")}</p>
                     )}
                     {extraCharges.map((c) => (
                       <div key={c.id} className="grid grid-cols-[minmax(0,1fr)_96px_32px] items-center gap-1.5">
@@ -3624,7 +3624,7 @@ export function LocalPurchaseView({
                         >
                           &times;
                         </button>
-                        <label className="col-span-3 flex items-center gap-1.5 text-[9.5px] font-bold text-slate-500 cursor-pointer">
+                        <label className="col-span-3 flex items-center gap-1.5 text-[11px] font-bold text-slate-500 cursor-pointer">
                           <input
                             type="checkbox"
                             className="shrink-0 accent-blue-600"
@@ -3637,7 +3637,7 @@ export function LocalPurchaseView({
                       </div>
                     ))}
                     {extraCharges.length > 0 && (
-                      <p className="text-[9px] text-slate-400 leading-relaxed">
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
                         {t(lang, "lp.charges_info_note", "Charges are recorded on the bill for reference. They are not posted to the ledger and do not change the supplier payable.")}
                       </p>
                     )}
@@ -3672,17 +3672,17 @@ export function LocalPurchaseView({
               {currentStep === 4 && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="border-l-2 border-emerald-600 pl-2">
-                    <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
+                    <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-600">
                       {t(lang, "lp.step4_header", "STEP 4: VERIFY & POST")}
                     </h4>
                   </div>
 
                   {/* 4 Canonical Serials Ribbon */}
                   <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-3 space-y-2">
-                    <p className="text-[9.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                    <p className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                       <ShieldCheck className="h-3.5 w-3.5 text-blue-600" /> 4 Canonical Serial Numbers
                     </p>
-                    <div className="grid grid-cols-2 gap-2 text-[9px]">
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
                       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2">
                         <span className="block text-slate-400 font-bold">1. Super Admin Serial</span>
                         <span className="font-mono font-black text-blue-700 dark:text-blue-400">
@@ -3712,14 +3712,14 @@ export function LocalPurchaseView({
 
                   {/* Accounting Ledger DR / CR Routing */}
                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 space-y-2.5 shadow-2xs">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                    <p className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                       <FileCheck className="h-3.5 w-3.5 text-emerald-600" /> Double-Entry Ledger Routing
                     </p>
-                    <div className="space-y-1.5 text-[9.5px]">
+                    <div className="space-y-1.5 text-[11px]">
                       <div className="flex justify-between items-center p-2 rounded-lg bg-blue-50/70 border border-blue-100 dark:bg-blue-950/30 dark:border-blue-900">
                         <div>
                           <span className="font-black text-blue-700 dark:text-blue-300">DR (Debit): Purchase / Inventory</span>
-                          <p className="text-[8.5px] text-slate-500 font-mono">{purchaseAccountNo} &mdash; {selectedPurchaseAccount?.name || "Inventory Account"}</p>
+                          <p className="text-[11px] text-slate-500 font-mono">{purchaseAccountNo} &mdash; {selectedPurchaseAccount?.name || "Inventory Account"}</p>
                         </div>
                         <span className="font-mono font-black text-blue-700">{purchaseCurrency} {combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
@@ -3727,12 +3727,12 @@ export function LocalPurchaseView({
                       <div className="flex justify-between items-center p-2 rounded-lg bg-emerald-50/70 border border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900">
                         <div>
                           <span className="font-black text-emerald-700 dark:text-emerald-300">CR (Credit): Supplier / Payable</span>
-                          <p className="text-[8.5px] text-slate-500 font-mono">{salesAccountNo} &mdash; {selectedSalesAccount?.name || supplierName || "Supplier Account"}</p>
+                          <p className="text-[11px] text-slate-500 font-mono">{salesAccountNo} &mdash; {selectedSalesAccount?.name || supplierName || "Supplier Account"}</p>
                         </div>
                         <span className="font-mono font-black text-emerald-700">{purchaseCurrency} {combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
 
-                      <div className="flex justify-between items-center p-2 rounded-lg bg-slate-50 border border-slate-200 dark:bg-slate-800/40 dark:border-slate-700 text-[8.5px]">
+                      <div className="flex justify-between items-center p-2 rounded-lg bg-slate-50 border border-slate-200 dark:bg-slate-800/40 dark:border-slate-700 text-[11px]">
                         <span className="text-slate-500 font-bold">Payment Condition / Route:</span>
                         <span className="font-black text-slate-800 dark:text-slate-200">{paymentMode} &bull; Daily Payments Integration</span>
                       </div>
@@ -3782,7 +3782,7 @@ export function LocalPurchaseView({
                     type="button"
                     variant="ghost"
                     onClick={() => setCurrentStep(3)}
-                    className="w-full h-8 text-[10px] font-bold text-slate-500 hover:text-slate-800"
+                    className="w-full h-8 text-[11px] font-bold text-slate-500 hover:text-slate-800"
                   >
                     &larr; {t(lang, "common.previous_step", "Back to Payment & Loading")}
                   </Button>
@@ -3798,11 +3798,11 @@ export function LocalPurchaseView({
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
               {/* Card 1: BRANCH & USER INFORMATION */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[126px] shadow-2xs">
-                <div className="p-2 border-b border-slate-100 dark:border-slate-800 font-extrabold text-[9px] flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                  <span className="w-[17px] h-[17px] rounded bg-blue-600 text-white text-[9px] flex items-center justify-center font-black">1</span>
+                <div className="p-2 border-b border-slate-100 dark:border-slate-800 font-extrabold text-[11px] flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                  <span className="w-[17px] h-[17px] rounded bg-blue-600 text-white text-[11px] flex items-center justify-center font-black">1</span>
                   {t(lang, "lp.branch_user_info", "BRANCH & USER INFORMATION")}
                 </div>
-                <div className="p-2 space-y-1 text-[8.5px]">
+                <div className="p-2 space-y-1 text-[11px]">
                   <div className="grid grid-cols-2 gap-2">
                     <span className="text-slate-400">{t(lang, "lp.branch_name", "Branch Name")}</span>
                     <span className="font-bold text-right truncate text-slate-800 dark:text-slate-100">{activeBranch?.name || "—"}</span>
@@ -3828,11 +3828,11 @@ export function LocalPurchaseView({
 
               {/* Card 2: BILL DETAILS */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[126px] shadow-2xs">
-                <div className="p-2 border-b border-slate-100 dark:border-slate-800 font-extrabold text-[9px] flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                  <span className="w-[17px] h-[17px] rounded bg-emerald-600 text-white text-[9px] flex items-center justify-center font-black">2</span>
+                <div className="p-2 border-b border-slate-100 dark:border-slate-800 font-extrabold text-[11px] flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                  <span className="w-[17px] h-[17px] rounded bg-emerald-600 text-white text-[11px] flex items-center justify-center font-black">2</span>
                   {t(lang, "lp.bill_details", "BILL DETAILS")}
                 </div>
-                <div className="p-2 space-y-1 text-[8.5px]">
+                <div className="p-2 space-y-1 text-[11px]">
                   <div className="grid grid-cols-2 gap-2">
                     <span className="text-slate-400">{t(lang, "lp.booking_date", "Booking Date")}</span>
                     <span className="font-mono font-bold text-right text-slate-800 dark:text-slate-100">{loadingDate || new Date().toISOString().slice(0, 10)}</span>
@@ -3858,11 +3858,11 @@ export function LocalPurchaseView({
 
               {/* Card 3: PURCHASE ACCOUNT DETAILS */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[126px] shadow-2xs">
-                <div className="p-2 border-b border-slate-100 dark:border-slate-800 font-extrabold text-[9px] flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                  <span className="w-[17px] h-[17px] rounded bg-purple-600 text-white text-[9px] flex items-center justify-center font-black">3</span>
+                <div className="p-2 border-b border-slate-100 dark:border-slate-800 font-extrabold text-[11px] flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                  <span className="w-[17px] h-[17px] rounded bg-purple-600 text-white text-[11px] flex items-center justify-center font-black">3</span>
                   {t(lang, "lp.purchase_account_details", "PURCHASE ACCOUNT DETAILS")}
                 </div>
-                <div className="p-2 space-y-1 text-[8.5px]">
+                <div className="p-2 space-y-1 text-[11px]">
                   <div className="grid grid-cols-2 gap-2">
                     <span className="text-slate-400">{t(lang, "lp.account_name", "Account Name")}</span>
                     <span className="font-bold text-right truncate text-slate-800 dark:text-slate-100">{selectedPurchaseAccount?.name || "—"}</span>
@@ -3884,11 +3884,11 @@ export function LocalPurchaseView({
 
               {/* Card 4: SALES ACCOUNT DETAILS */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[126px] shadow-2xs">
-                <div className="p-2 border-b border-slate-100 dark:border-slate-800 font-extrabold text-[9px] flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                  <span className="w-[17px] h-[17px] rounded bg-amber-500 text-white text-[9px] flex items-center justify-center font-black">4</span>
+                <div className="p-2 border-b border-slate-100 dark:border-slate-800 font-extrabold text-[11px] flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                  <span className="w-[17px] h-[17px] rounded bg-amber-500 text-white text-[11px] flex items-center justify-center font-black">4</span>
                   {t(lang, "lp.sales_account_details", "SALES ACCOUNT DETAILS")}
                 </div>
-                <div className="p-2 space-y-1 text-[8.5px]">
+                <div className="p-2 space-y-1 text-[11px]">
                   <div className="grid grid-cols-2 gap-2">
                     <span className="text-slate-400">{t(lang, "lp.account_name", "Account Name")}</span>
                     <span className="font-bold text-right truncate text-slate-800 dark:text-slate-100">{selectedSalesAccount?.name || "—"}</span>
@@ -3929,14 +3929,14 @@ export function LocalPurchaseView({
                   <CardTitle className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
                     <Package className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.goods_table_title", "GOODS TABLE")}
                   </CardTitle>
-                  <span className="text-[10px] font-mono font-bold bg-blue-600 text-white px-2.5 py-0.5 rounded-full">
+                  <span className="text-[11px] font-mono font-bold bg-blue-600 text-white px-2.5 py-0.5 rounded-full whitespace-nowrap">
                     {draftItems.length} {t(lang, "lp.goods_entered_badge", "Goods Entered")}
                   </span>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="overflow-x-auto max-h-[380px]">
                     <table className="w-full text-left text-[11px] whitespace-nowrap">
-                      <thead className="bg-slate-100 text-slate-700 text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-200 sticky top-0">
+                      <thead className="bg-slate-100 text-slate-700 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200 sticky top-0">
                         <tr>
                           <Th className="p-2 border-b text-center">#</Th>
                           <Th className="p-2 border-b">{t(lang, "lp.col_goods_item", "Goods")}</Th>
@@ -3954,36 +3954,36 @@ export function LocalPurchaseView({
                           <Th className="p-2 border-b text-center">{t(lang, "lp.col_action", "Action")}</Th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 text-[10px]">
+                      <tbody className="divide-y divide-slate-100 text-[11px]">
                         {draftItems.length > 0 ? (
                           draftItems.map((item, idx) => (
                             <tr key={item.id} className="hover:bg-slate-50">
                               <td className="p-2 font-mono font-bold text-slate-500 text-center">{idx + 1}</td>
                               <td className="p-2">
                                 <div className="font-bold text-slate-900">{item.goodsName}</div>
-                                {item.hsCode && <div className="text-[8px] text-slate-400 font-mono">{item.hsCode}</div>}
+                                {item.hsCode && <div className="text-[11px] text-slate-400 font-mono">{item.hsCode}</div>}
                               </td>
-                              <td className="p-2 text-[10px] text-slate-600">{item.size || "-"}</td>
-                              <td className="p-2 text-[10px] text-slate-600">{item.brand || "-"}</td>
-                              <td className="p-2 text-[10px] font-semibold text-slate-600">{item.origin || "—"}</td>
+                              <td className="p-2 text-[11px] text-slate-600">{item.size || "-"}</td>
+                              <td className="p-2 text-[11px] text-slate-600">{item.brand || "-"}</td>
+                              <td className="p-2 text-[11px] font-semibold text-slate-600">{item.origin || "—"}</td>
                               <td className="p-2 text-right font-mono font-bold text-slate-800">{item.quantityKgs?.toLocaleString()}</td>
-                              <td className="p-2 text-[10px] text-slate-600">{item.quantityName}</td>
+                              <td className="p-2 text-[11px] text-slate-600">{item.quantityName}</td>
                               <td className="p-2 text-right font-mono text-slate-600">{(item.totalGrossWeight || 0).toLocaleString()} kg</td>
                               <td className="p-2 text-right font-mono font-bold text-blue-700">{(item.netWeight || 0).toLocaleString()} kg</td>
                               <td className="p-2 text-right font-mono">
                                 <div className="font-bold text-slate-700">{item.purchaseRate}</div>
-                                <div className="text-[8px] text-slate-400 uppercase">{(item.priceType || item.rateType || "").replace("_", " ")}</div>
+                                <div className="text-[11px] text-slate-400 uppercase">{(item.priceType || item.rateType || "").replace("_", " ")}</div>
                               </td>
                               <td className="p-2 text-right font-mono font-bold text-slate-700">
                                 {(item.purchaseCost || item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                               <td className="p-2 text-center">
                                 {item.applyTax === "Yes" && Number(item.taxAmount || 0) > 0 ? (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
                                     {item.taxPercentage}% ({Number(item.taxAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap">
                                     {t(lang, "common.no", "No")}
                                   </span>
                                 )}
@@ -4018,29 +4018,29 @@ export function LocalPurchaseView({
                   <div className="border-t border-amber-100 bg-amber-50/30">
                     <div className="grid grid-cols-5 divide-x divide-amber-100">
                       <div className="px-3 py-2.5 min-w-0">
-                        <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.total_goods_lines", "Goods Entered")}</span>
+                        <span className="block text-[11px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.total_goods_lines", "Goods Entered")}</span>
                         <strong className="block text-[12px] font-black text-slate-800 truncate">{draftItems.length}</strong>
                       </div>
                       <div className="px-3 py-2.5 min-w-0">
-                        <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.col_packages", "Total Qty")}</span>
+                        <span className="block text-[11px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.col_packages", "Total Qty")}</span>
                         <strong className="block text-[12px] font-black text-slate-800 truncate">
                           {draftItems.reduce((a, i) => a + (i.quantityKgs || 0), 0).toLocaleString()}
                         </strong>
                       </div>
                       <div className="px-3 py-2.5 min-w-0">
-                        <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.net_weight", "Net Weight")}</span>
+                        <span className="block text-[11px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.net_weight", "Net Weight")}</span>
                         <strong className="block text-[12px] font-black text-blue-700 truncate">
-                          {draftItems.reduce((a, i) => a + (i.netWeight || 0), 0).toLocaleString()} <span className="text-[9px] font-bold">kg</span>
+                          {draftItems.reduce((a, i) => a + (i.netWeight || 0), 0).toLocaleString()} <span className="text-[11px] font-bold">kg</span>
                         </strong>
                       </div>
                       <div className="px-3 py-2.5 min-w-0">
-                        <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.col_tax_amt", "Total Tax")}</span>
+                        <span className="block text-[11px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.col_tax_amt", "Total Tax")}</span>
                         <strong className="block text-[12px] font-black text-amber-700 truncate">
                           {purchaseCurrency} {draftItems.reduce((a, i) => a + (i.taxAmount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </strong>
                       </div>
                       <div className="px-3 py-2.5 min-w-0">
-                        <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.final_amount_auto", "Final Amount")}</span>
+                        <span className="block text-[11px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.final_amount_auto", "Final Amount")}</span>
                         <strong className="block text-[12px] font-black text-emerald-700 truncate">
                           {purchaseCurrency} {draftItems.reduce((a, i) => a + (i.finalCost || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </strong>
@@ -4060,13 +4060,13 @@ export function LocalPurchaseView({
                     <span className="text-[11px] font-black uppercase text-[#6b4f00] tracking-wide">
                       {t(lang, "lp.goods_report_head", "GOODS REPORT")}
                     </span>
-                    <span className="text-[9.5px] font-bold text-[#6b4f00]">
+                    <span className="text-[11px] font-bold text-[#6b4f00]">
                       {draftItems.length} {t(lang, "lp.items_confirmed", "Items Confirmed")}
                     </span>
                   </div>
                   <div className="overflow-x-auto max-h-[340px]">
                     <table className="w-full text-left text-[11px] whitespace-nowrap">
-                      <thead className="bg-slate-50 text-slate-600 text-[9px] font-extrabold uppercase border-b border-slate-100">
+                      <thead className="bg-slate-50 text-slate-600 text-[11px] font-extrabold uppercase border-b border-slate-100">
                         <tr>
                           <Th className="p-2 border-b text-center">#</Th>
                           <Th className="p-2 border-b">{t(lang, "lp.col_goods_item", "GOODS")}</Th>
@@ -4083,7 +4083,7 @@ export function LocalPurchaseView({
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_final_amount", "TOTAL AMOUNT")} ({purchaseCurrency})</Th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 text-[10px]">
+                      <tbody className="divide-y divide-slate-100 text-[11px]">
                         {draftItems.length > 0 ? (
                           draftItems.map((item, idx) => (
                             <tr key={item.id} className="hover:bg-slate-50">
@@ -4102,11 +4102,11 @@ export function LocalPurchaseView({
                               </td>
                               <td className="p-2 text-center">
                                 {item.applyTax === "Yes" && Number(item.taxAmount || 0) > 0 ? (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
                                     {item.taxPercentage}% ({Number(item.taxAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap">
                                     {t(lang, "common.no", "No")}
                                   </span>
                                 )}
@@ -4118,7 +4118,7 @@ export function LocalPurchaseView({
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={14} className="p-3 text-center text-[10px] text-slate-400">
+                            <td colSpan={14} className="p-3 text-center text-[11px] text-slate-400">
                               {t(lang, "lp.no_goods_lines", "No goods lines added yet.")}
                             </td>
                           </tr>
@@ -4130,7 +4130,7 @@ export function LocalPurchaseView({
                   {extraCharges.length > 0 && (
                     <div className="border-t border-slate-100 px-3 py-2 space-y-1">
                       {extraCharges.map(c => (
-                        <div key={c.id} className="flex justify-between text-[10px]">
+                        <div key={c.id} className="flex justify-between text-[11px]">
                           <span className="text-slate-600">{c.label || t(lang, "lp.charge_unnamed", "Charge")}{c.allocate ? ` · ${t(lang, "lp.charge_allocate", "Add to landed cost")}` : ""}</span>
                           <span className="font-mono font-bold text-slate-700">{purchaseCurrency} {fmtMoney(Number(c.amount) || 0)}</span>
                         </div>
@@ -4138,7 +4138,7 @@ export function LocalPurchaseView({
                     </div>
                   )}
                   <div className="border-t border-slate-200 bg-emerald-50/60 px-3 py-2 flex justify-between items-center">
-                    <span className="text-[10px] font-black uppercase tracking-wide text-emerald-800">{t(lang, "lp.grand_total", "Grand Total")}</span>
+                    <span className="text-[11px] font-black uppercase tracking-wide text-emerald-800">{t(lang, "lp.grand_total", "Grand Total")}</span>
                     <span className="font-mono font-black text-emerald-700 text-sm">{purchaseCurrency} {fmtMoney(grandTotalWithCharges)}</span>
                   </div>
 
@@ -4146,29 +4146,29 @@ export function LocalPurchaseView({
                   <div className="border-t border-slate-100 bg-slate-50/60">
                     <div className="grid grid-cols-5 divide-x divide-slate-100">
                       <div className="px-3 py-2 min-w-0">
-                        <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.total_goods_lines", "Goods Items")}</span>
+                        <span className="block text-[11px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.total_goods_lines", "Goods Items")}</span>
                         <strong className="block text-[11px] font-black text-slate-800 truncate">{draftItems.length}</strong>
                       </div>
                       <div className="px-3 py-2 min-w-0">
-                        <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.col_packages", "Total Qty")}</span>
+                        <span className="block text-[11px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.col_packages", "Total Qty")}</span>
                         <strong className="block text-[11px] font-black text-slate-800 truncate">
                           {draftItems.reduce((a,i)=>a+i.quantityKgs, 0).toLocaleString()}
                         </strong>
                       </div>
                       <div className="px-3 py-2 min-w-0">
-                        <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.net_weight", "Net Weight")}</span>
+                        <span className="block text-[11px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.net_weight", "Net Weight")}</span>
                         <strong className="block text-[11px] font-black text-blue-700 truncate">
                           {(draftItems.reduce((a,i)=>a+i.netWeight, 0)).toLocaleString()} kg
                         </strong>
                       </div>
                       <div className="px-3 py-2 min-w-0">
-                        <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.col_tax_amt", "Total Tax")}</span>
+                        <span className="block text-[11px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.col_tax_amt", "Total Tax")}</span>
                         <strong className="block text-[11px] font-black text-amber-700 truncate">
                           {purchaseCurrency} {(draftItems.reduce((a,i)=>a+(i.taxAmount || 0), 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </strong>
                       </div>
                       <div className="px-3 py-2 min-w-0">
-                        <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.final_amount_auto", "Final Amount")}</span>
+                        <span className="block text-[11px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.final_amount_auto", "Final Amount")}</span>
                         <strong className="block text-[11px] font-black text-emerald-600 truncate">
                           {purchaseCurrency} {combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </strong>
@@ -4181,11 +4181,11 @@ export function LocalPurchaseView({
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
                   {/* Mini Card 1: LOADING DETAILS */}
                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[82px] shadow-2xs">
-                    <div className="p-1.5 px-2 border-b border-slate-100 dark:border-slate-800 text-[9px] font-extrabold flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                      <span className="w-[17px] h-[17px] rounded bg-blue-600 text-white text-[9px] flex items-center justify-center font-black">1</span>
+                    <div className="p-1.5 px-2 border-b border-slate-100 dark:border-slate-800 text-[11px] font-extrabold flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                      <span className="w-[17px] h-[17px] rounded bg-blue-600 text-white text-[11px] flex items-center justify-center font-black">1</span>
                       {t(lang, "lp.card_loading_details", "LOADING DETAILS")}
                     </div>
-                    <div className="p-2 space-y-1 text-[8.5px]">
+                    <div className="p-2 space-y-1 text-[11px]">
                       <div className="grid grid-cols-2 gap-2">
                         <span className="text-slate-400">{t(lang, "lp.type_label", "Type")}</span>
                         <span className="font-bold text-right text-slate-800 dark:text-slate-100 truncate">{shipmentType || "—"}</span>
@@ -4199,11 +4199,11 @@ export function LocalPurchaseView({
 
                   {/* Mini Card 2: PAYMENT DETAILS */}
                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[82px] shadow-2xs">
-                    <div className="p-1.5 px-2 border-b border-slate-100 dark:border-slate-800 text-[9px] font-extrabold flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                      <span className="w-[17px] h-[17px] rounded bg-emerald-600 text-white text-[9px] flex items-center justify-center font-black">2</span>
+                    <div className="p-1.5 px-2 border-b border-slate-100 dark:border-slate-800 text-[11px] font-extrabold flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                      <span className="w-[17px] h-[17px] rounded bg-emerald-600 text-white text-[11px] flex items-center justify-center font-black">2</span>
                       {t(lang, "lp.card_payment_details", "PAYMENT DETAILS")}
                     </div>
-                    <div className="p-2 space-y-1 text-[8.5px]">
+                    <div className="p-2 space-y-1 text-[11px]">
                       <div className="grid grid-cols-2 gap-2">
                         <span className="text-slate-400">{t(lang, "lp.condition_label", "Condition")}</span>
                         <span className="font-bold text-right text-slate-800 dark:text-slate-100">{paymentMode || "Cash"}</span>
@@ -4229,11 +4229,11 @@ export function LocalPurchaseView({
 
                   {/* Mini Card 3: GOODS DETAILS */}
                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[82px] shadow-2xs">
-                    <div className="p-1.5 px-2 border-b border-slate-100 dark:border-slate-800 text-[9px] font-extrabold flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                      <span className="w-[17px] h-[17px] rounded bg-purple-600 text-white text-[9px] flex items-center justify-center font-black">3</span>
+                    <div className="p-1.5 px-2 border-b border-slate-100 dark:border-slate-800 text-[11px] font-extrabold flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                      <span className="w-[17px] h-[17px] rounded bg-purple-600 text-white text-[11px] flex items-center justify-center font-black">3</span>
                       {t(lang, "lp.card_goods_details", "GOODS DETAILS")}
                     </div>
-                    <div className="p-2 space-y-1 text-[8.5px]">
+                    <div className="p-2 space-y-1 text-[11px]">
                       <div className="grid grid-cols-2 gap-2">
                         <span className="text-slate-400">{t(lang, "lp.total_goods_lines", "Total Goods")}</span>
                         <span className="font-bold text-right text-slate-800 dark:text-slate-100">{draftItems.length}</span>
@@ -4261,11 +4261,11 @@ export function LocalPurchaseView({
 
                   {/* Mini Card 4: ORIGIN & TOTAL DETAILS */}
                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[82px] shadow-2xs">
-                    <div className="p-1.5 px-2 border-b border-slate-100 dark:border-slate-800 text-[9px] font-extrabold flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                      <span className="w-[17px] h-[17px] rounded bg-amber-500 text-white text-[9px] flex items-center justify-center font-black">4</span>
+                    <div className="p-1.5 px-2 border-b border-slate-100 dark:border-slate-800 text-[11px] font-extrabold flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                      <span className="w-[17px] h-[17px] rounded bg-amber-500 text-white text-[11px] flex items-center justify-center font-black">4</span>
                       {t(lang, "lp.card_origin_total", "ORIGIN & TOTAL DETAILS")}
                     </div>
-                    <div className="p-2 space-y-1 text-[8.5px]">
+                    <div className="p-2 space-y-1 text-[11px]">
                       <div className="grid grid-cols-2 gap-2">
                         <span className="text-slate-400">{t(lang, "lp.origin_label", "Origin")}</span>
                         <span className="font-bold text-right truncate text-slate-800 dark:text-slate-100">{selectedOriginCountryName || "Mixed"}</span>
@@ -4302,13 +4302,13 @@ export function LocalPurchaseView({
                         <h2 className="text-base font-black uppercase tracking-tight text-slate-900 dark:text-slate-50">
                           {activeBranch?.companyName || activeBranch?.name || "—"}
                         </h2>
-                        <p className="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400">
+                        <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                           {activeBranch?.name || "—"} &bull; {[scopeLabels.city, scopeLabels.country].filter(Boolean).join(", ") || "—"}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 mb-1">
+                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 mb-1 whitespace-nowrap">
                         READY FOR GL & ROZNAMCHA POSTING
                       </span>
                       <div className="text-xs font-mono font-bold text-slate-600 dark:text-slate-300">
@@ -4319,30 +4319,30 @@ export function LocalPurchaseView({
 
                   {/* 4 Canonical Serials Official Strip */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 p-3">
-                    <div className="text-[9.5px] font-black uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+                    <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
                       <ShieldCheck className="h-3.5 w-3.5 text-blue-600" /> 4 Canonical Audit Serials
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[9.5px]">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
                       <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
-                        <span className="block text-[8px] uppercase font-bold text-slate-400">1. Super Admin Serial</span>
+                        <span className="block text-[11px] uppercase font-bold text-slate-400">1. Super Admin Serial</span>
                         <strong className="block font-mono text-blue-700 dark:text-blue-400 truncate">
                           {`SA-LP-2026-${String(purchases.length + 1).padStart(5, "0")}`}
                         </strong>
                       </div>
                       <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
-                        <span className="block text-[8px] uppercase font-bold text-slate-400">2. Country Admin Serial</span>
+                        <span className="block text-[11px] uppercase font-bold text-slate-400">2. Country Admin Serial</span>
                         <strong className="block font-mono text-emerald-700 dark:text-emerald-400 truncate">
                           {`CA-${(scopeLabels.country || "LOC").slice(0, 3).toUpperCase()}-2026-${String(purchases.filter(p => p.country_id === activeBranch?.countryId).length + 1).padStart(5, "0")}`}
                         </strong>
                       </div>
                       <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
-                        <span className="block text-[8px] uppercase font-bold text-slate-400">3. Branch Serial</span>
+                        <span className="block text-[11px] uppercase font-bold text-slate-400">3. Branch Serial</span>
                         <strong className="block font-mono text-purple-700 dark:text-purple-400 truncate">
                           {`BR-${(activeBranch?.code || "DXB").slice(0, 4).toUpperCase()}-2026-${String(purchases.filter(p => p.country_branch_id === selectedBranchId).length + 1).padStart(5, "0")}`}
                         </strong>
                       </div>
                       <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
-                        <span className="block text-[8px] uppercase font-bold text-slate-400">4. Bill Voucher Serial</span>
+                        <span className="block text-[11px] uppercase font-bold text-slate-400">4. Bill Voucher Serial</span>
                         <strong className="block font-mono text-amber-700 dark:text-amber-400 truncate">
                           {contractNo || allotId ? `BILL-${contractNo || allotId}` : `BILL-${String(purchases.length + 5200)}`}
                         </strong>
@@ -4351,38 +4351,38 @@ export function LocalPurchaseView({
                   </div>
 
                   {/* Summary Grid: Accounts, Payment, Logistics */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[10px] bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[11px] bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
                     <div>
-                      <span className="block text-slate-400 font-bold uppercase text-[8.5px]">Purchase Account (DR)</span>
+                      <span className="block text-slate-400 font-bold uppercase text-[11px]">Purchase Account (DR)</span>
                       <strong className="text-slate-800 dark:text-slate-100">{purchaseAccountNo || "DR-01"}</strong>
-                      <p className="text-[9px] text-slate-500 truncate">{selectedPurchaseAccount?.name || "Inventory Account"}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{selectedPurchaseAccount?.name || "Inventory Account"}</p>
                     </div>
                     <div>
-                      <span className="block text-slate-400 font-bold uppercase text-[8.5px]">Sales / Supplier Account (CR)</span>
+                      <span className="block text-slate-400 font-bold uppercase text-[11px]">Sales / Supplier Account (CR)</span>
                       <strong className="text-slate-800 dark:text-slate-100">{salesAccountNo || "CR-01"}</strong>
-                      <p className="text-[9px] text-slate-500 truncate">{selectedSalesAccount?.name || supplierName || "Supplier"}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{selectedSalesAccount?.name || supplierName || "Supplier"}</p>
                     </div>
                     <div>
-                      <span className="block text-slate-400 font-bold uppercase text-[8.5px]">Payment Condition</span>
+                      <span className="block text-slate-400 font-bold uppercase text-[11px]">Payment Condition</span>
                       <strong className="text-blue-700 dark:text-blue-400">{paymentMode}</strong>
-                      <p className="text-[9px] text-slate-500 truncate">Source: Daily Payments</p>
+                      <p className="text-[11px] text-slate-500 truncate">Source: Daily Payments</p>
                     </div>
                     <div>
-                      <span className="block text-slate-400 font-bold uppercase text-[8.5px]">{t(lang, "lp.payment_logistics_s", "Transport & Loading")}</span>
+                      <span className="block text-slate-400 font-bold uppercase text-[11px]">{t(lang, "lp.payment_logistics_s", "Transport & Loading")}</span>
                       <strong className="text-emerald-700 dark:text-emerald-400">{shipmentType}</strong>
-                      <p className="text-[9px] text-slate-500 truncate">{truckNo ? `Truck: ${truckNo}` : `Date: ${loadingDate}`}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{truckNo ? `Truck: ${truckNo}` : `Date: ${loadingDate}`}</p>
                     </div>
                   </div>
 
                   {/* Goods Items Manifest Table */}
                   <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-                    <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex justify-between">
+                    <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex justify-between">
                       <span>{t(lang, "lp.goods_manifest", "Itemized Goods Manifest")}</span>
                       <span>{draftItems.length} Line(s)</span>
                     </div>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-[10px] whitespace-nowrap">
-                        <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 text-[8.5px] font-extrabold uppercase border-b border-slate-200 dark:border-slate-700">
+                      <table className="w-full text-left text-[11px] whitespace-nowrap">
+                        <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 text-[11px] font-extrabold uppercase border-b border-slate-200 dark:border-slate-700">
                           <tr>
                             <Th className="p-2 text-center">#</Th>
                             <Th className="p-2">Goods Item</Th>
@@ -4398,7 +4398,7 @@ export function LocalPurchaseView({
                             <Th className="p-2 text-right">Total ({purchaseCurrency})</Th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[9.5px]">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
                           {draftItems.length > 0 ? (
                             draftItems.map((item, idx) => (
                               <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
@@ -4424,13 +4424,13 @@ export function LocalPurchaseView({
                             ))
                           ) : (
                             <tr>
-                              <td colSpan={14} className="p-3 text-center text-[10px] text-slate-400">
+                              <td colSpan={14} className="p-3 text-center text-[11px] text-slate-400">
                                 {t(lang, "lp.no_goods_lines", "No goods lines added yet.")}
                               </td>
                             </tr>
                           )}
                         </tbody>
-                        <tfoot className="bg-slate-100 dark:bg-slate-800 text-[10px] font-black border-t-2 border-slate-300 dark:border-slate-700">
+                        <tfoot className="bg-slate-100 dark:bg-slate-800 text-[11px] font-black border-t-2 border-slate-300 dark:border-slate-700">
                           <tr>
                             <td colSpan={5} className="p-2 uppercase text-slate-600 dark:text-slate-300">Total Goods Manifest</td>
                             <td className="p-2 text-right font-mono">
@@ -4461,12 +4461,12 @@ export function LocalPurchaseView({
                   {/* Additional charges + landed-cost allocation (display only; posting is unchanged) */}
                   {(extraCharges.length > 0 || landedLines.length > 0) && (
                     <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-                      <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                      <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
                         {t(lang, "lp.landed_title", "Charges & Landed Cost")}
                       </div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[10px]">
-                          <thead className="bg-slate-50 dark:bg-slate-800/60 text-[8.5px] font-extrabold uppercase text-slate-600 border-b border-slate-200">
+                        <table className="w-full text-[11px]">
+                          <thead className="bg-slate-50 dark:bg-slate-800/60 text-[11px] font-extrabold uppercase text-slate-600 border-b border-slate-200">
                             <tr>
                               <Th className="p-2 text-start">{t(lang, "lp.col_goods_item", "Goods Item")}</Th>
                               <Th className="p-2 text-end">{t(lang, "lp.landed_base", "Bill Amount")}</Th>
@@ -4498,7 +4498,7 @@ export function LocalPurchaseView({
                           </tfoot>
                         </table>
                       </div>
-                      <p className="px-3 py-2 text-[9px] text-slate-400">
+                      <p className="px-3 py-2 text-[11px] text-slate-400">
                         {t(lang, "lp.landed_note", "Landed cost is a costing view only. The posted journal below uses the goods bill amount.")}
                       </p>
                     </div>
@@ -4506,12 +4506,12 @@ export function LocalPurchaseView({
 
                   {/* Double-Entry Ledger Posting Table */}
                   <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-                    <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex justify-between">
+                    <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex justify-between">
                       <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-blue-600" /> Accounting Double-Entry Journal Breakdown</span>
                       <span className="text-emerald-600">Balanced (DR = CR)</span>
                     </div>
-                    <table className="w-full text-left text-[10px] whitespace-nowrap">
-                      <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 text-[8.5px] font-extrabold uppercase border-b border-slate-200 dark:border-slate-700">
+                    <table className="w-full text-left text-[11px] whitespace-nowrap">
+                      <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 text-[11px] font-extrabold uppercase border-b border-slate-200 dark:border-slate-700">
                         <tr>
                           <Th className="p-2">Account Code</Th>
                           <Th className="p-2">Account Title</Th>
@@ -4520,7 +4520,7 @@ export function LocalPurchaseView({
                           <Th className="p-2 text-right">Credit (CR) {purchaseCurrency}</Th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[9.5px]">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
                         <tr>
                           <td className="p-2 font-mono font-bold text-blue-700">{purchaseAccountNo || "DR-01"}</td>
                           <td className="p-2 font-semibold text-slate-800 dark:text-slate-200">{selectedPurchaseAccount?.name || "Inventory / Local Purchase"}</td>
@@ -4540,7 +4540,7 @@ export function LocalPurchaseView({
                           </td>
                         </tr>
                       </tbody>
-                      <tfoot className="bg-slate-100 dark:bg-slate-800 text-[10px] font-black border-t border-slate-300 dark:border-slate-700">
+                      <tfoot className="bg-slate-100 dark:bg-slate-800 text-[11px] font-black border-t border-slate-300 dark:border-slate-700">
                         <tr>
                           <td colSpan={3} className="p-2 uppercase text-slate-600 dark:text-slate-300">Journal Balanced Totals</td>
                           <td className="p-2 text-right font-mono text-blue-700">
@@ -4555,7 +4555,7 @@ export function LocalPurchaseView({
                   </div>
 
                   {/* Signatures & Official Approvals */}
-                  <div className="grid grid-cols-3 gap-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-center text-[9px]">
+                  <div className="grid grid-cols-3 gap-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-center text-[11px]">
                     <div className="border-t border-slate-300 dark:border-slate-700 pt-2">
                       <span className="block font-bold text-slate-700 dark:text-slate-300">{session.fullName || session.email || "Super Admin"}</span>
                       <span className="text-slate-400">Prepared & Verified By</span>
@@ -4607,7 +4607,7 @@ export function LocalPurchaseView({
                           : t(lang, "lp.reg_all_countries_list", "All Countries Local Purchase List")}
                       </h3>
                       {activeCountryObj && (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                           <span>{getCountryFlag(activeCountryObj.name)}</span>
                           <span>{activeCountryObj.name}</span>
                           <span className="opacity-75 font-mono">({filteredPurchases.length} {filteredPurchases.length === 1 ? t(lang, "lp.reg_bill", "Bill") : t(lang, "lp.reg_bills", "Bills")})</span>
@@ -4675,7 +4675,7 @@ export function LocalPurchaseView({
                         className="absolute end-0 top-full mt-1.5 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 shadow-2xl z-50 animate-in fade-in space-y-1 text-xs font-semibold"
                       >
                         <div className="p-2 border-b border-slate-100 dark:border-slate-800">
-                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                          <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
                             {t(lang, "lp.reg_page_size", "Page Size")}
                           </p>
                           <div className="flex gap-1.5">
@@ -4738,7 +4738,7 @@ export function LocalPurchaseView({
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-start text-xs whitespace-nowrap border-collapse">
-                    <thead className="bg-slate-50/90 dark:bg-slate-800/80 text-[10.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
+                    <thead className="bg-slate-50/90 dark:bg-slate-800/80 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
                       <tr>
                         <Th className="px-2.5 py-2.5 text-center w-8">
                           <input
@@ -4755,7 +4755,7 @@ export function LocalPurchaseView({
                         <Th className="px-3 py-2.5">
                           <span className="inline-flex items-center gap-1">
                             {t(lang, "lp.col_date", "DATE")}
-                            <span className="text-[10px] text-slate-400">⇅</span>
+                            <span className="text-[11px] text-slate-400">⇅</span>
                           </span>
                         </Th>
                         <Th className="px-3 py-2.5">{t(lang, "lp.col_supplier_name", "SUPPLIER NAME")}</Th>
@@ -4845,18 +4845,18 @@ export function LocalPurchaseView({
                                 {(() => {
                                   const st = (row.status || "").toLowerCase();
                                   if (st === "posted") {
-                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">{t(lang, "lp.reg_status_posted", "Posted")}</span>;
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">{t(lang, "lp.reg_status_posted", "Posted")}</span>;
                                   }
                                   if (st === "draft") {
-                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">{t(lang, "lp.reg_status_draft", "Draft")}</span>;
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200 whitespace-nowrap">{t(lang, "lp.reg_status_draft", "Draft")}</span>;
                                   }
                                   if (st === "pending") {
-                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">{t(lang, "lp.reg_status_pending", "Pending")}</span>;
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200 whitespace-nowrap">{t(lang, "lp.reg_status_pending", "Pending")}</span>;
                                   }
                                   if (st === "accepted") {
-                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">{t(lang, "lp.reg_status_accepted", "Accepted")}</span>;
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200 whitespace-nowrap">{t(lang, "lp.reg_status_accepted", "Accepted")}</span>;
                                   }
-                                  return <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">{row.status}</span>;
+                                  return <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 whitespace-nowrap">{row.status}</span>;
                                 })()}
                               </td>
                               <td className="px-3 py-2 text-center" onClick={(e) => e.stopPropagation()}>
@@ -5042,7 +5042,7 @@ export function LocalPurchaseView({
                       className="absolute end-0 top-full mt-1.5 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 shadow-2xl z-50 animate-in fade-in space-y-1 text-xs font-semibold"
                     >
                       <div className="p-2 border-b border-slate-100 dark:border-slate-800">
-                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
                           {t(lang, "lp.reg_page_size", "Page Size")}
                         </p>
                         <div className="flex gap-1.5">
@@ -5103,7 +5103,7 @@ export function LocalPurchaseView({
 
               <div className="overflow-x-auto">
                 <table className="w-full text-start text-xs whitespace-nowrap border-collapse">
-                  <thead className="bg-slate-50/90 dark:bg-slate-800/80 text-[10.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
+                  <thead className="bg-slate-50/90 dark:bg-slate-800/80 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
                     <tr>
                       <Th className="px-2.5 py-2.5 text-center w-8">
                         <input
@@ -5118,7 +5118,7 @@ export function LocalPurchaseView({
                       <Th className="px-3 py-2.5">
                         <span className="inline-flex items-center gap-1">
                           {t(lang, "lp.col_date", "DATE")}
-                          <span className="text-[10px] text-slate-400">⇅</span>
+                          <span className="text-[11px] text-slate-400">⇅</span>
                         </span>
                       </Th>
                       <Th className="px-3 py-2.5">{t(lang, "lp.col_supplier_name", "SUPPLIER NAME")}</Th>
@@ -5205,18 +5205,18 @@ export function LocalPurchaseView({
                               {(() => {
                                 const st = (row.status || "").toLowerCase();
                                 if (st === "posted") {
-                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">{t(lang, "lp.reg_status_posted", "Posted")}</span>;
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">{t(lang, "lp.reg_status_posted", "Posted")}</span>;
                                 }
                                 if (st === "draft") {
-                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">{t(lang, "lp.reg_status_draft", "Draft")}</span>;
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200 whitespace-nowrap">{t(lang, "lp.reg_status_draft", "Draft")}</span>;
                                 }
                                 if (st === "pending") {
-                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">{t(lang, "lp.reg_status_pending", "Pending")}</span>;
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200 whitespace-nowrap">{t(lang, "lp.reg_status_pending", "Pending")}</span>;
                                 }
                                 if (st === "accepted") {
-                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">{t(lang, "lp.reg_status_accepted", "Accepted")}</span>;
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200 whitespace-nowrap">{t(lang, "lp.reg_status_accepted", "Accepted")}</span>;
                                 }
-                                return <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">{row.status}</span>;
+                                return <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 whitespace-nowrap">{row.status}</span>;
                               })()}
                             </td>
                             <td className="px-3 py-2 text-center" onClick={(e) => e.stopPropagation()}>
@@ -5347,7 +5347,7 @@ export function LocalPurchaseView({
                 <h3 className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-blue-600" /> {t(lang, "lp.scope_modal_title", "SELECT WORKING LOCATION SCOPE")}
                 </h3>
-                <p className="text-[10px] text-slate-500 font-medium mt-0.5">{t(lang, "lp.scope_modal_desc", "Please select the Country, Branch, and City Branch before creating bill.")}</p>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5">{t(lang, "lp.scope_modal_desc", "Please select the Country, Branch, and City Branch before creating bill.")}</p>
               </div>
               <button onClick={() => setIsScopeModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4 w-4" />
@@ -5356,7 +5356,7 @@ export function LocalPurchaseView({
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">{t(lang, "lp.country_required", "Country *")}</label>
+                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">{t(lang, "lp.country_required", "Country *")}</label>
                 <select
                   value={scopeCountryId}
                   onChange={e => {
@@ -5378,7 +5378,7 @@ export function LocalPurchaseView({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">{t(lang, "lp.country_branch", "Country Branch *")}</label>
+                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">{t(lang, "lp.country_branch", "Country Branch *")}</label>
                 <select
                   value={scopeBranchId}
                   onChange={e => {
@@ -5396,12 +5396,12 @@ export function LocalPurchaseView({
                   ))}
                 </select>
                 {scopeFilteredBranches.length === 0 && scopeCountryId && (
-                  <p className="text-[9px] text-red-500 font-bold mt-1">{t(lang, "lp.no_branches_for_country", "No branches found for this country.")}</p>
+                  <p className="text-[11px] text-red-500 font-bold mt-1">{t(lang, "lp.no_branches_for_country", "No branches found for this country.")}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">{t(lang, "lp.city_branch", "City Branch")}</label>
+                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">{t(lang, "lp.city_branch", "City Branch")}</label>
                 <select
                   value={scopeCityBranchId}
                   onChange={e => setScopeCityBranchId(e.target.value)}
@@ -5411,7 +5411,7 @@ export function LocalPurchaseView({
                   {scopeCityBranches.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
                 {scopeCityBranches.length === 0 && scopeBranchId && (
-                  <p className="text-[9px] text-slate-400 font-bold mt-1">{t(lang, "lp.no_city_branches", "No city branches for this branch.")}</p>
+                  <p className="text-[11px] text-slate-400 font-bold mt-1">{t(lang, "lp.no_city_branches", "No city branches for this branch.")}</p>
                 )}
               </div>
             </div>
@@ -5483,7 +5483,7 @@ export function LocalPurchaseView({
 
             <form onSubmit={handleCreateGoodsMaster} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.goods_item_name", "Goods Item Name *")}</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.goods_item_name", "Goods Item Name *")}</label>
                 <input
                   required
                   autoFocus
@@ -5495,7 +5495,7 @@ export function LocalPurchaseView({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.col_chassis_hs", "Chassis / HS Code")}</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.col_chassis_hs", "Chassis / HS Code")}</label>
                 <input
                   value={newChsCodeInput}
                   onChange={e => setNewChsCodeInput(e.target.value)}
@@ -5541,7 +5541,7 @@ export function LocalPurchaseView({
 
             <form onSubmit={handleEditGoodsMaster} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.goods_item_name", "Goods Item Name *")}</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.goods_item_name", "Goods Item Name *")}</label>
                 <input
                   required
                   autoFocus
@@ -5552,7 +5552,7 @@ export function LocalPurchaseView({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.col_chassis_hs", "Chassis / HS Code")}</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.col_chassis_hs", "Chassis / HS Code")}</label>
                 <input
                   value={editChsCodeInput}
                   onChange={e => setEditChsCodeInput(e.target.value)}
@@ -5597,7 +5597,7 @@ export function LocalPurchaseView({
 
             <form onSubmit={handleCreateBrandVariation} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.new_brand_name", "New Brand Name *")}</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.new_brand_name", "New Brand Name *")}</label>
                 <input
                   required
                   autoFocus
@@ -5645,7 +5645,7 @@ export function LocalPurchaseView({
 
             <form onSubmit={handleCreateSizeVariation} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.new_size_name", "New Size Name *")}</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.new_size_name", "New Size Name *")}</label>
                 <input
                   required
                   autoFocus
@@ -5800,17 +5800,17 @@ export function LocalPurchaseView({
                     // is unaffected (printDomFragmentViaModal clones into its own print
                     // document, and print:max-w-none below already governs paper output).
                     <div className="overflow-x-auto print:overflow-visible">
-                    <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[10px] text-slate-800 print:max-w-none print:text-[9px]">
+                    <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[11px] text-slate-800 print:max-w-none print:text-[11px]">
                       <div className="overflow-hidden rounded-2xl border border-slate-300">
                         <div className="grid grid-cols-[88px_1fr_210px] gap-4 bg-slate-950 p-5 text-white">
                           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">{th("LOGO")}</div>
                           <div className="space-y-1">
                             <h2 className="text-xl font-black uppercase tracking-[0.18em]">{t(lang, "lp.tax_invoice", "Tax Invoice")}</h2>
                             <p className="text-sm font-extrabold uppercase tracking-wide">{companyName}</p>
-                            <p className="text-[10px] text-slate-300">{branchName}</p>
-                            <p className="max-w-lg text-[10px] leading-4 text-slate-300">{officeAddress}</p>
+                            <p className="text-[11px] text-slate-300">{branchName}</p>
+                            <p className="max-w-lg text-[11px] leading-4 text-slate-300">{officeAddress}</p>
                           </div>
-                          <div className="space-y-1 text-right text-[10px]">
+                          <div className="space-y-1 text-right text-[11px]">
                             <p>{t(lang, "lp.f_invoice_no", "Invoice No:")} <span className="font-mono font-black text-white">{voucherRef}</span></p>
                             <p>{t(lang, "lp.f_invoice_date", "Invoice Date:")} <span className="font-mono font-bold">{rowDate}</span></p>
                             <p>{t(lang, "lp.f_payment_method", "Payment Method:")} <span className="font-bold">{paymentMethod}</span></p>
@@ -5822,19 +5822,19 @@ export function LocalPurchaseView({
 
                         <div className="grid grid-cols-3 gap-3 border-b border-slate-200 bg-slate-50 p-4">
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.hdr_supplier_details", "Supplier Details")}</p>
+                            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.hdr_supplier_details", "Supplier Details")}</p>
                             <p className="text-sm font-black text-slate-900">{supplierName}</p>
                             <p className="mt-1 text-slate-500">{t(lang, "lp.f_country", "Country:")} {supplierCountryName || ""}</p>
                             <p className="text-slate-500">{t(lang, "lp.f_invoice_currency", "Invoice Currency:")} <span className="font-bold text-slate-800">{rowCurrency}</span></p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.delivery_warehouse", "Delivery / Warehouse")}</p>
+                            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.delivery_warehouse", "Delivery / Warehouse")}</p>
                             <p>{t(lang, "lp.f_transaction_type", "Transaction Type:")} <span className="font-bold">{shippingMode}</span></p>
                             <p>{t(lang, "lp.f_warehouse", "Warehouse:")} <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></p>
                             <p>{t(lang, "lp.f_truck_no", "Truck No:")} <span className="font-mono font-bold text-indigo-700">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.invoice_control", "Invoice Control")}</p>
+                            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.invoice_control", "Invoice Control")}</p>
                             <p>{t(lang, "lp.f_branch", "Branch:")} <span className="font-bold">{branchName}</span></p>
                             <p>{t(lang, "lp.f_document_ref", "Document Ref:")} <span className="font-mono font-bold">{voucherRef}</span></p>
                             <p>{t(lang, "lp.f_status", "Status:")} <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">{t(lang, "lp.col_posted", "Posted")}</span></p>
@@ -5842,7 +5842,7 @@ export function LocalPurchaseView({
                         </div>
 
                         <div className="p-4">
-                          <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[9px]">
+                          <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[11px]">
                             <thead className="bg-slate-900 text-white">
                               <tr>
                                 <Th className="border border-slate-800 p-2 text-left">{t(lang, "lp.col_sr", "Sr.")}</Th>
@@ -5864,7 +5864,7 @@ export function LocalPurchaseView({
                                 <td className="border border-slate-200 p-2">1</td>
                                 <td className="border border-slate-200 p-2 font-bold text-slate-900">
                                   {goodsName}
-                                  <div className="mt-1 text-[8px] font-semibold text-slate-500">Gross WT: {rowGrossWt.toLocaleString()} kg | Net WT: {rowNetWt.toLocaleString()} kg</div>
+                                  <div className="mt-1 text-[11px] font-semibold text-slate-500">Gross WT: {rowGrossWt.toLocaleString()} kg | Net WT: {rowNetWt.toLocaleString()} kg</div>
                                 </td>
                                 <td className="border border-slate-200 p-2 font-mono">{hsCode}</td>
                                 <td className="border border-slate-200 p-2">{brandName}</td>
@@ -5882,9 +5882,9 @@ export function LocalPurchaseView({
 
                           <div className="mt-4 grid grid-cols-[1fr_310px] gap-4">
                             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.amount_in_words", "Amount In Words")}</p>
+                              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.amount_in_words", "Amount In Words")}</p>
                               <p className="text-sm font-black capitalize text-slate-900">{amountToWordsEn(rowGrandTotal, rowCurrency)}</p>
-                              <div className="mt-4 grid grid-cols-2 gap-3 text-[9px]">
+                              <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
                                 <div className="rounded-lg border border-dashed border-slate-300 bg-white p-3">
                                   <p className="font-black uppercase text-slate-500">{t(lang, "lp.qr_code", "QR Code")}</p>
                                   <p className="mt-2 text-slate-400">{t(lang, "lp.qr_placeholder_note", "QR placeholder for e-invoice reference.")}</p>
@@ -5896,8 +5896,8 @@ export function LocalPurchaseView({
                               </div>
                             </div>
 
-                            <div className="overflow-hidden rounded-xl border border-slate-300 text-[10px]">
-                              <div className="bg-slate-100 px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-700">{t(lang, "lp.summary_word", "Summary")}</div>
+                            <div className="overflow-hidden rounded-xl border border-slate-300 text-[11px]">
+                              <div className="bg-slate-100 px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-700">{t(lang, "lp.summary_word", "Summary")}</div>
                               <div className="space-y-2 p-3">
                                 <div className="flex justify-between"><span>{t(lang, "lp.sub_total", "Sub Total")}</span><span className="font-mono font-bold">{rowCurrency} {rowSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
                                 <div className="flex justify-between text-red-600"><span>{t(lang, "lp.vat_total", "VAT Total")}</span><span className="font-mono font-bold">{rowCurrency} {rowTaxAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
@@ -5909,7 +5909,7 @@ export function LocalPurchaseView({
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 border-t border-slate-200 bg-slate-50 p-4 text-[9px]">
+                        <div className="grid grid-cols-2 gap-4 border-t border-slate-200 bg-slate-50 p-4 text-[11px]">
                           <div className="space-y-1">
                             <p className="font-black uppercase tracking-[0.14em] text-blue-800">{t(lang, "lp.bank_details", "Bank Details")}</p>
                             <p>{t(lang, "lp.f_bank_name", "Bank Name:")} <span className="font-bold">{activeBranch?.bankName || activeBranch?.bank_name || "-"}</span></p>
@@ -5924,7 +5924,7 @@ export function LocalPurchaseView({
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-6 p-5 text-center text-[9px] font-bold text-slate-600">
+                        <div className="grid grid-cols-3 gap-6 p-5 text-center text-[11px] font-bold text-slate-600">
                           <div className="border-t border-slate-700 pt-2">{t(lang, "lp.prepared_by", "Prepared By")}</div>
                           <div className="border-t border-slate-700 pt-2">{t(lang, "lp.checked_by", "Checked By")}</div>
                           <div className="border-t border-slate-700 pt-2">{t(lang, "lp.authorized_signature", "Authorized Signature")}</div>
@@ -5941,26 +5941,26 @@ export function LocalPurchaseView({
               <div className="flex justify-between items-start border-b-2 border-slate-800 pb-3">
                 <div>
                   <h2 className="text-sm font-black uppercase text-slate-900 tracking-tight">{th("LOCAL PURCHASE BILL VOUCHER")}</h2>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase">
+                  <p className="text-[11px] text-slate-500 font-bold uppercase">
                     {selectedRowForVoucher.branchName || t(lang, "lp.global_system_branch", "Global System Branch")}
                   </p>
                 </div>
                 <div className="text-right text-xs font-mono">
                   <span className="font-black text-blue-600 block text-sm">LP-{selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}</span>
-                  <span className="text-[9px] text-slate-500 block">{t(lang, "lp.f_date", "Date:")} {new Date(selectedRowForVoucher.createdAt || selectedRowForVoucher.created_at).toLocaleDateString("en-GB")}</span>
+                  <span className="text-[11px] text-slate-500 block">{t(lang, "lp.f_date", "Date:")} {new Date(selectedRowForVoucher.createdAt || selectedRowForVoucher.created_at).toLocaleDateString("en-GB")}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
                 <div>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase block">{t(lang, "lp.f_supplier_vendor", "Supplier / Vendor:")}</span>
+                  <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "lp.f_supplier_vendor", "Supplier / Vendor:")}</span>
                   <span className="font-bold text-slate-800 text-xs">{selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "-"}</span>
-                  <span className="text-[9px] text-emerald-600 block font-bold mt-1 uppercase">
+                  <span className="text-[11px] text-emerald-600 block font-bold mt-1 uppercase">
                     {t(lang, "lp.f_payment_mode", "Payment Mode:")} {selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash"}
                   </span>
                 </div>
-                <div className="text-right text-[10px] space-y-0.5">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase block">{t(lang, "lp.f_shipping_logistics", "Shipping & Logistics:")}</span>
+                <div className="text-right text-[11px] space-y-0.5">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase block">{t(lang, "lp.f_shipping_logistics", "Shipping & Logistics:")}</span>
                   <div className="font-semibold text-slate-700">{t(lang, "lp.f_mode", "Mode:")} <span className="font-bold">{selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || "Loading"}</span></div>
                   <div className="font-semibold text-slate-700">{t(lang, "lp.f_warehouse", "Warehouse:")} <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></div>
                   <div className="font-semibold text-slate-700">{t(lang, "lp.f_truck_no", "Truck No:")} <span className="font-bold font-mono text-indigo-600">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></div>
@@ -5969,7 +5969,7 @@ export function LocalPurchaseView({
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border border-slate-200">
-                  <thead className="bg-slate-100 text-slate-700 text-[9px] font-bold uppercase">
+                  <thead className="bg-slate-100 text-slate-700 text-[11px] font-bold uppercase">
                     <tr>
                       <Th className="p-2 border-b">{t(lang, "lp.col_goods_item", "Goods Item")}</Th>
                       <Th className="p-2 border-b">{t(lang, "lp.col_brand_origin", "Brand/Origin")}</Th>
@@ -5979,17 +5979,17 @@ export function LocalPurchaseView({
                       <Th className="p-2 border-b text-right">{t(lang, "lp.col_final_amount", "Final Amount")}</Th>
                     </tr>
                   </thead>
-                  <tbody className="text-[10px]">
+                  <tbody className="text-[11px]">
                     <tr className="border-b">
                       <td className="p-2 font-bold text-slate-800">
                         {selectedRowForVoucher.goodsName || selectedRowForVoucher.goods_name}
                         {(selectedRowForVoucher.chassisCode || selectedRowForVoucher.chassis_code || selectedRowForVoucher.lotNo || selectedRowForVoucher.lot_no) && (
-                          <div className="text-[8px] text-slate-500 font-bold uppercase mt-0.5 font-mono">
+                          <div className="text-[11px] text-slate-500 font-bold uppercase mt-0.5 font-mono">
                             Chs: {selectedRowForVoucher.chassisCode || selectedRowForVoucher.chassis_code || "-"} | Lot: {selectedRowForVoucher.lotNo || selectedRowForVoucher.lot_no || "-"}
                           </div>
                         )}
                         {(selectedRowForVoucher.apply_tax === "Yes" || selectedRowForVoucher.applyTax === "Yes") && (
-                          <div className="text-[8px] text-indigo-650 font-bold uppercase mt-0.5 font-sans">
+                          <div className="text-[11px] text-indigo-650 font-bold uppercase mt-0.5 font-sans">
                             Tax: {selectedRowForVoucher.tax_type || selectedRowForVoucher.taxType} ({selectedRowForVoucher.tax_percentage || selectedRowForVoucher.taxPercentage}%) - ${Number(selectedRowForVoucher.tax_amount || selectedRowForVoucher.taxAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
                         )}

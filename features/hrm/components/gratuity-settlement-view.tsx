@@ -94,13 +94,13 @@ export function GratuitySettlementView({ lang }: { lang?: string }) {
                 rows.map((r) => (
                   <tr key={r.id} className="cursor-pointer border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40" onClick={() => setOpenId(r.id)}>
                     <td className="px-3 py-2 font-mono font-bold text-slate-700 dark:text-slate-200">{r.settlement_no}</td>
-                    <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{r.employee_name} <span className="font-mono text-[10px] text-slate-400">{r.employee_code}</span></td>
+                    <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{r.employee_name} <span className="font-mono text-[11px] text-slate-400">{r.employee_code}</span></td>
                     <td className="px-3 py-2 text-slate-500">{s.t(`lc_sub_${r.separation_type}`, r.separation_type)}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-slate-500">{Number(r.service_years).toFixed(2)}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-slate-500">{NUM(r.gratuity_amount)}</td>
                     <td className="px-3 py-2 text-right tabular-nums font-bold text-slate-800 dark:text-slate-100">{NUM(r.net_settlement)}</td>
                     <td className="px-3 py-2 text-slate-500">{r.currency}</td>
-                    <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${TONE[r.status] || TONE.draft}`}>{s.t(`grat_st_${r.status}`, r.status)}</span></td>
+                    <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[r.status] || TONE.draft}`}>{s.t(`grat_st_${r.status}`, r.status)}</span></td>
                   </tr>
                 ))
               )}
@@ -155,7 +155,7 @@ function CalcForm({ s, employees, onClose, onDone }: { s: ReturnType<typeof useE
             <L label={s.t("grat_other_add", "Other Additions")}><input type="number" value={f.otherAdditions} onChange={(e) => set("otherAdditions", e.target.value)} className={INP} /></L>
             <L label={s.t("grat_other_ded", "Other Deductions")}><input type="number" value={f.otherDeductions} onChange={(e) => set("otherDeductions", e.target.value)} className={INP} /></L>
           </div>
-          <p className="text-[10px] text-slate-400">{s.t("grat_hint", "Gratuity, service years, paid-leave encashment and outstanding advances are computed automatically from the employee record + country policy.")}</p>
+          <p className="text-[11px] text-slate-400">{s.t("grat_hint", "Gratuity, service years, paid-leave encashment and outstanding advances are computed automatically from the employee record + country policy.")}</p>
         </div>
         <div className="mt-5 flex gap-2">
           <button type="button" onClick={() => void submit()} disabled={saving || !f.employeeId} className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50">{saving ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : s.t("grat_calc", "Calculate")}</button>
@@ -243,7 +243,7 @@ function SettlementDetail({ s, id, onBack }: { s: ReturnType<typeof useErpScreen
               <div className={s.textStart}>
                 <h1 className="text-lg font-black text-slate-900 dark:text-slate-50">{row.settlement_no}</h1>
                 <p className="text-xs text-slate-500">{row.employee_name} · {row.employee_code} · {s.t(`lc_sub_${row.separation_type}`, row.separation_type)}</p>
-                <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${TONE[row.status] || TONE.draft}`}>{s.t(`grat_st_${row.status}`, row.status)}</span>
+                <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[row.status] || TONE.draft}`}>{s.t(`grat_st_${row.status}`, row.status)}</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <UniversalPrintActionButton reportConfig={printConfig} />
@@ -272,7 +272,7 @@ function SettlementDetail({ s, id, onBack }: { s: ReturnType<typeof useErpScreen
                     <td className="py-2.5 text-right font-black tabular-nums text-slate-900 dark:text-slate-50">{NUM(row.net_settlement)} {row.currency}</td>
                   </tr>
                   {row.currency !== "USD" ? (
-                    <tr><td className="py-1 text-[10px] text-slate-400">{s.t("grat_usd", "USD equivalent")}</td><td className="py-1 text-right text-[10px] text-slate-400">{NUM(row.usd_amount)} USD @ {Number(row.exchange_rate).toFixed(4)}</td></tr>
+                    <tr><td className="py-1 text-[11px] text-slate-400">{s.t("grat_usd", "USD equivalent")}</td><td className="py-1 text-right text-[11px] text-slate-400">{NUM(row.usd_amount)} USD @ {Number(row.exchange_rate).toFixed(4)}</td></tr>
                   ) : null}
                 </tbody>
               </table>
@@ -313,7 +313,7 @@ function SettlementDetail({ s, id, onBack }: { s: ReturnType<typeof useErpScreen
 function L({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
+      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
       {children}
     </div>
   );

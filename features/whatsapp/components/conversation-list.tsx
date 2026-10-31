@@ -86,7 +86,7 @@ export function ConversationList({
           <button
             key={tab.value}
             onClick={() => onFilterChange({ status: tab.value })}
-            className={`flex-1 py-2 text-[10px] font-medium transition-colors border-b-2 ${
+            className={`flex-1 py-2 text-[11px] font-medium transition-colors border-b-2 ${
               filters.status === tab.value || (!filters.status && tab.value === "all")
                 ? "border-[#25D366] text-[#25D366]"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -94,7 +94,7 @@ export function ConversationList({
           >
             {tt(tab.labelKey, tab.labelFallback)}
             {tab.value !== "all" && (
-              <span className="ms-1 text-[9px] opacity-70">
+              <span className="ms-1 text-[11px] opacity-70">
                 ({conversations.filter((c) => c.status === tab.value).length})
               </span>
             )}
@@ -102,7 +102,7 @@ export function ConversationList({
         ))}
         <button
           onClick={() => setShowFilters((v) => !v)}
-          className={`px-2 py-2 text-[10px] text-muted-foreground hover:text-foreground transition-colors border-b-2 ${showFilters ? "border-[#25D366] text-[#25D366]" : "border-transparent"}`}
+          className={`px-2 py-2 text-[11px] text-muted-foreground hover:text-foreground transition-colors border-b-2 ${showFilters ? "border-[#25D366] text-[#25D366]" : "border-transparent"}`}
           title={tt("wa.advanced_filters", "Advanced filters")}
         >
           <Filter className="h-3 w-3" />

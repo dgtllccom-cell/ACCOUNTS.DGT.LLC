@@ -244,7 +244,7 @@ export function WhatsAppWizardModal({
           ].map((s) => (
             <div key={s.n} className="flex items-center gap-1.5">
               <div className={cn(
-                "h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-black",
+                "h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-black",
                 step >= s.n ? "bg-emerald-600 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
               )}>
                 {step > s.n ? <Check className="h-3.5 w-3.5" /> : s.n}
@@ -304,7 +304,7 @@ export function WhatsAppWizardModal({
                 placeholder="00971544816664"
                 className="w-full font-mono font-bold p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
               />
-              <p className="text-[10.5px] text-slate-400">{tt("wam.enter_branch_whatsapp_number", "Enter your branch WhatsApp phone number e.g. 00971544816664")}</p>
+              <p className="text-[11px] text-slate-400">{tt("wam.enter_branch_whatsapp_number", "Enter your branch WhatsApp phone number e.g. 00971544816664")}</p>
             </div>
 
             {verifyError && (
@@ -343,7 +343,7 @@ export function WhatsAppWizardModal({
             )}
 
             <div className="flex items-center justify-between pt-2 border-t dark:border-slate-800">
-              <p className="text-[10.5px] text-slate-400 flex items-center gap-1">
+              <p className="text-[11px] text-slate-400 flex items-center gap-1">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> {tt("wiz.credentials_protected", "Server Meta Credentials Protected")}
               </p>
               <button
@@ -374,7 +374,7 @@ export function WhatsAppWizardModal({
             </div>
 
             {/* Messaging Feature Badges */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10.5px] font-bold">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[11px] font-bold">
               <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex flex-col items-center gap-1">
                 <Bot className="h-4 w-4 text-emerald-500" />
                 {tt("wiz.ai_replies", "AI Auto-Replies")}
@@ -456,7 +456,7 @@ export function WhatsAppWizardModal({
                     <p>WAMID: <span className="font-bold text-emerald-600">{testResult.wamid}</span></p>
                   )}
                   {Boolean(testResult.details) && (
-                    <p className="text-[10.5px] opacity-90">
+                    <p className="text-[11px] opacity-90">
                       {typeof testResult.details === "string" ? testResult.details : JSON.stringify(testResult.details)}
                     </p>
                   )}

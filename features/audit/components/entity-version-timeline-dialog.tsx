@@ -165,7 +165,7 @@ export function EntityVersionTimelineDialog({
               return (
                 <div key={event.id || idx} className="relative pl-6">
                   {/* Timeline Dot */}
-                  <div className="absolute -left-2.5 top-1.5 h-5 w-5 rounded-full border-2 border-sky-500 bg-white dark:bg-slate-900 flex items-center justify-center text-[10px] font-bold text-sky-600">
+                  <div className="absolute -left-2.5 top-1.5 h-5 w-5 rounded-full border-2 border-sky-500 bg-white dark:bg-slate-900 flex items-center justify-center text-[11px] font-bold text-sky-600">
                     {event.version_number}
                   </div>
 

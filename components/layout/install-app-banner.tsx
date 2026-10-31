@@ -137,7 +137,7 @@ export function InstallAppBanner() {
               <span className="tracking-tight text-sm font-black">
                 {lang === "ur" ? "دامان بزنس گروپ ایپ انسٹال کریں (DGT ERP)" : "Install Damaan Business Group App (DGT ERP)"}
               </span>
-              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-mono whitespace-nowrap">
+              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded text-[11px] font-mono whitespace-nowrap">
                 {tb("iab.auto_dl_ready", "Automatic Download Ready")}
               </span>
             </div>

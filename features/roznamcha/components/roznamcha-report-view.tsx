@@ -727,7 +727,7 @@ export function RoznamchaReportView({
             </div>
 
             <div className="rounded-lg border p-4 bg-muted/20 space-y-1 dark:bg-slate-900/50 dark:border-slate-800">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{th("Narration / Details")}</span>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{th("Narration / Details")}</span>
               <p className="text-xs text-foreground font-medium leading-relaxed">{selectedHeader.narration || "No narration provided."}</p>
             </div>
 
@@ -753,7 +753,7 @@ export function RoznamchaReportView({
                             {line.accounts ? `${line.accounts.code} - ${line.accounts.name}` : line.account_id}
                           </div>
                           {line.ledgers && (
-                            <div className="text-[10px] text-muted-foreground">{th("Ledger")}: {line.ledgers.code} - {line.ledgers.name}</div>
+                            <div className="text-[11px] text-muted-foreground">{th("Ledger")}: {line.ledgers.code} - {line.ledgers.name}</div>
                           )}
                         </td>
                         <td className="px-3 py-2 text-right font-mono tabular-nums text-rose-600">
@@ -777,11 +777,11 @@ export function RoznamchaReportView({
             {selectedTotals && (
               <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border dark:bg-slate-900/30 dark:border-slate-800">
                 <div>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{th("Debit Total")}</span>
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase">{th("Debit Total")}</span>
                   <div className="text-sm font-extrabold text-rose-600 mt-0.5">{selectedHeader.countries?.currency_code || "—"} {fmtNumber(selectedTotals.debit)}</div>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{th("Credit Total")}</span>
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase">{th("Credit Total")}</span>
                   <div className="text-sm font-extrabold text-emerald-600 mt-0.5">{selectedHeader.countries?.currency_code || "—"} {fmtNumber(selectedTotals.credit)}</div>
                 </div>
               </div>
@@ -806,7 +806,7 @@ function StatCard({ label, value, tone }: { label: string; value: string; tone?:
   return (
     <Card className="border-slate-200/80 shadow-sm">
       <CardContent className="p-3">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
         <div className={cn("mt-1 text-xl font-semibold leading-none tracking-tight", tone)}>{value}</div>
       </CardContent>
     </Card>

@@ -178,7 +178,7 @@ export function BranchUserSummary({
             <div key={`detail-${node.level}-${node.name}-${i}`} className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-900/40">
               <div className="mb-2 flex items-center justify-between gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
                 <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-200">{node.name}</span>
-                <span className="text-[10px] font-semibold text-slate-400">{node.currency || tr(levelLabel[node.level])}</span>
+                <span className="text-[11px] font-semibold text-slate-400">{node.currency || tr(levelLabel[node.level])}</span>
               </div>
               <dl className="space-y-1.5">
                 {node.metrics.map((m) => (

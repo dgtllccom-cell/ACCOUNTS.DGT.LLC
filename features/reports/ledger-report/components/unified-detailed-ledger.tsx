@@ -384,7 +384,7 @@ export function UnifiedDetailedLedgerView() {
             </Button>
             <div>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-700/10 dark:bg-emerald-950/50 dark:text-emerald-300">
+                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-700/10 dark:bg-emerald-950/50 dark:text-emerald-300 whitespace-nowrap">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                   {isSuperAdmin ? tr("Super Admin Scope") : tr("Authorized Ledger Scope")}
                 </span>
@@ -546,7 +546,7 @@ export function UnifiedDetailedLedgerView() {
               <BookOpen className="h-3.5 w-3.5 text-emerald-600" />
               <span>{tr("Account Details")}</span>
             </h5>
-            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-mono font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
               {header?.ledgerCurrency || "—"}
             </span>
           </div>
@@ -657,7 +657,7 @@ export function UnifiedDetailedLedgerView() {
               <Layers className="h-3.5 w-3.5 text-amber-600" />
               <span>{tr("Ledger Summary")}</span>
             </h5>
-            <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+            <span className="rounded bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 whitespace-nowrap">
               {calculatedTotals.lines.length} {tr("Entries")}
             </span>
           </div>
@@ -744,7 +744,7 @@ export function UnifiedDetailedLedgerView() {
                     {line.branchName || tr("Main Office")}
                   </td>
                   <td className="p-2.5 whitespace-nowrap">
-                    <span className="inline-block rounded px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <span className="inline-block rounded px-2 py-0.5 text-[11px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                       {line.sourceTable === "ledger_posting_batches"
                         ? tr("Opening Balance")
                         : line.sourceTable === "roznamcha_entries"
@@ -758,7 +758,7 @@ export function UnifiedDetailedLedgerView() {
                   <td className="p-2.5 text-slate-700 dark:text-slate-300 max-w-sm">
                     <div>{line.description || "—"}</div>
                     {((line as any).perKgRate || (line as any).purchaseCurrency || (line as any).totalPurchaseAmount) ? (
-                      <div className="text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+                      <div className="text-[11px] text-slate-400 mt-1 pt-1 border-t border-slate-100 dark:border-slate-800 flex gap-2">
                         {(line as any).perKgRate && <span>{tr("Per KG Rate")}: {fmt((line as any).perKgRate)}</span>}
                         {(line as any).purchaseCurrency && <span>{tr("Currency")}: {(line as any).purchaseCurrency}</span>}
                         {(line as any).totalPurchaseAmount && <span>{tr("Total")}: {fmt((line as any).totalPurchaseAmount)}</span>}

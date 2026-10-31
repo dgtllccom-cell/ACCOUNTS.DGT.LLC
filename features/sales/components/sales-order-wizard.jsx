@@ -58,6 +58,7 @@ import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-ro
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
 import { SalesBookingStep1 } from "./sales-booking-step1";
 import { SalesBookingStep2 } from "./sales-booking-step2";
+import { resolveBookingRate } from "@/lib/sales/sales-goods-model";
 import { SalesBookingStep3 } from "./sales-booking-step3";
 import { SalesBookingStep4 } from "./sales-booking-step4";
 import { SalesBookingStep5 } from "./sales-booking-step5";
@@ -139,154 +140,101 @@ async function lookupSalesBookingReport(query, countryId, countryBranchId, cityB
   return payload.data?.reports?.[0] ?? null;
 }
 
-const DEFAULT_SEEDED_GOODS = [
-  {
-    goodsName: "Almond Kernel",
-    hsCode: "080212",
-    unit: "MT",
-    qtyNo: 10,
-    quantity: 10,
-    coursePrice: 2500,
-    unitPrice: 2500,
-    totalAmount: 25000,
-    grossWeight: 12000,
-    netWeight: 11000,
-    size: "5% Broken",
-    brand: "Al Baraka",
-    origin: "USA",
-    originCountry: "United Arab Emirates",
-    exchangeRate: 3.6730,
-    finalAmount: 91825
-  },
-  {
-    goodsName: "Pistachio",
-    hsCode: "080252",
-    unit: "MT",
-    qtyNo: 5,
-    quantity: 5,
-    coursePrice: 3200,
-    unitPrice: 3200,
-    totalAmount: 16000,
-    grossWeight: 6000,
-    netWeight: 5500,
-    size: "Standard",
-    brand: "Al Baraka",
-    origin: "USA",
-    originCountry: "United Arab Emirates",
-    exchangeRate: 3.6730,
-    finalAmount: 58768
-  },
-  {
-    goodsName: "Raisins",
-    hsCode: "080620",
-    unit: "MT",
-    qtyNo: 8,
-    quantity: 8,
-    coursePrice: 1800,
-    unitPrice: 1800,
-    totalAmount: 14400,
-    grossWeight: 8000,
-    netWeight: 7500,
-    size: "Standard",
-    brand: "Golden",
-    origin: "Iran",
-    originCountry: "Iran",
-    exchangeRate: 3.6730,
-    finalAmount: 52891
-  }
-];
+// A new Sales Booking starts EMPTY. It used to open pre-filled with a demo customer, account, TRN numbers, shipment and three demo goods
+// (Al Noor Imports / Global Trading LLC / Almond, Pistachio, Raisins) that could be saved as if they were real. Nothing here is a business value.
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
 
 const DEFAULT_FORM = {
   countryId: "",
   countryBranchId: "",
   cityBranchId: "",
-  customerAccountNo: "CU-001",
-  customerAccountName: "Al Noor Imports",
-  customerAccountBranch: "Dubai Main Branch",
-  customerAccountCurrency: "AED",
-  customerAccountKind: "Customer",
+  customerAccountNo: "",
+  customerAccountName: "",
+  customerAccountBranch: "",
+  customerAccountCurrency: "",
+  customerAccountKind: "",
   customerAccountIsControl: false,
   customerAccountCurrentBalance: 0,
   customerAccountOpeningBalance: 0,
-  customerAccountStatus: "active",
-  customerAccountSerialNumber: "CU-001",
+  customerAccountStatus: "",
+  customerAccountSerialNumber: "",
   customerAccountCountrySerialNumber: "",
   customerAccountBranchSerialNumber: "",
-  customerAccountManualReferenceNumber: "CU-001",
-  customerAccountMobile: "+971 50 123 4567",
-  customerAccountWhatsapp: "+971 50 123 4567",
-  customerCompanyName: "Al Noor Imports",
-  customerAddress: "Warehouse 5, Jebel Ali, Dubai, UAE",
-  customerLicenseNo: "TRN0987654321",
-  customerGstTrn: "100987654321003",
-  customerCountry: "United Arab Emirates",
-  customerCity: "Dubai",
-  customerCityCode: "DXB",
-  salesAccountNo: "SA-001",
-  salesAccountName: "Global Trading LLC",
-  salesAccountBranch: "Dubai Main Branch",
-  salesAccountCurrency: "AED",
-  salesAccountKind: "Income",
+  customerAccountManualReferenceNumber: "",
+  customerAccountMobile: "",
+  customerAccountWhatsapp: "",
+  customerCompanyName: "",
+  customerAddress: "",
+  customerLicenseNo: "",
+  customerGstTrn: "",
+  customerCountry: "",
+  customerCity: "",
+  customerCityCode: "",
+  salesAccountNo: "",
+  salesAccountName: "",
+  salesAccountBranch: "",
+  salesAccountCurrency: "",
+  salesAccountKind: "",
   salesAccountIsControl: false,
   salesAccountCurrentBalance: 0,
   salesAccountOpeningBalance: 0,
-  salesAccountStatus: "active",
-  salesAccountSerialNumber: "SA-001",
+  salesAccountStatus: "",
+  salesAccountSerialNumber: "",
   salesAccountCountrySerialNumber: "",
   salesAccountBranchSerialNumber: "",
-  salesAccountManualReferenceNumber: "SA-001",
-  salesAccountMobile: "+971 4 123 4567",
-  salesAccountWhatsapp: "+971 4 123 4567",
-  salesCompanyName: "Global Trading LLC",
-  salesAddress: "Office 101, Business Bay, Dubai, UAE",
-  salesLicenseNo: "TRN1234567890",
-  salesGstTrn: "100123456789003",
-  salesCountry: "United Arab Emirates",
-  salesCity: "Dubai",
-  salesCityCode: "DXB",
-  salesOrderNo: "SB-2026-0001",
-  salesContractNo: "SC-2026-0001",
-  billNo: "SV-0001",
-  salesDate: "2026-10-16",
-  currencyType: "AED",
-  salesCurrency: "AED",
-  exchangeRate: 3.6730,
-  branchName: "Dubai Main Branch",
-  branchCode: "DXB-01",
-  branchCity: "Dubai",
-  branchCountry: "United Arab Emirates",
-  userName: "Admin User",
+  salesAccountManualReferenceNumber: "",
+  salesAccountMobile: "",
+  salesAccountWhatsapp: "",
+  salesCompanyName: "",
+  salesAddress: "",
+  salesLicenseNo: "",
+  salesGstTrn: "",
+  salesCountry: "",
+  salesCity: "",
+  salesCityCode: "",
+  salesOrderNo: "",
+  salesContractNo: "",
+  billNo: "",
+  salesDate: TODAY_ISO,
+  currencyType: "",
+  salesCurrency: "",
+  exchangeRate: "",
+  branchName: "",
+  branchCode: "",
+  branchCity: "",
+  branchCountry: "",
+  userName: "",
   userId: "",
   paymentType: "Cash",
   shipmentType: "By Sea",
   shippingMode: "By Sea",
-  customerId: "CU-001",
-  customerName: "Al Noor Imports",
+  customerId: "",
+  customerName: "",
   salesStatus: "Draft",
-  remarks: "Standard export sales booking",
-  loadingReport: "Cargo loaded at Jebel Ali Port on 20 Oct 2026. All containers inspected and sealed with MSC line. Documents (Packing List, Commercial Invoice and Certificate of Origin) handed over to shipping line. Vessel MSC Evergreen (VY1234) departed on time. No damage reported.",
-  orderReportRemarks: "Total 23.000 MT including Almond Kernels, Pistachios and Raisins. All goods are in good condition and packed as per standard export quality. Net weight 24,000 KG and gross weight 26,000 KG. All HS codes verified and quantities matched with packing list.",
-  paymentReport: "Advance payment of 10% (AED 20,348.00) received on 16 Oct 2026 via cash. Remaining amount AED 183,136.00 to be paid on or before 28 Oct 2026. Payment terms as per sales contract. No outstanding from previous bookings.",
-  salesReportRemarks: "Sales booking for export shipment of Almond Kernels, Pistachios and Raisins to Pakistan via Jebel Ali Port. Total 23.000 MT, Invoice value USD 55,400.00 (AED 203,484.00 at rate 3.6730). Advance 10% received and balance as per payment terms. All documents verified and shipment processed as per contract. Entry to be transferred to Sales Ledger (CR), Customer Ledger (DR) and stock as per approved booking.",
+  remarks: "",
+  loadingReport: "",
+  orderReportRemarks: "",
+  paymentReport: "",
+  salesReportRemarks: "",
   salesInvoiceRemarks: "",
   showRemarksOnA4: true,
 
   // Tab 3 details
-  advancePercent: 10,
-  advancePaymentDate: "2026-10-16",
-  paymentDate: "2026-10-28",
+  advancePercent: 0,
+  advancePaymentDate: "",
+  paymentDate: "",
   paymentDaysAndMethodDetails: "",
-  loadingCountry: "United Arab Emirates",
-  loadingPort: "Jebel Ali Port",
-  loadingDate: "2026-10-20",
-  receivedCountry: "Pakistan",
-  receivedPort: "Karachi Port",
-  receivedDate: "2026-10-28",
-  destinationCountry: "Pakistan",
-  destinationCity: "Karachi",
-  shippingLine: "MSC Line",
-  vesselName: "MSC Evergreen",
-  voyageNo: "VY1234",
+  loadingCountry: "",
+  loadingPort: "",
+  loadingDate: "",
+  receivedCountry: "",
+  receivedPort: "",
+  receivedDate: "",
+  destinationCountry: "",
+  destinationCity: "",
+  shippingLine: "",
+  vesselName: "",
+  voyageNo: "",
   loadingBorder: "",
   receivedBorder: "",
   airportName: "",
@@ -294,10 +242,10 @@ const DEFAULT_FORM = {
   transportAgent: "",
   airlineName: "",
   receivedAgentName: "",
-  containerCount: 1,
-  containerSize: "40 FT",
-  containerNumbers: "MSKU1234567",
-  sealNumber: "SL-99882",
+  containerCount: 0,
+  containerSize: "",
+  containerNumbers: "",
+  sealNumber: "",
 
   // Step 2 Active Item inputs
   saleType: "stock", // "stock" | "endorse"
@@ -329,18 +277,18 @@ const DEFAULT_FORM = {
   hsCode: "",
   allotName: "",
   qtyName: "BAGS",
-  qtyNo: 100,
-  qtyKgs: 50.00,
-  emptyKgs: 0.10,
-  netWeight: 4990.00,
+  qtyNo: "",
+  qtyKgs: "",
+  emptyKgs: "",
+  netWeight: "",
   divideType: "D/KGs",
-  divideWeight: 1.0,
+  divideWeight: 1,
   priceType: "P/KGs",
-  coursePrice: 12.50,
-  secondaryCurrency: "PKR",
-  rate2: 280.00,
+  coursePrice: "",
+  secondaryCurrency: "",
+  rate2: "",
   operator: "*",
-  qualityReport: "Passed"
+  qualityReport: "",
 };
 
 // Seeded rows matching user's mock screenshots
@@ -422,7 +370,7 @@ function LightTable({ headers, children }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
       <table className="min-w-full border-collapse text-xs text-slate-800">
-        <thead className="bg-slate-50 text-[10px] uppercase font-bold tracking-wide text-slate-650 border-b border-slate-200">
+        <thead className="bg-slate-50 text-[11px] uppercase font-bold tracking-wide text-slate-650 border-b border-slate-200">
           <tr>
             {headers.map((header, idx) => (
               <Th
@@ -463,7 +411,7 @@ function LightStatusBadge({ status }) {
     badgeClass = "bg-blue-50 text-blue-700 border-blue-200";
   }
   return (
-    <span className={`inline-flex items-center rounded border px-2 py-0.5 text-[9px] font-black uppercase ${badgeClass}`}>
+    <span className={`inline-flex items-center rounded border px-2 py-0.5 text-[11px] font-black uppercase ${badgeClass}`}>
       {status || "Open"}
     </span>
   );
@@ -496,7 +444,7 @@ export function SalesOrderWizard({ session }) {
   // Serial numbers (SO / Contract / Bill) are assigned by the server on save via
   // nextTransactionSerial — never a random client value. Form starts blank.
   const [form, setForm] = useState(() => ({ ...DEFAULT_FORM }));
-  const [goodsEntries, setGoodsEntries] = useState(() => [...DEFAULT_SEEDED_GOODS]);
+  const [goodsEntries, setGoodsEntries] = useState(() => []);
   const setValue = useCallback((key, val) => setForm((p) => ({ ...p, [key]: val })), []);
 
   // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
@@ -524,7 +472,7 @@ export function SalesOrderWizard({ session }) {
   const sectionPanelHeaderCls = isLocalSale
     ? "flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-amber-300 dark:border-amber-800 px-3 py-2 mb-3"
     : "flex items-center justify-between border-b border-border pb-2";
-  const miniCardCls = "bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[10px] dark:bg-slate-950 dark:border-slate-800";
+  const miniCardCls = "bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[11px] dark:bg-slate-950 dark:border-slate-800";
   // Local Purchase's exact 4-color numbered-badge sequence (blue/emerald/purple/amber),
   // cycled for however many numbered mini-cards a given section has.
   const localBadgeColors = ["bg-blue-600", "bg-emerald-600", "bg-purple-600", "bg-amber-500"];
@@ -1769,11 +1717,24 @@ export function SalesOrderWizard({ session }) {
       alert(t(lang, "sales.wiz_err_sales_acct_req", "Please select a Sales Account (CR) before proceeding."));
       return false;
     }
+    if (!form.currencyType || !form.secondaryCurrency) {
+      alert(t(lang, "sales.bk_err_currency_req", "Please select the Invoice and Settlement currencies before proceeding."));
+      return false;
+    }
+    if (!resolveBookingRate({ invoiceCurrency: form.currencyType, settlementCurrency: form.secondaryCurrency, exchangeRate: form.exchangeRate, operator: form.operator }).ok) {
+      alert(t(lang, "sales.bk_err_rate_req", "Please enter a valid exchange rate before proceeding."));
+      return false;
+    }
     return true;
   };
 
   const buildSalesOrderPayload = (salesStatus = "Draft", customOrderNo = null) => {
-    const usdRate = Number(form.exchangeRate || 1);
+    // The rate is the one the user confirmed in Step 1 (same currency = exactly 1). It is never invented: a missing / zero rate stops the save.
+    const resolvedRate = resolveBookingRate({ invoiceCurrency: form.currencyType, settlementCurrency: form.secondaryCurrency, exchangeRate: form.exchangeRate, operator: form.operator });
+    if (!resolvedRate.ok) {
+      throw new Error(t(lang, "sales.bk_err_rate_req", "Please enter a valid exchange rate before proceeding."));
+    }
+    const usdRate = resolvedRate.rate;
 
     const customerAccount = dbAccounts.find(acc => acc.accountCode === form.customerAccountNo);
     const salesAccount = dbAccounts.find(acc => acc.accountCode === form.salesAccountNo);
@@ -1801,7 +1762,7 @@ export function SalesOrderWizard({ session }) {
       customerNumber: customerAccount?.customerNumber || null,
       quantity: reportTotals.totalQty || 0,
       totalWeight: reportTotals.totalNet || 0,
-      currencyCode: form.salesCurrency || "USD",
+      currencyCode: form.currencyType || form.salesCurrency || "USD",
       exchangeRate: usdRate,
       orderTotal: reportTotals.grandFinal || reportTotals.grandPrimaryFinal || 0,
       // Mirrors purchase-order-wizard.jsx: orderTotal above is already converted to the
@@ -2191,9 +2152,22 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       coursePrice: row.coursePrice,
       currencyType: row.currencyType,
       salesCurrency: row.purchaseCurrency || row.salesCurrency,
+      secondaryCurrency: row.settlementCurrency || prev.secondaryCurrency,
       exchangeRate: row.exchangeRate,
-      operator: row.op,
+      operator: row.op || row.operator || "*",
       allotName: row.allotName,
+      variety: row.variety || "",
+      qualityExtra: row.quality || "",
+      qualityReport: row.qualityReport || "",
+      goodsId: row.goodsId || "",
+      stockSource: row.stockSource || "",
+      stockLotNo: row.stockLotNo || "",
+      stockSnapshot: row.stockLinked && row.stockLotNo ? {
+        source: row.stockSource || "", group: row.stockSource === "booking" ? "booking" : (row.stockSource === "in_transit" || row.stockSource === "endorse") ? "export" : "warehouse",
+        lotNo: row.stockLotNo, stockRef: row.stockRef || row.stockLotNo, lotId: row.selectedLotId || "", goodsName: row.goodsName, qtyName: row.qtyName,
+        totalQty: Number(row.stockRemainingAtEntry || 0), soldQty: 0, remaining: Number(row.stockRemainingAtEntry || 0), totalWeight: 0,
+        warehouseName: row.warehouse || "", location: "", branchName: "", status: "", containerNo: ""
+      } : null,
       manualTotalAmount: row.totalAmount,
       manualFinalAmount: row.finalAmount,
       managedLotId: row.managedLotId || "",
@@ -2933,17 +2907,17 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
                     <Building2 className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_branch_login_details", "Branch Login Details")}</h4>
+                  <h4 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_branch_login_details", "Branch Login Details")}</h4>
                 </div>
-                <div className="space-y-1.5 text-[10px]">
+                <div className="space-y-1.5 text-[11px]">
                   <div className="space-y-0.5 border-b border-border/40 pb-1.5 mb-1.5">
-                    <span className="text-muted-foreground block text-[8px] uppercase font-bold">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
+                    <span className="text-muted-foreground block text-[11px] uppercase font-bold">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
                     <span className="font-black text-primary block truncate text-xs" title={loginBranchName}>{loginBranchName || "N/A"}</span>
                   </div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_branch_code_colon", "Branch Code:")}</span> <span className="font-semibold text-foreground font-mono">{loginBranchCode || "N/A"}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_user_admin_colon", "User Admin:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-450 uppercase">{form.userName}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_user_id_colon", "User ID:")}</span> <span className="font-semibold text-foreground font-mono text-[9px]">{form.userId || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_role_colon", "Role:")}</span> <span className="font-semibold text-foreground capitalize text-[9px]">{primaryRole}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_user_id_colon", "User ID:")}</span> <span className="font-semibold text-foreground font-mono text-[11px]">{form.userId || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_role_colon", "Role:")}</span> <span className="font-semibold text-foreground capitalize text-[11px]">{primaryRole}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_location_colon", "Location:")}</span> <span className="font-semibold text-foreground truncate" title={`${loginCityName || "N/A"}, ${loginCountryName || "N/A"}`}>{loginCityName || "N/A"}, {loginCountryName || "N/A"}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_country_colon", "Country:")}</span> <span className="font-semibold text-foreground truncate" title={loginCountryName}>{loginCountryName || "N/A"}</span></div>
                 </div>
@@ -2955,13 +2929,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
                     <FileText className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_bill_details", "Bill Details")}</h4>
+                  <h4 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_bill_details", "Bill Details")}</h4>
                 </div>
-                <div className="space-y-1.5 text-[10px]">
+                <div className="space-y-1.5 text-[11px]">
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_booking_date_colon", "Booking Date:")}</span> <span className="font-semibold text-foreground">{form.salesDate}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_fiscal_year_colon", "Fiscal Year:")}</span> <span className="font-semibold">2025-26</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground font-bold">{t(lang, "purchase.card_booking_branch_colon", "Booking Branch:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-450 truncate" title={loginBranchName}>{loginBranchName || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_status_colon", "Status:")}</span> <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-1.5 py-0.2 text-[8px] font-bold text-yellow-600 dark:text-yellow-450 uppercase">{translateOptionLabel(lang, form.salesStatus)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_status_colon", "Status:")}</span> <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-1.5 py-0.2 text-[11px] font-bold text-yellow-600 dark:text-yellow-450 uppercase">{translateOptionLabel(lang, form.salesStatus)}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_system_serial_colon", "System Serial:")}</span> <span className="font-bold text-foreground truncate font-mono" title={form.salesOrderNo}>{form.salesOrderNo}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground font-bold text-primary">{t(lang, "purchase.card_branch_serial_colon", "Branch Serial:")}</span> <span className="font-bold text-primary truncate font-mono" title={form.billNo}>{form.billNo}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_contract_no_colon", "Contract No:")}</span> <span className="font-semibold text-foreground truncate font-mono" title={form.salesContractNo}>{form.salesContractNo}</span></div>
@@ -2976,12 +2950,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
                     <ArrowUpRight className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h4>
+                  <h4 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h4>
                 </div>
-                <div className="space-y-1.5 text-[10px]">
+                <div className="space-y-1.5 text-[11px]">
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.salesAccountNo}>{form.salesAccountNo}</span></div>
                   <div className="space-y-0.5 pt-1">
-                    <span className="text-muted-foreground block text-[9px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
+                    <span className="text-muted-foreground block text-[11px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
                     <span className="font-semibold text-foreground block truncate text-xs text-primary" title={form.salesAccountName}>{form.salesAccountName}</span>
                   </div>
                   <div className="flex justify-between pt-1"><span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> <span className="font-semibold text-foreground truncate" title={form.salesAccountBranch}>{form.salesAccountBranch}</span></div>
@@ -2989,7 +2963,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1 relative" ref={salesCompanyDropdownRef}>
                     <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
                     <div className="flex items-center gap-1">
-                      <span className="font-bold text-foreground truncate max-w-[100px] text-[8.5px] text-right font-mono" title={form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
+                      <span className="font-bold text-foreground truncate max-w-[100px] text-[11px] text-right font-mono" title={form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
                         {form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}
                       </span>
                       <button
@@ -3004,12 +2978,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     {salesCompanySelectOpen && (
                       <div className="absolute right-0 top-6 w-48 rounded-xl bg-card border border-border shadow-2xl z-[60] p-1.5 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
-                        <div className="px-2 py-0.5 text-[8px] font-black uppercase text-primary tracking-wider border-b border-border/40 mb-1">
+                        <div className="px-2 py-0.5 text-[11px] font-black uppercase text-primary tracking-wider border-b border-border/40 mb-1">
                           {t(lang, "purchase.card_select_company_title", "Select Company")}
                         </div>
                         <div className="max-h-32 overflow-y-auto space-y-0.5 scrollbar-thin">
                           {dbCompanies.length === 0 ? (
-                            <div className="px-2 py-2 text-center text-muted-foreground text-[8px] italic">
+                            <div className="px-2 py-2 text-center text-muted-foreground text-[11px] italic">
                               {t(lang, "purchase.card_no_companies_found", "No companies found.")}
                             </div>
                           ) : (
@@ -3025,7 +2999,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                     setValue("salesCompanyCode", cCode);
                                     setSalesCompanySelectOpen(false);
                                   }}
-                                  className="w-full text-left px-2 py-0.5 rounded hover:bg-muted text-[8.5px] text-foreground font-semibold truncate block"
+                                  className="w-full text-left px-2 py-0.5 rounded hover:bg-muted text-[11px] text-foreground font-semibold truncate block"
                                   title={c.name}
                                  >
                                    {c.name} ({cCode})
@@ -3046,15 +3020,15 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <span className="p-1 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950/30">
                     <ArrowDownLeft className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}</h4>
+                  <h4 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}</h4>
                 </div>
-                <div className="space-y-1.5 text-[10px]">
+                <div className="space-y-1.5 text-[11px]">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span>
                     <span className="font-bold text-foreground truncate block font-mono text-right" title={form.customerAccountNo}>{form.customerAccountNo || "N/A"}</span>
                   </div>
                   <div className="space-y-0.5 pt-1">
-                    <span className="text-muted-foreground block text-[9px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
+                    <span className="text-muted-foreground block text-[11px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
                     <span className="font-semibold text-rose-700 dark:text-rose-400 block truncate text-xs" title={form.customerAccountName}>{form.customerAccountName || "N/A"}</span>
                   </div>
                   <div className="flex justify-between pt-1">
@@ -3067,7 +3041,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   </div>
                   <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1">
                     <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
-                    <span className="font-bold text-foreground truncate max-w-[120px] text-[8.5px] text-right font-mono" title={form.salesCompanyName || t(lang, "purchase.card_none_label", "None")}>
+                    <span className="font-bold text-foreground truncate max-w-[120px] text-[11px] text-right font-mono" title={form.salesCompanyName || t(lang, "purchase.card_none_label", "None")}>
                       {form.salesCompanyName || t(lang, "purchase.card_none_label", "None")}
                     </span>
                   </div>
@@ -3110,17 +3084,17 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <span className="text-xs font-black uppercase tracking-wider text-blue-900 dark:text-blue-300">
                     {t(lang, "tc.active_handover_task", "Active Handover Task")}
                   </span>
-                  <Badge variant="outline" className="text-[10px] font-bold border-blue-300 text-blue-700 bg-white dark:bg-slate-900">
+                  <Badge variant="outline" className="text-[11px] font-bold border-blue-300 text-blue-700 bg-white dark:bg-slate-900">
                     {activeHandover.metadata?.requestedTask || activeHandover.narration || t(lang, "tc.task_assigned", "Task Assigned")}
                   </Badge>
                   {activeHandover.metadata?.priority && (
-                    <Badge variant={activeHandover.metadata.priority === "urgent" ? "destructive" : "secondary"} className="text-[9px] uppercase">
+                    <Badge variant={activeHandover.metadata.priority === "urgent" ? "destructive" : "secondary"} className="text-[11px] uppercase">
                       {activeHandover.metadata.priority}
                     </Badge>
                   )}
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                  {t(lang, "tc.assigned_by", "Assigned by")}: <span className="font-bold text-slate-800 dark:text-slate-200">{activeHandover.sender_name || t(lang, "tc.branch_user", "Branch User")}</span> • {t(lang, "tc.instruction", "Instruction")}: <span className="italic font-medium">"{activeHandover.remarks || activeHandover.narration || t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}"</span>
+                  {t(lang, "tc.assigned_by", "Assigned by")}: <span className="font-bold text-slate-800 dark:text-slate-200">{activeHandover.sender_name || t(lang, "tc.branch_user", "Branch User")}</span> • {t(lang, "tc.instruction", "Instruction")}: <span className="italic font-medium">&quot;{activeHandover.remarks || activeHandover.narration || t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}&quot;</span>
                 </p>
               </div>
             </div>
@@ -3251,23 +3225,23 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               {createPortal(
                 <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
                   <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 me-2">
-                    <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
+                    <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
                   </div>
                   <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 me-1">
                     <span className="relative flex h-2 w-2 ms-1">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider pr-1">{t(lang, "purchase.live_badge", "Live")}</span>
+                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider pr-1">{t(lang, "purchase.live_badge", "Live")}</span>
                   </div>
                   <Button
                     type="button"
                     onClick={() => window.location.reload()}
-                    className="flex items-center gap-1 h-7.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md font-bold text-[10px]"
+                    className="flex items-center gap-1 h-7.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md font-bold text-[11px]"
                   >
                     + {t(lang, "sow.new_short", "New")}
                   </Button>
@@ -3278,7 +3252,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       setIsTransferred(false);
                       setActiveTab("report");
                     }}
-                    className="flex items-center gap-1 h-7.5 px-2.5 bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md font-bold text-[10px]"
+                    className="flex items-center gap-1 h-7.5 px-2.5 bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md font-bold text-[11px]"
                   >
                     <FileText className="h-3.5 w-3.5" /> {t(lang, "purchase.report_short", "Report")}
                   </Button>
@@ -3433,23 +3407,23 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </div>
               <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
                 <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 me-2">
-                  <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
-                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
-                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
-                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
-                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
+                  <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
                 </div>
                 <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 me-1">
                   <span className="relative flex h-2 w-2 ms-1">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
-                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider pr-1">{t(lang, "purchase.live_badge", "Live")}</span>
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider pr-1">{t(lang, "purchase.live_badge", "Live")}</span>
                 </div>
                 <Button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="flex items-center gap-1 h-7.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md font-bold text-[10px]"
+                  className="flex items-center gap-1 h-7.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md font-bold text-[11px]"
                 >
                   + {t(lang, "sow.new_short", "New")}
                 </Button>
@@ -3460,7 +3434,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     setIsTransferred(false);
                     setActiveTab("report");
                   }}
-                  className="flex items-center gap-1 h-7.5 px-2.5 bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md font-bold text-[10px]"
+                  className="flex items-center gap-1 h-7.5 px-2.5 bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md font-bold text-[11px]"
                 >
                   <FileText className="h-3.5 w-3.5" /> {t(lang, "purchase.report_short", "Report")}
                 </Button>
@@ -3624,12 +3598,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       {(activeTab === "finalize" || activeTab === "report") && "Sales Booking Order - Step 5 (Final Voucher & Transfer)"}
                     </h1>
                     {(activeTab === "review" || activeTab === "reports_tab") && (
-                      <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                      <p className="text-[11px] text-slate-400 font-medium mt-0.5">
                         {t(lang, "sales.review_reports_subtitle", "Please review all details below before saving. You can add reports/remarks in each section.")}
                       </p>
                     )}
                     {(activeTab === "finalize" || activeTab === "report") && (
-                      <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                      <p className="text-[11px] text-slate-400 font-medium mt-0.5">
                         {t(lang, "sales.professional_verification_subtitle", "Review complete details, reports and remarks. Then confirm to transfer to ledger, stock and related modules.")}
                       </p>
                     )}
@@ -3648,7 +3622,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "text-slate-400 hover:text-white"
                     )}
                   >
-                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black", activeTab === "booking" ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>1</span>
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", activeTab === "booking" ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>1</span>
                     <span>{t(lang, "sales.tab_booking", "Booking")}</span>
                   </button>
 
@@ -3665,7 +3639,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "text-slate-400 hover:text-white"
                     )}
                   >
-                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black", activeTab === "goods" ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>2</span>
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", activeTab === "goods" ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>2</span>
                     <span>{t(lang, "sales.tab_goods", "Items")}</span>
                   </button>
 
@@ -3682,7 +3656,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "text-slate-400 hover:text-white"
                     )}
                   >
-                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black", (activeTab === "shipping" || activeTab === "others") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>3</span>
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", (activeTab === "shipping" || activeTab === "others") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>3</span>
                     <span>{t(lang, "purchase.tab3_shipping_payment", "Shipping & Payment")}</span>
                   </button>
 
@@ -3699,7 +3673,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "text-slate-400 hover:text-white"
                     )}
                   >
-                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black", (activeTab === "review" || activeTab === "reports_tab") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>4</span>
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", (activeTab === "review" || activeTab === "reports_tab") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>4</span>
                     <span>{t(lang, "sales.tab_reports", "Review")}</span>
                   </button>
 
@@ -3716,7 +3690,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "text-slate-400 hover:text-white"
                     )}
                   >
-                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black", (activeTab === "finalize" || activeTab === "report") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>5</span>
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", (activeTab === "finalize" || activeTab === "report") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>5</span>
                     <span>{t(lang, "sales.tab_verify", "Finalize")}</span>
                   </button>
                 </div>
@@ -3847,6 +3821,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   dbCompanies={dbCompanies}
                   applyAccountMaster={applyAccountMaster}
                   formatAccountDisplayLabel={formatAccountDisplayLabel}
+                  localCurrency={String((allCountries.length ? allCountries : countries).find((c) => c.id === form.countryId)?.currency_code || "").toUpperCase()}
                 />
               )}
 
@@ -3860,9 +3835,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   lang={lang}
                   onBack={() => setActiveTab("booking")}
                   onNext={() => setActiveTab("shipping")}
-                  availableLots={saleLots}
-                  dbCompanies={dbCompanies}
-                  dbAccounts={dbAccounts}
+                  dbGoods={dbGoods}
+                  countries={(allCountries.length ? allCountries : countries).map((c) => c.name)}
+                  excludeOrderId={savedOrderId || null}
+                  onEditItem={handleEditGoodsEntry}
                 />
               )}
 
@@ -4000,11 +3976,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           </div>
                           <div>
                             <h4 className="text-xs font-black uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100">{t(lang, "purchase.shipping_location_title", "Shipping & Location")}</h4>
-                            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{t(lang, "purchase.shipping_location_subtitle", "Essential route information only: country, port, mode and dates.")}</p>
+                            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{t(lang, "purchase.shipping_location_subtitle", "Essential route information only: country, port, mode and dates.")}</p>
                           </div>
                         </div>
                         <label className="min-w-[150px] space-y-1">
-                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.shipping_mode_label", "Shipping Mode")}</span>
+                          <span className="block text-[11px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.shipping_mode_label", "Shipping Mode")}</span>
                           <select
                             value={form.shippingMode || "By Sea"}
                             onChange={(e) => {
@@ -4027,7 +4003,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           </div>
                           <div className="grid gap-3 sm:grid-cols-3">
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_country_label", "Loading Country")}</span>
+                              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_country_label", "Loading Country")}</span>
                               <SearchableSelect
                                 value={form.loadingCountry || ""}
                                 onChange={(val) => {
@@ -4047,7 +4023,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_port_label", "Loading Port")}</span>
+                              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_port_label", "Loading Port")}</span>
                               <SearchableSelect
                                 value={form.loadingPort || form.airportName || form.loadingBorder || ""}
                                 onChange={(val) => {
@@ -4067,7 +4043,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_date_label", "Loading Date")}</span>
+                              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_date_label", "Loading Date")}</span>
                               <input
                                 type="date"
                                 value={form.loadingDate || ""}
@@ -4085,7 +4061,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           </div>
                           <div className="grid gap-3 sm:grid-cols-3">
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_country_label", "Receiving Country")}</span>
+                              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_country_label", "Receiving Country")}</span>
                               <SearchableSelect
                                 value={form.receivingCountry || form.destinationCountry || form.receivedCountry || ""}
                                 onChange={(val) => {
@@ -4106,7 +4082,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_port_label", "Receiving Port")}</span>
+                              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_port_label", "Receiving Port")}</span>
                               <SearchableSelect
                                 value={form.receivingPort || form.destinationPort || form.receivedPort || ""}
                                 onChange={(val) => {
@@ -4127,7 +4103,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_date_label", "Receiving Date")}</span>
+                              <span className="block text-[11px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_date_label", "Receiving Date")}</span>
                               <input
                                 type="date"
                                 value={form.receivedDate || ""}
@@ -4147,17 +4123,17 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           <Globe2 className="h-3.5 w-3.5" />
                         </div>
                         <div>
-                          <h5 className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                          <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
                             {t(lang, "ctransfer.destination", "Destination Country / Branch")}
                           </h5>
-                          <p className="text-[9.5px] text-slate-500 dark:text-slate-400">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
                             {t(lang, "ctransfer.sale_subtitle", "Sales orders scoped for transfer from a selling country/branch to a destination (owning) country/branch.")}
                           </p>
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <div>
-                          <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                             {t(lang, "purchase.destination_country_colon", "Destination Country:")}
                           </label>
                           <select
@@ -4172,7 +4148,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                             {t(lang, "common.branch", "Main Branch")}
                           </label>
                           <select
@@ -4188,7 +4164,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                             {t(lang, "common.branch", "City Branch")}
                           </label>
                           <select
@@ -4217,7 +4193,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
+                          <label className="block text-[11px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
                           <select
                             value={form.paymentType || ""}
                             onChange={(e) => setValue("paymentType", e.target.value)}
@@ -4228,7 +4204,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.advance_percentage_label", "Advance Percentage (%)")}</label>
+                          <label className="block text-[11px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.advance_percentage_label", "Advance Percentage (%)")}</label>
                           <input
                             type="number"
                             min="0"
@@ -4240,7 +4216,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.advance_payment_date_label", "Advance Payment Date")}</label>
+                          <label className="block text-[11px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.advance_payment_date_label", "Advance Payment Date")}</label>
                           <input
                             type="date"
                             value={form.advancePaymentDate || ""}
@@ -4249,7 +4225,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.final_payment_date_label", "Final Payment Date")}</label>
+                          <label className="block text-[11px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.final_payment_date_label", "Final Payment Date")}</label>
                           <input
                             type="date"
                             value={form.paymentDate || ""}
@@ -4268,7 +4244,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.container_numbers_label", "Container Numbers")}</label>
+                          <label className="block text-[11px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.container_numbers_label", "Container Numbers")}</label>
                           <input
                             type="text"
                             value={form.containerNumbers || ""}
@@ -4278,7 +4254,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.container_size_type_label", "Container Size / Type")}</label>
+                          <label className="block text-[11px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.container_size_type_label", "Container Size / Type")}</label>
                           <select
                             value={form.containerSize || ""}
                             onChange={(e) => setValue("containerSize", e.target.value)}
@@ -4344,7 +4320,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="rounded-2xl border border-border bg-card p-4 shadow-sm animate-in fade-in zoom-in-95 duration-200">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 border-b border-border pb-2">
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">{t(lang, "sales.lot_stock_panel_title", "Lot Stock Panel")}</p>
+                        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-primary">{t(lang, "sales.lot_stock_panel_title", "Lot Stock Panel")}</p>
                         <h4 className="text-sm font-black text-foreground">{selectedSaleSource.label}</h4>
                       </div>
                       <div className="flex items-center gap-2">
@@ -4353,7 +4329,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           value={lotSearch}
                           onChange={(e) => setLotSearch(e.target.value)}
                           placeholder={t(lang, "sales.search_lot_ph", "Search lot no, goods, stock ref...")}
-                          className="h-8 w-56 rounded-lg border border-input bg-background px-3 text-[10px] outline-none focus:border-primary"
+                          className="h-8 w-56 rounded-lg border border-input bg-background px-3 text-[11px] outline-none focus:border-primary"
                         />
                         <button type="button" onClick={() => setLotPanelOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-border hover:bg-muted">
                           <X className="h-3.5 w-3.5" />
@@ -4361,9 +4337,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                     </div>
                     <div className="overflow-x-auto rounded-xl border border-border">
-                      <table className="w-full text-[10px] text-foreground border-collapse text-left whitespace-nowrap">
+                      <table className="w-full text-[11px] text-foreground border-collapse text-left whitespace-nowrap">
                         <thead className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
-                          <tr className="font-bold uppercase tracking-wider text-[9px]">
+                          <tr className="font-bold uppercase tracking-wider text-[11px]">
                             <Th className="px-3 py-2.5 text-left">{t(lang, "sales.lot_no_label", "Lot No")}</Th>
                             <Th className="px-3 py-2.5 text-left">{t(lang, "sales.goods_brand_label", "Goods / Brand")}</Th>
                             <Th className="px-3 py-2.5 text-right">{t(lang, "god.as_available", "Available")}</Th>
@@ -4386,16 +4362,16 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 <tr className="border-t border-border hover:bg-sky-50/50 transition">
                                   <td className="px-3 py-2.5 font-black text-primary">
                                     {lot.lotNo}
-                                    <div className="text-[9px] font-semibold text-muted-foreground font-mono">{lot.stockRef}</div>
+                                    <div className="text-[11px] font-semibold text-muted-foreground font-mono">{lot.stockRef}</div>
                                   </td>
                                   <td className="px-3 py-2.5 font-bold text-foreground">
                                     {lot.goodsName}
-                                    <div className="text-[9px] font-semibold text-muted-foreground">{lot.brand} / {lot.size} / {lot.origin}</div>
+                                    <div className="text-[11px] font-semibold text-muted-foreground">{lot.brand} / {lot.size} / {lot.origin}</div>
                                   </td>
                                   <td className="px-3 py-2.5 text-right font-black">{Number(lot.availableQty || 0).toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</td>
                                   <td className="px-3 py-2.5 text-right font-mono font-bold">{Number(lot.netWeight || 0).toLocaleString()}</td>
                                   <td className="px-3 py-2.5 text-muted-foreground">{lot.location}</td>
-                                  <td className="px-3 py-2.5"><span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black text-emerald-700">{lot.status}</span></td>
+                                  <td className="px-3 py-2.5"><span className="rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-black text-emerald-700">{lot.status}</span></td>
                                   <td className="px-3 py-2.5 text-center">
                                     <div className="flex gap-1.5 justify-center items-center">
                                       <button
@@ -4404,7 +4380,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                           applySaleLot(lot);
                                           setLotPanelOpen(false);
                                         }}
-                                        className="rounded-lg bg-sky-600 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-sm hover:bg-sky-700 transition shrink-0"
+                                        className="rounded-lg bg-sky-600 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-white shadow-sm hover:bg-sky-700 transition shrink-0"
                                       >
                                         {t(lang, "sales.use_lot_btn", "Use Lot")}
                                       </button>
@@ -4415,7 +4391,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                           setCheckedLotNo(next);
                                           if (next) loadLotDeductions(lot);
                                         }}
-                                        className="rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider transition shrink-0"
+                                        className="rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider transition shrink-0"
                                       >
                                         {checkedLotNo === lot.lotNo ? t(lang, "sales.hide_word", "Hide") : t(lang, "sales.check_stock_btn", "Check Stock")}
                                       </button>
@@ -4427,18 +4403,18 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                     <td colSpan={7} className="px-4 py-3 bg-slate-50/50">
                                       <div className="space-y-2.5 max-w-[95%] mx-auto">
                                         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
-                                          <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                                          <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                                             <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse"></span>
                                             Stock Utilization History & Balance for {lot.lotNo}
                                           </h5>
-                                          <div className="text-[9px] font-bold text-slate-500">
+                                          <div className="text-[11px] font-bold text-slate-500">
                                             {t(lang, "sales.original_capacity_colon", "Original Capacity:")}<span className="font-mono text-slate-800">{originalQty.toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</span> ({originalWeight.toLocaleString()} KG)
                                           </div>
                                         </div>
 
                                         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-                                          <table className="w-full text-[9px] text-slate-700 border-collapse">
-                                            <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[8px] border-b border-slate-200">
+                                          <table className="w-full text-[11px] text-slate-700 border-collapse">
+                                            <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                                               <tr>
                                                 <Th className="px-3 py-1.5 text-left">{t(lang, "sales.transaction_ref_label", "Transaction Ref")}</Th>
                                                 <Th className="px-3 py-1.5 text-left">{t(lang, "sales.sale_date_label", "Sale Date")}</Th>
@@ -4456,7 +4432,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                                 <td className="px-3 py-1.5 italic text-emerald-700">{t(lang, "sales.initial_import_inbound", "Initial Import / Stock Inbound")}</td>
                                                 <td className="px-3 py-1.5 text-right font-mono font-bold text-emerald-600">+{originalQty.toLocaleString()}</td>
                                                 <td className="px-3 py-1.5 text-right font-mono font-bold text-emerald-600">+{originalWeight.toLocaleString()} KG</td>
-                                                <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded">{t(lang, "sales.inbound_word", "Inbound")}</span></td>
+                                                <td className="px-3 py-1.5"><span className="text-[11px] font-black uppercase bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded whitespace-nowrap">{t(lang, "sales.inbound_word", "Inbound")}</span></td>
                                               </tr>
 
                                               {/* Deduction history */}
@@ -4467,14 +4443,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                                   <td className="px-3 py-1.5 font-semibold text-slate-800">{d.customer}</td>
                                                   <td className="px-3 py-1.5 text-right font-mono font-bold">-{d.quantity.toLocaleString()}</td>
                                                   <td className="px-3 py-1.5 text-right font-mono font-bold">-{d.weight.toLocaleString()} KG</td>
-                                                  <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-red-100 text-red-800 px-1 py-0.5 rounded">{t(lang, "sales.sold_out_word", "Sold Out")}</span></td>
+                                                  <td className="px-3 py-1.5"><span className="text-[11px] font-black uppercase bg-red-100 text-red-800 px-1 py-0.5 rounded whitespace-nowrap">{t(lang, "sales.sold_out_word", "Sold Out")}</span></td>
                                                 </tr>
                                               ))}
 
                                               {/* Total Sold Summary row */}
                                               {deductions.length > 0 && (
                                                 <tr className="bg-slate-50/50 border-t border-slate-150 font-bold">
-                                                  <td colSpan={3} className="px-3 py-1.5 text-right text-slate-500 uppercase tracking-wider text-[8px]">{t(lang, "sales.total_outward_deductions_colon", "Total Outward Deductions:")}</td>
+                                                  <td colSpan={3} className="px-3 py-1.5 text-right text-slate-500 uppercase tracking-wider text-[11px]">{t(lang, "sales.total_outward_deductions_colon", "Total Outward Deductions:")}</td>
                                                   <td className="px-3 py-1.5 text-right font-mono text-red-600 font-black">-{totalDeductedQty.toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</td>
                                                   <td className="px-3 py-1.5 text-right font-mono text-red-600 font-black">-{totalDeductedWeight.toLocaleString()} KG</td>
                                                   <td className="px-3 py-1.5 text-slate-400 font-semibold">—</td>
@@ -4483,10 +4459,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                                               {/* Net Remaining Balance row */}
                                               <tr className="bg-sky-50 border-t border-slate-200 font-black text-sky-950">
-                                                <td colSpan={3} className="px-3 py-1.5 text-right uppercase tracking-wider text-[8px]">{t(lang, "sales.net_available_balance_colon", "Net Available Balance:")}</td>
-                                                <td className="px-3 py-1.5 text-right font-mono text-[10px] font-black text-sky-700">{lot.availableQty.toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</td>
-                                                <td className="px-3 py-1.5 text-right font-mono text-[10px] font-black text-sky-700">{lot.netWeight.toLocaleString()} KG</td>
-                                                <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-sky-200 text-sky-800 px-1 py-0.5 rounded animate-pulse">{t(lang, "sales.live_stock_title", "Live Stock")}</span></td>
+                                                <td colSpan={3} className="px-3 py-1.5 text-right uppercase tracking-wider text-[11px]">{t(lang, "sales.net_available_balance_colon", "Net Available Balance:")}</td>
+                                                <td className="px-3 py-1.5 text-right font-mono text-[11px] font-black text-sky-700">{lot.availableQty.toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</td>
+                                                <td className="px-3 py-1.5 text-right font-mono text-[11px] font-black text-sky-700">{lot.netWeight.toLocaleString()} KG</td>
+                                                <td className="px-3 py-1.5"><span className="text-[11px] font-black uppercase bg-sky-200 text-sky-800 px-1 py-0.5 rounded animate-pulse whitespace-nowrap">{t(lang, "sales.live_stock_title", "Live Stock")}</span></td>
                                               </tr>
                                             </tbody>
                                           </table>
@@ -4528,13 +4504,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <span className="text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-200 flex items-center gap-2">
                           <Package className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.goods_table_title", "GOODS TABLE")}
                         </span>
-                        <span className="text-[10px] font-mono font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                        <span className="text-[11px] font-mono font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full whitespace-nowrap">
                           {goodsEntries.length} {t(lang, "lp.goods_entered_badge", "Goods Entered")}
                         </span>
                       </div>
                     )}
                     <div className={cn("overflow-x-auto border border-border bg-background shadow-sm", isLocalSale ? "rounded-b-lg" : "rounded-lg")}>
-                      <table className="w-full text-[9px] text-foreground border-collapse text-left whitespace-nowrap">
+                      <table className="w-full text-[11px] text-foreground border-collapse text-left whitespace-nowrap">
                         <thead>
                           <tr className="bg-muted/80 text-muted-foreground border-b border-border font-bold uppercase tracking-wider">
                             <Th className="px-3 py-2.5 text-center w-8">#</Th>
@@ -4555,7 +4531,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <tbody>
                           {goodsEntries.length === 0 ? (
                             <tr>
-                              <td colSpan={13} className="px-3 py-6 text-center text-muted-foreground italic font-semibold text-[10px]">
+                              <td colSpan={13} className="px-3 py-6 text-center text-muted-foreground italic font-semibold text-[11px]">
                                 {t(lang, "purchase.goods_table_empty", "No goods added yet. Add an item above to see it here.")}
                               </td>
                             </tr>
@@ -4581,7 +4557,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                     <button
                                       type="button"
                                       onClick={() => handleViewGoodsEntry(index)}
-                                      className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[9px] font-bold transition-colors"
+                                      className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-bold transition-colors"
                                       title={t(lang, "branch.view", "View")}
                                     >
                                       <Eye className="h-3 w-3" /> {t(lang, "branch.view", "View")}
@@ -4589,7 +4565,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                     <button
                                       type="button"
                                       onClick={() => handleEditGoodsEntry(index)}
-                                      className="flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[9px] font-bold transition-colors shadow-sm border border-blue-200"
+                                      className="flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[11px] font-bold transition-colors shadow-sm border border-blue-200"
                                       title={t(lang, "branch.edit", "Edit")}
                                     >
                                       <Edit3 className="h-3 w-3" /> {t(lang, "branch.edit", "Edit")}
@@ -4597,7 +4573,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                     <button
                                       type="button"
                                       onClick={() => setGoodsEntries(prev => prev.filter((_, idx) => idx !== index))}
-                                      className="flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[9px] font-bold transition-colors shadow-sm border border-red-100"
+                                      className="flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[11px] font-bold transition-colors shadow-sm border border-red-100"
                                       title={t(lang, "common.delete", "Delete")}
                                     >
                                       <Trash2 className="h-3 w-3" /> {t(lang, "common.delete", "Delete")}
@@ -4621,7 +4597,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className={sectionPanelHeaderCls}>
                     <h3 className={cn("text-xs font-black uppercase tracking-wider", isLocalSale ? "text-amber-900 dark:text-amber-200" : "text-foreground")}>{t(lang, "sales.booking_bill_info_title", "Sales Booking / Bill Info")}</h3>
                     {isLocalSale && (
-                      <span className="text-[9px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0">
+                      <span className="text-[11px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0 whitespace-nowrap">
                         {t(lang, "sales.local_sale_badge", "Local Sale")}
                       </span>
                     )}
@@ -4641,7 +4617,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                   <div className="grid grid-cols-1 gap-4">
                     <div className="relative" ref={customerDropdownRef}>
-                      <label className="block text-[10px] font-bold text-foreground mb-1">{t(lang, "sales.customer_account_dr_star", "Customer Account (DR)*")}</label>
+                      <label className="block text-[11px] font-bold text-foreground mb-1">{t(lang, "sales.customer_account_dr_star", "Customer Account (DR)*")}</label>
                       <div className="relative flex items-center">
                         <input
                           type="text"
@@ -4671,8 +4647,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       {customerDropdownOpen && (
                         <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                           <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
-                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">{t(lang, "sales.select_customer_account_dr_header", "Select Customer Account (DR)")}</span>
-                            <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            <span className="text-[11px] font-black uppercase text-primary tracking-wider">{t(lang, "sales.select_customer_account_dr_header", "Select Customer Account (DR)")}</span>
+                            <span className="text-[11px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">
                               {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).length} found
                             </span>
                           </div>
@@ -4692,9 +4668,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 >
                                   <div className="flex justify-between items-start gap-2 mb-1">
                                     <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
-                                    <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
+                                    <span className="font-mono text-[11px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap">System: {acc.accountCode}</span>
                                   </div>
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[11px] text-muted-foreground">
                                     <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
                                     <div>
                                       {acc.manualReferenceNumber && (
@@ -4722,7 +4698,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
 
                     <div className="relative" ref={salesDropdownRef}>
-                      <label className="block text-[10px] font-bold text-foreground mb-1">{t(lang, "purchase.sales_account_cr_star", "Sales Account (CR)*")}</label>
+                      <label className="block text-[11px] font-bold text-foreground mb-1">{t(lang, "purchase.sales_account_cr_star", "Sales Account (CR)*")}</label>
                       <div className="relative flex items-center">
                         <input
                           type="text"
@@ -4751,8 +4727,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       {salesDropdownOpen && (
                         <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                           <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
-                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">{t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)")}</span>
-                            <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            <span className="text-[11px] font-black uppercase text-primary tracking-wider">{t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)")}</span>
+                            <span className="text-[11px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">
                               {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length} found
                             </span>
                           </div>
@@ -4772,9 +4748,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 >
                                   <div className="flex justify-between items-start gap-2 mb-1">
                                     <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
-                                    <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
+                                    <span className="font-mono text-[11px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap">System: {acc.accountCode}</span>
                                   </div>
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[11px] text-muted-foreground">
                                     <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
                                     <div>
                                       {acc.manualReferenceNumber && (
@@ -4805,32 +4781,32 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="rounded-lg border border-border bg-muted/20 p-3">
                     <div className="grid grid-cols-1 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.contract_no_label", "Contract No")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.contract_no_label", "Contract No")}</label>
                         <input
                           type="text"
                           value={form.salesContractNo}
                           onChange={(e) => setValue("salesContractNo", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] h-8 font-mono"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.contract_booking_date_label", "Contract / Booking Date")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.contract_booking_date_label", "Contract / Booking Date")}</label>
                         <input
                           type="date"
                           value={form.salesDate}
                           onChange={(e) => setValue("salesDate", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] h-8 font-mono"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.invoice_payment_select_label", "Invoice / Payment Select")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.invoice_payment_select_label", "Invoice / Payment Select")}</label>
                         <select
                           value={form.paymentType || ""}
                           onChange={(e) => setValue("paymentType", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] h-8"
                         >
                           <option value="">{t(lang, "common.select", "Select…")}</option>
                           {PAYMENT_TYPES.map((type) => (
@@ -4839,7 +4815,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.ship_option_label", "Ship Option")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.ship_option_label", "Ship Option")}</label>
                         <select
                           value={form.shippingMode}
                           onChange={(e) => {
@@ -4847,7 +4823,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             setValue("shippingMode", mode);
                             setValue("shipmentType", mode === "By Sea" ? "By Ship" : mode);
                           }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] h-8"
                         >
                           {LOADING_TYPES.map((type) => (
                             <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>
@@ -4855,11 +4831,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "log.tbl_status", "Status")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "log.tbl_status", "Status")}</label>
                         <select
                           value={form.salesStatus}
                           onChange={(e) => setValue("salesStatus", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] h-8"
                         >
                           <option value="Draft">{t(lang, "bdash.status_draft", "Draft")}</option>
                           <option value="Pending">{t(lang, "log.seg_pending", "Pending")}</option>
@@ -4869,13 +4845,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                     </div>
                     <div className="mt-3">
-                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.booking_remarks_terms_label", "Booking Remarks / Terms")}</label>
+                      <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.booking_remarks_terms_label", "Booking Remarks / Terms")}</label>
                       <textarea
                         rows={2}
                         value={form.remarks}
                         onChange={(e) => setValue("remarks", e.target.value)}
                         placeholder={t(lang, "sales.remarks_ph", "Write booking terms, payment notes, invoice note, or shipping instruction…")}
-                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] resize-none"
+                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] resize-none"
                       />
                     </div>
                   </div>
@@ -4905,14 +4881,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </h3>
                     <div className="flex items-center gap-2">
                       {isLocalSale && (
-                        <span className="text-[9px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0">
+                        <span className="text-[11px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0 whitespace-nowrap">
                           {t(lang, "sales.local_sale_badge", "Local Sale")}
                         </span>
                       )}
                       <button
                         type="button"
                         onClick={() => setActiveTab("booking")}
-                        className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 underline"
+                        className="text-[11px] font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 underline"
                       >
                         {t(lang, "purchase.back_to_booking", "← Back to Booking")}
                       </button>
@@ -4958,10 +4934,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                               {t(lang, "sales.opt_endorse_sale", "Endorse Sale")}
                             </span>
                             {(form.saleType === "endorse" || form.saleSource === "endorse") && (
-                              <Badge className="bg-blue-600 text-white text-[9px] px-1.5 py-0 h-4">{t(lang, "sales.badge_selected", "Selected")}</Badge>
+                              <Badge className="bg-blue-600 text-white text-[11px] px-1.5 py-0 h-4 leading-none">{t(lang, "sales.badge_selected", "Selected")}</Badge>
                             )}
                           </div>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                             {t(lang, "sales.endorse_sale_desc", "Sell goods agreed before purchase. No physical stock deducted.")}
                           </p>
                         </div>
@@ -4994,10 +4970,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                               {t(lang, "sales.opt_stock_sale", "Stock Sale")}
                             </span>
                             {(form.saleType !== "endorse" && form.saleSource !== "endorse") && (
-                              <Badge className="bg-blue-600 text-white text-[9px] px-1.5 py-0 h-4">{t(lang, "sales.badge_selected", "Selected")}</Badge>
+                              <Badge className="bg-blue-600 text-white text-[11px] px-1.5 py-0 h-4 leading-none">{t(lang, "sales.badge_selected", "Selected")}</Badge>
                             )}
                           </div>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                             {t(lang, "sales.stock_sale_desc", "Sell from real available inventory across warehouse and branches.")}
                           </p>
                         </div>
@@ -5008,10 +4984,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   {/* 2. IMMEDIATELY BELOW: Required Goods / Product Selection */}
                   <div className="relative">
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
                         {t(lang, "purchase.goods_name_star", "Goods Name*")}
                       </label>
-                      <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400">
+                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
                         {t(lang, "sales.field_required_both", "*Required for both Endorse & Stock")}
                       </span>
                     </div>
@@ -5060,17 +5036,17 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   {form.saleType !== "endorse" && form.saleSource !== "endorse" && (
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 space-y-2.5">
                       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                           <Package className="h-3.5 w-3.5 text-blue-600" />
                           {t(lang, "sales.selected_lot_title", "Selected Stock Lot")} ({availableLotsForProduct.length})
                         </span>
-                        <span className="text-[9.5px] text-muted-foreground font-semibold">
+                        <span className="text-[11px] text-muted-foreground font-semibold">
                           {form.goodsName ? `${availableLotsForProduct.length} lots for "${form.goodsName}"` : t(lang, "sales.field_required_both", "*Required for both Endorse & Stock")}
                         </span>
                       </div>
 
                       {!form.goodsName ? (
-                        <div className="p-3 text-center rounded-lg border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-[10.5px] text-slate-500">
+                        <div className="p-3 text-center rounded-lg border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-[11px] text-slate-500">
                           ℹ️ {t(lang, "sales.open_stock_lots_msg", "Please select Goods / Product above to view available stock lots.")}
                         </div>
                       ) : saleLotsLoading ? (
@@ -5079,12 +5055,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           <span>{t(lang, "cns.loading", "Loading available lots…")}</span>
                         </div>
                       ) : availableLotsForProduct.length === 0 ? (
-                        <div className="p-3 rounded-lg border border-amber-200 bg-amber-50/60 dark:border-amber-900/60 dark:bg-amber-950/20 text-[10.5px] text-amber-800 dark:text-amber-200">
+                        <div className="p-3 rounded-lg border border-amber-200 bg-amber-50/60 dark:border-amber-900/60 dark:bg-amber-950/20 text-[11px] text-amber-800 dark:text-amber-200">
                           ⚠️ {t(lang, "sales.no_lots_for_product", "No available inventory lots found for this product. You can choose another product or switch to Endorse Sale.")}
                         </div>
                       ) : (
                         <div className="overflow-x-auto max-h-48 overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-lg">
-                          <table className="w-full text-[10px] text-left">
+                          <table className="w-full text-[11px] text-left">
                             <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-black border-b border-slate-200 dark:border-slate-800 sticky top-0">
                               <tr>
                                 <Th className="py-1.5 px-2 text-center w-10">Select</Th>
@@ -5138,32 +5114,32 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       {selectedSaleLot && (
                         <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/60 dark:bg-emerald-950/20 p-3 space-y-2">
                           <div className="flex items-center justify-between border-b border-emerald-100 dark:border-emerald-900/40 pb-1.5">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
                               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                               {t(lang, "sales.selected_lot_title", "Selected Stock Lot")}: <span className="font-mono text-xs text-foreground font-black">{selectedSaleLot.lotNo}</span>
                             </span>
-                            <Badge variant="outline" className="text-[9px] border-emerald-300 text-emerald-700 bg-white">
+                            <Badge variant="outline" className="text-[11px] border-emerald-300 text-emerald-700 bg-white">
                               {selectedSaleLot.branchName || "Branch Stock"}
                             </Badge>
                           </div>
 
                           <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
                             <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-emerald-100 dark:border-emerald-900/30">
-                              <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.lbl_lot_available", "Available in Lot")}</div>
+                              <div className="text-[11px] font-black uppercase text-slate-500">{t(lang, "sales.lbl_lot_available", "Available in Lot")}</div>
                               <div className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 font-mono mt-0.5">
                                 {Number(selectedSaleLot.availableQty || 0).toLocaleString()} {selectedSaleLot.qtyName}
                               </div>
                             </div>
 
                             <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-blue-100 dark:border-blue-900/30">
-                              <div className="text-[9px] font-black uppercase text-blue-600">{t(lang, "sales.lbl_selling_qty", "Selling Qty")}</div>
+                              <div className="text-[11px] font-black uppercase text-blue-600">{t(lang, "sales.lbl_selling_qty", "Selling Qty")}</div>
                               <div className="text-xs sm:text-sm font-black text-blue-600 font-mono mt-0.5">
                                 {Number(form.qtyNo || 0).toLocaleString()} {form.qtyName || selectedSaleLot.qtyName}
                               </div>
                             </div>
 
                             <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-emerald-100 dark:border-emerald-900/30">
-                              <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.lbl_remaining_stock", "Remaining Stock")}</div>
+                              <div className="text-[11px] font-black uppercase text-slate-500">{t(lang, "sales.lbl_remaining_stock", "Remaining Stock")}</div>
                               <div className={`text-xs sm:text-sm font-black font-mono mt-0.5 ${
                                 (Number(selectedSaleLot.availableQty || 0) - Number(form.qtyNo || 0)) < 0
                                   ? "text-rose-600"
@@ -5175,7 +5151,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           </div>
 
                           {(Number(selectedSaleLot.availableQty || 0) - Number(form.qtyNo || 0)) < 0 && (
-                            <div className="text-[10px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-lg border border-rose-200 dark:border-rose-900 flex items-center gap-1.5">
+                            <div className="text-[11px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-lg border border-rose-200 dark:border-rose-900 flex items-center gap-1.5">
                               <span>⚠️</span>
                               <span>{t(lang, "sales.err_selling_exceeds_stock", "Selling quantity exceeds available lot quantity! Please adjust selling quantity.")}</span>
                             </div>
@@ -5195,35 +5171,35 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             {t(lang, "sales.endorse_fulfillment_title", "Endorse Fulfillment Status")}
                           </h4>
                         </div>
-                        <Badge className="bg-purple-600 text-white text-[9px] px-2 py-0.5">
+                        <Badge className="bg-purple-600 text-white text-[11px] px-2 py-0.5">
                           {t(lang, "sales.badge_endorse_agreement", "Pre-Purchase Agreement")}
                         </Badge>
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                         <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
-                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_sale_qty", "Sale Quantity")}</div>
+                          <div className="text-[11px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_sale_qty", "Sale Quantity")}</div>
                           <div className="text-xs sm:text-sm font-black text-purple-700 dark:text-purple-300 font-mono mt-0.5">
                             {Number(form.qtyNo || 0).toLocaleString()} {form.qtyName || "BAGS"}
                           </div>
                         </div>
 
                         <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
-                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_purchased", "Qty Purchased")}</div>
+                          <div className="text-[11px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_purchased", "Qty Purchased")}</div>
                           <div className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 font-mono mt-0.5">
                             {Number(form.endorseQtyPurchased || 0).toLocaleString()} {form.qtyName || "BAGS"}
                           </div>
                         </div>
 
                         <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
-                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_allocated", "Qty Allocated")}</div>
+                          <div className="text-[11px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_allocated", "Qty Allocated")}</div>
                           <div className="text-xs sm:text-sm font-black text-emerald-600 font-mono mt-0.5">
                             {Number(form.endorseQtyAllocated || 0).toLocaleString()} {form.qtyName || "BAGS"}
                           </div>
                         </div>
 
                         <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
-                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_outstanding", "Qty Outstanding")}</div>
+                          <div className="text-[11px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_outstanding", "Qty Outstanding")}</div>
                           <div className="text-xs sm:text-sm font-black text-amber-600 font-mono mt-0.5">
                             {Math.max(0, Number(form.qtyNo || 0) - Number(form.endorseQtyAllocated || 0)).toLocaleString()} {form.qtyName || "BAGS"}
                           </div>
@@ -5232,10 +5208,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                       <div className="bg-white/90 dark:bg-slate-900/90 rounded-xl p-3 border border-purple-100 dark:border-purple-900/30 space-y-2">
                         <div className="flex items-center justify-between">
-                          <label className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300">
+                          <label className="text-[11px] font-black uppercase text-slate-700 dark:text-slate-300">
                             {t(lang, "sales.link_purchased_lot_label", "Link Purchased Lot (When Entered Into Stock)")}
                           </label>
-                          <span className="text-[9px] text-muted-foreground">{t(lang, "sales.optional_fulfillment", "Optional / Post-Purchase")}</span>
+                          <span className="text-[11px] text-muted-foreground">{t(lang, "sales.optional_fulfillment", "Optional / Post-Purchase")}</span>
                         </div>
                         <div className="flex gap-2">
                           <input
@@ -5251,13 +5227,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                               variant="outline"
                               size="sm"
                               onClick={() => setValue("endorseLinkedLotNo", "")}
-                              className="text-[10px] h-8"
+                              className="text-[11px] h-8"
                             >
                               {t(lang, "common.clear", "Clear")}
                             </Button>
                           )}
                         </div>
-                        <p className="text-[9.5px] text-slate-500 dark:text-slate-400">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
                           ℹ️ {t(lang, "sales.endorse_note", "Goods sold under Endorse agreement will be saved without deducting physical stock. When purchase arrival occurs, link the lot here to fulfill this order.")}
                         </p>
                       </div>
@@ -5268,7 +5244,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="grid grid-cols-1 gap-3 pt-2">
                     {/* Manual Net KGs Input */}
                     <div>
-                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.net_kgs_weight", "Net KGs (Weight)")}</label>
+                      <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.net_kgs_weight", "Net KGs (Weight)")}</label>
                       <input
                         type="number"
                         value={form.netWeight !== undefined && form.netWeight !== "" ? form.netWeight : ""}
@@ -5278,17 +5254,17 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           setValue("manualTotalAmount", "");
                           setValue("manualFinalAmount", "");
                         }}
-                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono font-bold"
+                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] font-mono font-bold"
                         placeholder="0.00"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
+                      <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
                       <select
                         value={form.origin || ""}
                         onChange={(e) => setValue("origin", e.target.value)}
-                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px]"
                       >
                         <option value="">{t(lang, "purchase.select_origin", "Select Origin")}</option>
                         {Array.from(new Set([
@@ -5305,7 +5281,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_hs_code", "HS Code")}</label>
+                          <label className="block text-[11px] text-muted-foreground">{t(lang, "purchase.th_hs_code", "HS Code")}</label>
                           {form.goodsName && (() => {
                             const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === form.goodsName.trim().toUpperCase());
                             if (selectedGood && (selectedGood.chs_code || selectedGood.chsCode || "") !== (form.hsCode || "")) {
@@ -5313,7 +5289,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 <button
                                   type="button"
                                   onClick={handleUpdateHsCode}
-                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
+                                  className="text-[11px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
                                 >
                                   {t(lang, "purchase.save_to_master", "Save to Master")}
                                 </button>
@@ -5326,17 +5302,17 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           type="text"
                           value={form.hsCode || ""}
                           onChange={(e) => setValue("hsCode", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] font-mono"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1 font-bold">{t(lang, "purchase.allot_name_id", "Allot Name / ID")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1 font-bold">{t(lang, "purchase.allot_name_id", "Allot Name / ID")}</label>
                         <input
                           type="text"
                           value={form.allotName || form.stockLotNo || ""}
                           onChange={(e) => setValue("allotName", e.target.value)}
                           placeholder={t(lang, "sales.alt_code_example_ph", "e.g. ALT-2003")}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono font-bold"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] font-mono font-bold"
                         />
                       </div>
                     </div>
@@ -5344,7 +5320,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_brand", "Brand")}</label>
+                          <label className="block text-[11px] text-muted-foreground">{t(lang, "purchase.th_brand", "Brand")}</label>
                           {form.goodsName && form.brand && (() => {
                             const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                             const masterBrands = selGood?.master_brands || (selGood?.variations || []).map(v => v.brand).filter(Boolean);
@@ -5353,7 +5329,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 <button
                                   type="button"
                                   onClick={() => handleSaveParamToMaster("brand", form.brand)}
-                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
+                                  className="text-[11px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
                                 >
                                   {t(lang, "purchase.save_to_master", "Save to Master")}
                                 </button>
@@ -5396,7 +5372,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] text-muted-foreground">{t(lang, "lp.size_spec", "Size Specification")}</label>
+                          <label className="block text-[11px] text-muted-foreground">{t(lang, "lp.size_spec", "Size Specification")}</label>
                           {form.goodsName && form.size && (() => {
                             const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                             const masterSizes = selGood?.master_sizes || (selGood?.variations || []).map(v => v.size).filter(Boolean);
@@ -5405,7 +5381,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 <button
                                   type="button"
                                   onClick={() => handleSaveParamToMaster("size", form.size)}
-                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
+                                  className="text-[11px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
                                 >
                                   {t(lang, "purchase.save_to_master", "Save to Master")}
                                 </button>
@@ -5451,7 +5427,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.variety_label", "Variety")}</label>
+                          <label className="block text-[11px] text-muted-foreground">{t(lang, "purchase.variety_label", "Variety")}</label>
                           {form.goodsName && form.variety && (() => {
                             const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                             const masterVars = selGood?.master_varieties || [];
@@ -5460,7 +5436,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 <button
                                   type="button"
                                   onClick={() => handleSaveParamToMaster("variety", form.variety)}
-                                  className="text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white px-1.5 py-0.5 rounded transition-colors"
+                                  className="text-[11px] bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white px-1.5 py-0.5 rounded transition-colors"
                                 >
                                   {t(lang, "purchase.save_to_master", "Save to Master")}
                                 </button>
@@ -5498,7 +5474,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.extra_details_label", "Quality / Extra Details")}</label>
+                          <label className="block text-[11px] text-muted-foreground">{t(lang, "purchase.extra_details_label", "Quality / Extra Details")}</label>
                           {form.goodsName && form.extraDetails && (() => {
                             const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                             const masterSpecs = selGood?.master_extra_details || [];
@@ -5507,7 +5483,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 <button
                                   type="button"
                                   onClick={() => handleSaveParamToMaster("extra_details", form.extraDetails)}
-                                  className="text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white px-1.5 py-0.5 rounded transition-colors"
+                                  className="text-[11px] bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white px-1.5 py-0.5 rounded transition-colors"
                                 >
                                   {t(lang, "purchase.save_to_master", "Save to Master")}
                                 </button>
@@ -5520,7 +5496,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           type="text"
                           value={form.extraDetails || ""}
                           onChange={(e) => setValue("extraDetails", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px]"
                           placeholder={t(lang, "purchase.extra_details_placeholder", "e.g. Soft Shell / Light Color")}
                         />
                       </div>
@@ -5528,7 +5504,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.qty_name_label", "Qty Name")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.qty_name_label", "Qty Name")}</label>
                         <SearchableSelect
                           value={form.qtyName || "BAGS"}
                           onChange={(val) => {
@@ -5548,7 +5524,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.quantity_no", "Quantity No")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.quantity_no", "Quantity No")}</label>
                         <input
                           type="number"
                           value={form.qtyNo || ""}
@@ -5561,14 +5537,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             const emptyKgs = Number(form.emptyKgs || 0);
                             setValue("netWeight", val * qtyKgs - val * emptyKgs);
                           }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] font-mono"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.qty_kgs_1", "1 Qty KGS")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.qty_kgs_1", "1 Qty KGS")}</label>
                         <input
                           type="number"
                           value={form.qtyKgs || ""}
@@ -5581,11 +5557,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             const emptyKgs = Number(form.emptyKgs || 0);
                             setValue("netWeight", qtyNo * val - qtyNo * emptyKgs);
                           }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] font-mono"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.empty_kgs_1", "1 Empty KGS")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.empty_kgs_1", "1 Empty KGS")}</label>
                         <input
                           type="number"
                           value={form.emptyKgs || ""}
@@ -5598,25 +5574,25 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             const qtyKgs = Number(form.qtyKgs || 0);
                             setValue("netWeight", qtyNo * qtyKgs - qtyNo * val);
                           }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] font-mono"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.divide_type", "Divide Type")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.divide_type", "Divide Type")}</label>
                         <select
                           value={form.divideType || "D/KGs"}
                           onChange={(e) => setValue("divideType", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px]"
                         >
                           <option value="D/KGs">{t(lang, "purchase.opt_divide_per_kg", "Divide / Kg")}</option>
                           <option value="D/LBs">{t(lang, "purchase.opt_divide_per_lb", "Divide / Lb")}</option>
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.divide_weight_value", "Divide Weight / Value")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.divide_weight_value", "Divide Weight / Value")}</label>
                         <input
                           type="number"
                           value={form.divideWeight || 1}
@@ -5625,25 +5601,25 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             setValue("manualTotalAmount", "");
                             setValue("manualFinalAmount", "");
                           }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] font-mono"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.price_type", "Price Type")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.price_type", "Price Type")}</label>
                         <select
                           value={form.priceType || "P/KGs"}
                           onChange={(e) => setValue("priceType", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px]"
                         >
                           <option value="P/KGs">{t(lang, "purchase.opt_price_per_kg", "Price / Kg")}</option>
                           <option value="P/LBs">{t(lang, "purchase.opt_price_per_lb", "Price / Lb")}</option>
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.price_rate_c1", "Price Rate (C1)")}</label>
+                        <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.price_rate_c1", "Price Rate (C1)")}</label>
                         <input
                           type="number"
                           value={form.coursePrice || ""}
@@ -5652,29 +5628,29 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             setValue("manualTotalAmount", "");
                             setValue("manualFinalAmount", "");
                           }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] font-mono"
                         />
                       </div>
                     </div>
  
                     <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900 mt-2">
-                      <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">{t(lang, "sales.currency_conversion_title", "Sales Currency & Conversion")}</h4>
+                      <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">{t(lang, "sales.currency_conversion_title", "Sales Currency & Conversion")}</h4>
                       <div className="grid grid-cols-2 gap-3 mb-2">
                         <div>
-                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.pricing_currency", "Pricing Currency")}</label>
+                          <label className="block text-[11px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.pricing_currency", "Pricing Currency")}</label>
                           <select
                             value={form.currencyType || "USD"}
                             onChange={(e) => {
                               const val = e.target.value;
                               setForm(prev => ({ ...prev, currencyType: val, salesCurrency: val }));
                             }}
-                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px]"
                           >
                             {CURRENCY_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">Exchange Rate to {form.secondaryCurrency || "PKR"}</label>
+                          <label className="block text-[11px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">Exchange Rate to {form.secondaryCurrency || "PKR"}</label>
                           <div className="flex gap-1.5">
                             <input
                                type="number"
@@ -5683,7 +5659,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                  setValue("exchangeRate", Number(e.target.value));
                                  setValue("manualFinalAmount", "");
                                }}
-                               className="flex-1 min-w-0 bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono h-8"
+                               className="flex-1 min-w-0 bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[11px] font-mono h-8"
                             />
                             <select
                               value={form.operator || "*"}
@@ -5701,23 +5677,23 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                       <div className="grid grid-cols-2 gap-3 mt-2">
                         <div>
-                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">Amount ({form.currencyType || "USD"})</label>
+                          <label className="block text-[11px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">Amount ({form.currencyType || "USD"})</label>
                           <input
                             type="number"
                             value={form.manualTotalAmount !== undefined && form.manualTotalAmount !== "" ? form.manualTotalAmount : currentItemTotals.totalAmount}
                             onChange={(e) => setValue("manualTotalAmount", e.target.value === "" ? "" : Number(e.target.value))}
                             placeholder={currentItemTotals.totalAmount.toFixed(2)}
-                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono"
+                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[11px] font-mono"
                           />
                         </div>
                         <div>
-                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">Final ({form.secondaryCurrency || "PKR"})</label>
+                          <label className="block text-[11px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">Final ({form.secondaryCurrency || "PKR"})</label>
                           <input
                             type="number"
                             value={form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? form.manualFinalAmount : currentItemTotals.finalAmount}
                             onChange={(e) => setValue("manualFinalAmount", e.target.value === "" ? "" : Number(e.target.value))}
                             placeholder={currentItemTotals.finalAmount.toFixed(2)}
-                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono"
+                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[11px] font-mono"
                           />
                         </div>
                       </div>
@@ -5768,13 +5744,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-4 rounded-xl shadow-sm", isLocalSale ? "bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-amber-300 dark:border-amber-800" : "bg-white border border-slate-200 dark:bg-slate-950 dark:border-slate-800")}>
             <div>
               <h2 className={cn("text-base font-black uppercase tracking-wider", isLocalSale ? "text-amber-900 dark:text-amber-200" : "text-slate-900")}>{t(lang, "sales.final_review_title", "Sales Booking Order – Final Review & Approval")}</h2>
-              <p className={cn("text-[10px] font-semibold mt-0.5", isLocalSale ? "text-amber-800/80 dark:text-amber-300/70" : "text-slate-500")}>{t(lang, "sales.review_hint", "Please review all information carefully before final approval. You can approve, send back for edit, or request changes.")}</p>
+              <p className={cn("text-[11px] font-semibold mt-0.5", isLocalSale ? "text-amber-800/80 dark:text-amber-300/70" : "text-slate-500")}>{t(lang, "sales.review_hint", "Please review all information carefully before final approval. You can approve, send back for edit, or request changes.")}</p>
             </div>
             <div className="flex gap-2.5">
               <Button
                 type="button"
                 onClick={() => handleOpenA4Report(false)}
-                className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-[10px] font-bold h-9 px-3 rounded-lg shadow-sm flex items-center gap-1.5"
+                className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-[11px] font-bold h-9 px-3 rounded-lg shadow-sm flex items-center gap-1.5"
               >
                 <Download className="h-3.5 w-3.5 text-slate-500" />
                 {t(lang, "sales.download_review_report", "Download Review Report (PDF)")}
@@ -5782,7 +5758,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <Button
                 type="button"
                 onClick={() => handleOpenA4Report && handleOpenA4Report(true)}
-                className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-[10px] font-bold h-9 px-3 rounded-lg shadow-sm flex items-center gap-1.5"
+                className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-[11px] font-bold h-9 px-3 rounded-lg shadow-sm flex items-center gap-1.5"
               >
                 <Printer className="h-3.5 w-3.5 text-slate-500" />
                 {t(lang, "sales.print_review_btn", "Print Review")}
@@ -5791,7 +5767,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           </div>
 
           {/* Alert Success bar */}
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-3.5 flex items-center gap-3 text-[10px] font-bold shadow-sm">
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-3.5 flex items-center gap-3 text-[11px] font-bold shadow-sm">
             <span className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-xs font-black">✓</span>
             {t(lang, "cbs.all_saved_ready", "All information has been saved successfully and is ready for final review.")}
           </div>
@@ -5802,7 +5778,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 1. Branch & Booking Info */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(1), "text-white") : "bg-blue-50 text-blue-600")}>1</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[11px]", isLocalSale ? cn(localBadgeCls(1), "text-white") : "bg-blue-50 text-blue-600")}>1</span>
                 {t(lang, "branch.section_branch_info", "Branch Information")}
               </h3>
               <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
@@ -5813,7 +5789,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_user_admin_colon", "User Admin:")}</span><span className="font-bold text-slate-800">{form.userName || "—"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_user_id_colon", "User ID:")}</span><span className="font-bold text-slate-800 font-mono">{form.userId || "USR-1001"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "PKR"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_status_colon", "Status:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{isTransferred ? t(lang, "common.active", "Active") : t(lang, "bdash.status_draft", "Draft")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_status_colon", "Status:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase w-max whitespace-nowrap">{isTransferred ? t(lang, "common.active", "Active") : t(lang, "bdash.status_draft", "Draft")}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.established_date_colon", "Established Date:")}</span><span className="font-bold text-slate-800">{form.salesDate}</span>
               </div>
             </div>
@@ -5821,7 +5797,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 2. Address & Logistics */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(2), "text-white") : "bg-blue-50 text-blue-600")}>2</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[11px]", isLocalSale ? cn(localBadgeCls(2), "text-white") : "bg-blue-50 text-blue-600")}>2</span>
                 {t(lang, "sales.logistics_routing_title", "Logistics & Routing")}
               </h3>
               <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
@@ -5838,7 +5814,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 3. Customer Account (DR) */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(3), "text-white") : "bg-blue-50 text-blue-600")}>3</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[11px]", isLocalSale ? cn(localBadgeCls(3), "text-white") : "bg-blue-50 text-blue-600")}>3</span>
                 {t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}
               </h3>
               {form.customerAccountNo || form.customerAccountName ? (
@@ -5861,7 +5837,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 4. Sales Account (CR) */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(4), "text-white") : "bg-blue-50 text-blue-600")}>4</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[11px]", isLocalSale ? cn(localBadgeCls(4), "text-white") : "bg-blue-50 text-blue-600")}>4</span>
                 {t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}
               </h3>
               {form.salesAccountNo || form.salesAccountName ? (
@@ -5889,10 +5865,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 5. Roles & Permissions Summary */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(5), "text-white") : "bg-blue-50 text-blue-600")}>5</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[11px]", isLocalSale ? cn(localBadgeCls(5), "text-white") : "bg-blue-50 text-blue-600")}>5</span>
                 {t(lang, "branch.wizard_step7_title", "Roles & Permissions")}
               </h3>
-              <table className="w-full text-left text-[9px] mt-1">
+              <table className="w-full text-left text-[11px] mt-1">
                 <thead>
                   <tr className="border-b border-slate-150 text-slate-400 font-bold uppercase tracking-wider">
                     <Th className="pb-1.5">{t(lang, "sales.role_name_label", "Role Name")}</Th>
@@ -5912,7 +5888,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 6. Accounting Setup / Parameters */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(6), "text-white") : "bg-blue-50 text-blue-600")}>6</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[11px]", isLocalSale ? cn(localBadgeCls(6), "text-white") : "bg-blue-50 text-blue-600")}>6</span>
                 {t(lang, "cbs.step7_label", "Accounting Setup")}
               </h3>
               <div className="grid grid-cols-[140px_1fr] gap-x-2 gap-y-1.5">
@@ -5929,15 +5905,15 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             {/* 7. Communication Setup */}
             <div className={miniCardCls}>
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
-                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(7), "text-white") : "bg-blue-50 text-blue-600")}>7</span>
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[11px]", isLocalSale ? cn(localBadgeCls(7), "text-white") : "bg-blue-50 text-blue-600")}>7</span>
                 {t(lang, "cbs.communication_setup_label", "Communication Setup")}
               </h3>
               <div className="grid grid-cols-[140px_1fr] gap-x-2 gap-y-1.5">
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.email_documents_colon", "Email (For Documents):")}</span><span className="font-bold text-slate-850 truncate">{form.branchEmail || "—"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_colon", "Email (Notifications):")}</span><span className="font-bold text-slate-850 truncate">{form.notificationsEmail || "—"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_number_colon", "WhatsApp Number:")}</span><span className="font-bold text-slate-800">+92 333 1234567</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "sales.sms_notifications_colon", "SMS Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{t(lang, "cbs.enabled_word", "Enabled")}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_row_colon", "Email Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{t(lang, "cbs.enabled_word", "Enabled")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.sms_notifications_colon", "SMS Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase w-max whitespace-nowrap">{t(lang, "cbs.enabled_word", "Enabled")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_row_colon", "Email Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase w-max whitespace-nowrap">{t(lang, "cbs.enabled_word", "Enabled")}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.language_colon", "Language:")}</span><span className="font-bold text-slate-800">{t(lang, "cbs.lang_english_word", "English")}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.timezone_colon", "Time Zone:")}</span><span className="font-bold text-slate-800 truncate">(GMT+05:00) Pakistan</span>
               </div>
@@ -5951,8 +5927,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <Package className="h-3.5 w-3.5 text-blue-600" /> {t(lang, "purchase.goods_details_title", "Goods Details")}
             </h3>
             <div className="overflow-x-auto">
-              <table className="w-full text-[10px] text-left border-collapse border border-slate-200">
-                <thead className="bg-slate-50 text-slate-650 font-bold uppercase tracking-wider text-[8px] border-b border-slate-200">
+              <table className="w-full text-[11px] text-left border-collapse border border-slate-200">
+                <thead className="bg-slate-50 text-slate-650 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                   <tr>
                     <Th className="p-2 border-r border-slate-200">{t(lang, "purchase.th_goods", "Goods")}</Th>
                     <Th className="p-2 border-r border-slate-200">{t(lang, "purchase.th_brand", "Brand")}</Th>
@@ -6005,7 +5981,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <textarea
               value={form.orderReportRemarks}
               onChange={(e) => handleTextChange("orderReportRemarks", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 outline-none focus:border-blue-500 resize-none h-24 text-[10px] font-semibold"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 outline-none focus:border-blue-500 resize-none h-24 text-[11px] font-semibold"
               placeholder={t(lang, "sales.verification_remarks_ph", "Type verification, approval, or audit remarks here...")}
             />
           </div>
@@ -6016,7 +5992,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <h3 className="font-black text-[11px] text-slate-800 border-b border-slate-100 pb-2 mb-3 uppercase">{t(lang, "sales.saved_reports_title", "Saved Reports")}</h3>
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {reportsList.map((report) => (
-                  <div key={report.id} className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-[10px] font-semibold relative">
+                  <div key={report.id} className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-[11px] font-semibold relative">
                     <div className="flex justify-between items-start mb-1.5">
                       <span className="font-bold text-slate-800 uppercase tracking-wider">{report.name}</span>
                       <button type="button" onClick={() => handleDeleteReport(report.id)} className="text-red-500 hover:text-red-700 transition">
@@ -6024,7 +6000,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </button>
                     </div>
                     {report.description && <p className="text-slate-600 mb-1.5">{report.description}</p>}
-                    <p className="text-slate-400 font-mono text-[8px]">{formatShortDate(report.createdAt)}</p>
+                    <p className="text-slate-400 font-mono text-[11px]">{formatShortDate(report.createdAt)}</p>
                   </div>
                 ))}
               </div>
@@ -6038,16 +6014,16 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-[10px]">✓</span>
+                  <span className="h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-[11px]">✓</span>
                   <h4 className="text-xs font-black text-slate-900 uppercase">{t(lang, "sales.approve_activate_order_btn", "Approve & Activate Order")}</h4>
                 </div>
-                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed mb-4">
+                <p className="text-[11px] text-slate-500 font-semibold leading-relaxed mb-4">
                   Approve this booking order and transfer/post it to the General Ledger. The booking will become active and available for all operations.
                 </p>
               </div>
               <div>
                 {isTransferred ? (
-                  <div className="w-full bg-emerald-50 text-emerald-800 text-[10px] font-black uppercase text-center py-2 border border-emerald-200 rounded-lg">
+                  <div className="w-full bg-emerald-50 text-emerald-800 text-[11px] font-black uppercase text-center py-2 border border-emerald-200 rounded-lg">
                     {t(lang, "sales.approved_transferred_status", "Approved & Transferred")}
                   </div>
                 ) : (
@@ -6067,10 +6043,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="h-5 w-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-[10px]">↩</span>
+                  <span className="h-5 w-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-[11px]">↩</span>
                   <h4 className="text-xs font-black text-slate-900 uppercase">{t(lang, "cbs.send_back_title", "Send Back for Edit")}</h4>
                 </div>
-                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed mb-4">
+                <p className="text-[11px] text-slate-500 font-semibold leading-relaxed mb-4">
                   Send this booking back to the entries screen for corrections, adjustments, or additional cargo/amount information.
                 </p>
               </div>
@@ -6087,10 +6063,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="h-5 w-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-[10px]">✕</span>
+                  <span className="h-5 w-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-[11px]">✕</span>
                   <h4 className="text-xs font-black text-slate-900 uppercase">{t(lang, "sales.request_changes_cancel_btn", "Request Changes / Cancel")}</h4>
                 </div>
-                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed mb-4">
+                <p className="text-[11px] text-slate-500 font-semibold leading-relaxed mb-4">
                   Flag specific discrepancies or cancel this booking process entirely. All logs will record this audit action.
                 </p>
               </div>
@@ -6111,7 +6087,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           </div>
 
           {/* Information banner */}
-          <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg text-[9px] font-semibold text-slate-500 leading-relaxed">
+          <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg text-[11px] font-semibold text-slate-500 leading-relaxed">
             {t(lang, "sales.review_footer_note", "Please review all information carefully before taking action. Once approved, the booking will be finalized and its postings posted permanently to the general ledger.")}
           </div>
 
@@ -6161,11 +6137,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 text-left">
                   <div className="flex flex-col gap-4 bg-slate-950 px-5 py-4 text-white md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{form.branchCompanyName || form.salesCompanyName || form.branchName || form.branchCountry || ""}</p>
+                      <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-300">{form.branchCompanyName || form.salesCompanyName || form.branchName || form.branchCountry || ""}</p>
                       <h1 className="mt-1 text-xl font-black uppercase tracking-[0.22em]">{t(lang, "sales.booking_order_title", "Sales Booking Order")}</h1>
-                      <p className="mt-1 text-[10px] font-semibold text-slate-300">{t(lang, "sales.professional_verification_subtitle", "Professional verification, account routing, goods, payment and audit template")}</p>
+                      <p className="mt-1 text-[11px] font-semibold text-slate-300">{t(lang, "sales.professional_verification_subtitle", "Professional verification, account routing, goods, payment and audit template")}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-right text-[10px] font-bold md:min-w-[360px]">
+                    <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-right text-[11px] font-bold md:min-w-[360px]">
                       <span className="text-slate-400">{t(lang, "sales.so_no_label", "SO No")}</span><span>{form.salesOrderNo || "N/A"}</span>
                       <span className="text-slate-400">{t(lang, "rozrep.bill_no", "Bill No")}</span><span>{form.billNo || "N/A"}</span>
                       <span className="text-slate-400">{t(lang, "bdash.col_date", "Date")}</span><span>{form.salesDate || "N/A"}</span>
@@ -6174,9 +6150,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   </div>
 
                   {/* Account Info Cards */}
-                  <div className="grid gap-4 p-4 text-[10px] md:grid-cols-2 bg-slate-50/50">
+                  <div className="grid gap-4 p-4 text-[11px] md:grid-cols-2 bg-slate-50/50">
                     <div className="border border-slate-300 bg-white p-3 rounded shadow-sm">
-                      <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[10px]">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h3>
+                      <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[11px]">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h3>
                       <div className="grid grid-cols-[80px_1fr] gap-1">
                         <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold">{form.salesAccountNo || "N/A"}</span>
                         <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold">{form.salesAccountName || "N/A"}</span>
@@ -6184,7 +6160,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                     </div>
                     <div className="border border-slate-300 bg-white p-3 rounded shadow-sm">
-                      <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[10px]">{t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}</h3>
+                      <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[11px]">{t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}</h3>
                       <div className="grid grid-cols-[80px_1fr] gap-1">
                         <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold">{form.customerAccountNo || "N/A"}</span>
                         <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold">{form.customerAccountName || "N/A"}</span>
@@ -6194,18 +6170,18 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   </div>
 
                   {/* Routing row */}
-                  <div className="grid gap-0 border-t border-slate-200 bg-white text-[10px] font-semibold text-slate-700 md:grid-cols-4">
-                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "report.country", "Country")}</span>{form.branchCountry || form.origin || "N/A"}</div>
-                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "report.branch", "Branch")}</span>{form.branchName || "N/A"}</div>
-                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "bdash.branch_code", "Branch Code")}</span>{form.branchCode || "N/A"}</div>
-                    <div className="p-3"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "hr.f_currency", "Currency")}</span>{form.salesCurrency || form.currencyType || "N/A"}</div>
+                  <div className="grid gap-0 border-t border-slate-200 bg-white text-[11px] font-semibold text-slate-700 md:grid-cols-4">
+                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[11px] uppercase tracking-wider text-slate-400">{t(lang, "report.country", "Country")}</span>{form.branchCountry || form.origin || "N/A"}</div>
+                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[11px] uppercase tracking-wider text-slate-400">{t(lang, "report.branch", "Branch")}</span>{form.branchName || "N/A"}</div>
+                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[11px] uppercase tracking-wider text-slate-400">{t(lang, "bdash.branch_code", "Branch Code")}</span>{form.branchCode || "N/A"}</div>
+                    <div className="p-3"><span className="block text-[11px] uppercase tracking-wider text-slate-400">{t(lang, "hr.f_currency", "Currency")}</span>{form.salesCurrency || form.currencyType || "N/A"}</div>
                   </div>
                 </div>
 
                 {/* Goods Table */}
                 <div className="mb-6">
                   <h3 className="font-black text-xs border-b-2 border-slate-400 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.goods_details_title", "Goods Details")}</h3>
-                  <table className="w-full text-[9px] border-collapse border border-slate-300">
+                  <table className="w-full text-[11px] border-collapse border border-slate-300">
                     <thead>
                       <tr className="bg-slate-100 border-b border-slate-300">
                         <Th className="border-r border-slate-300 p-1.5 text-left">#</Th>
@@ -6242,7 +6218,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       <tr className="bg-slate-50 border-t-2 border-slate-400 font-bold">
                         <td colSpan={4} className="p-1.5 text-right">{t(lang, "purchase.total_colon", "Total:")}</td>
                         <td className="border-r border-slate-200 p-1.5 text-right">{reportTotals.totalQty.toLocaleString()}</td>
-                        <td colSpan={3} className="border-r border-slate-200 p-1.5 text-right text-[8px] text-slate-500 uppercase">{t(lang, "purchase.grand_total_colon", "Grand Total:")}</td>
+                        <td colSpan={3} className="border-r border-slate-200 p-1.5 text-right text-[11px] text-slate-500 uppercase">{t(lang, "purchase.grand_total_colon", "Grand Total:")}</td>
                         <td className="p-1.5 text-right">{form.secondaryCurrency || "PKR"} {reportTotals.grandFinal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     </tfoot>
@@ -6250,7 +6226,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </div>
 
                 {/* Loading Details */}
-                <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                <div className="mb-4 border border-slate-300 rounded p-3 text-[11px]">
                   <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.loading_transit_report", "Loading & Transit Report")}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid grid-cols-[100px_1fr] gap-1">
@@ -6269,7 +6245,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </div>
 
                 {/* Payment Condition */}
-                <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                <div className="mb-4 border border-slate-300 rounded p-3 text-[11px]">
                   <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.payment_conditions_report", "Payment Conditions Report")}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid grid-cols-[120px_1fr] gap-1">
@@ -6287,7 +6263,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                 {/* Remarks & Narration */}
                 {form.remarks && (
-                  <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                  <div className="mb-4 border border-slate-300 rounded p-3 text-[11px]">
                     <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</h3>
                     <p className="whitespace-pre-wrap font-medium text-slate-800">{form.remarks}</p>
                   </div>
@@ -6295,7 +6271,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                 {/* User Remarks (Report) */}
                 {form.orderReportRemarks && (
-                  <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                  <div className="mb-4 border border-slate-300 rounded p-3 text-[11px]">
                     <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.user_remarks_report_title", "User Remarks (Report)")}</h3>
                     <p className="whitespace-pre-wrap font-medium text-slate-800">{form.orderReportRemarks}</p>
                   </div>
@@ -6303,7 +6279,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                 {/* Dynamic Reports */}
                 {reportsList.length > 0 && (
-                  <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                  <div className="mb-4 border border-slate-300 rounded p-3 text-[11px]">
                     <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.dynamic_reports_notes_title", "Dynamic Reports & Notes")}</h3>
                     <div className="space-y-3">
                       {reportsList.map((r, i) => (
@@ -6317,7 +6293,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 )}
 
                 {/* Signatures */}
-                <div className="mt-16 grid grid-cols-3 gap-8 text-center text-[10px] font-bold">
+                <div className="mt-16 grid grid-cols-3 gap-8 text-center text-[11px] font-bold">
                   <div>
                     <div className="border-t border-slate-400 pt-1">{t(lang, "purchase.prepared_by_label", "Prepared By")}</div>
                   </div>
@@ -6341,7 +6317,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
                 <h3 className="text-sm font-bold tracking-tight text-foreground">{t(lang, "purchase.add_new_country_label", "Add New Country")}</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{t(lang, "sales.iso_codes_auto_generated", "ISO codes and emails are auto-generated")}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{t(lang, "sales.iso_codes_auto_generated", "ISO codes and emails are auto-generated")}</p>
               </div>
               <button
                 type="button"
@@ -6351,10 +6327,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
             <div className="p-5 space-y-3">
               {newCountryError && (
-                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newCountryError}</div>
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">{newCountryError}</div>
               )}
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.country_name_star", "Country Name *")}</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "sales.country_name_star", "Country Name *")}</label>
                 <input
                   type="text"
                   value={newCountryForm.name}
@@ -6365,7 +6341,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 />
               </div>
-              <p className="text-[9px] text-muted-foreground/60">ISO-2, ISO-3, currency code and system emails will be auto-generated. You can update them later in Location Setup.</p>
+              <p className="text-[11px] text-muted-foreground/60">ISO-2, ISO-3, currency code and system emails will be auto-generated. You can update them later in Location Setup.</p>
             </div>
             <div className="flex justify-end gap-2 px-5 pb-4">
               <button
@@ -6391,7 +6367,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
                 <h3 className="text-sm font-bold tracking-tight text-foreground">{t(lang, "purchase.add_new_good", "Add New Good")}</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{t(lang, "sales.creates_new_item_goods_master", "Creates a new item in the Goods Master")}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{t(lang, "sales.creates_new_item_goods_master", "Creates a new item in the Goods Master")}</p>
               </div>
               <button
                 type="button"
@@ -6401,11 +6377,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
             <div className="p-5 space-y-3">
               {newGoodError && (
-                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newGoodError}</div>
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">{newGoodError}</div>
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "tl.goods_name_label", "Goods Name *")}</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "tl.goods_name_label", "Goods Name *")}</label>
                   <input
                     type="text"
                     value={newGoodForm.goodsName}
@@ -6415,7 +6391,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.hs_code_star", "HS Code *")}</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "sales.hs_code_star", "HS Code *")}</label>
                   <input
                     type="text"
                     value={newGoodForm.chsCode}
@@ -6425,7 +6401,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   />
                 </div>
               </div>
-              <p className="text-[9px] text-muted-foreground/60">{t(lang, "sales.after_saving_good_msg", "After saving, this good will be auto-selected with HS Code pre-filled.")}</p>
+              <p className="text-[11px] text-muted-foreground/60">{t(lang, "sales.after_saving_good_msg", "After saving, this good will be auto-selected with HS Code pre-filled.")}</p>
             </div>
             <div className="flex justify-end gap-2 px-5 pb-4">
               <button
@@ -6453,7 +6429,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">
                   {t(lang, "sales.add_new_prefix_word", "Add New {0}").replace("{0}", newPortForm.transportType === "sea" ? t(lang, "sales.port_word", "Port") : newPortForm.transportType === "road" ? t(lang, "sales.border_word", "Border") : t(lang, "sales.airport_word", "Airport"))}
                 </h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-[11px] text-muted-foreground mt-0.5">
                   {t(lang, "sales.adding_to_registry_msg", "Adding to {0} registry").replace("{0}", newPortForm.side === "loading" ? t(lang, "sales.loading_word", "Loading") : t(lang, "sales.received_word", "Received"))}
                 </p>
               </div>
@@ -6465,10 +6441,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
             <div className="p-5 space-y-3">
               {newPortError && (
-                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newPortError}</div>
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">{newPortError}</div>
               )}
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.country_name_star", "Country Name *")}</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "sales.country_name_star", "Country Name *")}</label>
                 <select
                   value={newPortForm.countryName || ""}
                   onChange={(e) => setNewPortForm(p => ({ ...p, countryName: e.target.value }))}
@@ -6479,7 +6455,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">
+                <label className="block text-[11px] text-muted-foreground mb-1">
                   {t(lang, "sales.name_star_suffix", "{0} Name *").replace("{0}", newPortForm.transportType === "sea" ? t(lang, "sales.port_word", "Port") : newPortForm.transportType === "road" ? t(lang, "sales.border_word", "Border") : t(lang, "sales.airport_word", "Airport"))}
                 </label>
                 <input
@@ -6529,7 +6505,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">
                   {t(lang, "purchase.wiz_add_good_variation", "Add Good Variation")}
                 </h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-[11px] text-muted-foreground mt-0.5">
                   {t(lang, "purchase.wiz_specify_size_brand", "Specify size/brand under selected good")}
                 </p>
               </div>
@@ -6541,7 +6517,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
             <div className="p-5 space-y-3">
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.th_goods_name", "Goods Name")}</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "purchase.th_goods_name", "Goods Name")}</label>
                 <input
                   type="text"
                   value={customVariationForm.goodsName}
@@ -6551,7 +6527,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.brand_name_star", "Brand Name *")}</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "sales.brand_name_star", "Brand Name *")}</label>
                 <input
                   type="text"
                   value={customVariationForm.brand}
@@ -6561,7 +6537,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 />
               </div>
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.size_spec_star", "Size Specification *")}</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "sales.size_spec_star", "Size Specification *")}</label>
                 <input
                   type="text"
                   value={customVariationForm.size}
@@ -6601,7 +6577,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <h3 className="text-sm font-bold tracking-tight text-foreground">
                   {t(lang, "sales.create_new_prefix", "Create New {0}").replace("{0}", createAccountType === "purchase" ? t(lang, "sales.supplier_account_word", "Supplier Account") : t(lang, "sales.customer_account_word", "Customer Account"))}
                 </h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-[11px] text-muted-foreground mt-0.5">
                   {t(lang, "sales.scope_colon", "Scope:")} {form.cityBranchId ? t(lang, "report.scope_city_branch", "City Branch") : form.countryBranchId ? t(lang, "purchase.card_main_branch_fallback", "Main Branch") : form.countryId ? t(lang, "sales.country_scope_word", "Country Scope") : t(lang, "sales.super_admin_scope_word", "Super Admin")}
                 </p>
               </div>
@@ -6613,13 +6589,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
             <div className="p-5 space-y-3">
               {createAccountError && (
-                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">
                   {createAccountError}
                 </div>
               )}
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.account_name_star", "Account Name *")}</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "sales.account_name_star", "Account Name *")}</label>
                 <input
                   type="text"
                   value={createAccountForm.name}
@@ -6631,7 +6607,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.account_code_star", "Account Code *")}</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "sales.account_code_star", "Account Code *")}</label>
                   <input
                     type="text"
                     value={createAccountForm.code}
@@ -6641,7 +6617,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.currency_star", "Currency *")}</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "sales.currency_star", "Currency *")}</label>
                   <select
                     value={createAccountForm.currency}
                     onChange={(e) => setCreateAccountForm(p => ({ ...p, currency: e.target.value }))}
@@ -6656,7 +6632,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.account_category_star", "Account Category *")}</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "sales.account_category_star", "Account Category *")}</label>
                   <select
                     value={createAccountForm.kind}
                     onChange={(e) => setCreateAccountForm(p => ({ ...p, kind: e.target.value }))}
@@ -6670,7 +6646,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   </select>
                 </div>
                 <div className="flex items-center pt-5">
-                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-foreground cursor-pointer select-none">
+                  <label className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={createAccountForm.isControlAccount}
@@ -6682,7 +6658,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </div>
               </div>
 
-              <p className="text-[9px] text-muted-foreground/60">
+              <p className="text-[11px] text-muted-foreground/60">
                 This account will be created under the selected country and branch scoping, and auto-selected.
               </p>
             </div>
@@ -6783,7 +6759,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <h3 className="text-sm font-bold tracking-tight text-foreground">
                   {t(lang, "purchase.wiz_create_new_company", "Create New Company")}
                 </h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-[11px] text-muted-foreground mt-0.5">
                   {t(lang, "purchase.wiz_adding_to_company_registry", "Adding to Company Master Settings registry")}
                 </p>
               </div>
@@ -6795,13 +6771,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
             <div className="p-5 space-y-3">
               {createCompanyError && (
-                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">
                   {createCompanyError}
                 </div>
               )}
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "tl.company_name_label", "Company Name *")}</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "tl.company_name_label", "Company Name *")}</label>
                 <input
                   type="text"
                   value={createCompanyForm.name}
@@ -6812,7 +6788,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "branch.legal_name_label", "Legal Name")}</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "branch.legal_name_label", "Legal Name")}</label>
                 <input
                   type="text"
                   value={createCompanyForm.legalName}
@@ -6823,7 +6799,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.base_currency_star", "Base Currency *")}</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{t(lang, "sales.base_currency_star", "Base Currency *")}</label>
                 <select
                   value={createCompanyForm.baseCurrency}
                   onChange={(e) => setCreateCompanyForm(p => ({ ...p, baseCurrency: e.target.value }))}
@@ -6835,7 +6811,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </select>
               </div>
 
-              <p className="text-[9px] text-muted-foreground/60">
+              <p className="text-[11px] text-muted-foreground/60">
                 This company will be saved to the master company registry and auto-selected for the current account.
               </p>
             </div>
@@ -6885,11 +6861,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="border border-slate-200 rounded p-2.5 bg-white shadow-sm flex justify-between items-center">
-                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{t(lang, "lpjr.inv_invoice_no", "Invoice No")}</span>
+                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{t(lang, "lpjr.inv_invoice_no", "Invoice No")}</span>
                   <div className="font-black font-mono text-slate-900">{form.salesOrderNo}</div>
                 </div>
                 <div className="border border-slate-200 rounded p-2.5 bg-white shadow-sm flex justify-between items-center">
-                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{t(lang, "sales.base_entry_no_label", "Base Entry No")}</span>
+                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{t(lang, "sales.base_entry_no_label", "Base Entry No")}</span>
                   <div className="font-black font-mono text-slate-900">{savedOrderNo || t(lang, "purchase.wiz_pending_ellipsis", "Pending...")}</div>
                 </div>
               </div>
@@ -6941,11 +6917,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <>
                     <div className="grid grid-cols-2 gap-3 border-b border-slate-100 pb-3">
                       <div>
-                        <span className="text-[10px] text-muted-foreground font-semibold block uppercase">{t(lang, "sales.lot_number_label", "Lot Number")}</span>
+                        <span className="text-[11px] text-muted-foreground font-semibold block uppercase">{t(lang, "sales.lot_number_label", "Lot Number")}</span>
                         <span className="font-mono font-black text-primary text-sm">{lot.lotNo}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-muted-foreground font-semibold block uppercase">{t(lang, "sales.reference_number_label", "Reference Number")}</span>
+                        <span className="text-[11px] text-muted-foreground font-semibold block uppercase">{t(lang, "sales.reference_number_label", "Reference Number")}</span>
                         <span className="font-mono font-bold text-slate-700">{lot.stockRef}</span>
                       </div>
                     </div>
@@ -6988,7 +6964,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-sky-600 focus:ring-sky-500"
                         defaultChecked
                       />
-                      <label htmlFor="confirm-lot-chk" className="font-bold text-[10px] leading-tight cursor-pointer">
+                      <label htmlFor="confirm-lot-chk" className="font-bold text-[11px] leading-tight cursor-pointer">
                         {t(lang, "sales.confirm_lot_selection_msg", "Confirm selection of this cargo lot to apply details to the goods entry form.")}
                       </label>
                     </div>

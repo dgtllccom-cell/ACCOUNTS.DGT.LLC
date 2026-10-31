@@ -414,7 +414,7 @@ export function DgtMailManagementView() {
                     }`}
                   />
                   {formErrors.emailAddress && (
-                    <p className="text-[10px] text-red-600 mt-1">✗ {formErrors.emailAddress}</p>
+                    <p className="text-[11px] text-red-600 mt-1">✗ {formErrors.emailAddress}</p>
                   )}
                 </div>
 
@@ -450,7 +450,7 @@ export function DgtMailManagementView() {
                     </button>
                   </div>
                   {formErrors.imapPassword && (
-                    <p className="text-[10px] text-red-600 mt-1">✗ {formErrors.imapPassword}</p>
+                    <p className="text-[11px] text-red-600 mt-1">✗ {formErrors.imapPassword}</p>
                   )}
                 </div>
               </div>
@@ -623,7 +623,7 @@ export function DgtMailManagementView() {
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+            <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
               <tr>
                 <Th className="px-5 py-3.5">Email Address</Th>
                 <Th className="px-5 py-3.5">Display Name</Th>
@@ -648,7 +648,7 @@ export function DgtMailManagementView() {
               ) : filteredMailboxes.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-5 py-12 text-center text-slate-400">
-                    No mailboxes configured yet. Click "Add Mailbox" to connect a new account.
+                    No mailboxes configured yet. Click &quot;Add Mailbox&quot; to connect a new account.
                   </td>
                 </tr>
               ) : (
@@ -665,7 +665,7 @@ export function DgtMailManagementView() {
                         <div className="font-mono font-bold text-slate-900 dark:text-white">
                           {mb.email_address}
                         </div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-[11px] text-slate-400">
                           Plan: {mb.plan_type?.toUpperCase() || 'FREE'}
                         </div>
                       </td>
@@ -684,28 +684,28 @@ export function DgtMailManagementView() {
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {!mb.last_connection_status ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-md">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-md whitespace-nowrap">
                               {s.t("mail_imap_status_untested", "IMAP: Not Tested")}
                             </span>
                           ) : mb.last_connection_status === 'success' ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md whitespace-nowrap">
                               {s.t("mail_imap_status_ok", "IMAP: OK")}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 px-1.5 py-0.5 rounded-md">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 px-1.5 py-0.5 rounded-md whitespace-nowrap">
                               {s.t("mail_imap_status_failed", "IMAP: Failed")}
                             </span>
                           )}
                           {!mb.last_connection_status ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-md">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-md whitespace-nowrap">
                               {s.t("mail_smtp_status_untested", "SMTP: Not Tested")}
                             </span>
                           ) : mb.last_connection_status === 'success' ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md whitespace-nowrap">
                               {s.t("mail_smtp_status_ok", "SMTP: OK")}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 px-1.5 py-0.5 rounded-md">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 px-1.5 py-0.5 rounded-md whitespace-nowrap">
                               {s.t("mail_smtp_status_failed", "SMTP: Failed")}
                             </span>
                           )}

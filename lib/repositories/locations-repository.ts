@@ -499,7 +499,7 @@ export class LocationsRepository {
 
     if (q) query = query.or(`name.ilike.%${q}%,code.ilike.%${q}%`);
 
-    let { data } = await query.limit(limit);
+    const { data } = await query.limit(limit);
 
     const dbUrl = getDbUrl();
     if ((!data || data.length === 0) && dbUrl) {
@@ -549,7 +549,7 @@ export class LocationsRepository {
 
     if (q) query = query.or(`name.ilike.%${q}%,code.ilike.%${q}%`);
 
-    let { data } = await query.limit(limit);
+    const { data } = await query.limit(limit);
 
     if ((!data || data.length === 0) && dbUrl) {
       try {
@@ -727,7 +727,7 @@ export class LocationsRepository {
 
     if (q) query = query.ilike("name", `%${q}%`);
 
-    let { data, error } = await query.limit(limit);
+    const { data, error } = await query.limit(limit);
     if (!error && data && data.length > 0) return data as AreaRow[];
 
     const dbUrl = getDbUrl();

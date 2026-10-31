@@ -604,11 +604,11 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
       <div className="no-print rounded-3xl bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 p-6 sm:p-8 text-white shadow-xl border border-border/40 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-emerald-500/20 px-3 py-0.5 text-xs font-black text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+            <span className="rounded-full bg-emerald-500/20 px-3 py-0.5 text-xs font-black text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 whitespace-nowrap">
               <Sparkles className="h-3 w-3" />
               {t(lang, "safd.safd_official_system_audit_directory", "OFFICIAL SYSTEM AUDIT & DIRECTORY")}
             </span>
-            <span className="rounded-full bg-blue-500/20 px-3 py-0.5 text-xs font-bold text-blue-300 border border-blue-500/30">
+            <span className="rounded-full bg-blue-500/20 px-3 py-0.5 text-xs font-bold text-blue-300 border border-blue-500/30 whitespace-nowrap">
               {t(lang, "safd.generated_on", "Generated")}: {formatErpDate(new Date().toISOString().slice(0, 10), lang)}
             </span>
           </div>
@@ -660,27 +660,27 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_total_modules_forms", "Total Modules & Forms")}</span>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_total_modules_forms", "Total Modules & Forms")}</span>
               <p className="text-2xl font-black text-foreground mt-1">{ERP_FORMS_CATALOG.length}</p>
-              <span className="text-[10px] font-semibold text-emerald-600">{t(lang, "safd.pct_operational", "100% Operational")}</span>
+              <span className="text-[11px] font-semibold text-emerald-600">{t(lang, "safd.pct_operational", "100% Operational")}</span>
             </div>
 
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_system_categories", "System Categories")}</span>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_system_categories", "System Categories")}</span>
               <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">{t(lang, "safd.core_sectors", "7 Core Sectors")}</p>
-              <span className="text-[10px] font-semibold text-muted-foreground">{t(lang, "safd.safd_full_erp_scope", "Full ERP Scope")}</span>
+              <span className="text-[11px] font-semibold text-muted-foreground">{t(lang, "safd.safd_full_erp_scope", "Full ERP Scope")}</span>
             </div>
 
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_database_migrations", "Database Migrations")}</span>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_database_migrations", "Database Migrations")}</span>
               <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{t(lang, "safd.sql_schemas", "119+ SQL Schemas")}</p>
-              <span className="text-[10px] font-semibold text-muted-foreground">PostgreSQL &amp; Supabase</span>
+              <span className="text-[11px] font-semibold text-muted-foreground">PostgreSQL &amp; Supabase</span>
             </div>
 
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_role_scopes", "Role Scopes")}</span>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_role_scopes", "Role Scopes")}</span>
               <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{t(lang, "safd.hierarchy_levels", "6 Hierarchy Levels")}</p>
-              <span className="text-[10px] font-semibold text-muted-foreground">{t(lang, "safd.safd_super_to_cashier", "Super to Cashier")}</span>
+              <span className="text-[11px] font-semibold text-muted-foreground">{t(lang, "safd.safd_super_to_cashier", "Super to Cashier")}</span>
             </div>
           </div>
         </div>
@@ -697,7 +697,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
               <div key={idx} className="rounded-2xl border border-border/80 bg-muted/10 p-4 hover:bg-muted/20 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1.5">
                   <span className="font-black text-xs sm:text-sm text-foreground flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-extrabold text-white">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-extrabold text-white">
                       {idx + 1}
                     </span>
                     {m.phase}
@@ -763,7 +763,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
           {/* Forms Directory Table */}
           <div className="overflow-x-auto rounded-2xl border border-border bg-card">
             <table className="w-full text-xs text-left">
-              <thead className="bg-muted/60 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
+              <thead className="bg-muted/60 text-[11px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                 <tr>
                   <Th className="px-3.5 py-3">#</Th>
                   <Th className="px-3.5 py-3">{t(lang, "safd.safd_form_module_name", "Form / Module Name")}</Th>
@@ -783,18 +783,18 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
                     <td className="px-3.5 py-3 font-bold text-foreground">
                       <div>{translateHeader(lang, item.name)}</div>
                       {item.nameUrdu && (
-                        <div className="text-[10px] text-muted-foreground font-normal mt-0.5">{item.nameUrdu}</div>
+                        <div className="text-[11px] text-muted-foreground font-normal mt-0.5">{item.nameUrdu}</div>
                       )}
                     </td>
                     <td className="px-3.5 py-3">
-                      <span className="inline-block rounded-md bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[9px] font-extrabold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800">
+                      <span className="inline-block rounded-md bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[11px] font-extrabold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800 whitespace-nowrap">
                         {categoryLabel(item.category)}
                       </span>
                     </td>
-                    <td className="px-3.5 py-3 font-mono text-[10px] text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[180px]">
+                    <td className="px-3.5 py-3 font-mono text-[11px] text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[180px]">
                       {item.route}
                     </td>
-                    <td className="px-3.5 py-3 text-[10px] text-muted-foreground font-medium">
+                    <td className="px-3.5 py-3 text-[11px] text-muted-foreground font-medium">
                       {item.roles.map((r) => translateHeader(lang, r)).join(", ")}
                     </td>
                     <td className="px-3.5 py-3 text-xs text-muted-foreground leading-relaxed max-w-xs">
@@ -820,27 +820,27 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
           <div className="grid grid-cols-3 gap-6 text-center text-xs">
             <div>
               <p className="font-black text-foreground mb-8">{t(lang, "safd.safd_system_engineering_team", "System Engineering Team")}</p>
-              <div className="border-t border-muted-foreground/40 pt-1 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">
+              <div className="border-t border-muted-foreground/40 pt-1 font-bold text-muted-foreground uppercase tracking-wider text-[11px]">
                 {t(lang, "safd.safd_prepared_by_technical_lead", "Prepared By (Technical Lead)")}
               </div>
             </div>
 
             <div>
               <div className="h-10 mb-2" />
-              <div className="border-t border-muted-foreground/40 pt-1 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">
+              <div className="border-t border-muted-foreground/40 pt-1 font-bold text-muted-foreground uppercase tracking-wider text-[11px]">
                 {t(lang, "safd.safd_audited_checked_by", "Audited & Checked By")}
               </div>
             </div>
 
             <div>
               <div className="h-10 mb-2" />
-              <div className="border-t border-muted-foreground/40 pt-1 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">
+              <div className="border-t border-muted-foreground/40 pt-1 font-bold text-muted-foreground uppercase tracking-wider text-[11px]">
                 {t(lang, "safd.safd_approved_by_system_owner", "Approved By (System Owner)")}
               </div>
             </div>
           </div>
 
-          <div className="mt-8 pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between text-[10px] text-muted-foreground">
+          <div className="mt-8 pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between text-[11px] text-muted-foreground">
             <p>© {new Date().getFullYear()} {brandLine} — {t(lang, "safd.rights_reserved", "All rights reserved.")}</p>
             <p className="font-mono" suppressHydrationWarning>{t(lang, "safd.generated_on", "Generated")}: {new Date().toLocaleString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</p>
           </div>

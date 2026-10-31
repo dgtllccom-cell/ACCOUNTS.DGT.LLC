@@ -181,6 +181,46 @@ function CustomsBadge({ status, stage }: { status: string; stage: StockStage }) 
   );
 }
 
+/** what has been paid and what is still owed — for this loading when the row is a loading, otherwise for the bill */
+function paymentLine(r: StockJournalRow) {
+  const p = r.payment;
+  if (!p) return null;
+  if (p.loading) {
+    const paid = p.loading.advanceAllocated + p.loading.paid;
+    return { paid, of: p.loading.value, balance: p.loading.outstanding, ccy: p.currency, complete: p.loading.complete, scope: "loading" as const };
+  }
+  return { paid: p.advancePaid, of: p.advanceRequired, balance: p.outstanding, ccy: p.currency, complete: p.outstanding <= 0.05, scope: "bill" as const };
+}
+
+function PaymentCell({ r, t }: { r: StockJournalRow; t: (k: string, fb: string) => string }) {
+  const line = paymentLine(r);
+  if (!line || !r.payment) return <span className="text-slate-400">—</span>;
+  const p = r.payment;
+  const tip = [
+    `${t("pay_bill_total", "Bill total")}: ${fmtNum(p.billTotal)} ${p.currency}`,
+    `${t("pay_qty", "Quantity")}: ${fmtNum(p.totalQuantity, 3)} · ${t("pay_loaded", "loaded")} ${fmtNum(p.loadedQuantity, 3)} · ${t("pay_balance_qty", "balance")} ${fmtNum(p.balanceQuantity, 3)}`,
+    `${t("pay_advance_required", "Advance required")}: ${fmtNum(p.advanceRequired)} (${p.advancePercent}%) · ${t("pay_advance_paid", "paid")} ${fmtNum(p.advancePaid)}`,
+    `${t("pay_remaining_paid", "Remaining payments")}: ${fmtNum(p.remainingPaid)}`,
+    `${t("pay_total_paid", "Total paid")}: ${fmtNum(p.totalPaid)} · ${t("pay_outstanding", "Outstanding")}: ${fmtNum(p.outstanding)} ${p.currency}`
+  ].join("\n");
+  return (
+    <div className="min-w-[170px] space-y-0.5 py-0.5 text-[11px]" dir="ltr" title={tip} data-testid="payment-cell">
+      <div className="font-bold text-slate-800 dark:text-slate-200">
+        {line.scope === "loading" ? t("pay_paid", "Paid") : t("pay_advance", "Advance")}:{" "}
+        <span className="font-black tabular-nums">{fmtNum(line.paid)}</span> / <span className="tabular-nums">{fmtNum(line.of)}</span> {line.ccy}
+      </div>
+      <div className={`font-black tabular-nums ${line.complete ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}`}>
+        {t("pay_balance", "Balance")}: {fmtNum(line.balance)} {line.ccy}
+      </div>
+      {r.paymentHold && (
+        <div className="inline-block rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800" data-testid="payment-hold">
+          {t("pay_awaiting", "Awaiting Remaining Payment")}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProgressCell({ r }: { r: StockJournalRow }) {
   const loaded = Number(r.loadedQuantity) || 0;
   const received = Number(r.receivedQuantity) || 0;
@@ -212,7 +252,7 @@ function ProgressCell({ r }: { r: StockJournalRow }) {
           style={{ width: `${loaded === 0 ? 0 : Math.max(pct, received > 0 ? 8 : 0)}%` }}
         />
       </div>
-      <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+      <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
         <span>
           Damage: <span className={damage > 0 ? "font-bold text-red-600" : ""}>{fmtNum(damage)}</span>
         </span>
@@ -731,6 +771,7 @@ export function JournalBookingStockDashboard({
       "Net Weight (Kg)",
       "Booking / Invoice No.",
       "Loaded / Received / Damage / Shortage / Outstanding",
+      "Paid / Balance (purchase currency)",
       "Ship Details",
       "Customs",
       "Warehouse",
@@ -750,6 +791,7 @@ export function JournalBookingStockDashboard({
         r.netWeight || r.quantity,
         `${r.bookingNo || ""} / ${r.invoiceNo || ""}`.trim(),
         `Loaded: ${r.loadedQuantity || 0}; Received: ${r.receivedQuantity || 0}; Damage: ${r.damagedQuantity || 0}; Shortage: ${r.shortageQuantity || 0}; Outstanding: ${r.outstandingQuantity || 0}`,
+        (() => { const l = paymentLine(r); return l ? `Paid ${fmtNum(l.paid)} of ${fmtNum(l.of)} ${l.ccy}; Balance ${fmtNum(l.balance)}${r.paymentHold ? "; awaiting remaining payment" : ""}` : ""; })(),
         r.shipDetails || r.truckOrContainer || "",
         customsLabel(r.customsStatus),
         r.warehouseName || (r.stage === "transit" ? "In Transit" : "—"),
@@ -818,6 +860,7 @@ export function JournalBookingStockDashboard({
         <th class="num">Net Wt (Kg)</th>
         <th>Booking / Invoice No.</th>
         <th>Loaded / Received / Damage / Shortage / Outstanding</th>
+        <th>${s.t("pay_paid_balance", "Paid / Balance")}</th>
         <th>Ship Details</th>
         <th class="center">Customs</th>
         <th>Warehouse</th>
@@ -840,6 +883,7 @@ export function JournalBookingStockDashboard({
           <td class="num">${fmtNum(r.netWeight || r.quantity)}</td>
           <td><b>${r.bookingNo || "—"}</b><br><small>${r.invoiceNo || "—"}</small></td>
           <td>Loaded: ${fmtNum(r.loadedQuantity || 0)} · Recv: ${fmtNum(r.receivedQuantity || 0)} · Dam: ${fmtNum(r.damagedQuantity || 0)} · Short: ${fmtNum(r.shortageQuantity || 0)} · Out: <b>${fmtNum(r.outstandingQuantity || 0)}</b></td>
+          <td>${(() => { const l = paymentLine(r); return l ? `${s.t("pay_paid", "Paid")} ${fmtNum(l.paid)} / ${fmtNum(l.of)} ${l.ccy}<br><b>${s.t("pay_balance", "Balance")} ${fmtNum(l.balance)}</b>${r.paymentHold ? `<br><small>${s.t("pay_awaiting", "Awaiting Remaining Payment")}</small>` : ""}` : "—"; })()}</td>
           <td>${r.shipDetails || r.truckOrContainer || "—"}</td>
           <td class="center">${customsLabel(r.customsStatus)}</td>
           <td>${r.warehouseName || (r.stage === "transit" ? "In Transit" : "—")}</td>
@@ -943,11 +987,11 @@ export function JournalBookingStockDashboard({
           </span>
           <div>
             <div className="flex items-center gap-1.5 leading-none">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
                 {s.t("eyebrow_inventory_journal", "INVENTORY / STOCK JOURNAL")}
               </span>
-              <span className="hidden text-[9px] font-bold text-slate-300 dark:text-slate-600 md:inline">•</span>
-              <span className="hidden text-[9px] font-medium text-slate-400 md:inline">
+              <span className="hidden text-[11px] font-bold text-slate-300 dark:text-slate-600 md:inline">•</span>
+              <span className="hidden text-[11px] font-medium text-slate-400 md:inline">
                 {s.t("subtitle_purchase_general_stock", "Your stock, from booking to delivery.")}
               </span>
             </div>
@@ -1039,7 +1083,7 @@ export function JournalBookingStockDashboard({
             <Filter className="h-3.5 w-3.5 text-blue-600" />
             <span>{s.t("filters", "Filters")}</span>
             {activeChips.length > 0 && (
-              <span className="rounded-full bg-blue-100 px-1.5 py-0.2 text-[9px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+              <span className="rounded-full bg-blue-100 px-1.5 py-0.2 text-[11px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                 {activeChips.length}
               </span>
             )}
@@ -1122,7 +1166,7 @@ export function JournalBookingStockDashboard({
               key={chip.id}
               type="button"
               onClick={chip.onRemove}
-              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300"
+              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 whitespace-nowrap"
             >
               <span>{chip.label}</span>
               <X className="h-3 w-3" />
@@ -1131,7 +1175,7 @@ export function JournalBookingStockDashboard({
           <button
             type="button"
             onClick={clearAllFilters}
-            className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300"
+            className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 whitespace-nowrap"
           >
             Clear all
           </button>
@@ -1152,7 +1196,7 @@ export function JournalBookingStockDashboard({
                   {s.t("panel_stock_summary", "Stock Summary")}
                 </h2>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 {s.t("panel_selected_scope", "Selected scope")}
               </span>
             </div>
@@ -1179,12 +1223,12 @@ export function JournalBookingStockDashboard({
                         <span className="text-[17px] font-black text-slate-900 dark:text-slate-50 tabular-nums">
                           {fmtNum(qty)}
                         </span>
-                        <span className="text-[10px] font-medium text-slate-400">{u}</span>
+                        <span className="text-[11px] font-medium text-slate-400">{u}</span>
                       </div>
                     );
                   })}
                 </div>
-                <span className="text-[10px] text-blue-600 font-semibold dark:text-blue-400">
+                <span className="text-[11px] text-blue-600 font-semibold dark:text-blue-400">
                   {metricFilter === "total" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
                 </span>
               </button>
@@ -1210,12 +1254,12 @@ export function JournalBookingStockDashboard({
                         <span className="text-[17px] font-black text-amber-600 dark:text-amber-400 tabular-nums">
                           {fmtNum(qty)}
                         </span>
-                        <span className="text-[10px] font-medium text-slate-400">{u}</span>
+                        <span className="text-[11px] font-medium text-slate-400">{u}</span>
                       </div>
                     );
                   })}
                 </div>
-                <span className="text-[10px] text-amber-600 font-semibold dark:text-amber-400">
+                <span className="text-[11px] text-amber-600 font-semibold dark:text-amber-400">
                   {metricFilter === "remaining" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
                 </span>
               </button>
@@ -1241,19 +1285,19 @@ export function JournalBookingStockDashboard({
                         <span className="text-[17px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
                           {fmtNum(qty)}
                         </span>
-                        <span className="text-[10px] font-medium text-slate-400">{u}</span>
+                        <span className="text-[11px] font-medium text-slate-400">{u}</span>
                       </div>
                     );
                   })}
                 </div>
-                <span className="text-[10px] text-emerald-600 font-semibold dark:text-emerald-400">
+                <span className="text-[11px] text-emerald-600 font-semibold dark:text-emerald-400">
                   {metricFilter === "available" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
                 </span>
               </button>
             </div>
           </div>
 
-          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[10px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
+          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
             {s.t("panel_stock_footnote", "Quantities stay separate by unit. No Bags / Boxes conversion.")}
           </div>
         </article>
@@ -1270,7 +1314,7 @@ export function JournalBookingStockDashboard({
                   {s.t("panel_stock_by_stage", "Stock by Stage")}
                 </h2>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 {s.t("panel_stage_records", "Records")}
               </span>
             </div>
@@ -1297,7 +1341,7 @@ export function JournalBookingStockDashboard({
                       <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${st.dotClass}`} />
                       <span className="truncate">{st.label}</span>
                     </span>
-                    <span className="ms-1.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-black tabular-nums text-slate-700 dark:bg-slate-700 dark:text-slate-200" dir="ltr">
+                    <span className="ms-1.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-slate-700 dark:bg-slate-700 dark:text-slate-200 whitespace-nowrap" dir="ltr">
                       {count}
                     </span>
                   </button>
@@ -1306,7 +1350,7 @@ export function JournalBookingStockDashboard({
             </div>
           </div>
 
-          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[10px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
+          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
             {s.t("panel_stage_footnote", "Click any stage to filter the table below.")}
           </div>
         </article>
@@ -1323,12 +1367,12 @@ export function JournalBookingStockDashboard({
                   {s.t("panel_country_wise_stock", "Country-wise Stock")}
                 </h2>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">
                 {s.t("panel_click_to_filter", "Click to filter")}
               </span>
             </div>
 
-            <div className="grid grid-cols-12 bg-slate-50/80 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:bg-slate-800/80">
+            <div className="grid grid-cols-12 bg-slate-50/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-slate-400 dark:bg-slate-800/80">
               <span className="col-span-6">{s.t("col_country_branch", "Country / Branch")}</span>
               <span className="col-span-3 text-end">{s.t("unit_bags", "Bags")}</span>
               <span className="col-span-3 text-end">{s.t("unit_boxes", "Boxes")}</span>
@@ -1356,7 +1400,7 @@ export function JournalBookingStockDashboard({
                       <span className="col-span-6 flex items-center gap-1.5 truncate">
                         <span className="text-sm leading-none shrink-0">{c.flag}</span>
                         <span className="truncate font-semibold">{c.country}</span>
-                        {c.branch && <span className="text-[10px] text-slate-400 truncate">({c.branch})</span>}
+                        {c.branch && <span className="text-[11px] text-slate-400 truncate">({c.branch})</span>}
                       </span>
                       <span className="col-span-3 text-end font-bold tabular-nums" dir="ltr">
                         {fmtNum(c.bags)}
@@ -1371,7 +1415,7 @@ export function JournalBookingStockDashboard({
             </div>
           </div>
 
-          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[10px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
+          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
             {selectedCountry ? `Filtering by ${selectedCountry} · Click row to clear` : "Click any country to filter records."}
           </div>
         </article>
@@ -1731,7 +1775,7 @@ export function JournalBookingStockDashboard({
                     }[metricFilter]
                   : tabLabel(tab)}
               </h2>
-              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                 {displayRows.length} {s.t("records", "records")}
               </span>
             </div>
@@ -1762,6 +1806,7 @@ export function JournalBookingStockDashboard({
                   <th className="min-w-[105px] px-3 py-3 text-end text-[12px] font-black uppercase text-slate-500">{s.t("col_net_weight", "Net Weight (Kg)")}</th>
                   <th className="min-w-[130px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_booking_invoice_no", "Booking / Invoice No.")}</th>
                   <th className="min-w-[220px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_receiving", "Loaded / Received / Damage / Shortage / Outstanding")}</th>
+                  <th className="min-w-[190px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_payment", "Payment (Paid / Balance)")}</th>
                   <th className="min-w-[125px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_ship_details", "Ship Details")}</th>
                   <th className="min-w-[95px] px-2.5 py-3 text-center text-[12px] font-black uppercase text-slate-500">{s.t("col_customs", "Customs")}</th>
                   <th className="min-w-[125px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_warehouse", "Warehouse")}</th>
@@ -1771,7 +1816,7 @@ export function JournalBookingStockDashboard({
               <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60">
                 {loading && displayRows.length === 0 && (
                   <tr>
-                    <td colSpan={16} className="p-12 text-center text-slate-500">
+                    <td colSpan={17} className="p-12 text-center text-slate-500">
                       <Loader2 className="mx-auto h-6 w-6 animate-spin text-blue-600" />
                       <span className="mt-2 block font-medium">{s.t("loading", "Loading…")}</span>
                     </td>
@@ -1779,7 +1824,7 @@ export function JournalBookingStockDashboard({
                 )}
                 {!loading && displayRows.length === 0 && (
                   <tr>
-                    <td colSpan={16} className="p-12 text-center text-[14px] text-slate-500">
+                    <td colSpan={17} className="p-12 text-center text-[14px] text-slate-500">
                       {s.t("empty", "No stock records match these filters.")}
                     </td>
                   </tr>
@@ -1871,11 +1916,11 @@ export function JournalBookingStockDashboard({
 
                       {/* 12. Booking / Invoice No. */}
                       <td className="px-3 py-3 text-[11px]">
-                        <div className="text-[10px] font-medium text-slate-400">Booking No.</div>
+                        <div className="text-[11px] font-medium text-slate-400">Booking No.</div>
                         <div className="font-bold text-blue-600 dark:text-blue-400" dir="ltr">
                           {r.bookingNo || "—"}
                         </div>
-                        <div className="mt-0.5 text-[10px] font-medium text-slate-400">Invoice No.</div>
+                        <div className="mt-0.5 text-[11px] font-medium text-slate-400">Invoice No.</div>
                         <div className="font-bold text-blue-600 dark:text-blue-400" dir="ltr">
                           {r.invoiceNo || "—"}
                         </div>
@@ -1884,6 +1929,11 @@ export function JournalBookingStockDashboard({
                       {/* 13. Loaded / Received / Damage / Shortage / Outstanding */}
                       <td className="px-3 py-3" dir="ltr">
                         <ProgressCell r={r} />
+                      </td>
+
+                      {/* 13b. Payment: paid / balance (this loading, or the bill) */}
+                      <td className="px-3 py-3">
+                        <PaymentCell r={r} t={s.t} />
                       </td>
 
                       {/* 14. Ship Details */}
@@ -2089,23 +2139,23 @@ export function JournalBookingStockDashboard({
 
                 <div className="grid grid-cols-2 gap-2 text-[12px] text-slate-600 dark:text-slate-300">
                   <div>
-                    <span className="block text-[10px] uppercase text-slate-400">Origin</span>
+                    <span className="block text-[11px] uppercase text-slate-400">Origin</span>
                     <span className="font-semibold">{r.origin || r.countryName || "—"}</span>
                   </div>
                   <div>
-                    <span className="block text-[10px] uppercase text-slate-400">Date</span>
+                    <span className="block text-[11px] uppercase text-slate-400">Date</span>
                     <span className="font-semibold" dir="ltr">
                       {fmtDateDisplay(r.date)}
                     </span>
                   </div>
                   <div>
-                    <span className="block text-[10px] uppercase text-slate-400">Gross / Net (Kg)</span>
+                    <span className="block text-[11px] uppercase text-slate-400">Gross / Net (Kg)</span>
                     <span className="font-semibold" dir="ltr">
                       {fmtNum(r.grossWeight || r.quantity)} / {fmtNum(r.netWeight || r.quantity)}
                     </span>
                   </div>
                   <div>
-                    <span className="block text-[10px] uppercase text-slate-400">Customs</span>
+                    <span className="block text-[11px] uppercase text-slate-400">Customs</span>
                     <CustomsBadge status={r.customsStatus} stage={r.stage} />
                   </div>
                 </div>

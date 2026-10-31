@@ -230,8 +230,10 @@ export async function saveEnterpriseRecordTranslations(
       source: input.source ?? "auto",
       // only a person's entry is "complete"; an automatic rendering (dictionary substitution / transliteration) is search material that
       // still needs a human check, so no screen may show it as the person's name (see lib/i18n/customer-name.ts)
-      status: input.source === "manual" ? "complete" : (input.recordTable === "enterprise_accounts" || input.recordTable === "accounts" || input.recordTable === "ledgers") ? "verified" : "needs_review",
-      engine: input.source === "manual" ? "manual" : (input.recordTable === "enterprise_accounts" || input.recordTable === "accounts" || input.recordTable === "ledgers") ? "local_dictionary" : "auto_unverified",
+      // (owner rule, issue #36: account / ledger names too — an automatic rendering is never stamped "verified"; the approved English
+      //  name comes from a person through Translation Management → Review queue)
+      status: input.source === "manual" ? "complete" : "needs_review",
+      engine: input.source === "manual" ? "manual" : "auto_unverified",
       actorId: input.source === "manual" ? input.actorId ?? null : null
     }, db);
     saved.push({ recordId: input.recordId, fieldName: field.fieldName });

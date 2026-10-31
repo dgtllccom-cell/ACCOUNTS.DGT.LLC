@@ -273,7 +273,7 @@ export function AllReportsView() {
       {/* Header */}
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="text-[10px] font-black uppercase tracking-widest text-indigo-600">{t(lang, "arv.arv_centralized_reports_suite", "Centralized Reports Suite")}</div>
+          <div className="text-[11px] font-black uppercase tracking-widest text-indigo-600">{t(lang, "arv.arv_centralized_reports_suite", "Centralized Reports Suite")}</div>
           <h1 className="text-xl font-black text-slate-950 tracking-tight">{t(lang, "arv.arv_all_erp_reports_catalog", "All ERP Reports & Analytical Catalog")}</h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
             Role-based permissions automatically restrict reports to authorized Country or Branch scopes.
@@ -356,7 +356,7 @@ export function AllReportsView() {
                   <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-slate-100 border text-slate-600">
+                  <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded bg-slate-100 border text-slate-600 whitespace-nowrap">
                     {tr(report.category)}
                   </span>
                 </div>

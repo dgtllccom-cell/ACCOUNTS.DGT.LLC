@@ -348,7 +348,7 @@ export function ErpDatePicker(props: ErpDatePickerProps) {
                     : "flex w-36 flex-col border-e border-slate-100 dark:border-slate-800",
                 )}
               >
-                <span className="px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                <span className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   {s.t("quick_ranges", "Quick Ranges")}
                 </span>
                 {presetList.map((k) => (

@@ -165,7 +165,7 @@ export function PayrollTaxConfigView({ lang }: { lang?: string }) {
                         {r.calc_method === "fixed_amount" ? `${NUM(r.fixed_amount)} ${r.currency}` : r.calc_method === "slab" ? s.t("ptax_slab_n", "{n} slabs").replace("{n}", String((r.slabs ?? []).length)) : `${NUM(r.rate_percent)}%`}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 text-slate-500">{r.effective_from?.slice?.(0, 10) || r.effective_from}</td>
-                      <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${r.is_active ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800"}`}>{r.is_active ? s.t("yes", "Yes") : s.t("no", "No")}</span></td>
+                      <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${r.is_active ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800"}`}>{r.is_active ? s.t("yes", "Yes") : s.t("no", "No")}</span></td>
                       <td className="px-3 py-2 text-right">
                         <div className="inline-flex gap-1">
                           <button type="button" onClick={() => { setEditing(r); setShowForm(true); }} className="rounded-lg border border-slate-200 p-1 text-slate-400 hover:bg-slate-50 dark:border-slate-700"><Pencil className="h-3.5 w-3.5" /></button>
@@ -338,7 +338,7 @@ function TaxForm({
 function L({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
+      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
       {children}
     </div>
   );

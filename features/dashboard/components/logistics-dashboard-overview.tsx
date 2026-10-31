@@ -281,7 +281,7 @@ export function LogisticsDashboardOverview({
                     <h3 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
                       {t(lang, "nav.shipping_clearing", "Shipping & Clearing")}
                     </h3>
-                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
                       {t(lang, "logi.shipping_dash_subtitle", "Dashboard for shipment and clearance operations")}
                     </p>
                   </div>
@@ -301,17 +301,18 @@ export function LogisticsDashboardOverview({
                 <button
                   type="button"
                   onClick={() => setSettingsOpen(true)}
-                  className="h-9 px-3 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-700 dark:text-slate-200 text-xs font-bold inline-flex items-center gap-1.5 shadow-xs backdrop-blur-xs transition-all cursor-pointer"
+                  className="h-9 px-3 rounded-lg border border-slate-200/90 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-700 dark:text-slate-200 text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shadow-xs backdrop-blur-xs transition-all cursor-pointer"
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5 text-blue-600" />
-                  <span>{translateHeader(lang, "Settings")}</span>
+                  {/* "Dashboard Settings", not "Settings": the top bar already has a Settings (preferences) button */}
+                  <span>{tt("dash.dashboard_settings", "Dashboard Settings")}</span>
                 </button>
 
               </div>
             </div>
 
             {/* Bottom slogan */}
-            <div className="pt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+            <div className="pt-3 text-[11px] font-black uppercase tracking-widest text-slate-400">
               {tt("log.hero_slogan", "Global shipping, brighter tomorrow")}
             </div>
           </div>
@@ -330,18 +331,18 @@ export function LogisticsDashboardOverview({
                   </span>
                 </div>
                 <div className="mt-2.5 space-y-0.5">
-                  <p className="text-[10.5px] font-bold text-slate-600 dark:text-slate-400 leading-tight truncate">
+                  <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight truncate">
                     {card.label}
                   </p>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-black text-slate-900 dark:text-white">
                       {card.value}
                     </span>
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                       {card.change}
                     </span>
                   </div>
-                  <p className="text-[9.5px] text-slate-400 truncate">
+                  <p className="text-[11px] text-slate-400 truncate">
                     {card.sub}
                   </p>
                 </div>
@@ -366,7 +367,7 @@ export function LogisticsDashboardOverview({
             </div>
 
             {/* Custom Legend */}
-            <div className="flex items-center gap-3.5 text-[10px] font-bold pt-2">
+            <div className="flex items-center gap-3.5 text-[11px] font-bold pt-2">
               <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                 <span className="h-2 w-2 rounded-full bg-blue-600" />
                 <span>{tt("log.trend_subtitle", "Operational movement by current stage")}</span>
@@ -377,8 +378,8 @@ export function LogisticsDashboardOverview({
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={stageTrend} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="stage" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} />
-                  <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} />
+                  <XAxis dataKey="stage" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 11 }} />
+                  <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 11 }} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#0f172a",
@@ -397,7 +398,7 @@ export function LogisticsDashboardOverview({
 
         {/* Status Mix Donut (Center ~25%) */}
         {isWidgetVisible("status_mix") && (
-          <div className="lg:col-span-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between">
+          <div className="lg:col-span-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between">
             <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <Activity className="h-4 w-4 text-cyan-600" />
               <h3 className="text-xs font-bold text-slate-900 dark:text-white">
@@ -425,11 +426,11 @@ export function LogisticsDashboardOverview({
 
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-xl font-black text-slate-900 dark:text-white leading-tight">{statusMixTotal}</span>
-                <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">{tt("common.total", "Total")}</span>
+                <span className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">{tt("common.total", "Total")}</span>
               </div>
             </div>
 
-            <div className="space-y-1 pt-1 text-[10.5px]">
+            <div className="space-y-1 pt-1 text-[11px]">
               {statusMix.map((item) => (
                 <div key={item.name} className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                   <div className="flex items-center gap-1.5 truncate">
@@ -445,7 +446,7 @@ export function LogisticsDashboardOverview({
 
         {/* Quick Access Grid (Right ~30%) */}
         {isWidgetVisible("quick_access") && (
-          <div className="lg:col-span-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between">
+          <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between">
             <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <Zap className="h-4 w-4 text-blue-600" />
               <h3 className="text-xs font-bold text-slate-900 dark:text-white">
@@ -561,7 +562,7 @@ export function LogisticsDashboardOverview({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                  <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold uppercase text-slate-500 tracking-wider">
                     <Th className="px-3.5 py-2.5 w-8">#</Th>
                     <Th className="px-3.5 py-2.5">Date</Th>
                     <Th className="px-3.5 py-2.5">Shipping Line</Th>
@@ -587,7 +588,7 @@ export function LogisticsDashboardOverview({
                       <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">{s.vessel}</td>
                       <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">{s.eta}</td>
                       <td className="px-3.5 py-2.5 text-center">
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9.5px] font-bold ${getStatusBadge(s.status)}`}>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ${getStatusBadge(s.status)}`}>
                           {translateHeader(lang, s.status)}
                         </span>
                       </td>
@@ -625,7 +626,7 @@ export function LogisticsDashboardOverview({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                  <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold uppercase text-slate-500 tracking-wider">
                     <Th className="px-3 py-2.5 w-8">#</Th>
                     <Th className="px-3 py-2.5">Task</Th>
                     <Th className="px-3 py-2.5">Related To</Th>
@@ -645,15 +646,15 @@ export function LogisticsDashboardOverview({
                     <tr key={t.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="px-3 py-2.5 text-slate-400 text-[11px]">{idx + 1}</td>
                       <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-white truncate max-w-[120px]">{t.task}</td>
-                      <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400 font-mono text-[10.5px] whitespace-nowrap">{t.relatedTo}</td>
-                      <td className="px-3 py-2.5 text-slate-500 whitespace-nowrap text-[10.5px]">{t.dueDate}</td>
+                      <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400 font-mono text-[11px] whitespace-nowrap">{t.relatedTo}</td>
+                      <td className="px-3 py-2.5 text-slate-500 whitespace-nowrap text-[11px]">{t.dueDate}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getPriorityBadge(t.priority || "Medium")}`}>
+                        <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-black uppercase tracking-wider ${getPriorityBadge(t.priority || "Medium")}`}>
                           {t.priority ? translateHeader(lang, t.priority) : "—"}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9.5px] font-bold ${getStatusBadge(t.status)}`}>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ${getStatusBadge(t.status)}`}>
                           {translateHeader(lang, t.status)}
                         </span>
                       </td>
@@ -758,7 +759,7 @@ export function LogisticsDashboardOverview({
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold uppercase text-slate-500 tracking-wider">
                   <Th className="px-4 py-2.5 w-8">#</Th>
                   <Th className="px-4 py-2.5">Date</Th>
                   <Th className="px-4 py-2.5">Document Type</Th>
@@ -782,7 +783,7 @@ export function LogisticsDashboardOverview({
                     <td className="px-4 py-2.5 font-mono font-bold text-blue-600 dark:text-blue-400">{doc.ref}</td>
                     <td className="px-4 py-2.5 text-slate-600 dark:text-slate-400 font-mono text-[11px]">{doc.relatedTo}</td>
                     <td className="px-4 py-2.5 text-center">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9.5px] font-bold ${getStatusBadge(doc.status)}`}>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ${getStatusBadge(doc.status)}`}>
                         {translateHeader(lang, doc.status)}
                       </span>
                     </td>

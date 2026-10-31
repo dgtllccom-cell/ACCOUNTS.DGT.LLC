@@ -471,7 +471,7 @@ export function CityBranchRegistrationWizard() {
                     countryId={location.countryId || null}
                     placeholder={_("cbr.ph_owner_person", "Search Person Master for branch owner / manager...")}
                   />
-                  <p className="text-[10px] text-muted-foreground">{_("cbr.note_owner_person", "Select from Central Person Master. Use + Add New Person if the person is not yet registered.")}</p>
+                  <p className="text-[11px] text-muted-foreground">{_("cbr.note_owner_person", "Select from Central Person Master. Use + Add New Person if the person is not yet registered.")}</p>
                 </div>
                 <div />
               </div>

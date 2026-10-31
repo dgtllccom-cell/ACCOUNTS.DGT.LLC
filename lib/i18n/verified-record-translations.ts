@@ -48,7 +48,10 @@ export async function buildVerifiedTranslationSet(input: {
   // (or a human-supplied `manual` value) may be stored. Proper nouns with no approved
   // translation stay original and are flagged needs_review — we do NOT transliterate-guess.
   // (Previously `mode === "transliterate"` allowed generated transliterations through.)
-  const canUseGenerated = dictionaryHit;
+  // A person's entry (any supplied language) is stored as typed: the languages the person left empty keep the saved text — a
+  // machine rendering must not ride along inside a row that is then read as approved.
+  const personEntry = Object.values(input.supplied ?? {}).some((text) => clean(text));
+  const canUseGenerated = dictionaryHit && !personEntry;
   const translations: VerifiedTranslationMap = { [input.originalLanguage]: value };
   let usedManual = false;
   let usedGenerated = false;

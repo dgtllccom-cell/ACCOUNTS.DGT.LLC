@@ -331,7 +331,7 @@ export function PurchaseLoadingFormView() {
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-800 dark:bg-slate-900">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-900/60 dark:border-slate-800">
+              <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-900/60 dark:border-slate-800">
                 <tr>
                   <Th className="px-4 py-3">{tt("plrf.col_po_bill", "PO / Bill Serial")}</Th>
                   <Th className="px-4 py-3">{tt("plrf.col_bl_vessel", "B/L & Vessel")}</Th>
@@ -384,20 +384,20 @@ export function PurchaseLoadingFormView() {
                         <div className="font-mono font-black text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                           {row.purchase_order_no}
                           {poRecords.length > 0 && (
-                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-800">
+                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-800 whitespace-nowrap">
                               {poRecords.length} {poRecords.length === 1 ? "Entry" : "Entries"}
                             </span>
                           )}
                         </div>
-                        <div className="text-[10px] text-slate-500 font-semibold mt-0.5">{form.salesAccountName || form.supplierName || tt("common.supplier", "Supplier")}</div>
+                        <div className="text-[11px] text-slate-500 font-semibold mt-0.5">{form.salesAccountName || form.supplierName || tt("common.supplier", "Supplier")}</div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-mono font-bold text-slate-800 dark:text-slate-200">BL: {blNumbers}</div>
-                        <div className="text-[10px] font-semibold text-slate-500">Vessel: {vesselName}</div>
+                        <div className="text-[11px] font-semibold text-slate-500">Vessel: {vesselName}</div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-semibold text-slate-700 dark:text-slate-300">{loadingPort} &rarr; {receivingPort}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">{new Date(row.created_at).toLocaleDateString("en-GB")}</div>
+                        <div className="text-[11px] text-slate-400 font-mono">{new Date(row.created_at).toLocaleDateString("en-GB")}</div>
                       </td>
                       <td className="px-4 py-3 text-right font-mono font-bold text-slate-700 dark:text-slate-200">{totalContractQty.toLocaleString()} {unitLabel}</td>
                       <td className="px-4 py-3 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">{loadedQty.toLocaleString()} {unitLabel}</td>
@@ -408,7 +408,7 @@ export function PurchaseLoadingFormView() {
                       </td>
                       <td className="px-4 py-3 text-right font-mono font-black text-slate-800 dark:text-slate-100">
                         <div>{poTotalUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</div>
-                        <div className="text-[9.5px] font-semibold text-blue-600">@ {exRate.toFixed(2)}</div>
+                        <div className="text-[11px] font-semibold text-blue-600">@ {exRate.toFixed(2)}</div>
                       </td>
                       <td className="px-4 py-3 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">
                         {advanceLocal > 0 ? `${advanceLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED` : "-"}
@@ -443,7 +443,7 @@ export function PurchaseLoadingFormView() {
                                 }).toString();
                                 window.open(`/dashboard/journal/purchase-order-payment/remaining?${queryParams}`, "_self");
                               }}
-                              className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 transition shadow-2xs"
+                              className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] font-black uppercase text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 transition shadow-2xs"
                               title={tt("plf.transfer_remaining_balance", "Transfer Remaining Balance to Journal")}
                             >
                               <Link2 className="h-3 w-3 text-emerald-600" />
@@ -454,7 +454,7 @@ export function PurchaseLoadingFormView() {
                           <Button
                             onClick={() => setSelectedPO(row)}
                             size="sm"
-                            className="h-7 bg-blue-600 hover:bg-blue-700 text-[10px] font-bold uppercase tracking-wider px-2.5 rounded-md"
+                            className="h-7 bg-blue-600 hover:bg-blue-700 text-[11px] font-bold uppercase tracking-wider px-2.5 rounded-md"
                           >
                             {tt("plrf.open_workflow", "Open Workflow")}
                           </Button>
@@ -511,7 +511,7 @@ export function PurchaseLoadingFormView() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
+                className={`flex-1 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded transition-colors ${
                   activeTab === tab.id 
                     ? "bg-slate-900 text-white" 
                     : "text-slate-500 hover:bg-slate-100"
@@ -538,24 +538,24 @@ export function PurchaseLoadingFormView() {
                 <div className="space-y-4 text-xs font-mono">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <span className="block text-[10px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.issue_date", "Issue Date")}</span>
+                      <span className="block text-[11px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.issue_date", "Issue Date")}</span>
                       <div className="font-black">{new Date(selectedPOForm.purchaseDate || selectedPO.created_at).toLocaleDateString("en-GB")}</div>
                     </div>
                     <div>
-                      <span className="block text-[10px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.bill_ref_no", "Bill / Ref No")}</span>
+                      <span className="block text-[11px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.bill_ref_no", "Bill / Ref No")}</span>
                       <div className="font-black">{selectedPOForm.billNo || "-"}</div>
                     </div>
                     <div>
-                      <span className="block text-[10px] text-slate-500 font-sans font-bold mb-1">{tt("common.supplier", "Supplier")}</span>
+                      <span className="block text-[11px] text-slate-500 font-sans font-bold mb-1">{tt("common.supplier", "Supplier")}</span>
                       <div className="font-black">{selectedPOForm.salesAccountName || "-"}</div>
                     </div>
                     <div>
-                      <span className="block text-[10px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.shipping_mode", "Shipping Mode")}</span>
+                      <span className="block text-[11px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.shipping_mode", "Shipping Mode")}</span>
                       <div className="font-black">{selectedPOForm.shippingMode || "By Sea"}</div>
                     </div>
                   </div>
                   <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end">
-                    <Button onClick={() => setActiveTab("parties")} className="h-8 text-[10px] uppercase font-bold tracking-wider">{tt("plrf.next_parties", "Next: Parties")}</Button>
+                    <Button onClick={() => setActiveTab("parties")} className="h-8 text-[11px] uppercase font-bold tracking-wider">{tt("plrf.next_parties", "Next: Parties")}</Button>
                   </div>
                 </div>
               )}
@@ -563,20 +563,20 @@ export function PurchaseLoadingFormView() {
               {activeTab === "parties" && (
                 <div className="space-y-4 text-xs font-mono">
                   <div>
-                    <span className="block text-[10px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.notify_party", "Notify Party")}</span>
+                    <span className="block text-[11px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.notify_party", "Notify Party")}</span>
                     <div className="font-black">{selectedPOForm.notifyPartyName || "Same as Consignee"}</div>
                   </div>
                   <div>
-                    <span className="block text-[10px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.importer", "Importer / Consignee")}</span>
+                    <span className="block text-[11px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.importer", "Importer / Consignee")}</span>
                     <div className="font-black">{selectedPOForm.importerName || "-"}</div>
                   </div>
                   <div>
-                    <span className="block text-[10px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.exporter", "Exporter / Shipper")}</span>
+                    <span className="block text-[11px] text-slate-500 font-sans font-bold mb-1">{tt("plrf.exporter", "Exporter / Shipper")}</span>
                     <div className="font-black">{selectedPOForm.exporterName || "-"}</div>
                   </div>
                   <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between">
-                    <Button variant="outline" onClick={() => setActiveTab("bill")} className="h-8 text-[10px] uppercase font-bold tracking-wider text-slate-600">{tt("common.back", "Back")}</Button>
-                    <Button onClick={() => setActiveTab("goods")} className="h-8 text-[10px] uppercase font-bold tracking-wider">{tt("plrf.next_goods", "Next: Goods")}</Button>
+                    <Button variant="outline" onClick={() => setActiveTab("bill")} className="h-8 text-[11px] uppercase font-bold tracking-wider text-slate-600">{tt("common.back", "Back")}</Button>
+                    <Button onClick={() => setActiveTab("goods")} className="h-8 text-[11px] uppercase font-bold tracking-wider">{tt("plrf.next_goods", "Next: Goods")}</Button>
                   </div>
                 </div>
               )}
@@ -597,8 +597,8 @@ export function PurchaseLoadingFormView() {
                     </div>
                   )}
                   <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between">
-                    <Button variant="outline" onClick={() => setActiveTab("parties")} className="h-8 text-[10px] uppercase font-bold tracking-wider text-slate-600">{tt("common.back", "Back")}</Button>
-                    <Button onClick={() => setActiveTab("load")} className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] uppercase font-bold tracking-wider">{tt("plrf.next_loading", "Next: New Loading")}</Button>
+                    <Button variant="outline" onClick={() => setActiveTab("parties")} className="h-8 text-[11px] uppercase font-bold tracking-wider text-slate-600">{tt("common.back", "Back")}</Button>
+                    <Button onClick={() => setActiveTab("load")} className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] uppercase font-bold tracking-wider">{tt("plrf.next_loading", "Next: New Loading")}</Button>
                   </div>
                 </div>
               )}
@@ -624,7 +624,7 @@ export function PurchaseLoadingFormView() {
                   />
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] text-slate-500 font-bold mb-1">{tt("plrf.container_no_req", "Container Number *")}</label>
+                      <label className="block text-[11px] text-slate-500 font-bold mb-1">{tt("plrf.container_no_req", "Container Number *")}</label>
                       <input
                         value={loadForm.containerNumber}
                         onChange={e => setLoadForm(f => ({ ...f, containerNumber: e.target.value.toUpperCase() }))}
@@ -633,7 +633,7 @@ export function PurchaseLoadingFormView() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-500 font-bold mb-1">{tt("plr.divide_type", "Container Type")}</label>
+                      <label className="block text-[11px] text-slate-500 font-bold mb-1">{tt("plr.divide_type", "Container Type")}</label>
                       <select
                         value={loadForm.containerType}
                         onChange={e => setLoadForm(f => ({ ...f, containerType: e.target.value }))}
@@ -646,7 +646,7 @@ export function PurchaseLoadingFormView() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] text-slate-500 font-bold mb-1">{tt("plrf.loading_qty_req", "Loading Quantity *")}</label>
+                      <label className="block text-[11px] text-slate-500 font-bold mb-1">{tt("plrf.loading_qty_req", "Loading Quantity *")}</label>
                       <input
                         type="number"
                         value={loadForm.loadingQuantity}
@@ -656,7 +656,7 @@ export function PurchaseLoadingFormView() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-500 font-bold mb-1">{tt("plr.loading_date", "Loading Date")}</label>
+                      <label className="block text-[11px] text-slate-500 font-bold mb-1">{tt("plr.loading_date", "Loading Date")}</label>
                       <input
                         type="date"
                         value={loadForm.loadingDate}
@@ -667,7 +667,7 @@ export function PurchaseLoadingFormView() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] text-slate-500 font-bold mb-1">{tt("plrf.loading_notes", "Loading Notes")}</label>
+                    <label className="block text-[11px] text-slate-500 font-bold mb-1">{tt("plrf.loading_notes", "Loading Notes")}</label>
                     <textarea
                       value={loadForm.loadingNote}
                       onChange={e => setLoadForm(f => ({ ...f, loadingNote: e.target.value }))}
@@ -679,15 +679,15 @@ export function PurchaseLoadingFormView() {
                   {/* LIVE BALANCE SECTION */}
                   <div className="bg-slate-900 text-white rounded-lg p-3 grid grid-cols-3 gap-2 mt-4 text-center divide-x divide-slate-700">
                     <div>
-                      <div className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{tt("plrf.total_qty", "Total Qty")}</div>
+                      <div className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">{tt("plrf.total_qty", "Total Qty")}</div>
                       <div className="text-sm font-mono font-black text-white">{poTotalQty.toLocaleString()}</div>
                     </div>
                     <div>
-                      <div className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{tt("plrf.loaded", "Loaded")}</div>
+                      <div className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">{tt("plrf.loaded", "Loaded")}</div>
                       <div className="text-sm font-mono font-black text-emerald-400">{(poAlreadyLoadedQty + currentLoadingQty).toLocaleString()}</div>
                     </div>
                     <div>
-                      <div className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{tt("plrf.balance", "Balance")}</div>
+                      <div className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">{tt("plrf.balance", "Balance")}</div>
                       <div className={`text-sm font-mono font-black ${liveBalance < 0 ? "text-rose-400" : "text-amber-400"}`}>
                         {liveBalance.toLocaleString()}
                       </div>
@@ -695,16 +695,16 @@ export function PurchaseLoadingFormView() {
                   </div>
 
                   {stockLifecycle ? (
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] font-bold uppercase tracking-wider text-slate-600">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span>
                           {tt("plf.stock_stage", "Stock Stage:")} <b className="text-slate-900">{stockLifecycle.lifecycleStage.replace(/-/g, " ").toUpperCase()}</b>
                         </span>
-                        <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black ${stockLifecycle.visualStatus === "black" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
+                        <span className={`rounded-full border px-2 py-0.5 text-[11px] font-black ${stockLifecycle.visualStatus === "black" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
                           {stockLifecycle.statusLabel}
                         </span>
                       </div>
-                      <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] font-semibold uppercase tracking-normal text-slate-500 sm:grid-cols-4">
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] font-semibold uppercase tracking-normal text-slate-500 sm:grid-cols-4">
                         <div className="rounded-md bg-white px-2 py-1">{tt("plrf.f_loaded", "Loaded:")} <b className="text-slate-900">{stockLifecycle.totalLoadedQuantity.toLocaleString()}</b></div>
                         <div className="rounded-md bg-white px-2 py-1">{tt("plrf.f_remaining", "Remaining:")} <b className="text-slate-900">{stockLifecycle.remainingQuantity.toLocaleString()}</b></div>
                         <div className="rounded-md bg-white px-2 py-1">{tt("plrf.f_payment", "Payment:")} <b className="text-slate-900">{stockLifecycle.paymentProofComplete ? tt("plrf.v_complete", "Complete") : tt("plrf.v_pending", "Pending")}</b></div>
@@ -715,7 +715,7 @@ export function PurchaseLoadingFormView() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-8 text-[10px] font-black uppercase tracking-wider"
+                          className="h-8 text-[11px] font-black uppercase tracking-wider"
                           disabled={!stockLifecycle.paymentProofComplete || stockLifecycle.lifecycleStage === "land" || stockLifecycle.visualStatus === "black"}
                           onClick={() => void handleMoveLoadingStage("land")}
                         >
@@ -724,7 +724,7 @@ export function PurchaseLoadingFormView() {
                         <select
                           value={nextDestination}
                           onChange={(event) => setNextDestination(event.target.value as typeof nextDestination)}
-                          className="h-8 rounded-md border border-slate-300 bg-white px-2 text-[10px] font-bold uppercase tracking-wider text-slate-700 outline-none"
+                          className="h-8 rounded-md border border-slate-300 bg-white px-2 text-[11px] font-bold uppercase tracking-wider text-slate-700 outline-none"
                         >
                           <option value="warehouse">{tt("plrf.warehouse", "Warehouse")}</option>
                           <option value="in-transit">{tt("plrf.in_transit", "In Transit")}</option>
@@ -734,7 +734,7 @@ export function PurchaseLoadingFormView() {
                         <Button
                           type="button"
                           size="sm"
-                          className="h-8 bg-indigo-600 text-[10px] font-black uppercase tracking-wider text-white hover:bg-indigo-700"
+                          className="h-8 bg-indigo-600 text-[11px] font-black uppercase tracking-wider text-white hover:bg-indigo-700"
                           disabled={!stockLifecycle.paymentProofComplete || stockLifecycle.lifecycleStage !== "land" || saving}
                           onClick={() => void handleMoveLoadingStage("forward")}
                         >
@@ -745,8 +745,8 @@ export function PurchaseLoadingFormView() {
                   ) : null}
 
                   <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between">
-                    <Button variant="outline" onClick={() => setActiveTab("goods")} className="h-8 text-[10px] uppercase font-bold tracking-wider text-slate-600">{tt("common.back", "Back")}</Button>
-                    <Button onClick={handleSaveLoading} disabled={saving} className="h-8 bg-blue-600 hover:bg-blue-700 text-white text-[10px] uppercase font-bold tracking-wider px-6">
+                    <Button variant="outline" onClick={() => setActiveTab("goods")} className="h-8 text-[11px] uppercase font-bold tracking-wider text-slate-600">{tt("common.back", "Back")}</Button>
+                    <Button onClick={handleSaveLoading} disabled={saving} className="h-8 bg-blue-600 hover:bg-blue-700 text-white text-[11px] uppercase font-bold tracking-wider px-6">
                       {saving ? tt("plrf.saving", "Saving...") : tt("plrf.save_loading", "Save Loading")}
                     </Button>
                   </div>
@@ -766,23 +766,23 @@ export function PurchaseLoadingFormView() {
             </div>
             <div className="p-4 grid grid-cols-2 gap-y-4 gap-x-2 text-xs font-mono">
               <div>
-                <span className="text-[9px] text-slate-400 uppercase font-sans font-bold block mb-0.5">{tt("plrf.issue_date", "Issue Date")}</span>
+                <span className="text-[11px] text-slate-400 uppercase font-sans font-bold block mb-0.5">{tt("plrf.issue_date", "Issue Date")}</span>
                 <span className="font-black">{new Date(selectedPOForm.purchaseDate || selectedPO.created_at).toLocaleDateString("en-GB")}</span>
               </div>
               <div>
-                <span className="text-[9px] text-slate-400 uppercase font-sans font-bold block mb-0.5">{tt("plrf.bill_ref_no", "Bill / Ref No")}</span>
+                <span className="text-[11px] text-slate-400 uppercase font-sans font-bold block mb-0.5">{tt("plrf.bill_ref_no", "Bill / Ref No")}</span>
                 <span className="font-black">{selectedPOForm.billNo || "-"}</span>
               </div>
               <div className="col-span-2">
-                <span className="text-[9px] text-slate-400 uppercase font-sans font-bold block mb-0.5">{tt("plrf.notify_party", "Notify Party")}</span>
+                <span className="text-[11px] text-slate-400 uppercase font-sans font-bold block mb-0.5">{tt("plrf.notify_party", "Notify Party")}</span>
                 <span className="font-black">{selectedPOForm.notifyPartyName || "Same as Consignee"}</span>
               </div>
               <div className="col-span-2">
-                <span className="text-[9px] text-slate-400 uppercase font-sans font-bold block mb-0.5">{tt("plrf.importer", "Importer")}</span>
+                <span className="text-[11px] text-slate-400 uppercase font-sans font-bold block mb-0.5">{tt("plrf.importer", "Importer")}</span>
                 <span className="font-black">{selectedPOForm.importerName || "-"}</span>
               </div>
               <div className="col-span-2">
-                <span className="text-[9px] text-slate-400 uppercase font-sans font-bold block mb-0.5">{tt("plrf.exporter", "Exporter")}</span>
+                <span className="text-[11px] text-slate-400 uppercase font-sans font-bold block mb-0.5">{tt("plrf.exporter", "Exporter")}</span>
                 <span className="font-black">{selectedPOForm.exporterName || "-"}</span>
               </div>
             </div>
@@ -793,7 +793,7 @@ export function PurchaseLoadingFormView() {
               <h2 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
                 <Anchor className="h-4 w-4 text-blue-200" /> {tt("plrf.goods_container", "GOODS & CONTAINER REPORT")}
               </h2>
-              <span className="bg-blue-800 text-white text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+              <span className="bg-blue-800 text-white text-[11px] px-2 py-0.5 rounded font-bold uppercase tracking-wider whitespace-nowrap">
                 {tt("plf.live_inventory", "LIVE INVENTORY")}
               </span>
             </div>
@@ -802,9 +802,9 @@ export function PurchaseLoadingFormView() {
               <table className="w-full text-left text-xs whitespace-nowrap">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <Th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[10px]">{tt("common.date", "Date")}</Th>
-                    <Th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[10px]">{tt("plrf.col_container", "Container")}</Th>
-                    <Th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[10px] text-right">{tt("cpb.loaded_qty", "Loaded Qty")}</Th>
+                    <Th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[11px]">{tt("common.date", "Date")}</Th>
+                    <Th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[11px]">{tt("plrf.col_container", "Container")}</Th>
+                    <Th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[11px] text-right">{tt("cpb.loaded_qty", "Loaded Qty")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -813,7 +813,7 @@ export function PurchaseLoadingFormView() {
                   )}
                   {poRecords.map((r, i) => (
                     <tr key={i} className="hover:bg-slate-50">
-                      <td className="px-4 py-2 font-mono text-[10px]">{new Date(r.report_payload?.loadingDate || r.loaded_at).toLocaleDateString("en-GB")}</td>
+                      <td className="px-4 py-2 font-mono text-[11px]">{new Date(r.report_payload?.loadingDate || r.loaded_at).toLocaleDateString("en-GB")}</td>
                       <td className="px-4 py-2 font-mono font-bold text-blue-600 text-[11px]">{r.container_number}</td>
                       <td className="px-4 py-2 font-mono font-black text-right text-emerald-600">{Number(r.report_payload?.loadingQuantity || 0).toLocaleString()}</td>
                     </tr>
@@ -821,7 +821,7 @@ export function PurchaseLoadingFormView() {
                   {/* Current Active Form Live Preview */}
                   {currentLoadingQty > 0 && (
                     <tr className="bg-amber-50">
-                      <td className="px-4 py-2 font-mono text-[10px] text-amber-600 border-l-2 border-amber-400">
+                      <td className="px-4 py-2 font-mono text-[11px] text-amber-600 border-l-2 border-amber-400">
                         {loadForm.loadingDate ? new Date(loadForm.loadingDate).toLocaleDateString("en-GB") : "Pending"}
                       </td>
                       <td className="px-4 py-2 font-mono font-bold text-amber-700 text-[11px]">
@@ -839,17 +839,17 @@ export function PurchaseLoadingFormView() {
             <div className="bg-slate-50 border-t border-slate-200 p-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{tt("plrf.total_kgs", "Total KGs:")}</span>
+                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{tt("plrf.total_kgs", "Total KGs:")}</span>
                   <span className="font-mono font-black text-slate-700">{poTotalQty.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{tt("plrf.net_weight", "Net Weight:")}</span>
+                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{tt("plrf.net_weight", "Net Weight:")}</span>
                   <span className="font-mono font-black text-slate-700">{poTotalNetWeight.toLocaleString()} KGs</span>
                 </div>
                 <div className="col-span-2 pt-2 border-t border-slate-200 flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{tt("plrf.grand_amount", "Grand Final Amount:")}</span>
+                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{tt("plrf.grand_amount", "Grand Final Amount:")}</span>
                   <span className="text-base font-mono font-black text-emerald-600">
-                    <span className="text-[10px] mr-1 text-emerald-500">{selectedPO.currency_code || selectedPOForm.currencyType || "USD"}</span>
+                    <span className="text-[11px] mr-1 text-emerald-500">{selectedPO.currency_code || selectedPOForm.currencyType || "USD"}</span>
                     {poTotalAmount.toLocaleString()}
                   </span>
                 </div>

@@ -333,14 +333,14 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
       case "drCr":
         if (row.balanceDirection === "DR") {
           return (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-black bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800 whitespace-nowrap">
               DR
             </span>
           );
         }
         if (row.balanceDirection === "CR") {
           return (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
               CR
             </span>
           );
@@ -378,7 +378,7 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
         );
       case "entryType":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
             {row.entryType || "Journal"}
           </span>
         );
@@ -392,7 +392,7 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
         return (
           <span
             className={cn(
-              "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+              "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold uppercase",
               row.status === "posted"
                 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                 : row.status === "cancelled"
@@ -898,7 +898,7 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
                       <button
                         type="button"
                         onClick={() => setSelectedDetailRow(row)}
-                        className="text-[11px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800"
+                        className="text-[11px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 whitespace-nowrap"
                         title={s.t("view_details", "View Details")}
                       >
                         <Eye className="h-3 w-3" />
@@ -1064,53 +1064,53 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900/50 p-3">
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Date</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Date</span>
                 <span className="font-semibold text-slate-900 dark:text-slate-100">{selectedDetailRow.date}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Voucher No</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Voucher No</span>
                 <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{selectedDetailRow.voucherNo || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Journal No</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Journal No</span>
                 <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{selectedDetailRow.journalNo || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Entry Type</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Entry Type</span>
                 <span className="font-semibold text-blue-600 dark:text-blue-400">{selectedDetailRow.entryType || selectedDetailRow.sourceTable}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account Code</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Account Code</span>
                 <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{selectedDetailRow.accountCode || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account Number</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Account Number</span>
                 <span className="font-mono text-slate-800 dark:text-slate-200">{selectedDetailRow.accountNumber || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account Name</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Account Name</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">{selectedDetailRow.accountName || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account Type / Status</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Account Type / Status</span>
                 <span className="font-medium text-slate-700 dark:text-slate-300">
                   {selectedDetailRow.accountType || "General"} · <span className="text-emerald-600 font-bold">{selectedDetailRow.accountStatus || "ACTIVE"}</span>
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Transaction Branch</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Transaction Branch</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">{selectedDetailRow.transactionBranchName || selectedDetailRow.branchName || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account Branch</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Account Branch</span>
                 <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedDetailRow.accountBranchName || selectedDetailRow.branchName || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Country</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Country</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedDetailRow.countryName || "—"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Currency & Rate</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Currency & Rate</span>
                 <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedDetailRow.currency} (USD Rate: {numberFmt(selectedDetailRow.usdRate)})</span>
               </div>
             </div>
@@ -1118,25 +1118,25 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
             {/* Financial Summary Box */}
             <div className="grid grid-cols-4 gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Total Debit</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Total Debit</span>
                 <span className="font-mono font-bold text-sm text-rose-600 dark:text-rose-400">
                   {selectedDetailRow.debit ? numberFmt(selectedDetailRow.debit) : "0.00"} {selectedDetailRow.currency}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Total Credit</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Total Credit</span>
                 <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
                   {selectedDetailRow.credit ? numberFmt(selectedDetailRow.credit) : "0.00"} {selectedDetailRow.currency}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Final Balance</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Final Balance</span>
                 <span className="font-mono font-black text-sm text-blue-600 dark:text-blue-400">
                   {numberFmt(selectedDetailRow.finalBalance)} {selectedDetailRow.currency}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Balance Type</span>
+                <span className="text-[11px] text-muted-foreground uppercase font-bold block">Balance Type</span>
                 <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-xs font-black", selectedDetailRow.balanceDirection === "DR" ? "bg-rose-100 text-rose-700" : selectedDetailRow.balanceDirection === "CR" ? "bg-emerald-100 text-emerald-700" : "text-slate-400")}>
                   {selectedDetailRow.balanceDirection}
                 </span>
@@ -1144,7 +1144,7 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
             </div>
 
             <div>
-              <span className="text-[10px] text-muted-foreground uppercase font-bold block">Narration / Description</span>
+              <span className="text-[11px] text-muted-foreground uppercase font-bold block">Narration / Description</span>
               <p className="mt-1 text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 border rounded p-2.5 leading-relaxed">
                 {selectedDetailRow.description || "No description provided."}
               </p>

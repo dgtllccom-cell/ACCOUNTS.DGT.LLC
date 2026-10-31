@@ -1079,7 +1079,9 @@ export function ExtFormClient({ token }: { token: string }) {
       mobiles: mobContacts.map((c) => c.value.trim()),
       whatsapps: waContacts.map((c) => c.value.trim()),
       contacts: contactsList.filter((c) => c.value.trim()).map((c) => ({
-        type: c.type === "Custom" && c.customLabel ? c.customLabel : (ctLabel(c.type, lang)),
+        // the stored contact type is the canonical value ("Mobile", "WhatsApp"), never the label in the form's language —
+        // an Urdu label saved as data stayed Urdu for every viewer and the server's Mobile / WhatsApp lookup missed it
+        type: c.type === "Custom" && c.customLabel ? c.customLabel : c.type,
         value: c.value.trim()
       })),
       email,
@@ -1300,7 +1302,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       {isPassed ? <Check size={14} className="stroke-[3]" /> : stepNum}
                     </button>
                     <span
-                      className={`text-[10px] sm:text-[11px] font-bold text-center ${
+                      className={`text-[11px] sm:text-[11px] font-bold text-center ${
                         isCurrent
                           ? "text-indigo-600"
                           : isPassed
@@ -1653,11 +1655,11 @@ export function ExtFormClient({ token }: { token: string }) {
                             </span>
                           </div>
                           {docFrontImage ? (
-                            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
                               <CheckCircle2 size={11} /> {t("frontSideReady", lang)}
                             </span>
                           ) : (
-                            <span className="text-[10px] font-medium text-slate-400">
+                            <span className="text-[11px] font-medium text-slate-400">
                               {t("requiredMark", lang)}
                             </span>
                           )}
@@ -1736,11 +1738,11 @@ export function ExtFormClient({ token }: { token: string }) {
                               </span>
                             </div>
                             {docBackImage ? (
-                              <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
                                 <CheckCircle2 size={11} /> {t("backSideReady", lang)}
                               </span>
                             ) : (
-                              <span className="text-[10px] font-medium text-slate-400">
+                              <span className="text-[11px] font-medium text-slate-400">
                                 {t("optional", lang)}
                               </span>
                             )}
@@ -1862,7 +1864,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     {/* Dates: Issue Date, Expiry Date */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-600">
+                        <label className="text-[11px] font-bold text-slate-600">
                           {t("issueDate", lang)}
                         </label>
                         <input
@@ -1873,7 +1875,7 @@ export function ExtFormClient({ token }: { token: string }) {
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-600">
+                        <label className="text-[11px] font-bold text-slate-600">
                           {t("expiryDate", lang)}
                         </label>
                         <input
@@ -1926,7 +1928,7 @@ export function ExtFormClient({ token }: { token: string }) {
 
                             {/* Dates details */}
                             {(doc.dob || doc.issueDate || doc.expiryDate) && (
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-600 font-mono bg-white/70 p-1.5 rounded-lg border border-slate-100">
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600 font-mono bg-white/70 p-1.5 rounded-lg border border-slate-100">
                                 {doc.dob && <span>DOB: <b>{doc.dob}</b></span>}
                                 {doc.issueDate && <span>{t("issued", lang)}: <b>{doc.issueDate}</b></span>}
                                 {doc.expiryDate && <span>{t("expires", lang)}: <b>{doc.expiryDate}</b></span>}
@@ -2222,7 +2224,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       <span>{t("galleryBtn", lang)}</span>
                     </button>
                   </div>
-                  <p className="text-[10px] text-slate-400">{t("photoSizeHint", lang)}</p>
+                  <p className="text-[11px] text-slate-400">{t("photoSizeHint", lang)}</p>
                 </div>
 
                 {/* Step 4 Navigation Buttons */}
@@ -2304,16 +2306,16 @@ export function ExtFormClient({ token }: { token: string }) {
                         <h4 className="font-black text-xs sm:text-sm text-slate-900 uppercase tracking-wider">
                           {centralT(lang as never, "acct.brand_short" as never, "Digital Dock ERP")}
                         </h4>
-                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">
+                        <p className="text-[11px] text-slate-400 font-medium uppercase tracking-widest">
                           {t("publicVerificationGateway", lang)}
                         </p>
                       </div>
                     </div>
                     <div className="text-end">
-                      <span className="inline-block text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                      <span className="inline-block text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full uppercase tracking-wider">
                         {t("applicationDraft", lang)}
                       </span>
-                      <p className="text-[9px] text-slate-400 font-mono mt-0.5">
+                      <p className="text-[11px] text-slate-400 font-mono mt-0.5">
                         Ref: {token.slice(0, 12).toUpperCase()}
                       </p>
                     </div>
@@ -2349,7 +2351,7 @@ export function ExtFormClient({ token }: { token: string }) {
                         </p>
                       )}
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
-                        <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 text-[10px] font-bold uppercase">
+                        <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 text-[11px] font-bold uppercase whitespace-nowrap">
                           {t(gender, lang)}
                         </span>
                         {docDob && (
@@ -2372,7 +2374,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
                         {t("phoneLabel", lang)}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[11px] text-slate-400 font-mono">
                         {contactsList.filter(c => c.value.trim()).length} Registered
                       </span>
                     </div>
@@ -2430,7 +2432,7 @@ export function ExtFormClient({ token }: { token: string }) {
                             <div className="grid grid-cols-2 gap-2 pt-1">
                               {docFrontImage && (
                                 <div className="space-y-1">
-                                  <span className="text-[10px] font-bold text-slate-500 block">{t("frontSide", lang)}</span>
+                                  <span className="text-[11px] font-bold text-slate-500 block">{t("frontSide", lang)}</span>
                                   <div
                                     onClick={() => setPreviewModalImage({ src: docFrontImage, title: t("idFrontSide", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
@@ -2442,7 +2444,7 @@ export function ExtFormClient({ token }: { token: string }) {
                               )}
                               {docBackImage && (
                                 <div className="space-y-1">
-                                  <span className="text-[10px] font-bold text-slate-500 block">{t("backSide", lang)}</span>
+                                  <span className="text-[11px] font-bold text-slate-500 block">{t("backSide", lang)}</span>
                                   <div
                                     onClick={() => setPreviewModalImage({ src: docBackImage, title: t("idBackSide", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
@@ -2532,7 +2534,7 @@ export function ExtFormClient({ token }: { token: string }) {
                         </p>
                       )}
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
-                        <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 text-[10px] font-bold uppercase">
+                        <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 text-[11px] font-bold uppercase whitespace-nowrap">
                           {t(gender, lang)}
                         </span>
                         {docDob && (
@@ -2555,7 +2557,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
                         {t("phoneLabel", lang)}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[11px] text-slate-400 font-mono">
                         {contactsList.filter(c => c.value.trim()).length} Registered
                       </span>
                     </div>
@@ -2611,7 +2613,7 @@ export function ExtFormClient({ token }: { token: string }) {
                             <div className="grid grid-cols-2 gap-2 pt-1">
                               {docFrontImage && (
                                 <div className="space-y-1">
-                                  <span className="text-[10px] font-bold text-slate-500 block">{t("frontSide", lang)}</span>
+                                  <span className="text-[11px] font-bold text-slate-500 block">{t("frontSide", lang)}</span>
                                   <div
                                     onClick={() => setPreviewModalImage({ src: docFrontImage, title: t("idFrontSide", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
@@ -2623,7 +2625,7 @@ export function ExtFormClient({ token }: { token: string }) {
                               )}
                               {docBackImage && (
                                 <div className="space-y-1">
-                                  <span className="text-[10px] font-bold text-slate-500 block">{t("backSide", lang)}</span>
+                                  <span className="text-[11px] font-bold text-slate-500 block">{t("backSide", lang)}</span>
                                   <div
                                     onClick={() => setPreviewModalImage({ src: docBackImage, title: t("idBackSide", lang) })}
                                     className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
@@ -2698,23 +2700,23 @@ export function ExtFormClient({ token }: { token: string }) {
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-3 rounded-2xl border border-slate-200">
                       <div>
-                        <span className="text-slate-400 text-[10px] block">{t("country", lang)}:</span>
+                        <span className="text-slate-400 text-[11px] block">{t("country", lang)}:</span>
                         <span className="font-bold text-slate-800">{locName(country, lang)}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400 text-[10px] block">{t("stateProvince", lang)}:</span>
+                        <span className="text-slate-400 text-[11px] block">{t("stateProvince", lang)}:</span>
                         <span className="font-bold text-slate-800">{locName(stateProvince, lang)}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400 text-[10px] block">{t("city", lang)}:</span>
+                        <span className="text-slate-400 text-[11px] block">{t("city", lang)}:</span>
                         <span className="font-bold text-slate-800">{locName(city, lang)}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400 text-[10px] block">{t("postalCode", lang)}:</span>
+                        <span className="text-slate-400 text-[11px] block">{t("postalCode", lang)}:</span>
                         <span className="font-mono font-bold text-slate-800">{postalCode || "—"}</span>
                       </div>
                       <div className="col-span-2 pt-2 border-t border-slate-200">
-                        <span className="text-slate-400 text-[10px] block">{t("fullAddress", lang)}:</span>
+                        <span className="text-slate-400 text-[11px] block">{t("fullAddress", lang)}:</span>
                         <p className="font-medium text-slate-800 mt-0.5">{fullAddress || "—"}</p>
                       </div>
                     </div>
@@ -2722,19 +2724,19 @@ export function ExtFormClient({ token }: { token: string }) {
 
                   {/* Declaration & Signature Box */}
                   <div className="pt-2 border-t border-slate-200 space-y-3">
-                    <p className="text-[10px] text-slate-500 italic leading-relaxed">
+                    <p className="text-[11px] text-slate-500 italic leading-relaxed">
                       {t("declarationText", lang)}
                     </p>
                     <div className="flex items-center justify-between pt-2">
                       <div>
-                        <span className="text-[9px] text-slate-400 uppercase tracking-wider block">{t("generatedOn", lang)}</span>
-                        <span className="text-[10px] font-mono text-slate-700" suppressHydrationWarning>
+                        <span className="text-[11px] text-slate-400 uppercase tracking-wider block">{t("generatedOn", lang)}</span>
+                        <span className="text-[11px] font-mono text-slate-700" suppressHydrationWarning>
                           {formatErpDate(new Date().toISOString().slice(0, 10), lang)}
                         </span>
                       </div>
                       <div className="text-end">
-                        <span className="text-[9px] text-slate-400 uppercase tracking-wider block">{t("applicantStatus", lang)}</span>
-                        <span className="text-[10px] font-bold text-emerald-700 font-mono">
+                        <span className="text-[11px] text-slate-400 uppercase tracking-wider block">{t("applicantStatus", lang)}</span>
+                        <span className="text-[11px] font-bold text-emerald-700 font-mono">
                           {t("readyForSubmission", lang)}
                         </span>
                       </div>
@@ -2807,7 +2809,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     {t("receiptTitle", lang)}
                   </span>
                 </div>
-                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
+                <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">
                   {t("verifiedRecord", lang)}
                 </span>
               </div>
@@ -2831,7 +2833,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       {t("fatherName", lang)}: <span className="font-bold text-slate-700">{fatherName}</span>
                     </p>
                   )}
-                  <p className="text-[10px] text-slate-400 font-mono">
+                  <p className="text-[11px] text-slate-400 font-mono">
                     Token: {token.slice(0, 16)}...
                   </p>
                 </div>
@@ -2840,7 +2842,7 @@ export function ExtFormClient({ token }: { token: string }) {
               {/* Data Grid */}
               <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-200">
                 <div className="col-span-2">
-                  <span className="text-slate-400 text-[10px] block">{t("phoneLabel", lang)}:</span>
+                  <span className="text-slate-400 text-[11px] block">{t("phoneLabel", lang)}:</span>
                   <div className="flex flex-wrap gap-1 mt-0.5">
                     {contactsList.filter(c => c.value.trim()).map(c => (
                       <span key={c.id} className="inline-block px-2 py-0.5 bg-white border border-slate-200 rounded text-[11px] font-mono text-slate-800">
@@ -2850,22 +2852,22 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
                 </div>
                 <div>
-                  <span className="text-slate-400 text-[10px] block">{t("country", lang)} / {t("city", lang)}:</span>
+                  <span className="text-slate-400 text-[11px] block">{t("country", lang)} / {t("city", lang)}:</span>
                   <span className="font-bold text-slate-800 text-[11px]">
                     {locName(country, lang)} / {locName(city, lang)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 text-[10px] block">{t("postalCode", lang)}:</span>
+                  <span className="text-slate-400 text-[11px] block">{t("postalCode", lang)}:</span>
                   <span className="font-bold font-mono text-slate-800 text-[11px]">{postalCode || "—"}</span>
                 </div>
                 <div className="col-span-2">
-                  <span className="text-slate-400 text-[10px] block">{t("fullAddress", lang)}:</span>
+                  <span className="text-slate-400 text-[11px] block">{t("fullAddress", lang)}:</span>
                   <span className="font-medium text-slate-800 text-[11px]">{fullAddress || "—"}</span>
                 </div>
                 {email && (
                   <div className="col-span-2">
-                    <span className="text-slate-400 text-[10px] block">{t("email", lang)}:</span>
+                    <span className="text-slate-400 text-[11px] block">{t("email", lang)}:</span>
                     <span className="font-bold font-mono text-slate-800 text-[11px]">{email}</span>
                   </div>
                 )}
@@ -2893,10 +2895,10 @@ export function ExtFormClient({ token }: { token: string }) {
                           {docLabel(d.type, lang) || d.type}
                         </span>
                         {d.number && d.number !== "N/A" && (
-                          <span className="text-[10px] font-mono text-slate-500 block">#{d.number}</span>
+                          <span className="text-[11px] font-mono text-slate-500 block">#{d.number}</span>
                         )}
                         {(d.dob || d.issueDate || d.expiryDate) && (
-                          <div className="text-[9px] text-slate-400 font-mono">
+                          <div className="text-[11px] text-slate-400 font-mono">
                             {d.dob && <div>{t("dob", lang)}: {d.dob}</div>}
                             {d.issueDate && <div>{t("issued", lang)}: {d.issueDate}</div>}
                             {d.expiryDate && <div>{t("expires", lang)}: {d.expiryDate}</div>}
@@ -2925,7 +2927,7 @@ export function ExtFormClient({ token }: { token: string }) {
               )}
 
               {/* Footer Timestamp */}
-              <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
+              <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-400">
                 <span>{t("submittedOn", lang)}: {submittedTimestamp}</span>
                 <span className="font-mono font-bold text-indigo-600">{t("secureErpGateway", lang)}</span>
               </div>
@@ -2955,7 +2957,7 @@ export function ExtFormClient({ token }: { token: string }) {
 
         {/* Footer Gateway Brand */}
         <div className="text-center pt-2 border-t border-slate-100 print:hidden">
-          <p className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">
+          <p className="text-[11px] font-semibold text-slate-400 tracking-wider uppercase">
             {t("poweredBy", lang)}
           </p>
         </div>

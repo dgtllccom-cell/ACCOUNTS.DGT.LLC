@@ -277,7 +277,7 @@ export function CustomerOrderFullDetailsView({
                 <div className="flex items-start gap-2.5">
                   <User className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{s.t("role", "Role")}</span>
+                    <span className="text-[11px] uppercase font-bold text-slate-400 block">{s.t("role", "Role")}</span>
                     <span className="font-bold text-slate-800">{s.t("aud_role_operations", "Operations")}</span>
                   </div>
                 </div>
@@ -285,7 +285,7 @@ export function CustomerOrderFullDetailsView({
                 <div className="flex items-start gap-2.5">
                   <Building2 className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{tg("common.branch", "Branch")}</span>
+                    <span className="text-[11px] uppercase font-bold text-slate-400 block">{tg("common.branch", "Branch")}</span>
                     <span className="font-bold text-slate-800">Dubai Main</span>
                   </div>
                 </div>
@@ -293,7 +293,7 @@ export function CustomerOrderFullDetailsView({
                 <div className="flex items-start gap-2.5">
                   <Hash className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{s.t("branch_code", "Branch Code")}</span>
+                    <span className="text-[11px] uppercase font-bold text-slate-400 block">{s.t("branch_code", "Branch Code")}</span>
                     <span className="font-mono font-bold text-slate-800">DXB-001</span>
                   </div>
                 </div>
@@ -301,7 +301,7 @@ export function CustomerOrderFullDetailsView({
                 <div className="flex items-start gap-2.5">
                   <MapPin className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{tg("common.country", "Country")}</span>
+                    <span className="text-[11px] uppercase font-bold text-slate-400 block">{tg("common.country", "Country")}</span>
                     <span className="font-bold text-slate-800">United Arab Emirates</span>
                   </div>
                 </div>
@@ -309,7 +309,7 @@ export function CustomerOrderFullDetailsView({
                 <div className="flex items-start gap-2.5 pt-2 border-t border-slate-100">
                   <Clock className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">{s.t("date_time", "Date & Time")}</span>
+                    <span className="text-[11px] uppercase font-bold text-slate-400 block">{s.t("date_time", "Date & Time")}</span>
                     <span className="font-mono font-bold text-slate-800 text-[11px]">12 OCT 2026 16:20</span>
                   </div>
                 </div>
@@ -317,7 +317,7 @@ export function CustomerOrderFullDetailsView({
             </div>
 
             <div className="pt-4 text-center">
-              <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-200">
+              <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-bold text-[11px] border border-blue-200">
                 {s.t("verified_order", "Verified ERP Order")}
               </span>
             </div>
@@ -339,7 +339,7 @@ export function CustomerOrderFullDetailsView({
                     <h2 className="text-xl font-black text-blue-950 tracking-tight">DGT LLC</h2>
                     <span className="text-xs font-black text-blue-900 tracking-wide">DAMAAN GENERAL TRADING L.L.C</span>
                   </div>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
                     {s.t("tagline", "IMPORT • EXPORT • TRANSIT • LOGISTICS • CLEARING AGENT")}
                   </p>
                 </div>
@@ -489,7 +489,7 @@ export function CustomerOrderFullDetailsView({
                     <button
                       type="button"
                       onClick={() => order && onEdit(order)}
-                      className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition"
+                      className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition whitespace-nowrap"
                     >
                       <Edit3 className="h-3 w-3" />
                       <span>{tg("common.edit", "Edit")}</span>
@@ -520,7 +520,7 @@ export function CustomerOrderFullDetailsView({
                   </div>
                   <div className="py-1.5 flex justify-between items-center">
                     <span className="text-slate-500 font-medium">{tg("common.status", "Status")}</span>
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap">
                       {coStatusLabel(L, status || "completed")}
                     </span>
                   </div>
@@ -543,7 +543,7 @@ export function CustomerOrderFullDetailsView({
                     <button
                       type="button"
                       onClick={() => order && onEdit(order)}
-                      className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition"
+                      className="inline-flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold px-2 py-0.5 transition whitespace-nowrap"
                     >
                       <Edit3 className="h-3 w-3" />
                       <span>{tg("common.edit", "Edit")}</span>

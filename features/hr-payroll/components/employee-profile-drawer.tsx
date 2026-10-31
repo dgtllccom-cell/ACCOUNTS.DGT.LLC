@@ -221,7 +221,7 @@ export function EmployeeProfileDrawer({
                   </h3>
                   <Badge
                     variant="outline"
-                    className={`font-black text-[10px] uppercase px-2.5 py-0.5 rounded-full ${
+                    className={`font-black text-[11px] uppercase px-2.5 py-0.5 rounded-full ${
                       emp.status === "Active"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-300"
                         : "bg-slate-100 text-slate-600 border-slate-300"
@@ -236,15 +236,15 @@ export function EmployeeProfileDrawer({
                   </p>
                 )}
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <span className="font-mono font-black text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md text-[11px] border border-blue-200 dark:border-blue-800">
+                  <span className="font-mono font-black text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md text-[11px] border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                     {emp.employee_code}
                   </span>
                   {person.person_code && (
-                    <span className="font-mono font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-[11px]">
+                    <span className="font-mono font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-[11px] whitespace-nowrap">
                       {person.person_code}
                     </span>
                   )}
-                  <span className="font-bold text-slate-700 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-[11px] uppercase">
+                  <span className="font-bold text-slate-700 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-[11px] uppercase whitespace-nowrap">
                     {emp.category || "Staff"}
                   </span>
                 </div>
@@ -254,30 +254,30 @@ export function EmployeeProfileDrawer({
 
           {/* 4-Level Serial Numbers Card */}
           <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800">
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">
+            <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
               {t(lang, "epd.serial_tracking_title", "4-Level ERP Serial Tracking")}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
               <div className="p-2 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_super_admin", "1. Super Admin")}</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_super_admin", "1. Super Admin")}</div>
                 <div className="font-mono font-extrabold text-slate-900 dark:text-slate-100 truncate mt-0.5">
                   {emp.super_admin_serial || emp.employee_code || "—"}
                 </div>
               </div>
               <div className="p-2 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_country", "2. Country Serial")}</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_country", "2. Country Serial")}</div>
                 <div className="font-mono font-extrabold text-blue-600 dark:text-blue-400 truncate mt-0.5">
                   {emp.country_serial || "—"}
                 </div>
               </div>
               <div className="p-2 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_branch", "3. Branch Serial")}</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_branch", "3. Branch Serial")}</div>
                 <div className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400 truncate mt-0.5">
                   {emp.branch_serial || "—"}
                 </div>
               </div>
               <div className="p-2 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_entry", "4. Entry Serial")}</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase">{t(lang, "epd.serial_entry", "4. Entry Serial")}</div>
                 <div className="font-mono font-extrabold text-purple-600 dark:text-purple-400 truncate mt-0.5">
                   {emp.entry_serial || "—"}
                 </div>
@@ -296,33 +296,33 @@ export function EmployeeProfileDrawer({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Country")}</span>
+                <span className="text-slate-400 block font-semibold text-[11px] uppercase">{th("Country")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">{country.name || "N/A"}</span>
               </div>
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Main Branch")}</span>
+                <span className="text-slate-400 block font-semibold text-[11px] uppercase">{th("Main Branch")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">
                   {mainBranch.name || "N/A"} {mainBranch.code ? `(${mainBranch.code})` : ""}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("City Branch")}</span>
+                <span className="text-slate-400 block font-semibold text-[11px] uppercase">{th("City Branch")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">
                   {cityBranch.name || "N/A"} {cityBranch.code ? `(${cityBranch.code})` : ""}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Reporting Manager")}</span>
+                <span className="text-slate-400 block font-semibold text-[11px] uppercase">{th("Reporting Manager")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">
                   {emp.reporting_manager_name || emp.reporting_manager?.customer_name || "Self / Branch Head"}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Designation")}</span>
+                <span className="text-slate-400 block font-semibold text-[11px] uppercase">{th("Designation")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">{emp.designation || "N/A"}</span>
               </div>
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Department")}</span>
+                <span className="text-slate-400 block font-semibold text-[11px] uppercase">{th("Department")}</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100">{emp.department || "Executive Management"}</span>
               </div>
             </div>
@@ -339,7 +339,7 @@ export function EmployeeProfileDrawer({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Mobile Number")}</span>
+                <span className="text-slate-400 block font-semibold text-[11px] uppercase">{th("Mobile Number")}</span>
                 {person.mobile ? (
                   <a
                     href={`tel:${person.mobile}`}
@@ -353,7 +353,7 @@ export function EmployeeProfileDrawer({
               </div>
 
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("WhatsApp")}</span>
+                <span className="text-slate-400 block font-semibold text-[11px] uppercase">{th("WhatsApp")}</span>
                 {person.whatsapp || person.mobile ? (
                   <a
                     href={`https://wa.me/${(person.whatsapp || person.mobile).replace(/[^0-9]/g, "")}`}
@@ -369,7 +369,7 @@ export function EmployeeProfileDrawer({
               </div>
 
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Email Address")}</span>
+                <span className="text-slate-400 block font-semibold text-[11px] uppercase">{th("Email Address")}</span>
                 {person.email ? (
                   <a
                     href={`mailto:${person.email}`}
@@ -383,14 +383,14 @@ export function EmployeeProfileDrawer({
               </div>
 
               <div>
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("National ID / Passport")}</span>
+                <span className="text-slate-400 block font-semibold text-[11px] uppercase">{th("National ID / Passport")}</span>
                 <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                   {person.cnic || person.passport || emp.cnic_passport || "—"}
                 </span>
               </div>
 
               <div className="sm:col-span-2">
-                <span className="text-slate-400 block font-semibold text-[10px] uppercase">{th("Address")}</span>
+                <span className="text-slate-400 block font-semibold text-[11px] uppercase">{th("Address")}</span>
                 <span className="font-medium text-slate-800 dark:text-slate-200">
                   {person.address || emp.address || "—"}
                 </span>
@@ -409,28 +409,28 @@ export function EmployeeProfileDrawer({
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px]">
               <div className="p-2.5 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-xl border border-emerald-200/80 dark:border-emerald-800">
-                <div className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">{th("Net Salary")}</div>
+                <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">{th("Net Salary")}</div>
                 <div className="font-mono font-black text-emerald-800 dark:text-emerald-300 text-sm mt-0.5">
                   {Number(emp.net_salary || emp.salary || 0).toLocaleString()} {emp.salary_currency || "USD"}
                 </div>
               </div>
 
               <div className="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">{th("Basic Salary")}</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase">{th("Basic Salary")}</div>
                 <div className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5">
                   {Number(emp.basic_salary || emp.salary || 0).toLocaleString()} {emp.salary_currency || "USD"}
                 </div>
               </div>
 
               <div className="p-2.5 bg-red-50/60 dark:bg-red-950/30 rounded-xl border border-red-200/80 dark:border-red-800">
-                <div className="text-[9px] font-bold text-red-700 dark:text-red-400 uppercase">{th("Adv / Loan Deduction")}</div>
+                <div className="text-[11px] font-bold text-red-700 dark:text-red-400 uppercase">{th("Adv / Loan Deduction")}</div>
                 <div className="font-mono font-bold text-red-700 dark:text-red-300 text-sm mt-0.5">
                   -{Number((emp.advance_deduction || 0) + (emp.loan_deduction || 0)).toLocaleString()}
                 </div>
               </div>
 
               <div className="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="text-[9px] font-bold text-slate-400 uppercase">{th("Joining Date")}</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase">{th("Joining Date")}</div>
                 <div className="font-mono font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5">
                   {emp.joining_date || "—"}
                 </div>

@@ -797,7 +797,7 @@ export function BranchUserPermissionManagementView({
 
                                 <td className="py-3 px-3">
                                   <span
-                                    className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold ${mod.categoryColor}`}
+                                    className={`inline-block rounded-md px-2 py-0.5 text-[11px] font-bold ${mod.categoryColor}`}
                                   >
                                     {tr(mod.category)}
                                   </span>
@@ -875,7 +875,7 @@ export function BranchUserPermissionManagementView({
 
                                       <td className="py-2.5 px-3">
                                         <span
-                                          className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold ${child.categoryColor}`}
+                                          className={`inline-block rounded-md px-2 py-0.5 text-[11px] font-bold ${child.categoryColor}`}
                                         >
                                           {tr(child.category)}
                                         </span>
@@ -949,12 +949,12 @@ export function BranchUserPermissionManagementView({
                 <div className="rounded-xl border p-3 bg-muted/40">
                   <p className="text-muted-foreground font-semibold">{tr("Assigned City Branch")}</p>
                   <p className="text-sm font-black mt-1 text-foreground">{branch.name}</p>
-                  <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{branch.code}</p>
+                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{branch.code}</p>
                 </div>
                 <div className="rounded-xl border p-3 bg-muted/40">
                   <p className="text-muted-foreground font-semibold">{tr("Country Hub")}</p>
                   <p className="text-sm font-black mt-1 text-foreground">{branch.countryName || "Pakistan"}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{branch.currency}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{branch.currency}</p>
                 </div>
               </div>
             </Card>
@@ -1065,7 +1065,7 @@ export function BranchUserPermissionManagementView({
                   <Shield className="h-3.5 w-3.5 text-slate-400" />
                   {tr("Role")}
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
+                <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">
                   <Ship className="h-3 w-3" />
                   {roleText(selectedUser?.role)}
                 </span>
@@ -1092,7 +1092,7 @@ export function BranchUserPermissionManagementView({
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
                   {tr("Status")}
                 </span>
-                <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-black text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 whitespace-nowrap">
                   {selectedUser?.isActive ? tr("Active") : tr("Inactive")}
                 </span>
               </div>

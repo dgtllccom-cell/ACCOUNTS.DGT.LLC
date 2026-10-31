@@ -406,7 +406,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                     </option>
                   ))}
                 </select>
-                <p className="text-[10px] text-muted-foreground">{scopeHelpByKind[kind]}</p>
+                <p className="text-[11px] text-muted-foreground">{scopeHelpByKind[kind]}</p>
               </div>
 
               <div className="space-y-1.5">
@@ -415,7 +415,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                   <button
                     type="button"
                     onClick={() => setPassword(generateSecurePassword())}
-                    className="text-[10px] font-bold text-sky-600 hover:underline flex items-center gap-1"
+                    className="text-[11px] font-bold text-sky-600 hover:underline flex items-center gap-1"
                   >
                     <RefreshCw className="h-2.5 w-2.5" />
                     {tt("uf.auto_generate", "Auto-Generate")}
@@ -448,7 +448,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                     <MapPin className="h-3.5 w-3.5 text-emerald-600" />
                     {tt("uf.scope_title", "Operational Location Scope")}
                   </Label>
-                  <span className="text-[10px] text-muted-foreground">{tt("uf.central_branch", "Centralized Branch Hierarchy")}</span>
+                  <span className="text-[11px] text-muted-foreground">{tt("uf.central_branch", "Centralized Branch Hierarchy")}</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -548,10 +548,10 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                 </div>
                 <div>
                   <h3 className="font-black text-sm text-white">{tt("uf.preview_title", "Live User Profile Preview")}</h3>
-                  <p className="text-[10px] text-slate-300">{tt("uf.preview_sub", "Real-time credentials & scope summary")}</p>
+                  <p className="text-[11px] text-slate-300">{tt("uf.preview_sub", "Real-time credentials & scope summary")}</p>
                 </div>
               </div>
-              <Badge className="bg-emerald-600 text-white font-bold text-[10px] uppercase">
+              <Badge className="bg-emerald-600 text-white font-bold text-[11px] uppercase">
                 {role.replace(/_/g, " ")}
               </Badge>
             </div>
@@ -593,7 +593,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                       setCopiedKey(true);
                       setTimeout(() => setCopiedKey(false), 2000);
                     }}
-                    className="text-[10px] text-slate-400 hover:text-white"
+                    className="text-[11px] text-slate-400 hover:text-white"
                     title={tt("uf.copy_password", "Copy Password")}
                   >
                     {copiedKey ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
@@ -609,9 +609,9 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                   <Shield className="h-3.5 w-3.5 text-indigo-400" />
                   {tt("uf.security_tier", "Security Tier & Vault:")}
                 </span>
-                <span className="text-emerald-400 font-mono font-bold text-[10px]">{tt("uf.encrypted", "ENCRYPTED / SYNCED")}</span>
+                <span className="text-emerald-400 font-mono font-bold text-[11px]">{tt("uf.encrypted", "ENCRYPTED / SYNCED")}</span>
               </div>
-              <p className="text-[10px] text-slate-400 leading-relaxed">
+              <p className="text-[11px] text-slate-400 leading-relaxed">
                 {tt("uf.vault_desc", "Upon creation, credentials are automatically synchronized with the Super Admin Credential Vault and an immutable audit event is recorded.")}
               </p>
             </div>

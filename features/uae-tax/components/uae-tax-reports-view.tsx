@@ -175,7 +175,7 @@ export function UaeTaxReportsView({ lang: langProp }: { lang?: SupportedLanguage
 function Card({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
+      <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">{label}</p>
       <p className={`mt-1 text-base font-black tabular-nums ${tone ?? "text-slate-800 dark:text-slate-100"}`}>{value}</p>
     </div>
   );

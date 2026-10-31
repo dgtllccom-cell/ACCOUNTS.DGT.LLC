@@ -707,13 +707,17 @@ function hasUpgraded(item: SidebarMenuItem | SidebarSubItem | SidebarDeepChild):
   return "children" in item && Array.isArray(item.children) ? item.children.some((c) => hasUpgraded(c)) : false;
 }
 
+// A dot, not a text pill: the "UPGRADED" pill on ~20 items truncated their labels ("Daily Payment E…"). The meaning stays in the
+// tooltip and for screen readers.
 function UpgradedMark({ lang }: { lang: string }) {
+  const label = tUi(lang as never, "nav.upgraded", "Upgraded");
   return (
     <span
-      className="ms-1.5 inline-flex shrink-0 items-center rounded px-1 py-px text-[8.5px] font-bold uppercase leading-none tracking-wider bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:ring-emerald-800"
-      title={tUi(lang as never, "nav.upgraded_hint", "Strengthened in the latest ERP upgrade")}
+      data-testid="nav-upgraded-mark"
+      className="ms-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-100 dark:ring-emerald-900"
+      title={`${label} — ${tUi(lang as never, "nav.upgraded_hint", "Strengthened in the latest ERP upgrade")}`}
     >
-      {tUi(lang as never, "nav.upgraded", "Upgraded")}
+      <span className="sr-only">{label}</span>
     </span>
   );
 }
@@ -1259,7 +1263,7 @@ export function DigitalDockPremiumSidebar({
             <h1 className="text-[15px] font-black tracking-tight text-[#0a192f] group-hover:text-[#2563eb] transition-colors leading-tight truncate">
               DGT LLC
             </h1>
-            <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 tracking-wider uppercase truncate mt-0.5">
+            <p className="text-[11px] font-bold text-blue-600 dark:text-blue-400 tracking-wider uppercase truncate mt-0.5">
               ERP SYSTEM
             </p>
           </div>
@@ -1317,7 +1321,7 @@ export function DigitalDockPremiumSidebar({
                     </div>
 
                     {item.badge && (
-                      <span className={`me-2 px-1.5 py-0.5 text-[10px] font-extrabold rounded uppercase tracking-wider ${
+                      <span className={`me-2 px-1.5 py-0.5 text-[11px] font-extrabold rounded uppercase tracking-wider ${
                         isRed ? "bg-red-600 text-white" : "bg-blue-100 text-blue-700"
                       }`}>
                         {item.badge}
@@ -1539,7 +1543,7 @@ export function DigitalDockPremiumSidebar({
                   </span>
                   {item.upgraded && <UpgradedMark lang={lang} />}
                   {item.badge && (
-                    <span className={`px-1.5 py-0.5 text-[10px] font-extrabold rounded uppercase tracking-wider ${
+                    <span className={`px-1.5 py-0.5 text-[11px] font-extrabold rounded uppercase tracking-wider ${
                       isRed ? "bg-red-600 text-white" : "bg-blue-100 text-blue-700"
                     }`}>
                       {item.badge}
@@ -1586,7 +1590,7 @@ export function DigitalDockPremiumSidebar({
             <span className="text-[11.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
               {tUi(lang, "crm360.crmReportCenter", "CRM REPORT CENTER")}
             </span>
-            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded">
+            <span className="text-[11px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded whitespace-nowrap">
               8 Reports
             </span>
           </div>

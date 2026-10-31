@@ -75,12 +75,12 @@ export function ChatPanel({
           <div>
             <p className="text-sm font-semibold text-foreground">{contactLabel}</p>
             <div className="flex items-center gap-2">
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 {conv.contact?.phoneNumber ?? ""}
               </p>
               <StatusBadge status={conv.status} tiny />
               {conv.assignedUser && (
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-[11px] text-muted-foreground">
                   → {conv.assignedUser.fullName}
                 </span>
               )}
@@ -93,7 +93,7 @@ export function ChatPanel({
           {conv.status !== "resolved" && (
             <button
               onClick={() => handleStatusChange(conv.id, "resolved")}
-              className="rounded-md border border-emerald-300 px-2.5 py-1 text-[10px] font-medium text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+              className="rounded-md border border-emerald-300 px-2.5 py-1 text-[11px] font-medium text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
             >
               ✓ {tt("wa.resolve_btn", "Resolve")}
             </button>
@@ -101,7 +101,7 @@ export function ChatPanel({
           {conv.status === "resolved" && (
             <button
               onClick={() => handleStatusChange(conv.id, "open")}
-              className="rounded-md border border-sky-300 px-2.5 py-1 text-[10px] font-medium text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
+              className="rounded-md border border-sky-300 px-2.5 py-1 text-[11px] font-medium text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
             >
               {tt("wa.reopen_btn", "Reopen")}
             </button>
@@ -125,7 +125,7 @@ export function ChatPanel({
           <div className="flex justify-center pb-2">
             <button
               onClick={onLoadMore}
-              className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+              className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2"
             >
               {tt("wa.load_older", "Load older messages")}
             </button>

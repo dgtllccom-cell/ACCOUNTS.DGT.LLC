@@ -294,6 +294,9 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
   const processing = PROCESSING.includes(jobStatus) && !bundle?.job?.stalled;
   const stalled = Boolean(bundle?.job?.stalled);
   const noFields = !processing && (bundle?.fields?.length ?? 0) === 0;
+  // a run that failed keeps its error even after the job was reported to the review queue (status "qvc") — say what happened
+  const jobError = !processing ? String(bundle?.job?.error ?? "").trim() : "";
+  const noOcrText = !processing && !String(bundle?.job?.ocr_text ?? "").trim();
   const extractionProblem = stalled || jobStatus === "error" || noFields;
   const progress = (bundle?.job?.progress ?? null) as { stage?: string; page?: number; pages?: number } | null;
 
@@ -353,9 +356,9 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
             {rest.map((a) => <option key={a.id} value={a.id}>{fmt(a)}</option>)}
           </optgroup>
         </select>
-        {required && !value && <p className="mt-1 text-[10.5px] font-semibold text-amber-700">{T("account_required", "Required before the entry can be opened.")}</p>}
+        {required && !value && <p className="mt-1 text-[11px] font-semibold text-amber-700">{T("account_required", "Required before the entry can be opened.")}</p>}
         {picked && (
-          <p className={`mt-1 text-[10.5px] font-semibold ${linkedOk || !pid ? "text-slate-500" : "text-amber-700"}`} data-testid={`acct-info-${role}`} dir="auto">
+          <p className={`mt-1 text-[11px] font-semibold ${linkedOk || !pid ? "text-slate-500" : "text-amber-700"}`} data-testid={`acct-info-${role}`} dir="auto">
             {picked.code} · {picked.name}{picked.kind ? ` · ${picked.kind}` : ""}{picked.currency ? ` · ${picked.currency}` : ""}
             {pid && (role === "supplier" || role === "customer") ? (linkedOk ? ` — ${T("acct_linked", "linked to the selected party")}` : ` — ${T("acct_not_linked", "NOT linked to the selected party: check this is the party's own account, not a generic ledger")}`) : ""}
           </p>
@@ -464,8 +467,12 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
       {extractionProblem && !readOnly && (
         <div className="space-y-2 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2.5 dark:border-rose-900 dark:bg-rose-950/30" data-testid="extraction-problem">
           <p className="flex items-start gap-2 text-xs font-bold text-rose-800 dark:text-rose-200"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{stalled ? T("ep_stalled", "OCR stopped before it finished (the server was restarted or the request timed out). Nothing was extracted.") : jobStatus === "error" ? `${T("ep_error", "OCR failed")}: ${bundle?.job?.error ?? ""}` : T("ep_none", "OCR finished but no fields could be extracted. The form below is EMPTY — it is not an extracted result.")}</span>
+            <span>{stalled ? T("ep_stalled", "OCR stopped before it finished (the server was restarted or the request timed out). Nothing was extracted.")
+              : jobStatus === "error" || jobError ? T("ep_failed", "Processing did not finish — nothing was extracted. Press Retry OCR to read the document again.")
+              : noOcrText ? T("ep_no_text", "OCR returned no readable text for this document. Retry OCR, or enter the values manually from the original.")
+              : T("ep_none", "OCR finished but no fields could be extracted. The form below is EMPTY — it is not an extracted result.")}</span>
           </p>
+          {jobError && <p className="ms-6 break-all font-mono text-[11px] text-rose-700/80 dark:text-rose-300/80" dir="ltr" data-testid="extraction-error-detail">{jobError}</p>}
           <div className="flex flex-wrap gap-2">
             <button type="button" disabled={busy} onClick={() => void retryOcr()} data-testid="retry-ocr" className="rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700 disabled:opacity-50">{T("retry_ocr", "Retry OCR")}</button>
             <button type="button" onClick={() => setOcrOpen(true)} data-testid="review-ocr" className="rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-[11px] font-bold text-rose-700 hover:bg-rose-50">{T("review_ocr", "Review OCR text")}</button>
@@ -521,7 +528,7 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
           <div className="flex items-center justify-between px-3 py-2 text-xs font-black text-slate-700 dark:text-slate-200">
             <span className="inline-flex items-center gap-1.5"><FileText className="h-4 w-4 text-blue-600" />{T("original_doc", "Original document")}</span>
             {pages.length > 0 && (
-              <span className="flex flex-wrap items-center gap-1 text-[10.5px] font-normal">
+              <span className="flex flex-wrap items-center gap-1 text-[11px] font-normal">
                 <span className="font-bold text-slate-500">{T("source_pages", "Source pages")}:</span>
                 {pages.map((p) => <button key={p} type="button" onClick={() => setPage(p)} className={`rounded-full px-2 py-0.5 font-bold ${page === p ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"}`}>{p}</button>)}
               </span>
@@ -553,17 +560,17 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                       {(ctx?.candidates ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}{c.code ? ` [${c.code}]` : ""} · {c.kind === "company" ? T("kind_company", "Company") : T("kind_customer", "Customer")}{c.score ? ` · ${Math.round(c.score * 100)}%` : ""}</option>)}
                     </select>
                     {state.party.id && <p className="mt-1 text-[11px] font-black text-slate-700 dark:text-slate-200" dir="auto" data-testid="party-chosen">{state.party.name}{(ctx?.candidates.find((c) => c.id === state.party.id)?.code) ? ` · ${T("party_code", "Code")} ${ctx?.candidates.find((c) => c.id === state.party.id)?.code}` : ""}</p>}
-                    <p className={`mt-1 text-[10.5px] font-semibold ${state.party.id ? "text-emerald-700" : "text-amber-700"}`}>
+                    <p className={`mt-1 text-[11px] font-semibold ${state.party.id ? "text-emerald-700" : "text-amber-700"}`}>
                       {state.party.id ? T("party_matched", "Matched to an existing authorised record.") : ctx?.partyStatus === "ambiguous" ? T("party_ambiguous", "More than one record could match — please choose.") : T("party_not_found", "No existing authorised record matched. Nothing will be created automatically.")}
                     </p>
-                    {ctx?.documentOwnName && <p className="mt-1 text-[10.5px] text-slate-500">{T("our_side", "Other party on the document (our side)")}: <b dir="auto">{ctx.documentOwnName}</b></p>}
+                    {ctx?.documentOwnName && <p className="mt-1 text-[11px] text-slate-500">{T("our_side", "Other party on the document (our side)")}: <b dir="auto">{ctx.documentOwnName}</b></p>}
                   </div>
                 )}
 
                 {mod.roles.length > 0 && (
                   <div className="space-y-2.5 rounded-xl border border-slate-200 p-2.5 dark:border-slate-800">
                     {mod.roles.filter((r) => r !== "bank").map((r) => accountSelect(r))}
-                    <label className="flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-500">
+                    <label className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
                       <input type="checkbox" checked={showAllAccounts} onChange={(e) => setShowAllAccounts(e.target.checked)} />
                       {T("show_all_accounts", "Show every account in my scope (not only the usual kind)")}
                     </label>
@@ -578,13 +585,13 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                         <option value="">{T("currency_pick", "— Select the purchase currency —")}</option>
                         {[...new Set([...(f.currency ? [f.currency] : []), ...CURRENCIES])].map((c) => <option key={c} value={c}>{c}</option>)}
                       </select>
-                      {ctx && ctx.rate.fromCurrency && f.currency && ctx.rate.fromCurrency !== f.currency && <p className="mt-1 text-[10.5px] font-semibold text-amber-700">{T("currency_differs", "The document states")} {ctx.rate.fromCurrency}.</p>}
-                      {(fields1("currency")?.validation_status === "amber") && <p className="mt-1 text-[10.5px] font-semibold text-amber-700">{fields1("currency")?.validation_message}</p>}
+                      {ctx && ctx.rate.fromCurrency && f.currency && ctx.rate.fromCurrency !== f.currency && <p className="mt-1 text-[11px] font-semibold text-amber-700">{T("currency_differs", "The document states")} {ctx.rate.fromCurrency}.</p>}
+                      {(fields1("currency")?.validation_status === "amber") && <p className="mt-1 text-[11px] font-semibold text-amber-700">{fields1("currency")?.validation_message}</p>}
                     </div>
                     <div>
                       {lbl(T("f_totalAmount", "Original purchase amount") + " *", fm.grand_total ? <span className="font-normal text-slate-400">{T("as_extracted", "as extracted")}: {fm.grand_total}</span> : null)}
                       <input dir="ltr" inputMode="decimal" value={f.totalAmount} onChange={(e) => setForm({ totalAmount: e.target.value })} className={inputCls(!f.totalAmount)} placeholder={notFound} data-testid="f-total" />
-                      <p className="mt-0.5 text-[10px] text-slate-400">{T("original_kept", "Kept as written on the document. Only the converted amount is used for the final posting, after you confirm it.")}</p>
+                      <p className="mt-0.5 text-[11px] text-slate-400">{T("original_kept", "Kept as written on the document. Only the converted amount is used for the final posting, after you confirm it.")}</p>
                     </div>
                   </div>
                 )}
@@ -597,7 +604,7 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                   <div>
                     {lbl(T("erp_reference", "ERP reference"))}
                     <input dir="ltr" value={bundle.draft?.draft_no ?? bundle.job.job_no} readOnly className={`${inputCls()} bg-slate-50 text-slate-500`} />
-                    <p className="mt-0.5 text-[10px] text-slate-400">{T("erp_reference_hint", "System reference — kept separate from the contract number.")}</p>
+                    <p className="mt-0.5 text-[11px] text-slate-400">{T("erp_reference_hint", "System reference — kept separate from the contract number.")}</p>
                   </div>
                   <div>
                     {lbl(T("f_documentDate", "Document date"))}
@@ -634,10 +641,10 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                       <input dir="ltr" inputMode="decimal" value={it.netWeight ?? ""} onChange={(e) => setItem(i, { netWeight: numOrNull(e.target.value) })} placeholder={T("f_net", "Net weight")} className={inputCls()} />
                     </div>
                     {mod.financial && it.quantity != null && it.unitPrice != null && it.amount != null && Math.abs(it.quantity * it.unitPrice - it.amount) > 0.5 && (
-                      <p className="mt-1 text-[10.5px] font-semibold text-rose-700">{T("line_mismatch", "Quantity × unit price does not equal this amount")} ({(it.quantity * it.unitPrice).toLocaleString()}).</p>
+                      <p className="mt-1 text-[11px] font-semibold text-rose-700">{T("line_mismatch", "Quantity × unit price does not equal this amount")} ({(it.quantity * it.unitPrice).toLocaleString()}).</p>
                     )}
                     {it.grossWeight != null && it.tareWeight != null && it.netWeight != null && Math.abs(it.grossWeight - it.tareWeight - it.netWeight) > 0.01 && (
-                      <p className="mt-1 text-[10.5px] font-semibold text-rose-700">{T("weight_mismatch", "Gross − tare does not equal net weight")} ({(it.grossWeight - it.tareWeight).toLocaleString()}).</p>
+                      <p className="mt-1 text-[11px] font-semibold text-rose-700">{T("weight_mismatch", "Gross − tare does not equal net weight")} ({(it.grossWeight - it.tareWeight).toLocaleString()}).</p>
                     )}
                   </div>
                 ))}
@@ -661,6 +668,10 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                   {textField("deliveryTerms", T("f_delivery", "Delivery terms"))}
                   {textField("incoterm", T("f_incoterm", "Incoterm"), { dir: "ltr" })}
                   {textField("deliveryPlace", T("f_place", "Delivery place"))}
+                  {textField("loadingPort", T("f_loading_port", "Port / place of loading"))}
+                  {textField("destinationPort", T("f_destination_port", "Port / place of destination"))}
+                  {textField("shipmentTime", T("f_shipment_time", "Time of shipment"))}
+                  {textField("countryOfOrigin", T("f_origin", "Country of origin"))}
                   {textField("packing", T("f_packing", "Packing"))}
                 </div>
 
@@ -683,7 +694,7 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                     {f.shipmentMode === "air" && textField("awbNo", T("f_awb", "AWB no."), { dir: "ltr" })}
                     {f.shipmentMode === "train" && textField("railRef", T("f_rail", "Rail consignment / wagon ref."), { dir: "ltr" })}
                   </div>
-                  <p className="mt-1.5 text-[10px] text-slate-400">{T("transport_not_bill", "These references are separate from the purchase bill no., the contract no. and the ERP entry no.")}</p>
+                  <p className="mt-1.5 text-[11px] text-slate-400">{T("transport_not_bill", "These references are separate from the purchase bill no., the contract no. and the ERP entry no.")}</p>
                 </div>
 
                 {mod.financial && (
@@ -731,7 +742,7 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                             {T("fx_formula", "Calculation")}: {ex.originalAmount != null ? ex.originalAmount.toLocaleString() : "—"} {ex.direction === "multiply" ? "×" : "÷"} {ex.rate ?? "?"} = {ex.finalAmount != null ? ex.finalAmount.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"} {ex.finalCurrency}
                           </p>
                           {ex.rateSource !== "master" && (
-                            <p className="col-span-2 flex items-start gap-1 text-[10.5px] font-semibold text-amber-700" data-testid="fx-unverified">
+                            <p className="col-span-2 flex items-start gap-1 text-[11px] font-semibold text-amber-700" data-testid="fx-unverified">
                               <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />{ex.rate == null ? T("fx_no_rate", "No verified rate was found in the Exchange Rates master for this pair. Enter the rate you want to use.") : T("fx_manual", "This rate was typed in manually — it is not from the Exchange Rates master.")}
                             </p>
                           )}
@@ -752,12 +763,12 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                       <>
                         <dl className="grid grid-cols-1 gap-x-3 gap-y-1 text-[11px] sm:grid-cols-2">
                           {([["bank_beneficiary", "Beneficiary", bank.extracted.beneficiary], ["bank_name", "Bank", bank.extracted.bankName], ["bank_account", "Account no.", bank.extracted.accountNo], ["bank_iban", "IBAN", bank.extracted.iban], ["bank_swift", "SWIFT / BIC", bank.extracted.swift]] as const).map(([k, fb, v]) => (
-                            <div key={k}><dt className="text-[10px] font-bold uppercase text-slate-400">{T(k, fb)}</dt><dd className="font-semibold text-slate-800 dark:text-slate-100" dir="ltr">{v || <span className="text-amber-700">{T("not_found_short", "Not found")}</span>}</dd></div>
+                            <div key={k}><dt className="text-[11px] font-bold uppercase text-slate-400">{T(k, fb)}</dt><dd className="font-semibold text-slate-800 dark:text-slate-100" dir="ltr">{v || <span className="text-amber-700">{T("not_found_short", "Not found")}</span>}</dd></div>
                           ))}
                         </dl>
                         <p className={`mt-2 text-[11px] font-bold ${bank.status === "matched" ? "text-emerald-700" : bank.status === "none_extracted" ? "text-slate-500" : "text-amber-700"}`} data-testid="bank-status">{bankStatusLabel[bank.status]}</p>
                         {bank.status === "changed" && bank.differences.length > 0 && (
-                          <ul className="mt-1 list-disc ps-4 text-[10.5px] text-amber-800">{bank.differences.map((d) => <li key={d.field} dir="ltr">{d.field}: {d.extracted} ≠ {d.existing}</li>)}</ul>
+                          <ul className="mt-1 list-disc ps-4 text-[11px] text-amber-800">{bank.differences.map((d) => <li key={d.field} dir="ltr">{d.field}: {d.extracted} ≠ {d.existing}</li>)}</ul>
                         )}
                         {bank.status !== "none_extracted" && (
                           <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-semibold">
@@ -769,7 +780,7 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                             ))}
                           </div>
                         )}
-                        <p className="mt-1 text-[10px] text-slate-400">{T("bank_no_create", "No bank, account or ledger is ever created from this screen.")}</p>
+                        <p className="mt-1 text-[11px] text-slate-400">{T("bank_no_create", "No bank, account or ledger is ever created from this screen.")}</p>
                       </>
                     ) : <p className="text-[11px] text-slate-400">{T("ctx_unavailable", "Matching details are not available right now.")}</p>}
                   </div>
@@ -790,7 +801,7 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                 {bundle.fields.length === 0 ? <p className="rounded-lg border border-dashed border-rose-300 bg-rose-50 p-3 text-center text-xs font-semibold text-rose-700">{T("no_fields", "No fields were extracted from this document.")}</p> : (
                   <div className="max-h-[60vh] overflow-auto rounded-lg border border-slate-200 dark:border-slate-800">
                     <table className="w-full text-[11px]">
-                      <thead className="sticky top-0 bg-slate-50 text-[10px] uppercase text-slate-400 dark:bg-slate-800"><tr><Th className="p-1.5 text-start">{T("col_field", "Field")}</Th><Th className="p-1.5 text-start">{T("col_value", "Value")}</Th><Th className="p-1.5">{T("col_page", "Page")}</Th><Th className="p-1.5">%</Th></tr></thead>
+                      <thead className="sticky top-0 bg-slate-50 text-[11px] uppercase text-slate-400 dark:bg-slate-800"><tr><Th className="p-1.5 text-start">{T("col_field", "Field")}</Th><Th className="p-1.5 text-start">{T("col_value", "Value")}</Th><Th className="p-1.5">{T("col_page", "Page")}</Th><Th className="p-1.5">%</Th></tr></thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {bundle.fields.map((fld) => (
                           <tr key={fld.field_key}>

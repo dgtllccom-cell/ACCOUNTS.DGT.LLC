@@ -332,9 +332,9 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
           Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-20 rounded-xl border border-slate-200 bg-slate-50 animate-pulse dark:border-slate-800 dark:bg-slate-900" />)
         ) : cards.map((c, i) => (
           <div key={i} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="text-[10px] font-bold uppercase text-slate-500">{c.k}</div>
+            <div className="text-[11px] font-bold uppercase text-slate-500">{c.k}</div>
             <div className="mt-1 text-xl font-black">{c.v}</div>
-            <div className="text-[10px] text-slate-400">{c.s}</div>
+            <div className="text-[11px] text-slate-400">{c.s}</div>
           </div>
         ))}
       </div>
@@ -397,7 +397,7 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
         <div className="w-full overflow-x-auto">
           <table className="w-full min-w-[1280px] text-xs">
             <thead className="bg-slate-50 dark:bg-slate-950/50">
-              <tr className="text-[10px] uppercase text-slate-500">
+              <tr className="text-[11px] uppercase text-slate-500">
                 <Th className="p-2.5 text-start w-12">{tt("rozrep.sno", "Sr #")}</Th>
                 <Th className="p-2.5 text-start min-w-[140px]">{tt("bankroz.date_time", "Date / Time")}</Th>
                 <Th className="p-2.5 text-start min-w-[110px]">{tt("sae.module", "Module")}</Th>
@@ -431,7 +431,7 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
                   <td className="p-2.5 text-end font-mono text-rose-600 whitespace-nowrap">{e.debit ? fmtMoney(e.debit) : "0.00"}</td>
                   <td className="p-2.5 text-end font-mono text-emerald-600 whitespace-nowrap">{e.credit ? fmtMoney(e.credit) : "0.00"}</td>
                   <td className="p-2.5 text-center whitespace-nowrap">
-                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider min-w-[70px] text-center ${statusClass(e.status)}`}>
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider min-w-[70px] text-center ${statusClass(e.status)}`}>
                       {e.status || "unpaid"}
                     </span>
                   </td>
@@ -479,7 +479,7 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
                 [tt("acct.status", "Status"), selected.status]
               ] as [string, string][]).map(([k, v], i) => (
                 <div key={i} className="rounded-lg border border-slate-200 p-2 dark:border-slate-800">
-                  <div className="text-[10px] text-slate-500">{k}</div>
+                  <div className="text-[11px] text-slate-500">{k}</div>
                   <div className="text-xs font-bold break-words">{v || "-"}</div>
                 </div>
               ))}

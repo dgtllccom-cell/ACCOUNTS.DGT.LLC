@@ -21,7 +21,7 @@ export function StatusBadge({ status, tiny }: Props) {
   const cfg = CONFIG[status] ?? CONFIG.open;
   return (
     <span
-      className={`inline-flex items-center rounded-full font-medium ${tiny ? "px-1.5 py-px text-[9px]" : "px-2 py-0.5 text-[10px]"} ${cfg.cls}`}
+      className={`inline-flex items-center rounded-full font-medium ${tiny ? "px-1.5 py-px text-[11px]" : "px-2 py-0.5 text-[11px]"} ${cfg.cls}`}
     >
       {t(lang, cfg.labelKey as never, cfg.labelFallback)}
     </span>

@@ -529,7 +529,7 @@ export default function ProductMasterClient({ session }: { session: SessionLike 
                         { lang: s.lang },
                       )
                     }
-                    className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11px] font-semibold text-primary"
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11px] font-semibold text-primary whitespace-nowrap"
                   >
                     {s.tGlobal("prodm.print_label", "Print Label")}
                   </button>

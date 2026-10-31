@@ -607,7 +607,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
               <div className="space-y-1 sm:col-span-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-[11px] font-semibold text-muted-foreground">{tt("datepick.date_range", "Date Range")}</Label>
-                  <div className="flex items-center gap-1 text-[10px]">
+                  <div className="flex items-center gap-1 text-[11px]">
                     <button
                       type="button"
                       onClick={() => { setFromDate(todayIso()); setToDate(todayIso()); }}
@@ -786,7 +786,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.total_entries", "Total Entries")}</div>
               <div className="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{summary.totalEntries}</div>
-              <div className="text-[10px] text-muted-foreground">{tt("bankroz.all_transactions", "All Transactions")}</div>
+              <div className="text-[11px] text-muted-foreground">{tt("bankroz.all_transactions", "All Transactions")}</div>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
               <FileText className="h-5 w-5" />
@@ -800,7 +800,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.total_debit", "Total Debit")}</div>
               <div className="mt-1 text-xl font-black text-rose-600">{fmtNumber(summary.totalDebit)}</div>
-              <div className="text-[10px] font-semibold text-rose-600/80">PKR</div>
+              <div className="text-[11px] font-semibold text-rose-600/80">PKR</div>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400">
               <TrendingDown className="h-5 w-5" />
@@ -814,7 +814,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.total_credit", "Total Credit")}</div>
               <div className="mt-1 text-xl font-black text-emerald-600">{fmtNumber(summary.totalCredit)}</div>
-              <div className="text-[10px] font-semibold text-emerald-600/80">PKR</div>
+              <div className="text-[11px] font-semibold text-emerald-600/80">PKR</div>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
               <TrendingUp className="h-5 w-5" />
@@ -828,7 +828,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.opening_balance", "Opening Balance")}</div>
               <div className="mt-1 text-xl font-black text-blue-600 dark:text-blue-400">{fmtNumber(summary.openingBalance)}</div>
-              <div className="text-[10px] font-semibold text-blue-600/80">PKR</div>
+              <div className="text-[11px] font-semibold text-blue-600/80">PKR</div>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
               <Wallet className="h-5 w-5" />
@@ -842,7 +842,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.closing_balance", "Closing Balance")}</div>
               <div className="mt-1 text-xl font-black text-purple-600 dark:text-purple-400">{fmtNumber(summary.closingBalance)}</div>
-              <div className="text-[10px] font-semibold text-purple-600/80">PKR</div>
+              <div className="text-[11px] font-semibold text-purple-600/80">PKR</div>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-400">
               <PieChart className="h-5 w-5" />
@@ -856,7 +856,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.pending_unclear", "Pending / Unclear")}</div>
               <div className="mt-1 text-2xl font-black text-amber-500">{summary.pendingCount}</div>
-              <div className="text-[10px] text-muted-foreground">{tt("bankroz.entries", "Entries")}</div>
+              <div className="text-[11px] text-muted-foreground">{tt("bankroz.entries", "Entries")}</div>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400">
               <Clock className="h-5 w-5" />
@@ -896,12 +896,12 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
               >
                 <span>{tab.label}</span>
                 {tab.id === "due_today" && summary.dueTodayCount > 0 && (
-                  <span className="rounded-full bg-amber-400 px-1.5 py-0.2 text-[10px] font-black text-slate-900">
+                  <span className="rounded-full bg-amber-400 px-1.5 py-0.2 text-[11px] font-black text-slate-900">
                     {summary.dueTodayCount}
                   </span>
                 )}
                 {tab.id === "dishonored" && summary.dishonoredCount > 0 && (
-                  <span className="rounded-full bg-rose-500 px-1.5 py-0.2 text-[10px] font-black text-white">
+                  <span className="rounded-full bg-rose-500 px-1.5 py-0.2 text-[11px] font-black text-white">
                     {summary.dishonoredCount}
                   </span>
                 )}
@@ -1004,12 +1004,12 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                         <div className="font-semibold text-slate-900 dark:text-slate-100">
                           {formatShortDate(row.entry_date)}
                         </div>
-                        <div className="text-[10px] text-slate-500 font-mono">{formatTimeOnly(row.entry_time)}</div>
+                        <div className="text-[11px] text-slate-500 font-mono">{formatTimeOnly(row.entry_time)}</div>
                       </td>
 
                       {/* 4. Country */}
                       <td className="py-2.5 px-2.5 text-center border-r whitespace-nowrap">
-                        <span className="inline-block rounded px-2 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        <span className="inline-block rounded px-2 py-0.5 text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                           {row.country?.name || "Global"}
                         </span>
                       </td>
@@ -1027,7 +1027,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                       {/* 6. User Name (Strictly after Branch Name and before Bank Name) */}
                       <td className="py-2.5 px-3 border-r whitespace-nowrap bg-blue-50/20 dark:bg-blue-950/10">
                         <div className="flex items-center gap-1.5">
-                          <span className="h-5 w-5 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700">
+                          <span className="h-5 w-5 rounded-full bg-slate-200 flex items-center justify-center text-[11px] font-bold text-slate-700">
                             {row.user_name.slice(0, 1).toUpperCase()}
                           </span>
                           <span className="font-semibold text-slate-900 dark:text-slate-100">{row.user_name}</span>
@@ -1038,7 +1038,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                       <td className="py-2.5 px-3 border-r whitespace-nowrap">
                         <div className="font-semibold text-slate-900 dark:text-slate-100">{row.bank?.bank_name || row.bank_name}</div>
                         {(row.bank?.short_name || row.bank_code) && (
-                          <span className="inline-block text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                          <span className="inline-block text-[11px] font-bold text-blue-600 dark:text-blue-400">
                             {row.bank?.short_name || row.bank_code}
                           </span>
                         )}
@@ -1053,7 +1053,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                       <td className="py-2.5 px-3 border-r">
                         <div className="text-slate-800 dark:text-slate-200 leading-snug">{row.particulars}</div>
                         {row.dishonor_reason && (
-                          <div className="text-[10px] font-bold text-rose-600 flex items-center gap-1 mt-0.5">
+                          <div className="text-[11px] font-bold text-rose-600 flex items-center gap-1 mt-0.5">
                             <AlertCircle className="h-3 w-3" />
                             <span>Reason: {row.dishonor_reason}</span>
                           </div>
@@ -1071,7 +1071,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                           {formatDateDisplay(row.due_date)}
                         </div>
                         {isDue && (
-                          <span className="inline-block mt-0.5 rounded bg-amber-100 px-1.5 py-0.2 text-[9px] font-black text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                          <span className="inline-block mt-0.5 rounded bg-amber-100 px-1.5 py-0.2 text-[11px] font-black text-amber-800 dark:bg-amber-950 dark:text-amber-300">
                             {tt("bankroz.due_today", "Due Today")}
                           </span>
                         )}
@@ -1095,31 +1095,31 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                       {/* 15. Status */}
                       <td className="py-2.5 px-2.5 text-center border-r whitespace-nowrap">
                         {row.effective_status === "cleared" && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                             <CheckCircle2 className="h-3 w-3" />
                             <span>{tt("bankroz.cleared", "Cleared")}</span>
                           </span>
                         )}
                         {row.effective_status === "pending" && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 whitespace-nowrap">
                             <Clock className="h-3 w-3" />
                             <span>{tt("bankroz.pending", "Pending")}</span>
                           </span>
                         )}
                         {row.effective_status === "post_dated" && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">
                             <Calendar className="h-3 w-3" />
                             <span>{tt("bankroz.post_dated", "Post Dated")}</span>
                           </span>
                         )}
                         {row.effective_status === "overdue" && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 whitespace-nowrap">
                             <AlertTriangle className="h-3 w-3" />
                             <span>{tt("bankroz.overdue", "Overdue")}</span>
                           </span>
                         )}
                         {row.effective_status === "dishonored" && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 whitespace-nowrap">
                             <XCircle className="h-3 w-3" />
                             <span>{tt("bankroz.dishonored", "Dishonored")}</span>
                           </span>
@@ -1357,19 +1357,19 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             <div className="rounded-lg border bg-slate-50 p-3 dark:bg-slate-900/50 space-y-2">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 font-semibold">
                 <div>
-                  <span className="text-muted-foreground block text-[10px]">{tt("bankroz.bank", "Bank")}</span>
+                  <span className="text-muted-foreground block text-[11px]">{tt("bankroz.bank", "Bank")}</span>
                   <span className="text-slate-900 dark:text-slate-100">{actionModalRow.bank_name}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[10px]">{tt("bankroz.cheque_date", "Cheque Date")}</span>
+                  <span className="text-muted-foreground block text-[11px]">{tt("bankroz.cheque_date", "Cheque Date")}</span>
                   <span>{formatShortDate(actionModalRow.cheque_date)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[10px]">{tt("bankroz.due_date", "Due Date")}</span>
+                  <span className="text-muted-foreground block text-[11px]">{tt("bankroz.due_date", "Due Date")}</span>
                   <span>{formatShortDate(actionModalRow.due_date)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[10px]">{tt("bankroz.amount", "Amount")}</span>
+                  <span className="text-muted-foreground block text-[11px]">{tt("bankroz.amount", "Amount")}</span>
                   <span className="font-mono font-bold text-blue-600">
                     {fmtNumber(actionModalRow.debit || actionModalRow.credit)} {actionModalRow.currency}
                   </span>
@@ -1449,14 +1449,14 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
             {/* Audit Trail Timeline */}
             <div className="space-y-1.5 border-t pt-3">
-              <Label className="font-bold uppercase tracking-wider text-[10px] text-slate-500">{tt("bankroz.audit_trail", "Audit Trail")}</Label>
+              <Label className="font-bold uppercase tracking-wider text-[11px] text-slate-500">{tt("bankroz.audit_trail", "Audit Trail")}</Label>
               <div className="max-h-36 overflow-y-auto space-y-2 rounded border bg-slate-50/50 p-2 dark:bg-slate-900/30 text-[11px]">
                 {actionModalRow.audit_trail && actionModalRow.audit_trail.length > 0 ? (
                   actionModalRow.audit_trail.map((log, lidx) => (
                     <div key={lidx} className="border-b pb-1.5 last:border-0 last:pb-0">
                       <div className="flex items-center justify-between font-semibold">
                         <span className="capitalize text-slate-900 dark:text-slate-100">{log.action}</span>
-                        <span className="text-muted-foreground font-mono text-[10px]">
+                        <span className="text-muted-foreground font-mono text-[11px]">
                           {formatShortDate(log.timestamp)} {formatTimeOnly(log.timestamp)}
                         </span>
                       </div>

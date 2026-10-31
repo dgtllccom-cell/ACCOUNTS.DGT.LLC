@@ -60,27 +60,27 @@ const ACTIONS: Array<{ key: keyof Pick<ModuleRow, "view" | "create" | "edit" | "
 function CapabilityBadge({ cap, lang }: { cap: ModuleCapability; lang: string }) {
   if (cap.status === "denied") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900 px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wide">
+      <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900 px-2 py-0.5 text-[11px] font-black uppercase tracking-wide whitespace-nowrap">
         <ShieldAlert className="h-3 w-3" aria-hidden /> {t(lang, "pcc.status_denied", "Denied")}
       </span>
     );
   }
   if (cap.status === "custom") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900 px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wide">
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900 px-2 py-0.5 text-[11px] font-black uppercase tracking-wide whitespace-nowrap">
         <ShieldCheck className="h-3 w-3" aria-hidden /> {t(lang, "pcc.status_custom", "Custom")}
       </span>
     );
   }
   if (cap.status === "inherited") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900 px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wide">
+      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900 px-2 py-0.5 text-[11px] font-black uppercase tracking-wide whitespace-nowrap">
         <ShieldQuestion className="h-3 w-3" aria-hidden /> {t(lang, "pcc.status_inherited", "Inherited")}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-900 dark:text-slate-500 dark:border-slate-800 px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wide">
+    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-900 dark:text-slate-500 dark:border-slate-800 px-2 py-0.5 text-[11px] font-black uppercase tracking-wide whitespace-nowrap">
       {t(lang, "pcc.status_none", "None")}
     </span>
   );
@@ -303,7 +303,7 @@ export function PermissionControlCenterView({ isSuperAdmin }: { isSuperAdmin: bo
           <p className="text-xs text-rose-600 font-bold">{rulesError}</p>
         ) : rules ? (
           <>
-            <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
               {currentScopeType === "country" && <Globe2 className="h-3.5 w-3.5 text-blue-500" aria-hidden />}
               {currentScopeType === "country_branch" && <Building2 className="h-3.5 w-3.5 text-blue-500" aria-hidden />}
               {currentScopeType === "city_branch" && <MapPin className="h-3.5 w-3.5 text-emerald-500" aria-hidden />}
@@ -314,7 +314,7 @@ export function PermissionControlCenterView({ isSuperAdmin }: { isSuperAdmin: bo
 
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
               <table className="w-full min-w-[720px] text-xs text-left">
-                <thead className="bg-slate-50 dark:bg-slate-900/60 text-[9.5px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                <thead className="bg-slate-50 dark:bg-slate-900/60 text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   <tr>
                     <Th className="px-3 py-2">{t(lang, "pcc.module", "Module")}</Th>
                     {ACTIONS.map((a) => (
@@ -346,7 +346,7 @@ export function PermissionControlCenterView({ isSuperAdmin }: { isSuperAdmin: bo
                                   title={t(lang, "pcc.grant_custom", "Grant (custom)")}
                                   disabled={perms.length === 0}
                                   onClick={() => toggleCustom(perms)}
-                                  className={`h-5 w-5 rounded-md border text-[10px] font-black transition disabled:opacity-30 ${isCustom ? "bg-emerald-600 text-white border-emerald-600" : "border-slate-200 text-slate-400 hover:border-emerald-400 hover:text-emerald-600 dark:border-slate-700"}`}
+                                  className={`h-5 w-5 rounded-md border text-[11px] font-black transition disabled:opacity-30 ${isCustom ? "bg-emerald-600 text-white border-emerald-600" : "border-slate-200 text-slate-400 hover:border-emerald-400 hover:text-emerald-600 dark:border-slate-700"}`}
                                 >
                                   +
                                 </button>
@@ -355,7 +355,7 @@ export function PermissionControlCenterView({ isSuperAdmin }: { isSuperAdmin: bo
                                   title={t(lang, "pcc.deny", "Deny")}
                                   disabled={perms.length === 0}
                                   onClick={() => toggleDenied(perms)}
-                                  className={`h-5 w-5 rounded-md border text-[10px] font-black transition disabled:opacity-30 ${isDenied ? "bg-rose-600 text-white border-rose-600" : "border-slate-200 text-slate-400 hover:border-rose-400 hover:text-rose-600 dark:border-slate-700"}`}
+                                  className={`h-5 w-5 rounded-md border text-[11px] font-black transition disabled:opacity-30 ${isDenied ? "bg-rose-600 text-white border-rose-600" : "border-slate-200 text-slate-400 hover:border-rose-400 hover:text-rose-600 dark:border-slate-700"}`}
                                 >
                                   ×
                                 </button>
@@ -371,11 +371,11 @@ export function PermissionControlCenterView({ isSuperAdmin }: { isSuperAdmin: bo
             </div>
 
             <div className="flex items-center justify-between gap-3 pt-1">
-              <p className="text-[10px] text-slate-400 font-medium">
+              <p className="text-[11px] text-slate-400 font-medium">
                 {t(lang, "pcc.only_super_admin_can_save", "Only Super Admin can save scope rules. Writes are rejected server-side for any other role.")}
               </p>
               <div className="flex items-center gap-3">
-                {saveMessage ? <span className="text-[10px] font-bold text-slate-500">{saveMessage}</span> : null}
+                {saveMessage ? <span className="text-[11px] font-bold text-slate-500">{saveMessage}</span> : null}
                 <button
                   type="button"
                   onClick={saveRules}
@@ -417,10 +417,10 @@ export function PermissionControlCenterView({ isSuperAdmin }: { isSuperAdmin: bo
                 className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-900/50 flex items-center justify-between"
               >
                 <span className="font-bold text-slate-800 dark:text-slate-200">{u.name}</span>
-                <span className="text-[10px] text-slate-400 uppercase font-bold">{u.role}</span>
+                <span className="text-[11px] text-slate-400 uppercase font-bold">{u.role}</span>
               </button>
             ))}
-            {filteredUsers.length === 0 ? <p className="px-3 py-2 text-[10px] text-slate-400">{t(lang, "pcc.no_users_found", "No users found.")}</p> : null}
+            {filteredUsers.length === 0 ? <p className="px-3 py-2 text-[11px] text-slate-400">{t(lang, "pcc.no_users_found", "No users found.")}</p> : null}
           </div>
         ) : null}
 
@@ -429,16 +429,16 @@ export function PermissionControlCenterView({ isSuperAdmin }: { isSuperAdmin: bo
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-black text-sm text-slate-900 dark:text-white">{selectedUser.name}</p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase">
                   {selectedUser.role} • {enterpriseRoleScopes[selectedUser.role]} • {selectedUser.countryName}{selectedUser.cityName ? ` / ${selectedUser.cityName}` : selectedUser.branchName ? ` / ${selectedUser.branchName}` : ""}
                 </p>
               </div>
-              <button type="button" onClick={() => { setSelectedUser(null); setUserSearch(""); }} className="text-[10px] font-bold text-slate-400 hover:text-slate-700">
+              <button type="button" onClick={() => { setSelectedUser(null); setUserSearch(""); }} className="text-[11px] font-bold text-slate-400 hover:text-slate-700">
                 {t(lang, "pcc.clear", "Clear")}
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[10px]">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px]">
               <div>
                 <p className="font-black uppercase text-slate-400 mb-1">{t(lang, "pcc.role_default", "Role Default")}</p>
                 <p className="font-bold text-slate-700 dark:text-slate-300">{userRoleDefaults.length} {t(lang, "pcc.permissions_count", "permissions")}</p>
@@ -455,7 +455,7 @@ export function PermissionControlCenterView({ isSuperAdmin }: { isSuperAdmin: bo
               </div>
             </div>
 
-            <p className="text-[9.5px] text-slate-400 font-medium">
+            <p className="text-[11px] text-slate-400 font-medium">
               {userHasCustomSet
                 ? t(lang, "pcc.effective_note_custom", "This user has a custom permission set — it fully replaces the role default (never widened back to role defaults).")
                 : t(lang, "pcc.effective_note_role", "This user has no custom override — effective permissions are the role default.")}

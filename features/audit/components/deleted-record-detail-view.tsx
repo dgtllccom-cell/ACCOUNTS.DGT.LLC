@@ -235,21 +235,21 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
         
         {/* 1. Created At */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-          <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mb-1">
             <Calendar className="h-3.5 w-3.5 text-blue-600" />
             <span>{th("Created At")}</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px]">
             {new Date(rec.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5 font-medium">
+          <div className="text-[11px] text-slate-400 mt-0.5 font-medium">
             {th("by")} {rec.user_name || "—"}
           </div>
         </div>
 
         {/* 2. Deleted At */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-          <div className="flex items-center gap-1 text-[10.5px] font-bold text-rose-600 mb-1">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-rose-600 mb-1">
             <Trash2 className="h-3.5 w-3.5" />
             <span>{th("Deleted At")}</span>
           </div>
@@ -260,84 +260,84 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
 
         {/* 3. Deleted By */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-          <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mb-1">
             <User className="h-3.5 w-3.5 text-slate-600" />
             <span>{th("Deleted By")}</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px] truncate">
             {rec.user_name || "—"}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
+          <div className="text-[11px] text-slate-400 mt-0.5 font-mono">
             {rec.user_id ? `@${rec.user_id}` : "—"}
           </div>
         </div>
 
         {/* 4. User Role */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-          <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mb-1">
             <ShieldCheck className="h-3.5 w-3.5 text-slate-600" />
             <span>{th("User Role")}</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px]">
             {rec.user_role ? translateHeader(lang, rec.user_role) : "—"}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">
+          <div className="text-[11px] text-slate-400 mt-0.5">
             {th("System Role")}
           </div>
         </div>
 
         {/* 5. Country */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-          <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mb-1">
             <Globe className="h-3.5 w-3.5 text-blue-600" />
             <span>{th("Country")}</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px]">
             {rec.country_name || "—"}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">
+          <div className="text-[11px] text-slate-400 mt-0.5">
             {th("Operating Country")}
           </div>
         </div>
 
         {/* 6. Branch */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-          <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mb-1">
             <Building2 className="h-3.5 w-3.5 text-teal-600" />
             <span>{th("Branch")}</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px] truncate">
             {rec.branch_name || "—"}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">
+          <div className="text-[11px] text-slate-400 mt-0.5">
             {th("Main Operating Branch")}
           </div>
         </div>
 
         {/* 7. Module */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-          <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 mb-1">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mb-1">
             <Package className="h-3.5 w-3.5 text-blue-600" />
             <span>{th("Module")}</span>
           </div>
           <div className="font-bold text-blue-600 dark:text-blue-400 text-[11px]">
             {rec.module || "—"}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">
+          <div className="text-[11px] text-slate-400 mt-0.5">
             {th("Financial Module")}
           </div>
         </div>
 
         {/* 8. Deletion Risk */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-          <div className="flex items-center gap-1 text-[10.5px] font-bold text-rose-600 mb-1">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-rose-600 mb-1">
             <ShieldAlert className="h-3.5 w-3.5" />
             <span>{th("Deletion Risk")}</span>
           </div>
           <div className="font-black text-rose-700 dark:text-rose-400 text-[11px]">
             {rec.risk_level ? translateHeader(lang, rec.risk_level) : "—"}
           </div>
-          <div className="text-[10px] text-rose-600 mt-0.5 font-medium">
+          <div className="text-[11px] text-rose-600 mt-0.5 font-medium">
             {th("High Risk Deletion")}
           </div>
         </div>
@@ -382,16 +382,16 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
                         <span className="font-bold text-slate-900 dark:text-white text-[11.5px]">
                           {isCreated ? `${th("Original Created")} v1.0` : isDel ? `${th("Deleted")} v${event.version_number || i + 1}.0` : `${th("Edited")} v${event.version_number || i + 1}.0`}
                         </span>
-                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-black ${
+                        <span className={`px-1.5 py-0.2 rounded text-[11px] font-black ${
                           isDel ? "bg-rose-100 text-rose-700" : isCreated ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
                         }`}>
                           {isDel ? th("Deleted") : isCreated ? th("Created") : th("Edited")}
                         </span>
                       </div>
-                      <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                      <div className="text-[11px] text-slate-500 font-mono mt-0.5">
                         {new Date(event.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
                       </div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">
+                      <div className="text-[11px] text-slate-400 mt-0.5">
                         by {event.user_name || "User"} • Role: {event.user_role || "Admin"}
                       </div>
                     </div>
@@ -477,60 +477,60 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
 
           <div className="grid grid-cols-2 gap-y-2 gap-x-3 text-xs">
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("Deletion Reason")}</span>
+              <span className="block text-[11px] font-bold text-slate-400">{th("Deletion Reason")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{rec.reason || "Duplicate Entry"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("Date & Time")}</span>
+              <span className="block text-[11px] font-bold text-slate-400">{th("Date & Time")}</span>
               <span className="font-mono text-slate-700 dark:text-slate-300 text-[11px]">
                 {new Date(rec.deleted_at || rec.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
               </span>
             </div>
 
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("Deleted By")}</span>
+              <span className="block text-[11px] font-bold text-slate-400">{th("Deleted By")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{rec.user_name || "—"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("IP Address")}</span>
+              <span className="block text-[11px] font-bold text-slate-400">{th("IP Address")}</span>
               <span className="font-mono text-slate-700 dark:text-slate-300">{rec.ip_address || "192.168.10.25"}</span>
             </div>
 
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("Username")}</span>
+              <span className="block text-[11px] font-bold text-slate-400">{th("Username")}</span>
               <span className="font-mono text-slate-700 dark:text-slate-300">@{rec.user_id || "superadmin"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("Device")}</span>
-              <span className="text-slate-700 dark:text-slate-300 text-[10.5px]">{rec.device_session || "Windows 11 / Chrome 127"}</span>
+              <span className="block text-[11px] font-bold text-slate-400">{th("Device")}</span>
+              <span className="text-slate-700 dark:text-slate-300 text-[11px]">{rec.device_session || "Windows 11 / Chrome 127"}</span>
             </div>
 
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("User ID")}</span>
+              <span className="block text-[11px] font-bold text-slate-400">{th("User ID")}</span>
               <span className="font-mono text-slate-700 dark:text-slate-300">USR-0001</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("Session ID")}</span>
-              <span className="font-mono text-slate-500 text-[10px] truncate max-w-[120px]" title={rec.session_id}>
+              <span className="block text-[11px] font-bold text-slate-400">{th("Session ID")}</span>
+              <span className="font-mono text-slate-500 text-[11px] truncate max-w-[120px]" title={rec.session_id}>
                 {rec.session_id || "SID-9f3c2e7b5e1d"}
               </span>
             </div>
 
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("Role")}</span>
+              <span className="block text-[11px] font-bold text-slate-400">{th("Role")}</span>
               <span className="font-medium text-slate-700 dark:text-slate-300">{rec.user_role || "—"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("Approval Reference")}</span>
-              <span className="font-mono font-bold text-blue-600 text-[10.5px]">{rec.approval_reference || "APP-8286-3344"}</span>
+              <span className="block text-[11px] font-bold text-slate-400">{th("Approval Reference")}</span>
+              <span className="font-mono font-bold text-blue-600 text-[11px]">{rec.approval_reference || "APP-8286-3344"}</span>
             </div>
 
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("Country")}</span>
+              <span className="block text-[11px] font-bold text-slate-400">{th("Country")}</span>
               <span className="font-medium text-slate-700 dark:text-slate-300">{rec.country_name || "Pakistan"}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-bold text-slate-400">{th("Branch")}</span>
+              <span className="block text-[11px] font-bold text-slate-400">{th("Branch")}</span>
               <span className="font-medium text-slate-700 dark:text-slate-300">{rec.branch_name || "Pakistan Main Branch"}</span>
             </div>
           </div>
@@ -538,7 +538,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
           <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-[11px] font-bold text-slate-500">{t(lang, "audit.reviewer_comments", "Reviewer Comments")}</span>
-              <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 text-[10px] font-bold">
+              <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 text-[11px] font-bold">
                 {rec.review_status || "Pending Review"}
               </Badge>
             </div>
@@ -598,7 +598,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
                       v{v.version_number || index + 1}.0
                     </td>
                     <td className="py-2.5 px-3 font-semibold">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
                         isDel ? "bg-rose-100 text-rose-700" : isCreated ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
                       }`}>
                         {isDel ? th("Deleted") : isCreated ? th("Created") : th("Edited")}

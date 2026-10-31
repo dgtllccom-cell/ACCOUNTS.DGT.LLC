@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useViewMode, viewModeStore } from "@/components/layout/view-mode-store";
 import { ViewModeToggle } from "@/components/layout/view-mode-toggle";
@@ -105,10 +106,33 @@ export function TableCardViewController() {
     return () => { mo.disconnect(); unsub(); if (timer) window.clearTimeout(timer); if (floatTimer) window.clearTimeout(floatTimer); if (raf) cancelAnimationFrame(raf); };
   }, [pathname, reportKey]);
 
+  // The fallback toggle used to float over the content's top-end corner — exactly where pages put their own action buttons
+  // (it covered "Sync Ledgers", "New Account", …). It now takes real space: a slot in the top bar from md up, and its own
+  // small row above the content on phones, where the top bar is already full.
+  const wide = useWideViewport();
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => { setSlot(document.getElementById(TOPBAR_VIEW_SLOT_ID)); }, [pathname]);
+
   if (!eligible || !needFloating) return null;
+  if (wide && slot) return createPortal(<div data-floating className="no-print flex"><ViewModeToggle /></div>, slot);
   return (
-    <div className="no-print sticky top-1 z-30 -mb-1 flex h-0 justify-end overflow-visible pe-1">
-      <div data-floating className="translate-y-1 rounded-lg bg-background/90 shadow-sm backdrop-blur"><ViewModeToggle /></div>
+    <div className="no-print mb-2 flex justify-end">
+      <div data-floating className="flex"><ViewModeToggle /></div>
     </div>
   );
+}
+
+/** Mount point in the dashboard top bar for the fallback Grid / List toggle. */
+export const TOPBAR_VIEW_SLOT_ID = "erp-topbar-view-slot";
+
+function useWideViewport() {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const sync = () => setWide(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return wide;
 }

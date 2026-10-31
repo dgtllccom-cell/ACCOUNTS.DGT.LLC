@@ -429,7 +429,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                 <Globe className="h-4 w-4 text-blue-600" />
                 <span className="font-black text-xs uppercase text-slate-800 dark:text-slate-100">{cg.countryName}</span>
               </div>
-              <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+              <span className="text-[11px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 whitespace-nowrap">
                 {cg.branches.length} {th("BRANCHES")}
               </span>
             </CardHeader>
@@ -443,20 +443,20 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
 
               {/* Branch Breakdown Section inside Country Card */}
               <div className="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-extrabold uppercase text-slate-500">
+                <div className="flex items-center justify-between text-[11px] font-extrabold uppercase text-slate-500">
                   <span>{th("BRANCH BREAKDOWN")}</span>
-                  <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded text-[8px]">ALL</span>
+                  <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded text-[11px]">ALL</span>
                 </div>
                 {cg.branches.map(br => (
                   <div key={br.branchName} className="p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/60 space-y-1 text-[11px]">
                     <div className="font-black text-slate-800 dark:text-slate-200 uppercase">{br.branchName}</div>
-                    <div className="flex justify-between items-center text-[10px]">
+                    <div className="flex justify-between items-center text-[11px]">
                       <span className="text-slate-400">{th("TOTAL PURCH")}:</span>
                       <span className="font-mono font-bold text-red-500">{br.totalPurchase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       <span className="text-slate-400 ml-2">{th("PAID ADV")}:</span>
                       <span className="font-mono font-bold text-emerald-600">{br.postedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
-                    <div className="flex justify-between items-center text-[10px] border-t border-slate-200/40 dark:border-slate-700/40 pt-1">
+                    <div className="flex justify-between items-center text-[11px] border-t border-slate-200/40 dark:border-slate-700/40 pt-1">
                       <span className="text-slate-400">{th("REM. BAL")}:</span>
                       <span className="font-mono font-bold text-slate-700 dark:text-slate-300">0.00</span>
                     </div>
@@ -477,7 +477,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
               {th("TRANSACTION LOG & SEARCH REPORT (LOCAL PURCHASES)")}
             </CardTitle>
           </div>
-          <span className="text-[10px] font-mono font-bold text-slate-500">
+          <span className="text-[11px] font-mono font-bold text-slate-500">
             Total Scoped Entries: {filteredPurchases.length}
           </span>
         </CardHeader>
@@ -485,7 +485,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
         <CardContent className="p-0">
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-320px)]">
             <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
-              <thead className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
+              <thead className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
                 <tr>
                   <Th className="p-2.5 text-center border-r border-slate-200 dark:border-slate-700"></Th>
                   <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">{th("SUPER S/N")}</Th>
@@ -510,7 +510,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                   <Th className="p-2.5 text-center">{th("ACTIONS")}</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px]">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[11px]">
                 {loading ? (
                   <tr>
                     <td colSpan={19} className="p-8 text-center text-slate-400 font-mono">
@@ -529,7 +529,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                   countryGroups.map(cg => (
                     <Fragment key={cg.countryName}>
                       {/* Country Group Divider Header Row */}
-                      <tr className="bg-slate-100 dark:bg-slate-800/80 font-black text-slate-800 dark:text-slate-200 text-[10px]">
+                      <tr className="bg-slate-100 dark:bg-slate-800/80 font-black text-slate-800 dark:text-slate-200 text-[11px]">
                         <td colSpan={21} className="px-4 py-2 uppercase tracking-wider border-y border-slate-200 dark:border-slate-700">
                           <div className="flex items-center justify-between">
                             <span>{cg.countryName} ({cg.records.length} RECORDS)</span>
@@ -578,10 +578,10 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                             <td className="p-2 font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">{new Date(row.createdAt || row.created_at || "").toLocaleDateString("en-GB")}</td>
                             <td className="p-2 font-semibold border-r border-slate-150 dark:border-slate-800">{row.branchName || row.branch_name || "-"}</td>
                             <td className="p-2 border-r border-slate-150 dark:border-slate-800">{row.countryName || row.country_name || "-"}</td>
-                            <td className="p-2 font-mono text-[9px] font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">
+                            <td className="p-2 font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">
                               {row.purchaseAccountNo || row.purchase_account_no || "—"}
                             </td>
-                            <td className="p-2 font-mono text-[9px] font-bold text-purple-600 dark:text-purple-400 border-r border-slate-150 dark:border-slate-800">
+                            <td className="p-2 font-mono text-[11px] font-bold text-purple-600 dark:text-purple-400 border-r border-slate-150 dark:border-slate-800">
                               {row.salesAccountNo || row.sales_account_no || row.brokerAccountNo || row.broker_account_no || "—"}
                             </td>
                             <td className="p-2 font-bold text-slate-900 dark:text-slate-100 border-r border-slate-150 dark:border-slate-800">{row.goodsName || row.goods_name || "-"}</td>
@@ -599,7 +599,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                  size="sm"
                                  variant="outline"
                                  onClick={() => setSelectedRowForVoucher(row)}
-                                 className="h-6 px-2 text-[9px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md"
+                                 className="h-6 px-2 text-[11px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md whitespace-nowrap"
                                >
                                  {th("View Voucher")}
                                </Button>
@@ -611,7 +611,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
                                   {/* 1. Account & Posting Status */}
                                   <div className="space-y-1">
-                                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                    <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">
                                       {th("ACCOUNTING & POSTING")}
                                     </div>
                                     <div className="flex justify-between">
@@ -632,7 +632,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
 
                                   {/* 2. Payment Condition & Balances */}
                                   <div className="space-y-1">
-                                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                    <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">
                                       {th("PAYMENT & BALANCES")}
                                     </div>
                                     <div className="flex justify-between">
@@ -651,7 +651,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
 
                                   {/* 3. Transfer & Goods Location */}
                                   <div className="space-y-1">
-                                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                    <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">
                                       {th("TRANSFER & LOCATION")}
                                     </div>
                                     <div className="flex justify-between">
@@ -670,7 +670,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
 
                                   {/* 4. Loading & Receiving Confirmation */}
                                   <div className="space-y-1">
-                                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                    <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">
                                       {th("LOADING & CONFIRMATION")}
                                     </div>
                                     <div className="flex justify-between">
@@ -806,17 +806,17 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                     // wrapper only lets a narrow screen pan across it; printDomFragmentViaModal
                     // clones into its own print window, so print output is unaffected.
                     <div className="overflow-x-auto print:overflow-visible">
-                    <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[10px] text-slate-800 print:max-w-none print:text-[9px]">
+                    <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[11px] text-slate-800 print:max-w-none print:text-[11px]">
                       <div className="overflow-hidden rounded-2xl border border-slate-300">
                         <div className="grid grid-cols-[88px_1fr_210px] gap-4 bg-slate-950 p-5 text-white">
                           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">{th("LOGO")}</div>
                           <div className="space-y-1">
                             <h2 className="text-xl font-black uppercase tracking-[0.18em]">{tt("lpjr.inv_tax_invoice", "Tax Invoice")}</h2>
                             <p className="text-sm font-extrabold uppercase tracking-wide">{companyName}</p>
-                            <p className="text-[10px] text-slate-300">{branchName}</p>
-                            <p className="max-w-lg text-[10px] leading-4 text-slate-300">{officeAddress}</p>
+                            <p className="text-[11px] text-slate-300">{branchName}</p>
+                            <p className="max-w-lg text-[11px] leading-4 text-slate-300">{officeAddress}</p>
                           </div>
-                          <div className="space-y-1 text-right text-[10px]">
+                          <div className="space-y-1 text-right text-[11px]">
                             <p>{tt("lpjr.inv_invoice_no", "Invoice No")}: <span className="font-mono font-black text-white">{voucherRef}</span></p>
                             <p>{tt("lpjr.inv_inv_date", "Invoice Date")}: <span className="font-mono font-bold">{rowDate}</span></p>
                             <p>{tt("lpjr.inv_payment_method", "Payment Method")}: <span className="font-bold">{paymentMethod}</span></p>
@@ -828,19 +828,19 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
 
                         <div className="grid grid-cols-3 gap-3 border-b border-slate-200 bg-slate-50 p-4">
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_supplier_details","Supplier Details")}</p>
+                            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_supplier_details","Supplier Details")}</p>
                             <p className="text-sm font-black text-slate-900">{supplierName}</p>
                             <p className="mt-1 text-slate-500">{th("COUNTRY")}: United Arab Emirates</p>
                             <p className="text-slate-500">{tt("lpjr.inv_invoice_currency","Invoice Currency")}: <span className="font-bold text-slate-800">{rowCurrency}</span></p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_delivery_wh","Delivery / Warehouse")}</p>
+                            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_delivery_wh","Delivery / Warehouse")}</p>
                             <p>{tt("lpjr.inv_transaction_type","Transaction Type")}: <span className="font-bold">{shippingMode}</span></p>
                             <p>{tt("lpjr.inv_warehouse","Warehouse")}: <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></p>
                             <p>{tt("lpjr.inv_truck_no","Truck No")}: <span className="font-mono font-bold text-indigo-700">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_invoice_control","Invoice Control")}</p>
+                            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_invoice_control","Invoice Control")}</p>
                             <p>{tt("common.branch","Branch")}: <span className="font-bold">{branchName}</span></p>
                             <p>{tt("lpjr.inv_doc_ref","Document Ref")}: <span className="font-mono font-bold">{voucherRef}</span></p>
                             <p>Status: <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">{selectedRowForVoucher.status === "posted" ? tt("lpjr.inv_posted","Posted") : tt("lpjr.inv_accepted","Accepted")}</span></p>
@@ -848,7 +848,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                         </div>
 
                         <div className="p-4">
-                          <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[9px]">
+                          <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[11px]">
                             <thead className="bg-slate-900 text-white">
                               <tr>
                                 <Th className="border border-slate-800 p-2 text-left">{tt("lpjr.inv_sr","Sr.")}</Th>
@@ -870,7 +870,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                 <td className="border border-slate-200 p-2">1</td>
                                 <td className="border border-slate-200 p-2 font-bold text-slate-900">
                                   {goodsName}
-                                  <div className="mt-1 text-[8px] font-semibold text-slate-500">{tt("lpjr.inv_gross_wt","Gross WT")}: {rowGrossWt.toLocaleString()} kg | {tt("lpjr.inv_net_wt_label","Net WT")}: {rowNetWt.toLocaleString()} kg</div>
+                                  <div className="mt-1 text-[11px] font-semibold text-slate-500">{tt("lpjr.inv_gross_wt","Gross WT")}: {rowGrossWt.toLocaleString()} kg | {tt("lpjr.inv_net_wt_label","Net WT")}: {rowNetWt.toLocaleString()} kg</div>
                                 </td>
                                 <td className="border border-slate-200 p-2 font-mono">{hsCode}</td>
                                 <td className="border border-slate-200 p-2">{brandName}</td>
@@ -888,9 +888,9 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
 
                           <div className="mt-4 grid grid-cols-[1fr_310px] gap-4">
                             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_amount_words","Amount In Words")}</p>
+                              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_amount_words","Amount In Words")}</p>
                               <p className="text-sm font-black capitalize text-slate-900">{amountToWordsEn(rowGrandTotal, rowCurrency)}</p>
-                              <div className="mt-4 grid grid-cols-2 gap-3 text-[9px]">
+                              <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
                                 <div className="rounded-lg border border-dashed border-slate-300 bg-white p-3">
                                   <p className="font-black uppercase text-slate-500">{tt("lpjr.inv_qr_code","QR Code")}</p>
                                   <p className="mt-2 text-slate-400 font-bold">{tt("lpjr.inv_qr_ref","QR Reference: UAE e-invoice standard.")}</p>
@@ -902,8 +902,8 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                               </div>
                             </div>
 
-                            <div className="overflow-hidden rounded-xl border border-slate-300 text-[10px]">
-                              <div className="bg-slate-100 px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-700">{tt("lpjr.inv_summary","Summary")}</div>
+                            <div className="overflow-hidden rounded-xl border border-slate-300 text-[11px]">
+                              <div className="bg-slate-100 px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-700">{tt("lpjr.inv_summary","Summary")}</div>
                               <div className="space-y-2 p-3">
                                 <div className="flex justify-between"><span>{tt("lpjr.inv_sub_total","Sub Total")}</span><span className="font-mono font-bold">{rowCurrency} {rowSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
                                 <div className="flex justify-between text-red-650"><span>{tt("lpjr.inv_vat_total","VAT Total")}</span><span className="font-mono font-bold">{rowCurrency} {rowTaxAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
@@ -913,7 +913,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 border-t border-slate-200 bg-slate-50 p-4 text-[9px]">
+                        <div className="grid grid-cols-2 gap-4 border-t border-slate-200 bg-slate-50 p-4 text-[11px]">
                           <div className="space-y-1">
                             <p className="font-black uppercase tracking-[0.14em] text-blue-800">{tt("lpjr.inv_bank_details","Bank Details")}</p>
                             <p>{tt("lpjr.inv_bank_name","Bank Name")}: -</p>
@@ -928,7 +928,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-6 p-5 text-center text-[9px] font-bold text-slate-600">
+                        <div className="grid grid-cols-3 gap-6 p-5 text-center text-[11px] font-bold text-slate-600">
                           <div className="border-t border-slate-700 pt-2">{tt("lpjr.inv_prepared_by","Prepared By")}</div>
                           <div className="border-t border-slate-700 pt-2">{tt("lpjr.inv_checked_by","Checked By")}</div>
                           <div className="border-t border-slate-700 pt-2">{tt("lpjr.inv_auth_sig","Authorized Signature")}</div>
@@ -945,31 +945,31 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                     <div className="flex justify-between items-start border-b-2 border-slate-800 pb-3">
                       <div>
                         <h2 className="text-sm font-black uppercase text-slate-900 tracking-tight">{tt("lpjr.vchr_title","LOCAL PURCHASE BILL VOUCHER")}</h2>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase">
+                        <p className="text-[11px] text-slate-500 font-bold uppercase">
                           {selectedRowForVoucher.branchName || selectedRowForVoucher.branch_name || "Global System Branch"}
                         </p>
                       </div>
                       <div className="text-right text-xs font-mono">
                         <span className="font-black text-blue-600 block text-sm">LP-{selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}</span>
-                        <span className="text-[9px] text-slate-500 block">{tt("lpjr.vchr_date","Date")}: {new Date(selectedRowForVoucher.createdAt || selectedRowForVoucher.created_at || Date.now()).toLocaleDateString("en-GB")}</span>
+                        <span className="text-[11px] text-slate-500 block">{tt("lpjr.vchr_date","Date")}: {new Date(selectedRowForVoucher.createdAt || selectedRowForVoucher.created_at || Date.now()).toLocaleDateString("en-GB")}</span>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
                       <div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase block">{tt("lpjr.vchr_supplier","Supplier / Vendor:")}</span>
+                        <span className="text-[11px] font-bold text-slate-400 uppercase block">{tt("lpjr.vchr_supplier","Supplier / Vendor:")}</span>
                         <span className="font-bold text-slate-800 text-xs">{selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "-"}</span>
-                        <span className="text-[9px] text-emerald-600 block font-bold mt-1 uppercase font-mono">
+                        <span className="text-[11px] text-emerald-600 block font-bold mt-1 uppercase font-mono">
                           {tt("lpjr.vchr_payment_mode","Payment Mode")}: {selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash"}
                         </span>
                         {selectedRowForVoucher.paymentMode === "Advance" && (
-                          <div className="text-[9px] text-red-500 font-bold uppercase mt-1 font-mono">
+                          <div className="text-[11px] text-red-500 font-bold uppercase mt-1 font-mono">
                             {tt("lpjr.vchr_remaining_bal","Remaining Bal")}: {rowCurrency} {Number(selectedRowForVoucher.remainingBalance || selectedRowForVoucher.remaining_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
                         )}
                       </div>
-                      <div className="text-right text-[10px] space-y-0.5">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase block">{tt("lpjr.vchr_shipping","Shipping & Logistics:")}</span>
+                      <div className="text-right text-[11px] space-y-0.5">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase block">{tt("lpjr.vchr_shipping","Shipping & Logistics:")}</span>
                         <div className="font-semibold text-slate-700">{th("MODE")}: <span className="font-bold">{selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || th("LOADING")}</span></div>
                         <div className="font-semibold text-slate-700">{tt("lpjr.vchr_warehouse","Warehouse")}: <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></div>
                         <div className="font-semibold text-slate-700">{tt("lpjr.vchr_truck_no","Truck No")}: <span className="font-bold font-mono text-indigo-600">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></div>
@@ -978,7 +978,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
 
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border border-slate-200">
-                        <thead className="bg-slate-100 text-slate-700 text-[9px] font-bold uppercase">
+                        <thead className="bg-slate-100 text-slate-700 text-[11px] font-bold uppercase">
                           <tr>
                             <Th className="p-2 border-b">{tt("lpjr.vchr_goods_item","Goods Item")}</Th>
                             <Th className="p-2 border-b">{tt("lpjr.vchr_brand_origin","Brand/Origin")}</Th>
@@ -988,17 +988,17 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                             <Th className="p-2 border-b text-right font-black">{tt("lpjr.vchr_final_amount","Final Amount")}</Th>
                           </tr>
                         </thead>
-                        <tbody className="text-[10px]">
+                        <tbody className="text-[11px]">
                           <tr className="border-b">
                             <td className="p-2 font-bold text-slate-800">
                               {goodsName}
                               {(selectedRowForVoucher.chassisCode || selectedRowForVoucher.chassis_code || selectedRowForVoucher.lotNo || selectedRowForVoucher.lot_no) && (
-                                <div className="text-[8px] text-slate-500 font-bold uppercase mt-0.5 font-mono">
+                                <div className="text-[11px] text-slate-500 font-bold uppercase mt-0.5 font-mono">
                                   Chs: {selectedRowForVoucher.chassisCode || selectedRowForVoucher.chassis_code || "-"} | Lot: {selectedRowForVoucher.lotNo || selectedRowForVoucher.lot_no || "-"}
                                 </div>
                               )}
                               {(selectedRowForVoucher.applyTax || selectedRowForVoucher.apply_tax) && (
-                                <div className="text-[8px] text-indigo-650 font-bold uppercase mt-0.5">
+                                <div className="text-[11px] text-indigo-650 font-bold uppercase mt-0.5">
                                   Tax: {selectedRowForVoucher.taxType || selectedRowForVoucher.tax_type || "VAT"} ({selectedRowForVoucher.taxPercentage || selectedRowForVoucher.tax_percentage || 0}%) - ${Number(selectedRowForVoucher.taxAmount || selectedRowForVoucher.tax_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                               )}

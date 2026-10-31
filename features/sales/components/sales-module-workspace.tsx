@@ -335,7 +335,7 @@ export function SalesModuleWorkspace({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="truncate text-xl sm:text-2xl md:text-3xl font-black text-white">{displayTitle || title}</h1>
-                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-emerald-400 border border-emerald-500/30">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
+                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-black uppercase text-emerald-400 border border-emerald-500/30 whitespace-nowrap">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
               </div>
               <p className="truncate text-xs sm:text-sm text-slate-300 font-medium mt-0.5">{description}</p>
             </div>
@@ -426,17 +426,17 @@ export function SalesModuleWorkspace({
             <div key={countryCard.country} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 p-4 shadow-xs">
               <div className="mb-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
                 <div className="font-black uppercase tracking-wide text-cyan-600 dark:text-cyan-400">{countryCard.country}</div>
-                <span className="rounded-full bg-cyan-500/10 border border-cyan-300 dark:border-cyan-800 px-2.5 py-0.5 text-[10px] font-black text-cyan-700 dark:text-cyan-400">{countryCard.totalOrders} SOs</span>
+                <span className="rounded-full bg-cyan-500/10 border border-cyan-300 dark:border-cyan-800 px-2.5 py-0.5 text-[11px] font-black text-cyan-700 dark:text-cyan-400 whitespace-nowrap">{countryCard.totalOrders} SOs</span>
               </div>
               
               <div className="space-y-4">
                 {countryCard.currencies.map(curr => (
                   <div key={curr.currency} className="space-y-2">
                     <div className="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400">{curr.currency} <span className="font-bold lowercase text-slate-400">({curr.count} SOs)</span></div>
-                    <div className="grid grid-cols-2 gap-2 text-[10px] sm:text-xs">
-                      <div className="rounded-xl bg-white dark:bg-slate-900 p-2.5 border border-slate-200 dark:border-slate-800"><span className="block text-slate-400 font-bold uppercase text-[9px]">{t(lang, "sales.smw_total_sales", "Total Sales")}</span><b className="text-slate-900 dark:text-slate-100 font-mono">{money(curr.invoice, curr.currency)}</b></div>
-                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-2.5 border border-emerald-200 dark:border-emerald-900/40"><span className="block text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[9px]">{t(lang, "sales.smw_paid", "Paid")}</span><b className="text-emerald-700 dark:text-emerald-300 font-mono">{money(curr.advance, curr.currency)}</b></div>
-                      <div className="col-span-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 p-2.5 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40"><span className="block text-slate-400 font-bold uppercase text-[9px]">{t(lang, "sales.smw_receivable_balance", "Receivable Balance")}</span><b className="text-xs font-mono font-black">{money(curr.remaining, curr.currency)}</b></div>
+                    <div className="grid grid-cols-2 gap-2 text-[11px] sm:text-xs">
+                      <div className="rounded-xl bg-white dark:bg-slate-900 p-2.5 border border-slate-200 dark:border-slate-800"><span className="block text-slate-400 font-bold uppercase text-[11px]">{t(lang, "sales.smw_total_sales", "Total Sales")}</span><b className="text-slate-900 dark:text-slate-100 font-mono">{money(curr.invoice, curr.currency)}</b></div>
+                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-2.5 border border-emerald-200 dark:border-emerald-900/40"><span className="block text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[11px]">{t(lang, "sales.smw_paid", "Paid")}</span><b className="text-emerald-700 dark:text-emerald-300 font-mono">{money(curr.advance, curr.currency)}</b></div>
+                      <div className="col-span-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 p-2.5 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40"><span className="block text-slate-400 font-bold uppercase text-[11px]">{t(lang, "sales.smw_receivable_balance", "Receivable Balance")}</span><b className="text-xs font-mono font-black">{money(curr.remaining, curr.currency)}</b></div>
                     </div>
                   </div>
                 ))}
@@ -496,9 +496,9 @@ export function SalesModuleWorkspace({
               ) : rows.length ? rows.map((row) => (
                 <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                   <td className="px-4 py-3.5 font-mono font-bold text-slate-900 dark:text-slate-100">{soNumber(row)}</td>
-                  <td className="px-4 py-3.5 font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{row.super_admin_serial_number || "-"}</td>
-                  <td className="px-4 py-3.5 font-mono text-[10px] font-bold text-amber-600 dark:text-amber-400">{row.country_transaction_serial_number || "-"}</td>
-                  <td className="px-4 py-3.5 font-mono text-[10px] font-bold text-cyan-600 dark:text-cyan-400">{row.branch_transaction_serial_number || "-"}</td>
+                  <td className="px-4 py-3.5 font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{row.super_admin_serial_number || "-"}</td>
+                  <td className="px-4 py-3.5 font-mono text-[11px] font-bold text-amber-600 dark:text-amber-400">{row.country_transaction_serial_number || "-"}</td>
+                  <td className="px-4 py-3.5 font-mono text-[11px] font-bold text-cyan-600 dark:text-cyan-400">{row.branch_transaction_serial_number || "-"}</td>
                   <td className="px-4 py-3.5"><b>{contractNumber(row)}</b><br /><span className="text-slate-400 text-[11px]">{date(row.created_at)}</span></td>
                   <td className="px-4 py-3.5"><b>{branch(row)}</b><br /><span className="text-slate-400 text-[11px]">{country(row)}</span></td>
                   <td className="px-4 py-3.5"><b>{form(row).purchaseAccountName || customer(row)}</b><br /><span className="text-slate-400 text-[11px]">{form(row).purchaseAccountNo || "-"}</span></td>
@@ -508,7 +508,7 @@ export function SalesModuleWorkspace({
                   <td className="px-4 py-3.5 font-mono"><b>{money(amount(row), currency(row))}</b><br /><span className="text-slate-400 text-[11px]">Rate: {Number(row.exchange_rate || form(row).exchangeRate || 1)}</span></td>
                   <td className="px-4 py-3.5 font-mono">
                     <b>{money(advance(row), currency(row))}</b><br />
-                    <span className={cn("inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase mt-1", statusClass(status(row)))}>
+                    <span className={cn("inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-black uppercase mt-1", statusClass(status(row)))}>
                       {status(row)}
                     </span>
                   </td>
@@ -545,7 +545,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
           <PackageCheck className="h-5 w-5" />
         </div>
         <div>
-          <div className="text-[10px] font-black uppercase text-slate-400">{label}</div>
+          <div className="text-[11px] font-black uppercase text-slate-400">{label}</div>
           <div className="text-base font-black text-slate-900 dark:text-slate-100 font-mono">{value}</div>
         </div>
       </div>

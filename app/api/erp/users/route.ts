@@ -437,7 +437,7 @@ export async function POST(request: NextRequest) {
       null
     );
 
-    let { data: created, error: createError } = await admin.auth.admin.createUser({
+    const { data: created, error: createError } = await admin.auth.admin.createUser({
       email: targetEmail,
       password: body.password,
       email_confirm: true,
@@ -862,7 +862,7 @@ export async function PATCH(request: NextRequest) {
 
     // Fetch the target user's current assignment to check their current country scope
     // The full current assignment row — it is both the authorization subject and the audit "before" image.
-    let { data: targetAssignment } = await admin
+    const { data: targetAssignment } = await admin
       .from("user_role_assignments")
       .select("*")
       .eq("user_id", targetUserId)

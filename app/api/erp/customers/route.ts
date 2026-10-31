@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     // showed whatever script each record happened to be typed in, mixed record-to-record
     // regardless of the selected UI language (the exact "mixed English/Urdu names in the same
     // dropdown" bug). See lib/services/customers-service.ts for the write side.
-    let rawCustomers: any[] = (result as any).customers ?? [];
+    const rawCustomers: any[] = (result as any).customers ?? [];
     let customers: any[] = rawCustomers;
     if (Array.isArray(rawCustomers) && rawCustomers.length > 0) {
       // Localize metadata fields without destructively overwriting registered proper names

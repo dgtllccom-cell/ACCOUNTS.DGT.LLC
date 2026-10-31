@@ -117,7 +117,7 @@ export function InquiryRegisterView({ scope = "all", lang: langProp }: { scope?:
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
             {kpis.map((k) => (
               <div key={k.key} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
-                <div className="text-[10px] font-bold uppercase text-slate-400">{k.label}</div>
+                <div className="text-[11px] font-bold uppercase text-slate-400">{k.label}</div>
                 <div className={`mt-1 text-xl font-black ${k.tone}`}>{k.value}</div>
               </div>
             ))}
@@ -143,7 +143,7 @@ export function InquiryRegisterView({ scope = "all", lang: langProp }: { scope?:
           {/* table */}
           <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
             <table className="w-full text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase text-[10px]">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase text-[11px]">
                 <tr>
                   <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("col_no", "Inquiry #")}</Th>
                   <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("f_customer_name", "Customer")}</Th>
@@ -168,11 +168,11 @@ export function InquiryRegisterView({ scope = "all", lang: langProp }: { scope?:
                         {r.customer_name}
                         {r.customer_id && <Link2 className="h-3 w-3 text-emerald-500" />}
                       </div>
-                      {r.company_name && <div className="text-[10.5px] text-slate-400">{r.company_name}</div>}
+                      {r.company_name && <div className="text-[11px] text-slate-400">{r.company_name}</div>}
                     </td>
                     <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{r.business_type || "—"}</td>
                     <td className="px-3 py-2 text-slate-500">{s.t(`source_${r.source}`, r.source)}</td>
-                    <td className="px-3 py-2"><span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusTone(r.status)}`}>{s.t(`status_${r.status}`, r.status)}</span></td>
+                    <td className="px-3 py-2"><span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${statusTone(r.status)}`}>{s.t(`status_${r.status}`, r.status)}</span></td>
                     <td className={`px-3 py-2 ${r.follow_up_overdue ? "text-rose-600 font-bold" : "text-slate-500"}`}>
                       {r.follow_up_date ? <span className="flex items-center gap-1"><CalendarClock className="h-3 w-3" />{fmtDate(r.follow_up_date)}</span> : "—"}
                     </td>

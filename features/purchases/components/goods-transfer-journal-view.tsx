@@ -65,7 +65,7 @@ function StatusPill({ s, status }: { s: S; status: string }) {
     in_transit: "bg-amber-100 text-amber-800", confirmed: "bg-blue-100 text-blue-800", cancelled: "bg-slate-200 text-slate-600", returned: "bg-slate-200 text-slate-600",
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${tone[status] || "bg-slate-100 text-slate-700"}`}>
+    <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${tone[status] || "bg-slate-100 text-slate-700"}`}>
       {s.t(`status_${status}`, status.replace("_", " "))}
     </span>
   );
@@ -101,9 +101,9 @@ function FullScreen({ s, title, subtitle, onClose, children, footer }: { s: S; t
 function Field({ s, label, children, hint }: { s: S; label: string; children: React.ReactNode; hint?: string }) {
   return (
     <label className="block">
-      <span className={`mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500 ${s.textStart}`}>{label}</span>
+      <span className={`mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500 ${s.textStart}`}>{label}</span>
       {children}
-      {hint ? <span className={`mt-1 block text-[10px] text-slate-400 ${s.textStart}`}>{hint}</span> : null}
+      {hint ? <span className={`mt-1 block text-[11px] text-slate-400 ${s.textStart}`}>{hint}</span> : null}
     </label>
   );
 }
@@ -144,7 +144,7 @@ function Picker({ s, label, kind, countryId, value, onChange, hint }: { s: S; la
                 className={`block w-full px-3 py-2 text-xs hover:bg-blue-50 dark:hover:bg-slate-800 ${s.textStart}`}
                 onClick={() => { onChange({ id: r.id, text: `${r.code ?? ""} — ${r.name ?? ""}`.trim() }); setOpen(false); }}
               >
-                <span className="font-mono text-[10px] text-slate-500">{r.code}</span> {r.name}
+                <span className="font-mono text-[11px] text-slate-500">{r.code}</span> {r.name}
               </button>
             ))}
             <button type="button" className="block w-full border-t border-slate-100 px-3 py-2 text-[11px] text-slate-500" onClick={() => setOpen(false)}>{s.t("close", "Close")}</button>
@@ -227,14 +227,14 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
       {/* purchase + financial status */}
       {purchase ? (
         <section className="grid gap-3 rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-2 lg:grid-cols-4">
-          <div><div className="text-[10px] font-bold uppercase text-slate-500">{s.t("supplier", "Supplier")}</div><div className="font-semibold">{purchase.supplier || "—"}</div></div>
-          <div><div className="text-[10px] font-bold uppercase text-slate-500">{s.t("branch", "Country / Branch")}</div><div className="font-semibold">{purchase.countryName} · {purchase.branchName}{purchase.cityName ? ` · ${purchase.cityName}` : ""}</div></div>
-          <div><div className="text-[10px] font-bold uppercase text-slate-500">{s.t("fin_status", "Financial posting")}</div>
+          <div><div className="text-[11px] font-bold uppercase text-slate-500">{s.t("supplier", "Supplier")}</div><div className="font-semibold">{purchase.supplier || "—"}</div></div>
+          <div><div className="text-[11px] font-bold uppercase text-slate-500">{s.t("branch", "Country / Branch")}</div><div className="font-semibold">{purchase.countryName} · {purchase.branchName}{purchase.cityName ? ` · ${purchase.cityName}` : ""}</div></div>
+          <div><div className="text-[11px] font-bold uppercase text-slate-500">{s.t("fin_status", "Financial posting")}</div>
             <div className="flex items-center gap-1.5 font-semibold"><StatusPill s={s} status={purchase.status === "posted" ? "posted" : purchase.status} />
-              <span className="font-mono text-[10px] text-slate-500">{purchase.journalSerialNo || ""}</span></div></div>
-          <div><div className="text-[10px] font-bold uppercase text-slate-500">{s.t("payment", "Payment condition")}</div>
+              <span className="font-mono text-[11px] text-slate-500">{purchase.journalSerialNo || ""}</span></div></div>
+          <div><div className="text-[11px] font-bold uppercase text-slate-500">{s.t("payment", "Payment condition")}</div>
             <div className="font-semibold">{purchase.paymentMode} · {purchase.currency} {fmt(purchase.finalCost)}</div>
-            {purchase.remainingBalance > 0 ? <div className="text-[10px] text-slate-500">{s.t("remaining", "Remaining")}: {fmt(purchase.remainingBalance)}</div> : null}</div>
+            {purchase.remainingBalance > 0 ? <div className="text-[11px] text-slate-500">{s.t("remaining", "Remaining")}: {fmt(purchase.remainingBalance)}</div> : null}</div>
         </section>
       ) : null}
 
@@ -287,7 +287,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
             <div className="grid grid-cols-4 gap-px bg-slate-100 text-center dark:bg-slate-800 sm:grid-cols-7">
               {cells.map(([k, d, v]) => (
                 <div key={k} className="bg-white p-2 dark:bg-slate-900">
-                  <div className="text-[9px] font-bold uppercase text-slate-500">{s.t(k, d)}</div>
+                  <div className="text-[11px] font-bold uppercase text-slate-500">{s.t(k, d)}</div>
                   <div className="text-sm font-black tabular-nums">{qtyFmt(v)}</div>
                 </div>
               ))}
@@ -296,7 +296,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
               {lot.stock.map((row: Json) => (
                 <li key={row.id} className="flex items-start justify-between gap-3 p-3 text-xs">
                   <div className="min-w-0">
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold dark:bg-slate-800">{stateLabel(row.state)}</span>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">{stateLabel(row.state)}</span>
                     <div className="mt-1 break-words font-semibold">{placeLabel(row)}</div>
                     <div className="font-mono text-[11px] text-slate-500">{s.t("col_rack", "Rack / Bin")}: {row.rack_bin || "—"}</div>
                   </div>
@@ -313,7 +313,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
             </ul>
             <div className="hidden overflow-x-auto sm:block">
               <table className="w-full text-xs">
-                <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 dark:bg-slate-800/60">
+                <thead className="bg-slate-50 text-[11px] uppercase text-slate-500 dark:bg-slate-800/60">
                   <tr>
                     <th className={`p-2 ${s.textStart}`}>{s.t("col_state", "State")}</th>
                     <th className={`p-2 ${s.textStart}`}>{s.t("col_location", "Warehouse / Location")}</th>
@@ -325,7 +325,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {lot.stock.map((row: Json) => (
                     <tr key={row.id}>
-                      <td className="p-2"><span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold dark:bg-slate-800">{stateLabel(row.state)}</span></td>
+                      <td className="p-2"><span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">{stateLabel(row.state)}</span></td>
                       <td className="p-2">{placeLabel(row)}</td>
                       <td className="p-2 font-mono">{row.rack_bin || "—"}</td>
                       <td className={`p-2 font-bold tabular-nums ${s.textEnd}`}>{qtyFmt(row.qty)}</td>
@@ -409,20 +409,20 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                 <li key={t.id} className="space-y-1.5 p-3 text-xs">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="font-mono font-bold">{t.transfer_no}{trade ? <span className="ms-2 text-[10px] text-blue-700">{trade.trade_ref}</span> : null}</div>
+                      <div className="font-mono font-bold">{t.transfer_no}{trade ? <span className="ms-2 text-[11px] text-blue-700">{trade.trade_ref}</span> : null}</div>
                       <div>{purposeLabel(t.purpose)}</div>
                     </div>
                     <StatusPill s={s} status={t.status} />
                   </div>
                   <div className="text-slate-600">{lot?.lot_ref} · <b className="tabular-nums">{qtyFmt(t.qty)}</b> · {destText}</div>
-                  {t.cost_roznamcha_entry_id ? <div className="text-[10px] text-emerald-700">{s.t("cost_posted", "Cost of sales posted")} {t.cost_currency} {fmt(t.cost_amount)}</div> : null}
+                  {t.cost_roznamcha_entry_id ? <div className="text-[11px] text-emerald-700">{s.t("cost_posted", "Cost of sales posted")} {t.cost_currency} {fmt(t.cost_amount)}</div> : null}
                   {buttons}
                 </li>
               ))}
             </ul>
             <div className="hidden overflow-x-auto sm:block">
               <table className="w-full text-xs">
-                <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 dark:bg-slate-800/60">
+                <thead className="bg-slate-50 text-[11px] uppercase text-slate-500 dark:bg-slate-800/60">
                   <tr>
                     <th className={`p-2 ${s.textStart}`}>{s.t("col_no", "Transfer no.")}</th>
                     <th className={`p-2 ${s.textStart}`}>{s.t("col_purpose", "Purpose")}</th>
@@ -436,11 +436,11 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {rows.map(({ t, lot, trade, destText, buttons }) => (
                     <tr key={t.id} className="align-top">
-                      <td className="p-2 font-mono">{t.transfer_no}{trade ? <div className="text-[10px] text-blue-700">{trade.trade_ref}</div> : null}</td>
+                      <td className="p-2 font-mono">{t.transfer_no}{trade ? <div className="text-[11px] text-blue-700">{trade.trade_ref}</div> : null}</td>
                       <td className="p-2">{purposeLabel(t.purpose)}</td>
                       <td className="p-2">{lot?.lot_ref}</td>
                       <td className={`p-2 font-bold tabular-nums ${s.textEnd}`}>{qtyFmt(t.qty)}</td>
-                      <td className="p-2">{destText}{t.cost_roznamcha_entry_id ? <div className="text-[10px] text-emerald-700">{s.t("cost_posted", "Cost of sales posted")} {t.cost_currency} {fmt(t.cost_amount)}</div> : null}</td>
+                      <td className="p-2">{destText}{t.cost_roznamcha_entry_id ? <div className="text-[11px] text-emerald-700">{s.t("cost_posted", "Cost of sales posted")} {t.cost_currency} {fmt(t.cost_amount)}</div> : null}</td>
                       <td className="p-2"><StatusPill s={s} status={t.status} /></td>
                       <td className={`p-2 ${s.textEnd}`}>{buttons}</td>
                     </tr>
@@ -633,10 +633,10 @@ function TransferForm({ s, purchaseId, data, purpose, lot, row, onClose, onDone,
         <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs dark:border-slate-700 dark:bg-slate-900">
           <div className="mb-3 text-sm font-black">{s.t("prefill_title", "The sales form opens pre-filled with:")}</div>
           <dl className="grid gap-2 sm:grid-cols-2">
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("goods_lot", "Goods and lot")}</dt><dd className="font-semibold">{lot.goods_name} · {lot.lot_ref}</dd></div>
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("source_wh", "Source warehouse")}</dt><dd className="font-semibold">{placeLabel(row)}{row.rack_bin ? `/${row.rack_bin}` : ""}</dd></div>
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("q_available", "Available")}</dt><dd className="font-semibold">{qtyFmt(maxQty)} {lot.unit_name}</dd></div>
-            <div><dt className="text-[10px] font-bold uppercase text-slate-500">{s.t("cost_basis", "Cost / landed cost per unit")}</dt><dd className="font-semibold">{lot.currency_code} {fmt(Number(lot.original_cost) / Number(lot.qty_purchased))} / {fmt(lot.unit_cost)}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("goods_lot", "Goods and lot")}</dt><dd className="font-semibold">{lot.goods_name} · {lot.lot_ref}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("source_wh", "Source warehouse")}</dt><dd className="font-semibold">{placeLabel(row)}{row.rack_bin ? `/${row.rack_bin}` : ""}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("q_available", "Available")}</dt><dd className="font-semibold">{qtyFmt(maxQty)} {lot.unit_name}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase text-slate-500">{s.t("cost_basis", "Cost / landed cost per unit")}</dt><dd className="font-semibold">{lot.currency_code} {fmt(Number(lot.original_cost) / Number(lot.qty_purchased))} / {fmt(lot.unit_cost)}</dd></div>
           </dl>
           <p className="mt-3 text-[11px] text-slate-500">{purpose === "export_customer"
             ? s.t("export_note", "You then choose the customer, destination country, quantity, rate, currency, payment and delivery terms, mode, and the shipping/clearing branch or agent. The quantity is only reserved by the draft and is deducted once at final billing / dispatch.")

@@ -105,7 +105,7 @@ export function EmployeeLifecycleView({ lang }: { lang?: string }) {
         {/* employee selector + actions */}
         <div className="flex flex-wrap items-end gap-2 rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
           <div className="min-w-[16rem] flex-1">
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("employee", "Employee")}</label>
+            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("employee", "Employee")}</label>
             <select value={empId} onChange={(e) => setEmpId(e.target.value)} className={INP}>
               <option value="">{s.t("select_employee", "Select employee…")}</option>
               {employees.map((e) => (
@@ -172,7 +172,7 @@ export function EmployeeLifecycleView({ lang }: { lang?: string }) {
                       <td className="px-3 py-2 text-slate-500">{describeDetail(r, s)}</td>
                       <td className="px-3 py-2 text-slate-500">{r.reason || "—"}</td>
                       <td className="px-3 py-2">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.pending}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.pending}`}>
                           {s.t(`lc_status_${r.status}`, r.status)}
                         </span>
                       </td>
@@ -207,17 +207,17 @@ export function EmployeeLifecycleView({ lang }: { lang?: string }) {
                       <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-200">{r.employee_name} <span className="font-mono text-slate-400">{r.employee_code}</span></td>
                       <td className="px-3 py-2 text-slate-500">{s.t(`lc_${r._kind}`, r._kind)} · {s.t(`lc_sub_${r.event_type || r.transfer_type || r.separation_type}`, r.event_type || r.transfer_type || r.separation_type)}</td>
                       <td className="whitespace-nowrap px-3 py-2 text-slate-500">{r.effective_date || r.last_working_date}</td>
-                      <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.pending}`}>{s.t(`lc_status_${r.status}`, r.status)}</span></td>
+                      <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.pending}`}>{s.t(`lc_status_${r.status}`, r.status)}</span></td>
                       <td className="px-3 py-2 text-right">
                         <div className="inline-flex gap-1">
                           {r.status === "pending" ? (
                             <>
-                              <button type="button" onClick={() => void act(r._kind, r.id, "approve")} className="rounded-lg bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-700">{s.t("approve", "Approve")}</button>
-                              <button type="button" onClick={() => void act(r._kind, r.id, "reject")} className="rounded-lg border border-rose-200 px-2 py-1 text-[10px] font-bold text-rose-600 hover:bg-rose-50 dark:border-rose-900">{s.t("reject", "Reject")}</button>
+                              <button type="button" onClick={() => void act(r._kind, r.id, "approve")} className="rounded-lg bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-emerald-700">{s.t("approve", "Approve")}</button>
+                              <button type="button" onClick={() => void act(r._kind, r.id, "reject")} className="rounded-lg border border-rose-200 px-2 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 dark:border-rose-900">{s.t("reject", "Reject")}</button>
                             </>
                           ) : null}
                           {r.status === "approved" ? (
-                            <button type="button" onClick={() => void act(r._kind, r.id, "apply")} className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-blue-700">
+                            <button type="button" onClick={() => void act(r._kind, r.id, "apply")} className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-blue-700">
                               <Play className="h-3 w-3" />{s.t("apply", "Apply")}
                             </button>
                           ) : null}
@@ -242,7 +242,7 @@ export function EmployeeLifecycleView({ lang }: { lang?: string }) {
 function Info({ label, v }: { label: string; v: any }) {
   return (
     <div>
-      <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</div>
+      <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</div>
       <div className="font-semibold text-slate-700 dark:text-slate-200">{v == null || v === "" ? "—" : String(v)}</div>
     </div>
   );
@@ -343,7 +343,7 @@ function LifecycleForm({
               </L>
               <L label={s.t("effective_date", "Effective Date")}><input type="date" value={f.effectiveDate} onChange={(e) => set("effectiveDate", e.target.value)} className={INP} /></L>
               <L label={s.t("new_department", "New Department")}><input value={f.newDepartment ?? ""} onChange={(e) => set("newDepartment", e.target.value)} className={INP} /></L>
-              <p className="text-[10px] text-slate-400">{s.t("transfer_hint", "Branch / country moves take effect on the employee record when the transfer is approved and applied.")}</p>
+              <p className="text-[11px] text-slate-400">{s.t("transfer_hint", "Branch / country moves take effect on the employee record when the transfer is approved and applied.")}</p>
             </>
           )}
 
@@ -386,7 +386,7 @@ function LifecycleForm({
 function L({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
+      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</label>
       {children}
     </div>
   );

@@ -534,7 +534,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                           <td className="p-3 text-right text-emerald-600 font-medium">{so.currency} {Number(so.paidAmount).toLocaleString()}</td>
                           <td className="p-3 text-right text-rose-600 font-bold">{so.currency} {Number(so.remainingAmount).toLocaleString()}</td>
                           <td className="p-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
                               {so.salesStatus}
                             </span>
                           </td>
@@ -590,7 +590,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                           <td className="p-3 text-right text-emerald-600">{po.currency} {Number(po.advancePaid).toLocaleString()}</td>
                           <td className="p-3 text-right text-rose-600 font-bold">{po.currency} {Number(po.remainingDue).toLocaleString()}</td>
                           <td className="p-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
                               {po.paymentStatus}
                             </span>
                           </td>
@@ -648,7 +648,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                           <td className="p-3 text-right text-emerald-600 font-bold">{ch.currency} {Number(ch.debit).toLocaleString()}</td>
                           <td className="p-3 text-right text-rose-600 font-bold">{ch.currency} {Number(ch.credit).toLocaleString()}</td>
                           <td className="p-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border">
+                            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700 border whitespace-nowrap">
                               {ch.status}
                             </span>
                           </td>
@@ -698,7 +698,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                       {shippingAndClearing.map((item: any, idx: number) => (
                         <tr key={idx} className="hover:bg-slate-50/50">
                           <td className="p-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-teal-50 text-teal-700 border border-teal-200 whitespace-nowrap">
                               {item.type}
                             </span>
                           </td>
@@ -706,7 +706,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                           <td className="p-3 text-slate-700">{item.details}</td>
                           <td className="p-3 text-slate-600">{item.date}</td>
                           <td className="p-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border">
+                            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700 border whitespace-nowrap">
                               {item.status}
                             </span>
                           </td>

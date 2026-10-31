@@ -105,28 +105,28 @@ export function VersionComparisonModal({
         {/* ── VERSION META STRIP ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
           <div>
-            <span className="block text-[10px] font-bold text-slate-400">{t(lang, "vcm.version_action", "Version Action")}</span>
+            <span className="block text-[11px] font-bold text-slate-400">{t(lang, "vcm.version_action", "Version Action")}</span>
             <span className="font-bold text-slate-900 dark:text-white capitalize">
               {currentVer?.action_type || "EDIT"} (v{currentVer?.version_number || selectedVersionIdx + 1}.0)
             </span>
           </div>
 
           <div>
-            <span className="block text-[10px] font-bold text-slate-400">{t(lang, "vcm.edited_at", "Edited At")}</span>
+            <span className="block text-[11px] font-bold text-slate-400">{t(lang, "vcm.edited_at", "Edited At")}</span>
             <span className="font-mono text-slate-800 dark:text-slate-200">
               {new Date(currentVer?.created_at || Date.now()).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
             </span>
           </div>
 
           <div>
-            <span className="block text-[10px] font-bold text-slate-400">{t(lang, "vcm.edited_by", "Edited By")}</span>
+            <span className="block text-[11px] font-bold text-slate-400">{t(lang, "vcm.edited_by", "Edited By")}</span>
             <span className="font-bold text-slate-900 dark:text-white">
               {currentVer?.user_name || "Ali Hassan"} ({currentVer?.user_role || "Manager"})
             </span>
           </div>
 
           <div>
-            <span className="block text-[10px] font-bold text-slate-400">{t(lang, "vcm.approval_ref", "Approval Ref")}</span>
+            <span className="block text-[11px] font-bold text-slate-400">{t(lang, "vcm.approval_ref", "Approval Ref")}</span>
             <span className="font-mono font-bold text-blue-600">
               {currentVer?.approval_reference || "APP-8286-3344"}
             </span>
@@ -168,7 +168,7 @@ export function VersionComparisonModal({
                       {diff.label || diff.field.replace(/_/g, " ")}
                     </span>
                     {diff.isHighRisk && (
-                      <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[9.5px] font-black uppercase">
+                      <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-black uppercase whitespace-nowrap">
                         {t(lang, "audit.vcm_high_risk", "High-Risk Financial Field")}
                       </span>
                     )}
@@ -177,7 +177,7 @@ export function VersionComparisonModal({
                   <div className="grid grid-cols-1 md:grid-cols-2 text-xs divide-y md:divide-y-0 md:divide-x dark:divide-slate-700">
                     {/* Old Value */}
                     <div className="p-3 bg-rose-50/40 dark:bg-rose-950/20">
-                      <span className="block text-[10px] font-black uppercase text-rose-600 mb-1">
+                      <span className="block text-[11px] font-black uppercase text-rose-600 mb-1">
                         Before (Old Value)
                       </span>
                       <div className="font-mono text-rose-800 dark:text-rose-300 font-semibold bg-rose-100/60 dark:bg-rose-900/40 p-2 rounded-lg border border-rose-200 dark:border-rose-800 break-words">
@@ -187,7 +187,7 @@ export function VersionComparisonModal({
 
                     {/* New Value */}
                     <div className="p-3 bg-emerald-50/40 dark:bg-emerald-950/20">
-                      <span className="block text-[10px] font-black uppercase text-emerald-600 mb-1">
+                      <span className="block text-[11px] font-black uppercase text-emerald-600 mb-1">
                         After (New Value)
                       </span>
                       <div className="font-mono text-emerald-800 dark:text-emerald-300 font-semibold bg-emerald-100/60 dark:bg-emerald-900/40 p-2 rounded-lg border border-emerald-200 dark:border-emerald-800 break-words">

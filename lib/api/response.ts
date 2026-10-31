@@ -94,6 +94,28 @@ export function translateToUrdu(message: string): string {
   return message;
 }
 
+/** The caller-language message for a value that is not a valid record id (e.g. an account number). */
+export async function invalidRecordIdMessage(value: string) {
+  const [{ t }, { getRequestLanguage }] = await Promise.all([import("@/lib/i18n/ui"), import("@/lib/i18n/server")]);
+  const lang = await getRequestLanguage().catch(() => "en" as const);
+  return t(lang, "api.invalid_record_id", 'The record reference "{value}" is not a valid ID. Select the record from the list instead of typing its number or code, then try again.').replace("{value}", value);
+}
+
+/**
+ * A human reference (account number such as "ACC-000080", a code or a name) that reaches a
+ * uuid column makes Postgres raise 22P02 "invalid input syntax for type uuid". That is the
+ * request's fault, not a server fault: this returns the 400 INVALID_ID answer (message in the
+ * caller's language) for such an error, else null. Matched on the message because the
+ * Supabase-client paths rethrow `new Error(error.message)` (or wrap it) and drop the SQLSTATE.
+ * Routes that build their own error body call this first in their catch block.
+ */
+export async function invalidIdErrorOf(error: unknown): Promise<{ code: "INVALID_ID"; status: 400; message: string; value: string } | null> {
+  const raw = typeof error === "string" ? error : (error as { message?: unknown } | null)?.message;
+  if (typeof raw !== "string" || !/invalid input syntax for type uuid/i.test(raw)) return null;
+  const value = /type uuid: "([^"]*)"/i.exec(raw)?.[1] ?? "";
+  return { code: "INVALID_ID", status: 400, message: await invalidRecordIdMessage(value), value };
+}
+
 export function apiOk<T>(data: T, init?: ResponseInit) {
   return NextResponse.json({ ok: true, data }, init);
 }
@@ -271,6 +293,17 @@ export async function handleApiError(error: unknown) {
     else if (pgCode === "23514") { code = "CHECK_VIOLATION"; message = "One or more values are not allowed."; status = 422; }
     else if (pgCode === "23502") { code = "NOT_NULL_VIOLATION"; message = "A required field is missing."; status = 422; }
     else { code = "CONSTRAINT_VIOLATION"; status = 422; }
+  }
+
+  // A non-id value in a uuid comparison is a 400 INVALID_ID, not a 500 SERVER_ERROR — also when
+  // a route wrapped the raw database message in an ApiClientError (see invalidIdErrorOf), or
+  // threw the PostgREST error object itself (not an Error, so `message` above is generic).
+  const invalidId = (await invalidIdErrorOf(error)) ?? (await invalidIdErrorOf(message));
+  if (invalidId) {
+    code = invalidId.code;
+    status = invalidId.status;
+    details = { value: invalidId.value };
+    message = invalidId.message;
   }
 
   // A few routes/repositories still `throw new Error("...")` for what is really

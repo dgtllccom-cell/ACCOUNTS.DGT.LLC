@@ -124,7 +124,7 @@ export function AccessProfilePanel({
         <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-violet-900 dark:text-violet-200">
           <ShieldCheck className="h-3.5 w-3.5" /> {s.t("title", "Access Profile & Assignments")}
         </span>
-        <span className="rounded bg-violet-100 px-2 py-0.5 text-[10.5px] font-bold text-violet-800 dark:bg-violet-900 dark:text-violet-200" data-testid="effective-role">
+        <span className="rounded bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-800 dark:bg-violet-900 dark:text-violet-200 whitespace-nowrap" data-testid="effective-role">
           {s.t("effective_role", "Effective role")}: {centralT(s.lang, `role.${effectiveRole}` as never, effectiveRole)}
         </span>
       </div>
@@ -147,7 +147,7 @@ export function AccessProfilePanel({
             </button>
           ))}
         </div>
-        <p className="text-[10.5px] text-violet-800/80 dark:text-violet-300/80">
+        <p className="text-[11px] text-violet-800/80 dark:text-violet-300/80">
           {s.t("profile_hint", "The selected role decides the country / branch level; the access profile narrows it to operational or shipping-line modules.")}
         </p>
       </div>
@@ -176,7 +176,7 @@ export function AccessProfilePanel({
           <Warehouse className="h-3.5 w-3.5" /> {s.t("warehouses", "Warehouse assignment")}
         </span>
         {scopedWarehouses.length === 0 ? (
-          <p className="text-[10.5px] text-slate-500">{s.t("no_warehouses", "No warehouses in this country.")}</p>
+          <p className="text-[11px] text-slate-500">{s.t("no_warehouses", "No warehouses in this country.")}</p>
         ) : (
           <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
             {scopedWarehouses.map((w) => {
@@ -186,7 +186,7 @@ export function AccessProfilePanel({
                   key={w.id}
                   type="button"
                   onClick={() => set({ warehouseIds: on ? value.warehouseIds.filter((x) => x !== w.id) : [...value.warehouseIds, w.id] })}
-                  className={`rounded-md border px-2 py-1 text-[10.5px] font-bold ${
+                  className={`rounded-md border px-2 py-1 text-[11px] font-bold ${
                     on ? "border-violet-500 bg-violet-600 text-white" : "border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                   }`}
                 >
@@ -196,7 +196,7 @@ export function AccessProfilePanel({
             })}
           </div>
         )}
-        <p className="text-[10.5px] text-slate-500">{s.t("warehouses_hint", "Optional. Leave empty for every warehouse in the assigned scope.")}</p>
+        <p className="text-[11px] text-slate-500">{s.t("warehouses_hint", "Optional. Leave empty for every warehouse in the assigned scope.")}</p>
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
@@ -214,7 +214,7 @@ export function AccessProfilePanel({
           <input type="date" value={value.effectiveTo} onChange={(e) => set({ effectiveTo: e.target.value })}
             className="flex h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-900" />
         </label>
-        <p className="text-[10.5px] text-slate-500 sm:col-span-2">{s.t("dates_hint", "Outside these dates the assignment grants nothing.")}</p>
+        <p className="text-[11px] text-slate-500 sm:col-span-2">{s.t("dates_hint", "Outside these dates the assignment grants nothing.")}</p>
       </div>
 
       <div className="space-y-1">
@@ -242,7 +242,7 @@ export function AccessProfilePanel({
             );
           })}
         </div>
-        <p className="text-[10.5px] text-slate-500">{s.t("fin_hint", "Operations and Shipping Line profiles never see financial data, whatever is selected here.")}</p>
+        <p className="text-[11px] text-slate-500">{s.t("fin_hint", "Operations and Shipping Line profiles never see financial data, whatever is selected here.")}</p>
       </div>
 
       {error && (
@@ -298,7 +298,7 @@ export function EffectiveAccessSummary({ access, lang }: { access: EffectiveAcce
         <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-emerald-900 dark:text-emerald-200">
           <LayoutDashboard className="h-3.5 w-3.5" /> {s.t("title", "Effective Access Summary")}
         </div>
-        <p className="text-[10.5px] text-emerald-800/80 dark:text-emerald-300/80">{s.t("subtitle", "What this user will see after their next sign-in or page refresh.")}</p>
+        <p className="text-[11px] text-emerald-800/80 dark:text-emerald-300/80">{s.t("subtitle", "What this user will see after their next sign-in or page refresh.")}</p>
       </div>
       <div>
         {row(s.t("roles", "Effective roles"), access.roles.map((r) => centralT(s.lang, `role.${r}` as never, r)).join(" + "))}

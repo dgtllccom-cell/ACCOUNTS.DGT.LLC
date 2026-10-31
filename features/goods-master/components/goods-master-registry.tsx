@@ -780,7 +780,7 @@ export function GoodsMasterRegistry() {
                         <Package className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-sm font-medium">No goods items found.</p>
                         <p className="text-xs text-slate-400 mt-1">
-                          Click "+ New Goods Item" above to add your first master product.
+                          Click &quot;+ New Goods Item&quot; above to add your first master product.
                         </p>
                       </td>
                     </tr>
@@ -876,7 +876,7 @@ export function GoodsMasterRegistry() {
                                         <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                                         <span>{t("COMMERCIAL SPECIFICATION & REPORT")}</span>
                                       </div>
-                                      <span className="text-[10px] text-slate-400 font-mono font-bold">
+                                      <span className="text-[11px] text-slate-400 font-mono font-bold">
                                         {g.chs_code || ""}
                                       </span>
                                     </div>
@@ -1127,7 +1127,7 @@ export function GoodsMasterRegistry() {
                   {t.step === 1 && masterSection1Saved ? (
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   ) : (
-                    <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] flex items-center justify-center font-mono">
+                    <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 text-[11px] flex items-center justify-center font-mono leading-none">
                       {t.step}
                     </span>
                   )}
@@ -1309,7 +1309,7 @@ export function GoodsMasterRegistry() {
                         {(paramsByGoodsId[activeModalGoods.id] || []).filter((p) => p.param_type === "variety").length === 0 ? (
                           <tr>
                             <td colSpan={3} className="p-6 text-center text-slate-400">
-                              No varieties added yet. Type a variety above and click "+ Add Variety".
+                              No varieties added yet. Type a variety above and click &quot;+ Add Variety&quot;.
                             </td>
                           </tr>
                         ) : (
@@ -1396,7 +1396,7 @@ export function GoodsMasterRegistry() {
                         {(paramsByGoodsId[activeModalGoods.id] || []).filter((p) => p.param_type === "size").length === 0 ? (
                           <tr>
                             <td colSpan={3} className="p-6 text-center text-slate-400">
-                              No sizes/grades added yet. Type a size above and click "+ Add Size".
+                              No sizes/grades added yet. Type a size above and click &quot;+ Add Size&quot;.
                             </td>
                           </tr>
                         ) : (
@@ -1483,7 +1483,7 @@ export function GoodsMasterRegistry() {
                         {(paramsByGoodsId[activeModalGoods.id] || []).filter((p) => p.param_type === "brand").length === 0 ? (
                           <tr>
                             <td colSpan={3} className="p-6 text-center text-slate-400">
-                              No brands added yet. Type a brand above and click "+ Add Brand".
+                              No brands added yet. Type a brand above and click &quot;+ Add Brand&quot;.
                             </td>
                           </tr>
                         ) : (
@@ -1638,7 +1638,7 @@ export function GoodsMasterRegistry() {
                         {(activeModalGoods.variations || []).length === 0 ? (
                           <tr>
                             <td colSpan={6} className="p-6 text-center text-slate-400">
-                              No combinations added yet. Click "+ Add Variant Combination" above.
+                              No combinations added yet. Click &quot;+ Add Variant Combination&quot; above.
                             </td>
                           </tr>
                         ) : (
@@ -1754,7 +1754,7 @@ export function GoodsMasterRegistry() {
                           type="button"
                           onClick={() => setCombinationForm({ ...combinationForm, variety: p.param_value })}
                           className={cn(
-                            "text-[10px] px-2 py-0.5 rounded border transition-colors",
+                            "text-[11px] px-2 py-0.5 rounded border transition-colors",
                             combinationForm.variety === p.param_value
                               ? "bg-amber-600 text-white border-amber-600 font-bold"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
@@ -1789,7 +1789,7 @@ export function GoodsMasterRegistry() {
                           type="button"
                           onClick={() => setCombinationForm({ ...combinationForm, size: p.param_value })}
                           className={cn(
-                            "text-[10px] px-2 py-0.5 rounded border transition-colors",
+                            "text-[11px] px-2 py-0.5 rounded border transition-colors",
                             combinationForm.size === p.param_value
                               ? "bg-indigo-600 text-white border-indigo-600 font-bold"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
@@ -1824,7 +1824,7 @@ export function GoodsMasterRegistry() {
                           type="button"
                           onClick={() => setCombinationForm({ ...combinationForm, brand: p.param_value })}
                           className={cn(
-                            "text-[10px] px-2 py-0.5 rounded border transition-colors",
+                            "text-[11px] px-2 py-0.5 rounded border transition-colors",
                             combinationForm.brand === p.param_value
                               ? "bg-emerald-600 text-white border-emerald-600 font-bold"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
@@ -1858,7 +1858,7 @@ export function GoodsMasterRegistry() {
                           type="button"
                           onClick={() => setCombinationForm({ ...combinationForm, extraDetails: p.param_value })}
                           className={cn(
-                            "text-[10px] px-2 py-0.5 rounded border transition-colors",
+                            "text-[11px] px-2 py-0.5 rounded border transition-colors",
                             combinationForm.extraDetails === p.param_value
                               ? "bg-purple-600 text-white border-purple-600 font-bold"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
@@ -2030,7 +2030,7 @@ export function GoodsMasterRegistry() {
                               )}
                             </td>
                             <td className="p-2.5 text-center">
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap">
                                 Active
                               </span>
                             </td>
@@ -2091,7 +2091,7 @@ export function GoodsMasterRegistry() {
                     <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                       {viewingGoods.name}
                     </h3>
-                    <span className="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800 whitespace-nowrap">
                       HS: {viewingGoods.chs_code || "—"}
                     </span>
                     <span
@@ -2134,7 +2134,7 @@ export function GoodsMasterRegistry() {
               {/* Top Overview Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                  <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider block">
                     {t("GOODS NAME")}
                   </span>
                   <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
@@ -2143,7 +2143,7 @@ export function GoodsMasterRegistry() {
                 </div>
 
                 <div className="p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60">
-                  <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider block">
+                  <span className="text-[11px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider block">
                     {t("HS / PCT CODE")}
                   </span>
                   <span className="text-sm font-mono font-bold text-blue-700 dark:text-blue-300 mt-0.5 block">
@@ -2152,7 +2152,7 @@ export function GoodsMasterRegistry() {
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                  <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider block">
                     {t("CATEGORY")}
                   </span>
                   <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block">
@@ -2167,7 +2167,7 @@ export function GoodsMasterRegistry() {
                   );
                   return (
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                      <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider block">
                         {t("VARIANTS COUNT")}
                       </span>
                       <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 block truncate">
@@ -2237,7 +2237,7 @@ export function GoodsMasterRegistry() {
                         <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide">
                           {t("CONFIGURED SIZES & BRANDS")}
                         </h4>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800 whitespace-nowrap">
                           {effectiveVars.length} {t(isCustom ? "VARIANTS" : "TRADE SPECIFICATIONS")}
                         </span>
                       </div>
@@ -2286,7 +2286,7 @@ export function GoodsMasterRegistry() {
                                   {vIdx + 1}
                                 </td>
                                 <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 font-semibold text-xs border border-blue-100 dark:border-blue-900">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 font-semibold text-xs border border-blue-100 dark:border-blue-900 whitespace-nowrap">
                                     {v.brand || "—"}
                                   </span>
                                 </td>
@@ -2294,7 +2294,7 @@ export function GoodsMasterRegistry() {
                                   {v.variety || "—"}
                                 </td>
                                 <td className="p-2.5">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[11px]">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[11px] whitespace-nowrap">
                                     {v.size || "—"}
                                   </span>
                                 </td>
@@ -2304,7 +2304,7 @@ export function GoodsMasterRegistry() {
                                 <td className="p-2.5 text-center">
                                   <span
                                     className={cn(
-                                      "px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider",
+                                      "px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wider",
                                       v.is_active
                                         ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                                         : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"

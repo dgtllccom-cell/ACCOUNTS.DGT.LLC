@@ -290,7 +290,7 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
               {tt("invtpl.choose_template", "Choose Template")}
             </div>
             {matchedScope && (
-              <div className="text-[10px] text-slate-400">{tt("invtpl.matched_scope_hint", "Using the default set for")}: {matchedScope}</div>
+              <div className="text-[11px] text-slate-400">{tt("invtpl.matched_scope_hint", "Using the default set for")}: {matchedScope}</div>
             )}
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
@@ -306,7 +306,7 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
                 >
                   {on && <CheckCircle2 className="absolute -top-1.5 -right-1.5 h-4 w-4 text-blue-600 bg-white dark:bg-slate-900 rounded-full" />}
                   <span className="w-full aspect-[3/4] rounded overflow-hidden border border-slate-100 dark:border-slate-800" dangerouslySetInnerHTML={{ __html: def.thumbnail }} />
-                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{tt(def.nameKey, def.nameFallback)}</span>
+                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{tt(def.nameKey, def.nameFallback)}</span>
                 </button>
               );
             })}

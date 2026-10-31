@@ -101,7 +101,7 @@ export function PayrollRunView({ lang }: { lang?: string }) {
                     <td className="px-3 py-2 text-right tabular-nums text-slate-600 dark:text-slate-300">{NUM(r.total_gross)}</td>
                     <td className="px-3 py-2 text-right tabular-nums font-bold text-slate-800 dark:text-slate-100">{NUM(r.total_net)}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-slate-500">{NUM(r.total_net_usd)}</td>
-                    <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.draft}`}>{s.t(`payroll_st_${r.status}`, r.status)}</span></td>
+                    <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.draft}`}>{s.t(`payroll_st_${r.status}`, r.status)}</span></td>
                   </tr>
                 ))
               )}
@@ -142,14 +142,14 @@ function CreateRun({ s, onClose, onCreated }: { s: ReturnType<typeof useErpScree
         {err ? <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{err}</p> : null}
         <div className="mt-4 space-y-3">
           <div>
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("payroll_period", "Period (YYYY-MM)")}</label>
+            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("payroll_period", "Period (YYYY-MM)")}</label>
             <input type="month" value={periodMonth} onChange={(e) => setPeriodMonth(e.target.value)} className={INP} />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("description", "Notes")}</label>
+            <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">{s.t("description", "Notes")}</label>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className={INP} />
           </div>
-          <p className="text-[10px] text-slate-400">{s.t("payroll_scope_note", "The run covers active employees in your assigned country/branch scope.")}</p>
+          <p className="text-[11px] text-slate-400">{s.t("payroll_scope_note", "The run covers active employees in your assigned country/branch scope.")}</p>
         </div>
         <div className="mt-5 flex gap-2">
           <button type="button" onClick={() => void submit()} disabled={saving} className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
@@ -267,9 +267,9 @@ function PayrollRunDetail({ s, runId, onBack }: { s: ReturnType<typeof useErpScr
               <div className={s.textStart}>
                 <h1 className="text-lg font-black text-slate-900 dark:text-slate-50">{run.run_no}<span className="ms-2 text-sm font-normal text-slate-400">{run.period_month}</span></h1>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[run.status] || STATUS_TONE.draft}`}>{s.t(`payroll_st_${run.status}`, run.status)}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[run.status] || STATUS_TONE.draft}`}>{s.t(`payroll_st_${run.status}`, run.status)}</span>
                   {STATUS_FLOW.map((f, i) => (
-                    <span key={f} className={`text-[10px] ${STATUS_FLOW.indexOf(run.status) >= i ? "font-bold text-emerald-600" : "text-slate-300"}`}>{i > 0 ? "→ " : ""}{s.t(`payroll_st_${f}`, f)}</span>
+                    <span key={f} className={`text-[11px] ${STATUS_FLOW.indexOf(run.status) >= i ? "font-bold text-emerald-600" : "text-slate-300"}`}>{i > 0 ? "→ " : ""}{s.t(`payroll_st_${f}`, f)}</span>
                   ))}
                 </div>
               </div>
@@ -347,7 +347,7 @@ function PayrollRunDetail({ s, runId, onBack }: { s: ReturnType<typeof useErpScr
                     const editable = ["draft", "calculated", "reviewed"].includes(st);
                     return (
                       <tr key={l.id} className={`border-t border-slate-100 dark:border-slate-800 ${l.status === "excluded" ? "opacity-40" : ""}`}>
-                        <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-200">{l.employee_name}<div className="font-mono text-[10px] text-slate-400">{l.employee_code}</div></td>
+                        <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-200">{l.employee_name}<div className="font-mono text-[11px] text-slate-400">{l.employee_code}</div></td>
                         <td className="px-3 py-2 text-right tabular-nums text-slate-500">{NUM(l.basic_salary)}</td>
                         <td className="px-3 py-2 text-right tabular-nums text-slate-500">{NUM(l.allowances_total)}</td>
                         <td className="px-3 py-2 text-right tabular-nums text-slate-500">{NUM(l.overtime_amount)}</td>
@@ -371,9 +371,9 @@ function PayrollRunDetail({ s, runId, onBack }: { s: ReturnType<typeof useErpScr
                         <td className="px-3 py-2 text-slate-500">{l.currency}</td>
                         <td className="px-3 py-2 text-right tabular-nums text-slate-500">{NUM(l.usd_amount)}</td>
                         <td className="px-3 py-2">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[l.status] || STATUS_TONE.calculated}`}>{s.t(`payroll_lst_${l.status}`, l.status)}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[l.status] || STATUS_TONE.calculated}`}>{s.t(`payroll_lst_${l.status}`, l.status)}</span>
                           {editable ? (
-                            <button type="button" onClick={() => void editLine(l.id, { exclude: l.status !== "excluded" })} className="ms-1 text-[10px] font-bold text-slate-400 hover:text-rose-500">
+                            <button type="button" onClick={() => void editLine(l.id, { exclude: l.status !== "excluded" })} className="ms-1 text-[11px] font-bold text-slate-400 hover:text-rose-500">
                               {l.status === "excluded" ? s.t("payroll_include", "include") : s.t("payroll_exclude", "exclude")}
                             </button>
                           ) : null}
@@ -393,7 +393,7 @@ function PayrollRunDetail({ s, runId, onBack }: { s: ReturnType<typeof useErpScr
                 <p className="mb-1 text-[11px] font-black uppercase tracking-wider text-slate-400">{s.t("audit_trail", "Audit Trail")}</p>
                 <ul className="space-y-1">
                   {data.events.map((ev) => (
-                    <li key={ev.id} className="text-[10px] text-slate-500">
+                    <li key={ev.id} className="text-[11px] text-slate-500">
                       {new Date(ev.created_at).toLocaleString()} — <span className="font-bold">{s.t(`payroll_ev_${ev.action}`, ev.action)}</span>{ev.actor_name ? ` · ${ev.actor_name}` : ""}
                     </li>
                   ))}
@@ -410,7 +410,7 @@ function PayrollRunDetail({ s, runId, onBack }: { s: ReturnType<typeof useErpScr
 function Kpi({ label, value, tone }: { label: string; value: number | string; tone?: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-      <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</div>
+      <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">{label}</div>
       <div className={`mt-1 text-lg font-black ${tone || "text-slate-900 dark:text-slate-50"}`}>{value}</div>
     </div>
   );

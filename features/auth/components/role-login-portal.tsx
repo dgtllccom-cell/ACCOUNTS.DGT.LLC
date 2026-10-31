@@ -37,7 +37,7 @@ export function RoleLoginPortal({
             className="h-16 w-16 rounded-full object-contain shadow-xl border-2 border-amber-500/40 shrink-0"
           />
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-700">
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-amber-700">
               {config.badge}
             </p>
             <h1 className="text-2xl font-black tracking-tight text-slate-900 lg:text-3xl">
@@ -60,7 +60,7 @@ export function RoleLoginPortal({
                   {item.icon}
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
                     {item.label}
                   </p>
                   <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{item.value}</p>
@@ -71,12 +71,12 @@ export function RoleLoginPortal({
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
+          <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
             {config.scope}
           </span>
           <Link
             href={config.backHref || "/auth/login"}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-700 transition-colors hover:border-blue-200 hover:text-blue-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-slate-700 transition-colors hover:border-blue-200 hover:text-blue-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
           >
             {t(lang, "rlp.back_to_portal", "Back to portal")} <ArrowRight className="h-3.5 w-3.5" />
           </Link>
@@ -91,7 +91,7 @@ export function RoleLoginPortal({
       <AuthPortalShell lang={lang} rightPanel={rightPanel}>
         <LoginErrorBoundary>
           <div className="mb-5 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 shadow-xs dark:border-blue-900/40 dark:from-slate-900 dark:to-slate-950">
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-700 dark:text-blue-300">
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-blue-700 dark:text-blue-300">
               {config.badge}
             </p>
             <h2 className="mt-2 text-xl font-black tracking-tight text-slate-900 dark:text-white">

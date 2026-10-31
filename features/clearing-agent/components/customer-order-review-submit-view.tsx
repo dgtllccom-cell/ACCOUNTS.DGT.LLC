@@ -226,7 +226,7 @@ export function CustomerOrderReviewSubmitView({
             onClick={() => onGoToSubStep("1A")}
             className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition"
           >
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px]">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px]">
               ✓
             </span>
             <span>1A {tt("tab_1a_short", "Customer & Route")}</span>
@@ -238,7 +238,7 @@ export function CustomerOrderReviewSubmitView({
             onClick={() => onGoToSubStep("1B")}
             className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition"
           >
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px]">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px]">
               ✓
             </span>
             <span>1B {tt("tab_1b_short", "Fleet & Transport")}</span>
@@ -250,7 +250,7 @@ export function CustomerOrderReviewSubmitView({
             onClick={() => onGoToSubStep("1C")}
             className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition"
           >
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px]">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px]">
               ✓
             </span>
             <span>1C {tt("tab_1c_short", "Goods Entry")}</span>
@@ -258,7 +258,7 @@ export function CustomerOrderReviewSubmitView({
 
           {/* Step 1D */}
           <div className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px]">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px]">
               ✓
             </span>
             <span>1D {tt("tab_1d_short", "Documents & Charges")}</span>
@@ -266,7 +266,7 @@ export function CustomerOrderReviewSubmitView({
 
           {/* Step 1E (Active) */}
           <div className="flex items-center gap-1.5 rounded-xl border border-blue-500 bg-blue-600 px-3.5 py-1.5 text-xs font-black text-white shadow-xs">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-blue-700 text-[10px] font-black">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-blue-700 text-[11px] font-black">
               5
             </span>
             <span>1E {tt("tab_review_submit", "Review & Submit")}</span>
@@ -305,22 +305,22 @@ export function CustomerOrderReviewSubmitView({
           {/* Compact Serials Bar matching reference-02.jpeg */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 text-xs">
             <div className="col-span-2 sm:col-span-1 border-b sm:border-b-0 sm:border-r border-slate-100 pb-2 sm:pb-0 sm:pr-2.5 dark:border-slate-800">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">
+              <span className="text-[11px] uppercase font-bold text-slate-400 block">
                 {tt("customer_order_no", "Customer Order No.")}
               </span>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="font-mono font-black text-slate-900 dark:text-white text-xs truncate">
                   {orderNo}
                 </span>
-                <span className="rounded-full bg-amber-100 dark:bg-amber-950 px-1.5 py-0.2 text-[9px] font-bold text-amber-800 dark:text-amber-300">
+                <span className="rounded-full bg-amber-100 dark:bg-amber-950 px-1.5 py-0.2 text-[11px] font-bold text-amber-800 dark:text-amber-300">
                   {formData.status === "completed" ? "COMPLETED" : "PENDING"}
                 </span>
               </div>
-              <span className="text-[9.5px] text-slate-400 block mt-0.5">{createdAtFormatted}</span>
+              <span className="text-[11px] text-slate-400 block mt-0.5">{createdAtFormatted}</span>
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">
+              <span className="text-[11px] uppercase font-bold text-slate-400 block">
                 {tt("entry_serial", "Entry Serial")}
               </span>
               <span className="font-mono font-black text-blue-700 dark:text-blue-400 text-xs block mt-0.5">
@@ -329,7 +329,7 @@ export function CustomerOrderReviewSubmitView({
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">
+              <span className="text-[11px] uppercase font-bold text-slate-400 block">
                 {tt("global_serial_bill", "Global Serial / Bill")}
               </span>
               <span className="font-mono font-black text-slate-900 dark:text-white text-xs block mt-0.5 truncate">
@@ -338,7 +338,7 @@ export function CustomerOrderReviewSubmitView({
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">
+              <span className="text-[11px] uppercase font-bold text-slate-400 block">
                 {tt("country_serial", "Country Serial")}
               </span>
               <span className="font-mono font-black text-slate-700 dark:text-slate-300 text-xs block mt-0.5">
@@ -347,7 +347,7 @@ export function CustomerOrderReviewSubmitView({
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">
+              <span className="text-[11px] uppercase font-bold text-slate-400 block">
                 {tt("branch_serial", "Branch Serial")}
               </span>
               <span className="font-mono font-black text-slate-700 dark:text-slate-300 text-xs block mt-0.5">
@@ -381,27 +381,27 @@ export function CustomerOrderReviewSubmitView({
 
               <div className="space-y-2 text-xs">
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("customer", "Customer")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("customer", "Customer")}</span>
                   <span className="font-black text-slate-900 dark:text-white text-sm">{custName}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("account_ref", "Account Ref")}</span>
+                    <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("account_ref", "Account Ref")}</span>
                     <span className="font-mono font-bold text-blue-700 dark:text-blue-300">
                       {selectedAccountInfo?.account_number || selectedAccountInfo?.code || "CUST-0001"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("phone_mobile", "Phone / Mobile")}</span>
+                    <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("phone_mobile", "Phone / Mobile")}</span>
                     <span className="font-medium text-slate-700 dark:text-slate-300" dir="ltr">{custPhone}</span>
                   </div>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("email", "Email")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("email", "Email")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">{custEmail}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("address", "Address")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("address", "Address")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300">{custAddress}</span>
                 </div>
               </div>
@@ -431,33 +431,33 @@ export function CustomerOrderReviewSubmitView({
               <div className="space-y-2 text-xs">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("movement_type", "Movement Type")}</span>
+                    <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("movement_type", "Movement Type")}</span>
                     <span className="font-black text-purple-700 dark:text-purple-300 uppercase">
                       {formData.movement_type || "IMPORT"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("transport_mode", "Transport Mode")}</span>
+                    <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("transport_mode", "Transport Mode")}</span>
                     <span className="font-black text-blue-700 dark:text-blue-300 capitalize">
                       {formData.transport_mode ? formData.transport_mode.replace("by_", "By ") : "By Sea"}
                     </span>
                   </div>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("final_destination", "Final Destination")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("final_destination", "Final Destination")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">
                     {formData.destination_port_name || formData.destination_city || "Jebel Ali (AE)"}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("notify_party", "Notify Party")}</span>
+                    <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("notify_party", "Notify Party")}</span>
                     <span className="font-medium text-slate-700 dark:text-slate-300">
                       {partySelections?.notify_party?.customerName || "Same as Consignee"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("buyer_name", "Buyer Name")}</span>
+                    <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("buyer_name", "Buyer Name")}</span>
                     <span className="font-medium text-slate-700 dark:text-slate-300">
                       {partySelections?.buyer?.customerName || custName}
                     </span>
@@ -496,7 +496,7 @@ export function CustomerOrderReviewSubmitView({
                   <span className="text-base">🇨🇳</span>
                   <div>
                     <span className="font-bold text-slate-900 dark:text-white block text-[11px]">China (Shanghai)</span>
-                    <span className="text-[9.5px] text-slate-400 block">POL: CNSHA</span>
+                    <span className="text-[11px] text-slate-400 block">POL: CNSHA</span>
                   </div>
                 </div>
 
@@ -506,7 +506,7 @@ export function CustomerOrderReviewSubmitView({
                   <span className="text-base">🇸🇬</span>
                   <div>
                     <span className="font-bold text-slate-900 dark:text-white block text-[11px]">Singapore</span>
-                    <span className="text-[9.5px] text-slate-400 block">Transit: 22 Days</span>
+                    <span className="text-[11px] text-slate-400 block">Transit: 22 Days</span>
                   </div>
                 </div>
 
@@ -516,26 +516,26 @@ export function CustomerOrderReviewSubmitView({
                   <span className="text-base">🇦🇪</span>
                   <div>
                     <span className="font-bold text-slate-900 dark:text-white block text-[11px]">UAE (Jebel Ali)</span>
-                    <span className="text-[9.5px] text-slate-400 block">POD: AEJEA</span>
+                    <span className="text-[11px] text-slate-400 block">POD: AEJEA</span>
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs border-t border-slate-100 dark:border-slate-800">
                 <div>
-                  <span className="text-[9.5px] font-bold uppercase text-slate-400 block">{tt("route_type", "Route Type")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("route_type", "Route Type")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px]">Direct Import (Local)</span>
                 </div>
                 <div>
-                  <span className="text-[9.5px] font-bold uppercase text-slate-400 block">{tt("planned_pickup", "Planned Pickup")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("planned_pickup", "Planned Pickup")}</span>
                   <span className="font-mono text-slate-700 dark:text-slate-300 text-[11px]">11 Oct 2026</span>
                 </div>
                 <div>
-                  <span className="text-[9.5px] font-bold uppercase text-slate-400 block">{tt("planned_dispatch", "Planned Dispatch")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("planned_dispatch", "Planned Dispatch")}</span>
                   <span className="font-mono text-slate-700 dark:text-slate-300 text-[11px]">12 Oct 2026</span>
                 </div>
                 <div>
-                  <span className="text-[9.5px] font-bold uppercase text-slate-400 block">{tt("planned_arrival", "Planned Arrival")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("planned_arrival", "Planned Arrival")}</span>
                   <span className="font-mono text-slate-700 dark:text-slate-300 text-[11px]">27 Oct 2026</span>
                 </div>
               </div>
@@ -564,7 +564,7 @@ export function CustomerOrderReviewSubmitView({
 
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("assignment_mode", "Assignment Mode")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("assignment_mode", "Assignment Mode")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">
                     {formData.truck_assignment_mode === "permanent"
                       ? "Permanent Fleet"
@@ -574,19 +574,19 @@ export function CustomerOrderReviewSubmitView({
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("truck_plate", "Truck / Vehicle Plate")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("truck_plate", "Truck / Vehicle Plate")}</span>
                   <span className="font-mono font-black text-blue-700 dark:text-blue-400 text-sm">
                     {formData.truck_number || "DGT-7742"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("driver_name", "Driver Name")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("driver_name", "Driver Name")}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {formData.truck_driver_name || "Mohammed Rashed"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block">{tt("driver_mobile", "Driver Mobile")}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-400 block">{tt("driver_mobile", "Driver Mobile")}</span>
                   <span className="font-mono font-medium text-slate-700 dark:text-slate-300" dir="ltr">
                     {formData.truck_driver_mobile || "+971 55 987 6543"}
                   </span>
@@ -605,7 +605,7 @@ export function CustomerOrderReviewSubmitView({
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
                   1C. {tt("goods_cargo_manifest", "Goods & Cargo Manifest")}
                 </h4>
-                <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+                <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 whitespace-nowrap">
                   {cargoTotals.count} {tt("items", "Items")}
                 </span>
               </div>
@@ -632,7 +632,7 @@ export function CustomerOrderReviewSubmitView({
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-slate-50/90 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
+                <thead className="bg-slate-50/90 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
                   <tr>
                     <th className="py-2 px-3 text-center w-8">#</th>
                     <th className="py-2 px-3">{tt("col_warehouse_source", "Warehouse (Source)")}</th>
@@ -752,7 +752,7 @@ export function CustomerOrderReviewSubmitView({
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
                     1D. {tt("documents_and_charges", "Documents & Charges")}
                   </h4>
-                  <span className="rounded-full bg-blue-100 dark:bg-blue-950 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:text-blue-300">
+                  <span className="rounded-full bg-blue-100 dark:bg-blue-950 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:text-blue-300 whitespace-nowrap">
                     {sampleDocs.length} {tt("documents", "Documents")}
                   </span>
                 </div>
@@ -760,7 +760,7 @@ export function CustomerOrderReviewSubmitView({
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="text-[10px] font-bold uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                  <thead className="text-[11px] font-bold uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800">
                     <tr>
                       <th className="py-1.5 px-2 w-6">#</th>
                       <th className="py-1.5 px-2">{tt("col_document_name", "Document Name")}</th>
@@ -854,7 +854,7 @@ export function CustomerOrderReviewSubmitView({
                 </h4>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 whitespace-nowrap">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Live</span>
                 </span>
@@ -896,7 +896,7 @@ export function CustomerOrderReviewSubmitView({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-slate-400">{tt("status", "Status")}</span>
-                <span className="rounded-full bg-amber-100 dark:bg-amber-950 px-2 py-0.2 text-[10px] font-bold text-amber-800 dark:text-amber-300">
+                <span className="rounded-full bg-amber-100 dark:bg-amber-950 px-2 py-0.2 text-[11px] font-bold text-amber-800 dark:text-amber-300">
                   {formData.status || "Draft"}
                 </span>
               </div>
@@ -927,7 +927,7 @@ export function CustomerOrderReviewSubmitView({
               <button
                 type="button"
                 onClick={() => onGoToSubStep("1A")}
-                className="text-[10px] font-bold text-blue-600 hover:underline"
+                className="text-[11px] font-bold text-blue-600 hover:underline"
               >
                 {tt("view_full_route", "View Full Route")}
               </button>
@@ -939,17 +939,17 @@ export function CustomerOrderReviewSubmitView({
                 <span className="text-sm">🔴</span>
                 <div>
                   <span className="font-bold text-slate-900 dark:text-white block">Shanghai</span>
-                  <span className="text-[9.5px] text-slate-500">CNSHA</span>
+                  <span className="text-[11px] text-slate-500">CNSHA</span>
                 </div>
               </div>
-              <div className="pl-2 border-l-2 border-dashed border-blue-300 dark:border-blue-800 py-1 ml-1.5 text-[10px] text-blue-600 dark:text-blue-400 font-bold flex items-center gap-1">
+              <div className="pl-2 border-l-2 border-dashed border-blue-300 dark:border-blue-800 py-1 ml-1.5 text-[11px] text-blue-600 dark:text-blue-400 font-bold flex items-center gap-1">
                 <span>🚢 Singapore Transit: 22 Days</span>
               </div>
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-sm">🟢</span>
                 <div>
                   <span className="font-bold text-slate-900 dark:text-white block">Jebel Ali</span>
-                  <span className="text-[9.5px] text-slate-500">AEJEA</span>
+                  <span className="text-[11px] text-slate-500">AEJEA</span>
                 </div>
               </div>
             </div>
@@ -966,7 +966,7 @@ export function CustomerOrderReviewSubmitView({
                   {tt("summary_live", "Summary (Live)")}
                 </h4>
               </div>
-              <span className="text-[10px] font-bold text-slate-400">
+              <span className="text-[11px] font-bold text-slate-400">
                 {tt("view_details", "View Details >")}
               </span>
             </div>

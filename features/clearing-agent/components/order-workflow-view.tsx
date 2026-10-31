@@ -175,17 +175,17 @@ export function OrderWorkflowView({ orderId, lang }: { orderId: string; lang?: s
                   <span className="text-xs font-black uppercase tracking-wider text-blue-900 dark:text-blue-300">
                     {s.t("active_handover_task", "Active Handover Task")}
                   </span>
-                  <Badge variant="outline" className="text-[10px] font-bold border-blue-300 text-blue-700 bg-white dark:bg-slate-900">
+                  <Badge variant="outline" className="text-[11px] font-bold border-blue-300 text-blue-700 bg-white dark:bg-slate-900">
                     {activeHandover.metadata?.requestedTask || activeHandover.narration || "Task Assigned"}
                   </Badge>
                   {activeHandover.metadata?.priority && (
-                    <Badge variant={activeHandover.metadata.priority === "urgent" ? "destructive" : "secondary"} className="text-[9px] uppercase">
+                    <Badge variant={activeHandover.metadata.priority === "urgent" ? "destructive" : "secondary"} className="text-[11px] uppercase">
                       {activeHandover.metadata.priority}
                     </Badge>
                   )}
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                  {s.t("assigned_by", "Assigned by")}: <span className="font-bold text-slate-800 dark:text-slate-200">{activeHandover.sender_name || "Branch User"}</span> • {s.t("instruction", "Instruction")}: <span className="italic font-medium">"{activeHandover.remarks || activeHandover.narration || "Please complete assigned work."}"</span>
+                  {s.t("assigned_by", "Assigned by")}: <span className="font-bold text-slate-800 dark:text-slate-200">{activeHandover.sender_name || "Branch User"}</span> • {s.t("instruction", "Instruction")}: <span className="italic font-medium">&quot;{activeHandover.remarks || activeHandover.narration || "Please complete assigned work."}&quot;</span>
                 </p>
               </div>
             </div>
@@ -217,7 +217,7 @@ export function OrderWorkflowView({ orderId, lang }: { orderId: string; lang?: s
           <Badge>{s.t(`stage_${order.current_stage}`, order.current_stage)}</Badge>
         </div>
         {/* Stage progress bar */}
-        <div className="mt-4 flex flex-wrap items-center gap-1 text-[10px] font-bold">
+        <div className="mt-4 flex flex-wrap items-center gap-1 text-[11px] font-bold">
           {STAGES.map((st, i) => (
             <div key={st} className="flex items-center gap-1">
               <span
@@ -251,7 +251,7 @@ export function OrderWorkflowView({ orderId, lang }: { orderId: string; lang?: s
               >
                 <div className="flex items-center justify-between">
                   <span className="font-bold">{s.t("leg", "Leg")} {leg.leg_no}</span>
-                  <Badge variant="outline" className="text-[9px]">{s.t(`stage_${leg.stage}`, leg.stage)}</Badge>
+                  <Badge variant="outline" className="text-[11px]">{s.t(`stage_${leg.stage}`, leg.stage)}</Badge>
                 </div>
                 <span className="text-slate-500">
                   {leg.from_country_name || "—"} <ArrowRight className="inline h-3 w-3" /> {leg.to_country_name || "—"}
@@ -317,7 +317,7 @@ export function OrderWorkflowView({ orderId, lang }: { orderId: string; lang?: s
                     {legTransfers.map((t) => (
                       <div key={t.id} className="flex items-center justify-between rounded bg-slate-50 px-2 py-1 text-xs dark:bg-slate-900">
                         <span>{t.transfer_no}</span>
-                        <Badge variant="outline" className="text-[9px]">{s.t(`status_${t.status}`, t.status)}</Badge>
+                        <Badge variant="outline" className="text-[11px]">{s.t(`status_${t.status}`, t.status)}</Badge>
                       </div>
                     ))}
                   </div>
@@ -332,7 +332,7 @@ export function OrderWorkflowView({ orderId, lang }: { orderId: string; lang?: s
                       <div key={v.id} className="rounded bg-slate-50 px-2 py-1.5 text-xs dark:bg-slate-900">
                         <div className="flex items-center justify-between">
                           <span className="font-semibold">{v.verified_by_name || "—"}</span>
-                          <Badge variant={v.result === "verified" ? "default" : "destructive"} className="text-[9px]">{s.t(`result_${v.result}`, v.result)}</Badge>
+                          <Badge variant={v.result === "verified" ? "default" : "destructive"} className="text-[11px]">{s.t(`result_${v.result}`, v.result)}</Badge>
                         </div>
                         {v.discrepancy_notes && <p className="text-slate-500">{v.discrepancy_notes}</p>}
                       </div>

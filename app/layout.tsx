@@ -52,8 +52,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Every UI font, requested once (the per-language choice lives in globals.css → --font-arabic). */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&family=Vazirmatn:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap"
           rel="stylesheet"
         />
         <script
@@ -117,10 +118,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     if (cookieLang !== lang) document.cookie = 'erp_lang=' + encodeURIComponent(lang) + '; Path=/; Max-Age=' + (60 * 60 * 24 * 365) + '; SameSite=Lax';
     document.documentElement.lang = lang;
     document.documentElement.dir = rtl.has(lang) ? 'rtl' : 'ltr';
-    if (rtl.has(lang)) {
-      var overrides = { ar: "'Cairo', sans-serif", fa: "'Vazirmatn', sans-serif", ur: "'Noto Naskh Arabic', 'Cairo', 'Segoe UI', Tahoma, sans-serif", ps: "'Noto Naskh Arabic', 'Cairo', 'Segoe UI', Tahoma, sans-serif" };
-      document.documentElement.style.setProperty('--font-family-override', overrides[lang] || "'Noto Naskh Arabic', sans-serif");
-    }
   } catch {}
   try {
     var isLocalDev = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(location.hostname) !== -1;

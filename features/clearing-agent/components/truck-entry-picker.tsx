@@ -174,7 +174,7 @@ export function TruckEntryPicker({
                       className="flex w-full flex-col items-start gap-0.5 border-b border-slate-100 px-3 py-2 text-start last:border-0 hover:bg-blue-50 dark:border-slate-800 dark:hover:bg-slate-800"
                     >
                       <span className="text-xs font-black text-slate-900 dark:text-slate-50">{t.truck_number}</span>
-                      <span className="text-[10px] text-slate-500">
+                      <span className="text-[11px] text-slate-500">
                         {[t.driver_name, t.owner_name || t.transport_company, t.truck_type].filter(Boolean).join(" · ") || "—"}
                       </span>
                     </button>
@@ -209,7 +209,7 @@ export function TruckEntryPicker({
                 <div><dt className="inline text-slate-500">{s.t("truck_type", "Type / Capacity")}: </dt><dd className="inline font-bold">{[selected.truck_type, selected.capacity].filter(Boolean).join(" · ") || "—"}</dd></div>
                 {selected.registration_number ? <div><dt className="inline text-slate-500">{s.t("truck_reg_no", "Registration No")}: </dt><dd className="inline font-bold">{selected.registration_number}</dd></div> : null}
               </dl>
-              <p className="mt-1.5 text-[10px] text-slate-500">{s.t("truck_autofill_note", "Details are loaded from the central registry and saved with this order.")}</p>
+              <p className="mt-1.5 text-[11px] text-slate-500">{s.t("truck_autofill_note", "Details are loaded from the central registry and saved with this order.")}</p>
             </div>
           )}
         </div>
@@ -231,7 +231,7 @@ export function TruckEntryPicker({
             <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-300">{s.t("truck_owner", "Owner / Transport Company")}</label>
             <input disabled={disabled} value={value.truck_owner_name} onChange={(e) => onChange({ ...value, truck_owner_name: e.target.value })} className={fld} />
           </div>
-          <p className="sm:col-span-2 text-[10px] text-slate-500">{s.t("truck_temp_note", "Temporary trucks are saved with this order only and are not added to the central registry.")}</p>
+          <p className="sm:col-span-2 text-[11px] text-slate-500">{s.t("truck_temp_note", "Temporary trucks are saved with this order only and are not added to the central registry.")}</p>
         </div>
       )}
     </div>

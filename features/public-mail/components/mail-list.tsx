@@ -134,7 +134,7 @@ export function MailList({
 
               {/* OTP Pill if detected */}
               {msg.is_verification_code && msg.extracted_code && (
-                <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[11px] font-semibold">
+                <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[11px] font-semibold whitespace-nowrap">
                   <KeyRound className="h-3 w-3" />
                   <span>{tt("mail.code_label", "Code")}: {msg.extracted_code}</span>
                 </div>

@@ -195,7 +195,7 @@ export function CustomerAutoReplyPanel({
           <MessageSquareText className="h-3.5 w-3.5 text-teal-600" />
           {tr(lang, "title", "Customer Auto-Reply")}
         </span>
-        <span className="text-[10px] font-semibold text-slate-400">{open ? "−" : "+"}</span>
+        <span className="text-[11px] font-semibold text-slate-400">{open ? "−" : "+"}</span>
       </button>
 
       {open && (
@@ -295,7 +295,7 @@ export function CustomerAutoReplyPanel({
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm leading-relaxed"
                 />
                 {aiDraftBody && aiDraftBody !== body && (
-                  <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
+                  <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
                     {tr(lang, "edited_note", "Edited from the generated draft — your version will be sent and logged.")}
                   </p>
                 )}
@@ -330,7 +330,7 @@ export function CustomerAutoReplyPanel({
 
               {/* history */}
               <div className="pt-2">
-                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 pb-1.5">
+                <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 pb-1.5">
                   <History className="h-3 w-3" /> {tr(lang, "history", "Reply history")}
                 </h4>
                 {data.replies.length === 0 ? (
@@ -360,7 +360,7 @@ export function CustomerAutoReplyPanel({
                               <td className="px-2.5 py-1.5 font-semibold text-slate-700 dark:text-slate-200">
                                 {r.sentByName}
                                 {r.wasEdited && (
-                                  <span className="ms-1 text-[9px] text-amber-600 dark:text-amber-400">
+                                  <span className="ms-1 text-[11px] text-amber-600 dark:text-amber-400">
                                     ({tr(lang, "edited_badge", "edited")})
                                   </span>
                                 )}
@@ -373,7 +373,7 @@ export function CustomerAutoReplyPanel({
                                   {tr(lang, "status_" + r.status, r.status)}
                                 </span>
                                 {r.detail && (
-                                  <span className="block text-[10px] text-slate-400 mt-0.5 max-w-[260px]">{r.detail}</span>
+                                  <span className="block text-[11px] text-slate-400 mt-0.5 max-w-[260px]">{r.detail}</span>
                                 )}
                               </td>
                             </tr>

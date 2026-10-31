@@ -481,7 +481,7 @@ export function LocalPurchaseApprovedHeader({
             onCountryChange(c.id);
           }}
           className={cn(
-            "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold transition-all",
+            "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold transition-all",
             selectedCountryId === c.id
               ? "bg-amber-600 text-white"
               : "bg-amber-200/70 hover:bg-amber-300 text-amber-950 dark:bg-amber-900/40 dark:text-amber-200"
@@ -505,7 +505,7 @@ export function LocalPurchaseApprovedHeader({
             onBranchChange(b.id);
           }}
           className={cn(
-            "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold transition-all",
+            "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold transition-all",
             selectedBranchId === b.id
               ? "bg-amber-600 text-white"
               : "bg-amber-200/70 hover:bg-amber-300 text-amber-950 dark:bg-amber-900/40 dark:text-amber-200"
@@ -520,7 +520,7 @@ export function LocalPurchaseApprovedHeader({
     }
 
     return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-950 dark:bg-amber-900/40 dark:text-amber-200 text-[10px] font-bold">
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-950 dark:bg-amber-900/40 dark:text-amber-200 text-[11px] font-bold whitespace-nowrap">
         <Building2 className="h-2.5 w-2.5 opacity-70" />
         <span>{scopeLabel}</span>
       </span>
@@ -1020,7 +1020,7 @@ export function LocalPurchaseApprovedHeader({
               <Filter aria-hidden="true" />
               <span>{tx("common.filter", "Filters")}</span>
               {activeFiltersCount > 0 && (
-                <span className="ms-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white" dir="ltr">
+                <span className="ms-1 px-1.5 py-0.5 rounded-full text-[11px] font-black bg-blue-600 text-white whitespace-nowrap" dir="ltr">
                   {activeFiltersCount}
                 </span>
               )}
@@ -1060,7 +1060,7 @@ export function LocalPurchaseApprovedHeader({
                 <div className="space-y-2.5 pt-1 text-xs">
                   {/* Supplier filter */}
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">
                       {tx("lp.col_supplier_name", "Supplier")}
                     </label>
                     <select
@@ -1077,7 +1077,7 @@ export function LocalPurchaseApprovedHeader({
 
                   {/* Goods filter */}
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">
                       {tx("lp.col_goods_name", "Goods")}
                     </label>
                     <select
@@ -1097,7 +1097,7 @@ export function LocalPurchaseApprovedHeader({
                   {/* Country filter (if Super Admin or multiple countries) */}
                   {isSuperAdmin && (
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1">
                         {tx("common.country", "Country")}
                       </label>
                       <select
@@ -1117,7 +1117,7 @@ export function LocalPurchaseApprovedHeader({
 
                   {/* Branch filter */}
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">
                       {tx("common.branch", "Branch")}
                     </label>
                     <select
@@ -1136,7 +1136,7 @@ export function LocalPurchaseApprovedHeader({
 
                   {/* Status filter */}
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">
                       {tx("lp.col_status", "Status")}
                     </label>
                     <select
@@ -1154,7 +1154,7 @@ export function LocalPurchaseApprovedHeader({
 
                   {/* Payment Mode filter */}
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">
                       {tx("lp.reg_payment_mode", "Payment Mode")}
                     </label>
                     <select
@@ -1173,7 +1173,7 @@ export function LocalPurchaseApprovedHeader({
                   {/* Date range filters */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1">
                         {tx("common.date_from", "From Date")}
                       </label>
                       <input
@@ -1183,7 +1183,7 @@ export function LocalPurchaseApprovedHeader({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1">
                         {tx("common.date_to", "To Date")}
                       </label>
                       <input
@@ -1728,7 +1728,7 @@ export function LocalPurchaseApprovedHeader({
                             {row.name}
                           </div>
                           {row.subname && (
-                            <div className="text-[10px] text-slate-500 truncate">
+                            <div className="text-[11px] text-slate-500 truncate">
                               {row.subname}
                             </div>
                           )}
@@ -1738,7 +1738,7 @@ export function LocalPurchaseApprovedHeader({
                         <div className="text-xs font-black font-mono" dir="ltr">
                           {fmtMoney(metrics.unit, row.amount)}
                         </div>
-                        <div className="text-[10px] text-slate-500" dir="ltr">
+                        <div className="text-[11px] text-slate-500" dir="ltr">
                           {fmtInt(row.count)} {tx("lp.bills_label", "Bills")}
                         </div>
                       </div>
@@ -1752,7 +1752,7 @@ export function LocalPurchaseApprovedHeader({
                           style={{ width: `${Math.min(100, Math.max(0, row.percentage))}%` }}
                         />
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 flex-none" dir="ltr">
+                      <span className="text-[11px] font-bold text-slate-500 flex-none" dir="ltr">
                         {row.percentage}%
                       </span>
                     </div>

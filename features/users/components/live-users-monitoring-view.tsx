@@ -319,7 +319,7 @@ export function LiveUsersMonitoringView() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 dark:border-slate-800 dark:bg-slate-900/90 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               {tt("total_staff", "Total Personnel")}
             </span>
             <Users className="h-4 w-4 text-blue-500" />
@@ -327,12 +327,12 @@ export function LiveUsersMonitoringView() {
           <div className="mt-1.5 text-2xl font-black text-slate-900 dark:text-white">
             {stats.total}
           </div>
-          <p className="text-[10px] text-slate-400 mt-0.5">{tt("registered_roster", "Scoped workforce")}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{tt("registered_roster", "Scoped workforce")}</p>
         </div>
 
         <div className="rounded-2xl border border-emerald-200/80 bg-white p-3.5 dark:border-emerald-900/50 dark:bg-slate-900/90 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
               {tt("online_now", "Online Now")}
             </span>
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping" />
@@ -340,12 +340,12 @@ export function LiveUsersMonitoringView() {
           <div className="mt-1.5 text-2xl font-black text-emerald-600 dark:text-emerald-400">
             {stats.online}
           </div>
-          <p className="text-[10px] text-emerald-600/80 mt-0.5">{tt("currently_active", "Actively working")}</p>
+          <p className="text-[11px] text-emerald-600/80 mt-0.5">{tt("currently_active", "Actively working")}</p>
         </div>
 
         <div className="rounded-2xl border border-amber-200/80 bg-white p-3.5 dark:border-amber-900/50 dark:bg-slate-900/90 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
               {tt("idle_users", "Idle / Away")}
             </span>
             <Clock className="h-4 w-4 text-amber-500" />
@@ -353,12 +353,12 @@ export function LiveUsersMonitoringView() {
           <div className="mt-1.5 text-2xl font-black text-amber-600 dark:text-amber-400">
             {stats.idle}
           </div>
-          <p className="text-[10px] text-amber-600/80 mt-0.5">{tt("session_standby", "Standby / Session on")}</p>
+          <p className="text-[11px] text-amber-600/80 mt-0.5">{tt("session_standby", "Standby / Session on")}</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 dark:border-slate-800 dark:bg-slate-900/90 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-indigo-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-500">
               {tt("business_staff", "Business Desk")}
             </span>
             <Briefcase className="h-4 w-4 text-indigo-500" />
@@ -366,12 +366,12 @@ export function LiveUsersMonitoringView() {
           <div className="mt-1.5 text-2xl font-black text-indigo-600 dark:text-indigo-400">
             {stats.business}
           </div>
-          <p className="text-[10px] text-slate-400 mt-0.5">{tt("commercial_roles", "Trading & Accounts")}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{tt("commercial_roles", "Trading & Accounts")}</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 dark:border-slate-800 dark:bg-slate-900/90 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-cyan-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-500">
               {tt("shipping_staff", "Shipping Lines")}
             </span>
             <Ship className="h-4 w-4 text-cyan-500" />
@@ -379,12 +379,12 @@ export function LiveUsersMonitoringView() {
           <div className="mt-1.5 text-2xl font-black text-cyan-600 dark:text-cyan-400">
             {stats.shipping}
           </div>
-          <p className="text-[10px] text-slate-400 mt-0.5">{tt("container_freight", "Containers & Vessels")}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{tt("container_freight", "Containers & Vessels")}</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 dark:border-slate-800 dark:bg-slate-900/90 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-purple-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-500">
               {tt("clearing_staff", "Clearing Agents")}
             </span>
             <Boxes className="h-4 w-4 text-purple-500" />
@@ -392,7 +392,7 @@ export function LiveUsersMonitoringView() {
           <div className="mt-1.5 text-2xl font-black text-purple-600 dark:text-purple-400">
             {stats.clearing}
           </div>
-          <p className="text-[10px] text-slate-400 mt-0.5">{tt("customs_transport", "Customs & Haulage")}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{tt("customs_transport", "Customs & Haulage")}</p>
         </div>
       </div>
 
@@ -496,7 +496,7 @@ export function LiveUsersMonitoringView() {
           <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800/60 text-xs">
             {/* Domain Tabs */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase text-slate-400 mr-1">{tt("domain", "Domain")}:</span>
+              <span className="text-[11px] font-black uppercase text-slate-400 mr-1">{tt("domain", "Domain")}:</span>
               {(["all", "Business", "Shipping Line", "Clearing Agent"] as const).map((d) => (
                 <button
                   key={d}
@@ -515,7 +515,7 @@ export function LiveUsersMonitoringView() {
 
             {/* Status Tabs */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase text-slate-400 mr-1">{tt("status", "Status")}:</span>
+              <span className="text-[11px] font-black uppercase text-slate-400 mr-1">{tt("status", "Status")}:</span>
               {(["all", "Online", "Idle", "Offline"] as const).map((st) => (
                 <button
                   key={st}
@@ -559,7 +559,7 @@ export function LiveUsersMonitoringView() {
           /* ================= PROFESSIONAL HIGH-CONTRAST TABLE ================= */
           <div className="overflow-x-auto">
             <table className="w-full text-left rtl:text-right text-xs">
-              <thead className="bg-[#0b1626] text-white border-b border-slate-800 text-[10.5px] font-black uppercase tracking-wider">
+              <thead className="bg-[#0b1626] text-white border-b border-slate-800 text-[11px] font-black uppercase tracking-wider">
                 <tr>
                   <Th className="py-3 px-4 whitespace-nowrap">{tt("th_user_id", "USER ID")}</Th>
                   <Th className="py-3 px-4 whitespace-nowrap">{tt("th_user_name", "USER NAME & ROLE")}</Th>
@@ -594,12 +594,12 @@ export function LiveUsersMonitoringView() {
                         <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                           <span>{user.userName}</span>
                           {user.id === userContext?.userId && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold">
+                            <span className="text-[11px] px-1.5 py-0.2 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold">
                               You
                             </span>
                           )}
                         </div>
-                        <span className="text-[10.5px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
                           {user.roleTitle}
                         </span>
                       </td>
@@ -614,7 +614,7 @@ export function LiveUsersMonitoringView() {
                             {user.branchCode}
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-400 block mt-0.5 truncate max-w-[200px]">
+                        <span className="text-[11px] text-slate-400 block mt-0.5 truncate max-w-[200px]">
                           {user.branchName}
                         </span>
                       </td>
@@ -622,7 +622,7 @@ export function LiveUsersMonitoringView() {
                       {/* USER TYPE */}
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold border ${
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
                             user.userType === "Shipping Line"
                               ? "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-300 dark:border-cyan-800"
                               : user.userType === "Clearing Agent"
@@ -641,7 +641,7 @@ export function LiveUsersMonitoringView() {
                           <span className="truncate max-w-[280px]">{user.currentWork}</span>
                         </div>
                         {user.lastAction ? (
-                          <span className="text-[10px] text-slate-400 block mt-0.5 truncate max-w-[280px]">
+                          <span className="text-[11px] text-slate-400 block mt-0.5 truncate max-w-[280px]">
                             {user.lastAction}
                           </span>
                         ) : null}
@@ -655,13 +655,13 @@ export function LiveUsersMonitoringView() {
                       {/* TIME */}
                       <td className="py-3 px-3 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
                         <div>{user.time}</div>
-                        <span className="text-[9.5px] text-slate-400 block">{user.lastActiveAgo}</span>
+                        <span className="text-[11px] text-slate-400 block">{user.lastActiveAgo}</span>
                       </td>
 
                       {/* STATUS */}
                       <td className="py-3 px-3 text-center whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black border ${
                             isOnline
                               ? "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
                               : isIdle
@@ -724,16 +724,16 @@ export function LiveUsersMonitoringView() {
                       <div>
                         <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                           <span>{user.userName}</span>
-                          <span className="font-mono text-[10px] text-cyan-600 dark:text-cyan-400">
+                          <span className="font-mono text-[11px] text-cyan-600 dark:text-cyan-400">
                             [{user.userId}]
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-400 block">{user.roleTitle}</span>
+                        <span className="text-[11px] text-slate-400 block">{user.roleTitle}</span>
                       </div>
                     </div>
 
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black border ${
                         isOnline
                           ? "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300"
                           : isIdle
@@ -755,25 +755,25 @@ export function LiveUsersMonitoringView() {
                     </div>
 
                     <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-150 dark:border-slate-750">
-                      <span className="text-[10px] font-black uppercase text-slate-400 block">{tt("current_work", "CURRENT WORK")}</span>
+                      <span className="text-[11px] font-black uppercase text-slate-400 block">{tt("current_work", "CURRENT WORK")}</span>
                       <span className="font-bold text-blue-600 dark:text-blue-400 mt-0.5 block truncate">
                         {user.currentWork}
                       </span>
                       {user.lastAction && (
-                        <span className="text-[9.5px] text-slate-500 block truncate mt-0.5">
+                        <span className="text-[11px] text-slate-500 block truncate mt-0.5">
                           {user.lastAction}
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between text-[10.5px] text-slate-500 pt-1">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                       <span>{user.date} at {user.time}</span>
                       <span className="italic">{user.lastActiveAgo}</span>
                     </div>
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                       {user.userType}
                     </span>
                     <button

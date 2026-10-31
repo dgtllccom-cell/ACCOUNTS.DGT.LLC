@@ -97,7 +97,7 @@ export async function buildReviewContext(
     const documentOwnName = partyRole === "supplier" ? buyerName : partyRole === "customer" ? sellerName : null;
 
     // ── candidate party masters (customers + companies), authorised by scope ─────────────────────────
-    let candidates: PartyCandidate[] = [];
+    const candidates: PartyCandidate[] = [];
     const tokens = significantTokens(documentPartyName).slice(0, 3);
     if (partyRole && tokens.length) {
       const patterns = tokens.map((t) => `%${t.replace(/[%_\\]/g, "")}%`);

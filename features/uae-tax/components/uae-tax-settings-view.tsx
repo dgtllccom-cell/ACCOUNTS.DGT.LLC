@@ -302,7 +302,7 @@ export function UaeTaxSettingsView({ lang: langProp }: { lang?: SupportedLanguag
                         <td className="px-4 py-3 text-slate-500">{ent.branch_count ?? 0}</td>
                         <td className="px-4 py-3">
                           <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                               ent.is_active
                                 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
                                 : "bg-slate-100 text-slate-500 dark:bg-slate-800"
@@ -357,7 +357,7 @@ export function UaeTaxSettingsView({ lang: langProp }: { lang?: SupportedLanguag
                       <td className="px-4 py-3 text-slate-500">{z.zone_type}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                             z.is_designated
                               ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300"
                               : "bg-slate-100 text-slate-500 dark:bg-slate-800"

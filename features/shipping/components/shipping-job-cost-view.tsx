@@ -283,7 +283,7 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                         <td className="px-2 py-2 text-right font-mono">{l.currency} {l.grandAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
                         <td className="px-2 py-2">
                           {l.claim ? (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase bg-slate-700/60 text-slate-300">
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full uppercase bg-slate-700/60 text-slate-300 whitespace-nowrap">
                               {tt(`claimstatus_${l.claim.status}`, l.claim.status)}
                             </span>
                           ) : (
@@ -295,7 +295,7 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                             <button
                               onClick={() => void handleClaim(l.id)}
                               disabled={claimingLineId === l.id}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[10px] font-semibold disabled:opacity-50"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[11px] font-semibold disabled:opacity-50"
                             >
                               {claimingLineId === l.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
                               {tt("claim_action", "Submit Claim")}
@@ -334,7 +334,7 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
               <div className="space-y-4">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs text-slate-300">
-                    <thead className="bg-slate-950/60 text-slate-400 uppercase text-[10px] tracking-wider">
+                    <thead className="bg-slate-950/60 text-slate-400 uppercase text-[11px] tracking-wider">
                       <tr>
                         <Th>{tt("col_leg", "Leg / Corridor")}</Th>
                         <Th>{tt("col_provider", "Provider / Account")}</Th>
@@ -352,14 +352,14 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                           <td className="px-3 py-2 font-mono">
                             <span className="font-bold text-white">Leg #{pb.legNo ?? "-"}</span>
                             {pb.fromLocation || pb.toLocation ? (
-                              <span className="block text-[10px] text-slate-400">
+                              <span className="block text-[11px] text-slate-400">
                                 {pb.fromLocation || "?"} → {pb.toLocation || "?"}
                               </span>
                             ) : null}
                           </td>
                           <td className="px-3 py-2">
                             <span className="font-bold text-white">{pb.providerName}</span>
-                            <span className="block text-[10px] font-mono text-indigo-400">
+                            <span className="block text-[11px] font-mono text-indigo-400">
                               {pb.providerAccountCode ? `[${pb.providerAccountCode}] ` : ""}
                               {pb.providerAccountName || ""}
                             </span>
@@ -370,7 +370,7 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                           <td className="px-3 py-2">
                             <span className="capitalize">{pb.expenseCategory?.replace(/_/g, " ") || "-"}</span>
                             {pb.countryOfService && (
-                              <span className="block text-[10px] text-slate-400">
+                              <span className="block text-[11px] text-slate-400">
                                 📍 {pb.countryOfService}
                               </span>
                             )}
@@ -387,7 +387,7 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                           <td className="px-3 py-2 text-center">
                             <div className="flex flex-col items-center gap-1">
                               <span
-                                className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase ${
                                   pb.postingStatus === "posted"
                                     ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                                     : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
@@ -396,7 +396,7 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                                 {pb.postingStatus === "posted" ? tt("posted", "Posted") : tt("unposted", "Unposted")}
                               </span>
                               <span
-                                className={`text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase ${
+                                className={`text-[11px] font-semibold px-2 py-0.5 rounded-full uppercase ${
                                   pb.paymentStatus === "paid"
                                     ? "bg-emerald-500/20 text-emerald-300"
                                     : pb.paymentStatus === "partially_paid"
@@ -433,10 +433,10 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                           >
                             <div>
                               <span className="font-bold text-white">{b.providerName}</span>
-                              <span className="block text-[10px] text-slate-400 font-mono">
+                              <span className="block text-[11px] text-slate-400 font-mono">
                                 {pmt.paymentNo} • {pmt.paymentDate?.split("T")[0]} {pmt.referenceNo ? `(${pmt.referenceNo})` : ""}
                               </span>
-                              <span className="text-[10px] text-slate-400">
+                              <span className="text-[11px] text-slate-400">
                                 Paid via: {pmt.paymentAccountName || pmt.paymentAccountCode || "Cash/Bank"}
                               </span>
                             </div>
@@ -444,7 +444,7 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                               <span className="font-mono font-bold text-emerald-400">
                                 {b.currencyCode} {Number(pmt.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                               </span>
-                              <span className="block text-[9px] uppercase text-emerald-500/80">Posted</span>
+                              <span className="block text-[11px] uppercase text-emerald-500/80">Posted</span>
                             </div>
                           </div>
                         ))
@@ -473,7 +473,7 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                         {tt(`type_${c.category}`, c.category || "-")}
                       </div>
                       <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase ${
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full uppercase ${
                           c.status === "accepted"
                             ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                             : c.status === "pending"
@@ -487,7 +487,7 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                     {c.status === "pending" ? (
                       <div className="flex flex-wrap items-end gap-2 pt-2 border-t border-slate-800/60">
                         <div className="w-48">
-                          <label className="block text-[10px] text-slate-500 mb-1">{tt("debit_ledger", "Debit Ledger")}</label>
+                          <label className="block text-[11px] text-slate-500 mb-1">{tt("debit_ledger", "Debit Ledger")}</label>
                           <SearchSelect
                             label=""
                             value={acceptLedgers[c.id]?.debit || ""}
@@ -497,7 +497,7 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                           />
                         </div>
                         <div className="w-48">
-                          <label className="block text-[10px] text-slate-500 mb-1">{tt("credit_ledger", "Credit Ledger")}</label>
+                          <label className="block text-[11px] text-slate-500 mb-1">{tt("credit_ledger", "Credit Ledger")}</label>
                           <SearchSelect
                             label=""
                             value={acceptLedgers[c.id]?.credit || ""}

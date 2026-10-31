@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize } from "@/lib/permissions/middleware";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { invalidRecordIdMessage, rethrowIfNextControlFlow } from "@/lib/api/response";
+import { isUuid } from "@/lib/utils";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { isShippingDomainOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { getCombinedCustomerStatement } from "@/lib/services/customer-statement-service";
@@ -19,6 +20,10 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const customerId = searchParams.get("customerId");
     if (!customerId) return NextResponse.json({ success: false, error: "customerId is required" }, { status: 400 });
+    // an account number (ACC-000080) or code is not a customer id — say so instead of a uuid-cast 500
+    if (!isUuid(customerId)) {
+      return NextResponse.json({ success: false, code: "INVALID_ID", error: await invalidRecordIdMessage(customerId) }, { status: 400 });
+    }
 
     if (!session.isSuperAdmin) {
       const customer = await withLocalPg((sql) => sql`

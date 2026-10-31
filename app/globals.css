@@ -302,7 +302,7 @@ body {
 .erp-table-head {
   background: hsl(var(--muted) / 0.65);
   color: hsl(var(--muted-foreground));
-  font-size: 0.7rem;
+  font-size: max(11px, 0.7rem);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -346,10 +346,20 @@ body {
 
 
 /* ── Enterprise SaaS Typography & Font Engine (Zoho / Stripe Quality) ── */
+/* ONE place for the per-language font: every RTL rule below reads var(--font-arabic).
+   Urdu: Jameel Noori Nastaleeq when installed on the device (the usual Urdu font in Pakistan), else the open-licence
+   Noto Nastaliq Urdu web font. Arabic: Cairo. Farsi: Vazirmatn. Pashto: Noto Sans Arabic (complete Pashto letters
+   ټ ډ ړ ږ ښ ګ ڼ ې ۍ). All web fonts are requested once in app/layout.tsx; a browser downloads only the face it uses. */
 :root {
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-arabic: "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
 }
+html:lang(ur) { --font-arabic: "Jameel Noori Nastaleeq", "Jameel Noori Nastaleeq Kasheeda", "Noto Nastaliq Urdu", "Noto Sans Arabic", "Segoe UI", Tahoma, serif; }
+html:lang(ar) { --font-arabic: "Cairo", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif; }
+html:lang(fa) { --font-arabic: "Vazirmatn", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif; }
+html:lang(ps) { --font-arabic: "Noto Sans Arabic", "Noto Naskh Arabic", "Segoe UI", Tahoma, Arial, sans-serif; }
+/* Nastaleeq is a tall, sloping script: give its lines room so stacked letters do not touch the next line. */
+html:lang(ur) body { line-height: 1.8; }
 
 html {
   font-family: var(--font-sans);
@@ -410,6 +420,11 @@ html[dir="rtl"] div {
     font-size: 15px;
   }
 }
+
+/* Urdu (Nastaleeq) has a small x-height: the same px size reads about 2px smaller than Latin, so Urdu gets ~7% more at every breakpoint. */
+@media screen and (min-width: 1024px) and (max-width: 1440px) { html:lang(ur) { font-size: 14.5px; } }
+@media screen and (min-width: 1441px) { html:lang(ur) { font-size: 16px; } }
+@media screen and (max-width: 1023px) { html:lang(ur) { font-size: 16px; } }
 
 .erp-report-shell {
   background: white;
@@ -510,7 +525,7 @@ html, body {
 
 @media (max-width: 768px) {
   .erp-table-wrap table {
-    font-size: 0.8125rem;
+    font-size: max(11px, 0.8125rem);
   }
 
   .erp-table-wrap th,
@@ -1066,7 +1081,7 @@ button, a {
     overflow-wrap: anywhere;
   }
   main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody td::before {
-    content: attr(data-label); flex: 0 0 40%; max-width: 44%; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    content: attr(data-label); flex: 0 0 40%; max-width: 44%; font-size: max(11px, 0.66rem); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
     color: hsl(var(--muted-foreground)); padding-top: 0.12rem;
   }
   main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody td[data-label=""]::before { display: none; }

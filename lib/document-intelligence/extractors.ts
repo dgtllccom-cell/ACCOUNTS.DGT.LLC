@@ -74,7 +74,8 @@ const FINANCE_DOCS = ["cheque_image", "bank_transfer_advice", "payment_confirmat
 
 // Ordered — earlier, more specific patterns win.
 const RULES: Rule[] = [
-  { key: "invoice_number", label: "Invoice Number", patterns: [/invoice\s*(?:no\.?|number|#)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i, /\binv[\s\-#:]*([A-Z0-9][A-Z0-9/\-.]{3,30})/i] },
+  // an invoice number has a digit; "INV" must not be the start of the word "Invoice" ("Commercial Invoice in 3 originals" gave "oice")
+  { key: "invoice_number", label: "Invoice Number", patterns: [/invoice\s*(?:no\.?|number|#)\s*[:.\-]?\s*((?=[A-Z0-9/\-.]*\d)[A-Z0-9][A-Z0-9/\-.]{1,30})/i, /\binv(?![a-z])[\s\-#:.]*([A-Z]{0,4}\d[A-Z0-9/\-.]{2,30})/i] },
   { key: "contract_number", label: "Contract Number", patterns: [/contract\s*(?:no\.?|number|#|ref)[:./_\s-]*\b([A-Z]{2,5}[-/]?\d{2,6}[-/]\d{2,6}|[A-Z]{2,5}-?\d{4,8})\b/i, /contract\s*(?:no\.?|number|#|ref)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i, /\bcon[\s\-#:]*([0-9]{3,10})/i] },
   { key: "manual_contract_number", label: "Manual Contract / Bill Number", patterns: [/(?:manual|reference)\s*(?:contract|bill)\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i] },
   { key: "booking_number", label: "Booking Number", patterns: [/booking\s*(?:no\.?|number|ref|confirmation)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i] },
@@ -172,7 +173,9 @@ const RULES: Rule[] = [
 
 const TRADE_SKIP = new Set(["company_name", "company_type", "registration_number", "owner_name", "father_name", "national_id", "incorporation_date", "contract_parties", "phone", "email", "website", "address",
   // account-master rules read HS codes / table headers as account codes; the transport references are parsed explicitly
-  "account_code", "account_name", "category", "branch", "mobile", "city", "contact", "bl_number", "customs_reference", "vessel", "voyage"]);
+  "account_code", "account_name", "category", "branch", "mobile", "city", "contact", "bl_number", "customs_reference", "vessel", "voyage",
+  // the contract parser reads the bank block (a generic "branch" rule read "BRANCH ⏎ Bank Address" as a branch name)
+  "branch_name", "port_of_loading", "port_of_discharge"]);
 
 const CONTAINER_RE = /\b([A-Z]{4}\d{7})\b/g;
 const SEAL_RE = /\bseal\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9\-]{4,15})/gi;
@@ -204,6 +207,7 @@ export function contractFieldCandidates(c: ContractParse, pages: OcrPage[]): Fie
   const out: Array<FieldCandidate | null> = [];
   const g0 = c.goods[0];
   out.push(fc("supplier_name", "Seller (as written on the document)", c.sellerName, pages));
+  out.push(fc("supplier_name_local", "Seller (Chinese name on the document)", c.sellerNameLocal, pages, { confidence: 0.8 }));
   out.push(fc("customer_name", "Buyer (as written on the document)", c.buyerName, pages));
   out.push(fc("seller_country", "Seller Country", c.sellerCountry, pages, { confidence: 0.8 }));
   out.push(fc("buyer_country", "Buyer Country", c.buyerCountry, pages, { confidence: 0.8 }));
@@ -223,7 +227,11 @@ export function contractFieldCandidates(c: ContractParse, pages: OcrPage[]): Fie
   }
   if (g0) {
     out.push(fc("goods_description", "Goods Description", c.goods.map((g) => g.description).join("; "), pages));
-    out.push(fc("quantity", "Quantity", g0.quantity, pages, { normalized: g0.quantity == null ? null : String(g0.quantity) }));
+    out.push(fc("goods_specification", "Goods Specification", g0.specification, pages, { confidence: 0.75 }));
+    // a quantity the scan did not print readably is the printed amount ÷ the printed unit price — shown for review, never as read
+    out.push(fc("quantity", "Quantity", g0.quantity, pages, g0.quantitySource === "amount_div_price"
+      ? { normalized: String(g0.quantity), confidence: 0.6, message: "Quantity not readable on the scan — calculated as printed amount ÷ unit price. Please confirm." }
+      : { normalized: g0.quantity == null ? null : String(g0.quantity) }));
     out.push(fc("unit", "Unit", g0.unit, pages, { confidence: 0.85 }));
     out.push(fc("unit_price", "Unit Price", g0.unitPrice, pages, { normalized: g0.unitPrice == null ? null : String(g0.unitPrice) }));
   }
@@ -243,6 +251,10 @@ export function contractFieldCandidates(c: ContractParse, pages: OcrPage[]): Fie
   out.push(fc("delivery_terms", "Delivery Terms", c.deliveryTerms, pages, { confidence: 0.88 }));
   out.push(fc("incoterm", "Incoterm", c.incoterm, pages, { confidence: 0.9 }));
   out.push(fc("delivery_place", "Delivery Place", c.deliveryPlace, pages, { confidence: 0.8 }));
+  out.push(fc("port_of_loading", "Port of Loading", c.portOfLoading, pages, { confidence: 0.8 }));
+  out.push(fc("port_of_discharge", "Port of Destination", c.portOfDestination, pages, { confidence: 0.8 }));
+  out.push(fc("shipment_time", "Time of Shipment", c.shipmentTime, pages, { confidence: 0.8 }));
+  out.push(fc("country_of_origin", "Country of Origin", c.countryOfOrigin, pages, { confidence: 0.8 }));
   out.push(fc("beneficiary_name", "Beneficiary / Account Title", c.bank.beneficiary, pages, { confidence: 0.85 }));
   out.push(fc("bank_name", "Beneficiary Bank", c.bank.bankName, pages, { confidence: 0.85 }));
   out.push(fc("branch_name", "Bank Branch", c.bank.branch, pages, { confidence: 0.75 }));

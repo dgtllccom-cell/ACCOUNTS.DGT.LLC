@@ -4,8 +4,9 @@ import { allowedRowDomains, sessionDomainFilter } from "@/lib/permissions/domain
 import { withReadPg } from "@/lib/db/local-postgres";
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { lookupApprovedDictionary } from "@/lib/i18n/localize-records";
+import { lookupApprovedDictionary, trustedStoredTranslation } from "@/lib/i18n/localize-records";
 import { isUuid } from "@/lib/utils";
+import { resolveLedgerIds } from "@/lib/db/account-refs";
 
 export type LedgerReportScope = "super_admin" | "country" | "branch";
 
@@ -45,6 +46,13 @@ export type LedgerLookupRow = {
   cityId?: string | null;
   cityName: string | null;
   address: string | null;
+  contacts?: any;
+  /** Shared account card (Cash Entry picker and other account pickers): the account's own saved contact / address, else its
+   *  linked customer's; the account status. Saved values only. */
+  accountPhone?: string | null;
+  accountEmail?: string | null;
+  accountAddress?: string | null;
+  accountStatus?: string | null;
   createdAt?: string | null;
 };
 
@@ -91,6 +99,39 @@ type TranslationRow = {
   pashto_text: string | null;
 };
 
+type CardCustomer = { id: string; mobile: string | null; whatsapp: string | null; email: string | null; address: string | null };
+
+/** The account's saved contacts ([{ type, value }] — jsonb, or the same as a JSON string). */
+function savedContacts(contacts: unknown): Array<{ type?: string; value?: string }> {
+  if (Array.isArray(contacts)) return contacts as Array<{ type?: string; value?: string }>;
+  if (typeof contacts === "string") {
+    try {
+      const parsed = JSON.parse(contacts);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/**
+ * Phone, e-mail, address and status for the shared account card: what the account itself saved (its contacts, its full
+ * address), otherwise what its linked customer saved. Nothing is derived or invented — an empty field stays empty.
+ */
+function accountCardDetails(enterpriseAccount: any, customer: CardCustomer | null | undefined) {
+  const contacts = savedContacts(enterpriseAccount?.contacts);
+  const pick = (types: string[]) =>
+    contacts.find((c) => types.includes(String(c?.type || "").toLowerCase()) && String(c?.value || "").trim())?.value?.trim() || null;
+  const clean = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+  return {
+    accountPhone: pick(["mobile", "phone", "whatsapp", "landline", "office"]) || clean(customer?.mobile) || clean(customer?.whatsapp),
+    accountEmail: pick(["email"]) || clean(customer?.email),
+    accountAddress: clean(enterpriseAccount?.full_address) || clean(customer?.address),
+    accountStatus: clean(enterpriseAccount?.status)
+  };
+}
+
 function translationKey(table: string, id: string, field: string) {
   return `${table}|${id}|${field}`;
 }
@@ -126,7 +167,8 @@ async function loadTranslations(input: {
       const chunkFields = Array.from(new Set(chunk.map((t) => t.field)));
       const chunkRows = await sql`
         select record_table, record_id, field_name, original_text, english_text,
-               urdu_text, arabic_text, persian_text, pashto_text
+               urdu_text, arabic_text, persian_text, pashto_text,
+               translation_status, translated_by_engine, source::text as source, corrected_by
         from public.record_translations
         where record_table = any(${chunkTables}::text[])
           and record_id = any(${chunkIds}::uuid[])
@@ -150,7 +192,7 @@ async function loadTranslations(input: {
       const { data, error } = await input.supabase
         .from("record_translations")
         .select(
-          "record_table, record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text"
+          "record_table, record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, translated_by_engine, source, corrected_by"
         )
         .in("record_table", chunkTables)
         .in("record_id", chunkIds)
@@ -162,27 +204,20 @@ async function loadTranslations(input: {
     }
   }
 
-  const langCol: Record<SupportedLanguage, keyof TranslationRow> = {
-    en: "english_text", ur: "urdu_text", ar: "arabic_text", fa: "persian_text", ps: "pashto_text"
-  };
-  const col = langCol[input.language] ?? "english_text";
-
   const map = new Map<string, string>();
   for (const row of (allData ?? []) as TranslationRow[]) {
     const raw = (row.original_text ?? "").trim();
-    const recVal = ((row[col] as string | null) ?? "").trim();
-    // Honest resolution only (record value → approved central dictionary → original). No machine
-    // transliteration / auto-translation of names — per the ERP master-data policy (never guess or
-    // invent a proper-name spelling). This also removed a broken auto-translate call that used
-    // undefined imports (detectScriptType / autoTranslate5Languages).
-    let resolved = recVal;
+    // the central trust rule (lib/i18n/localize-records.ts): an approved translation, or a clean rendering of English text — never
+    // an unverified machine re-spelling of a name or of text typed in Urdu / Pashto ("Namt Allah Brwkr" for "نعمت اللہ بروکر")
+    let resolved = trustedStoredTranslation(row.record_table, row.field_name, raw, row as any, input.language) ?? "";
 
     if (!resolved) {
       const dictVal = await lookupApprovedDictionary(row.record_table, raw, input.language);
       if (dictVal) resolved = dictVal;
     }
 
-    if (!resolved && input.language === "en") resolved = (row.english_text ?? "").trim() || raw;
+    // no approved translation: the saved text itself
+    if (!resolved && input.language === "en") resolved = raw;
     if (resolved) map.set(translationKey(row.record_table, row.record_id, row.field_name), resolved);
   }
 
@@ -233,6 +268,17 @@ export class LedgerReportService {
   // via withLocalPg — same proven bypass as goods-repository.ts/banks-repository.ts)
   // when available, falling back to the Supabase client otherwise.
   async listLedgers(input: ListLedgersInput): Promise<LedgerLookupRow[]> {
+    // `ledgerId` may carry what the screen shows (the account number "ACC-000080", an
+    // account / ledger code) — the uuid casts below turned that into a 500. Map such
+    // references to ledger ids first; the session scope below still decides what is visible.
+    if (input.ledgerId) {
+      const refs = Array.isArray(input.ledgerId) ? input.ledgerId : [input.ledgerId];
+      if (refs.some((ref) => !isUuid(ref))) {
+        const ledgerIds = await resolveLedgerIds(refs);
+        if (!ledgerIds.length) return [];
+        input = { ...input, ledgerId: ledgerIds };
+      }
+    }
     // Pure read (query builder only, no writes/transactions) — use the shared
     // pooled connection instead of paying withLocalPg's fresh-connection setup
     // cost on every account search/lookup call (measured 7-12s per call before
@@ -334,7 +380,7 @@ export class LedgerReportService {
         ? sql`SELECT id, code, name, kind, currency, company_id, created_at FROM public.accounts WHERE id = ANY(${accountIds}::uuid[]) AND deleted_at IS NULL`
         : Promise.resolve([]),
       enterpriseAccountIds.length
-        ? sql`SELECT id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts, company_id, created_at FROM public.enterprise_accounts WHERE id = ANY(${enterpriseAccountIds}::uuid[]) AND deleted_at IS NULL`
+        ? sql`SELECT id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts, company_id, created_at, full_address, status::text AS status, customer_id FROM public.enterprise_accounts WHERE id = ANY(${enterpriseAccountIds}::uuid[]) AND deleted_at IS NULL`
         : Promise.resolve([]),
       countryIds.length
         ? sql`SELECT id, name FROM public.countries WHERE id = ANY(${countryIds}::uuid[]) AND deleted_at IS NULL`
@@ -354,10 +400,14 @@ export class LedgerReportService {
     const stateIds = unique([...(countryBranches as any[]).map((b) => b.state_province_id), ...(cityBranches as any[]).map((b) => b.state_province_id)]);
     const cityIds = unique([...(countryBranches as any[]).map((b) => b.city_id), ...(cityBranches as any[]).map((b) => b.city_id)]);
 
-    const [companies, states, cities] = await Promise.all([
+    const cardCustomerIds = unique((enterpriseAccounts as any[]).map((a) => a.customer_id));
+    const [companies, states, cities, cardCustomers] = await Promise.all([
       companyIds.length ? sql`SELECT id, name FROM public.companies WHERE id = ANY(${companyIds}::uuid[]) AND deleted_at IS NULL` : Promise.resolve([]),
       stateIds.length ? sql`SELECT id, name FROM public.states_provinces WHERE id = ANY(${stateIds}::uuid[]) AND deleted_at IS NULL` : Promise.resolve([]),
-      cityIds.length ? sql`SELECT id, name FROM public.cities WHERE id = ANY(${cityIds}::uuid[]) AND deleted_at IS NULL` : Promise.resolve([])
+      cityIds.length ? sql`SELECT id, name FROM public.cities WHERE id = ANY(${cityIds}::uuid[]) AND deleted_at IS NULL` : Promise.resolve([]),
+      cardCustomerIds.length
+        ? sql`SELECT id, mobile, whatsapp, email, address FROM public.customers WHERE id = ANY(${cardCustomerIds}::uuid[]) AND deleted_at IS NULL`
+        : Promise.resolve([])
     ]);
 
     const result = this.assembleLedgerRows(rows, {
@@ -368,7 +418,8 @@ export class LedgerReportService {
       cityBranches: cityBranches as any[],
       companies: companies as any[],
       states: states as any[],
-      cities: cities as any[]
+      cities: cities as any[],
+      customers: cardCustomers as any[]
     });
 
     const language = input.language ?? null;
@@ -408,8 +459,10 @@ export class LedgerReportService {
       companies: Array<{ id: string; name: string }>;
       states: Array<{ id: string; name: string }>;
       cities: Array<{ id: string; name: string }>;
+      customers?: CardCustomer[];
     }
   ): LedgerLookupRow[] {
+    const cardCustomerById = new Map((lookups.customers ?? []).map((c) => [c.id, c]));
     const accountById = new Map(lookups.accounts.map((a) => [a.id, a]));
     const enterpriseAccountById = new Map(lookups.enterpriseAccounts.map((a) => [a.id, a]));
     const countryById = new Map(lookups.countries.map((c) => [c.id, c]));
@@ -472,6 +525,7 @@ export class LedgerReportService {
         cityName,
         address,
         contacts: enterpriseAccount?.contacts ?? null,
+        ...accountCardDetails(enterpriseAccount, (enterpriseAccount as any)?.customer_id ? cardCustomerById.get((enterpriseAccount as any).customer_id) : null),
         createdAt: (enterpriseAccount as any)?.created_at ?? (legacyAccount as any)?.created_at ?? row.created_at ?? null
       } as LedgerLookupRow;
     });
@@ -631,7 +685,7 @@ export class LedgerReportService {
         ? fetchInChunks("accounts", "id, code, name, kind, currency, company_id, created_at", accountIds)
         : Promise.resolve({ data: [], error: null }),
       enterpriseAccountIds.length
-        ? fetchInChunks("enterprise_accounts", "id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts, company_id, created_at", enterpriseAccountIds)
+        ? fetchInChunks("enterprise_accounts", "id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts, company_id, created_at, full_address, status, customer_id", enterpriseAccountIds)
         : Promise.resolve({ data: [], error: null }),
       countryIds.length
         ? fetchInChunks("countries", "id, name", countryIds)
@@ -699,11 +753,14 @@ export class LedgerReportService {
     const stateIds = unique([...countryBranches.map((b) => b.state_province_id), ...cityBranches.map((b) => b.state_province_id)]);
     const cityIds = unique([...countryBranches.map((b) => b.city_id), ...cityBranches.map((b) => b.city_id)]);
 
-    const [companiesRes, statesRes, citiesRes] = await Promise.all([
+    const fallbackCustomerIds = unique(enterpriseAccounts.map((a: any) => a.customer_id));
+    const [companiesRes, statesRes, citiesRes, customersRes] = await Promise.all([
       companyIds.length ? fetchInChunks("companies", "id, name", companyIds) : Promise.resolve({ data: [], error: null }),
       stateIds.length ? fetchInChunks("states_provinces", "id, name", stateIds) : Promise.resolve({ data: [], error: null }),
-      cityIds.length ? fetchInChunks("cities", "id, name", cityIds) : Promise.resolve({ data: [], error: null })
+      cityIds.length ? fetchInChunks("cities", "id, name", cityIds) : Promise.resolve({ data: [], error: null }),
+      fallbackCustomerIds.length ? fetchInChunks("customers", "id, mobile, whatsapp, email, address", fallbackCustomerIds) : Promise.resolve({ data: [], error: null })
     ]);
+    const fallbackCustomerById = new Map(((customersRes.data ?? []) as CardCustomer[]).map((c) => [c.id, c]));
 
     if (companiesRes.error) throw new Error((companiesRes.error as any).message);
     if (statesRes.error) throw new Error((statesRes.error as any).message);
@@ -773,6 +830,7 @@ export class LedgerReportService {
         cityName,
         address,
         contacts: enterpriseAccount?.contacts ?? null,
+        ...accountCardDetails(enterpriseAccount, (enterpriseAccount as any)?.customer_id ? fallbackCustomerById.get((enterpriseAccount as any).customer_id) : null),
         createdAt: row.created_at ?? null
       };
     });
@@ -914,7 +972,8 @@ export class LedgerReportService {
     }
 
     const targetLedgerIds = unique([
-      ...initialLedgerIds,
+      // a human reference was already resolved into header.ledgerId by listLedgers above
+      ...initialLedgerIds.filter((id) => isUuid(id)),
       header.ledgerId,
       header.accountId,
       ...siblingLedgerIds
@@ -945,7 +1004,7 @@ export class LedgerReportService {
       .order("id", { ascending: true })
       .limit(limit);
 
-    let jlQuery = supabase
+    const jlQuery = supabase
       .from("journal_lines")
       .select(
         "id, journal_entry_id, description, debit, credit, journal_entries!inner(entry_no, entry_date, status, posted_at, posted_by)"

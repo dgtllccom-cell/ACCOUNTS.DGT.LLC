@@ -386,21 +386,21 @@ export function CustomerOrderPartnerBillsPanel({
       {/* Provider & Account Master Ledger Status */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 text-xs">
         <div className="rounded-lg bg-white p-2 border border-indigo-100 dark:bg-slate-900 dark:border-indigo-900/40">
-          <span className="text-[10px] font-bold text-slate-400 uppercase block">{tt("partner_name_label", "Provider / Partner")}</span>
+          <span className="text-[11px] font-bold text-slate-400 uppercase block">{tt("partner_name_label", "Provider / Partner")}</span>
           <span className="font-bold text-slate-800 dark:text-slate-100">{partnerName || tt("not_specified", "Not Specified")}</span>
-          <span className="text-[10px] text-slate-500 block">
+          <span className="text-[11px] text-slate-500 block">
             {partnerType ? partnerType.replace(/_/g, " ").toUpperCase() : ""} {partnerCountryName ? `• ${partnerCountryName}` : ""}
           </span>
         </div>
 
         <div className="rounded-lg bg-white p-2 border border-indigo-100 dark:bg-slate-900 dark:border-indigo-900/40 col-span-2">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("account_master_ledger", "Account Master Ledger (Payable)")}</span>
+            <span className="text-[11px] font-bold text-slate-400 uppercase">{tt("account_master_ledger", "Account Master Ledger (Payable)")}</span>
             <a
               href="/dashboard/accounts/setup"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:underline"
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:underline"
             >
               <span>{tt("open_account_master", "Account Master")}</span>
               <ExternalLink className="h-2.5 w-2.5" />
@@ -415,7 +415,7 @@ export function CustomerOrderPartnerBillsPanel({
                 {providerLedger?.name || partnerAccountNumber || partnerAccountId}
               </span>
               {providerLedger?.currency && (
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 font-mono text-emerald-700">
+                <span className="text-[11px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 font-mono text-emerald-700">
                   {providerLedger.currency}
                 </span>
               )}
@@ -463,7 +463,7 @@ export function CustomerOrderPartnerBillsPanel({
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("invoice_ref_label", "Invoice / Bill Ref No *")}</label>
+              <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("invoice_ref_label", "Invoice / Bill Ref No *")}</label>
               <input
                 type="text"
                 required
@@ -475,7 +475,7 @@ export function CustomerOrderPartnerBillsPanel({
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("bill_amount_label", "Total Bill Amount *")}</label>
+              <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("bill_amount_label", "Total Bill Amount *")}</label>
               <input
                 type="number"
                 step="0.01"
@@ -488,7 +488,7 @@ export function CustomerOrderPartnerBillsPanel({
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("currency_label", "Currency")}</label>
+              <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("currency_label", "Currency")}</label>
               <select
                 value={newCurrency}
                 onChange={(e) => setNewCurrency(e.target.value)}
@@ -503,7 +503,7 @@ export function CustomerOrderPartnerBillsPanel({
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("historical_rate_label", "Historical Exchange Rate")}</label>
+              <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("historical_rate_label", "Historical Exchange Rate")}</label>
               <input
                 type="number"
                 step="0.0001"
@@ -516,7 +516,7 @@ export function CustomerOrderPartnerBillsPanel({
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("expense_category_label", "Expense Category")}</label>
+              <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("expense_category_label", "Expense Category")}</label>
               <select
                 value={newExpenseCategory}
                 onChange={(e) => setNewExpenseCategory(e.target.value)}
@@ -533,7 +533,7 @@ export function CustomerOrderPartnerBillsPanel({
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("expense_ledger_label", "Debit Expense Ledger (Account Master)")}</label>
+              <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("expense_ledger_label", "Debit Expense Ledger (Account Master)")}</label>
               <select
                 value={newExpenseAccountId}
                 onChange={(e) => setNewExpenseAccountId(e.target.value)}
@@ -552,7 +552,7 @@ export function CustomerOrderPartnerBillsPanel({
           {/* Detailed optional charges breakdown */}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 text-[11px] pt-1 border-t border-slate-100 dark:border-slate-800">
             <div>
-              <label className="block text-[9px] text-slate-400 uppercase font-bold">{tt("charge_customs_duty", "Customs Duty")}</label>
+              <label className="block text-[11px] text-slate-400 uppercase font-bold">{tt("charge_customs_duty", "Customs Duty")}</label>
               <input
                 type="number"
                 placeholder="0"
@@ -562,7 +562,7 @@ export function CustomerOrderPartnerBillsPanel({
               />
             </div>
             <div>
-              <label className="block text-[9px] text-slate-400 uppercase font-bold">{tt("charge_freight", "Freight Charges")}</label>
+              <label className="block text-[11px] text-slate-400 uppercase font-bold">{tt("charge_freight", "Freight Charges")}</label>
               <input
                 type="number"
                 placeholder="0"
@@ -572,7 +572,7 @@ export function CustomerOrderPartnerBillsPanel({
               />
             </div>
             <div>
-              <label className="block text-[9px] text-slate-400 uppercase font-bold">{tt("charge_port", "Port Charges")}</label>
+              <label className="block text-[11px] text-slate-400 uppercase font-bold">{tt("charge_port", "Port Charges")}</label>
               <input
                 type="number"
                 placeholder="0"
@@ -582,7 +582,7 @@ export function CustomerOrderPartnerBillsPanel({
               />
             </div>
             <div>
-              <label className="block text-[9px] text-slate-400 uppercase font-bold">{tt("charge_clearance", "Clearance Fee")}</label>
+              <label className="block text-[11px] text-slate-400 uppercase font-bold">{tt("charge_clearance", "Clearance Fee")}</label>
               <input
                 type="number"
                 placeholder="0"
@@ -592,7 +592,7 @@ export function CustomerOrderPartnerBillsPanel({
               />
             </div>
             <div>
-              <label className="block text-[9px] text-slate-400 uppercase font-bold">{tt("charge_other", "Other Charges")}</label>
+              <label className="block text-[11px] text-slate-400 uppercase font-bold">{tt("charge_other", "Other Charges")}</label>
               <input
                 type="number"
                 placeholder="0"
@@ -605,7 +605,7 @@ export function CustomerOrderPartnerBillsPanel({
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("supporting_doc_ref", "Supporting Document Ref / Filename")}</label>
+              <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("supporting_doc_ref", "Supporting Document Ref / Filename")}</label>
               <input
                 type="text"
                 placeholder="e.g. invoice_afghan_agent_8921.pdf"
@@ -616,7 +616,7 @@ export function CustomerOrderPartnerBillsPanel({
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("remarks_label", "Remarks / Notes")}</label>
+              <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("remarks_label", "Remarks / Notes")}</label>
               <input
                 type="text"
                 placeholder="e.g. Afghanistan border clearance fee and transit guarantee"
@@ -674,12 +674,12 @@ export function CustomerOrderPartnerBillsPanel({
                     {bill.bill_no}
                   </span>
                   {bill.invoice_ref && (
-                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-mono text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                       Ref: {bill.invoice_ref}
                     </span>
                   )}
                   {bill.expense_category && (
-                    <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                    <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 whitespace-nowrap">
                       {bill.expense_category.replace(/_/g, " ")}
                     </span>
                   )}
@@ -688,7 +688,7 @@ export function CustomerOrderPartnerBillsPanel({
                 <div className="flex items-center gap-2">
                   {/* Posting Status Badge */}
                   <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider ${
                       bill.posting_status === "posted"
                         ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                         : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
@@ -709,7 +709,7 @@ export function CustomerOrderPartnerBillsPanel({
 
                   {/* Payment Status Badge */}
                   <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider ${
                       bill.payment_status === "paid"
                         ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                         : bill.payment_status === "partially_paid"
@@ -729,26 +729,26 @@ export function CustomerOrderPartnerBillsPanel({
               {/* Financial Balance Summary (Bill Total, Paid, Remaining Due) */}
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 bg-slate-50/70 p-2.5 rounded-lg dark:bg-slate-800/40 text-xs">
                 <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">{tt("bill_total_label", "Bill Total")}</span>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase block">{tt("bill_total_label", "Bill Total")}</span>
                   <span className="font-mono text-sm font-black text-slate-900 dark:text-slate-100">
                     {bill.currency_code} {Number(bill.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
                   {bill.exchange_rate && bill.exchange_rate !== 1 && (
-                    <span className="text-[10px] text-slate-400 block font-mono">
+                    <span className="text-[11px] text-slate-400 block font-mono">
                       Rate: {bill.exchange_rate}
                     </span>
                   )}
                 </div>
 
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-700 uppercase block dark:text-emerald-400">{tt("paid_amount_label", "Paid Amount")}</span>
+                  <span className="text-[11px] font-bold text-emerald-700 uppercase block dark:text-emerald-400">{tt("paid_amount_label", "Paid Amount")}</span>
                   <span className="font-mono text-sm font-black text-emerald-700 dark:text-emerald-400">
                     {bill.currency_code} {Number(bill.paid_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
                 </div>
 
                 <div>
-                  <span className="text-[10px] font-bold text-rose-700 uppercase block dark:text-rose-400">{tt("remaining_due_label", "Remaining Due")}</span>
+                  <span className="text-[11px] font-bold text-rose-700 uppercase block dark:text-rose-400">{tt("remaining_due_label", "Remaining Due")}</span>
                   <span className="font-mono text-sm font-black text-rose-700 dark:text-rose-400">
                     {bill.currency_code} {Number(bill.remaining_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
@@ -812,12 +812,12 @@ export function CustomerOrderPartnerBillsPanel({
               {/* Payments History Table */}
               {bill.payments && bill.payments.length > 0 && (
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
                     {tt("payments_history", "Payments History")} ({bill.payments.length})
                   </span>
                   <div className="overflow-x-auto rounded border border-slate-200 dark:border-slate-800">
                     <table className="w-full text-left text-[11px]">
-                      <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 font-bold uppercase text-[9px]">
+                      <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 font-bold uppercase text-[11px]">
                         <tr>
                           <Th className="px-2 py-1">#</Th>
                           <Th className="px-2 py-1">{tt("col_date", "Date")}</Th>
@@ -835,7 +835,7 @@ export function CustomerOrderPartnerBillsPanel({
                             <td className="px-2 py-1 font-mono font-bold text-emerald-700 dark:text-emerald-400">
                               {p.currency_code} {Number(p.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </td>
-                            <td className="px-2 py-1 uppercase text-[10px]">{p.payment_method?.replace(/_/g, " ")}</td>
+                            <td className="px-2 py-1 uppercase text-[11px]">{p.payment_method?.replace(/_/g, " ")}</td>
                             <td className="px-2 py-1 font-semibold">{p.payment_account_name || p.payment_account_code || p.payment_account_id}</td>
                             <td className="px-2 py-1 font-mono text-indigo-600 dark:text-indigo-400">{p.roznamcha_voucher_no || "-"}</td>
                           </tr>
@@ -937,7 +937,7 @@ export function CustomerOrderPartnerBillsPanel({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("payment_date_label", "Payment Date")}</label>
+                  <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("payment_date_label", "Payment Date")}</label>
                   <input
                     type="date"
                     required
@@ -948,7 +948,7 @@ export function CustomerOrderPartnerBillsPanel({
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("payment_method_label", "Method")}</label>
+                  <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("payment_method_label", "Method")}</label>
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
@@ -963,7 +963,7 @@ export function CustomerOrderPartnerBillsPanel({
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("ref_cheque_no", "Reference / Cheque No.")}</label>
+                <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("ref_cheque_no", "Reference / Cheque No.")}</label>
                 <input
                   type="text"
                   placeholder="e.g. TRF-90812 or CHQ-00192"
@@ -974,7 +974,7 @@ export function CustomerOrderPartnerBillsPanel({
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">{tt("narration_label", "Narration / Memo")}</label>
+                <label className="mb-1 block text-[11px] font-bold text-slate-500 uppercase">{tt("narration_label", "Narration / Memo")}</label>
                 <input
                   type="text"
                   placeholder="e.g. Partial payment for Afghanistan customs clearance"

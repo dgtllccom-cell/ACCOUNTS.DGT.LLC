@@ -238,7 +238,7 @@ export default function DgtMailUsersDirectoryPage() {
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+            <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
               <tr>
                 <Th className="px-5 py-3.5">Email Address & User</Th>
                 <Th className="px-5 py-3.5">Country / Branch</Th>
@@ -294,7 +294,7 @@ export default function DgtMailUsersDirectoryPage() {
                         <span className="font-semibold text-slate-700 dark:text-slate-300 block">
                           UAE / Dubai HQ
                         </span>
-                        <span className="text-[10px] text-slate-400 block font-mono">
+                        <span className="text-[11px] text-slate-400 block font-mono">
                           {u.plan_name || "Enterprise"}
                         </span>
                       </td>
@@ -302,10 +302,10 @@ export default function DgtMailUsersDirectoryPage() {
                       {/* 3. IMAP / SMTP Status */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md whitespace-nowrap">
                             IMAP: OK
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded-md whitespace-nowrap">
                             SMTP: OK
                           </span>
                         </div>

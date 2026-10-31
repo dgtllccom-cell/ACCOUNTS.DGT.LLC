@@ -556,7 +556,7 @@ export function CustomerOrderTransferHubView({
                         <div className="font-bold text-xs text-slate-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
                           {cardTitle(card)}
                         </div>
-                        <div className="text-[10.5px] text-slate-400 dark:text-slate-400 truncate mt-0.5">
+                        <div className="text-[11px] text-slate-400 dark:text-slate-400 truncate mt-0.5">
                           {cardSub(card)}
                         </div>
                       </div>
@@ -650,7 +650,7 @@ export function CustomerOrderTransferHubView({
                   </div>
                   <div className="py-1.5 flex justify-between items-center gap-2">
                     <span className="text-slate-400 font-semibold">{tg("common.status", "Status")}</span>
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-500 text-white">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500 text-white whitespace-nowrap">
                       {coStatusLabel(L, data.status)}
                     </span>
                   </div>
@@ -987,7 +987,7 @@ export function CustomerOrderTransferHubView({
                           </td>
                           <td className="py-2.5 px-3 text-center">
                             <span
-                              className={`inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold ${
+                              className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                                 item.status === "Completed"
                                   ? "bg-emerald-500 text-white"
                                   : "bg-blue-500 text-white"

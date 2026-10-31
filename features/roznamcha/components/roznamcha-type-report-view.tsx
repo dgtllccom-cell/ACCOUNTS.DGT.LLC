@@ -624,7 +624,7 @@ export function RoznamchaTypeReportView({
             variant="outline"
             size="sm"
             onClick={() => router.back()}
-            className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             {isRtl ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
             {tt("rozrep.back", "Back")}
@@ -635,7 +635,7 @@ export function RoznamchaTypeReportView({
             type="button"
             variant={filtersOpen ? "default" : "outline"}
             size="sm"
-            className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+            className="h-7 gap-1 rounded-lg px-2 text-[11px] font-bold"
             onClick={() => setFiltersOpen((v) => !v)}
           >
             <SlidersHorizontal className="h-3 w-3" aria-hidden />
@@ -676,7 +676,7 @@ export function RoznamchaTypeReportView({
             size="sm"
             onClick={loadData}
             disabled={loading}
-            className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2 text-[11px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             <RefreshCcw className={cn("h-3 w-3", loading && "animate-spin")} />
             {tt("rozrep.reload", "Reload")}
@@ -690,7 +690,7 @@ export function RoznamchaTypeReportView({
           size="sm"
           onClick={() => void printReport()}
           data-testid="print-action"
-          className="h-7 gap-1 rounded-lg px-2.5 text-[10px] font-bold"
+          className="h-7 gap-1 rounded-lg px-2.5 text-[11px] font-bold"
         >
           <Printer className="h-3 w-3" />
           {tt("report.print", "Print")}
@@ -703,7 +703,7 @@ export function RoznamchaTypeReportView({
             variant="outline"
             size="sm"
             onClick={() => setActionsMenuOpen((v: boolean) => !v)}
-            className="h-7 gap-1 rounded-lg border-blue-200 bg-blue-50/50 px-2.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-400"
+            className="h-7 gap-1 rounded-lg border-blue-200 bg-blue-50/50 px-2.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-400"
           >
             <MoreVertical className="h-3 w-3" />
             {tt("rozrep.actions", "Actions")}
@@ -770,7 +770,7 @@ export function RoznamchaTypeReportView({
             </div>
             <div className="flex justify-between items-center">
               <span>{tt("rozrep.user_id_label", "USER ID:")}</span>
-              <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">
+              <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">
                 {sessionInfo?.user?.id ?? "90902409-5512-47d1-8612-3095f2285406"}
               </span>
             </div>
@@ -793,7 +793,7 @@ export function RoznamchaTypeReportView({
                 {new Date().toLocaleTimeString(currentLang === "en" ? "en-US" : currentLang, { hour: "2-digit", minute: "2-digit", hour12: true })}
               </span>
             </div>
-            <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+            <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[11px]">
               <span>{tt("rozrep.status_label", "STATUS:")}</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">{tt("rozrep.active", "ACTIVE")}</span>
             </div>
@@ -829,7 +829,7 @@ export function RoznamchaTypeReportView({
                 <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(Math.abs(data?.netBalance ?? 0))}</span>
                 {data?.netBalance ? (
                   <span className={cn(
-                    "rounded px-1.5 py-0.2 text-[9px] font-black uppercase border tracking-wider",
+                    "rounded px-1.5 py-0.2 text-[11px] font-black uppercase border tracking-wider",
                     data.netBalance > 0
                       ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-300/40"
                       : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300/40"
@@ -837,7 +837,7 @@ export function RoznamchaTypeReportView({
                     {data.netBalance > 0 ? "DR" : "CR"}
                   </span>
                 ) : (
-                  <span className="text-[10px] text-slate-400 font-mono">—</span>
+                  <span className="text-[11px] text-slate-400 font-mono">—</span>
                 )}
               </div>
             </div>
@@ -867,7 +867,7 @@ export function RoznamchaTypeReportView({
               <span className="text-rose-600">{tt("rozrep.remaining_entries", "REMAINING ENTRIES:")}</span>
               <span className="font-black text-rose-600">{data?.pendingCount ?? 0}</span>
             </div>
-            <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+            <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[11px]">
               <span>{tt("rozrep.system_status", "SYSTEM STATUS:")}</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">{tt("rozrep.online_synced", "ONLINE & SYNCED")}</span>
             </div>
@@ -906,15 +906,15 @@ export function RoznamchaTypeReportView({
               <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
                 {tt("report.active_types", "Active Types")}: <span className="font-extrabold text-orange-600">{tt("report.all_categories", "All Categories")}</span>
               </div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">
                 {tt("report.current_filter", "Current Filter")}: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedCategory === "all" ? tt("report.all_categories", "All Categories") : getCategoryLabel(selectedCategory, currentLang)}</span>
               </div>
             </div>
             <div className="mt-2.5 flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] font-bold text-orange-600 group-hover:underline">
+              <span className="text-[11px] font-bold text-orange-600 group-hover:underline">
                 {showAllCategories ? tt("report.hide_details", "Hide Details") : tt("report.show_details", "Show Details")}
               </span>
-              <span className="text-[9px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded">
+              <span className="text-[11px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded whitespace-nowrap">
                 {tt("report.explore", "EXPLORE")} {isRtl ? "←" : "→"}
               </span>
             </div>
@@ -929,7 +929,7 @@ export function RoznamchaTypeReportView({
             <h3 className="text-xs font-black uppercase tracking-wider text-orange-900 dark:text-orange-300">
               {tt("rozrep.category_directory", "Roznamcha Entry Category Directory")}
             </h3>
-            <span className="text-[10px] text-orange-700 dark:text-orange-400">
+            <span className="text-[11px] text-orange-700 dark:text-orange-400">
               {tt("rozrep.category_directory_hint", "Click a category to filter instantly")}
             </span>
           </div>
@@ -950,9 +950,9 @@ export function RoznamchaTypeReportView({
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase">{getCategoryLabel(cat, currentLang)}</span>
-                  <span className="text-[10px] font-mono text-slate-400">#{cat}</span>
+                  <span className="text-[11px] font-mono text-slate-400">#{cat}</span>
                 </div>
-                <div className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                   {selectedCategory === cat ? tt("rozrep.active_view", "Active View") : tt("rozrep.click_to_view", "Click to view")}
                 </div>
               </div>
@@ -967,7 +967,7 @@ export function RoznamchaTypeReportView({
           <CardContent className="p-3.5 space-y-3">
             <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-6">
               <div className="space-y-1 md:col-span-2">
-                <Label className="text-[10px] text-muted-foreground">{tt("datepick.date_range", "Date Range")}</Label>
+                <Label className="text-[11px] text-muted-foreground">{tt("datepick.date_range", "Date Range")}</Label>
                 <ErpDatePicker
                   mode="range"
                   lang={activeLang}
@@ -981,7 +981,7 @@ export function RoznamchaTypeReportView({
               </div>
               {entryCategory === "all" ? (
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground">{tt("rozrep.entry_type", "Entry Type")}</Label>
+                  <Label className="text-[11px] text-muted-foreground">{tt("rozrep.entry_type", "Entry Type")}</Label>
                   <select
                     className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                     value={selectedCategory}
@@ -995,7 +995,7 @@ export function RoznamchaTypeReportView({
                 </div>
               ) : null}
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.debit_credit", "Debit / Credit")}</Label>
+                <Label className="text-[11px] text-muted-foreground">{tt("rozrep.debit_credit", "Debit / Credit")}</Label>
                 <select
                   className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                   value={debitCredit}
@@ -1014,7 +1014,7 @@ export function RoznamchaTypeReportView({
                 onValueChange={setCurrency}
               />
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.status", "Status")}</Label>
+                <Label className="text-[11px] text-muted-foreground">{tt("rozrep.status", "Status")}</Label>
                 <select
                   className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                   value={status}
@@ -1028,11 +1028,11 @@ export function RoznamchaTypeReportView({
                 </select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.reference_no", "Reference No")}</Label>
+                <Label className="text-[11px] text-muted-foreground">{tt("rozrep.reference_no", "Reference No")}</Label>
                 <Input className="h-8 text-xs" value={referenceNo} onChange={(e) => setReferenceNo(e.target.value)} placeholder={tt("rozrep.reference_ph", "Reference number")} />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.bill_no", "Bill No")}</Label>
+                <Label className="text-[11px] text-muted-foreground">{tt("rozrep.bill_no", "Bill No")}</Label>
                 <Input className="h-8 text-xs" value={billNo} onChange={(e) => setBillNo(e.target.value)} placeholder={tt("rozrep.bill_no_ph", "Bill number")} />
               </div>
             </div>
@@ -1059,7 +1059,7 @@ export function RoznamchaTypeReportView({
               </span>
             )}
           </CardTitle>
-          <div className="text-[10.5px] font-semibold text-slate-500">
+          <div className="text-[11px] font-semibold text-slate-500">
             {tt("rozrep.showing_page", "Showing Page")} {page} {tt("rozrep.of", "of")} {Math.ceil((data?.totalCount ?? 0) / pageSize) || 1}
           </div>
         </CardHeader>
@@ -1113,7 +1113,7 @@ export function RoznamchaTypeReportView({
                         <ReportTd className="text-center font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap text-[11px]">
                           {entrySerial(row)}
                           {totalLines > 1 && (
-                            <span className="ms-1 text-[9px] font-normal text-slate-400">
+                            <span className="ms-1 text-[11px] font-normal text-slate-400">
                               ({lineIndex + 1}/{totalLines})
                             </span>
                           )}
@@ -1125,7 +1125,7 @@ export function RoznamchaTypeReportView({
                           {formatEntryType(row.source_transaction_type || row.type, currentLang)}
                         </ReportTd>
                         <ReportTd className="text-center whitespace-nowrap">
-                          <span className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold border", rType.badgeClass)}>
+                          <span className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-bold border", rType.badgeClass)}>
                             <span className="font-mono font-black">{rType.code}</span>
                             <span className="hidden sm:inline font-medium">· {rType.label}</span>
                           </span>
@@ -1151,7 +1151,7 @@ export function RoznamchaTypeReportView({
                                 {fmtNumber(netDiff)}
                               </span>
                               <span className={cn(
-                                "rounded px-1.5 py-0.2 text-[9px] font-black uppercase tracking-wider border",
+                                "rounded px-1.5 py-0.2 text-[11px] font-black uppercase tracking-wider border",
                                 balDirection === "DR"
                                   ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-300/40"
                                   : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300/40"
@@ -1166,7 +1166,7 @@ export function RoznamchaTypeReportView({
                         <ReportTd className="text-center font-mono text-[11px] whitespace-nowrap text-slate-600 dark:text-slate-400">{billNumber(row)}</ReportTd>
                         <ReportTd className="text-center whitespace-nowrap">
                           <span className={cn(
-                            "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                            "rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider",
                             row.status === "posted"
                               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300/40"
                               : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/40"

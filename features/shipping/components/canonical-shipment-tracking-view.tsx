@@ -504,7 +504,7 @@ export function CanonicalShipmentTrackingView({
     <div className="space-y-0.5">
       <div className="font-mono text-xs text-foreground/80 whitespace-nowrap" dir="ltr">{formatDate(row.eta)}</div>
       {isEtaOverdue(row.eta, row.currentStage) && (
-        <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-1.5 py-0.5 text-[10.5px] font-bold text-rose-700 dark:text-rose-400">
+        <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-1.5 py-0.5 text-[11px] font-bold text-rose-700 dark:text-rose-400 whitespace-nowrap">
           <Clock className="h-3 w-3" />{s.t("eta_overdue", "ETA passed")}
         </span>
       )}
@@ -1140,7 +1140,7 @@ export function CanonicalShipmentTrackingView({
             <div className="flex min-w-0 items-center gap-2">
               <Ship className="h-4 w-4 shrink-0 text-primary" />
               <h2 className="text-sm font-black text-foreground">{s.t("list_title", "Shipment & Container Tracking List")}</h2>
-              <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-[11px] font-bold text-muted-foreground" dir="ltr" aria-label={s.t("total_records", "Total Records")}>{totalRows}</span>
+              <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-[11px] font-bold text-muted-foreground whitespace-nowrap" dir="ltr" aria-label={s.t("total_records", "Total Records")}>{totalRows}</span>
             </div>
             <div role="tablist" aria-label={s.t("list_views", "List views")} className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5 text-xs">
               {(["all", "containers", "shipments", "trucks"] as const).map((tab) => (
@@ -1174,7 +1174,7 @@ export function CanonicalShipmentTrackingView({
             <Button type="button" variant={filtersOpen ? "default" : "outline"} aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)} className="h-11 gap-1.5 rounded-xl text-xs sm:h-10 md:hidden">
               <Filter className="h-4 w-4" />
               {s.t("filters", "Filters")}
-              {activeFilterCount > 0 && <Badge className="ms-0.5 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px]">{activeFilterCount}</Badge>}
+              {activeFilterCount > 0 && <Badge className="ms-0.5 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[11px] leading-none">{activeFilterCount}</Badge>}
             </Button>
           </div>
 

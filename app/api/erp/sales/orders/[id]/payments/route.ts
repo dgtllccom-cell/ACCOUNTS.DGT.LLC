@@ -91,7 +91,7 @@ function buildSalesGoodsAuditRemark(orderRow: any, fallbackReference?: string | 
 }
 
 async function assertLedgerMatchesSalesScope(sql: any, ledgerId: string, orderRow: any, label: string) {
-  let rows = await sql`
+  const rows = await sql`
     select id, code, name, country_id, country_branch_id, city_branch_id
     from ledgers where id = ${ledgerId}::uuid and deleted_at is null
   `;

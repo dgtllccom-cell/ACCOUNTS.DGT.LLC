@@ -65,7 +65,7 @@ export function SendMessageForm({ onSend, isSending, conversationStatus, windowE
         <button
           onClick={() => setMode("text")}
           className={cn(
-            "flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors",
+            "flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors",
             mode === "text"
               ? "bg-[#25D366]/15 text-[#25D366]"
               : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -77,7 +77,7 @@ export function SendMessageForm({ onSend, isSending, conversationStatus, windowE
         <button
           onClick={() => setMode("note")}
           className={cn(
-            "flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors",
+            "flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors",
             mode === "note"
               ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
               : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -90,7 +90,7 @@ export function SendMessageForm({ onSend, isSending, conversationStatus, windowE
 
       {/* Window warning */}
       {windowExpired && mode === "text" && (
-        <div className="mb-2 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-[10px] text-amber-700 dark:bg-amber-900/20 dark:border-amber-800/40 dark:text-amber-400">
+        <div className="mb-2 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-[11px] text-amber-700 dark:bg-amber-900/20 dark:border-amber-800/40 dark:text-amber-400">
           ⚠️ {tt("wa.window_expired", "The 24-hour messaging window has expired. You can only send template messages or internal notes.")}
         </div>
       )}
@@ -144,7 +144,7 @@ export function SendMessageForm({ onSend, isSending, conversationStatus, windowE
         </button>
       </div>
 
-      <p className="mt-1 text-[9px] text-muted-foreground/50 text-end">
+      <p className="mt-1 text-[11px] text-muted-foreground/50 text-end">
         {mode === "note" ? tt("wa.note_visibility", "Only visible to your team") : tt("wa.sent_via_wa", "Sent via WhatsApp")}
       </p>
     </div>

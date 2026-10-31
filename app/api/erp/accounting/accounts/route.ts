@@ -459,7 +459,7 @@ export async function GET(request: NextRequest) {
       // fallback to Supabase query below if local pg pool is unavailable
     }
 
-    let supabase = await createApiSupabaseClient();
+    const supabase = await createApiSupabaseClient();
     let query: any = supabase
       .from("enterprise_accounts")
       .select(

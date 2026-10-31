@@ -145,7 +145,7 @@ export function UaeEInvoiceView({ lang: langProp, mode }: { lang?: SupportedLang
                     <td className="px-4 py-2 text-slate-500">{s.t(`ei_type_${r.document_type}`, r.document_type)}</td>
                     <td className="px-4 py-2 text-slate-600 dark:text-slate-300">{r.buyer_name || "—"}</td>
                     <td className="px-4 py-2 text-right tabular-nums font-semibold">{fmtAed(r.total_incl_vat)}</td>
-                    <td className="px-4 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status] ?? "bg-slate-100"}`}>{s.t(`ei_status_${r.status}`, r.status)}</span></td>
+                    <td className="px-4 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_TONE[r.status] ?? "bg-slate-100"}`}>{s.t(`ei_status_${r.status}`, r.status)}</span></td>
                     <td className="px-4 py-2 font-mono text-slate-400">{r.asp_reference || "—"}</td>
                     <td className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
@@ -201,7 +201,7 @@ export function UaeEInvoiceView({ lang: langProp, mode }: { lang?: SupportedLang
                 {selected.pint_ae_payload ? (
                   <details>
                     <summary className="cursor-pointer text-[11px] font-bold text-slate-500">{s.t("ei_view_payload", "PINT-AE payload")}</summary>
-                    <pre className="mt-1 max-h-64 overflow-auto rounded bg-slate-950 p-2 text-[10px] text-slate-200">{JSON.stringify(selected.pint_ae_payload, null, 2)}</pre>
+                    <pre className="mt-1 max-h-64 overflow-auto rounded bg-slate-950 p-2 text-[11px] text-slate-200">{JSON.stringify(selected.pint_ae_payload, null, 2)}</pre>
                   </details>
                 ) : null}
               </div>

@@ -484,7 +484,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
             <h4 className="font-bold text-slate-900 text-sm sm:text-base">
               {tx("linksRegistry", lang)}
             </h4>
-            <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5 text-xs font-bold">
+            <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap">
               {links.length}
             </span>
           </div>
@@ -715,7 +715,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                       {viewSubmissionModal.submission_data.email || viewSubmissionModal.submission_data.mobile || "No contact info"}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 whitespace-nowrap">
                         {tx("statusUsed", lang)}
                       </span>
                     </div>
@@ -809,7 +809,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                             {doc.frontImage && (
                               <div className="border border-slate-200 rounded-xl p-2 bg-slate-50">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                                <span className="text-[11px] font-bold text-slate-500 uppercase block mb-1">
                                   {tx("frontSide", lang)}
                                 </span>
                                 <img
@@ -821,7 +821,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                             )}
                             {doc.backImage && (
                               <div className="border border-slate-200 rounded-xl p-2 bg-slate-50">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                                <span className="text-[11px] font-bold text-slate-500 uppercase block mb-1">
                                   {tx("backSide", lang)}
                                 </span>
                                 <img

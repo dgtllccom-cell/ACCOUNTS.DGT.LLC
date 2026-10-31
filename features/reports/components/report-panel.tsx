@@ -612,7 +612,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             variant="outline"
             size="sm"
             onClick={() => router.back()}
-            className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             <ChevronLeft className="h-3 w-3" />
             {_("common.back", "Back")}
@@ -623,7 +623,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             type="button"
             variant={filtersOpen ? "default" : "outline"}
             size="sm"
-            className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+            className="h-7 gap-1 rounded-lg px-2 text-[11px] font-bold"
             onClick={() => setFiltersOpen((v) => !v)}
           >
             <SlidersHorizontal className="h-3 w-3" aria-hidden />
@@ -657,7 +657,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+            className="h-7 gap-1 rounded-lg px-2 text-[11px] font-bold"
             onClick={() => appliedFilters && fetchReport(appliedFilters)}
             disabled={reportLoading}
             title={_("report.reload_data", "Reload report data")}
@@ -672,7 +672,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               type="button"
               onClick={() => setDensity("comfortable")}
               className={cn(
-                "rounded-md px-1.5 py-0.5 text-[10px] font-bold transition-colors",
+                "rounded-md px-1.5 py-0.5 text-[11px] font-bold transition-colors",
                 density === "comfortable"
                   ? "bg-white text-blue-600 shadow-2xs dark:bg-slate-800 dark:text-blue-400"
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -684,7 +684,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               type="button"
               onClick={() => setDensity("compact")}
               className={cn(
-                "rounded-md px-1.5 py-0.5 text-[10px] font-bold transition-colors",
+                "rounded-md px-1.5 py-0.5 text-[11px] font-bold transition-colors",
                 density === "compact"
                   ? "bg-white text-blue-600 shadow-2xs dark:bg-slate-800 dark:text-blue-400"
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -700,7 +700,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+              className="h-7 gap-1 rounded-lg px-2 text-[11px] font-bold"
               onClick={() => setShowColumnsModal((v) => !v)}
             >
               <Columns3 className="h-3 w-3" />
@@ -724,12 +724,12 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                     <button
                       type="button"
                       onClick={resetColumnsToDefault}
-                      className="rounded-md border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      className="rounded-md border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap"
                     >
                       {_("report.reset_default", "Reset to Default")}
                     </button>
                     {Object.keys(savedViews).map((name) => (
-                      <span key={name} className="inline-flex items-center rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-[10px] font-bold text-blue-700 dark:text-blue-300">
+                      <span key={name} className="inline-flex items-center rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-[11px] font-bold text-blue-700 dark:text-blue-300">
                         <button type="button" onClick={() => applySavedView(name)} className="px-1.5 py-0.5 hover:underline">{name}</button>
                         <button type="button" onClick={() => deleteSavedView(name)} className="px-1 text-blue-400 hover:text-red-500" aria-label={t(lang, "rp.delete_view", "Delete view")}>×</button>
                       </span>
@@ -746,7 +746,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                       type="button"
                       onClick={() => saveCurrentView(newViewName)}
                       disabled={!newViewName.trim()}
-                      className="rounded-md bg-blue-600 px-2 py-1 text-[10px] font-bold text-white disabled:opacity-40"
+                      className="rounded-md bg-blue-600 px-2 py-1 text-[11px] font-bold text-white disabled:opacity-40"
                     >
                       {_("report.save_view", "Save")}
                     </button>
@@ -801,7 +801,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 gap-1 rounded-lg px-2.5 text-[10px] font-bold bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
+              className="h-7 gap-1 rounded-lg px-2.5 text-[11px] font-bold bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
               onClick={() => setActionsMenuOpen((v) => !v)}
             >
               <MoreVertical className="h-3 w-3" />
@@ -896,7 +896,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               </div>
               <div className="flex justify-between items-center">
               <span>{th("USER ID")}:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{viewerId || "1001-000000000000000000"}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[11px] font-mono">{viewerId || "1001-000000000000000000"}</span>
               </div>
               <div className="flex justify-between items-center">
               <span>{th("USER NAME")}:</span>
@@ -912,7 +912,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               </div>
               <div className="flex justify-between items-center mt-auto pt-1">
               <span>{th("STATUS")}:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{th("ACTIVE")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[11px] whitespace-nowrap">{th("ACTIVE")}</span>
               </div>
             </div>
           </div>
@@ -933,8 +933,8 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               <span className="font-black text-slate-800 dark:text-slate-200">{totalEntriesCount}</span>
             </div>
             {mixedCurrency && (
-              <div className="flex flex-col gap-0.5 rounded-lg bg-slate-50 p-2 font-mono text-[10.5px] dark:bg-slate-800/60" data-testid="report-by-currency">
-                <div className="flex justify-between gap-2 text-[9.5px] font-bold uppercase text-slate-400"><span>&nbsp;</span><span>{_("report.col_credit")}</span><span>{_("report.col_debit")}</span><span>{_("report.col_balance")}</span></div>
+              <div className="flex flex-col gap-0.5 rounded-lg bg-slate-50 p-2 font-mono text-[11px] dark:bg-slate-800/60" data-testid="report-by-currency">
+                <div className="flex justify-between gap-2 text-[11px] font-bold uppercase text-slate-400"><span>&nbsp;</span><span>{_("report.col_credit")}</span><span>{_("report.col_debit")}</span><span>{_("report.col_balance")}</span></div>
                 {summaryByCurrency.slice(0, 4).map(([cur, v]) => (
                   <div key={cur} className="flex justify-between gap-2"><span className="font-black text-slate-700 dark:text-slate-200">{cur}</span><span className="text-emerald-600">{fmtNum(v.credit)}</span><span className="text-rose-600">{fmtNum(v.debit)}</span><span className="text-blue-600">{fmtNum(v.net)}</span></div>
                 ))}
@@ -983,7 +983,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               <span className="text-rose-600">{th("REMAINING ENTRIES")}:</span>
               <span className="font-black text-rose-600">{remainingCount}</span>
             </div>
-            <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+            <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[11px]">
               <span>{th("SYSTEM STATUS")}:</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">{th("ONLINE & SYNCED")}</span>
             </div>
@@ -1022,15 +1022,15 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
                 {_("report.active_countries", "ACTIVE COUNTRIES")}: <span className="font-extrabold text-orange-600">{meta?.countries?.length || 1}</span>
               </div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">
                 {_("report.total_branches", "Total Branches")}: <span className="font-semibold text-slate-700 dark:text-slate-300">{(meta?.mainBranches?.length || 0) + (meta?.cityBranches?.length || 0)}</span>
               </div>
             </div>
             <div className="mt-2.5 flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] font-bold text-orange-600 group-hover:underline">
+              <span className="text-[11px] font-bold text-orange-600 group-hover:underline">
                 {showAllCountries ? _("report.hide_details", "Hide Details") : _("report.show_details", "Show Details")}
               </span>
-              <span className="text-[9px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded">
+              <span className="text-[11px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded whitespace-nowrap">
                 {th("EXPLORE")} →
               </span>
             </div>
@@ -1045,7 +1045,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             <h3 className="text-xs font-black uppercase tracking-wider text-orange-900 dark:text-orange-300">
               {_("report.country_branch_breakdown_directory", "Country & Branch Breakdown Directory")}
             </h3>
-            <span className="text-[10px] text-orange-700 dark:text-orange-400">
+            <span className="text-[11px] text-orange-700 dark:text-orange-400">
               {_("report.click_a_country_to_filter_instantly", "Click a country to filter instantly")}
             </span>
           </div>
@@ -1066,9 +1066,9 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-slate-800 dark:text-slate-200">{c.name}</span>
-                  <span className="text-[10px] font-mono text-slate-400">{c.code || "AED"}</span>
+                  <span className="text-[11px] font-mono text-slate-400">{c.code || "AED"}</span>
                 </div>
-                <div className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                   {meta?.mainBranches?.filter((b: any) => b.country_id === c.id).length || 1} {th("BRANCHES ACTIVE")}
                 </div>
               </div>
@@ -1110,21 +1110,21 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
       {reportResult && (
         <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 px-3 py-1.5 dark:border-slate-800 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[9px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase">
+            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase whitespace-nowrap">
               {reportResult?.scope?.label ?? "GLOBAL"}
             </span>
-            <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
               {_("report.country_label", "Country")}: <strong className="text-slate-900 dark:text-white">{previewFilters[1]?.value}</strong>
             </span>
-            <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
               {_("report.branch_label", "Branch")}: <strong className="text-slate-900 dark:text-white">{applied.branch || applied.mainBranch || th("ALL BRANCHES")}</strong>
             </span>
-            <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
               {_("report.currency_label", "Currency")}: <strong className="text-slate-900 dark:text-white">{applied.currency ?? _("common.all", "All")}</strong>
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
               {reportData.length} {_("report.records_loaded", "Records Loaded")}
             </span>
           </div>
@@ -1182,7 +1182,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
               {Object.entries(selectedRow).filter(([key]) => !["sourceTable", "historyEntries", "currentVersion", "originalVersion"].includes(key)).map(([key, value]) => (
                 <div key={key} className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
-                  <div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{translateHeader(lang, key.replace(/([A-Z])/g, " $1").toUpperCase())}</div>
+                  <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">{translateHeader(lang, key.replace(/([A-Z])/g, " $1").toUpperCase())}</div>
                   <div className="mt-1 break-words text-xs font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(value)}</div>
                 </div>
               ))}
@@ -1197,19 +1197,19 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                   {selectedHistoryEntries.map((entry: any) => (
                     <div key={entry.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-xs dark:border-slate-800 dark:bg-slate-900/60">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">{entry.versionLabel || entry.action || "Version"}</span>
-                        <span className="text-[10px] font-semibold text-slate-500">{new Date(entry.created_at).toLocaleString()}</span>
+                        <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-white">{entry.versionLabel || entry.action || "Version"}</span>
+                        <span className="text-[11px] font-semibold text-slate-500">{new Date(entry.created_at).toLocaleString()}</span>
                       </div>
                       <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{_("report.who_changed_it", "Who changed it")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.user)}</div></div>
-                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{_("report.login_user_id", "Login/User ID")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.loginUserId || entry.actor_id)}</div></div>
-                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{t(lang, "report.role" as UiKey, "Role")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.role)}</div></div>
-                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{_("report.country_label", "Country")} / {_("report.branch_label", "Branch")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.country)}</div></div>
-                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{_("report.main_city_branch", "Main / City Branch")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{`${renderAuditValue(entry.mainBranch)} / ${renderAuditValue(entry.cityBranch)}`}</div></div>
-                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{_("report.reason", "Reason")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.reason)}</div></div>
+                        <div><div className="text-[11px] font-black uppercase tracking-wide text-slate-400">{_("report.who_changed_it", "Who changed it")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.user)}</div></div>
+                        <div><div className="text-[11px] font-black uppercase tracking-wide text-slate-400">{_("report.login_user_id", "Login/User ID")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.loginUserId || entry.actor_id)}</div></div>
+                        <div><div className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "report.role" as UiKey, "Role")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.role)}</div></div>
+                        <div><div className="text-[11px] font-black uppercase tracking-wide text-slate-400">{_("report.country_label", "Country")} / {_("report.branch_label", "Branch")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.country)}</div></div>
+                        <div><div className="text-[11px] font-black uppercase tracking-wide text-slate-400">{_("report.main_city_branch", "Main / City Branch")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{`${renderAuditValue(entry.mainBranch)} / ${renderAuditValue(entry.cityBranch)}`}</div></div>
+                        <div><div className="text-[11px] font-black uppercase tracking-wide text-slate-400">{_("report.reason", "Reason")}</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.reason)}</div></div>
                       </div>
                       <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-                        <div className="grid grid-cols-[1fr_1fr_1fr] bg-slate-100 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                        <div className="grid grid-cols-[1fr_1fr_1fr] bg-slate-100 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                           <span>{_("report.field", "Field")}</span>
                           <span>{_("report.before", "Before")}</span>
                           <span>{_("report.after", "After")}</span>

@@ -813,7 +813,7 @@ export function CompanyIncorporationForm({
                   </>
                 )}
                 {accountId && (
-                  <div className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                  <div className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                     {s.t("linked_account_number", "Linked Account Number")}: <span className="font-mono">{accounts.find((a) => a.id === accountId)?.accountNumber || "—"}</span>
                   </div>
                 )}
@@ -1232,14 +1232,14 @@ export function CompanyIncorporationForm({
               </div>
             );
             const Badge = ({ txt }: { txt: string }) => (
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">{txt}</span>
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 whitespace-nowrap">{txt}</span>
             );
             return (
               <div className={cn(card, "space-y-4 border-blue-200 dark:border-blue-900/50")}>
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className="truncate text-sm font-black text-slate-900 dark:text-white">{s.t("live_report", "Live Registration Report")}</h3>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {s.t("updating_live", "Updating in real time")}
                     </span>
                   </div>
@@ -1257,7 +1257,7 @@ export function CompanyIncorporationForm({
                 <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.t("sel_account", "Selected Account Details")}</span>
-                    <span className="text-[10px] font-semibold text-slate-400">{s.t("read_only", "Read-only")}</span>
+                    <span className="text-[11px] font-semibold text-slate-400">{s.t("read_only", "Read-only")}</span>
                   </div>
                   {selAcc ? (
                     <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1276,7 +1276,7 @@ export function CompanyIncorporationForm({
                 <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.t("sel_customer", "Selected Customer Details")}</span>
-                    <span className="text-[10px] font-semibold text-slate-400">{s.t("read_only", "Read-only")}</span>
+                    <span className="text-[11px] font-semibold text-slate-400">{s.t("read_only", "Read-only")}</span>
                   </div>
                   {owner ? (
                     <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1294,7 +1294,7 @@ export function CompanyIncorporationForm({
                 <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.t("existing_linked", "Existing Linked Companies")} ({sisters.length})</span>
-                    <span className="text-[10px] font-semibold text-slate-400">{s.t("read_only", "Read-only")}</span>
+                    <span className="text-[11px] font-semibold text-slate-400">{s.t("read_only", "Read-only")}</span>
                   </div>
                   {sisters.length === 0 ? (
                     <p className="text-[11px] text-slate-500">{owner ? s.t("no_sisters", "No other registered company for this owner yet.") : s.t("pick_customer_first", "Select a customer to begin.")}</p>
@@ -1304,12 +1304,12 @@ export function CompanyIncorporationForm({
                         <div key={c.id} className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1.5 dark:bg-slate-800/50">
                           <div className="min-w-0">
                             <div className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">{c.name}</div>
-                            <div className="truncate text-[10px] text-slate-500">{[c.company_code, c.registration_number, c.country_name].filter(Boolean).join(" · ") || "—"}</div>
+                            <div className="truncate text-[11px] text-slate-500">{[c.company_code, c.registration_number, c.country_name].filter(Boolean).join(" · ") || "—"}</div>
                           </div>
                           <button
                             type="button"
                             onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${encodeURIComponent(c.id)}` as Route)}
-                            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-blue-300 px-2 py-1 text-[10px] font-bold text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950/40"
+                            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-blue-300 px-2 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950/40"
                           >
                             {s.t("view", "View")}
                           </button>
@@ -1323,7 +1323,7 @@ export function CompanyIncorporationForm({
                 <div className="rounded-xl border border-amber-300 bg-amber-50/40 p-3 dark:border-amber-800 dark:bg-amber-950/20">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.t("new_draft", "New Company Draft")}</span>
-                    <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-900/60 dark:text-amber-200">{savedId ? s.t("saved_badge", "Saved") : s.t("draft_badge", "Will be created")}</span>
+                    <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-bold text-amber-900 dark:bg-amber-900/60 dark:text-amber-200 whitespace-nowrap">{savedId ? s.t("saved_badge", "Saved") : s.t("draft_badge", "Will be created")}</span>
                   </div>
                   <div className="divide-y divide-amber-200/60 dark:divide-amber-900/40">
                     <Row k={s.t("company_name_lbl", "Company Name")} v={legalName || tradeName} />

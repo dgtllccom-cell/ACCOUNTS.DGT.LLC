@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       // keep original names
     }
 
-    let taxes = localizedTaxRows.map((t: any) => ({
+    const taxes = localizedTaxRows.map((t: any) => ({
       id: t.id,
       countryId: t.country_id,
       countryName: t.countries?.name || "Global",

@@ -775,7 +775,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                 {tt("cbill.branch_office", "Branch / Office")}
               </span>
             </div>
-            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+            <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 whitespace-nowrap">
               {tt("cbill.active_badge", "Active")}
             </span>
           </div>
@@ -789,7 +789,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
               </div>
             </div>
           </div>
-          <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[10px] font-bold text-slate-400">
+          <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px] font-bold text-slate-400">
             {tt("cbill.branch_office", "Branch / Office")}: <span className="font-mono text-slate-700 dark:text-slate-300">{displayValue(bill?.city_branch_id || bill?.country_branch_id)}</span>
           </div>
         </div>
@@ -807,33 +807,33 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
             </div>
           </div>
           <div>
-            <span className="text-[10px] font-bold uppercase text-slate-400">
+            <span className="text-[11px] font-bold uppercase text-slate-400">
               {tt("cbill.bill_no", "Bill Number")}
             </span>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-base font-black text-blue-600 dark:text-blue-400 font-mono">
                 {displayValue(bill?.bill_no)}
               </span>
-              <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 uppercase">
+              <span className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 uppercase whitespace-nowrap">
                 {tt(`cbill.status_${bill?.status || "draft"}`, "Draft")}
               </span>
             </div>
           </div>
-          <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-4 gap-1 text-[10px] text-center">
+          <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-4 gap-1 text-[11px] text-center">
             <div>
-              <span className="text-slate-400 block text-[9px]">Global</span>
+              <span className="text-slate-400 block text-[11px]">Global</span>
               <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{displayValue(bill?.super_admin_serial)}</span>
             </div>
             <div>
-              <span className="text-slate-400 block text-[9px]">{tt("report.col_country", "Country")}</span>
+              <span className="text-slate-400 block text-[11px]">{tt("report.col_country", "Country")}</span>
               <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{displayValue(bill?.country_serial)}</span>
             </div>
             <div>
-              <span className="text-slate-400 block text-[9px]">{tt("report.col_branch", "Branch")}</span>
+              <span className="text-slate-400 block text-[11px]">{tt("report.col_branch", "Branch")}</span>
               <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{displayValue(bill?.branch_serial)}</span>
             </div>
             <div>
-              <span className="text-slate-400 block text-[9px]">Entry</span>
+              <span className="text-slate-400 block text-[11px]">Entry</span>
               <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{displayValue(bill?.entry_serial)}</span>
             </div>
           </div>
@@ -854,7 +854,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
 
           <div className="space-y-1.5 py-1 text-xs">
             <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold">
-              <div className="h-4 w-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">
+              <div className="h-4 w-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] leading-none">
                 ✓
               </div>
               <span>{tt("cbill.title", "Customer Bill")}</span>
@@ -873,7 +873,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
             </div>
           </div>
 
-          <div className="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
+          <div className="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
             <span>{tt("tc.workflow_stage", "Workflow Status")}:</span>
             <span className="font-bold text-amber-600 dark:text-amber-400">{tt("cinq.status_in_progress", "In Progress")}</span>
           </div>
@@ -890,7 +890,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                 {tt("cbill.customer_details", "Customer Details")}
               </span>
             </div>
-            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+            <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 whitespace-nowrap">
               {tt("cbill.active_badge", "Active")}
             </span>
           </div>
@@ -904,7 +904,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
             </div>
           </div>
 
-          <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
+          <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
             <span>{tt("cbill.customer_name", "Customer Name")}</span>
             <span className="font-bold text-slate-700 dark:text-slate-300">{displayValue(bill?.customer_name)}</span>
           </div>
@@ -1201,7 +1201,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                          <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                             {tt("cbill.quantity", "Quantity")}
                           </label>
                           <input
@@ -1215,7 +1215,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                          <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                             {tt("cbill.unit", "Unit")}
                           </label>
                           <input
@@ -1228,7 +1228,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                          <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                             {tt("cbill.rate", "Rate / Price")} *
                           </label>
                           <input
@@ -1242,7 +1242,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                          <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                             {tt("cbill.tax_pct", "Tax %")}
                           </label>
                           <input
@@ -1293,7 +1293,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                   {items.length > 0 && (
                     <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                       <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 dark:bg-slate-800/80 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-200 dark:border-slate-700">
+                        <thead className="bg-slate-50 dark:bg-slate-800/80 text-[11px] uppercase font-bold text-slate-500 border-b border-slate-200 dark:border-slate-700">
                           <tr>
                             <Th className="py-2.5 px-3">#</Th>
                             <Th className="py-2.5 px-3">{tt("cbill.charge_name", "Charge Item")}</Th>
@@ -1310,7 +1310,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                               <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
                               <td className="py-2.5 px-3">
                                 <div className="font-bold text-slate-900 dark:text-slate-100">{it.charge_name}</div>
-                                <div className="text-[10px] text-slate-500 capitalize">{it.charge_type.replace("_", " ")}</div>
+                                <div className="text-[11px] text-slate-500 capitalize">{it.charge_type.replace("_", " ")}</div>
                               </td>
                               <td className="py-2.5 px-3 text-center text-slate-700 dark:text-slate-300">
                                 {it.quantity} {it.unit}
@@ -1361,7 +1361,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
 
                     <div className="grid grid-cols-2 gap-3 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                        <label className="block text-[11px] font-bold text-slate-500 mb-1">
                           {tt("cbill.other_charges", "Other Surcharges")}
                         </label>
                         <input
@@ -1376,7 +1376,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                        <label className="block text-[11px] font-bold text-slate-500 mb-1">
                           {tt("cbill.discount", "Discount")}
                         </label>
                         <input
@@ -1412,7 +1412,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
             {/* Header with Title and Pagination Switcher */}
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 whitespace-nowrap">
                   👁️ {tt("cbill.live_preview", "LIVE BILL PREVIEW")}
                 </span>
               </div>
@@ -1448,7 +1448,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                   <h3 className="text-base font-black text-slate-900 dark:text-white">
                     {tt("cbill.title", "Customer Bill")}
                   </h3>
-                  <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase">
+                  <span className="px-2 py-0.5 text-[11px] font-bold rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase whitespace-nowrap">
                     {tt(`cbill.status_${bill?.status || "draft"}`, "Draft")}
                   </span>
                 </div>
@@ -1458,31 +1458,31 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
 
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-3 text-xs">
                   <div>
-                    <span className="text-slate-400 block text-[10px]">{tt("cbill.bill_no", "Bill Number")}</span>
+                    <span className="text-slate-400 block text-[11px]">{tt("cbill.bill_no", "Bill Number")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
                       {displayValue(bill?.bill_no)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">{tt("cbill.customer_name", "Customer")}</span>
+                    <span className="text-slate-400 block text-[11px]">{tt("cbill.customer_name", "Customer")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
                       {displayValue(bill?.customer_name)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">{tt("cbill.bill_date", "Bill Date")}</span>
+                    <span className="text-slate-400 block text-[11px]">{tt("cbill.bill_date", "Bill Date")}</span>
                     <span className="text-slate-700 dark:text-slate-300">
                       {bill?.bill_date ? String(bill.bill_date).slice(0, 10) : "—"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">{tt("cbill.account_number", "A/C No")}</span>
+                    <span className="text-slate-400 block text-[11px]">{tt("cbill.account_number", "A/C No")}</span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-mono font-bold">
                       {displayValue(bill?.customer_account_number)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">{tt("cbill.due_date", "Due Date")}</span>
+                    <span className="text-slate-400 block text-[11px]">{tt("cbill.due_date", "Due Date")}</span>
                     <span className="text-slate-700 dark:text-slate-300">{dueDate || "—"}</span>
                   </div>
                 </div>
@@ -1490,7 +1490,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
 
               {/* Total Due Highlight Card */}
               <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 rounded-xl p-3 text-center sm:text-right shrink-0">
-                <span className="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 tracking-wider">
+                <span className="text-[11px] font-bold uppercase text-blue-600 dark:text-blue-400 tracking-wider">
                   {tt("cbill.total_due", "Total Due")}
                 </span>
                 <div className="text-2xl font-black text-blue-600 dark:text-blue-400 font-mono">
@@ -1552,7 +1552,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
               <div className="space-y-3">
                 <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 dark:bg-slate-800/80 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-200 dark:border-slate-700">
+                    <thead className="bg-slate-50 dark:bg-slate-800/80 text-[11px] uppercase font-bold text-slate-500 border-b border-slate-200 dark:border-slate-700">
                       <tr>
                         <Th className="py-2.5 px-3">#</Th>
                         <Th className="py-2.5 px-3">{tt("cbill.charge_name", "Description")}</Th>
@@ -1659,7 +1659,7 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                         <span className="font-mono font-black text-blue-600 dark:text-blue-400">
                           {ord.order_no}
                         </span>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-bold uppercase bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                           {ord.transport_mode || "—"} • {ord.movement_type || "—"}
                         </span>
                       </div>

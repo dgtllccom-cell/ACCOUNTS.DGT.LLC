@@ -332,7 +332,7 @@ function LightTable({ headers, children }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
       <table className="min-w-full border-collapse text-xs text-slate-800">
-        <thead className="bg-slate-50 text-[10px] uppercase font-bold tracking-wide text-slate-650 border-b border-slate-200">
+        <thead className="bg-slate-50 text-[11px] uppercase font-bold tracking-wide text-slate-650 border-b border-slate-200">
           <tr>
             {headers.map((header, idx) => (
               <Th
@@ -395,7 +395,7 @@ function LightStatusBadge({ status }) {
     badgeClass = "bg-blue-50 text-blue-700 border-blue-200";
   }
   return (
-    <span className={`inline-flex items-center rounded border px-2 py-0.5 text-[9px] font-black uppercase ${badgeClass}`}>
+    <span className={`inline-flex items-center rounded border px-2 py-0.5 text-[11px] font-black uppercase ${badgeClass}`}>
       {status || "Open"}
     </span>
   );
@@ -3438,18 +3438,18 @@ export function PurchaseOrderWizard({ session }) {
   const headerActions = (
     <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
         <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 mr-2">
-          <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab1_booking", "1 Booking")}</button>
-          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab2_goods", "2 Goods")}</button>
-          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "shipping" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
-          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab4_reports", "4 Reports")}</button>
-          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-2 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab5_verify", "5 Verify")}</button>
+          <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-2 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab1_booking", "1 Booking")}</button>
+          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-2 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab2_goods", "2 Goods")}</button>
+          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-2 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "shipping" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
+          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-2 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab4_reports", "4 Reports")}</button>
+          <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-2 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab5_verify", "5 Verify")}</button>
         </div>
         <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 mr-1">
           <span className="relative flex h-2 w-2 ml-1">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider pr-1">{t(lang, "purchase.live_badge", "Live")}</span>
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider pr-1">{t(lang, "purchase.live_badge", "Live")}</span>
         </div>
         <div className="hidden sm:flex items-center gap-1.5 bg-background border border-input rounded-lg px-2.5 py-1 shadow-xs">
           <Search className="h-3.5 w-3.5 text-muted-foreground" />
@@ -3470,7 +3470,7 @@ export function PurchaseOrderWizard({ session }) {
             type="button"
             disabled={bookingSearchLoading || !bookingSearchInput.trim()}
             onClick={() => handleSearchBookingOrder(bookingSearchInput)}
-            className="text-[10px] font-black uppercase text-primary hover:text-primary/80 disabled:opacity-40 px-1"
+            className="text-[11px] font-black uppercase text-primary hover:text-primary/80 disabled:opacity-40 px-1"
           >
             {bookingSearchLoading ? "..." : t(lang, "common.load", "Load")}
           </button>
@@ -3478,14 +3478,14 @@ export function PurchaseOrderWizard({ session }) {
         <Button
           type="button"
           onClick={() => setIsFormOpen(false)}
-          className="flex items-center gap-1 h-8 px-3 bg-slate-700 hover:bg-slate-800 text-white transition-all shadow-md font-bold text-[10px] rounded-lg"
+          className="flex items-center gap-1 h-8 px-3 bg-slate-700 hover:bg-slate-800 text-white transition-all shadow-md font-bold text-[11px] rounded-lg"
         >
           {t(lang, "purchase.back_to_register", "← Register")}
         </Button>
         <Button
           type="button"
           onClick={() => setEntryMethodModalOpen(true)}
-          className="flex items-center gap-1 h-8 px-3 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md font-bold text-[10px] rounded-lg"
+          className="flex items-center gap-1 h-8 px-3 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md font-bold text-[11px] rounded-lg"
         >
           {t(lang, "purchase.new_short", "+ New")}
         </Button>
@@ -3496,14 +3496,14 @@ export function PurchaseOrderWizard({ session }) {
             setIsTransferred(false);
             setActiveTab("report");
           }}
-          className="flex items-center gap-1 h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md font-bold text-[10px] rounded-lg"
+          className="flex items-center gap-1 h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md font-bold text-[11px] rounded-lg"
         >
           <FileText className="h-3.5 w-3.5" /> {t(lang, "purchase.report_short", "Report")}
         </Button>
         <Button
           type="button"
           onClick={() => setHandoverModalOpen(true)}
-          className="flex items-center gap-1 h-8 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md font-bold text-[10px] rounded-lg"
+          className="flex items-center gap-1 h-8 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md font-bold text-[11px] rounded-lg"
           title={t(lang, "tc.handover_task", "Handover / Delegate Task to User")}
         >
           <Send className="h-3.5 w-3.5" /> {t(lang, "tc.handover_btn", "Handover")}
@@ -3511,7 +3511,7 @@ export function PurchaseOrderWizard({ session }) {
         <Button
           type="button"
           onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
-          className="flex items-center gap-1 h-8 px-2.5 bg-primary text-primary-foreground hover:bg-primary/95 transition-all shadow-md font-bold text-[10px] rounded-lg"
+          className="flex items-center gap-1 h-8 px-2.5 bg-primary text-primary-foreground hover:bg-primary/95 transition-all shadow-md font-bold text-[11px] rounded-lg"
         >
           <MoreVertical className="h-3.5 w-3.5" /> {t(lang, "purchase.actions_short", "Actions")}
         </Button>
@@ -3824,11 +3824,11 @@ export function PurchaseOrderWizard({ session }) {
                   <span className="text-xs font-black uppercase tracking-wider text-blue-900 dark:text-blue-300">
                     {t(lang, "tc.active_handover_task", "Active Handover Task")}
                   </span>
-                  <Badge variant="outline" className="text-[10px] font-bold border-blue-300 text-blue-700 bg-white dark:bg-slate-900">
+                  <Badge variant="outline" className="text-[11px] font-bold border-blue-300 text-blue-700 bg-white dark:bg-slate-900">
                     {activeHandover.metadata?.requestedTask || activeHandover.narration || t(lang, "tc.task_assigned", "Task Assigned")}
                   </Badge>
                   {activeHandover.metadata?.priority && (
-                    <Badge variant={activeHandover.metadata.priority === "urgent" ? "destructive" : "secondary"} className="text-[9px] uppercase">
+                    <Badge variant={activeHandover.metadata.priority === "urgent" ? "destructive" : "secondary"} className="text-[11px] uppercase">
                       {activeHandover.metadata.priority}
                     </Badge>
                   )}
@@ -3889,7 +3889,7 @@ export function PurchaseOrderWizard({ session }) {
                 <div className="py-8 text-center border-2 border-dashed border-border rounded-xl">
                   <FileClock className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2" />
                   <p className="text-xs font-bold text-muted-foreground">{t(lang, "dintake.em_no_drafts", "No saved drafts for this screen.")}</p>
-                  <p className="text-[10px] text-muted-foreground/70 mt-1">{t(lang, "dintake.em_scan_desc", "Upload a document to extract fields.")}</p>
+                  <p className="text-[11px] text-muted-foreground/70 mt-1">{t(lang, "dintake.em_scan_desc", "Upload a document to extract fields.")}</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -3902,7 +3902,7 @@ export function PurchaseOrderWizard({ session }) {
                     >
                       <div>
                         <div className="text-xs font-black text-foreground">{d.draft_no || d.draftNo}</div>
-                        <div className="text-[10px] text-muted-foreground">{[d.country_name, d.original_filename].filter(Boolean).join(" · ")}</div>
+                        <div className="text-[11px] text-muted-foreground">{[d.country_name, d.original_filename].filter(Boolean).join(" · ")}</div>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </button>
@@ -3917,7 +3917,7 @@ export function PurchaseOrderWizard({ session }) {
                   <Sparkles className="h-4 w-4" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-black tracking-widest uppercase text-emerald-600 dark:text-emerald-400 block leading-tight">
+                  <span className="text-[11px] font-black tracking-widest uppercase text-emerald-600 dark:text-emerald-400 block leading-tight">
                     {t(lang, "dintake.nav_center", "Document Intake Center")}
                   </span>
                   <p className="text-xs text-muted-foreground font-medium">
@@ -3945,7 +3945,7 @@ export function PurchaseOrderWizard({ session }) {
                       <div className="h-9 w-9 rounded-lg bg-emerald-500 text-white flex items-center justify-center shadow-sm">
                         <FilePlus2 className="h-5 w-5" />
                       </div>
-                      <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 dark:bg-emerald-900/60 dark:text-emerald-300 px-2 py-0.5 rounded">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 dark:bg-emerald-900/60 dark:text-emerald-300 px-2 py-0.5 rounded whitespace-nowrap">
                         Standard
                       </span>
                     </div>
@@ -3976,7 +3976,7 @@ export function PurchaseOrderWizard({ session }) {
                       <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
                         <ScanLine className="h-5 w-5" />
                       </div>
-                      <span className="text-[9.5px] font-black uppercase tracking-wider text-blue-700 bg-blue-100 dark:bg-blue-900/60 dark:text-blue-300 px-2 py-0.5 rounded">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-blue-700 bg-blue-100 dark:bg-blue-900/60 dark:text-blue-300 px-2 py-0.5 rounded whitespace-nowrap">
                         {t(lang, "dintake.st_ocr", "OCR")}
                       </span>
                     </div>
@@ -4015,7 +4015,7 @@ export function PurchaseOrderWizard({ session }) {
                       <div className="h-9 w-9 rounded-lg bg-purple-600 text-white flex items-center justify-center shadow-sm">
                         <Mic className="h-5 w-5" />
                       </div>
-                      <span className="text-[9.5px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 dark:bg-purple-900/60 dark:text-purple-300 px-2 py-0.5 rounded">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 dark:bg-purple-900/60 dark:text-purple-300 px-2 py-0.5 rounded whitespace-nowrap">
                         AI
                       </span>
                     </div>
@@ -4055,7 +4055,7 @@ export function PurchaseOrderWizard({ session }) {
                       <div className="h-9 w-9 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-sm">
                         <FileClock className="h-5 w-5" />
                       </div>
-                      <span className="text-[9.5px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/60 dark:text-amber-300 px-2 py-0.5 rounded">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/60 dark:text-amber-300 px-2 py-0.5 rounded whitespace-nowrap">
                         {t(lang, "dintake.st_draft_ready", "Draft Ready")}
                       </span>
                     </div>
@@ -4090,7 +4090,7 @@ export function PurchaseOrderWizard({ session }) {
                 <ShieldCheck className="h-4 w-4" />
               </div>
               <div>
-                <span className="text-[10px] font-black tracking-widest uppercase text-indigo-600 dark:text-indigo-400 block leading-tight">{t(lang, "purchase.super_admin_control", "SUPER ADMIN CONTROL")}</span>
+                <span className="text-[11px] font-black tracking-widest uppercase text-indigo-600 dark:text-indigo-400 block leading-tight">{t(lang, "purchase.super_admin_control", "SUPER ADMIN CONTROL")}</span>
                 <p className="text-xs text-muted-foreground font-medium">
                   {t(lang, "purchase.working_scope_desc", "Select Country, Main Branch, and City Branch scope.")}
                 </p>
@@ -4204,10 +4204,10 @@ export function PurchaseOrderWizard({ session }) {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="bg-emerald-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded border border-emerald-500/30">
+                <span className="bg-emerald-600 text-white text-[11px] font-black uppercase px-2 py-0.5 rounded border border-emerald-500/30 whitespace-nowrap">
                   {t(lang, "purchase.posted_voucher_registration", "POSTED VOUCHER REGISTRATION")}
                 </span>
-                <span className="bg-blue-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded">
+                <span className="bg-blue-600 text-white text-[11px] font-black uppercase px-2 py-0.5 rounded whitespace-nowrap">
                   ✓ LEDGER OK
                 </span>
               </div>
@@ -4243,25 +4243,25 @@ export function PurchaseOrderWizard({ session }) {
           {/* Transferred Audit Summary Badges */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-emerald-500/20 text-xs">
             <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
-              <span className="block text-[10px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_transfer_date", "Transfer Date")}</span>
+              <span className="block text-[11px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_transfer_date", "Transfer Date")}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">
                 {transferredData?.transferDate || form.workflow?.transferredAt?.slice(0, 10) || new Date().toISOString().slice(0, 10)}
               </span>
             </div>
             <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
-              <span className="block text-[10px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_roznamcha_serial", "Roznamcha Serial (Business)")}</span>
+              <span className="block text-[11px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_roznamcha_serial", "Roznamcha Serial (Business)")}</span>
               <span className="font-bold text-blue-600 font-mono">
                 {transferredData?.roznamchaSerialNo || form.workflow?.roznamchaSerialNo || form.workflow?.superAdminSerialNo || "RS-POSTED"}
               </span>
             </div>
             <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
-              <span className="block text-[10px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_paydid_serial", "Pay-Did / Credit Serial")}</span>
+              <span className="block text-[11px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_paydid_serial", "Pay-Did / Credit Serial")}</span>
               <span className="font-bold text-emerald-600 font-mono">
                 {transferredData?.payDidSerialNo || form.workflow?.payDidSerialNo || "PAY-POSTED"}
               </span>
             </div>
             <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
-              <span className="block text-[10px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_ledger_status", "Ledgers Posting")}</span>
+              <span className="block text-[11px] text-slate-500 font-bold uppercase">{t(lang, "purchase.lbl_ledger_status", "Ledgers Posting")}</span>
               <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                 {t(lang, "purchase.lbl_ledger_ok", "OK / Posted")}
@@ -4350,21 +4350,21 @@ export function PurchaseOrderWizard({ session }) {
 
                     <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs">
                       <div>
-                        <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "purchase.pc_number", "PC Number")}</span>
+                        <span className="block text-[11px] uppercase font-bold text-slate-400">{t(lang, "purchase.pc_number", "PC Number")}</span>
                         <span className="font-mono font-black text-white">{form.purchaseContractNo || form.purchaseOrderNo || "\u2014"}</span>
                       </div>
                       <div>
-                        <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "purchase.booking_date_colon", "Booking Date:")}</span>
-                        <span className="inline-block bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded text-[11px]">
+                        <span className="block text-[11px] uppercase font-bold text-slate-400">{t(lang, "purchase.booking_date_colon", "Booking Date:")}</span>
+                        <span className="inline-block bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded text-[11px] whitespace-nowrap">
                           {form.purchaseDate || "\u2014"}
                         </span>
                       </div>
                       <div>
-                        <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "purchase.branch_word", "Branch")}</span>
+                        <span className="block text-[11px] uppercase font-bold text-slate-400">{t(lang, "purchase.branch_word", "Branch")}</span>
                         <span className="font-bold text-white">{form.branchName || "\u2014"}</span>
                       </div>
                       <div>
-                        <span className="block text-[9px] uppercase font-bold text-slate-400">{t(lang, "purchase.system_word", "System")}</span>
+                        <span className="block text-[11px] uppercase font-bold text-slate-400">{t(lang, "purchase.system_word", "System")}</span>
                         <span className="font-bold text-white">{t(lang, "purchase.system_word", "System")}</span>
                       </div>
                     </div>
@@ -4421,12 +4421,12 @@ export function PurchaseOrderWizard({ session }) {
                             <button
                               type="button"
                               onClick={() => setShowScopeModal(true)}
-                              className="text-[9.5px] font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 transition"
+                              className="text-[11px] font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 transition whitespace-nowrap"
                             >
                               {t(lang, "purchase.change_scope", "Scope ⚙")}
                             </button>
                           )}
-                          <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
                             {t(lang, "purchase.active_word", "Active")}
                           </span>
                         </div>
@@ -4476,7 +4476,7 @@ export function PurchaseOrderWizard({ session }) {
                           <span className="h-5 w-5 rounded bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center">2</span>
                           <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">{t(lang, "purchase.bill_details_title", "Bill Details")}</h4>
                         </div>
-                        <span className="text-[9.5px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+                        <span className="text-[11px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800 whitespace-nowrap">
                           {t(lang, "purchase.draft_badge", "DRAFT")}
                         </span>
                       </div>
@@ -4623,7 +4623,7 @@ export function PurchaseOrderWizard({ session }) {
 
                     <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
                       <table className="w-full text-xs text-left border-collapse">
-                        <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] uppercase font-bold text-slate-600 dark:text-slate-400">
+                        <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[11px] uppercase font-bold text-slate-600 dark:text-slate-400">
                           <tr>
                             <Th className="p-2 text-center w-8">#</Th>
                             <Th className="p-2">{t(lang, "purchase.goods_name", "Goods Name")}</Th>
@@ -4663,7 +4663,7 @@ export function PurchaseOrderWizard({ session }) {
                     </div>
 
                     <div className="pt-2">
-                      <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.remarks_goods", "Remarks / Notes (Goods)")}</label>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.remarks_goods", "Remarks / Notes (Goods)")}</label>
                       <input
                         type="text"
                         value={form.goodsRemarks || ""}
@@ -4686,45 +4686,45 @@ export function PurchaseOrderWizard({ session }) {
                         </div>
                         <div className="grid grid-cols-2 gap-4 mt-3">
                           <div className="space-y-1.5 text-xs">
-                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider block mb-1">{t(lang, "purchase.export_loading_sub", "Export / Loading")}</span>
+                            <span className="text-[11px] font-black text-blue-600 uppercase tracking-wider block mb-1">{t(lang, "purchase.export_loading_sub", "Export / Loading")}</span>
                             <div>
-                              <span className="text-[10px] text-slate-400 block font-semibold">{t(lang, "purchase.from_country", "From Country")}</span>
+                              <span className="text-[11px] text-slate-400 block font-semibold">{t(lang, "purchase.from_country", "From Country")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.loadingCountry || form.branchCountry || "\u2014"}</span>
                             </div>
                             <div>
-                              <span className="text-[10px] text-slate-400 block font-semibold">{t(lang, "purchase.from_port", "From Port")}</span>
+                              <span className="text-[11px] text-slate-400 block font-semibold">{t(lang, "purchase.from_port", "From Port")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.loadingPort || "\u2014"}</span>
                             </div>
                             <div>
-                              <span className="text-[10px] text-slate-400 block font-semibold">{t(lang, "purchase.loading_date_lbl", "Loading Date")}</span>
+                              <span className="text-[11px] text-slate-400 block font-semibold">{t(lang, "purchase.loading_date_lbl", "Loading Date")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.loadingDate || "\u2014"}</span>
                             </div>
                             <div>
-                              <span className="text-[10px] text-slate-400 block font-semibold">{t(lang, "purchase.shipping_line_lbl", "Shipping Line")}</span>
+                              <span className="text-[11px] text-slate-400 block font-semibold">{t(lang, "purchase.shipping_line_lbl", "Shipping Line")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.shippingLine || "\u2014"}</span>
                             </div>
                           </div>
 
                           <div className="space-y-1.5 text-xs">
-                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider block mb-1">{t(lang, "purchase.import_receiving_sub", "Import / Receiving")}</span>
+                            <span className="text-[11px] font-black text-blue-600 uppercase tracking-wider block mb-1">{t(lang, "purchase.import_receiving_sub", "Import / Receiving")}</span>
                             <div>
-                              <span className="text-[10px] text-slate-400 block font-semibold">{t(lang, "purchase.to_country", "To Country")}</span>
+                              <span className="text-[11px] text-slate-400 block font-semibold">{t(lang, "purchase.to_country", "To Country")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.receivingCountry || form.destinationCountry || "\u2014"}</span>
                             </div>
                             <div>
-                              <span className="text-[10px] text-slate-400 block font-semibold">{t(lang, "purchase.to_port", "To Port")}</span>
+                              <span className="text-[11px] text-slate-400 block font-semibold">{t(lang, "purchase.to_port", "To Port")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.receivingPort || form.destinationPort || "\u2014"}</span>
                             </div>
                             <div>
-                              <span className="text-[10px] text-slate-400 block font-semibold">{t(lang, "purchase.receiving_date_lbl", "Receiving Date")}</span>
+                              <span className="text-[11px] text-slate-400 block font-semibold">{t(lang, "purchase.receiving_date_lbl", "Receiving Date")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.receivedDate || "\u2014"}</span>
                             </div>
                             <div>
-                              <span className="text-[10px] text-slate-400 block font-semibold">{t(lang, "purchase.final_destination_lbl", "Final Destination")}</span>
+                              <span className="text-[11px] text-slate-400 block font-semibold">{t(lang, "purchase.final_destination_lbl", "Final Destination")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.destinationPort || "\u2014"}</span>
                             </div>
                             <div>
-                              <span className="text-[10px] text-slate-400 block font-semibold">{t(lang, "purchase.shipping_line_lbl", "Shipping Line")}</span>
+                              <span className="text-[11px] text-slate-400 block font-semibold">{t(lang, "purchase.shipping_line_lbl", "Shipping Line")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.shippingLine || "\u2014"}</span>
                             </div>
                           </div>
@@ -4732,7 +4732,7 @@ export function PurchaseOrderWizard({ session }) {
                       </div>
 
                       <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.remarks_loading", "Remarks / Notes (Loading)")}</label>
+                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.remarks_loading", "Remarks / Notes (Loading)")}</label>
                         <input
                           type="text"
                           value={form.loadingRemarks || ""}
@@ -4784,7 +4784,7 @@ export function PurchaseOrderWizard({ session }) {
                       </div>
 
                       <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.remarks_goods_summary", "Remarks / Notes (Goods Summary)")}</label>
+                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.remarks_goods_summary", "Remarks / Notes (Goods Summary)")}</label>
                         <input
                           type="text"
                           value={form.goodsSummaryRemarks || ""}
@@ -4834,7 +4834,7 @@ export function PurchaseOrderWizard({ session }) {
 
                           {/* Right Sub-Card: TOTAL PURCHASE PAYMENT */}
                           <div className="bg-blue-50/70 dark:bg-blue-950/40 rounded-xl p-3 border border-blue-100 dark:border-blue-900 space-y-1.5 text-xs flex flex-col justify-center">
-                            <span className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-400 tracking-wider text-center block mb-1">
+                            <span className="text-[11px] font-black uppercase text-blue-700 dark:text-blue-400 tracking-wider text-center block mb-1">
                               {t(lang, "purchase.total_purchase_payment", "Total Purchase Payment")}
                             </span>
                             <div className="flex justify-between">
@@ -4854,7 +4854,7 @@ export function PurchaseOrderWizard({ session }) {
                       </div>
 
                       <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.remarks_payment", "Remarks / Notes (Payment)")}</label>
+                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.remarks_payment", "Remarks / Notes (Payment)")}</label>
                         <input
                           type="text"
                           value={form.paymentRemarks || ""}
@@ -4942,7 +4942,7 @@ export function PurchaseOrderWizard({ session }) {
                           <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
                             {form.purchaseCompanyName || form.purchaseAccountName || "\u2014"}
                           </h2>
-                          <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded">
+                          <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded whitespace-nowrap">
                             ({form.purchaseAccountNo || "\u2014"})
                           </span>
                         </div>
@@ -5002,7 +5002,7 @@ export function PurchaseOrderWizard({ session }) {
                           <div className="space-y-3">
                             {/* Purchase Account (DR) */}
                             <div className="relative" ref={purchaseDropdownRef}>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.purchase_account_dr_star", "Purchase Account (DR)*")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.purchase_account_dr_star", "Purchase Account (DR)*")}</label>
                               <div className="relative flex items-center">
                                 <input
                                   type="text"
@@ -5046,8 +5046,8 @@ export function PurchaseOrderWizard({ session }) {
                               {purchaseDropdownOpen && (
                                 <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-500/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                                   <div className="flex justify-between items-center px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/40 rounded-lg mb-1.5 border border-blue-100 dark:border-blue-900">
-                                    <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">{t(lang, "purchase.select_purchase_account_dr_header", "Select Purchase Account (DR)")}</span>
-                                    <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                    <span className="text-[11px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">{t(lang, "purchase.select_purchase_account_dr_header", "Select Purchase Account (DR)")}</span>
+                                    <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                       {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).length))}
                                     </span>
                                   </div>
@@ -5070,17 +5070,17 @@ export function PurchaseOrderWizard({ session }) {
                                               {acc.accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account")}
                                             </span>
                                             <div className="flex flex-wrap items-center gap-1">
-                                              <span className="font-mono text-[9px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded">
+                                              <span className="font-mono text-[11px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                                 {acc.accountCode}
                                               </span>
                                               {acc.manualReferenceNumber && (
-                                                <span className="font-mono text-[9px] font-black bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1.5 py-0.5 rounded">
+                                                <span className="font-mono text-[11px] font-black bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                                   Ref: {acc.manualReferenceNumber}
                                                 </span>
                                               )}
                                             </div>
                                           </div>
-                                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9.5px] text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-1.5">
+                                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-1.5">
                                             <div>
                                               <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}
                                             </div>
@@ -5107,7 +5107,7 @@ export function PurchaseOrderWizard({ session }) {
 
                             {/* Sales Account (CR) */}
                             <div className="relative" ref={salesDropdownRef}>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.sales_account_cr_star", "Sales Account (CR)*")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.sales_account_cr_star", "Sales Account (CR)*")}</label>
                               <div className="relative flex items-center">
                                 <input
                                   type="text"
@@ -5151,8 +5151,8 @@ export function PurchaseOrderWizard({ session }) {
                               {salesDropdownOpen && (
                                 <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-500/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                                   <div className="flex justify-between items-center px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/40 rounded-lg mb-1.5 border border-blue-100 dark:border-blue-900">
-                                    <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">{t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)")}</span>
-                                    <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                    <span className="text-[11px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">{t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)")}</span>
+                                    <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                       {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length))}
                                     </span>
                                   </div>
@@ -5175,17 +5175,17 @@ export function PurchaseOrderWizard({ session }) {
                                               {acc.accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account")}
                                             </span>
                                             <div className="flex flex-wrap items-center gap-1">
-                                              <span className="font-mono text-[9px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded">
+                                              <span className="font-mono text-[11px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                                 {acc.accountCode}
                                               </span>
                                               {acc.manualReferenceNumber && (
-                                                <span className="font-mono text-[9px] font-black bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1.5 py-0.5 rounded">
+                                                <span className="font-mono text-[11px] font-black bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1.5 py-0.5 rounded whitespace-nowrap">
                                                   Ref: {acc.manualReferenceNumber}
                                                 </span>
                                               )}
                                             </div>
                                           </div>
-                                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9.5px] text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-1.5">
+                                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-1.5">
                                             <div>
                                               <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}
                                             </div>
@@ -5212,7 +5212,7 @@ export function PurchaseOrderWizard({ session }) {
 
                             {/* Contract No */}
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.contract_no_label", "Contract No")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.contract_no_label", "Contract No")}</label>
                               <input
                                 type="text"
                                 value={form.purchaseContractNo || ""}
@@ -5223,7 +5223,7 @@ export function PurchaseOrderWizard({ session }) {
 
                             {/* Contract / Booking Date */}
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.contract_booking_date_label", "Contract / Booking Date *")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.contract_booking_date_label", "Contract / Booking Date *")}</label>
                               <input
                                 type="date"
                                 value={form.purchaseDate || ""}
@@ -5235,7 +5235,7 @@ export function PurchaseOrderWizard({ session }) {
                             {/* Invoice / Payment Select & Ship Option (2 cols) */}
                             <div className="grid grid-cols-2 gap-2.5">
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.invoice_payment_select_label", "Invoice / Payment Select")}</label>
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.invoice_payment_select_label", "Invoice / Payment Select")}</label>
                                 <select
                                   value={form.paymentType || ""}
                                   onChange={(e) => setValue("paymentType", e.target.value)}
@@ -5248,7 +5248,7 @@ export function PurchaseOrderWizard({ session }) {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.ship_option_label", "Ship Option")}</label>
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.ship_option_label", "Ship Option")}</label>
                                 <select
                                   value={form.shippingMode || "By Sea"}
                                   onChange={(e) => {
@@ -5267,7 +5267,7 @@ export function PurchaseOrderWizard({ session }) {
 
                             {/* Status */}
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.status_label_plain", "Status")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.status_label_plain", "Status")}</label>
                               <select
                                 value={form.salesStatus || "Draft"}
                                 onChange={(e) => setValue("salesStatus", e.target.value)}
@@ -5284,14 +5284,14 @@ export function PurchaseOrderWizard({ session }) {
                             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-3 space-y-2.5">
                               <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                                 <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
-                                <span className="text-[10px] font-black uppercase tracking-wider">
+                                <span className="text-[11px] font-black uppercase tracking-wider">
                                   {t(lang, "purchase.booking_currency_title", "Booking Currency & Conversion")}
                                 </span>
                               </div>
 
-                              <div className="grid grid-cols-1 gap-2 text-[10px]">
+                              <div className="grid grid-cols-1 gap-2 text-[11px]">
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                                     {t(lang, "purchase.purchase_currency", "Purchase Currency (Invoice)")}
                                   </label>
                                   <select
@@ -5313,7 +5313,7 @@ export function PurchaseOrderWizard({ session }) {
                                 </div>
 
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                                     {t(lang, "purchase.final_currency", "Final / Settlement Currency")}
                                   </label>
                                   <select
@@ -5335,7 +5335,7 @@ export function PurchaseOrderWizard({ session }) {
                                 </div>
 
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                                     {t(lang, "purchase.exchange_rate", "Exchange Rate")} ({form.currencyType || "USD"} → {form.secondaryCurrency || "AED"})
                                   </label>
                                   <div className="flex gap-1">
@@ -5362,7 +5362,7 @@ export function PurchaseOrderWizard({ session }) {
 
                             {/* Remarks / Terms */}
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.booking_remarks_terms_label", "Booking Remarks / Terms")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.booking_remarks_terms_label", "Booking Remarks / Terms")}</label>
                               <textarea
                                 rows={2}
                                 value={form.remarks || ""}
@@ -5401,7 +5401,7 @@ export function PurchaseOrderWizard({ session }) {
                             <button
                               type="button"
                               onClick={() => setActiveTab("booking")}
-                              className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 underline"
+                              className="text-[11px] font-bold text-slate-500 hover:text-slate-800 underline"
                             >
                               {t(lang, "purchase.back_to_booking", "← Back to Booking")}
                             </button>
@@ -5410,7 +5410,7 @@ export function PurchaseOrderWizard({ session }) {
                           <div className="space-y-3">
                             {/* Manual Net KGs Input */}
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.net_kgs_weight", "Net KGs (Weight)")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.net_kgs_weight", "Net KGs (Weight)")}</label>
                               <input
                                 type="number"
                                 value={form.netWeight !== undefined && form.netWeight !== "" ? form.netWeight : ""}
@@ -5427,7 +5427,7 @@ export function PurchaseOrderWizard({ session }) {
 
                             {/* Origin Country */}
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
                               <select
                                 value={form.origin || ""}
                                 onChange={(e) => setValue("origin", e.target.value)}
@@ -5447,7 +5447,7 @@ export function PurchaseOrderWizard({ session }) {
 
                             {/* Goods Name */}
                             <div className="relative">
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.goods_name_star", "Goods Name*")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.goods_name_star", "Goods Name*")}</label>
                               <SearchableSelect
                                 value={form.goodsName || ""}
                                 onChange={(val) => {
@@ -5488,7 +5488,7 @@ export function PurchaseOrderWizard({ session }) {
                             <div className="grid grid-cols-2 gap-2.5">
                               <div>
                                 <div className="flex items-center justify-between mb-1">
-                                  <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.th_hs_code", "HS Code")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.th_hs_code", "HS Code")}</label>
                                   {form.goodsName && (() => {
                                     const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === form.goodsName.trim().toUpperCase());
                                     if (selectedGood && (selectedGood.chs_code || selectedGood.chsCode || "") !== (form.hsCode || "")) {
@@ -5496,7 +5496,7 @@ export function PurchaseOrderWizard({ session }) {
                                         <button
                                           type="button"
                                           onClick={handleUpdateHsCode}
-                                          className="text-[8.5px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
+                                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 whitespace-nowrap"
                                         >
                                           {t(lang, "purchase.save_short", "Save")}
                                         </button>
@@ -5513,7 +5513,7 @@ export function PurchaseOrderWizard({ session }) {
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.allot_name_id", "Allot Name / ID")}</label>
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.allot_name_id", "Allot Name / ID")}</label>
                                 <input
                                   type="text"
                                   value={form.allotName || ""}
@@ -5527,7 +5527,7 @@ export function PurchaseOrderWizard({ session }) {
                             <div className="grid grid-cols-2 gap-2.5">
                               <div>
                                 <div className="flex items-center justify-between mb-1">
-                                  <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.brand_label", "Brand")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.brand_label", "Brand")}</label>
                                   {form.goodsName && form.brand && (() => {
                                     const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                                     const masterBrands = selGood?.master_brands || (selGood?.variations || []).map(v => v.brand).filter(Boolean);
@@ -5536,7 +5536,7 @@ export function PurchaseOrderWizard({ session }) {
                                         <button
                                           type="button"
                                           onClick={() => handleSaveParamToMaster("brand", form.brand)}
-                                          className="text-[8.5px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
+                                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 whitespace-nowrap"
                                         >
                                           {t(lang, "purchase.save_short", "Save")}
                                         </button>
@@ -5579,7 +5579,7 @@ export function PurchaseOrderWizard({ session }) {
                               </div>
                               <div>
                                 <div className="flex items-center justify-between mb-1">
-                                  <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.size_label", "Size")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.size_label", "Size")}</label>
                                   {form.goodsName && form.size && (() => {
                                     const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                                     const masterSizes = selGood?.master_sizes || (selGood?.variations || []).map(v => v.size).filter(Boolean);
@@ -5588,7 +5588,7 @@ export function PurchaseOrderWizard({ session }) {
                                         <button
                                           type="button"
                                           onClick={() => handleSaveParamToMaster("size", form.size)}
-                                          className="text-[8.5px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
+                                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 whitespace-nowrap"
                                         >
                                           {t(lang, "purchase.save_short", "Save")}
                                         </button>
@@ -5635,7 +5635,7 @@ export function PurchaseOrderWizard({ session }) {
                             <div className="grid grid-cols-2 gap-2.5">
                               <div>
                                 <div className="flex items-center justify-between mb-1">
-                                  <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.variety_label", "Variety")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.variety_label", "Variety")}</label>
                                   {form.goodsName && form.variety && (() => {
                                     const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                                     const masterVars = selGood?.master_varieties || [];
@@ -5644,7 +5644,7 @@ export function PurchaseOrderWizard({ session }) {
                                         <button
                                           type="button"
                                           onClick={() => handleSaveParamToMaster("variety", form.variety)}
-                                          className="text-[8.5px] font-bold text-amber-600 bg-amber-50 px-1 py-0.5 rounded border border-amber-200 hover:bg-amber-100"
+                                          className="text-[11px] font-bold text-amber-600 bg-amber-50 px-1 py-0.5 rounded border border-amber-200 hover:bg-amber-100 whitespace-nowrap"
                                         >
                                           {t(lang, "purchase.save_short", "Save")}
                                         </button>
@@ -5681,7 +5681,7 @@ export function PurchaseOrderWizard({ session }) {
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.extra_details_label", "Quality / Extra Details")}</label>
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.extra_details_label", "Quality / Extra Details")}</label>
                                 <input
                                   type="text"
                                   value={form.extraDetails || ""}
@@ -5695,7 +5695,7 @@ export function PurchaseOrderWizard({ session }) {
                             {/* Qty Name & Quantity No */}
                             <div className="grid grid-cols-2 gap-2.5">
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.qty_name_label", "Qty Name")}</label>
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.qty_name_label", "Qty Name")}</label>
                                 <SearchableSelect
                                   value={form.qtyName || "BAGS"}
                                   onChange={(val) => {
@@ -5715,7 +5715,7 @@ export function PurchaseOrderWizard({ session }) {
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.quantity_no", "Quantity No")}</label>
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.quantity_no", "Quantity No")}</label>
                                 <input
                                   type="number"
                                   value={form.qtyNo || ""}
@@ -5737,7 +5737,7 @@ export function PurchaseOrderWizard({ session }) {
                             {/* 1 Qty KGS & 1 Empty KGS */}
                             <div className="grid grid-cols-2 gap-2.5">
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.qty_kgs_1", "1 Qty KGS")}</label>
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.qty_kgs_1", "1 Qty KGS")}</label>
                                 <input
                                   type="number"
                                   value={form.qtyKgs || ""}
@@ -5755,7 +5755,7 @@ export function PurchaseOrderWizard({ session }) {
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.empty_kgs_1", "1 Empty KGS")}</label>
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.empty_kgs_1", "1 Empty KGS")}</label>
                                 <input
                                   type="number"
                                   value={form.emptyKgs || ""}
@@ -5777,7 +5777,7 @@ export function PurchaseOrderWizard({ session }) {
                             {/* Divide Type & Divide Weight / Value */}
                             <div className="grid grid-cols-2 gap-2.5">
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.divide_type", "Divide Type")}</label>
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.divide_type", "Divide Type")}</label>
                                 <select
                                   value={form.divideType || "D/KGs"}
                                   onChange={(e) => setValue("divideType", e.target.value)}
@@ -5788,7 +5788,7 @@ export function PurchaseOrderWizard({ session }) {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.divide_weight_value", "Divide Weight / Value")}</label>
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.divide_weight_value", "Divide Weight / Value")}</label>
                                 <input
                                   type="number"
                                   value={form.divideWeight || 1}
@@ -5805,7 +5805,7 @@ export function PurchaseOrderWizard({ session }) {
                             {/* Price Type & Price Rate */}
                             <div className="grid grid-cols-2 gap-2.5">
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.price_type", "Price Type")}</label>
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.price_type", "Price Type")}</label>
                                 <select
                                   value={form.priceType || "P/KGs"}
                                   onChange={(e) => setValue("priceType", e.target.value)}
@@ -5816,7 +5816,7 @@ export function PurchaseOrderWizard({ session }) {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                                   {t(lang, "purchase.price_rate_c1", "Price Rate (C1)")} ({form.currencyType || "USD"})
                                 </label>
                                 <input
@@ -5835,7 +5835,7 @@ export function PurchaseOrderWizard({ session }) {
 
                             {/* Quality Report Reference */}
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.quality_report_reference", "Quality Report Reference")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.quality_report_reference", "Quality Report Reference")}</label>
                               <input
                                 type="text"
                                 value={form.qualityReport || ""}
@@ -5847,12 +5847,12 @@ export function PurchaseOrderWizard({ session }) {
 
                             {/* PURCHASE CURRENCY & CONVERSION Box */}
                             <div className="rounded-xl border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 p-3 space-y-2.5">
-                              <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+                              <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
                                 {t(lang, "purchase.purchase_currency_conversion", "Purchase Currency & Conversion")}
                               </h4>
                               <div className="grid grid-cols-2 gap-2.5">
                                 <div>
-                                  <label className="block text-[9px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                                  <label className="block text-[11px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
                                     {t(lang, "purchase.pricing_currency", "Pricing Currency")}
                                   </label>
                                   <select
@@ -5867,7 +5867,7 @@ export function PurchaseOrderWizard({ session }) {
                                   </select>
                                 </div>
                                 <div>
-                                  <label className="block text-[9px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                                  <label className="block text-[11px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
                                     {t(lang, "purchase.exchange_rate_to", "Exchange Rate to")} {form.secondaryCurrency || "AED"}
                                   </label>
                                   <div className="flex gap-1">
@@ -5897,7 +5897,7 @@ export function PurchaseOrderWizard({ session }) {
                               </div>
                               <div className="grid grid-cols-2 gap-2.5">
                                 <div>
-                                  <label className="block text-[9px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                                  <label className="block text-[11px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
                                     {t(lang, "purchase.th_amount", "Amount")} ({form.currencyType || "USD"})
                                   </label>
                                   <input
@@ -5909,7 +5909,7 @@ export function PurchaseOrderWizard({ session }) {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-[9px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                                  <label className="block text-[11px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
                                     {t(lang, "purchase.th_final", "Final")} ({form.secondaryCurrency || "AED"})
                                   </label>
                                   <input
@@ -5984,7 +5984,7 @@ export function PurchaseOrderWizard({ session }) {
                             <button
                               type="button"
                               onClick={() => setActiveTab("goods")}
-                              className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 underline"
+                              className="text-[11px] font-bold text-slate-500 hover:text-slate-800 underline"
                             >
                               {t(lang, "purchase.back_to_goods_arrow", "← Back to Goods")}
                             </button>
@@ -5993,7 +5993,7 @@ export function PurchaseOrderWizard({ session }) {
                           <div className="space-y-3">
                             {/* Shipping Mode */}
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.shipping_mode_label", "Shipping Mode")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.shipping_mode_label", "Shipping Mode")}</label>
                               <select
                                 value={form.shippingMode || "By Sea"}
                                 onChange={(e) => {
@@ -6013,11 +6013,11 @@ export function PurchaseOrderWizard({ session }) {
                             <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 dark:border-amber-900/50 dark:bg-amber-950/10 space-y-2.5">
                               <div className="flex items-center gap-2 border-b border-amber-100 pb-1.5 dark:border-amber-900/40">
                                 <span className="h-2 w-2 rounded-full bg-amber-500" />
-                                <h5 className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
+                                <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
                               </div>
                               <div className="space-y-2">
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.loading_country_label", "1. Loading Country")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.loading_country_label", "1. Loading Country")}</label>
                                   <SearchableSelect
                                     value={form.loadingCountry || ""}
                                     onChange={(val) => {
@@ -6037,7 +6037,7 @@ export function PurchaseOrderWizard({ session }) {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.loading_port_label", "2. Loading Port / Terminal")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.loading_port_label", "2. Loading Port / Terminal")}</label>
                                   <SearchableSelect
                                     value={form.loadingPort || form.airportName || form.loadingBorder || ""}
                                     onChange={(val) => {
@@ -6057,7 +6057,7 @@ export function PurchaseOrderWizard({ session }) {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.loading_date_label", "3. Loading Date")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.loading_date_label", "3. Loading Date")}</label>
                                   <input
                                     type="date"
                                     value={form.loadingDate || ""}
@@ -6072,11 +6072,11 @@ export function PurchaseOrderWizard({ session }) {
                             <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/10 space-y-2.5">
                               <div className="flex items-center gap-2 border-b border-emerald-100 pb-1.5 dark:border-emerald-900/40">
                                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                                <h5 className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
+                                <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
                               </div>
                               <div className="space-y-2">
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.receiving_country_label", "1. Receiving Country")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.receiving_country_label", "1. Receiving Country")}</label>
                                   <SearchableSelect
                                     value={form.receivingCountry || form.destinationCountry || form.receivedCountry || ""}
                                     onChange={(val) => {
@@ -6097,7 +6097,7 @@ export function PurchaseOrderWizard({ session }) {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.receiving_port_label", "2. Receiving Port / Terminal")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.receiving_port_label", "2. Receiving Port / Terminal")}</label>
                                   <SearchableSelect
                                     value={form.receivingPort || form.destinationPort || form.receivedPort || ""}
                                     onChange={(val) => {
@@ -6118,7 +6118,7 @@ export function PurchaseOrderWizard({ session }) {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.receiving_date_label", "3. Receiving Date")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.receiving_date_label", "3. Receiving Date")}</label>
                                   <input
                                     type="date"
                                     value={form.receivedDate || ""}
@@ -6136,17 +6136,17 @@ export function PurchaseOrderWizard({ session }) {
                                   <Globe2 className="h-3.5 w-3.5" />
                                 </div>
                                 <div>
-                                  <h5 className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                                  <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
                                     {t(lang, "ctransfer.destination", "Destination Country / Branch")}
                                   </h5>
-                                  <p className="text-[9.5px] text-slate-500 dark:text-slate-400">
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                                     {t(lang, "ctransfer.subtitle", "Purchase orders scoped for transfer from a source country/branch to a destination country/branch.")}
                                   </p>
                                 </div>
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                                     {t(lang, "purchase.destination_country_colon", "Destination Country:")}
                                   </label>
                                   <select
@@ -6161,7 +6161,7 @@ export function PurchaseOrderWizard({ session }) {
                                   </select>
                                 </div>
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                                     {t(lang, "common.branch", "Main Branch")}
                                   </label>
                                   <select
@@ -6177,7 +6177,7 @@ export function PurchaseOrderWizard({ session }) {
                                   </select>
                                 </div>
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                                     {t(lang, "common.branch", "City Branch")}
                                   </label>
                                   <select
@@ -6199,11 +6199,11 @@ export function PurchaseOrderWizard({ session }) {
                             <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-3 dark:border-blue-900/50 dark:bg-blue-950/10 space-y-2.5">
                               <div className="flex items-center gap-2 border-b border-blue-100 pb-1.5 dark:border-blue-900/40">
                                 <CreditCard className="h-3.5 w-3.5 text-blue-600" />
-                                <h5 className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.payment_terms_title", "Advance & Payment Terms")}</h5>
+                                <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.payment_terms_title", "Advance & Payment Terms")}</h5>
                               </div>
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
                                   <select
                                     value={form.paymentType || ""}
                                     onChange={(e) => {
@@ -6220,7 +6220,7 @@ export function PurchaseOrderWizard({ session }) {
                                   </select>
                                 </div>
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.advance_percentage_label", "Advance %")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.advance_percentage_label", "Advance %")}</label>
                                   <input
                                     type="number"
                                     min="0"
@@ -6233,7 +6233,7 @@ export function PurchaseOrderWizard({ session }) {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.advance_payment_date_label", "Advance Date")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.advance_payment_date_label", "Advance Date")}</label>
                                   <input
                                     type="date"
                                     value={form.advancePaymentDate || ""}
@@ -6242,7 +6242,7 @@ export function PurchaseOrderWizard({ session }) {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.final_payment_date_label", "Final Payment Date")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.final_payment_date_label", "Final Payment Date")}</label>
                                   <input
                                     type="date"
                                     value={form.paymentDate || ""}
@@ -6257,11 +6257,11 @@ export function PurchaseOrderWizard({ session }) {
                             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-3 space-y-2">
                               <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
                                 <Truck className="h-3.5 w-3.5 text-blue-600" />
-                                <span className="text-[10px] font-black uppercase tracking-wider">{t(lang, "purchase.transport_container_title", "Transport & Container")}</span>
+                                <span className="text-[11px] font-black uppercase tracking-wider">{t(lang, "purchase.transport_container_title", "Transport & Container")}</span>
                               </div>
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.container_numbers_label", "Container No")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.container_numbers_label", "Container No")}</label>
                                   <input
                                     type="text"
                                     value={form.containerNumbers || ""}
@@ -6271,7 +6271,7 @@ export function PurchaseOrderWizard({ session }) {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-[9.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.container_size_type_label", "Size / Type")}</label>
+                                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "purchase.container_size_type_label", "Size / Type")}</label>
                                   <select
                                     value={form.containerSize || "40 FT"}
                                     onChange={(e) => setValue("containerSize", e.target.value)}
@@ -6285,7 +6285,7 @@ export function PurchaseOrderWizard({ session }) {
 
                             {/* Remarks & Narration */}
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</label>
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</label>
                               <textarea
                                 rows={2}
                                 value={form.remarks || ""}
@@ -6333,7 +6333,7 @@ export function PurchaseOrderWizard({ session }) {
                               <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
                                 {t(lang, "purchase.booking_register_title", "Purchase Booking Register")}
                               </h3>
-                              <p className="text-[10px] text-slate-400 font-medium">
+                              <p className="text-[11px] text-slate-400 font-medium">
                                 {goodsEntries.length} {t(lang, "purchase.f_total_items", "Total Items")}
                               </p>
                             </div>
@@ -6376,7 +6376,7 @@ export function PurchaseOrderWizard({ session }) {
                         <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                           <table className="w-full text-xs text-slate-800 dark:text-slate-200 border-collapse text-left whitespace-nowrap">
                             <thead>
-                              <tr className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                              <tr className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 font-bold uppercase tracking-wider text-[11px]">
                                 <Th className="px-3 py-2.5 text-center w-10">#</Th>
                                 <Th className="px-3 py-2.5">{t(lang, "purchase.goods_name", "GOODS NAME")}</Th>
                                 <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.size_label", "SIZE")}</Th>
@@ -6424,28 +6424,28 @@ export function PurchaseOrderWizard({ session }) {
                                       </div>
                                     </td>
                                     <td className="px-3 py-2.5 text-center">
-                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[11px] border border-slate-200/80 dark:border-slate-700/80">
+                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[11px] border border-slate-200/80 dark:border-slate-700/80 whitespace-nowrap">
                                         {row.size || "-"}
                                       </span>
                                     </td>
                                     <td className="px-3 py-2.5 text-center">
-                                      <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[11px] border border-blue-200/70 dark:border-blue-800/70">
+                                      <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[11px] border border-blue-200/70 dark:border-blue-800/70 whitespace-nowrap">
                                         {row.brand || "-"}
                                       </span>
                                     </td>
                                     <td className="px-3 py-2.5 text-center">
-                                      <span className="px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-850 text-slate-600 dark:text-slate-400 font-mono font-bold text-[10.5px] border border-slate-200 dark:border-slate-700">
+                                      <span className="px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-850 text-slate-600 dark:text-slate-400 font-mono font-bold text-[11px] border border-slate-200 dark:border-slate-700 whitespace-nowrap">
                                         {row.hsCode || "-"}
                                       </span>
                                     </td>
                                     <td className="px-3 py-2.5 text-center">
-                                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold text-[10.5px] border border-emerald-200/60 dark:border-emerald-800/60">
+                                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] border border-emerald-200/60 dark:border-emerald-800/60 whitespace-nowrap">
                                         {row.origin || "-"}
                                       </span>
                                     </td>
                                     <td className="px-3 py-2.5 text-right font-mono font-black text-slate-900 dark:text-slate-100">{Number(row.qtyNo || 0).toLocaleString()}</td>
                                     <td className="px-3 py-2.5 text-center">
-                                      <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10.5px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                                      <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 whitespace-nowrap">
                                         {translateOptionLabel(lang, row.qtyName)}
                                       </span>
                                     </td>
@@ -6519,7 +6519,7 @@ export function PurchaseOrderWizard({ session }) {
                                   <td className="px-3 py-2.5 text-right font-mono font-black text-slate-900 dark:text-slate-100">
                                     {goodsEntries.reduce((sum, g) => sum + Number(g.qtyNo || 0), 0).toLocaleString()}
                                   </td>
-                                  <td className="px-3 py-2.5 text-center text-[10px] text-slate-500 font-semibold">
+                                  <td className="px-3 py-2.5 text-center text-[11px] text-slate-500 font-semibold">
                                     {translateOptionLabel(lang, goodsEntries[0]?.qtyName || "ITEMS")}
                                   </td>
                                   <td className="px-3 py-2.5 text-right font-mono text-slate-400">-</td>
@@ -6573,8 +6573,8 @@ export function PurchaseOrderWizard({ session }) {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[9.5px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-100/80 dark:bg-emerald-950/70 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-2xs">{t(lang, "purchase.step5_of5", "Step 5 of 5")}</span>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "purchase.final_verification_label", "Final Verification")}</span>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-100/80 dark:bg-emerald-950/70 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-2xs whitespace-nowrap">{t(lang, "purchase.step5_of5", "Step 5 of 5")}</span>
+                    <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "purchase.final_verification_label", "Final Verification")}</span>
                   </div>
                   <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-slate-100 mt-1">{t(lang, "purchase.final_verification_title", "Purchase Booking Final Verification")}</h2>
                   <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
@@ -6634,23 +6634,23 @@ export function PurchaseOrderWizard({ session }) {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs font-mono bg-white/80 dark:bg-slate-900/80 p-3.5 rounded-xl border border-emerald-200/60 dark:border-emerald-800/60">
                 <div>
-                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.general_serial_no", "General Serial No:")}</span>
+                  <span className="block text-[11px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.general_serial_no", "General Serial No:")}</span>
                   <span className="font-black text-emerald-950 dark:text-emerald-200">{form.generalSerialNumber || `GSN-${new Date().getFullYear()}-0001`}</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.roznamcha_journal_no", "Roznamcha (Journal) No:")}</span>
+                  <span className="block text-[11px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.roznamcha_journal_no", "Roznamcha (Journal) No:")}</span>
                   <span className="font-black text-emerald-950 dark:text-emerald-200">{form.journalNumber || `JRN-${new Date().getFullYear()}-8821`}</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.branch_roznamcha", "Branch Roznamcha:")}</span>
+                  <span className="block text-[11px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.branch_roznamcha", "Branch Roznamcha:")}</span>
                   <span className="font-black text-emerald-950 dark:text-emerald-200">{form.branchJournalNumber || `BR-JRN-402`}</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.cash_entry_serial", "Cash Entry Serial:")}</span>
+                  <span className="block text-[11px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.cash_entry_serial", "Cash Entry Serial:")}</span>
                   <span className="font-black text-emerald-950 dark:text-emerald-200">{form.cashEntrySerial || `CE-9921`}</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.business_entry_ref", "Business Entry Ref:")}</span>
+                  <span className="block text-[11px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.business_entry_ref", "Business Entry Ref:")}</span>
                   <span className="font-black text-emerald-950 dark:text-emerald-200 uppercase">{form.businessEntryRef || `BUS-ENT-PURCHASE`}</span>
                 </div>
               </div>
@@ -6666,7 +6666,7 @@ export function PurchaseOrderWizard({ session }) {
                   </p>
                 </div>
               </div>
-              <span className="px-3 py-1 bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[10px] font-black uppercase rounded-full border border-amber-300 dark:border-amber-700 self-start md:self-auto">
+              <span className="px-3 py-1 bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-black uppercase rounded-full border border-amber-300 dark:border-amber-700 self-start md:self-auto">
                 {t(lang, "purchase.pending_verification_badge", "Pending Verification")}
               </span>
             </div>
@@ -6681,7 +6681,7 @@ export function PurchaseOrderWizard({ session }) {
             <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
               <div className="bg-slate-950 px-6 py-5 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.28em] text-cyan-400">{form.purchaseCompanyName || form.branchName || t(lang, "purchase.damaan_business_group", "Digital Dock ERP")}</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-400">{form.purchaseCompanyName || form.branchName || t(lang, "purchase.damaan_business_group", "Digital Dock ERP")}</p>
                   <h1 className="mt-1 text-2xl font-black uppercase tracking-[0.18em] text-white">{t(lang, "purchase.voucher_title", "Purchase Booking Voucher")}</h1>
                   <p className="mt-1 text-xs font-medium text-slate-300">{t(lang, "purchase.voucher_subtitle", "Official ERP Verification, Account Routing & Goods Manifest Voucher")}</p>
                 </div>
@@ -6693,10 +6693,10 @@ export function PurchaseOrderWizard({ session }) {
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-0 bg-slate-50 dark:bg-slate-800/80 text-xs font-semibold text-slate-700 dark:text-slate-200 border-t border-slate-200 dark:border-slate-800">
-                <div className="p-3 border-r border-b md:border-b-0 border-slate-200 dark:border-slate-800"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_country_label", "Country")}</span>{form.branchCountry || form.origin || "N/A"}</div>
-                <div className="p-3 border-r border-b md:border-b-0 border-slate-200 dark:border-slate-800"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_branch_label", "Branch")}</span>{form.branchName || "N/A"}</div>
-                <div className="p-3 border-r border-slate-200 dark:border-slate-800"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_branch_code_label", "Branch Code")}</span><span className="font-mono">{form.branchCode || "N/A"}</span></div>
-                <div className="p-3"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_currency_label", "Currency")}</span><span className="font-black text-slate-900 dark:text-slate-100">{form.purchaseCurrency || form.currencyType || "N/A"}</span></div>
+                <div className="p-3 border-r border-b md:border-b-0 border-slate-200 dark:border-slate-800"><span className="block text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_country_label", "Country")}</span>{form.branchCountry || form.origin || "N/A"}</div>
+                <div className="p-3 border-r border-b md:border-b-0 border-slate-200 dark:border-slate-800"><span className="block text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_branch_label", "Branch")}</span>{form.branchName || "N/A"}</div>
+                <div className="p-3 border-r border-slate-200 dark:border-slate-800"><span className="block text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_branch_code_label", "Branch Code")}</span><span className="font-mono">{form.branchCode || "N/A"}</span></div>
+                <div className="p-3"><span className="block text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_currency_label", "Currency")}</span><span className="font-black text-slate-900 dark:text-slate-100">{form.purchaseCurrency || form.currencyType || "N/A"}</span></div>
               </div>
             </div>
 
@@ -6707,7 +6707,7 @@ export function PurchaseOrderWizard({ session }) {
                   <h3 className="font-black uppercase text-slate-900 dark:text-slate-100 text-xs tracking-wider flex items-center gap-1.5">
                     <ArrowDownLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" /> {t(lang, "purchase.purchase_account_short_title", "Purchase Account")}
                   </h3>
-                  <span className="bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-[9px] font-black px-2 py-0.5 rounded uppercase">{t(lang, "purchase.dr_debit_badge", "DR (Debit)")}</span>
+                  <span className="bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-[11px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap">{t(lang, "purchase.dr_debit_badge", "DR (Debit)")}</span>
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-1.5 text-xs">
                   <span className="text-slate-500 dark:text-slate-400 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-mono font-bold text-slate-900 dark:text-slate-100">{form.purchaseAccountNo || "N/A"}</span>
@@ -6721,7 +6721,7 @@ export function PurchaseOrderWizard({ session }) {
                   <h3 className="font-black uppercase text-slate-900 dark:text-slate-100 text-xs tracking-wider flex items-center gap-1.5">
                     <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> {t(lang, "purchase.sales_account_short_title", "Sales Account")}
                   </h3>
-                  <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[9px] font-black px-2 py-0.5 rounded uppercase">{t(lang, "purchase.cr_credit_badge", "CR (Credit)")}</span>
+                  <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[11px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap">{t(lang, "purchase.cr_credit_badge", "CR (Credit)")}</span>
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-1.5 text-xs">
                   <span className="text-slate-500 dark:text-slate-400 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-mono font-bold text-slate-900 dark:text-slate-100">{form.salesAccountNo || "N/A"}</span>
@@ -6738,7 +6738,7 @@ export function PurchaseOrderWizard({ session }) {
               </h3>
               <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                 <table className="w-full text-xs text-left border-collapse">
-                  <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider">
+                  <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 uppercase text-[11px] tracking-wider">
                     <tr>
                       <Th className="p-2.5 font-bold border-r border-slate-200 dark:border-slate-700">{t(lang, "purchase.th_goods", "Goods")}</Th>
                       <Th className="p-2.5 font-bold border-r border-slate-200 dark:border-slate-700">{t(lang, "purchase.th_brand", "Brand")}</Th>
@@ -6789,11 +6789,11 @@ export function PurchaseOrderWizard({ session }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1.5">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-blue-700 dark:text-blue-300 uppercase text-[9px] bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded">{t(lang, "purchase.purchase_account_dr_badge", "Purchase Account (DR)")}</span>
+                    <span className="font-bold text-blue-700 dark:text-blue-300 uppercase text-[11px] bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded whitespace-nowrap">{t(lang, "purchase.purchase_account_dr_badge", "Purchase Account (DR)")}</span>
                     <span className="text-slate-600 dark:text-slate-400 font-mono font-bold">{form.purchaseAccountNo || "N/A"}</span>
                   </div>
                   <div className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate" title={form.purchaseAccountName}>{localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName || "N/A")}</div>
-                  <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                  <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400">
                     <span>{t(lang, "purchase.branch_colon_label", "Branch:")} <strong className="text-slate-700 dark:text-slate-300">{form.purchaseAccountBranch || "-"}</strong></span>
                     <span>{t(lang, "purchase.currency_colon_label", "Currency:")} <strong className="text-slate-700 dark:text-slate-300">{form.purchaseCurrency || form.purchaseAccountCurrency || "-"}</strong></span>
                   </div>
@@ -6801,11 +6801,11 @@ export function PurchaseOrderWizard({ session }) {
 
                 <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1.5">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-emerald-700 dark:text-emerald-300 uppercase text-[9px] bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-300 uppercase text-[11px] bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded whitespace-nowrap">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</span>
                     <span className="text-slate-600 dark:text-slate-400 font-mono font-bold">{form.salesAccountNo || "N/A"}</span>
                   </div>
                   <div className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate" title={form.salesAccountName}>{localizeBiz(form, lang, "salesAccountName", form.salesAccountName || "N/A")}</div>
-                  <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                  <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400">
                     <span>{t(lang, "purchase.branch_colon_label", "Branch:")} <strong className="text-slate-700 dark:text-slate-300">{form.salesAccountBranch || "-"}</strong></span>
                     <span>{t(lang, "purchase.currency_colon_label", "Currency:")} <strong className="text-slate-700 dark:text-slate-300">{form.salesAccountCurrency || "-"}</strong></span>
                   </div>
@@ -6819,25 +6819,25 @@ export function PurchaseOrderWizard({ session }) {
                 <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" /> {t(lang, "purchase.user_audit_serial_hierarchy", "User Audit & Branch 4-Tier Serial Hierarchy")}
                 </h4>
-                <span className="text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 whitespace-nowrap">
                   {t(lang, "purchase.system_audit_log", "SYSTEM AUDIT LOG")}
                 </span>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                 <div className="bg-slate-50 dark:bg-slate-800/70 p-3 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
-                  <span className="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.created_by_user_id", "Created By User ID")}</span>
+                  <span className="block text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.created_by_user_id", "Created By User ID")}</span>
                   <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{form.userId || session?.userId || "USR-1001"}</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-800/70 p-3 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
-                  <span className="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.user_name_label", "User Name")}</span>
+                  <span className="block text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.user_name_label", "User Name")}</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{form.userName || session?.fullName || t(lang, "purchase.pmw_super_admin", "Super Admin")}</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-800/70 p-3 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
-                  <span className="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.working_branch_label", "Working Branch")}</span>
+                  <span className="block text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.working_branch_label", "Working Branch")}</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100 truncate block">{form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-800/70 p-3 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
-                  <span className="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.verification_date_label", "Verification Date")}</span>
+                  <span className="block text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.verification_date_label", "Verification Date")}</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">{form.purchaseDate || new Date().toISOString().slice(0, 10)}</span>
                 </div>
               </div>
@@ -6845,19 +6845,19 @@ export function PurchaseOrderWizard({ session }) {
               {/* 4-Tier Booking Serial Numbers */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-1 text-xs">
                 <div className="bg-blue-50/60 dark:bg-blue-950/40 p-3 rounded-xl border border-blue-100 dark:border-blue-800">
-                  <span className="block text-[9px] font-black uppercase text-blue-700 dark:text-blue-300 mb-0.5">{t(lang, "purchase.tier1_super_admin_serial", "1. Super Admin Serial")}</span>
+                  <span className="block text-[11px] font-black uppercase text-blue-700 dark:text-blue-300 mb-0.5">{t(lang, "purchase.tier1_super_admin_serial", "1. Super Admin Serial")}</span>
                   <span className="font-mono font-black text-blue-950 dark:text-blue-200">{form.superAdminSerialNumber || `SA-${new Date().getFullYear()}-0082`}</span>
                 </div>
                 <div className="bg-indigo-50/60 dark:bg-indigo-950/40 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800">
-                  <span className="block text-[9px] font-black uppercase text-indigo-700 dark:text-indigo-300 mb-0.5">{t(lang, "purchase.tier2_country_serial", "2. Country Serial")}</span>
+                  <span className="block text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-300 mb-0.5">{t(lang, "purchase.tier2_country_serial", "2. Country Serial")}</span>
                   <span className="font-mono font-black text-indigo-950 dark:text-indigo-200">{form.countryTransactionSerialNumber || `UAE-${new Date().getFullYear()}-0042`}</span>
                 </div>
                 <div className="bg-sky-50/60 dark:bg-sky-950/40 p-3 rounded-xl border border-sky-100 dark:border-sky-800">
-                  <span className="block text-[9px] font-black uppercase text-sky-700 dark:text-sky-300 mb-0.5">{t(lang, "purchase.tier3_branch_serial", "3. Branch Serial")}</span>
+                  <span className="block text-[11px] font-black uppercase text-sky-700 dark:text-sky-300 mb-0.5">{t(lang, "purchase.tier3_branch_serial", "3. Branch Serial")}</span>
                   <span className="font-mono font-black text-sky-950 dark:text-sky-200">{form.branchTransactionSerialNumber || `ARE-MAIN-${new Date().getFullYear()}-0021`}</span>
                 </div>
                 <div className="bg-slate-100/80 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                  <span className="block text-[9px] font-black uppercase text-slate-600 dark:text-slate-400 mb-0.5">{t(lang, "purchase.tier4_city_entry_serial", "4. City / Entry Serial")}</span>
+                  <span className="block text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 mb-0.5">{t(lang, "purchase.tier4_city_entry_serial", "4. City / Entry Serial")}</span>
                   <span className="font-mono font-black text-slate-900 dark:text-slate-100">{form.cashEntrySerial || form.journalNumber || `CB-${new Date().getFullYear()}-00421`}</span>
                 </div>
               </div>
@@ -6869,7 +6869,7 @@ export function PurchaseOrderWizard({ session }) {
                 <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
                   <ArrowRightLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> {t(lang, "purchase.transfer_destination_roznamcha_serials", "Transfer Destination & Business Roznamcha Serials")}
                 </h4>
-                <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded uppercase border ${isTransferred ? "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700" : "bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700"}`}>
+                <span className={`text-[11px] font-mono font-black px-2 py-0.5 rounded uppercase border ${isTransferred ? "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700" : "bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700"}`}>
                   {isTransferred ? t(lang, "purchase.transfer_locked_completed", "TRANSFER LOCKED & COMPLETED") : t(lang, "purchase.pending_transfer_badge", "PENDING TRANSFER")}
                 </span>
               </div>
@@ -6877,15 +6877,15 @@ export function PurchaseOrderWizard({ session }) {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 {/* Transfer Destination & Status */}
                 <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
-                  <span className="block text-[9.5px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">{t(lang, "purchase.transfer_destination_module", "Transfer Destination Module")}</span>
+                  <span className="block text-[11px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">{t(lang, "purchase.transfer_destination_module", "Transfer Destination Module")}</span>
                   <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
                     {isTransferred ? t(lang, "purchase.transfer_destination_completed_text", "Purchase Advance Payment Module & Business Roznamcha") : t(lang, "purchase.transfer_destination_ready_text", "Ready for Transfer to Payment Records")}
                   </div>
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
                     <span className="block font-semibold">{t(lang, "purchase.target_route_label", "Target Route:")}</span>
                     <code className="font-mono text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1 py-0.5 rounded font-bold">{buildPurchaseBookingTransferUrl(form.paymentType)}</code>
                   </div>
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
                     <span>{t(lang, "purchase.transfer_timestamp_label", "Transfer Timestamp:")} </span>
                     <strong className="font-mono text-slate-800 dark:text-slate-200">{form.transferTimestamp || (isTransferred ? new Date().toLocaleString() : t(lang, "purchase.not_transferred_yet", "Not Transferred Yet"))}</strong>
                   </div>
@@ -6894,28 +6894,28 @@ export function PurchaseOrderWizard({ session }) {
                 {/* Roznamcha Debit 4 Serials */}
                 <div className="bg-blue-50/50 dark:bg-blue-950/30 p-4 rounded-xl border border-blue-200/80 dark:border-blue-800/80 space-y-2">
                   <div className="flex justify-between items-center border-b border-blue-200/60 dark:border-blue-800/60 pb-1.5">
-                    <span className="font-black text-blue-800 dark:text-blue-200 uppercase text-[9.5px] tracking-wider">{t(lang, "purchase.debit_roznamcha_serials_dr", "Debit Roznamcha Serials (DR)")}</span>
-                    <span className="bg-blue-600 text-white text-[8.5px] font-black px-1.5 py-0.2 rounded">DR</span>
+                    <span className="font-black text-blue-800 dark:text-blue-200 uppercase text-[11px] tracking-wider">{t(lang, "purchase.debit_roznamcha_serials_dr", "Debit Roznamcha Serials (DR)")}</span>
+                    <span className="bg-blue-600 text-white text-[11px] font-black px-1.5 py-0.2 rounded">DR</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
-                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.sa_serial_label", "SA SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrSaSerial || `DR-SA-0082`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.country_serial_label", "COUNTRY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrCountrySerial || `DR-UAE-0042`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.branch_serial_label", "BRANCH SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrBranchSerial || `DR-MAIN-0021`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.city_serial_label", "CITY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrCitySerial || `DR-CB-00421`}</strong></div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px] font-mono">
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[11px]">{t(lang, "purchase.sa_serial_label", "SA SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrSaSerial || `DR-SA-0082`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[11px]">{t(lang, "purchase.country_serial_label", "COUNTRY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrCountrySerial || `DR-UAE-0042`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[11px]">{t(lang, "purchase.branch_serial_label", "BRANCH SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrBranchSerial || `DR-MAIN-0021`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[11px]">{t(lang, "purchase.city_serial_label", "CITY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrCitySerial || `DR-CB-00421`}</strong></div>
                   </div>
                 </div>
 
                 {/* Roznamcha Credit 4 Serials */}
                 <div className="bg-emerald-50/50 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-200/80 dark:border-emerald-800/80 space-y-2">
                   <div className="flex justify-between items-center border-b border-emerald-200/60 dark:border-emerald-800/60 pb-1.5">
-                    <span className="font-black text-emerald-800 dark:text-emerald-200 uppercase text-[9.5px] tracking-wider">{t(lang, "purchase.credit_roznamcha_serials_cr", "Credit Roznamcha Serials (CR)")}</span>
-                    <span className="bg-emerald-600 text-white text-[8.5px] font-black px-1.5 py-0.2 rounded">CR</span>
+                    <span className="font-black text-emerald-800 dark:text-emerald-200 uppercase text-[11px] tracking-wider">{t(lang, "purchase.credit_roznamcha_serials_cr", "Credit Roznamcha Serials (CR)")}</span>
+                    <span className="bg-emerald-600 text-white text-[11px] font-black px-1.5 py-0.2 rounded">CR</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
-                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.sa_serial_label", "SA SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrSaSerial || `CR-SA-0082`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.country_serial_label", "COUNTRY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrCountrySerial || `CR-UAE-0042`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.branch_serial_label", "BRANCH SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrBranchSerial || `CR-MAIN-0021`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.city_serial_label", "CITY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrCitySerial || `CR-CB-00421`}</strong></div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px] font-mono">
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[11px]">{t(lang, "purchase.sa_serial_label", "SA SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrSaSerial || `CR-SA-0082`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[11px]">{t(lang, "purchase.country_serial_label", "COUNTRY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrCountrySerial || `CR-UAE-0042`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[11px]">{t(lang, "purchase.branch_serial_label", "BRANCH SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrBranchSerial || `CR-MAIN-0021`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[11px]">{t(lang, "purchase.city_serial_label", "CITY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrCitySerial || `CR-CB-00421`}</strong></div>
                   </div>
                 </div>
               </div>
@@ -6946,7 +6946,7 @@ export function PurchaseOrderWizard({ session }) {
                         </button>
                       </div>
                       {report.description && <p className="text-slate-600 dark:text-slate-300 mb-1 font-medium text-[11px]">{report.description}</p>}
-                      <p className="text-slate-400 dark:text-slate-500 font-mono text-[9px]">{formatShortDate(report.createdAt)}</p>
+                      <p className="text-slate-400 dark:text-slate-500 font-mono text-[11px]">{formatShortDate(report.createdAt)}</p>
                     </div>
                   ))}
                 </div>
@@ -6999,38 +6999,38 @@ export function PurchaseOrderWizard({ session }) {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
               <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.size_label", "SIZE")}</span>
+                <span className="block text-[11px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.size_label", "SIZE")}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">{viewingGoodsItem.size || "-"}</span>
               </div>
               <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_hs_code", "HS CODE")}</span>
+                <span className="block text-[11px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_hs_code", "HS CODE")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{viewingGoodsItem.hsCode || "-"}</span>
               </div>
               <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.qty", "QTY")}</span>
+                <span className="block text-[11px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.qty", "QTY")}</span>
                 <span className="font-mono font-black text-slate-900 dark:text-slate-100">{Number(viewingGoodsItem.qtyNo || 0).toLocaleString()} {translateOptionLabel(lang, viewingGoodsItem.qtyName)}</span>
               </div>
               <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_gross_wt", "Gross Wt")}</span>
+                <span className="block text-[11px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_gross_wt", "Gross Wt")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{Number(viewingGoodsItem.grossWeight || 0).toFixed(2)}</span>
               </div>
               <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_net_wt", "Net Wt")}</span>
+                <span className="block text-[11px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_net_wt", "Net Wt")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{Number(viewingGoodsItem.netWeight || 0).toFixed(2)}</span>
               </div>
               <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_rate", "Rate")}</span>
+                <span className="block text-[11px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_rate", "Rate")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{Number(viewingGoodsItem.coursePrice || viewingGoodsItem.price || 0).toFixed(2)}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs">
               <div>
-                <span className="block text-[9.5px] uppercase font-bold text-slate-500 mb-0.5">{t(lang, "purchase.col_amount_ccy", "AMOUNT")}</span>
+                <span className="block text-[11px] uppercase font-bold text-slate-500 mb-0.5">{t(lang, "purchase.col_amount_ccy", "AMOUNT")}</span>
                 <span className="font-mono font-black text-amber-600 dark:text-amber-400 text-sm">{Number(viewingGoodsItem.totalAmount || viewingGoodsItem.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div>
-                <span className="block text-[9.5px] uppercase font-bold text-slate-500 mb-0.5">{t(lang, "purchase.col_final_ccy", "FINAL")}</span>
+                <span className="block text-[11px] uppercase font-bold text-slate-500 mb-0.5">{t(lang, "purchase.col_final_ccy", "FINAL")}</span>
                 <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">{Number(viewingGoodsItem.finalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
@@ -7078,7 +7078,7 @@ export function PurchaseOrderWizard({ session }) {
                 </div>
 
                 {/* Account Info */}
-                <div className="grid grid-cols-2 gap-4 mb-6 text-[10px]">
+                <div className="grid grid-cols-2 gap-4 mb-6 text-[11px]">
                   <div className="border border-slate-300 p-3 rounded">
                     <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.purchase_account_dr_badge", "Purchase Account (DR)")}</h3>
                     <div className="grid grid-cols-[80px_1fr] gap-1">
@@ -7100,7 +7100,7 @@ export function PurchaseOrderWizard({ session }) {
                 {/* Goods Table */}
                 <div className="mb-6">
                   <h3 className="font-black text-xs border-b-2 border-slate-400 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.goods_details_title", "Goods Details")}</h3>
-                  <table className="w-full text-[9px] border-collapse border border-slate-300">
+                  <table className="w-full text-[11px] border-collapse border border-slate-300">
                     <thead>
                       <tr className="bg-slate-100 border-b border-slate-300">
                         <Th className="border-r border-slate-300 p-1.5 text-left">{t(lang, "purchase.th_hash", "#")}</Th>
@@ -7137,7 +7137,7 @@ export function PurchaseOrderWizard({ session }) {
                       <tr className="bg-slate-50 border-t-2 border-slate-400 font-bold">
                         <td colSpan={4} className="p-1.5 text-right">{t(lang, "purchase.total_colon", "Total:")}</td>
                         <td className="border-r border-slate-200 p-1.5 text-right">{Number(reportTotals.totalQty || 0).toLocaleString()}</td>
-                        <td colSpan={3} className="border-r border-slate-200 p-1.5 text-right text-[8px] text-slate-500 uppercase">{t(lang, "purchase.grand_total_colon", "Grand Total:")}</td>
+                        <td colSpan={3} className="border-r border-slate-200 p-1.5 text-right text-[11px] text-slate-500 uppercase">{t(lang, "purchase.grand_total_colon", "Grand Total:")}</td>
                         <td className="p-1.5 text-right">{form.secondaryCurrency || "PKR"} {Number(reportTotals.grandFinal || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     </tfoot>
@@ -7145,7 +7145,7 @@ export function PurchaseOrderWizard({ session }) {
                 </div>
 
                 {/* Loading Details */}
-                <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                <div className="mb-4 border border-slate-300 rounded p-3 text-[11px]">
                   <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.loading_transit_report", "Loading & Transit Report")}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid grid-cols-[100px_1fr] gap-1">
@@ -7164,7 +7164,7 @@ export function PurchaseOrderWizard({ session }) {
                 </div>
 
                 {/* Payment Condition */}
-                <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                <div className="mb-4 border border-slate-300 rounded p-3 text-[11px]">
                   <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.payment_conditions_report", "Payment Conditions Report")}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid grid-cols-[120px_1fr] gap-1">
@@ -7182,7 +7182,7 @@ export function PurchaseOrderWizard({ session }) {
 
                 {/* Remarks & Narration */}
                 {form.remarks && (
-                  <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                  <div className="mb-4 border border-slate-300 rounded p-3 text-[11px]">
                     <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</h3>
                     <p className="whitespace-pre-wrap font-medium text-slate-800">{localizeBiz(form, lang, "remarks", form.remarks)}</p>
                   </div>
@@ -7190,7 +7190,7 @@ export function PurchaseOrderWizard({ session }) {
 
                 {/* User Remarks (Report) */}
                 {form.orderReportRemarks && (
-                  <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                  <div className="mb-4 border border-slate-300 rounded p-3 text-[11px]">
                     <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.user_remarks_report_title", "User Remarks (Report)")}</h3>
                     <p className="whitespace-pre-wrap font-medium text-slate-800">{localizeBiz(form, lang, "remarks", form.orderReportRemarks)}</p>
                   </div>
@@ -7198,7 +7198,7 @@ export function PurchaseOrderWizard({ session }) {
 
                 {/* Dynamic Reports */}
                 {reportsList.length > 0 && (
-                  <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                  <div className="mb-4 border border-slate-300 rounded p-3 text-[11px]">
                     <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.dynamic_reports_notes_title", "Dynamic Reports & Notes")}</h3>
                     <div className="space-y-3">
                       {reportsList.map((r, i) => (
@@ -7212,7 +7212,7 @@ export function PurchaseOrderWizard({ session }) {
                 )}
 
                 {/* Signatures */}
-                <div className="mt-16 grid grid-cols-3 gap-8 text-center text-[10px] font-bold">
+                <div className="mt-16 grid grid-cols-3 gap-8 text-center text-[11px] font-bold">
                   <div>
                     <div className="border-t border-slate-400 pt-1">{t(lang, "purchase.prepared_by_label", "Prepared By")}</div>
                   </div>
@@ -7236,7 +7236,7 @@ export function PurchaseOrderWizard({ session }) {
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
                 <h3 className="text-sm font-bold tracking-tight text-foreground">{trUi("Add New Country")}</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{trUi("ISO codes and emails are auto-generated")}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{trUi("ISO codes and emails are auto-generated")}</p>
               </div>
               <button
                 type="button"
@@ -7246,10 +7246,10 @@ export function PurchaseOrderWizard({ session }) {
             </div>
             <div className="p-5 space-y-3">
               {newCountryError && (
-                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newCountryError}</div>
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">{newCountryError}</div>
               )}
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Country Name")} *</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Country Name")} *</label>
                 <input
                   type="text"
                   value={newCountryForm.name}
@@ -7260,7 +7260,7 @@ export function PurchaseOrderWizard({ session }) {
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 />
               </div>
-              <p className="text-[9px] text-muted-foreground/60">{trUi("ISO-2, ISO-3, currency code and system emails will be auto-generated. You can update them later in Location Setup.")}</p>
+              <p className="text-[11px] text-muted-foreground/60">{trUi("ISO-2, ISO-3, currency code and system emails will be auto-generated. You can update them later in Location Setup.")}</p>
             </div>
             <div className="flex justify-end gap-2 px-5 pb-4">
               <button
@@ -7286,7 +7286,7 @@ export function PurchaseOrderWizard({ session }) {
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
                 <h3 className="text-sm font-bold tracking-tight text-foreground">{trUi("Add New Good")}</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{trUi("Creates a new item in the Goods Master")}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{trUi("Creates a new item in the Goods Master")}</p>
               </div>
               <button
                 type="button"
@@ -7296,11 +7296,11 @@ export function PurchaseOrderWizard({ session }) {
             </div>
             <div className="p-5 space-y-3">
               {newGoodError && (
-                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newGoodError}</div>
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">{newGoodError}</div>
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Goods Name")} *</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Goods Name")} *</label>
                   <input
                     type="text"
                     value={newGoodForm.goodsName}
@@ -7310,7 +7310,7 @@ export function PurchaseOrderWizard({ session }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">{trUi("HS Code")} *</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">{trUi("HS Code")} *</label>
                   <input
                     type="text"
                     value={newGoodForm.chsCode}
@@ -7320,7 +7320,7 @@ export function PurchaseOrderWizard({ session }) {
                   />
                 </div>
               </div>
-              <p className="text-[9px] text-muted-foreground/60">{trUi("After saving, this good will be auto-selected with HS Code pre-filled.")}</p>
+              <p className="text-[11px] text-muted-foreground/60">{trUi("After saving, this good will be auto-selected with HS Code pre-filled.")}</p>
             </div>
             <div className="flex justify-end gap-2 px-5 pb-4">
               <button
@@ -7348,7 +7348,7 @@ export function PurchaseOrderWizard({ session }) {
                 <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">
                   Add New {newPortForm.transportType === "sea" ? "Port" : newPortForm.transportType === "road" ? "Border" : "Airport"}
                 </h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-[11px] text-muted-foreground mt-0.5">
                   Adding to {newPortForm.side === "loading" ? "Loading" : "Received"} registry
                 </p>
               </div>
@@ -7360,10 +7360,10 @@ export function PurchaseOrderWizard({ session }) {
             </div>
             <div className="p-5 space-y-3">
               {newPortError && (
-                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newPortError}</div>
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">{newPortError}</div>
               )}
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Country Name")} *</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Country Name")} *</label>
                 <select
                   value={newPortForm.countryName || ""}
                   onChange={(e) => setNewPortForm(p => ({ ...p, countryName: e.target.value }))}
@@ -7374,7 +7374,7 @@ export function PurchaseOrderWizard({ session }) {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">
+                <label className="block text-[11px] text-muted-foreground mb-1">
                   {newPortForm.transportType === "sea" ? "Port" : newPortForm.transportType === "road" ? "Border" : "Airport"} Name *
                 </label>
                 <input
@@ -7424,7 +7424,7 @@ export function PurchaseOrderWizard({ session }) {
                 <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">
                   {t(lang, "purchase.wiz_add_good_variation", "Add Good Variation")}
                 </h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-[11px] text-muted-foreground mt-0.5">
                   {t(lang, "purchase.wiz_specify_size_brand", "Specify size/brand under selected good")}
                 </p>
               </div>
@@ -7436,7 +7436,7 @@ export function PurchaseOrderWizard({ session }) {
             </div>
             <div className="p-5 space-y-3">
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Goods Name")}</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Goods Name")}</label>
                 <input
                   type="text"
                   value={customVariationForm.goodsName}
@@ -7446,7 +7446,7 @@ export function PurchaseOrderWizard({ session }) {
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Brand Name")} *</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Brand Name")} *</label>
                 <input
                   type="text"
                   value={customVariationForm.brand}
@@ -7456,7 +7456,7 @@ export function PurchaseOrderWizard({ session }) {
                 />
               </div>
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Size Specification")} *</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Size Specification")} *</label>
                 <input
                   type="text"
                   value={customVariationForm.size}
@@ -7496,7 +7496,7 @@ export function PurchaseOrderWizard({ session }) {
                 <h3 className="text-sm font-bold tracking-tight text-foreground">
                   Create New {createAccountType === "purchase" ? "Supplier Account" : "Customer Account"}
                 </h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-[11px] text-muted-foreground mt-0.5">
                   Scope: {form.cityBranchId ? "City Branch" : form.countryBranchId ? "Main Branch" : form.countryId ? "Country Scope" : "Super Admin"}
                 </p>
               </div>
@@ -7508,13 +7508,13 @@ export function PurchaseOrderWizard({ session }) {
             </div>
             <div className="p-5 space-y-3">
               {createAccountError && (
-                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">
                   {createAccountError}
                 </div>
               )}
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Account Name")} *</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Account Name")} *</label>
                 <input
                   type="text"
                   value={createAccountForm.name}
@@ -7526,7 +7526,7 @@ export function PurchaseOrderWizard({ session }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Account Code")} *</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Account Code")} *</label>
                   <input
                     type="text"
                     value={createAccountForm.code}
@@ -7536,7 +7536,7 @@ export function PurchaseOrderWizard({ session }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Currency")} *</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Currency")} *</label>
                   <select
                     value={createAccountForm.currency}
                     onChange={(e) => setCreateAccountForm(p => ({ ...p, currency: e.target.value }))}
@@ -7551,7 +7551,7 @@ export function PurchaseOrderWizard({ session }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Account Category")} *</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Account Category")} *</label>
                   <select
                     value={createAccountForm.kind}
                     onChange={(e) => setCreateAccountForm(p => ({ ...p, kind: e.target.value }))}
@@ -7565,7 +7565,7 @@ export function PurchaseOrderWizard({ session }) {
                   </select>
                 </div>
                 <div className="flex items-center pt-5">
-                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-foreground cursor-pointer select-none">
+                  <label className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={createAccountForm.isControlAccount}
@@ -7577,7 +7577,7 @@ export function PurchaseOrderWizard({ session }) {
                 </div>
               </div>
 
-              <p className="text-[9px] text-muted-foreground/60">
+              <p className="text-[11px] text-muted-foreground/60">
                 This account will be created under the selected country and branch scoping, and auto-selected.
               </p>
             </div>
@@ -7634,7 +7634,7 @@ export function PurchaseOrderWizard({ session }) {
               <div>
                 <label className="text-[11px] font-black uppercase tracking-wider text-slate-700 mb-2 block flex items-center justify-between">
                   <span>{t(lang, "purchase.select_report_preset", "Choose Report Preset / Template")}</span>
-                  <span className="text-[10px] font-semibold text-blue-600 lowercase">{t(lang, "purchase.auto_fills_data", "Auto-fills current booking data")}</span>
+                  <span className="text-[11px] font-semibold text-blue-600 lowercase">{t(lang, "purchase.auto_fills_data", "Auto-fills current booking data")}</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
@@ -7652,7 +7652,7 @@ export function PurchaseOrderWizard({ session }) {
                         {t(lang, "purchase.tpl_payment", "Payment Terms")}
                       </span>
                     </div>
-                    <span className="text-[9px] text-slate-500 leading-tight">
+                    <span className="text-[11px] text-slate-500 leading-tight">
                       {t(lang, "purchase.tpl_payment_sub", "Advance, dates & total")}
                     </span>
                   </button>
@@ -7672,7 +7672,7 @@ export function PurchaseOrderWizard({ session }) {
                         {t(lang, "purchase.tpl_shipping", "Loading & Route")}
                       </span>
                     </div>
-                    <span className="text-[9px] text-slate-500 leading-tight">
+                    <span className="text-[11px] text-slate-500 leading-tight">
                       {t(lang, "purchase.tpl_shipping_sub", "Ports, borders & ETA")}
                     </span>
                   </button>
@@ -7692,7 +7692,7 @@ export function PurchaseOrderWizard({ session }) {
                         {t(lang, "purchase.tpl_goods", "Goods & Weight")}
                       </span>
                     </div>
-                    <span className="text-[9px] text-slate-500 leading-tight">
+                    <span className="text-[11px] text-slate-500 leading-tight">
                       {t(lang, "purchase.tpl_goods_sub", "Gross/Net wt & items")}
                     </span>
                   </button>
@@ -7712,7 +7712,7 @@ export function PurchaseOrderWizard({ session }) {
                         {t(lang, "purchase.tpl_custom", "Custom Blank")}
                       </span>
                     </div>
-                    <span className="text-[9px] text-slate-500 leading-tight">
+                    <span className="text-[11px] text-slate-500 leading-tight">
                       {t(lang, "purchase.tpl_custom_sub", "Blank report format")}
                     </span>
                   </button>
@@ -7722,24 +7722,24 @@ export function PurchaseOrderWizard({ session }) {
               {/* Live Preview Card */}
               {selectedReportTemplate === "payment" && (
                 <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-3 text-[11px] space-y-1.5 text-blue-950">
-                  <div className="font-black uppercase tracking-wider text-[10px] text-blue-700 flex items-center gap-1.5">
+                  <div className="font-black uppercase tracking-wider text-[11px] text-blue-700 flex items-center gap-1.5">
                     <CreditCard className="h-3.5 w-3.5" /> {t(lang, "purchase.live_payment_snapshot", "Live Payment Snapshot")}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                     <div className="bg-white/80 p-2 rounded-lg border border-blue-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_payment_type", "Payment Type")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_payment_type", "Payment Type")}</span>
                       <span className="font-black text-slate-800">{form.paymentType || "N/A"}</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-lg border border-blue-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_advance_percentage", "Advance %")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_advance_percentage", "Advance %")}</span>
                       <span className="font-black text-blue-700">{form.advancePercent || 0}% ({form.advancePaymentDate || "N/A"})</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-lg border border-blue-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_remaining_percentage", "Remaining %")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_remaining_percentage", "Remaining %")}</span>
                       <span className="font-black text-amber-700">{Math.max(0, 100 - Number(form.advancePercent || 0))}% ({form.paymentDate || "N/A"})</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-lg border border-blue-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_amount", "Order Total")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_amount", "Order Total")}</span>
                       <span className="font-black text-emerald-700 font-mono">{form.currencyType || "USD"} {Number(reportTotals.grandPrimaryFinal || 0).toLocaleString()}</span>
                     </div>
                   </div>
@@ -7748,24 +7748,24 @@ export function PurchaseOrderWizard({ session }) {
 
               {selectedReportTemplate === "shipping" && (
                 <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 text-[11px] space-y-1.5 text-emerald-950">
-                  <div className="font-black uppercase tracking-wider text-[10px] text-emerald-700 flex items-center gap-1.5">
+                  <div className="font-black uppercase tracking-wider text-[11px] text-emerald-700 flex items-center gap-1.5">
                     <Truck className="h-3.5 w-3.5" /> {t(lang, "purchase.live_shipping_snapshot", "Live Route & Shipping Snapshot")}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                     <div className="bg-white/80 p-2 rounded-lg border border-emerald-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_shipping_mode", "Mode")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_shipping_mode", "Mode")}</span>
                       <span className="font-black text-slate-800">{form.shippingMode || "By Sea"}</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-lg border border-emerald-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_loading_port", "Loading Port")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_loading_port", "Loading Port")}</span>
                       <span className="font-black text-slate-800 truncate block">{form.loadingPort || form.loadingBorder || "N/A"}</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-lg border border-emerald-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_destination_port", "Destination Port")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_destination_port", "Destination Port")}</span>
                       <span className="font-black text-slate-800 truncate block">{form.receivingPort || form.receivedPort || "N/A"}</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-lg border border-emerald-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_eta", "Expected ETA")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_eta", "Expected ETA")}</span>
                       <span className="font-black text-emerald-700">{form.receivingDate || form.receivedDate || "N/A"}</span>
                     </div>
                   </div>
@@ -7774,24 +7774,24 @@ export function PurchaseOrderWizard({ session }) {
 
               {selectedReportTemplate === "goods" && (
                 <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 text-[11px] space-y-1.5 text-amber-950">
-                  <div className="font-black uppercase tracking-wider text-[10px] text-amber-700 flex items-center gap-1.5">
+                  <div className="font-black uppercase tracking-wider text-[11px] text-amber-700 flex items-center gap-1.5">
                     <Package className="h-3.5 w-3.5" /> {t(lang, "purchase.live_goods_snapshot", "Live Goods & Cargo Weight Snapshot")}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                     <div className="bg-white/80 p-2 rounded-lg border border-amber-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_items", "Total Lots")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_items", "Total Lots")}</span>
                       <span className="font-black text-slate-800">{goodsEntries.length} Item(s)</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-lg border border-amber-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_quantity", "Total Quantity")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_quantity", "Total Quantity")}</span>
                       <span className="font-black text-slate-800">{Number(reportTotals.totalQty || 0).toLocaleString()} {goodsEntries[0]?.qtyName || "Bags"}</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-lg border border-amber-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_gross_wt", "Gross Weight")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_gross_wt", "Gross Weight")}</span>
                       <span className="font-black text-amber-800">{Number(reportTotals.totalGross || 0).toLocaleString()} KG</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-lg border border-amber-100">
-                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_net_wt", "Net Weight")}</span>
+                      <span className="text-[11px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_net_wt", "Net Weight")}</span>
                       <span className="font-black text-emerald-700">{Number(reportTotals.totalNet || 0).toLocaleString()} KG</span>
                     </div>
                   </div>
@@ -7833,7 +7833,7 @@ export function PurchaseOrderWizard({ session }) {
                     <label className="text-[11px] font-black text-slate-700 block uppercase tracking-wider">
                       {trUi("Report Content & Notes")}
                     </label>
-                    <span className="text-[10px] text-slate-400 font-medium">
+                    <span className="text-[11px] text-slate-400 font-medium">
                       {t(lang, "purchase.editable_report_hint", "Structured details above are loaded. Add remarks or edit freely.")}
                     </span>
                   </div>
@@ -7879,7 +7879,7 @@ export function PurchaseOrderWizard({ session }) {
                 <h3 className="text-sm font-bold tracking-tight text-foreground">
                   {t(lang, "purchase.wiz_create_new_company", "Create New Company")}
                 </h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-[11px] text-muted-foreground mt-0.5">
                   {t(lang, "purchase.wiz_adding_to_company_registry", "Adding to Company Master Settings registry")}
                 </p>
               </div>
@@ -7891,13 +7891,13 @@ export function PurchaseOrderWizard({ session }) {
             </div>
             <div className="p-5 space-y-3">
               {createCompanyError && (
-                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">
                   {createCompanyError}
                 </div>
               )}
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Company Name")} *</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Company Name")} *</label>
                 <input
                   type="text"
                   value={createCompanyForm.name}
@@ -7908,7 +7908,7 @@ export function PurchaseOrderWizard({ session }) {
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Legal Name")}</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Legal Name")}</label>
                 <input
                   type="text"
                   value={createCompanyForm.legalName}
@@ -7919,7 +7919,7 @@ export function PurchaseOrderWizard({ session }) {
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Base Currency")} *</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">{trUi("Base Currency")} *</label>
                 <select
                   value={createCompanyForm.baseCurrency}
                   onChange={(e) => setCreateCompanyForm(p => ({ ...p, baseCurrency: e.target.value }))}
@@ -7931,7 +7931,7 @@ export function PurchaseOrderWizard({ session }) {
                 </select>
               </div>
 
-              <p className="text-[9px] text-muted-foreground/60">
+              <p className="text-[11px] text-muted-foreground/60">
                 This company will be saved to the master company registry and auto-selected for the current account.
               </p>
             </div>
@@ -7979,11 +7979,11 @@ export function PurchaseOrderWizard({ session }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="border border-slate-200 rounded p-2.5 bg-white shadow-sm flex justify-between items-center">
-                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{trUi("Invoice No")}</span>
+                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{trUi("Invoice No")}</span>
                   <div className="font-black font-mono text-slate-900">{form.purchaseOrderNo}</div>
                 </div>
                 <div className="border border-slate-200 rounded p-2.5 bg-white shadow-sm flex justify-between items-center">
-                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{trUi("Base Entry No")}</span>
+                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{trUi("Base Entry No")}</span>
                   <div className="font-black font-mono text-slate-900">{savedOrderNo || t(lang, "purchase.wiz_pending_ellipsis", "Pending...")}</div>
                 </div>
               </div>

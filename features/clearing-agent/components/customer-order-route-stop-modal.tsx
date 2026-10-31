@@ -77,7 +77,13 @@ interface CustomerOrderRouteStopModalProps {
   onSave: (stopData: RouteStop, isEdit: boolean, index?: number) => void;
 }
 
-export function CustomerOrderRouteStopModal({
+export function CustomerOrderRouteStopModal(props: Parameters<typeof CustomerOrderRouteStopModalBody>[0]) {
+  // Guard before any hook: the body below may only mount when there is something to show.
+  if (!props.open) return null;
+  return <CustomerOrderRouteStopModalBody {...props} />;
+}
+
+function CustomerOrderRouteStopModalBody({
   open,
   onClose,
   lang: langProp,
@@ -96,7 +102,6 @@ export function CustomerOrderRouteStopModal({
 }: CustomerOrderRouteStopModalProps) {
   const activeLang = useActiveLanguage();
   const lang = langProp && langProp !== "en" ? langProp : activeLang;
-  if (!open) return null;
 
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tt = (key: string, fb: string) => t(lang, ("com." + key) as never, fb);
@@ -301,7 +306,7 @@ export function CustomerOrderRouteStopModal({
                     ? `${tt("edit_route_stop_title", "Edit Route Stop")} #${stopIndex + 1}`
                     : tt("add_route_stop_title", "Add Route Stop / Border Crossing")}
                 </h3>
-                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300 whitespace-nowrap">
                   {tt("step_waypoint_badge", "Corridor Waypoint")}
                 </span>
               </div>
@@ -324,7 +329,7 @@ export function CustomerOrderRouteStopModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Corridor Position Visual Context */}
           <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-3.5 dark:border-sky-900/60 dark:bg-sky-950/30">
-            <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-300 block mb-1">
+            <span className="text-[11px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-300 block mb-1">
               {tt("corridor_position_preview", "Corridor Placement:")}
             </span>
             <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -524,7 +529,7 @@ export function CustomerOrderRouteStopModal({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
                       {tt("customs_office_station", "Customs Station / Office")}
                     </label>
                     <CustomsOfficePicker
@@ -542,7 +547,7 @@ export function CustomerOrderRouteStopModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
                       {tt("customs_treatment_choice", "Customs Treatment")}
                     </label>
                     <select
@@ -758,7 +763,7 @@ export function CustomerOrderRouteStopModal({
                         href="/dashboard/accounts/setup"
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:underline dark:text-indigo-400"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:underline dark:text-indigo-400"
                       >
                         <span>{tt("open_accounts", "Chart of Accounts / Setup")}</span>
                         <ExternalLink className="h-3 w-3" />

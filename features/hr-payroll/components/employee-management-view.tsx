@@ -391,7 +391,7 @@ export function EmployeeManagementView() {
                           </div>
                         )}
                         {emp.person?.person_code ? (
-                          <div className="text-[10px] font-mono font-black text-blue-600 dark:text-blue-400 mt-0.5">{emp.person.person_code}</div>
+                          <div className="text-[11px] font-mono font-black text-blue-600 dark:text-blue-400 mt-0.5">{emp.person.person_code}</div>
                         ) : null}
                         <div className="text-xs text-slate-500 font-mono mt-0.5">{emp.person?.mobile || "-"}</div>
                       </td>

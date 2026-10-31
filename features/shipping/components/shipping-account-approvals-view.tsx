@@ -139,13 +139,13 @@ export function ShippingAccountApprovalsView({ lang: langProp }: { lang?: Suppor
                   <>
                     <tr key={r.id} className="border-b align-top">
                       <td className="py-2 pe-2 font-mono">{r.requestNo}</td>
-                      <td className="py-2 pe-2"><div className="font-semibold">{r.accountName}</div><div className="font-mono text-[10px] text-slate-500">{r.accountCode}</div></td>
+                      <td className="py-2 pe-2"><div className="font-semibold">{r.accountName}</div><div className="font-mono text-[11px] text-slate-500">{r.accountCode}</div></td>
                       <td className="py-2 pe-2">{r.cityBranchName ?? "-"}</td>
                       <td className="py-2 pe-2">{r.requestedByName ?? "-"}</td>
                       <td className="py-2 pe-2">
                         <div>{s.t("stage_of", "Stage {n} of {total}").replace("{n}", String(r.stage)).replace("{total}", String(r.totalStages))}</div>
                         {r.status === "pending" && r.stageLabel && (
-                          <div className="flex items-center gap-1 text-[10px] text-amber-700"><Clock className="h-3 w-3" />{s.t("waiting_for", "Waiting for {role}").replace("{role}", r.stageLabel)}</div>
+                          <div className="flex items-center gap-1 text-[11px] text-amber-700"><Clock className="h-3 w-3" />{s.t("waiting_for", "Waiting for {role}").replace("{role}", r.stageLabel)}</div>
                         )}
                       </td>
                       <td className="py-2 pe-2">
@@ -165,9 +165,9 @@ export function ShippingAccountApprovalsView({ lang: langProp }: { lang?: Suppor
                             </div>
                           </div>
                         ) : r.status === "pending" ? (
-                          <span className="text-[10px] text-slate-400">{s.t("not_your_stage", "Not your stage")}</span>
+                          <span className="text-[11px] text-slate-400">{s.t("not_your_stage", "Not your stage")}</span>
                         ) : null}
-                        <Button size="sm" variant="ghost" className="mt-1 h-6 px-1 text-[10px]" onClick={() => setOpen(open === r.id ? null : r.id)}>{s.t("history", "Approval history")}</Button>
+                        <Button size="sm" variant="ghost" className="mt-1 h-6 px-1 text-[11px]" onClick={() => setOpen(open === r.id ? null : r.id)}>{s.t("history", "Approval history")}</Button>
                       </td>
                     </tr>
                     {open === r.id && (
@@ -176,7 +176,7 @@ export function ShippingAccountApprovalsView({ lang: langProp }: { lang?: Suppor
                           <ol className="space-y-1">
                             {r.history.map((h, i) => (
                               <li key={i} className="flex flex-wrap gap-2">
-                                <span className="font-mono text-[10px] text-slate-500">{fmt(h.created_at)}</span>
+                                <span className="font-mono text-[11px] text-slate-500">{fmt(h.created_at)}</span>
                                 <span className="font-semibold">{h.actor_name ?? "-"}</span>
                                 <span>{h.to_status}</span>
                                 {h.note && <span className="text-slate-500">— {h.note}</span>}

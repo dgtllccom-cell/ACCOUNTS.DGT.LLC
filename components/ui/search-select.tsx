@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t as uiText } from "@/lib/i18n/ui";
+import { SavedText } from "@/components/i18n/saved-text";
 
 export type SearchSelectOption = {
   value: string;
@@ -136,15 +137,7 @@ export function SearchSelect({
   const isAccountCardMode = accountCards || (options || []).some((opt) => opt && (opt.isAccountCard || (opt.code && (opt.companyName || opt.phone || opt.address || opt.email))));
   const resolvedPlaceholder = placeholder ?? uiText(language, "common.select");
   const defaultSearchPlaceholder = isAccountCardMode
-    ? (language === "ur"
-        ? "گاہک کا نام، اکاؤنٹ نمبر، کمپنی، فون یا پتہ تلاش کریں..."
-        : language === "ar"
-        ? "أدخل اسم العميل، رقم الحساب، الشركة، الهاتف أو العنوان..."
-        : language === "fa"
-        ? "نام مشتری، شماره حساب، شرکت، شماره تماس یا آدرس..."
-        : language === "ps"
-        ? "د پیرودونکي نوم، حساب شمیره، شرکت، تلیفون یا ادرس دننه کړئ..."
-        : "Enter customer name, account number, company, phone or address...")
+    ? uiText(language, "ss.account_card_search_ph", "Enter customer name, account number, company, phone or address...")
     : uiText(language, "common.search");
   const resolvedSearchPlaceholder = searchPlaceholder ?? defaultSearchPlaceholder;
   const resolvedEmptyLabel = emptyLabel ?? uiText(language, "common.no_matches_found");
@@ -230,7 +223,7 @@ export function SearchSelect({
               triggerClassName
             )}
           >
-            <span className="truncate flex-1 text-left me-2 font-medium" title={selectedLabel || resolvedPlaceholder}>
+            <span className="truncate flex-1 text-start me-2 font-medium" title={selectedLabel || resolvedPlaceholder}>
               {selectedLabel || resolvedPlaceholder}
             </span>
             <div className="flex items-center gap-1 shrink-0">
@@ -274,7 +267,7 @@ export function SearchSelect({
           className={cn(
             "w-[var(--radix-popover-trigger-width)] p-0 rounded-xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 isolate z-[999999]",
             isAccountCardMode
-              ? "min-w-[360px] sm:min-w-[580px] max-w-[660px]"
+              ? "min-w-[min(360px,calc(100vw-1.5rem))] sm:min-w-[580px] max-w-[min(660px,calc(100vw-1.5rem))]"
               : richList
               ? "min-w-[360px] sm:min-w-[520px]"
               : "min-w-[320px]"
@@ -346,6 +339,8 @@ export function SearchSelect({
                   const initials = opt.initials || initialsFor(opt.primaryText || opt.label);
                   const statusRaw = opt.status || "Active";
                   const isActive = statusRaw.toLowerCase() === "active";
+                  // the status is a value: shown in the selected language
+                  const statusLabel = isActive ? uiText(language, "common.active", "Active") : statusRaw.toLowerCase() === "inactive" ? uiText(language, "common.inactive", "Inactive") : statusRaw;
 
                   return (
                     <CommandItem
@@ -370,7 +365,7 @@ export function SearchSelect({
                         "cursor-pointer transition-all",
                         isCard
                           ? cn(
-                              "flex flex-col items-stretch p-3 rounded-xl border mb-2",
+                              "flex flex-col items-stretch p-2.5 sm:p-3 rounded-xl border mb-1.5 sm:mb-2",
                               isSelected
                                 ? "bg-blue-50/80 dark:bg-blue-950/50 border-blue-400 dark:border-blue-600 shadow-xs"
                                 : "bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 shadow-2xs"
@@ -380,11 +375,11 @@ export function SearchSelect({
                       title={opt.label}
                     >
                       {isCard ? (
-                        <div className="flex items-start gap-3 w-full text-left">
+                        <div className="flex items-start gap-2.5 sm:gap-3 w-full text-start">
                           {/* Left Avatar Badge */}
                           <div
                             className={cn(
-                              "h-12 w-12 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm tracking-wide shadow-2xs border border-black/5 dark:border-white/10",
+                              "h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm tracking-wide shadow-2xs border border-black/5 dark:border-white/10",
                               opt.avatarBgColor || avatarStyle.bg,
                               opt.avatarTextColor || avatarStyle.text
                             )}
@@ -397,21 +392,21 @@ export function SearchSelect({
                             {/* Row 1: Name + Status Badge + Edit Button */}
                             <div className="flex items-center justify-between gap-2">
                               <span
-                                className="text-[13.5px] font-bold text-slate-900 dark:text-slate-100 truncate"
+                                className="text-[13px] sm:text-[13.5px] font-bold text-slate-900 dark:text-slate-100 truncate"
                                 title={opt.primaryText || opt.label}
                               >
-                                {opt.primaryText || opt.label}
+                                <SavedText value={opt.primaryText || opt.label} lang={language} kind="name" />
                               </span>
                               <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                                 <span
                                   className={cn(
-                                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide",
+                                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide",
                                     isActive
                                       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60"
                                       : "bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60"
                                   )}
                                 >
-                                  {statusRaw}
+                                  {statusLabel}
                                 </span>
                                 {(opt.onEdit || onEditOption) && (
                                   <button
@@ -481,7 +476,7 @@ export function SearchSelect({
                               <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mt-1">
                                 <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                                 <span className="truncate">
-                                  {opt.address || [opt.branch, opt.city, opt.country].filter(Boolean).join(", ")}
+                                  {opt.address ? <SavedText value={opt.address} lang={language} /> : [opt.branch, opt.city, opt.country].filter(Boolean).join(", ")}
                                 </span>
                               </div>
                             )}
@@ -492,7 +487,7 @@ export function SearchSelect({
                           <div className="flex min-w-0 flex-1 items-center gap-2.5">
                             <span
                               className={cn(
-                                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white",
+                                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white",
                                 opt.avatarColor || avatarColorFor(opt.primaryText || opt.label)
                               )}
                             >
@@ -503,21 +498,21 @@ export function SearchSelect({
                                 {opt.primaryText || opt.label}
                               </div>
                               {opt.secondaryText && (
-                                <div className="truncate text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400">{opt.secondaryText}</div>
+                                <div className="truncate text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{opt.secondaryText}</div>
                               )}
                             </div>
                             {opt.code && (
-                              <span className="hidden shrink-0 font-mono text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 sm:inline">
+                              <span className="hidden shrink-0 font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 sm:inline">
                                 {opt.code}
                               </span>
                             )}
                             {opt.branch && (
-                              <span className="hidden shrink-0 text-[10.5px] font-medium text-slate-500 dark:text-slate-400 md:inline">
+                              <span className="hidden shrink-0 text-[11px] font-medium text-slate-500 dark:text-slate-400 md:inline">
                                 {opt.branch}
                               </span>
                             )}
                             {opt.country && (
-                              <span className="hidden shrink-0 text-[10.5px] font-medium text-slate-500 dark:text-slate-400 lg:inline">
+                              <span className="hidden shrink-0 text-[11px] font-medium text-slate-500 dark:text-slate-400 lg:inline">
                                 {opt.country}
                               </span>
                             )}
@@ -578,7 +573,7 @@ export function SearchSelect({
                 </div>
               )}
               {richList && matchingOptions.length > 0 && matchingOptions.length <= displayOptions.length && (
-                <div className="border-t border-slate-100 dark:border-slate-800 px-3 py-1.5 text-center text-[10.5px] font-semibold text-slate-400">
+                <div className="border-t border-slate-100 dark:border-slate-800 px-3 py-1.5 text-center text-[11px] font-semibold text-slate-400">
                   {uiText(language, "common.showing_of_results", "Showing {shown} of {total} results")
                     .replace("{shown}", String(displayOptions.length))
                     .replace("{total}", String(matchingOptions.length))}

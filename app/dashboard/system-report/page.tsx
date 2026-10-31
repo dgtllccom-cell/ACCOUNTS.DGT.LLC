@@ -112,7 +112,7 @@ export default function SystemReportPage() {
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {(["en", "ur", "ar", "fa", "ps"] as const).map((l) => (
               <div key={l} className="rounded-lg bg-slate-50 dark:bg-slate-900 p-2 text-center">
-                <div className="text-[10px] uppercase text-slate-400">{l}</div>
+                <div className="text-[11px] uppercase text-slate-400">{l}</div>
                 <div className="text-sm font-black text-slate-800 dark:text-slate-100">{(tr.by_language as Record<string, number>)[l] ?? 0}</div>
               </div>
             ))}
@@ -126,9 +126,9 @@ export default function SystemReportPage() {
 function Card({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string | number; sub?: string }) {
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
-      <div className="flex items-center gap-2 text-slate-400">{icon}<span className="text-[10px] font-bold uppercase tracking-wider">{label}</span></div>
+      <div className="flex items-center gap-2 text-slate-400">{icon}<span className="text-[11px] font-bold uppercase tracking-wider">{label}</span></div>
       <div className="mt-2 text-2xl font-black text-slate-900 dark:text-white">{value}</div>
-      {sub && <div className="mt-0.5 text-[10px] text-slate-500">{sub}</div>}
+      {sub && <div className="mt-0.5 text-[11px] text-slate-500">{sub}</div>}
     </div>
   );
 }

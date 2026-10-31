@@ -159,7 +159,7 @@ export function RouteErrorBoundary({
         </p>
 
         {error && (
-          <div className="mt-4 rounded-xl bg-slate-900 p-3.5 text-left font-mono text-[10.5px] text-blue-300 overflow-x-auto border border-slate-800" dir="ltr">
+          <div className="mt-4 rounded-xl bg-slate-900 p-3.5 text-left font-mono text-[11px] text-blue-300 overflow-x-auto border border-slate-800" dir="ltr">
             {typeof error.message === "string"
               ? error.message
               : typeof error === "string"

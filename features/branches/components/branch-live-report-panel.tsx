@@ -21,7 +21,7 @@ export type BranchLiveReportStep = {
 function renderValue(value: string | null | undefined, prefix: string = "", notConfiguredLabel: string = "[Not Configured]") {
   const isBlank = !value || value.trim() === "" || value.trim() === "-" || value.trim().toLowerCase() === "undefined";
   if (isBlank) {
-    return <span className="inline-flex max-w-full items-center rounded-md border border-rose-200/60 bg-rose-50 px-2 py-0.5 text-[10px] font-bold leading-4 text-rose-600 dark:border-rose-900/30 dark:bg-rose-950/20 dark:text-rose-400">{notConfiguredLabel}</span>;
+    return <span className="inline-flex max-w-full items-center rounded-md border border-rose-200/60 bg-rose-50 px-2 py-0.5 text-[11px] font-bold leading-4 text-rose-600 dark:border-rose-900/30 dark:bg-rose-950/20 dark:text-rose-400 whitespace-nowrap">{notConfiguredLabel}</span>;
   }
   return <span className="block max-w-full break-words text-slate-900 dark:text-slate-100 font-semibold leading-5">{prefix}{value}</span>;
 }
@@ -137,8 +137,8 @@ export function BranchLiveReportPanel({
               </div>
               <div>
                 <h4 className="text-sm font-black text-slate-800 dark:text-slate-200 leading-tight">ACCOUNTS.DGT.LLC</h4>
-                <p className="text-[9px] font-semibold text-slate-400">{t(lang, "branch.enterprise_erp_fms", "Enterprise ERP / FMS")}</p>
-                <p className="text-[8px] font-medium text-slate-400/90 leading-tight">{t(lang, "branch.multi_country_branch_mgmt", "Multi-Country Branch Management")}</p>
+                <p className="text-[11px] font-semibold text-slate-400">{t(lang, "branch.enterprise_erp_fms", "Enterprise ERP / FMS")}</p>
+                <p className="text-[11px] font-medium text-slate-400/90 leading-tight">{t(lang, "branch.multi_country_branch_mgmt", "Multi-Country Branch Management")}</p>
               </div>
             </div>
 
@@ -147,13 +147,13 @@ export function BranchLiveReportPanel({
               <h1 className="text-sm font-black text-blue-900 dark:text-blue-400 tracking-wide uppercase leading-tight">
                 {b.branchType === "MAIN" ? t(lang, "branch.report_country_main_branch", "Country Main Branch") : b.branchType === "CITY" ? t(lang, "branch.report_city_branch", "City Branch Report") : t(lang, "branch.report_super_admin_branch", "Super Admin Branch")}
               </h1>
-              <span className="mt-1 text-[8px] font-extrabold text-blue-600 dark:text-blue-400 border border-blue-600/30 rounded-full px-2 py-0.5 uppercase bg-blue-50/50 dark:bg-blue-950/30">
+              <span className="mt-1 text-[11px] font-extrabold text-blue-600 dark:text-blue-400 border border-blue-600/30 rounded-full px-2 py-0.5 uppercase bg-blue-50/50 dark:bg-blue-950/30 whitespace-nowrap">
                 {b.branchStatus || status || t(lang, "branch.status_draft", "Draft")}
               </span>
             </div>
 
             {/* Metadata Box */}
-            <div className="flex flex-col justify-start md:items-end text-left md:text-right text-[9px] text-slate-600 dark:text-slate-400 leading-normal font-medium">
+            <div className="flex flex-col justify-start md:items-end text-left md:text-right text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-medium">
               <div><span className="text-slate-400">{t(lang, "branch.generated_on", "Generated On:")}</span> {stampDate}</div>
               <div><span className="text-slate-400">{t(lang, "branch.generated_time", "Generated Time:")}</span> {stampTime}</div>
               <div><span className="text-slate-400">{t(lang, "branch.report_by", "Report By:")}</span> {b.createdBy || t(lang, "branch.super_admin_role", "Super Admin")}</div>
@@ -164,7 +164,7 @@ export function BranchLiveReportPanel({
           {/* Parent Scope Hierarchy Context */}
           {(b.parentBranch || b.grandparentBranch) && (
             <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-lg p-3 space-y-2">
-              <div className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-200/50 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+              <div className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-200/50 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
                 <ShieldAlert className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                 <span>{t(lang, "branch.parent_scope_hierarchy", "Parent Scope Security Hierarchy Context")}</span>
               </div>
@@ -172,9 +172,9 @@ export function BranchLiveReportPanel({
                 {b.grandparentBranch && (
                   <>
                     <div className="bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded px-2.5 py-1.5 flex flex-col min-w-[150px]">
-                      <span className="text-[7px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{b.grandparentBranch.type}</span>
-                      <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">{b.grandparentBranch.name}</span>
-                      <span className="text-[8px] font-semibold text-slate-400">{t(lang, "branch.code_prefix", "Code:")} {b.grandparentBranch.code} ({b.grandparentBranch.status})</span>
+                      <span className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{b.grandparentBranch.type}</span>
+                      <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">{b.grandparentBranch.name}</span>
+                      <span className="text-[11px] font-semibold text-slate-400">{t(lang, "branch.code_prefix", "Code:")} {b.grandparentBranch.code} ({b.grandparentBranch.status})</span>
                     </div>
                     <span className="text-slate-300 dark:text-slate-700 text-sm font-bold">➔</span>
                   </>
@@ -182,17 +182,17 @@ export function BranchLiveReportPanel({
                 {b.parentBranch && (
                   <>
                     <div className="bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded px-2.5 py-1.5 flex flex-col min-w-[150px]">
-                      <span className="text-[7px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{b.parentBranch.type}</span>
-                      <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">{b.parentBranch.name}</span>
-                      <span className="text-[8px] font-semibold text-slate-400">{t(lang, "branch.code_prefix", "Code:")} {b.parentBranch.code} ({b.parentBranch.status})</span>
+                      <span className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{b.parentBranch.type}</span>
+                      <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">{b.parentBranch.name}</span>
+                      <span className="text-[11px] font-semibold text-slate-400">{t(lang, "branch.code_prefix", "Code:")} {b.parentBranch.code} ({b.parentBranch.status})</span>
                     </div>
                     <span className="text-slate-300 dark:text-slate-700 text-sm font-bold">➔</span>
                   </>
                 )}
                 <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/30 dark:border-blue-900/40 rounded px-2.5 py-1.5 flex flex-col min-w-[150px] shadow-sm">
-                  <span className="text-[7px] font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider">{b.branchType || t(lang, "branch.new_badge", "NEW")}</span>
-                  <span className="text-[10px] font-black text-blue-900 dark:text-blue-200 truncate">{b.branchName || t(lang, "branch.creating_branch_placeholder", "Creating branch...")}</span>
-                  <span className="text-[8px] font-semibold text-blue-500/80">{t(lang, "branch.code_prefix", "Code:")} {b.branchCode || "-"} {t(lang, "branch.creating_suffix", "(CREATING)")}</span>
+                  <span className="text-[11px] font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider">{b.branchType || t(lang, "branch.new_badge", "NEW")}</span>
+                  <span className="text-[11px] font-black text-blue-900 dark:text-blue-200 truncate">{b.branchName || t(lang, "branch.creating_branch_placeholder", "Creating branch...")}</span>
+                  <span className="text-[11px] font-semibold text-blue-500/80">{t(lang, "branch.code_prefix", "Code:")} {b.branchCode || "-"} {t(lang, "branch.creating_suffix", "(CREATING)")}</span>
                 </div>
               </div>
             </div>
@@ -203,7 +203,7 @@ export function BranchLiveReportPanel({
             <div className="flex-1 min-w-[130px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
               <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 shrink-0">✓</div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_status", "Status")}</span>
+                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_status", "Status")}</span>
                 <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 truncate">{(b.branchStatus || "Active").toUpperCase()}</span>
               </div>
             </div>
@@ -211,7 +211,7 @@ export function BranchLiveReportPanel({
             <div className="flex-1 min-w-[130px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
               <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50 shrink-0">📌</div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_code", "Code")}</span>
+                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_code", "Code")}</span>
                 <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{b.branchCode || "-"}</span>
               </div>
             </div>
@@ -219,7 +219,7 @@ export function BranchLiveReportPanel({
             <div className="flex-1 min-w-[140px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
               <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-pink-50 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 border border-pink-200/50 shrink-0">🏢</div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_type", "Type")}</span>
+                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_type", "Type")}</span>
                 <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{(b.branchType || "MAIN").toUpperCase()}</span>
               </div>
             </div>
@@ -227,7 +227,7 @@ export function BranchLiveReportPanel({
             <div className="flex-1 min-w-[130px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
               <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 border border-green-200/50 shrink-0">🌍</div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_country", "Country")}</span>
+                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_country", "Country")}</span>
                 <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{(b.country || "-").toUpperCase()}</span>
               </div>
             </div>
@@ -235,7 +235,7 @@ export function BranchLiveReportPanel({
             <div className="flex-1 min-w-[120px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
               <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/50 shrink-0">💵</div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_currency", "Currency")}</span>
+                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_currency", "Currency")}</span>
                 <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{(b.currency || "USD").toUpperCase()}</span>
               </div>
             </div>
@@ -243,7 +243,7 @@ export function BranchLiveReportPanel({
             <div className="flex-1 min-w-[120px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
               <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/50 shrink-0">#</div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_serial", "Serial")}</span>
+                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_serial", "Serial")}</span>
                 <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{b.serialNumber || "0001"}</span>
               </div>
             </div>
@@ -255,8 +255,8 @@ export function BranchLiveReportPanel({
             <div className="space-y-4">
               {/* Section 1: Branch Information */}
               <div>
-                <div className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
-                  <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[8px]">1</span>
+                <div className="bg-blue-600 text-white text-[11px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
+                  <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[11px] leading-none">1</span>
                   <span>{t(lang, "branch.section_branch_info", "Branch Information")}</span>
                 </div>
                 <div className="border border-t-0 border-slate-100 dark:border-slate-800 rounded-b-lg p-3.5 bg-white dark:bg-slate-950/40 space-y-2">
@@ -301,8 +301,8 @@ export function BranchLiveReportPanel({
 
               {/* Section 2: Branch Details */}
               <div>
-                <div className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
-                  <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[8px]">2</span>
+                <div className="bg-blue-600 text-white text-[11px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
+                  <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[11px] leading-none">2</span>
                   <span>{t(lang, "branch.section_branch_details_address", "Branch Details & Address")}</span>
                 </div>
                 <div className="border border-t-0 border-slate-100 dark:border-slate-800 rounded-b-lg p-3.5 bg-white dark:bg-slate-950/40 space-y-2">
@@ -354,8 +354,8 @@ export function BranchLiveReportPanel({
             <div className="space-y-4">
               {/* Section 3: Owner Details */}
               <div>
-                <div className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
-                  <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[8px]">3</span>
+                <div className="bg-blue-600 text-white text-[11px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
+                  <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[11px] leading-none">3</span>
                   <span>{t(lang, "branch.section_owner_details", "Owner Details")}</span>
                 </div>
                 <div className="border border-t-0 border-slate-100 dark:border-slate-800 rounded-b-lg p-3.5 bg-white dark:bg-slate-950/40 space-y-3">
@@ -366,8 +366,8 @@ export function BranchLiveReportPanel({
                     </div>
                     <div className="flex-1 min-w-0">
                       <h5 className="text-xs font-black text-slate-800 dark:text-slate-200">{rv(b.ownerName)}</h5>
-                      <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">{t(lang, "branch.code_prefix", "Code:")} {rv(b.ownerCode)}</p>
-                      <p className="text-[9px] text-slate-400 font-semibold mt-0.5">{t(lang, "branch.designation_prefix", "Designation:")} {rv(b.designation)}</p>
+                      <p className="text-[11px] text-slate-400 font-bold uppercase mt-0.5">{t(lang, "branch.code_prefix", "Code:")} {rv(b.ownerCode)}</p>
+                      <p className="text-[11px] text-slate-400 font-semibold mt-0.5">{t(lang, "branch.designation_prefix", "Designation:")} {rv(b.designation)}</p>
                     </div>
                   </div>
 
@@ -420,8 +420,8 @@ export function BranchLiveReportPanel({
 
               {/* Section 4: Company Details */}
               <div>
-                <div className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
-                  <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[8px]">4</span>
+                <div className="bg-blue-600 text-white text-[11px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
+                  <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[11px] leading-none">4</span>
                   <span>{t(lang, "branch.section_company_details", "Company Details")}</span>
                 </div>
                 <div className="border border-t-0 border-slate-100 dark:border-slate-800 rounded-b-lg p-3.5 bg-white dark:bg-slate-950/40 space-y-2">
@@ -464,8 +464,8 @@ export function BranchLiveReportPanel({
 
           {/* Section 5: Permissions Grid */}
           <div>
-            <div className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
-              <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[8px]">5</span>
+            <div className="bg-blue-600 text-white text-[11px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
+              <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[11px] leading-none">5</span>
               <span>{t(lang, "branch.section_permissions_access", "Branch Permissions & Access Rights")}</span>
             </div>
             <div className="border border-t-0 border-slate-100 dark:border-slate-800 rounded-b-md p-4 bg-slate-50/30 dark:bg-slate-950/40">
@@ -502,7 +502,7 @@ export function BranchLiveReportPanel({
           {/* Footer block: Signatures, Seal and Remarks */}
           <div className="border-t border-slate-200 dark:border-slate-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-6">
             {/* Remarks */}
-            <div className="w-full md:w-5/12 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 p-3 rounded-lg text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
+            <div className="w-full md:w-5/12 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 p-3 rounded-lg text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
               <strong className="block text-slate-700 dark:text-slate-300 text-xs mb-1">{t(lang, "branch.remarks_notes", "Remarks / Notes")}</strong>
               <span>{b.remarks || t(lang, "branch.default_remarks", "This is the branch profile summary report. All operations are managed under this branch's authorized scopes.")}</span>
             </div>
@@ -536,8 +536,8 @@ export function BranchLiveReportPanel({
               <div className="border-b border-slate-300 dark:border-slate-700 w-full h-8 flex items-end justify-center pb-1 text-slate-800 dark:text-slate-200 font-serif italic text-sm font-semibold select-none">
                 {b.createdBy || t(lang, "branch.super_admin_role", "Super Admin")}
               </div>
-              <p className="text-[10px] font-extrabold text-slate-500 mt-1 uppercase">{t(lang, "branch.approved_authority", "Approved Authority")}</p>
-              <p className="text-[8px] text-slate-400 font-medium leading-none">ACCOUNTS.DGT.LLC</p>
+              <p className="text-[11px] font-extrabold text-slate-500 mt-1 uppercase">{t(lang, "branch.approved_authority", "Approved Authority")}</p>
+              <p className="text-[11px] text-slate-400 font-medium leading-none">ACCOUNTS.DGT.LLC</p>
             </div>
           </div>
         </div>

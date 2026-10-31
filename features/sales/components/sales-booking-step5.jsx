@@ -69,18 +69,27 @@ export function SalesBookingStep5({
 
   const currency = form.salesCurrency || form.currencyType || "AED";
 
-  // Intelligent fallback text if Step 4 reports were left blank
-  const loadingReportText = form.loadingReport?.trim() ||
-    `Cargo loaded at ${form.loadingPort || "Jebel Ali Port"} on ${formatDisplayDate(form.loadingDate || form.salesDate)}. All containers inspected and sealed with ${form.shippingLine || "MSC Line"}. Documents (Packing List, Commercial Invoice and Certificate of Origin) handed over to shipping line. Vessel ${form.vesselName || "MSC Evergreen"} (${form.voyageNo || "VY1234"}) departed on time. No damage reported.`;
+  // Report texts: what the user wrote in Step 4, otherwise a summary built ONLY from this booking's own data. Nothing is invented
+  // (no port, vessel, payment-received or "no damage" statements the booking does not hold).
+  const goodsNames = goodsEntries.map((g) => g.goodsName || g.productName).filter(Boolean).join(", ");
+  const unitName = goodsEntries[0]?.qtyName || "";
+  const money = (n) => Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+  const loadingReportText = form.loadingReport?.trim() || "";
 
   const goodsSummaryReportText = form.orderReportRemarks?.trim() ||
-    `Total ${totals.totalQuantity.toLocaleString()} ${goodsEntries[0]?.qtyName || "MT"} including ${goodsEntries.map(g => g.goodsName || g.productName).filter(Boolean).join(", ") || "Almond Kernels, Pistachios and Raisins"}. All goods are in good condition and packed as per standard export quality. Net weight ${totals.totalNet.toLocaleString()} KG and gross weight ${totals.totalGross.toLocaleString()} KG. All HS codes verified and quantities matched with packing list.`;
+    (goodsEntries.length
+      ? `Total ${totals.totalQuantity.toLocaleString()} ${unitName} — ${goodsNames}. Net weight ${totals.totalNet.toLocaleString()} KG, gross weight ${totals.totalGross.toLocaleString()} KG.`
+      : "");
 
   const paymentReportText = form.paymentReport?.trim() ||
-    `Advance payment of ${totals.advancePercent}% (${currency} ${totals.advanceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}) received on ${formatDisplayDate(form.advancePaymentDate || form.salesDate)} via ${form.paymentType?.toLowerCase() || "cash"}. Remaining amount ${currency} ${totals.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} to be paid on or before ${formatDisplayDate(form.paymentDate || form.salesDate)}. Payment terms as per sales contract. No outstanding from previous bookings.`;
+    (totals.advancePercent > 0
+      ? `Advance required: ${totals.advancePercent}% (${currency} ${money(totals.advanceAmount)})${form.advancePaymentDate ? ` by ${formatDisplayDate(form.advancePaymentDate)}` : ""}. Remaining ${currency} ${money(totals.remainingAmount)}${form.paymentDate ? ` due by ${formatDisplayDate(form.paymentDate)}` : ""}.`
+      : "");
 
   const journalNarrationText = form.salesReportRemarks?.trim() ||
-    `Sales booking for export shipment of ${goodsEntries.map(g => g.goodsName || g.productName).filter(Boolean).join(", ") || "Almond Kernels, Pistachios and Raisins"} to ${form.destinationCountry || "Pakistan"} via ${form.loadingPort || "Jebel Ali Port"}. Total ${totals.totalQuantity.toLocaleString()} ${goodsEntries[0]?.qtyName || "MT"}, Invoice value USD ${totals.totalAmountUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })} (${currency} ${totals.totalAmountLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })} at rate ${totals.exRate.toFixed(4)}). Advance ${totals.advancePercent}% received and balance as per payment terms. All documents verified and shipment processed as per contract. Entry to be transferred to Sales Ledger (CR), Customer Ledger (DR) and stock as per approved booking.`;
+    (goodsEntries.length
+      ? `Sales booking of ${goodsNames}${form.destinationCountry ? ` to ${form.destinationCountry}` : ""}. Total ${totals.totalQuantity.toLocaleString()} ${unitName}, invoice value ${form.currencyType || currency} ${money(totals.totalAmountUsd)}${form.currencyType && form.secondaryCurrency && form.currencyType !== form.secondaryCurrency ? ` (${form.secondaryCurrency} ${money(totals.totalAmountLocal)} at rate ${Number(totals.exRate || 0).toFixed(4)})` : ""}.`
+      : "");
 
   const checklistItems = [
     "Booking Details Completed",
@@ -121,7 +130,7 @@ export function SalesBookingStep5({
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
                 {tUi(lang, "sales.final_verification_transfer", "FINAL VERIFICATION & TRANSFER")}
               </h3>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                 Check all information and confirm to transfer
               </p>
             </div>
@@ -139,7 +148,7 @@ export function SalesBookingStep5({
 
           {/* Transfer Operations */}
           <div className="space-y-2.5 border-t border-slate-100 dark:border-slate-800 pt-3">
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
               TRANSFER OPERATIONS
             </div>
             <div className="space-y-1.5">
@@ -147,9 +156,9 @@ export function SalesBookingStep5({
                 <div key={idx} className="flex items-center justify-between text-xs py-0.5">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-[10.5px] font-medium text-slate-700 dark:text-slate-300">{op}</span>
+                    <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300">{op}</span>
                   </div>
-                  <span className="px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
+                  <span className="px-1.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 whitespace-nowrap">
                     Ready
                   </span>
                 </div>
@@ -159,13 +168,13 @@ export function SalesBookingStep5({
 
           {/* Total Transaction Value Box */}
           <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 p-3.5 text-center space-y-1 shadow-2xs">
-            <div className="text-[9.5px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
               TOTAL TRANSACTION VALUE
             </div>
             <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tight">
               {currency} {totals.totalAmountLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
               USD {totals.totalAmountUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })} | Rate: {totals.exRate.toFixed(4)}
             </div>
           </div>
@@ -197,7 +206,7 @@ export function SalesBookingStep5({
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Confirm & Transfer to Ledger</span>
                 </div>
-                <span className="text-[9px] font-normal normal-case opacity-90">
+                <span className="text-[11px] font-normal normal-case opacity-90">
                   Post this Sales Booking to all related modules
                 </span>
               </>
@@ -237,10 +246,10 @@ export function SalesBookingStep5({
             {/* Company Info Left */}
             <div className="space-y-0.5">
               <h2 className="text-xl font-black text-slate-900 tracking-tight">DGT LLC</h2>
-              <p className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+              <p className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                 Import Export & Logistics Services
               </p>
-              <p className="text-[9.5px] text-slate-500 leading-tight">
+              <p className="text-[11px] text-slate-500 leading-tight">
                 Office 101, Business Bay, Dubai, UAE<br />
                 Tel: +971 4 123 4567 | Email: info@dgt.llc | www.dgt.llc
               </p>
@@ -249,9 +258,9 @@ export function SalesBookingStep5({
             {/* Blue Final Voucher Tag & QR Code */}
             <div className="flex items-center gap-3">
               <div className="bg-blue-600 text-white rounded-lg px-3 py-2 text-right shadow-xs space-y-0.5">
-                <div className="text-[10px] font-black uppercase tracking-wider">SALES BOOKING ORDER</div>
-                <div className="text-[8.5px] font-bold tracking-widest text-blue-100 uppercase">FINAL VOUCHER</div>
-                <div className="text-[9px] font-mono border-t border-blue-400/60 pt-1 mt-1 text-blue-50">
+                <div className="text-[11px] font-black uppercase tracking-wider">SALES BOOKING ORDER</div>
+                <div className="text-[11px] font-bold tracking-widest text-blue-100 uppercase">FINAL VOUCHER</div>
+                <div className="text-[11px] font-mono border-t border-blue-400/60 pt-1 mt-1 text-blue-50">
                   <div>Booking No: <b>{form.salesOrderNo || "SB-2026-0001"}</b></div>
                   <div>Serial No: <b>{form.billNo || "SV-0001"}</b></div>
                   <div>Date: {formatDisplayDate(form.salesDate)}</div>
@@ -261,7 +270,7 @@ export function SalesBookingStep5({
               {/* QR Code Placeholder Box */}
               <div className="w-14 h-14 border border-slate-300 rounded-lg p-1 bg-white flex flex-col items-center justify-center shadow-2xs">
                 <QrCode className="w-10 h-10 text-slate-800" />
-                <span className="text-[7px] font-mono text-slate-500">VERIFIED</span>
+                <span className="text-[11px] font-mono text-slate-500">VERIFIED</span>
               </div>
             </div>
           </div>
@@ -280,7 +289,7 @@ export function SalesBookingStep5({
 
           {/* GOODS OVERVIEW DETAILS Table */}
           <div className="border border-slate-200 rounded-xl overflow-hidden space-y-1">
-            <div className="bg-blue-50 px-3 py-1.5 flex items-center justify-between border-b border-slate-200 text-blue-900 font-black text-[10px] uppercase tracking-wider">
+            <div className="bg-blue-50 px-3 py-1.5 flex items-center justify-between border-b border-slate-200 text-blue-900 font-black text-[11px] uppercase tracking-wider">
               <span className="flex items-center gap-1.5">
                 <Package className="w-3.5 h-3.5 text-blue-600" />
                 GOODS OVERVIEW DETAILS
@@ -289,8 +298,8 @@ export function SalesBookingStep5({
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-[10px] text-left border-collapse">
-                <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[8px] border-b border-slate-200">
+              <table className="w-full text-[11px] text-left border-collapse">
+                <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                   <tr>
                     <th className="p-2 w-7 text-center">#</th>
                     <th className="p-2">GOODS NAME</th>
@@ -313,7 +322,7 @@ export function SalesBookingStep5({
                     const amtFinal = Number(item.finalAmount || (amtUsd * ex));
                     return (
                       <tr key={idx}>
-                        <td className="p-2 text-center font-mono text-[9px] text-slate-400">{idx + 1}</td>
+                        <td className="p-2 text-center font-mono text-[11px] text-slate-400">{idx + 1}</td>
                         <td className="p-2 font-bold text-slate-900">{item.goodsName || item.productName}</td>
                         <td className="p-2 text-slate-600">{item.size || "Standard"}</td>
                         <td className="p-2 text-slate-600">{item.brand || "Al Baraka"}</td>
@@ -337,7 +346,7 @@ export function SalesBookingStep5({
                     );
                   })}
                 </tbody>
-                <tfoot className="bg-slate-50 font-black border-t border-slate-300 text-[10px]">
+                <tfoot className="bg-slate-50 font-black border-t border-slate-300 text-[11px]">
                   <tr>
                     <td colSpan={6} className="p-2 text-right uppercase tracking-wider text-slate-600">Total</td>
                     <td className="p-2 text-right font-mono font-bold text-slate-900">
@@ -361,34 +370,34 @@ export function SalesBookingStep5({
           {/* Lower 3 Cards (Read-Only with automatically displayed Step 4 written reports) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* 1. LOADING (EXPORT / IMPORT) */}
-            <div className="border border-purple-200 rounded-xl p-3 bg-purple-50/20 space-y-2 text-[9.5px]">
-              <div className="flex items-center gap-1.5 border-b border-purple-200 pb-1 text-purple-700 font-black uppercase tracking-wider text-[10px]">
-                <span className="w-3.5 h-3.5 rounded bg-purple-600 text-white text-[8px] font-black flex items-center justify-center">1</span>
+            <div className="border border-purple-200 rounded-xl p-3 bg-purple-50/20 space-y-2 text-[11px]">
+              <div className="flex items-center gap-1.5 border-b border-purple-200 pb-1 text-purple-700 font-black uppercase tracking-wider text-[11px]">
+                <span className="w-3.5 h-3.5 rounded bg-purple-600 text-white text-[11px] font-black flex items-center justify-center leading-none">1</span>
                 <span>{tUi(lang, "sales.loading_export_import", "LOADING (EXPORT / IMPORT)")}</span>
               </div>
               <div className="grid grid-cols-2 gap-1 text-slate-700 leading-tight">
-                <div>Loading Port : <span className="font-bold">{form.loadingPort || "Jebel Ali Port"}</span></div>
+                <div>Loading Port : <span className="font-bold">{form.loadingPort || "—"}</span></div>
                 <div>Receiving Port : <span className="font-bold">{form.receivedPort || "Karachi Port"}</span></div>
                 <div>Loading Date : <span className="font-bold">{formatDisplayDate(form.loadingDate || form.salesDate)}</span></div>
                 <div>Receiving Date : <span className="font-bold">{formatDisplayDate(form.receivedDate || form.salesDate)}</span></div>
-                <div>Shipping Line : <span className="font-bold">{form.shippingLine || "MSC Line"}</span></div>
+                <div>Shipping Line : <span className="font-bold">{form.shippingLine || "—"}</span></div>
                 <div>Destination City : <span className="font-bold">{form.destinationCity || "Karachi"}</span></div>
               </div>
               {/* Displayed Report Box */}
               <div className="border-t border-purple-200/80 pt-1.5 space-y-0.5">
-                <span className="font-bold text-purple-800 text-[8.5px] uppercase block">
+                <span className="font-bold text-purple-800 text-[11px] uppercase block">
                   Report / Remarks (Loading & Shipping)
                 </span>
-                <div className="p-2 bg-white rounded-lg border border-purple-200/80 text-[9px] text-slate-700 leading-relaxed font-medium">
+                <div className="p-2 bg-white rounded-lg border border-purple-200/80 text-[11px] text-slate-700 leading-relaxed font-medium">
                   {loadingReportText}
                 </div>
               </div>
             </div>
 
             {/* 2. GOODS SUMMARY */}
-            <div className="border border-emerald-200 rounded-xl p-3 bg-emerald-50/20 space-y-2 text-[9.5px]">
-              <div className="flex items-center gap-1.5 border-b border-emerald-200 pb-1 text-emerald-700 font-black uppercase tracking-wider text-[10px]">
-                <span className="w-3.5 h-3.5 rounded bg-emerald-600 text-white text-[8px] font-black flex items-center justify-center">2</span>
+            <div className="border border-emerald-200 rounded-xl p-3 bg-emerald-50/20 space-y-2 text-[11px]">
+              <div className="flex items-center gap-1.5 border-b border-emerald-200 pb-1 text-emerald-700 font-black uppercase tracking-wider text-[11px]">
+                <span className="w-3.5 h-3.5 rounded bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center leading-none">2</span>
                 <span>{tUi(lang, "sales.goods_summary", "GOODS SUMMARY")}</span>
               </div>
               <div className="space-y-0.5 text-slate-700 leading-tight">
@@ -401,19 +410,19 @@ export function SalesBookingStep5({
               </div>
               {/* Displayed Report Box */}
               <div className="border-t border-emerald-200/80 pt-1.5 space-y-0.5">
-                <span className="font-bold text-emerald-800 text-[8.5px] uppercase block">
+                <span className="font-bold text-emerald-800 text-[11px] uppercase block">
                   Report / Remarks (Goods Summary)
                 </span>
-                <div className="p-2 bg-white rounded-lg border border-emerald-200/80 text-[9px] text-slate-700 leading-relaxed font-medium">
+                <div className="p-2 bg-white rounded-lg border border-emerald-200/80 text-[11px] text-slate-700 leading-relaxed font-medium">
                   {goodsSummaryReportText}
                 </div>
               </div>
             </div>
 
             {/* 3. PAYMENT & SETTLEMENT */}
-            <div className="border border-amber-200 rounded-xl p-3 bg-amber-50/20 space-y-2 text-[9.5px]">
-              <div className="flex items-center gap-1.5 border-b border-amber-200 pb-1 text-amber-700 font-black uppercase tracking-wider text-[10px]">
-                <span className="w-3.5 h-3.5 rounded bg-amber-600 text-white text-[8px] font-black flex items-center justify-center">3</span>
+            <div className="border border-amber-200 rounded-xl p-3 bg-amber-50/20 space-y-2 text-[11px]">
+              <div className="flex items-center gap-1.5 border-b border-amber-200 pb-1 text-amber-700 font-black uppercase tracking-wider text-[11px]">
+                <span className="w-3.5 h-3.5 rounded bg-amber-600 text-white text-[11px] font-black flex items-center justify-center leading-none">3</span>
                 <span>{tUi(lang, "sales.payment_settlement", "PAYMENT & SETTLEMENT")}</span>
               </div>
               <div className="space-y-0.5 text-slate-700 leading-tight">
@@ -426,10 +435,10 @@ export function SalesBookingStep5({
               </div>
               {/* Displayed Report Box */}
               <div className="border-t border-amber-200/80 pt-1.5 space-y-0.5">
-                <span className="font-bold text-amber-800 text-[8.5px] uppercase block">
+                <span className="font-bold text-amber-800 text-[11px] uppercase block">
                   Report / Remarks (Payment & Settlement)
                 </span>
-                <div className="p-2 bg-white rounded-lg border border-amber-200/80 text-[9px] text-slate-700 leading-relaxed font-medium">
+                <div className="p-2 bg-white rounded-lg border border-amber-200/80 text-[11px] text-slate-700 leading-relaxed font-medium">
                   {paymentReportText}
                 </div>
               </div>
@@ -438,11 +447,11 @@ export function SalesBookingStep5({
 
           {/* [4] JOURNAL REPORT / NARRATION (Read-Only Narrative in Full) */}
           <div className="border border-red-200 rounded-xl p-3.5 bg-red-50/20 space-y-1.5">
-            <div className="flex items-center gap-1.5 text-red-700 font-black uppercase tracking-wider text-[10.5px]">
-              <span className="w-4 h-4 rounded bg-red-600 text-white text-[9px] font-black flex items-center justify-center">4</span>
+            <div className="flex items-center gap-1.5 text-red-700 font-black uppercase tracking-wider text-[11px]">
+              <span className="w-4 h-4 rounded bg-red-600 text-white text-[11px] font-black flex items-center justify-center leading-none">4</span>
               <span>{tUi(lang, "sales.journal_report_narration", "JOURNAL REPORT / NARRATION")}</span>
             </div>
-            <div className="p-3 bg-white rounded-lg border border-red-200 text-[10px] text-slate-800 leading-relaxed font-medium">
+            <div className="p-3 bg-white rounded-lg border border-red-200 text-[11px] text-slate-800 leading-relaxed font-medium">
               {journalNarrationText}
             </div>
           </div>
