@@ -117,7 +117,9 @@ export function loadingValues(totalFC: number, totalQuantity: number, loadings: 
     loadedQ += Math.max(0, num(l.quantity));
     const left = Math.max(0, total - used);
     const exact = num(l.reportedValueFC);
-    let v = Math.min(exact > 0 ? exact : total * share(l.quantity), left);
+    // a loading that carries no quantity (the "pending" record the system opens when the advance is complete) carries no value either -
+    // its payload is the whole order form, which must never be priced as if the whole bill were loaded
+    let v = Math.max(0, num(l.quantity)) > 0 ? Math.min(exact > 0 ? exact : total * share(l.quantity), left) : 0;
     if (i === all.length - 1 && qty > 0 && loadedQ >= qty - 1e-6) v = left;
     v = round4(v);
     out.push(v);

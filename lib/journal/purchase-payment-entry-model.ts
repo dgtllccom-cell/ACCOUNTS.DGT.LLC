@@ -19,6 +19,7 @@ const num = (v: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
+const round2000 = (v: number) => Math.round((v + Number.EPSILON) * 10000) / 10000;
 
 /** The endorsement / advance percentage of an order — same precedence as the payment API. */
 export function orderPaymentPercent(form: Record<string, unknown> | null | undefined): number {
@@ -58,6 +59,22 @@ export function amountInPurchaseCurrency(input: {
   }
   const bodyRate = rate > 0 ? rate : 1;
   return (amount * bodyRate) / orderRate;
+}
+
+/**
+ * One saved payment row as its amount in the bill's PURCHASE currency and in the LOCAL currency. Rows are stored in the currency they were
+ * posted in (the branch/local currency for payments made through Roznamcha); the row's own rate converts, the order's rate is the fallback.
+ * The two figures are returned side by side and never added together.
+ */
+export function paymentAmountsOf(
+  payment: { amount?: unknown; currency_code?: unknown; exchange_rate?: unknown },
+  orderRate: number,
+  localCurrency: string
+): { purchase: number; local: number } {
+  const amount = num(payment.amount);
+  const rate = num(payment.exchange_rate) > 0 ? num(payment.exchange_rate) : num(orderRate) > 0 ? num(orderRate) : 1;
+  const isLocal = String(payment.currency_code ?? "").toUpperCase() === String(localCurrency ?? "").toUpperCase();
+  return isLocal ? { purchase: amount / rate, local: amount } : { purchase: amount, local: amount * rate };
 }
 
 export type PaymentLimit = {
@@ -129,7 +146,36 @@ export type EntryGoodsLine = EntryGoodsInput & {
   stageFinal: number;
 };
 
+/** one saved payment, in order, with what is left to pay after it - every amount in the PURCHASE currency, the local figure beside it */
+export type BreakdownRow = {
+  id: string;
+  date: string;
+  kind: string;
+  /** the payment in the purchase currency (the bill's own currency) */
+  amount: number;
+  /** the same payment in the local (branch) currency */
+  local: number;
+  /** local ÷ purchase currency, the rate the payment was posted at */
+  rate: number;
+  /** everything paid up to and including this payment */
+  paidToDate: number;
+  /** contract total minus paid to date (never below 0) */
+  remainingAfter: number;
+};
+
 export type EntryModel = {
+  /** the CALCULATED advance of the contract (contract × advance %) - what should be paid, not what was paid */
+  advanceRequired: number;
+  advanceRequiredLocal: number;
+  /** advance-kind payments in total (endorsement + advance) - what WAS paid as advance */
+  advanceKindPaid: number;
+  /** calculated advance minus advance paid (0 once it is covered) */
+  advanceStillDue: number;
+  /** contract total, purchase currency / local currency */
+  contractTotal: number;
+  contractTotalLocal: number;
+  /** every payment in date order with the balance left after it */
+  breakdown: BreakdownRow[];
   /** what the stage requires: endorsement/advance = contract × %, remaining = the balance still to pay */
   requiredAmount: number;
   requiredLocal: number;
@@ -195,7 +241,32 @@ export function buildPaymentEntryModel(input: EntryModelInput): EntryModel {
 
   const status: EntryModel["status"] = balance <= PAYMENT_LIMIT_TOLERANCE && total > 0 ? "paid" : totalPaid > PAYMENT_LIMIT_TOLERANCE ? "partial" : "draft";
 
+  let paidToDate = 0;
+  const breakdown: BreakdownRow[] = chronological.map((p) => {
+    const amount = Math.max(0, num(p.amountPurchase));
+    const local = Math.max(0, num(p.amountLocal)) || amount * rate;
+    paidToDate += amount;
+    return {
+      id: p.id,
+      date: p.date,
+      kind: p.kind,
+      amount: round2(amount),
+      local: round2(local),
+      rate: amount > 0 ? round2000(local / amount) : rate,
+      paidToDate: round2(paidToDate),
+      remainingAfter: round2(Math.max(0, total - paidToDate))
+    };
+  });
+  const advanceKindPaid = round2(endorsementPaid + advancePaid);
+
   return {
+    advanceRequired: required,
+    advanceRequiredLocal: round2(required * rate),
+    advanceKindPaid,
+    advanceStillDue: round2(Math.max(0, required - advanceKindPaid)),
+    contractTotal: round2(total),
+    contractTotalLocal: round2(totalLocal),
+    breakdown,
     requiredAmount,
     requiredLocal: round2(requiredAmount * rate),
     stagePercent: round2(stagePercent),
@@ -220,6 +291,51 @@ export function buildPaymentEntryModel(input: EntryModelInput): EntryModel {
     },
     allocations,
     status
+  };
+}
+
+/**
+ * The eight figures of the compact payment summary shown on top of every payment page, taken straight from the model (which is built from the
+ * saved payment records). Every amount is in the bill's own (purchase) currency; the local figure is only the secondary line - never summed with it.
+ */
+export type PaymentSummaryFigures = {
+  contractTotal: number;
+  contractTotalLocal: number;
+  advancePercent: number;
+  advanceRequired: number;
+  advanceRequiredLocal: number;
+  advancePaid: number;
+  advanceStillDue: number;
+  remainingPaid: number;
+  finalPaid: number;
+  totalPaid: number;
+  totalPaidLocal: number;
+  balance: number;
+  balanceLocal: number;
+  paidPercent: number;
+  /** false when the order says money was paid but no payment row is available to say which kind (advance / remaining / final) it was */
+  splitKnown: boolean;
+};
+
+export function paymentSummaryFigures(m: EntryModel, percent: number, rate: number): PaymentSummaryFigures {
+  const contractTotal = m.goodsTotals.amount > 0 ? m.goodsTotals.amount : m.contractTotal > 0 ? m.contractTotal : round2(m.totalPaid + m.balance);
+  const fx = num(rate) > 0 ? num(rate) : 1;
+  return {
+    contractTotal,
+    contractTotalLocal: m.goodsTotals.finalAmount > 0 ? m.goodsTotals.finalAmount : m.contractTotalLocal > 0 ? m.contractTotalLocal : round2(contractTotal * fx),
+    advancePercent: Math.max(0, num(percent)),
+    advanceRequired: m.advanceRequired,
+    advanceRequiredLocal: m.advanceRequiredLocal,
+    advancePaid: m.advanceKindPaid,
+    advanceStillDue: m.advanceStillDue,
+    remainingPaid: m.remainingPaid,
+    finalPaid: m.creditPaid,
+    totalPaid: m.totalPaid,
+    totalPaidLocal: m.totalPaidLocal,
+    balance: m.balance,
+    balanceLocal: m.balanceLocal,
+    paidPercent: m.paidPercent,
+    splitKnown: m.breakdown.length > 0 || m.totalPaid <= PAYMENT_LIMIT_TOLERANCE
   };
 }
 

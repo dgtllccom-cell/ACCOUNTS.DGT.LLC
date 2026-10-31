@@ -1,5 +1,7 @@
 "use client";
  
+import { PaymentSummaryStrip } from "@/features/journal/components/payment-summary-strip";
+import { buildPaymentEntryModel, orderPaymentPercent, paymentAmountsOf, paymentSummaryFigures } from "@/lib/journal/purchase-payment-entry-model";
 import { pl } from "@/lib/reports/print-label";
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { printStore } from "@/lib/store/print-store";
@@ -4890,6 +4892,31 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               const purchaseTotalHeader = Number(selected.order_total || form.totalAmount || goods.reduce((sum: number, g: any) => sum + Number(g.totalAmount || 0), 0));
               const advanceHeader = Number(selected.paid_amount || form.advanceAmount || ((purchaseTotalHeader * Number(form.advancePercent || 0)) / 100));
               const remainingHeader = Math.max(0, Number(selected.remaining_amount ?? (purchaseTotalHeader - advanceHeader)));
+              // compact payment summary: built from the SAVED payment rows (the order's own totals only when no row is loaded yet)
+              const summaryRows = (Array.isArray(selectedOrderPayments) ? selectedOrderPayments : [])
+                .filter((p: any) => p.kind !== "booking")
+                .map((p: any) => {
+                  const a = paymentAmountsOf(p, exRateHeader, baseCurrency);
+                  return { id: String(p.id), kind: String(p.kind || ""), amountPurchase: a.purchase, amountLocal: a.local, date: String(p.entry_date || p.created_at || "") };
+                });
+              const summaryPaid = summaryRows.length > 0 ? summaryRows.reduce((sum: number, r: any) => sum + r.amountPurchase, 0) : Number(selected.paid_amount || 0);
+              const summaryGoodsLocal = goods.reduce((sum: number, g: any) => sum + Number(g.finalAmount || g.localAmount || 0), 0);
+              const summaryPercent = orderPaymentPercent(form);
+              const summaryModel = buildPaymentEntryModel({
+                mode: "advance",
+                contractTotal: purchaseTotalHeader,
+                contractTotalLocal: summaryGoodsLocal > 0 ? summaryGoodsLocal : purchaseTotalHeader * exRateHeader,
+                rate: exRateHeader,
+                percent: summaryPercent,
+                endorsementOrder: false,
+                goods: [],
+                payments: summaryRows,
+                totalPaid: summaryPaid,
+                balance: Math.max(0, purchaseTotalHeader - summaryPaid)
+              });
+              const summaryStrip = (
+                <PaymentSummaryStrip variant="sales" lang={currentLanguage} currency={poCurrencyHeader} localCurrency={baseCurrency} figures={paymentSummaryFigures(summaryModel, summaryPercent, exRateHeader)} loading={loadingPayments} />
+              );
               const supplierHeader = form.salesAccountName || form.supplierName || form.salesCompanyName || "-";
               const companyHeader = form.purchaseCompanyName || form.salesCompanyName || form.companyName || "-";
               const branchHeader = rowBranchName(selected) || form.branchName || "-";
@@ -4909,15 +4936,11 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 ["Status", statusHeader]
               ];
 
-              const summaryCells = [
-                ["Invoice Amount", money(purchaseTotalHeader, poCurrencyHeader), money(purchaseTotalHeader * exRateHeader, baseCurrency), "text-slate-900 dark:text-slate-100"],
-                ["Advance / Paid", money(advanceHeader, poCurrencyHeader), money(advanceHeader * exRateHeader, baseCurrency), "text-emerald-700 dark:text-emerald-300"],
-                ["Remaining Balance", money(remainingHeader, poCurrencyHeader), money(remainingHeader * exRateHeader, baseCurrency), "text-rose-700 dark:text-rose-300"],
-                ["Final Balance", money(remainingHeader * exRateHeader, baseCurrency), `${poCurrencyHeader} converted to ${baseCurrency}`, "text-blue-700 dark:text-blue-300"]
-              ];
 
               if (!isOrderDetailsExpanded) {
                 return (
+                  <div className="space-y-3">
+                  {summaryStrip}
                   <section className="rounded-xl border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-sm transition-all">
                     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
                       <div className="flex flex-wrap items-center gap-4">
@@ -4955,10 +4978,13 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                       </div>
                     </div>
                   </section>
+                  </div>
                 );
               }
 
               return (
+                <div className="space-y-3">
+                {summaryStrip}
                 <section className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 transition-all">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
                     <div>
@@ -4979,16 +5005,6 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     </div>
                   </div>
 
-                  <div className="grid gap-3 p-4 xl:grid-cols-4">
-                    {summaryCells.map(([label, value, sub, tone]) => (
-                      <div key={label} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/40">
-                        <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">{translateHeader(currentLanguage, String(label))}</div>
-                        <div className={`mt-1 font-mono text-[13px] font-black ${tone}`}>{value}</div>
-                        <div className="mt-1 font-mono text-[11px] font-semibold text-slate-500">{sub}</div>
-                      </div>
-                    ))}
-                  </div>
-
                   <div className="grid gap-3 border-t border-slate-100 p-4 text-xs dark:border-slate-800 lg:grid-cols-4">
                     {detailCells.map(([label, value]) => (
                       <div key={label} className="min-w-0">
@@ -5006,10 +5022,11 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     </div>
                     <div>
                       <span className="block text-[11px] font-black uppercase tracking-wider text-slate-400">{translateHeader(currentLanguage, "Payment Status")}</span>
-                      <span className="block font-extrabold text-slate-850 dark:text-slate-200">Total Paid {money(advanceHeader, poCurrencyHeader)}</span>
+                      <span className="block font-extrabold text-slate-850 dark:text-slate-200">Total Paid {money(summaryPaid, poCurrencyHeader)}</span>
                     </div>
                   </div>
                 </section>
+                </div>
               );
             })()}
             {/* Purchase & Container Loading Context Details Card */}
@@ -5724,6 +5741,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                           </div>
                         </div>
 
+                        {fromLoading && (
                         <div className="grid gap-2 md:grid-cols-4 xl:grid-cols-7">
                           {[
                             ["Purchase Total", money(statementPurchaseForeign, poCurrency), poCurrency, "text-slate-900 dark:text-slate-100"],
@@ -5743,6 +5761,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                             </div>
                           ))}
                         </div>
+                        )}
                       </div>
 
                       {/* Running Ledger Table */}

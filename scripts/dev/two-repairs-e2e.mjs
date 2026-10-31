@@ -74,6 +74,7 @@ const loadingBody = (bill, container, qty, perKg, empty, netKg) => ({
 });
 const order = async (bill) => (await sql`select advance_paid::float adv, remaining_paid::float rem, remaining_due::float due, payment_status::text ps from purchase_orders where id = ${bill.id}`)[0];
 const due = async (bill) => { const r = await api("GET", `/api/erp/purchases/remaining-due?orderNo=${encodeURIComponent(bill.no)}&includeSettled=1`); return (r.j?.data?.bills ?? [])[0] ?? null; };
+const inList = async (bill) => ((await api("GET", "/api/erp/purchases/remaining-due")).j?.data?.bills ?? []).some((b) => b.billNo === bill.no);
 const dueList = async () => (await api("GET", "/api/erp/purchases/remaining-due")).j?.data?.bills ?? [];
 
 const browser = await chromium.launch();
@@ -116,11 +117,11 @@ try {
   await row.locator('[data-testid="ppe-edit"]').click();
   await page.locator('[data-testid="pem-currency"]:visible').waitFor({ timeout: 30000 });
   const ccyShown = await page.locator('[data-testid="pem-currency"]:visible').inputValue();
-  const amtShown = await page.locator('input[type="number"][step="0.01"]:visible').first().inputValue();
+  const amtShown = await page.locator('input[type="number"][step="0.01"]:visible').last().inputValue();
   const eqText = (await page.locator('[data-testid="pem-equivalent"]:visible').innerText().catch(() => "")).replace(/\s+/g, " ");
   check("edit", "[A] the Edit dialog shows what was paid in the BILL's currency: USD 22,000 (not AED 80,740)", ccyShown === "USD" && near(amtShown, 22000, 0.01), `${ccyShown} ${amtShown}`);
   check("edit", "[A] … and what that is in the branch currency: = 80,740.00 AED at rate 3.67", /80,740\.00 AED/.test(eqText) && /3\.67/.test(eqText), eqText);
-  await page.locator('input[type="number"][step="0.01"]:visible').first().fill("23250");
+  await page.locator('input[type="number"][step="0.01"]:visible').last().fill("23250");
   const eq2 = (await page.locator('[data-testid="pem-equivalent"]:visible').innerText().catch(() => "")).replace(/\s+/g, " ");
   check("edit", "[A] typing 23250 (USD) shows = 85,327.50 AED", /85,327\.50 AED/.test(eq2), eq2);
   await page.getByRole("button", { name: /Save Changes/ }).click();
@@ -142,6 +143,7 @@ try {
   check("edit", "[A] exactly one live advance payment - nothing duplicated", noDup[0].n === 1, String(noDup[0].n));
   await openDoc(A, "advance"); // reload
   row = page.locator('[data-testid="ppe-payment-row"]').first();
+  await row.waitFor({ timeout: 60000 });
   cells = (await row.locator("td").allInnerTexts()).map((x) => x.trim());
   check("edit", "[A] after reload the table shows USD | 23,250.00 | 3.6700 | Final Amount 85,327.50", cells.includes("USD") && cells.some((c) => num(c) === 23250) && cells.some((c) => near(num(c), 85327.5, 0.01)) && !cells.some((c) => num(c) === 80740), cells.join(" | "));
 
@@ -175,8 +177,10 @@ try {
   await page.screenshot({ path: `${OUT}/remaining-multi-truck.png` });
   await page.locator(`[data-testid="rdue-pay-loading-${loadsB[0].id}"]`).click();
   await page.locator('[data-testid="payment-entry-document"]').waitFor({ timeout: 120000 });
-  await page.waitForTimeout(6000);
+  await page.waitForFunction(() => [...document.querySelectorAll("input")].some((e) => Math.abs(Number(e.value) - 104287.5) < 0.01), null, { timeout: 60000 }).catch(() => undefined);
   const vals = await page.locator("input").evaluateAll((els) => els.map((e) => e.value));
+  fs.writeFileSync(`${OUT}/prefill-diag.json`, JSON.stringify({ allInputs: await page.locator("input").evaluateAll((els) => els.map((e) => ({ v: e.value, t: e.type, n: e.name || e.id || e.getAttribute("data-testid") || "" }))), slot: (await page.locator("#ppe-entry-slot").innerText().catch(() => "")).slice(0, 1500), url: page.url() }, null, 1));
+  await page.screenshot({ path: `${OUT}/prefill-after-click.png`, fullPage: true });
   check("multi", "[B] Pay this loading opens the bill's payment document with the amount prefilled 104,287.50", vals.some((v) => Math.abs(Number(v) - 104287.5) < 0.01), vals.filter(Boolean).slice(0, 12).join(" | "));
 
   const over = await postPay(B, payBody("remaining", 104288, "USD", { typeDetails: { loadingRecordId: loadsB[0].id } }));
@@ -191,7 +195,7 @@ try {
   check("multi", "[B] … the page shows 54,287.50 after reload", num((await page.locator(`[data-testid="rdue-payable-${B.no}"]`).innerText()).split("USD")[0]) === 54287.5);
   const rest = await postPay(B, payBody("remaining", 54287.5, "USD", { typeDetails: { loadingRecordId: loadsB[0].id } }));
   check("multi", "[B] the rest of truck 1 (USD 54,287.50) posts", rest.status < 300, `${rest.status} ${rest.msg}`);
-  check("multi", "[B] truck 1 is settled: the bill leaves the list (the other trucks are not loaded)", !(await due(B)));
+  check("multi", "[B] truck 1 is settled: the bill leaves the list (the other trucks are not loaded)", !(await inList(B)));
   await openRemainingPage();
   check("multi", "[B] … and the page no longer lists it", await page.locator(`[data-testid="rdue-row-${B.no}"]`).count() === 0);
 
@@ -222,28 +226,30 @@ try {
   await openRemainingPage();
   const payC = await page.locator(`[data-testid="rdue-payable-${C.no}"]`).innerText();
   check("single", "[C] the page lists it with Payable now 173,757.00 USD", num(payC.split("USD")[0]) === 173757, payC.replace(/\s+/g, " "));
-  const lcId = (await sql`select id::text id from purchase_loading_records where purchase_order_id = ${C.id} and deleted_at is null limit 1`)[0].id;
+  const lcId = (await sql`select id::text id from purchase_loading_records where purchase_order_id = ${C.id} and deleted_at is null and coalesce(loaded_quantity, 0) > 0 limit 1`)[0].id;
   const fullC = await postPay(C, payBody("remaining", 173757, "USD", { typeDetails: { loadingRecordId: lcId } }));
   check("single", "[C] paid in full - USD 173,757", fullC.status < 300, `${fullC.status} ${fullC.msg}`);
   const oc2 = await order(C);
   check("single", "[C] the bill is completed: due 0, status completed", near(oc2.due, 0, 0.02) && oc2.ps === "completed", JSON.stringify(oc2));
-  check("single", "[C] and it leaves the list", !(await due(C)));
+  check("single", "[C] and it leaves the list", !(await inList(C)));
 
   // ════════ print: the bill's payment document / receipt carries the right figures ════════
   await openDoc(C, "remaining");
-  const popupP = ctx.waitForEvent("page", { timeout: 60000 }).catch(() => null);
+  const row0Ready = async () => { await page.locator('[data-testid="ppe-payment-row"]').first().waitFor({ timeout: 90000 }).catch(() => undefined); await page.waitForTimeout(1500); };
+  await row0Ready();
   await page.locator('[data-testid="ppe-print"]').click();
-  const popup = await popupP;
-  if (popup) {
-    await popup.waitForLoadState("domcontentloaded").catch(() => undefined);
-    await popup.waitForTimeout(2500);
-    const pt = (await popup.locator("body").innerText().catch(() => "")).replace(/\s+/g, " ");
+  const frameEl = await page.waitForSelector("iframe", { timeout: 90000 }).catch(() => null);
+  const pframe = frameEl ? await frameEl.contentFrame() : null;
+  if (pframe) {
+    await pframe.waitForLoadState("domcontentloaded").catch(() => undefined);
+    await page.waitForTimeout(2500);
+    const pt = (await pframe.locator("body").innerText().catch(() => "")).replace(/\s+/g, " ");
     fs.writeFileSync(`${OUT}/print-C.txt`, pt);
     check("print", "[print] the printed payment document names the bill and carries both payments (USD 19,618 advance, USD 173,757 remaining)", pt.includes(C.no) && /173,757/.test(pt) && /19,618/.test(pt), pt.slice(0, 200));
     check("print", "[print] it does not print the branch-currency figure as a bill-currency amount (no 'USD 637,' / 'USD 71,998')", !/USD\s*637,\d{3}/.test(pt) && !/USD\s*71,998/.test(pt));
-    await popup.close().catch(() => undefined);
+    await page.keyboard.press("Escape").catch(() => undefined);
   } else {
-    check("print", "[print] the print window opened", false, "no popup");
+    check("print", "[print] the print preview opened", false, "no preview iframe");
   }
 } catch (e) {
   check("harness", "unexpected error", false, String(e?.stack || e).slice(0, 400));

@@ -561,6 +561,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           select id::text as id, loaded_quantity, net_weight, report_payload
           from purchase_loading_records
           where purchase_order_id = ${params.id}::uuid and deleted_at is null
+          order by created_at asc, id asc
         `) as any[],
         remainingRows: (await sql`
           select amount, currency_code, exchange_rate, base_currency_amount, loading_record_id::text as loading_record_id
@@ -572,14 +573,19 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       const { loadingRows, remainingRows } = loadedState;
       const toPur = (r: any) => paymentInPurchaseCurrency(r, orderCcy, rateToBase);
       const goodsLines = contractLines(parseJsonish(orderRow.form_data)?.goodsEntries);
-      const loadings = loadingRows.map((r: any) => {
+      // only loadings that really carry a quantity count (the pending record opened after the advance holds the whole order form, not a truck)
+      const loadings = loadingRows.filter((r: any) => Number(r.loaded_quantity || parseJsonish(r.report_payload)?.loadedQuantity || 0) > 0).map((r: any) => {
         const payload = parseJsonish(r.report_payload) || {};
         // the loading's own value: priced from the goods, quantity and weight it really carries at the contract price (not an equal share)
         const reported = Number(payload.totalPurchase || payload.purchaseAmount || 0) || (loadingGoodsValue(goodsLines, r) ?? 0);
         return { id: r.id as string, quantity: Number(r.loaded_quantity || payload.loadedQuantity || 0), reportedValueFC: Number.isFinite(reported) ? reported : 0 };
       });
       if (requestedLoadingId && !loadings.some((l: any) => l.id === requestedLoadingId)) {
-        throw new ApiClientError("This loading record does not belong to the purchase order being paid.", { status: 409, code: "BUSINESS_RULE" });
+        const pendingOnly = loadingRows.some((r: any) => r.id === requestedLoadingId);
+        throw new ApiClientError(
+          pendingOnly ? "No quantity has been loaded in this loading record yet, so nothing is payable for it." : "This loading record does not belong to the purchase order being paid.",
+          { status: 409, code: "BUSINESS_RULE" }
+        );
       }
       const payable = loadedPayable({
         orderTotalFC: orderTotalPur,

@@ -14,8 +14,10 @@ import {
   isEndorsementOrder,
   officeCurrencyForCountryName,
   orderPaymentPercent,
+  paymentSummaryFigures,
   type PaymentEntryMode
 } from "@/lib/journal/purchase-payment-entry-model";
+import { PaymentSummaryStrip } from "@/features/journal/components/payment-summary-strip";
 import React, { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ArrowRight,
@@ -5567,6 +5569,22 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
             const displayEndorsement = historyWithBalance;
 
 
+            // ── compact payment summary: one model for every payment page, built from the saved payment records ──
+            const summaryPercent = isCredit ? 0 : orderPaymentPercent(form);
+            const summaryModel = buildPaymentEntryModel({
+              mode: (activeMode === "remaining" ? "remaining" : "advance") as PaymentEntryMode,
+              contractTotal: statementPurchaseForeign,
+              contractTotalLocal: statementPurchaseLocal,
+              rate: exRate,
+              percent: summaryPercent,
+              endorsementOrder: !isCredit && isEndorsementOrder(form),
+              goods: [],
+              payments: (historyWithBalance as any[]).map((x) => ({ id: String(x.id), kind: String(x.kind || ""), amountPurchase: x.amtUSD, amountLocal: x.amtAED, date: String(x.entry_date || x.created_at || "") })),
+              totalPaid: statTotalPaidFC,
+              balance: statRemainingFC
+            });
+            const summaryFigures = paymentSummaryFigures(summaryModel, summaryPercent, exRate);
+
             // ── Endorsement / Advance / Remaining: the in-page document. Every figure comes from the values computed above, so it shows exactly
             //    what the old modal showed. The legacy markup below stays mounted (hidden) so the entry form, container picker and edit modal keep
             //    their state — they are portaled into the document's slots instead of being duplicated. ──
@@ -5646,6 +5664,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   ledgerLabel={ledgerLabelOf}
                   saving={processingPayment}
                   saveDisabled={Boolean(docLimit?.over)}
+                  paymentsLoading={loadingPayments}
                   onBack={() => setSelectedId("")}
                   onPrint={() => handleOpenA4PDF(selected, true)}
                   onSave={() => {
@@ -5710,38 +5729,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   </div>
                 </div>
 
-                {/* ── 4 COMPACT FINANCIAL KPI HIGHLIGHT STRIP ── */}
-                <div className="shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-2 px-4 pt-3 pb-2 bg-slate-50 dark:bg-[#070e20]">
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-2.5 shadow-xs">
-                    <span className="block text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Total Purchase")}</span>
-                    <div className="font-mono font-black text-sm text-slate-900 dark:text-white mt-0.5">
-                      {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[11px] text-slate-400">{poCurrencyHeader}</span>
-                    </div>
-                    <div className="font-mono text-[11px] text-slate-500">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-2.5 shadow-xs">
-                    <span className="block text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Condition / Stage")}</span>
-                    <div className="font-bold text-xs text-blue-600 dark:text-blue-400 mt-1 truncate">
-                      {isCredit ? "Credit Liability" : `${paymentCondition || "Advance"} (${advancePercent}%)`}
-                    </div>
-                    <div className="text-[11px] text-slate-500 mt-0.5 truncate">{date(selected.created_at)} • {userName}</div>
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-2.5 shadow-xs">
-                    <span className="block text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Total Paid")}</span>
-                    <div className="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400 mt-0.5">
-                      {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[11px] text-emerald-500/70">{poCurrencyHeader}</span>
-                    </div>
-                    <div className="font-mono text-[11px] text-emerald-600/80">{statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
-                  </div>
-
-                  <div className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 p-2.5 shadow-xs">
-                    <span className="block text-[11px] font-bold uppercase text-rose-500">{translateHeader(currentLanguage, "Remaining Balance")}</span>
-                    <div className="font-mono font-black text-sm text-rose-600 dark:text-rose-400 mt-0.5">
-                      {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[11px] text-rose-400">{poCurrencyHeader}</span>
-                    </div>
-                    <div className="font-mono text-[11px] text-rose-500/80">{statRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
+                {/* ── compact payment summary: calculated advance vs paid vs outstanding, the same design on every payment page ── */}
+                <div className="shrink-0 px-4 pt-3 pb-2 bg-slate-50 dark:bg-[#070e20]">
+                  <PaymentSummaryStrip lang={currentLanguage} currency={poCurrencyHeader} localCurrency={baseCurrency} figures={summaryFigures} loading={loadingPayments} />
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+                    <span className="font-bold text-blue-600 dark:text-blue-400">{translateHeader(currentLanguage, isCredit ? "Credit Liability" : (paymentCondition || "Advance"))}</span>
+                    <span>{date(selected.created_at)} • {userName}</span>
                   </div>
                 </div>
 

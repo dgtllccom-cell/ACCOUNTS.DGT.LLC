@@ -1,5 +1,6 @@
 "use client";
 
+import { PaymentSummaryStrip } from "@/features/journal/components/payment-summary-strip";
 import { useEffect, useState } from "react";
 import {
   AlertTriangle,
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t, type UiKey } from "@/lib/i18n/ui";
+import { paymentSummaryFigures } from "@/lib/journal/purchase-payment-entry-model";
 import type { EntryModel, PaymentEntryMode, PaymentLimit } from "@/lib/journal/purchase-payment-entry-model";
 
 /**
@@ -85,6 +87,8 @@ export type PaymentEntryDocumentProps = {
   ledgerLabel: (id?: string | null) => string;
   saving: boolean;
   saveDisabled: boolean;
+  /** the saved payment rows are still being fetched */
+  paymentsLoading?: boolean;
   onBack: () => void;
   onPrint: () => void;
   onSave: () => void;
@@ -167,9 +171,12 @@ export function PurchasePaymentEntryDocument(p: PaymentEntryDocumentProps) {
   const statusText = tt(`status_${m.status}`, m.status === "draft" ? "Draft" : m.status === "partial" ? "Partly paid" : "Fully paid");
 
   // the entries the current stage is about: endorsement/advance → advance-kind payments, remaining → remaining-kind payments
-  const shown = p.payments.filter((x) => (p.mode === "remaining" ? x.kind === "remaining" : x.kind === "advance"));
+  const dateOf = (x: EntryPaymentRow) => String(x.entry_date || x.created_at || "");
+  const shown = [...p.payments].sort((a, b) => dateOf(a).localeCompare(dateOf(b)));
+  const remainingAfter = new Map(m.breakdown.map((b) => [b.id, b.remainingAfter]));
+  const figures = paymentSummaryFigures(m, p.percent, p.rate);
   const shownTotals = shown.reduce((a, x) => ({ po: a.po + x.amtUSD, local: a.local + x.amtAED }), { po: 0, local: 0 });
-  const entriesTitle = tt(`entries_title_${p.mode}`, "Payment Entries");
+  const entriesTitle = tt("breakdown_title", "Payment breakdown");
   const kindOf = (x: EntryPaymentRow) => {
     if (x.kind === "remaining") return tt("kind_remaining", "Remaining");
     if (x.kind === "credit") return tt("kind_credit", "Credit");
@@ -182,7 +189,7 @@ export function PurchasePaymentEntryDocument(p: PaymentEntryDocumentProps) {
   const cr = crPayment;
   const crRelated = cr ? p.ledgerLabel(cr.credit_ledger_id) : "";
 
-  const th = "border-b border-slate-200 bg-slate-100 px-2 py-2 text-center align-middle text-[11px] font-bold leading-tight text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
+  const th = "max-w-[100px] border-b border-slate-200 bg-slate-100 px-2 py-2 text-center align-middle text-[11px] font-bold leading-tight text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
   const td = "whitespace-nowrap border-b border-slate-100 px-2 py-2 text-center text-xs text-slate-800 dark:border-slate-800 dark:text-slate-100";
   const num = "tabular-nums";
 
@@ -217,23 +224,98 @@ export function PurchasePaymentEntryDocument(p: PaymentEntryDocumentProps) {
         </div>
       </div>
 
+      {/* compact payment summary: calculated advance vs paid vs outstanding, from the saved payment records */}
+      <PaymentSummaryStrip lang={p.lang} currency={p.purchaseCurrency} localCurrency={p.baseCurrency} figures={figures} loading={p.paymentsLoading} />
+
+      {/* payment breakdown: every saved payment in date order with the balance left after it */}
+      <section className="overflow-hidden rounded-xl border border-rose-200 bg-white shadow-xs dark:border-rose-900/60 dark:bg-slate-900">
+        <header className="flex flex-wrap items-center justify-between gap-2 bg-rose-50 px-4 py-3 dark:bg-rose-950/30">
+          <h2 className="flex items-center gap-2 text-base font-extrabold text-rose-900 dark:text-rose-200">
+            <Wallet className="h-5 w-5" aria-hidden />
+            {entriesTitle}
+          </h2>
+          <button type="button" data-testid="ppe-new-payment" onClick={p.onNewPayment} className="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg bg-rose-600 px-3.5 text-xs font-bold text-white shadow-xs hover:bg-rose-700">
+            <Plus className="h-4 w-4" aria-hidden />
+            {tt("btn_new_payment", "New Payment")}
+          </button>
+        </header>
+        <div className="overflow-x-auto">
+          <table data-no-cards className="w-full min-w-[960px] border-collapse [&_td]:!px-1.5 [&_th]:!px-1.5">
+            <thead>
+              <tr>
+                <th scope="col" className={th}>#</th>
+                <th scope="col" className={th}>{tt("col_date", "Date")}</th>
+                <th scope="col" className={th}>{tt("col_user", "User Name")}</th>
+                <th scope="col" className={th}>{tt("col_roznamcha_type", "Roznamcha Type")}</th>
+                <th scope="col" className={th}>{tt("col_roznamcha_no", "Roznamcha No.")}</th>
+                <th scope="col" className={th}>{tt("col_type", "Type")}</th>
+                <th scope="col" className={cn(th, "text-start")}>{tt("col_details", "Details")}</th>
+                <th scope="col" className={th}>{tt("col_currency", "Currency")}</th>
+                <th scope="col" className={th}>{tt("col_amount", "Amount")}</th>
+                <th scope="col" className={th}>{tt("col_exchange_rate", "Exchange Rate")}</th>
+                <th scope="col" className={th}>{tt("col_final_local", "Final Amount (local)")}</th>
+                <th scope="col" className={th}>{tt("col_remaining_after", "Remaining after payment")}<span className="block text-[10px] font-semibold text-slate-500" dir="ltr">({p.purchaseCurrency})</span></th>
+                <th scope="col" className={th}>{tt("col_cr_details", "CR Details")}</th>
+                <th scope="col" className={th}>{tt("col_action", "Action")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shown.length === 0 && (
+                <tr><td colSpan={14} className={cn(td, "py-6 text-slate-500")}>{tt("no_payments", "No payments recorded for this order yet.")}</td></tr>
+              )}
+              {shown.map((x, i) => (
+                <tr key={x.id} data-testid="ppe-payment-row" className="odd:bg-white even:bg-slate-50/60 dark:odd:bg-slate-900 dark:even:bg-slate-900/60">
+                  <td className={td}>{i + 1}</td>
+                  <td className={td}><span dir="ltr">{day(x.entry_date || x.created_at)}</span></td>
+                  <td className={td}>{dash(x.roznamcha_entries?.profiles?.full_name)}</td>
+                  <td className={cn(td, "max-w-[90px] truncate")} title={p.ledgerLabel(x.credit_ledger_id)}>{dash(p.ledgerLabel(x.credit_ledger_id))}</td>
+                  <td className={cn(td, "max-w-[100px] truncate")} title={String(x.reference_no || x.roznamcha_entries?.super_admin_serial_number || "")}><span dir="ltr">{dash(x.reference_no || x.roznamcha_entries?.super_admin_serial_number)}</span></td>
+                  <td className={td}>{kindOf(x)}</td>
+                  <td className={cn(td, "max-w-[80px] truncate text-start")} title={x.narration || ""}>{dash(x.narration)}</td>
+                  <td className={td}>{dash(billCurrencyOf(x, p.purchaseCurrency))}</td>
+                  <td className={cn(td, num)} dir="ltr">{fmt(billAmountOf(x))}</td>
+                  <td className={cn(td, num)} dir="ltr">{fmt(x.exchange_rate, 4)}</td>
+                  <td className={cn(td, num, "font-bold")} dir="ltr">{fmt(x.amtAED)}</td>
+                  <td className={cn(td, num, "font-bold text-rose-700 dark:text-rose-300")} dir="ltr" data-testid="ppe-remaining-after">{fmt(remainingAfter.get(x.id) ?? m.balance)}</td>
+                  <td className={td}>
+                    <button type="button" data-testid="ppe-cr-details" onClick={() => setCrPayment(x)} className="inline-grid h-8 w-8 place-items-center rounded-md text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40" title={tt("view_cr", "View CR / DR details")} aria-label={tt("view_cr", "View CR / DR details")}>
+                      <Pin className="h-4 w-4" aria-hidden />
+                    </button>
+                  </td>
+                  <td className={td}>
+                    <button type="button" data-testid="ppe-edit" onClick={() => p.onEdit(x)} className="inline-flex h-8 items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
+                      <Pencil className="h-3 w-3" aria-hidden />
+                      {tt("btn_edit", "Edit")}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            {shown.length > 0 && (
+              <tfoot>
+                <tr className="bg-rose-50 font-extrabold text-rose-900 dark:bg-rose-950/30 dark:text-rose-200">
+                  <td className={td} colSpan={8}>{tt("col_total", "Total")}</td>
+                  <td className={cn(td, num)} dir="ltr">{fmt(shownTotals.po)} <span className="text-[10px] font-semibold">{p.purchaseCurrency}</span></td>
+                  <td className={td}>—</td>
+                  <td className={cn(td, num)} dir="ltr">{fmt(shownTotals.local)} <span className="text-[10px] font-semibold">{p.baseCurrency}</span></td>
+                  <td className={cn(td, num)} dir="ltr">{fmt(m.balance)} <span className="text-[10px] font-semibold">{p.purchaseCurrency}</span></td>
+                  <td className={td} colSpan={2} />
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      </section>
+
+
       {/* four info cards */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         <InfoCard tone="blue" icon={<FileText className="h-4 w-4" />} title={tt("card_payment_info", "Payment Info")}>
           <Row label={tt("f_payment_no", "Payment No.")}><span dir="ltr">{p.orderNo}</span></Row>
           <Row label={tt("f_purchase_account", "Purchase Account")}>{dash(p.purchaseAccount)}</Row>
           <Row label={tt("f_location", "Location")}>{dash(p.countryName)}</Row>
           <Row label={tt("f_branch", "Branch")}>{dash(p.branchName)}</Row>
           <Row label={tt("f_payment_date", "Payment Date")}><span dir="ltr">{day(p.paymentDate)}</span></Row>
-        </InfoCard>
-
-        <InfoCard tone="green" icon={<BadgeDollarSign className="h-4 w-4" />} title={`${tt("card_amount_summary", "Amount Summary")} (${p.purchaseCurrency})`}>
-          <Row label={tt("f_total_contract", "Total Contract Amount")} strong><span dir="ltr" className={num}>{fmt(m.goodsTotals.amount > 0 ? m.goodsTotals.amount : m.totalPaid + m.balance)}</span></Row>
-          {p.endorsementOrder && <Row label={tt("f_endorsement_paid", "Total Endorsement Paid")}><span dir="ltr" className={num}>{fmt(m.endorsementPaid)}</span></Row>}
-          <Row label={tt("f_advance_paid", "Total Advance Paid")}><span dir="ltr" className={num}>{fmt(m.advancePaid)}</span></Row>
-          <Row label={tt("f_remaining_paid", "Total Remaining Paid")}><span dir="ltr" className={num}>{fmt(m.remainingPaid)}</span></Row>
-          <Row label={tt("f_total_paid", "Total Paid")} strong tone="green"><span dir="ltr" className={num}>{fmt(m.totalPaid)}</span></Row>
-          <Row label={tt("f_balance", "Balance")} strong tone={m.balance > 0.01 ? "red" : "green"}><span dir="ltr" className={num}>{fmt(m.balance)}</span></Row>
         </InfoCard>
 
         <InfoCard tone="orange" icon={<UserRound className="h-4 w-4" />} title={tt("card_supplier", "Supplier Details")}>
@@ -347,103 +429,9 @@ export function PurchasePaymentEntryDocument(p: PaymentEntryDocumentProps) {
         </div>
       </section>
 
-      {/* payment entries */}
-      <section className="overflow-hidden rounded-xl border border-rose-200 bg-white shadow-xs dark:border-rose-900/60 dark:bg-slate-900">
-        <header className="flex flex-wrap items-center justify-between gap-2 bg-rose-50 px-4 py-3 dark:bg-rose-950/30">
-          <h2 className="flex items-center gap-2 text-base font-extrabold text-rose-900 dark:text-rose-200">
-            <Wallet className="h-5 w-5" aria-hidden />
-            {entriesTitle}
-          </h2>
-          <button type="button" data-testid="ppe-new-payment" onClick={p.onNewPayment} className="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg bg-rose-600 px-3.5 text-xs font-bold text-white shadow-xs hover:bg-rose-700">
-            <Plus className="h-4 w-4" aria-hidden />
-            {tt("btn_new_payment", "New Payment")}
-          </button>
-        </header>
-        <div className="overflow-x-auto">
-          <table data-no-cards className="w-full min-w-[960px] border-collapse [&_td]:!px-1.5 [&_th]:!px-1.5">
-            <thead>
-              <tr>
-                <th scope="col" className={th}>#</th>
-                <th scope="col" className={th}>{tt("col_date", "Date")}</th>
-                <th scope="col" className={th}>{tt("col_user", "User Name")}</th>
-                <th scope="col" className={th}>{tt("col_roznamcha_type", "Roznamcha Type")}</th>
-                <th scope="col" className={th}>{tt("col_roznamcha_no", "Roznamcha No.")}</th>
-                <th scope="col" className={th}>{tt("col_type", "Type")}</th>
-                <th scope="col" className={cn(th, "text-start")}>{tt("col_details", "Details")}</th>
-                <th scope="col" className={th}>{tt("col_currency", "Currency")}</th>
-                <th scope="col" className={th}>{tt("col_amount", "Amount")}</th>
-                <th scope="col" className={th}>{tt("col_exchange_rate", "Exchange Rate")}</th>
-                <th scope="col" className={th}>{tt("col_final_local", "Final Amount (local)")}</th>
-                <th scope="col" className={th}>{tt("col_cr_details", "CR Details")}</th>
-                <th scope="col" className={th}>{tt("col_action", "Action")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shown.length === 0 && (
-                <tr><td colSpan={13} className={cn(td, "py-6 text-slate-500")}>{tt("no_payments", "No payments recorded for this order yet.")}</td></tr>
-              )}
-              {shown.map((x, i) => (
-                <tr key={x.id} data-testid="ppe-payment-row" className="odd:bg-white even:bg-slate-50/60 dark:odd:bg-slate-900 dark:even:bg-slate-900/60">
-                  <td className={td}>{i + 1}</td>
-                  <td className={td}><span dir="ltr">{day(x.entry_date || x.created_at)}</span></td>
-                  <td className={td}>{dash(x.roznamcha_entries?.profiles?.full_name)}</td>
-                  <td className={cn(td, "max-w-[110px] truncate")} title={p.ledgerLabel(x.credit_ledger_id)}>{dash(p.ledgerLabel(x.credit_ledger_id))}</td>
-                  <td className={td}><span dir="ltr">{dash(x.reference_no || x.roznamcha_entries?.super_admin_serial_number)}</span></td>
-                  <td className={td}>{kindOf(x)}</td>
-                  <td className={cn(td, "max-w-[150px] truncate text-start")} title={x.narration || ""}>{dash(x.narration)}</td>
-                  <td className={td}>{dash(billCurrencyOf(x, p.purchaseCurrency))}</td>
-                  <td className={cn(td, num)} dir="ltr">{fmt(billAmountOf(x))}</td>
-                  <td className={cn(td, num)} dir="ltr">{fmt(x.exchange_rate, 4)}</td>
-                  <td className={cn(td, num, "font-bold")} dir="ltr">{fmt(x.amtAED)}</td>
-                  <td className={td}>
-                    <button type="button" data-testid="ppe-cr-details" onClick={() => setCrPayment(x)} className="inline-grid h-8 w-8 place-items-center rounded-md text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40" title={tt("view_cr", "View CR / DR details")} aria-label={tt("view_cr", "View CR / DR details")}>
-                      <Pin className="h-4 w-4" aria-hidden />
-                    </button>
-                  </td>
-                  <td className={td}>
-                    <button type="button" data-testid="ppe-edit" onClick={() => p.onEdit(x)} className="inline-flex h-8 items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
-                      <Pencil className="h-3 w-3" aria-hidden />
-                      {tt("btn_edit", "Edit")}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            {shown.length > 0 && (
-              <tfoot>
-                <tr className="bg-rose-50 font-extrabold text-rose-900 dark:bg-rose-950/30 dark:text-rose-200">
-                  <td className={td} colSpan={8}>{tt("col_total", "Total")}</td>
-                  <td className={cn(td, num)} dir="ltr">{fmt(shownTotals.po)} <span className="text-[10px] font-semibold">{p.purchaseCurrency}</span></td>
-                  <td className={td}>—</td>
-                  <td className={cn(td, num)} dir="ltr">{fmt(shownTotals.local)} <span className="text-[10px] font-semibold">{p.baseCurrency}</span></td>
-                  <td className={td} colSpan={2} />
-                </tr>
-              </tfoot>
-            )}
-          </table>
-        </div>
-      </section>
-
       {/* the existing entry form + container selection are portaled in here */}
       <section id="ppe-container-slot" className="empty:hidden" />
       <section id="ppe-entry-slot" data-testid="ppe-entry-slot" aria-label={tt("entry_section", "New payment entry")} className="scroll-mt-20" />
-
-      {/* totals band */}
-      <section data-testid="ppe-band" className="grid grid-cols-1 gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-slate-900 shadow-xs dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-slate-100 md:grid-cols-2 xl:grid-cols-4">
-        {[
-          { key: "band_contract", po: m.goodsTotals.amount > 0 ? m.goodsTotals.amount : m.totalPaid + m.balance, local: m.goodsTotals.finalAmount > 0 ? m.goodsTotals.finalAmount : (m.totalPaid + m.balance) * p.rate, tone: "text-blue-700 dark:text-blue-300", show: true },
-          { key: "band_endorsement", po: m.endorsementPaid, local: m.endorsementPaid * p.rate, tone: "text-emerald-700 dark:text-emerald-300", show: p.endorsementOrder },
-          { key: "band_advance", po: m.advancePaid, local: m.advancePaid * p.rate, tone: "text-rose-700 dark:text-rose-300", show: true },
-          { key: "band_remaining", po: m.remainingPaid, local: m.remainingPaid * p.rate, tone: "text-violet-700 dark:text-violet-300", show: true },
-          { key: "band_balance", po: m.balance, local: m.balanceLocal, tone: m.balance > 0.01 ? "text-rose-700 dark:text-rose-300" : "text-emerald-700 dark:text-emerald-300", show: true }
-        ].filter((b) => b.show).map((b) => (
-          <div key={b.key} className="min-w-0">
-            <div className="text-xs font-bold text-slate-700 dark:text-slate-300">{tt(b.key, b.key)}</div>
-            <div className={cn("mt-1 text-lg font-extrabold tabular-nums", b.tone)} dir="ltr">{p.purchaseCurrency} {fmt(b.po)}</div>
-            <div className={cn("text-sm font-bold tabular-nums", b.tone)} dir="ltr">{p.baseCurrency} {fmt(b.local)}</div>
-          </div>
-        ))}
-      </section>
 
       {/* CR / DR drawer */}
       {cr && (

@@ -145,7 +145,7 @@ describe("loadedPayable — Remaining Payment reflects only the loaded quantity"
   });
 });
 
-import { advanceClearance, loadingPaymentStates } from "@/lib/purchases/loaded-payable";
+import { advanceClearance, loadingPaymentStates, loadingValues } from "@/lib/purchases/loaded-payable";
 
 describe("advanceClearance — purchase currency only (REAL Production bills)", () => {
   // AE-001-0007: USD 1,158,750, 10 % advance, USD 115,875 paid (order_total in AED = 4,252,612.5 — the old comparison used this)
@@ -201,5 +201,35 @@ describe("loadingPaymentStates — 2,000 cartons, 800 loaded", () => {
   it("a fully settled bill completes every loading", () => {
     const s = loadingPaymentStates({ ...base, loadings: [{ id: "L1", quantity: 800 }], remainingPayments: [], orderRemainingDueFC: 0 });
     expect(s[0].complete).toBe(true);
+  });
+});
+
+describe("pending placeholder loading (REGRESSION: the record opened after the advance holds the WHOLE order form and was priced as the whole bill)", () => {
+  // 1,158,750 bill, 10 % advance (115,875) paid, 22,500 cartons booked; one truck of 2,250 cartons worth 115,875 is loaded
+  const bill = { orderTotalFC: 1158750, advancePaidFC: 115875, totalQuantity: 22500 };
+  const pending = { id: "pending", quantity: 0, reportedValueFC: 1158750 }; // whole-order payload priced by the goods lines
+  const truck = { id: "truck1", quantity: 2250, reportedValueFC: 115875 };
+
+  it("a loading with no quantity is worth nothing, whatever its payload says - in either row order", () => {
+    expect(loadingValues(1158750, 22500, [pending, truck])).toEqual([0, 115875]);
+    expect(loadingValues(1158750, 22500, [truck, pending])).toEqual([115875, 0]);
+  });
+  it("the truck still owes value - its advance share (104,287.50) and nothing else is payable", () => {
+    for (const loadings of [[pending, truck], [truck, pending]]) {
+      const p = loadedPayable({ ...bill, loadings, remainingPaidAllFC: 0, loadingId: "truck1", remainingPaidThisLoadingFC: 0 });
+      expect(p.loadedQuantity).toBe(2250);
+      expect(p.loadedOutstandingFC).toBeCloseTo(104287.5, 2);
+      expect(p.loadingOutstandingFC).toBeCloseTo(104287.5, 2);
+    }
+  });
+  it("loadingPaymentStates agrees: the pending record owes nothing, the truck owes 104,287.50", () => {
+    const states = loadingPaymentStates({ ...bill, loadings: [pending, truck], remainingPayments: [] });
+    expect(states[0].outstandingFC).toBe(0);
+    expect(states[1].valueFC).toBe(115875);
+    expect(states[1].outstandingFC).toBeCloseTo(104287.5, 2);
+  });
+  it("paying USD 500,000 against the whole bill is above what is loaded - the gate figure is 104,287.50, not 1,042,875", () => {
+    const p = loadedPayable({ ...bill, loadings: [pending, truck], remainingPaidAllFC: 0 });
+    expect(500000 > p.loadedOutstandingFC + 0.05).toBe(true);
   });
 });
