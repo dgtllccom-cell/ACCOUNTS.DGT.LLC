@@ -116,6 +116,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/clearing-agent/other-expenses": ["expenses_other:read", "expenses:read", "route:/dashboard/clearing-agent/other-expenses"],
   "/dashboard/clearing-agent/truck-freight-bill": ["expenses:read", "expenses:create", "route:/dashboard/clearing-agent/truck-freight-bill"],
   "/dashboard/settings/bank": ["banks:read", "route:/dashboard/settings/bank"],
+  "/dashboard/settings/transfer-modes": ["settings:read", "route:/dashboard/settings/transfer-modes"],
   "/dashboard/roznamcha/reports/bank": ["banks:read", "roznamcha:read", "route:/dashboard/roznamcha/reports/bank"],
   "/dashboard/roznamcha/money-exchange": ["exchange_rates:read", "route:/dashboard/roznamcha/money-exchange"],
   "/dashboard/reports/exchange-rate": ["exchange_rates:read", "route:/dashboard/reports/exchange-rate"],

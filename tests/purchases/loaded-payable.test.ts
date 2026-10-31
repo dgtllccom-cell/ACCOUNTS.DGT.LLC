@@ -129,10 +129,10 @@ describe("loadedPayable — Remaining Payment reflects only the loaded quantity"
     expect(second.loadingOutstandingFC).toBe(24000);
     expect(second.loadedOutstandingFC).toBe(24000);
   });
-  it("a weight-priced container may be worth more than its quantity share: its recorded value is honoured, never above the order total", () => {
-    // 200 of 500 bales but 45 % of the weight → recorded value 36,000 (quantity share would be 32,000)
+  it("a weight-priced container may be worth more than its quantity share: its own value is used, never above the order total", () => {
+    // 200 of 500 bales but 45 % of the weight → value 36,000 (quantity share would be 32,000); the advance follows the VALUE (40,000 × 36,000 / 80,000)
     const r = loadedPayable({ ...base, loadings: [load("L1", 200, 36000)], remainingPaidAllFC: 0, loadingId: "L1" });
-    expect(r.loadingOutstandingFC).toBe(36000 - 16000); // value − advance share (40,000 × 0.4)
+    expect(r.loadingOutstandingFC).toBe(36000 - 18000);
     const capped = loadedPayable({ ...base, loadings: [load("L1", 500, 999999)], remainingPaidAllFC: 0 });
     expect(capped.loadedOutstandingFC).toBe(40000);
   });

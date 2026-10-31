@@ -78,7 +78,11 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     // 3. Reverse the old Roznamcha Entry using the admin RPC
     // Function signature: reverse_roznamcha_entry(p_original_entry_id uuid, p_reason text, p_approval_request_id uuid default null)
     const adminSupabase = createSupabaseAdminClient() as any;
-    const { error: reverseError } = await adminSupabase.rpc("reverse_roznamcha_entry", {
+    // the Roznamcha domain of the entry being replaced (business / shipping) - the reversal and the re-posted entry must carry it too,
+    // otherwise they are stamped with no domain and drop out of (or leak into) the domain-filtered Roznamcha views
+    const { data: originalEntry } = await adminSupabase.from("roznamcha_entries").select("operational_domain").eq("id", existingPayment.roznamcha_entry_id).maybeSingle();
+    const entryDomain: string = originalEntry?.operational_domain || "business";
+    const { data: reversalEntryId, error: reverseError } = await adminSupabase.rpc("reverse_roznamcha_entry", {
       p_original_entry_id: existingPayment.roznamcha_entry_id,
       p_reason: "Edited Payment Journal Entry",
       p_approval_request_id: null
@@ -116,6 +120,17 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 
     if (postError) {
       throw new Error(`Failed to post edited payment: ${postError.message}`);
+    }
+
+    // carry over what the posting function does not know: the domain of the Roznamcha entries and the loading a Remaining payment belongs to
+    const { data: newPayment } = await adminSupabase.from("purchase_order_payments").select("roznamcha_entry_id").eq("id", newPaymentId).maybeSingle();
+    const entryIds = [reversalEntryId, newPayment?.roznamcha_entry_id].filter(Boolean);
+    if (entryIds.length) {
+      await adminSupabase.from("roznamcha_entries").update({ operational_domain: entryDomain }).in("id", entryIds).is("operational_domain", null);
+    }
+    if (existingPayment.loading_record_id) {
+      await adminSupabase.from("purchase_order_payments").update({ loading_record_id: existingPayment.loading_record_id }).eq("id", newPaymentId);
+      await adminSupabase.rpc("recalc_purchase_order_payment_totals", { p_purchase_order_id: params.id });
     }
 
     await writeAuditLog({

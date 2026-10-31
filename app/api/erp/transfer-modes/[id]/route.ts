@@ -2,6 +2,7 @@ import { localizeRecordFields, wantsRawRecord } from "@/lib/i18n/localize-record
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { NextRequest } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertTransferMode, canManageTransferModes, canReadTransferModes } from "@/lib/api/transfer-mode-access";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import type { TransferModeRow } from "../route";
@@ -11,7 +12,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireErpSession();
+    assertTransferMode(canReadTransferModes(await requireErpSession()), "settings:read or roznamcha:read");
     const { id } = await context.params;
 
     const row = await withLocalPg(async (sql) => {
@@ -59,7 +60,7 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireErpSession();
+    assertTransferMode(canManageTransferModes(await requireErpSession()), "settings:update");
     const { id } = await context.params;
     const body = await request.json();
 
@@ -112,7 +113,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireErpSession();
+    assertTransferMode(canManageTransferModes(await requireErpSession()), "settings:update");
     const { id } = await context.params;
 
     const deleted = await withLocalPg(async (sql) => {

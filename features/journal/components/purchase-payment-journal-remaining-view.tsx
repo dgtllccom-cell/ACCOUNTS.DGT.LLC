@@ -46,6 +46,7 @@ import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
 import { PaymentApprovedHeader, ordersToPayRows } from "@/features/purchases/components/purchase-payments-approved-header";
 import { PaymentModuleHeader, purchaseOrdersToModuleRows, useModulePayments } from "./payment-module-approved-header";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { RemainingDueBills } from "./remaining-due-bills";
 
 type FlatPayment = {
   id: string;
@@ -669,6 +670,20 @@ export function PurchasePaymentJournalRemainingView({
         </button>
       </div>
       </>
+      )}
+
+      {/* The Remaining Payment page: first the loaded bills that can be paid now (what is payable per loading), then the register of Remaining payments */}
+      {headerKind === "module" && (
+        <RemainingDueBills
+          lang={lang}
+          search={query}
+          countryFilter={countryFilter}
+          branchFilter={branchFilter}
+          onPay={(orderId, loadingId) => {
+            window.dispatchEvent(new CustomEvent("remaining-pay", { detail: { orderId, loadingId } }));
+            onOpenFullDetails(orderId);
+          }}
+        />
       )}
 
       {error ? (

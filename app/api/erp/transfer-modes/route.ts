@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { assertTransferMode, canAddTransferModes, canManageTransferModes, canReadTransferModes } from "@/lib/api/transfer-mode-access";
 
 export type TransferModeRow = {
   id: string;
@@ -20,7 +21,7 @@ export type TransferModeRow = {
 
 export async function GET(request: NextRequest) {
   try {
-    await requireErpSession();
+    assertTransferMode(canReadTransferModes(await requireErpSession()), "settings:read or roznamcha:read");
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search")?.trim().toLowerCase() || "";
     const includeInactive = searchParams.get("includeInactive") === "true";
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
       return results;
     });
 
-    let paged: any[] = rows ? Array.from(rows) : [];
+    let paged: any[] = rows || [];
     if (paged.length > 0 && !wantsRawRecord(request)) {
       const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
       paged = await localizeRecordFields<any>(paged, "transfer_modes", ["name", "reference_label", "reference_placeholder", "description"], lang);
@@ -61,7 +62,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    assertTransferMode(canAddTransferModes(session), "roznamcha:post or settings:update");
+    const canManage = canManageTransferModes(session);
     const body = await request.json();
     const name = String(body.name || "").trim();
     if (!name) {
@@ -84,6 +87,11 @@ export async function POST(request: NextRequest) {
         WHERE lower(name) = lower(${name}) AND deleted_at IS NULL
         LIMIT 1
       `;
+      if (existing && !canManage) {
+        // a cash-entry user adding a name that already exists just gets the existing mode - only a Settings editor changes it
+        const [same] = await sql<TransferModeRow[]>`SELECT * FROM public.transfer_modes WHERE id = ${existing.id}::uuid`;
+        return same;
+      }
       if (existing) {
         // Return existing if duplicate name
         const [updated] = await sql<TransferModeRow[]>`

@@ -56,12 +56,26 @@ export function PaymentEditModal({
   const isCountryAdmin = session?.roles?.includes("COUNTRY_ADMIN") || session?.roles?.includes("COUNTRY_MANAGER");
   const isBranchAdmin = !isSuperAdmin && !isCountryAdmin;
 
+  const poCurrency = String(row?.purchase_currency || row?.currency_code || "USD").toUpperCase();
+  const localCurrency = String(baseCurrency || "").toUpperCase();
+  const round4 = (n: number) => Math.round(n * 10000) / 10000;
+
   useEffect(() => {
     if (open && payment) {
       setEntryDate(payment.entry_date?.split("T")[0] || new Date().toISOString().split("T")[0]);
-      setAmount(payment.amount || "");
-      setCurrencyCode(payment.currency_code || "USD");
-      setExchangeRate(payment.exchange_rate || 1);
+      // The posting function stores a payment in the branch currency (a payment of USD 23,250 is saved as AED 85,327.50). Editing that stored
+      // figure as if it were the payment is what turned USD 23,250 into AED 23,250. So the dialog shows what was paid in the BILL's currency.
+      const storedCcy = String(payment.currency_code || "").toUpperCase();
+      const storedRate = Number(payment.exchange_rate || row?.exchange_rate || 1) || 1;
+      const storedAmount = Number(payment.base_currency_amount ?? payment.amount ?? 0);
+      if (storedCcy && storedCcy !== poCurrency && storedRate > 0) {
+        setAmount(round4(storedAmount / storedRate));
+        setCurrencyCode(poCurrency);
+      } else {
+        setAmount(payment.amount || "");
+        setCurrencyCode(storedCcy || poCurrency);
+      }
+      setExchangeRate(payment.exchange_rate || row?.exchange_rate || 1);
       setReferenceNo(payment.reference_no || "");
       setNarration(payment.narration || "");
       setDebitLedgerId(payment.debit_ledger_id || "");
@@ -197,12 +211,38 @@ export function PaymentEditModal({
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs font-bold uppercase text-slate-500">{t(lang, "purchase.th_amount", "Amount")}<span className="text-red-500">*</span></Label>
           <Input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required className="h-9 text-sm font-bold" />
+          {localCurrency && currencyCode !== localCurrency && Number(amount) > 0 && Number(exchangeRate) > 0 && (
+            <p className="text-[11px] font-semibold text-slate-500" dir="ltr" data-testid="pem-equivalent">
+              {t(lang, "pem.pem_equals_local", "= {amount} {ccy} at rate {rate}")
+                .replace("{amount}", (Math.round(Number(amount) * Number(exchangeRate) * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
+                .replace("{ccy}", localCurrency)
+                .replace("{rate}", String(Number(exchangeRate)))}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs font-bold uppercase text-slate-500">{t(lang, "pem.pem_currency_rate", "Currency & Rate")}</Label>
           <div className="flex gap-2">
-            <Input value={currencyCode} onChange={e => setCurrencyCode(e.target.value.toUpperCase())} className="w-20 font-bold h-9 text-sm" />
+            <select
+              value={currencyCode}
+              data-testid="pem-currency"
+              onChange={(e) => {
+                const next = e.target.value;
+                const rate = Number(exchangeRate) || 1;
+                const n = Number(amount);
+                if (Number.isFinite(n) && n > 0 && next !== currencyCode) {
+                  if (currencyCode === poCurrency && next === localCurrency) setAmount(round4(n * rate));
+                  else if (currencyCode === localCurrency && next === poCurrency) setAmount(round4(n / rate));
+                }
+                setCurrencyCode(next);
+              }}
+              className="h-9 w-24 rounded-md border border-slate-200 bg-white px-2 text-sm font-bold dark:border-slate-700 dark:bg-slate-900"
+            >
+              {Array.from(new Set([poCurrency, localCurrency, currencyCode].filter(Boolean))).map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
             <div className="flex flex-col w-full relative">
                <Input type="number" step="0.0001" value={exchangeRate} onChange={e => setExchangeRate(e.target.value)} className="h-9 text-sm font-semibold" />
             </div>

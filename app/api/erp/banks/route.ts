@@ -248,11 +248,8 @@ export async function POST(request: NextRequest) {
 
     let resolvedCountryId = countryId || (session.countryIds && session.countryIds.length > 0 ? session.countryIds[0] : null);
     if (!resolvedCountryId) {
-      const fallback = await withLocalPg(async (sql) => {
-        const rows = await sql<{ id: string }[]>`SELECT id FROM public.countries WHERE is_active = true ORDER BY name ASC LIMIT 1`;
-        return rows[0]?.id || null;
-      });
-      resolvedCountryId = fallback;
+      // no silent default: a bank is never filed under an arbitrary country
+      return new Response(JSON.stringify({ error: "countryId is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
     if (!session.isSuperAdmin && resolvedCountryId && !session.countryIds.includes(resolvedCountryId)) {

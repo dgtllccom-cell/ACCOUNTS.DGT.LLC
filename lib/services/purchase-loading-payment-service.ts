@@ -8,6 +8,7 @@
 import { parseJsonish } from "@/lib/stock-journal/model";
 import { resolvePaymentCondition, resolvePurchaseAmounts } from "@/lib/services/purchase-calculation-service";
 import { advanceClearance, loadingPaymentStates, paymentInPurchaseCurrency, type LoadingPaymentState } from "@/lib/purchases/loaded-payable";
+import { contractLines, loadingGoodsValue } from "@/lib/purchases/loading-value";
 
 const num = (v: unknown) => {
   const n = Number(v);
@@ -46,7 +47,7 @@ export type BillPaymentRow = {
   form_data?: unknown;
   payment_status?: string | null;
 };
-export type LoadingRow = { id: string; loaded_quantity?: number | string | null; report_payload?: unknown; created_at?: unknown };
+export type LoadingRow = { id: string; loaded_quantity?: number | string | null; net_weight?: number | string | null; report_payload?: unknown; created_at?: unknown };
 export type RemainingPaymentRow = { amount?: number | string | null; currency_code?: string | null; exchange_rate?: number | string | null; base_currency_amount?: number | string | null; loading_record_id?: string | null };
 
 export function buildBillPayment(po: BillPaymentRow, loadingRows: LoadingRow[], remainingRows: RemainingPaymentRow[]): BillPayment {
@@ -68,9 +69,11 @@ export function buildBillPayment(po: BillPaymentRow, loadingRows: LoadingRow[], 
   const clearance = advanceClearance({ totalPurchaseFC: billTotal, advancePercent: percent, advancePaidFC: advancePaid });
 
   const ordered = [...(loadingRows || [])].sort((a, b) => new Date(String(a.created_at ?? 0)).getTime() - new Date(String(b.created_at ?? 0)).getTime());
+  const lines = contractLines(formData.goodsEntries);
   const shares = ordered.map((l) => {
     const payload = parseJsonish(l.report_payload) || {};
-    const reported = num(payload.totalPurchase ?? payload.purchaseAmount);
+    // each loading is worth what it really carries (quantity, weight) at the contract price of its goods; a value the loading itself reports wins
+    const reported = num(payload.totalPurchase ?? payload.purchaseAmount) || (loadingGoodsValue(lines, l) ?? 0);
     return { id: String(l.id), quantity: num(l.loaded_quantity) || num(payload.loadedQuantity), reportedValueFC: reported };
   });
   const payments = (remainingRows || []).map((p) => ({

@@ -30,6 +30,16 @@ import type { EntryModel, PaymentEntryMode, PaymentLimit } from "@/lib/journal/p
  * #ppe-entry-slot, so posting behaves exactly as before.
  */
 
+/**
+ * The payment function stores every payment in the branch currency (a USD 23,250 payment is saved as AED 85,327.50 with the rate), so the stored
+ * "amount" is already the local figure. The table shows the amount in the BILL's currency (computed by the journal as amtUSD) beside the rate, and
+ * the local figure under "Final Amount" - never the same AED number twice.
+ */
+const billAmountOf = (x: { amtUSD?: number; amount?: number }) =>
+  Number.isFinite(Number(x.amtUSD)) && Number(x.amtUSD) > 0 ? Number(x.amtUSD) : Number(x.amount);
+const billCurrencyOf = (x: { amtUSD?: number; currency_code?: string | null }, purchaseCcy?: string | null) =>
+  Number.isFinite(Number(x.amtUSD)) && Number(x.amtUSD) > 0 && purchaseCcy ? purchaseCcy : x.currency_code;
+
 export type EntryPaymentRow = {
   id: string;
   kind: string;
@@ -381,8 +391,8 @@ export function PurchasePaymentEntryDocument(p: PaymentEntryDocumentProps) {
                   <td className={td}><span dir="ltr">{dash(x.reference_no || x.roznamcha_entries?.super_admin_serial_number)}</span></td>
                   <td className={td}>{kindOf(x)}</td>
                   <td className={cn(td, "max-w-[150px] truncate text-start")} title={x.narration || ""}>{dash(x.narration)}</td>
-                  <td className={td}>{dash(x.currency_code)}</td>
-                  <td className={cn(td, num)} dir="ltr">{fmt(x.amount)}</td>
+                  <td className={td}>{dash(billCurrencyOf(x, p.purchaseCurrency))}</td>
+                  <td className={cn(td, num)} dir="ltr">{fmt(billAmountOf(x))}</td>
                   <td className={cn(td, num)} dir="ltr">{fmt(x.exchange_rate, 4)}</td>
                   <td className={cn(td, num, "font-bold")} dir="ltr">{fmt(x.amtAED)}</td>
                   <td className={td}>
