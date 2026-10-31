@@ -66,6 +66,8 @@ export async function GET(request: NextRequest) {
 
       const branchesList = await sql<{ id: string; branch_name: string; country_id: string }[]>`
         SELECT id, branch_name, country_id FROM public.country_branches WHERE deleted_at IS NULL
+        UNION ALL
+        SELECT id, COALESCE(name, city_name, 'Branch') AS branch_name, country_id FROM public.city_branches WHERE deleted_at IS NULL
       `;
       const branchMap = new Map(branchesList.map((b) => [b.id, b]));
 
@@ -98,7 +100,7 @@ export async function GET(request: NextRequest) {
         LEFT JOIN public.country_branches cb ON cb.id = po.country_branch_id
         WHERE po.deleted_at IS NULL
           AND (${effectiveCountryId ? sql`po.country_id = ${effectiveCountryId}::uuid` : sql`true`})
-          AND (${effectiveBranchId ? sql`po.country_branch_id = ${effectiveBranchId}::uuid` : sql`true`})
+          AND (${effectiveBranchId ? sql`((po.country_branch_id = ${effectiveBranchId}::uuid) OR (po.city_branch_id = ${effectiveBranchId}::uuid))` : sql`true`})
         ORDER BY po.created_at DESC
         LIMIT ${limit}
       `;
@@ -135,7 +137,7 @@ export async function GET(request: NextRequest) {
         LEFT JOIN public.country_branches cb ON cb.id = po.country_branch_id
         WHERE pop.deleted_at IS NULL
           AND (${effectiveCountryId ? sql`po.country_id = ${effectiveCountryId}::uuid` : sql`true`})
-          AND (${effectiveBranchId ? sql`po.country_branch_id = ${effectiveBranchId}::uuid` : sql`true`})
+          AND (${effectiveBranchId ? sql`((po.country_branch_id = ${effectiveBranchId}::uuid) OR (po.city_branch_id = ${effectiveBranchId}::uuid))` : sql`true`})
         ORDER BY pop.created_at DESC
         LIMIT ${limit}
       `;
@@ -175,12 +177,39 @@ export async function GET(request: NextRequest) {
         LEFT JOIN public.country_branches cb ON cb.id = re.country_branch_id
         WHERE re.deleted_at IS NULL
           AND (${effectiveCountryId ? sql`re.country_id = ${effectiveCountryId}::uuid` : sql`true`})
-          AND (${effectiveBranchId ? sql`re.country_branch_id = ${effectiveBranchId}::uuid` : sql`true`})
+          AND (${effectiveBranchId ? sql`((re.country_branch_id = ${effectiveBranchId}::uuid) OR (re.city_branch_id = ${effectiveBranchId}::uuid))` : sql`true`})
         ORDER BY re.entry_date DESC, re.created_at DESC
         LIMIT ${limit}
       `;
 
-      // 5. Assemble unified CountryReportRow list
+            // 5. Fetch Sales Orders (Sales Booking & Local Sales)
+      const soRows = await sql<any[]>`
+        SELECT
+          so.id,
+          so.sales_order_no,
+          so.sales_contract_no,
+          so.currency_code,
+          so.order_total,
+          so.form_data,
+          so.country_id,
+          so.country_branch_id,
+          so.city_branch_id,
+          so.created_at,
+          so.sales_status AS status,
+          so.customer_name,
+          c.name AS country_name,
+          cb.branch_name AS branch_name
+        FROM public.sales_orders so
+        LEFT JOIN public.countries c ON c.id = so.country_id
+        LEFT JOIN public.country_branches cb ON cb.id = so.country_branch_id
+        WHERE so.deleted_at IS NULL
+          AND (${effectiveCountryId ? sql`so.country_id = ${effectiveCountryId}::uuid` : sql`true`})
+          AND (${effectiveBranchId ? sql`((so.country_branch_id = ${effectiveBranchId}::uuid) OR (so.city_branch_id = ${effectiveBranchId}::uuid))` : sql`true`})
+        ORDER BY so.created_at DESC
+        LIMIT ${limit}
+      `;
+
+      // 6. Assemble unified CountryReportRow list
       const combined: CountryReportRow[] = [];
 
       // Process Purchase Orders
@@ -323,6 +352,62 @@ export async function GET(request: NextRequest) {
         });
       }
 
+            // Process Sales Orders
+      for (const so of soRows) {
+        const formData = so.form_data || {};
+        const form = formData.form || {};
+        const isLocal =
+          String(so.sales_order_no || '').startsWith('LS-') ||
+          form.salesType === 'local' ||
+          String(form.billNo || '').startsWith('LS-');
+        
+        const billType = isLocal ? 'Local Sales' : 'Sales Booking';
+        const reportType = 'Sales';
+        const billNo = form.billNo || form.manualBillNumber || so.sales_order_no || `SB-${String(so.id).slice(0, 8).toUpperCase()}`;
+        const refNo = so.sales_contract_no || form.salesContractNo || '-';
+
+        const goodsEntries = formData.goodsEntries || form.goodsEntries || [];
+        const goodsSummary = goodsEntries.length > 0
+          ? `${goodsEntries[0].goodsName || goodsEntries[0].productName || 'Goods'} (${goodsEntries[0].qtyNo || goodsEntries[0].quantity || 0} ${goodsEntries[0].unit || 'MT'})`
+          : 'Commercial Goods';
+        
+        const description = `${billType} | Goods: ${goodsSummary} | Customer: ${so.customer_name || form.customerName || 'Customer'}`;
+        const totalAmount = Number(so.order_total || form.totalAmount || 0);
+        const rate = Number(form.exchangeRate || 3.67);
+
+        combined.push({
+          id: so.id,
+          serialNumber: 0,
+          date: form.orderDate || (so.created_at ? new Date(so.created_at).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)),
+          reportType,
+          billType,
+          billNo,
+          referenceNo: refNo,
+          description,
+          debit: 0,
+          credit: totalAmount,
+          balance: -totalAmount,
+          status: so.status || 'Posted',
+          currency: so.currency_code || form.currencyType || 'USD',
+          exchangeRate: rate,
+          countryId: so.country_id,
+          countryName: so.country_name || (so.country_id ? countryMap.get(so.country_id)?.name : 'UAE'),
+          branchId: so.country_branch_id || so.city_branch_id,
+          branchName: so.branch_name || 'Main Branch',
+          sourceModule: 'sales',
+          sourceTable: 'sales_orders',
+          originalId: so.id,
+          details: {
+            ...so,
+            form_data: formData,
+            customerName: so.customer_name || form.customerName || 'Customer',
+            purchaseAccountName: 'Sales Account',
+            goodsEntries,
+            remarks: form.remarks || 'Standard export sales order',
+          },
+        });
+      }
+
       // Sort by date descending
       combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -429,6 +514,8 @@ export async function GET(request: NextRequest) {
     return apiOk({
       data: rows,
       kpis,
+      countries: dbResult?.countries || [],
+      branches: dbResult?.branches || [],
       scope: {
         level: scope.level,
         effectiveCountryId,
