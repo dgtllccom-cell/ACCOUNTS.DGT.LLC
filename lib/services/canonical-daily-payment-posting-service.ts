@@ -1,3 +1,8 @@
+import { scopedSessionForPermission } from "@/lib/permissions/scoped-session";
+import type { ErpSession } from "@/lib/auth/session";
+import { recordInSessionScope, recordInHierarchyScope } from "@/lib/api/scope-middleware";
+import { assertFinancialAccess, ErpPermissionError } from "@/lib/permissions/middleware";
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { withLocalPg } from "../db/local-postgres";
 import { allocateFormSerials } from "./form-serials";
 import { assertDistinctBookingLedgers, assertBalancedPostedLines, assertPostedRoznamchaTrace } from "./posting-verification";
@@ -64,7 +69,7 @@ function isValidUuid(val: unknown): boolean {
  */
 export async function postCanonicalDailyPayment(
   input: CanonicalDailyPaymentInput,
-  actor: { userId: string; countryIds?: string[]; cityBranchIds?: string[] }
+  actor: ErpSession
 ): Promise<CanonicalDailyPaymentResult> {
   const {
     targetType,
@@ -82,6 +87,15 @@ export async function postCanonicalDailyPayment(
     narration,
     methodDetails
   } = input;
+
+  const isPurchase = targetType === "purchase_booking" || targetType === "local_purchase";
+  if (direction !== (isPurchase ? "purchase_payment" : "sales_payment")) {
+    throw new Error("Payment direction does not match the target order type.");
+  }
+  actor = scopedSessionForPermission(actor, isPurchase ? "purchases" : "sales", "post");
+  assertFinancialAccess(actor);
+  assertNotShippingOnly(actor, "Daily payments");
+  if (!Number.isFinite(exchangeRate) || exchangeRate <= 0) throw new Error("A valid posting exchange rate is required.");
 
   // 1. Basic validation
   if (!isValidUuid(targetId)) throw new Error("Invalid target order ID format.");
@@ -107,6 +121,7 @@ export async function postCanonicalDailyPayment(
       throw new Error(`The selected Debit Ledger (${debitLedgerId}) does not exist or has no valid mapping. Automatic ledger creation is disabled.`);
     }
     const debitLedger = debitRows[0];
+    if (!recordInHierarchyScope(actor, debitLedger)) throw new ErpPermissionError("Debit account is outside your authorized scope.");
 
     // Verify Credit Ledger exists
     const creditRows = await sql`
@@ -119,6 +134,7 @@ export async function postCanonicalDailyPayment(
       throw new Error(`The selected Credit Ledger (${creditLedgerId}) does not exist or has no valid mapping. Automatic ledger creation is disabled.`);
     }
     const creditLedger = creditRows[0];
+    if (!recordInHierarchyScope(actor, creditLedger)) throw new ErpPermissionError("Credit account is outside your authorized scope.");
 
     // 3. Direction Enforcement:
     // Purchase Payment: Supplier/Party = DR, Selected Source = CR
@@ -239,6 +255,10 @@ export async function postCanonicalDailyPayment(
       billIdentifier = s.sales_order_no ? `S#${s.sales_order_no}` : targetId;
     }
 
+    if (!recordInSessionScope(actor, {
+      country_id: orderCountryId, country_branch_id: orderCountryBranchId, city_branch_id: orderCityBranchId,
+    })) throw new ErpPermissionError("Payment order is outside your authorized scope.");
+
     // Resolve country base currency
     let baseCurrency = "USD";
     if (orderCountryId) {
@@ -253,7 +273,7 @@ export async function postCanonicalDailyPayment(
     // If transaction currency matches country functional base currency: exchange rate is 1.
     // Convert only once: never apply double conversion.
     const isSameCurrency = currencyCode.toUpperCase() === baseCurrency;
-    const effectiveExchangeRate = isSameCurrency ? 1 : (Number(exchangeRate) > 0 ? Number(exchangeRate) : 1);
+    const effectiveExchangeRate = isSameCurrency ? 1 : exchangeRate;
     const baseCurrencyAmount = isSameCurrency
       ? amount
       : Math.round(amount * effectiveExchangeRate * 10000) / 10000;

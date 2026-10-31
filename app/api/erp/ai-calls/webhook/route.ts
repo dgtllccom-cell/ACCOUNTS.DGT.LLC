@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   });
   const lang = (call.language_code || "en") as SupportedLanguage;
   const map = await resolveNumberMap(notif.toE164);
-  const actionUrl = request.nextUrl.origin + "/api/erp/ai-calls/webhook";
+  const actionUrl = (process.env.AI_CALL_WEBHOOK_URL || "").trim() || request.nextUrl.origin + "/api/erp/ai-calls/webhook";
   const handoffNumber = process.env.AI_CALL_HANDOFF_NUMBER || undefined;
 
   await recordEvent(call.id, notif.event, { from: notif.fromE164, to: notif.toE164, speech: notif.speechText, dtmf: notif.dtmf });

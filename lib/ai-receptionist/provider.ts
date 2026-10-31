@@ -9,7 +9,8 @@
  */
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { DialogueTurn, InboundCallNotification } from "./types";
-import { aiCallProvider, aiCallSigningSecret } from "./config";
+import { aiCallProvider } from "./config";
+import { validateRequest } from "twilio/lib/webhooks/webhooks";
 
 export interface TelephonyAdapter {
   readonly name: string;
@@ -38,13 +39,25 @@ function xmlEscape(s: string): string {
 class TwilioAdapter implements TelephonyAdapter {
   readonly name = "twilio";
 
-  verifySignature(_rawBody: string, headers: Record<string, string>, _url: string): boolean {
-    // Twilio signs with HMAC-SHA1 over the URL + sorted params using the auth token.
-    // Full implementation requires the auth token + exact param order; when a signing
-    // secret is configured we require the header to be present. Kept conservative:
-    const sig = headers["x-twilio-signature"] || headers["X-Twilio-Signature"];
-    if (aiCallSigningSecret()) return Boolean(sig);
-    return true;
+  verifySignature(rawBody: string, headers: Record<string, string>, url: string): boolean {
+    const token = (process.env.AI_CALL_AUTH_TOKEN || "").trim();
+    const signature = headers["x-twilio-signature"] || headers["X-Twilio-Signature"];
+    const contentType = headers["content-type"] || headers["Content-Type"] || "";
+    if (!token || !signature || !contentType.toLowerCase().startsWith("application/x-www-form-urlencoded")) return false;
+    // Twilio signs the exact externally configured URL. A trusted setting handles reverse proxies;
+    // never reconstruct it from caller-controlled forwarding headers.
+    const publicUrl = (process.env.AI_CALL_WEBHOOK_URL || "").trim() || url;
+    const form = new URLSearchParams(rawBody);
+    const params: Record<string, string | string[]> = Object.create(null);
+    for (const key of new Set(form.keys())) {
+      const values = form.getAll(key);
+      params[key] = values.length === 1 ? values[0] : values;
+    }
+    try {
+      return validateRequest(token, signature, publicUrl, params);
+    } catch {
+      return false;
+    }
   }
 
   parseInbound(params: URLSearchParams | Record<string, unknown>): InboundCallNotification {

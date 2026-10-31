@@ -72,7 +72,8 @@ LLM turn for open-ended questions. Without it, it runs as a structured multiling
    - `AI_CALL_ACCOUNT_SID=…`
    - `AI_CALL_AUTH_TOKEN=…`
    - `AI_CALL_NUMBER=+971…`
-   - `AI_CALL_SIGNING_SECRET=…`  (Twilio request-validation)
+   - `AI_CALL_WEBHOOK_URL=https://your-dev-host/api/erp/ai-calls/webhook` (exact public URL if behind a reverse proxy)
+   - Twilio signatures are verified using `AI_CALL_AUTH_TOKEN` and the official SDK. A separate signing secret is not used; missing or invalid signatures are rejected before inquiry writes.
    - `AI_CALL_HANDOFF_NUMBER=+971…`  (rings a human on "speak to an agent")
    - optional: `AI_CALL_LLM_PROVIDER` + `AI_CALL_LLM_API_KEY`
 4. **Point the provider's Voice webhook** at `https://api.dgt.llc/api/erp/ai-calls/webhook`.

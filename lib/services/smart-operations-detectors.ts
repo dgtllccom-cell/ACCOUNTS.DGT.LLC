@@ -1,3 +1,5 @@
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
+import { scopedSessionForPermission } from "@/lib/permissions/scoped-session";
 /**
  * Smart Operations — Control Checks (READ-ONLY detectors).
  *
@@ -8,6 +10,10 @@
  *
  * Severity: critical · needs_review · reminder.  A detector with zero findings reports "resolved".
  */
+import { ErpPermissionError, assertMobileProfile, assertResourceDomain } from "@/lib/permissions/middleware";
+import { hasHrRole } from "@/lib/services/hr-api";
+import { canManageInquiries } from "@/lib/customer-inquiry/access";
+import { ApiClientError } from "@/lib/api/response";
 import type { ErpSession } from "@/lib/auth/session";
 import { withReadPg } from "@/lib/db/local-postgres";
 import { sessionSqlScope, sqlScopeCondition, type SqlScope } from "@/lib/api/scope-middleware";
@@ -315,23 +321,64 @@ const DETECTORS: Def[] = [
 
 export const DETECTOR_CODES = DETECTORS.map((d) => d.detector);
 
-/** Run every detector for the caller's scope. A detector that fails reports zero + an error flag,
- *  so one broken source never hides the rest. */
+/** Resolve access before querying any source; combined checks need every module they expose.
+ * A reports grant alone does not grant access to finance, HR, or shipping records. */
+export function controlCheckSession(session: ErpSession, detector: string): ErpSession | null {
+  const resources: Record<string, string[]> = {
+    unbalanced_entry: ["roznamcha"], missing_fx_rate: ["roznamcha"],
+    duplicate_invoice: ["purchases"], missing_posting: ["purchases", "sales"],
+    payment_without_posting: ["purchases", "roznamcha"], settlement_discrepancy: ["ledgers"],
+    overdue_receivable: ["sales"], overdue_payable: ["purchases"],
+    incomplete_workflow: ["purchases", "sales"], pending_approval: ["approvals"],
+    stale_crm_followup: ["customers"], low_stock_alert: ["inventory"],
+    eta_passed_no_update: ["shipping"], missing_shipping_document: ["shipping"],
+    payroll_exception: [], wps_exception: [], missing_attendance_before_payroll: [], employee_document_expired: [],
+    company_license_expiry: ["companies"], tax_filing_deadline: ["uae_tax"],
+  };
+  if (!(detector in resources)) return null;
+  const financial = new Set(["unbalanced_entry", "missing_fx_rate", "duplicate_invoice", "missing_posting",
+    "payment_without_posting", "settlement_discrepancy", "overdue_receivable", "overdue_payable", "payroll_exception", "wps_exception", "tax_filing_deadline"]);
+  if (!session.isSuperAdmin && financial.has(detector) && session.canViewFinancials !== true) return null;
+  const hr = ["payroll_exception", "wps_exception", "missing_attendance_before_payroll", "employee_document_expired"].includes(detector);
+  if (hr && !hasHrRole(session, "read")) return null;
+  // These cross-module checks have no agent/line or personal-inquiry partition yet. Fail closed.
+  if (!session.isSuperAdmin && (session.isShippingScoped || session.shippingLineIds?.length)) return null;
+  if (detector === "stale_crm_followup" && !canManageInquiries(session)) return null;
+  let scoped = { ...session };
+  try {
+    if (hr) {
+      assertMobileProfile(scoped, "employees", "read");
+      assertResourceDomain(scoped, "purchases");
+    }
+    if (hr && scoped.assignmentGrants?.some((g) => !hasHrRole({ ...scoped, roles: [g.role] }, "read"))) return null;
+    for (const resource of resources[detector]) scoped = scopedSessionForPermission(scoped, resource, "read");
+    if (financial.has(detector)) assertNotShippingOnly(scoped, "Smart Operations financial findings");
+    if (!scoped.isSuperAdmin && financial.has(detector) && scoped.canViewFinancials !== true) return null;
+  } catch (error) {
+    if (error instanceof ErpPermissionError) return null;
+    throw error;
+  }
+  return scoped;
+}
+
+/** A broken source reports an error, never a resolved finding. No database is a 503. */
 export async function runControlChecks(session: ErpSession): Promise<{ generatedAt: string; results: Array<DetectorResult & { error?: boolean }> }> {
-  const scope = sessionSqlScope(session);
+  const permitted = DETECTORS.flatMap((d) => {
+    const scoped = controlCheckSession(session, d.detector);
+    return scoped ? [{ d, scoped }] : [];
+  });
   const results = await withReadPg(async (sql) =>
-    Promise.all(
-      DETECTORS.map(async (d) => {
-        try {
-          const rows = (await d.run(sql, scope, session)) as any[];
-          const findings = rows.map((r) => ({ detector: d.detector, severity: d.severity, ...d.map(r) }));
-          return { detector: d.detector, group: d.group, severity: d.severity, count: findings.length, findings };
-        } catch (e) {
-          console.warn("[smart-ops] detector failed", d.detector, (e as Error)?.message);
-          return { detector: d.detector, group: d.group, severity: d.severity, count: 0, findings: [], error: true };
-        }
-      })
-    )
+    Promise.all(permitted.map(async ({ d, scoped }) => {
+      try {
+        const rows = (await d.run(sql, sessionSqlScope(scoped), scoped)) as any[];
+        const findings = rows.map((r) => ({ detector: d.detector, severity: d.severity, ...d.map(r) }));
+        return { detector: d.detector, group: d.group, severity: d.severity, count: findings.length, findings };
+      } catch (e) {
+        console.warn("[smart-ops] detector failed", d.detector, (e as Error)?.message);
+        return { detector: d.detector, group: d.group, severity: d.severity, count: 0, findings: [], error: true };
+      }
+    }))
   );
-  return { generatedAt: new Date().toISOString(), results: results ?? [] };
+  if (!results) throw new ApiClientError("Database unavailable", { status: 503, code: "DATABASE_UNAVAILABLE" });
+  return { generatedAt: new Date().toISOString(), results };
 }

@@ -1,5 +1,10 @@
 import { withReadPg, withLocalPg } from "@/lib/db/local-postgres";
-import { ErpSession } from "@/lib/auth/session";
+import type { ErpSession } from "@/lib/auth/session";
+import { authorizeCustomer360, customerVisibilitySql, crmActionScopeSql, customerModuleScopeSql } from "./customer-360-access";
+import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
+import { canManageInquiries } from "@/lib/customer-inquiry/access";
+import { customerCurrencyBalances } from "./customer-360-balances";
+import { ApiClientError } from "@/lib/api/response";
 
 export interface Customer360Kpi {
   totalCustomers: number;
@@ -11,6 +16,7 @@ export interface Customer360Kpi {
   followUpsMeetings: number;
   followUpsOthers: number;
   receivableDue: number;
+  receivableDueByCurrency: Array<{ currency: string; amount: number }>;
   receivableDueCurrency: string;
   receivableDueTrend: string;
   customerHealth: number;
@@ -127,48 +133,46 @@ export async function getCustomer360Data(params: {
   page?: number;
   pageSize?: number;
 }): Promise<Customer360Payload> {
+  const session = authorizeCustomer360(params.session);
   const result = await withReadPg(async (sql) => {
-    const page = Math.max(1, params.page || 1);
-    const pageSize = Math.min(100, Math.max(5, params.pageSize || 10));
+    const page = Math.max(1, Math.trunc(params.page || 1));
+    const pageSize = Math.min(100, Math.max(1, Math.trunc(params.pageSize || 10)));
     const offset = (page - 1) * pageSize;
 
-    // Permissions scoping
-    let allowedCountryIds: string[] = [];
-    let allowedBranchIds: string[] = [];
-    if (!params.session.isSuperAdmin && !params.session.roles?.includes("super_admin")) {
-      allowedCountryIds = params.session.countryIds || [];
-      allowedBranchIds = params.session.cityBranchIds || [];
-    }
+    const scope = sessionSqlScope(session);
+    const masterScope = customerVisibilitySql(sql, session);
+    const actionScope = crmActionScopeSql(sql, session);
+    const customerFilters = sql`
+      ${params.startDate ? sql`AND c.created_at >= ${params.startDate}::date` : sql``}
+      ${params.endDate ? sql`AND c.created_at < (${params.endDate}::date + interval '1 day')` : sql``}
+      ${params.assignedUser && params.assignedUser !== "all" ? sql`AND EXISTS (
+        SELECT 1 FROM public.crm_action_items a WHERE a.source_type = 'customer' AND a.source_id = c.id::text
+          AND a.is_completed = false AND ${actionScope}
+          AND (a.responsible_user_id = ${params.assignedUser} OR a.responsible_user_name = ${params.assignedUser})
+      )` : sql``}`;
+
 
     // 1. Fetch available filter options
-    const countryRows = await sql`
-      SELECT id, name, iso2
-      FROM public.countries
-      WHERE is_active = true AND deleted_at IS NULL
-        ${allowedCountryIds.length > 0 ? sql`AND id = ANY(${allowedCountryIds}::uuid[])` : sql``}
-      ORDER BY name ASC;
-    `;
-
     const branchRows = await sql`
-      SELECT id, name, country_id
-      FROM public.city_branches
-      WHERE deleted_at IS NULL AND (status IS NULL OR status = 'active')
-        ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds}::uuid[])` : sql``}
-        ${allowedBranchIds.length > 0 ? sql`AND id = ANY(${allowedBranchIds}::uuid[])` : sql``}
-      ORDER BY name ASC;
-    `;
+      SELECT cb.id, cb.name, cb.country_id FROM public.city_branches cb
+      WHERE cb.deleted_at IS NULL AND (cb.status IS NULL OR cb.status = 'active')
+        AND ${scope.kind === "all" ? sql`TRUE` : scope.kind === "country" ? sql`cb.country_id = ANY(${scope.ids}::uuid[])` : scope.kind === "cityBranch" ? sql`cb.id = ANY(${scope.ids}::uuid[])` : scope.kind === "countryBranch" ? sql`cb.country_branch_id = ANY(${scope.ids}::uuid[])` : sql`FALSE`}
+      ORDER BY cb.name`;
+    const countryRows = await sql`
+      SELECT co.id, co.name, co.iso2 FROM public.countries co
+      WHERE co.is_active = true AND co.deleted_at IS NULL
+        AND ${scope.kind === "all" ? sql`TRUE` : sql`co.id = ANY(${session.countryIds}::uuid[])`}
+      ORDER BY co.name`;
 
     // 2. Aggregate KPIs
     const kpiSummary = await sql`
       SELECT
         COUNT(*) AS total_cust,
         COUNT(*) FILTER (WHERE is_active = true) AS active_cust
-      FROM public.customers
-      WHERE deleted_at IS NULL
+      FROM public.customers c
+      WHERE c.deleted_at IS NULL AND ${masterScope} ${customerFilters}
         ${params.countryId && params.countryId !== "all" ? sql`AND country_id = ${params.countryId}::uuid` : sql``}
-        ${params.branchId && params.branchId !== "all" ? sql`AND city_id = ${params.branchId}::uuid` : sql``}
-        ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds}::uuid[])` : sql``}
-        ${allowedBranchIds.length > 0 ? sql`AND city_id = ANY(${allowedBranchIds}::uuid[])` : sql``};
+        ${params.branchId && params.branchId !== "all" ? sql`AND EXISTS (SELECT 1 FROM public.enterprise_accounts ea WHERE ea.customer_id = c.id AND ea.deleted_at IS NULL AND ea.city_branch_id = ${params.branchId}::uuid AND ${sqlScopeCondition(sql, scope, "ea")})` : sql``}
     `;
 
     const followUpKpi = await sql`
@@ -177,13 +181,11 @@ export async function getCustomer360Data(params: {
         COUNT(*) FILTER (WHERE item_type ILIKE '%call%') AS calls_cnt,
         COUNT(*) FILTER (WHERE item_type ILIKE '%meet%') AS meet_cnt,
         COUNT(*) FILTER (WHERE item_type NOT ILIKE '%call%' AND item_type NOT ILIKE '%meet%') AS other_cnt,
-        COALESCE(SUM(remaining_amount) FILTER (WHERE item_type = 'Sales Recovery'), 0) AS total_rec_due
-      FROM public.crm_action_items
-      WHERE is_completed = false
+        COUNT(*) FILTER (WHERE item_type = 'Sales Recovery') AS recovery_count
+      FROM public.crm_action_items a
+      WHERE is_completed = false AND ${actionScope} AND due_date = CURRENT_DATE
         ${params.countryId && params.countryId !== "all" ? sql`AND country_id = ${params.countryId}` : sql``}
         ${params.branchId && params.branchId !== "all" ? sql`AND city_branch_id = ${params.branchId}` : sql``}
-        ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
-        ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``};
     `;
 
     const totalCust = Number(kpiSummary[0]?.total_cust || 0);
@@ -192,7 +194,15 @@ export async function getCustomer360Data(params: {
     const callsCnt = Number(followUpKpi[0]?.calls_cnt || 0);
     const meetCnt = Number(followUpKpi[0]?.meet_cnt || 0);
     const otherCnt = Number(followUpKpi[0]?.other_cnt || 0);
-    const recDue = Number(followUpKpi[0]?.total_rec_due || 0);
+    const receivableRows = await sql`
+      SELECT currency, SUM(remaining_amount) AS amount FROM public.crm_action_items a
+      WHERE is_completed = false AND item_type = 'Sales Recovery' AND remaining_amount > 0
+        AND ${actionScope}
+        ${params.countryId && params.countryId !== "all" ? sql`AND country_id = ${params.countryId}` : sql``}
+        ${params.branchId && params.branchId !== "all" ? sql`AND city_branch_id = ${params.branchId}` : sql``}
+      GROUP BY currency ORDER BY currency`;
+    const receivableDueByCurrency = receivableRows.map((r: any) => ({ currency: r.currency, amount: Number(r.amount) }));
+    const recDue = receivableDueByCurrency.length === 1 ? receivableDueByCurrency[0].amount : 0;
 
     // Customer health: ratio of active accounts
     const healthPercent = totalCust > 0 ? Math.min(100, Math.round((activeCust / totalCust) * 100)) : (activeCust > 0 ? 100 : 0);
@@ -207,8 +217,9 @@ export async function getCustomer360Data(params: {
       followUpsMeetings: meetCnt,
       followUpsOthers: otherCnt,
       receivableDue: recDue,
-      receivableDueCurrency: "AED",
-      receivableDueTrend: recDue > 0 ? "Pending collection" : "Zero pending balance",
+      receivableDueByCurrency,
+      receivableDueCurrency: receivableDueByCurrency.length === 1 ? receivableDueByCurrency[0].currency : "—",
+      receivableDueTrend: receivableDueByCurrency.length > 0 ? "Pending collection" : "Zero pending balance",
       customerHealth: healthPercent,
       customerHealthTrend: totalCust > 0 ? `${activeCust}/${totalCust} active accounts` : "No accounts"
     };
@@ -240,7 +251,11 @@ export async function getCustomer360Data(params: {
         latest_action.urgency_class
       FROM public.customers c
       LEFT JOIN public.countries co ON co.id = c.country_id
-      LEFT JOIN public.city_branches cb ON cb.id = c.city_id
+      LEFT JOIN LATERAL (
+        SELECT b.id, b.name FROM public.enterprise_accounts ea JOIN public.city_branches b ON b.id = ea.city_branch_id
+        WHERE ea.customer_id = c.id AND ea.deleted_at IS NULL AND ${sqlScopeCondition(sql, scope, "ea")}
+        ORDER BY ea.created_at, ea.id LIMIT 1
+      ) cb ON true
       LEFT JOIN LATERAL (
         SELECT 
           item_type, 
@@ -250,15 +265,13 @@ export async function getCustomer360Data(params: {
           last_follow_up, 
           urgency_class
         FROM public.crm_action_items a
-        WHERE (LOWER(a.party_name) = LOWER(c.customer_name) OR LOWER(a.party_name) = LOWER(c.company_name))
+        WHERE a.source_type = 'customer' AND a.source_id = c.id::text AND a.is_completed = false AND ${actionScope}
         ORDER BY a.due_date ASC
         LIMIT 1
       ) latest_action ON true
-      WHERE c.deleted_at IS NULL
+      WHERE c.deleted_at IS NULL AND ${masterScope} ${customerFilters}
         ${params.countryId && params.countryId !== "all" ? sql`AND c.country_id = ${params.countryId}::uuid` : sql``}
-        ${params.branchId && params.branchId !== "all" ? sql`AND c.city_id = ${params.branchId}::uuid` : sql``}
-        ${allowedCountryIds.length > 0 ? sql`AND c.country_id = ANY(${allowedCountryIds}::uuid[])` : sql``}
-        ${allowedBranchIds.length > 0 ? sql`AND c.city_id = ANY(${allowedBranchIds}::uuid[])` : sql``}
+        ${params.branchId && params.branchId !== "all" ? sql`AND EXISTS (SELECT 1 FROM public.enterprise_accounts ea WHERE ea.customer_id = c.id AND ea.deleted_at IS NULL AND ea.city_branch_id = ${params.branchId}::uuid AND ${sqlScopeCondition(sql, scope, "ea")})` : sql``}
         ${params.status === "active" ? sql`AND c.is_active = true` : params.status === "at_risk" ? sql`AND c.is_active = false` : sql``}
         ${searchLike ? sql`AND (
           c.customer_name ILIKE ${searchLike}
@@ -274,11 +287,9 @@ export async function getCustomer360Data(params: {
     const countResult = await sql`
       SELECT COUNT(*) AS total
       FROM public.customers c
-      WHERE c.deleted_at IS NULL
+      WHERE c.deleted_at IS NULL AND ${masterScope} ${customerFilters}
         ${params.countryId && params.countryId !== "all" ? sql`AND c.country_id = ${params.countryId}::uuid` : sql``}
-        ${params.branchId && params.branchId !== "all" ? sql`AND c.city_id = ${params.branchId}::uuid` : sql``}
-        ${allowedCountryIds.length > 0 ? sql`AND c.country_id = ANY(${allowedCountryIds}::uuid[])` : sql``}
-        ${allowedBranchIds.length > 0 ? sql`AND c.city_id = ANY(${allowedBranchIds}::uuid[])` : sql``}
+        ${params.branchId && params.branchId !== "all" ? sql`AND EXISTS (SELECT 1 FROM public.enterprise_accounts ea WHERE ea.customer_id = c.id AND ea.deleted_at IS NULL AND ea.city_branch_id = ${params.branchId}::uuid AND ${sqlScopeCondition(sql, scope, "ea")})` : sql``}
         ${params.status === "active" ? sql`AND c.is_active = true` : params.status === "at_risk" ? sql`AND c.is_active = false` : sql``}
         ${searchLike ? sql`AND (
           c.customer_name ILIKE ${searchLike}
@@ -309,7 +320,7 @@ export async function getCustomer360Data(params: {
       } else if (r.urgency_class === "due_today") {
         health = "Medium";
       } else if (r.is_active) {
-        health = idx % 3 === 0 ? "Excellent" : "Good";
+        health = "Good";
       }
 
       // Next action label
@@ -333,8 +344,8 @@ export async function getCustomer360Data(params: {
         avatarInitials: initials,
         avatarColor: color,
         countryId: r.country_id,
-        countryName: r.country_name || "UAE",
-        countryIso2: r.country_iso2 || "AE",
+        countryName: r.country_name || "—",
+        countryIso2: r.country_iso2 || "",
         countryFlag: flag,
         branchId: r.branch_id,
         branchName: r.branch_name || "Main Branch",
@@ -366,12 +377,10 @@ export async function getCustomer360Data(params: {
         responsible_user_name,
         remaining_amount,
         currency
-      FROM public.crm_action_items
-      WHERE is_completed = false
+      FROM public.crm_action_items a
+      WHERE is_completed = false AND ${actionScope}
         ${params.countryId && params.countryId !== "all" ? sql`AND country_id = ${params.countryId}` : sql``}
         ${params.branchId && params.branchId !== "all" ? sql`AND city_branch_id = ${params.branchId}` : sql``}
-        ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
-        ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``}
       ORDER BY due_date ASC
       LIMIT 10;
     `;
@@ -385,7 +394,7 @@ export async function getCustomer360Data(params: {
       const datePart = dueObj.toISOString().slice(0, 10);
       const isToday = datePart === new Date().toISOString().slice(0, 10);
       const formattedDate = isToday ? "Today" : dueObj.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-      const timeStr = isToday ? "10:30 AM" : "02:00 PM";
+      const timeStr = "";
 
       const assigned = r.responsible_user_name || "Sales Rep";
 
@@ -427,7 +436,7 @@ export async function getCustomer360Data(params: {
       }
     };
   });
-  if (!result) throw new Error("Database unavailable");
+  if (!result) throw new ApiClientError("Database unavailable", { status: 503, code: "DATABASE_UNAVAILABLE" });
   return result;
 }
 
@@ -440,6 +449,7 @@ export async function getCustomer360Profile(params: {
   session: ErpSession;
   customerId: string;
 }) {
+  const session = authorizeCustomer360(params.session);
   const result = await withReadPg(async (sql) => {
     // 1. Fetch customer details
     const custRows = await sql`
@@ -451,19 +461,20 @@ export async function getCustomer360Profile(params: {
         ci.name AS city_name
       FROM public.customers c
       LEFT JOIN public.countries co ON co.id = c.country_id
-      LEFT JOIN public.city_branches cb ON cb.id = c.city_id
+      LEFT JOIN LATERAL (
+        SELECT b.name FROM public.enterprise_accounts ea JOIN public.city_branches b ON b.id = ea.city_branch_id
+        WHERE ea.customer_id = c.id AND ea.deleted_at IS NULL AND ${sqlScopeCondition(sql, sessionSqlScope(session), "ea")}
+        ORDER BY ea.created_at, ea.id LIMIT 1
+      ) cb ON true
       LEFT JOIN public.cities ci ON ci.id = c.city_id
-      WHERE c.id = ${params.customerId}::uuid
+      WHERE c.id = ${params.customerId}::uuid AND c.deleted_at IS NULL AND ${customerVisibilitySql(sql, session)}
       LIMIT 1;
     `;
 
     const customer = custRows[0];
     if (!customer) {
-      throw new Error("Customer not found.");
+      throw new ApiClientError("Customer not found.", { status: 404, code: "NOT_FOUND" });
     }
-
-    const customerName = customer.customer_name;
-    const companyName = customer.company_name || customer.customer_name;
 
     // 2. Fetch real Sales Orders for this customer
     const salesOrders = await sql`
@@ -479,15 +490,13 @@ export async function getCustomer360Profile(params: {
         sales_status, 
         payment_status,
         product_summary
-      FROM public.sales_orders
-      WHERE deleted_at IS NULL
+      FROM public.sales_orders so
+      WHERE deleted_at IS NULL AND ${customerModuleScopeSql(sql, session, "sales", "so")}
         AND (
-          customer_account_id = ${params.customerId}::uuid
-          OR LOWER(customer_name) = LOWER(${customerName})
-          OR LOWER(customer_name) = LOWER(${companyName})
+          EXISTS (SELECT 1 FROM public.enterprise_accounts ea WHERE ea.id = so.customer_account_id
+            AND ea.customer_id = ${params.customerId}::uuid AND ea.deleted_at IS NULL)
         )
-      ORDER BY order_date DESC
-      LIMIT 20;
+      ORDER BY order_date DESC;
     `;
 
     // 3. Fetch real Purchase Orders if party acts as supplier / vendor
@@ -503,13 +512,13 @@ export async function getCustomer360Profile(params: {
         payment_status,
         status,
         created_at
-      FROM public.purchase_orders
-      WHERE deleted_at IS NULL
+      FROM public.purchase_orders po
+      WHERE deleted_at IS NULL AND ${customerModuleScopeSql(sql, session, "purchases", "po")}
         AND (
-          supplier_company_id = ${params.customerId}::uuid
+          EXISTS (SELECT 1 FROM public.enterprise_accounts ea WHERE ea.customer_id = ${params.customerId}::uuid
+            AND ea.deleted_at IS NULL AND ea.id::text = po.form_data->'form'->>'purchaseAccountId')
         )
-      ORDER BY created_at DESC
-      LIMIT 20;
+      ORDER BY created_at DESC;
     `;
 
     // 4. Fetch Cheques & Recovery transactions
@@ -525,11 +534,12 @@ export async function getCustomer360Profile(params: {
         credit, 
         currency, 
         status
-      FROM public.bank_cheque_transactions
-      WHERE deleted_at IS NULL
+      FROM public.bank_cheque_transactions ch
+      WHERE deleted_at IS NULL AND ${customerModuleScopeSql(sql, session, "roznamcha", "ch")}
         AND (
-          LOWER(particulars) ILIKE ${`%${customerName}%`}
-          OR LOWER(particulars) ILIKE ${`%${companyName}%`}
+          EXISTS (SELECT 1 FROM public.ledgers l JOIN public.enterprise_accounts ea ON ea.id = l.enterprise_account_id
+            WHERE l.id IN (ch.ledger_id, ch.counter_ledger_id) AND l.deleted_at IS NULL
+              AND ea.deleted_at IS NULL AND ea.customer_id = ${params.customerId}::uuid)
         )
       ORDER BY due_date DESC
       LIMIT 20;
@@ -547,12 +557,10 @@ export async function getCustomer360Profile(params: {
         status, 
         expected_loading_date,
         created_at
-      FROM public.clearing_customer_orders
-      WHERE deleted_at IS NULL
+      FROM public.clearing_customer_orders cl
+      WHERE deleted_at IS NULL AND ${customerModuleScopeSql(sql, session, "shipping_records", "cl")}
         AND (
           customer_id = ${params.customerId}::uuid
-          OR LOWER(customer_name) = LOWER(${customerName})
-          OR LOWER(customer_name) = LOWER(${companyName})
         )
       ORDER BY created_at DESC
       LIMIT 20;
@@ -571,14 +579,30 @@ export async function getCustomer360Profile(params: {
         shipment_status,
         eta, 
         etd
-      FROM public.shipping_line_records
-      WHERE deleted_at IS NULL
+      FROM public.shipping_line_records sh
+      WHERE deleted_at IS NULL AND ${customerModuleScopeSql(sql, session, "shipping", "sh")}
         AND (
-          account_id = ${params.customerId}::uuid
+          EXISTS (SELECT 1 FROM public.enterprise_accounts ea WHERE ea.id = sh.account_id
+            AND ea.customer_id = ${params.customerId}::uuid AND ea.deleted_at IS NULL)
         )
       ORDER BY created_at DESC
       LIMIT 20;
     `;
+
+    // Reuse existing inquiry and communication records; never create a second CRM history.
+    const inquiries = await sql`
+      SELECT i.id, i.inquiry_no, i.inquiry_summary, i.status, i.source, i.created_at, i.follow_up_date
+      FROM public.customer_inquiries i
+      WHERE i.customer_id = ${params.customerId}::uuid AND i.deleted_at IS NULL
+        AND ${sqlScopeCondition(sql, sessionSqlScope(session), "i")}
+        AND ${canManageInquiries(session) ? sql`TRUE` : sql`(i.created_by = ${session.userId}::uuid OR i.assigned_to = ${session.userId}::uuid)`}
+      ORDER BY i.created_at DESC LIMIT 30`;
+    const communications = await sql`
+      SELECT m.id, m.channel, m.subject, m.body, m.sender_name, m.created_at, m.linked_route
+      FROM public.communication_center_messages m
+      WHERE m.customer_id = ${params.customerId}::uuid AND m.deleted_at IS NULL
+        AND ${customerModuleScopeSql(sql, session, "messages", "m")}
+      ORDER BY m.created_at DESC LIMIT 30`;
 
     // 6. Fetch Activity Timeline (Follow-up notes and action items)
     const timelineNotes = await sql`
@@ -593,10 +617,8 @@ export async function getCustomer360Profile(params: {
         n.created_at
       FROM public.crm_followup_notes n
       JOIN public.crm_action_items a ON a.id = n.crm_item_id
-      WHERE (
-        LOWER(a.party_name) = LOWER(${customerName})
-        OR LOWER(a.party_name) = LOWER(${companyName})
-      )
+      WHERE a.source_type = 'customer' AND a.source_id = ${params.customerId}
+        AND ${crmActionScopeSql(sql, session)}
       ORDER BY n.created_at DESC
       LIMIT 30;
     `;
@@ -618,19 +640,17 @@ export async function getCustomer360Profile(params: {
         due_date,
         is_completed,
         created_at
-      FROM public.crm_action_items
-      WHERE (
-        LOWER(party_name) = LOWER(${customerName})
-        OR LOWER(party_name) = LOWER(${companyName})
-      )
+      FROM public.crm_action_items a
+      WHERE a.source_type = 'customer' AND a.source_id = ${params.customerId}
+        AND ${crmActionScopeSql(sql, session)}
       ORDER BY created_at DESC
       LIMIT 30;
     `;
 
     // 7. Calculate Financial Totals
-    const totalReceivable = salesOrders.reduce((sum: number, so: any) => sum + Number(so.remaining_amount || 0), 0);
-    const totalPayable = purchaseOrders.reduce((sum: number, po: any) => sum + Number(po.remaining_due || 0), 0);
-    const netPosition = totalReceivable - totalPayable;
+    const balancesByCurrency = customerCurrencyBalances(salesOrders, purchaseOrders);
+    // Scalar compatibility fields are valid only when every balance has the same currency.
+    const singleBalance = balancesByCurrency.length === 1 ? balancesByCurrency[0] : null;
 
     return {
       customer: {
@@ -644,8 +664,8 @@ export async function getCustomer360Profile(params: {
         email: customer.email || "-",
         address: customer.address || "-",
         notes: customer.notes || "-",
-        countryName: customer.country_name || "UAE",
-        countryIso2: customer.country_iso2 || "AE",
+        countryName: customer.country_name || "—",
+        countryIso2: customer.country_iso2 || "",
         branchName: customer.branch_name || "Main Branch",
         cityName: customer.city_name || "-",
         isActive: customer.is_active,
@@ -653,10 +673,11 @@ export async function getCustomer360Profile(params: {
         updatedAt: customer.updated_at
       },
       financialSummary: {
-        totalReceivable,
-        totalPayable,
-        netPosition,
-        currency: salesOrders[0]?.currency_code || "AED",
+        totalReceivable: singleBalance?.totalReceivable ?? null,
+        totalPayable: singleBalance?.totalPayable ?? null,
+        netPosition: singleBalance?.netPosition ?? null,
+        currency: singleBalance?.currency ?? null,
+        balancesByCurrency,
         salesOrdersCount: salesOrders.length,
         purchaseOrdersCount: purchaseOrders.length,
         chequesCount: cheques.length
@@ -672,18 +693,19 @@ export async function getCustomer360Profile(params: {
         currency: so.currency_code || "AED",
         salesStatus: so.sales_status || "Active",
         paymentStatus: so.payment_status || "Pending",
-        link: `/dashboard/sales-order?orderId=${so.id}`
+        link: `/dashboard/sales/sales-order?orderId=${so.id}`
       })),
       purchaseOrders: purchaseOrders.map((po: any) => ({
         id: po.id,
         purchaseOrderNo: po.purchase_order_no,
         contractNo: po.purchase_contract_no,
+        orderDate: po.created_at ? new Date(po.created_at).toISOString().slice(0, 10) : "-",
         orderTotal: Number(po.order_total || 0),
         advancePaid: Number(po.advance_paid || 0),
         remainingDue: Number(po.remaining_due || 0),
         currency: po.currency_code || "USD",
         paymentStatus: po.payment_status || "Pending",
-        link: `/dashboard/purchase-order?orderId=${po.id}`
+        link: `/dashboard/purchase/new-purchase-booking-order?orderId=${po.id}`
       })),
       cheques: cheques.map((ch: any) => ({
         id: ch.id,
@@ -705,7 +727,7 @@ export async function getCustomer360Profile(params: {
           details: cl.cargo_details || cl.route_name || "Customs Clearance",
           status: cl.status || "In Transit",
           date: cl.expected_loading_date ? new Date(cl.expected_loading_date).toISOString().slice(0, 10) : "-",
-          link: `/dashboard/shipping-cleaning`
+          link: `/dashboard/clearing-agent/customer-order?orderId=${cl.id}`
         })),
         ...shippingRecords.map((sh: any) => ({
           type: "Shipping BL",
@@ -714,10 +736,22 @@ export async function getCustomer360Profile(params: {
           details: `${sh.shipping_line_name || "Line"} • ${sh.container_numbers || "Containers"}`,
           status: sh.shipment_status || "Dispatched",
           date: sh.eta ? new Date(sh.eta).toISOString().slice(0, 10) : "-",
-          link: `/dashboard/shipping-cleaning`
+          link: `/dashboard/shipping-line/shipment-details?id=${sh.id}`
         }))
       ],
       timeline: [
+        ...inquiries.map((i: any) => ({
+          id: i.id, type: i.source, content: [i.inquiry_no, i.inquiry_summary, i.status].filter(Boolean).join(" · "),
+          author: customer.customer_name, role: "", date: new Date(i.created_at).toISOString(),
+          promiseDate: i.follow_up_date ? new Date(i.follow_up_date).toISOString().slice(0, 10) : null,
+          promiseAmount: null, link: `/dashboard/customer-inquiries?id=${i.id}`,
+        })),
+        ...communications.map((m: any) => ({
+          id: m.id, type: m.channel, content: [m.subject, m.body].filter(Boolean).join("\n"),
+          author: m.sender_name || "—", role: "", date: new Date(m.created_at).toISOString(),
+          promiseDate: null, promiseAmount: null,
+          link: typeof m.linked_route === "string" && m.linked_route.startsWith("/dashboard/") ? m.linked_route : "/dashboard/communication",
+        })),
         ...timelineNotes.map((n: any) => ({
           id: n.id,
           type: n.note_type || "Note",
@@ -741,7 +775,7 @@ export async function getCustomer360Profile(params: {
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     };
   });
-  if (!result) throw new Error("Database unavailable");
+  if (!result) throw new ApiClientError("Database unavailable", { status: 503, code: "DATABASE_UNAVAILABLE" });
   return result;
 }
 
@@ -757,75 +791,68 @@ export async function logCustomer360Activity(params: {
   promiseDate?: string | null;
   promiseAmount?: number | null;
 }) {
-  return await withLocalPg(async (sql) => {
-    // 1. Get customer
+  const session = authorizeCustomer360(params.session, "update");
+  const result = await withLocalPg(async (pool) => pool.begin(async (sql) => {
     const [cust] = await sql`
-      SELECT id, customer_name, company_name, country_id, city_id
-      FROM public.customers
-      WHERE id = ${params.customerId}::uuid
-      LIMIT 1;
-    `;
+      SELECT c.id, c.customer_name, c.company_name, c.country_id, co.currency_code,
+        account_scope.country_branch_id, account_scope.city_branch_id
+      FROM public.customers c
+      LEFT JOIN public.countries co ON co.id = c.country_id
+      LEFT JOIN LATERAL (
+        SELECT ea.country_branch_id, ea.city_branch_id FROM public.enterprise_accounts ea
+        WHERE ea.customer_id = c.id AND ea.deleted_at IS NULL
+          AND ${sqlScopeCondition(sql, sessionSqlScope(session), "ea")}
+        ORDER BY ea.created_at, ea.id LIMIT 1
+      ) account_scope ON true
+      WHERE c.id = ${params.customerId}::uuid AND c.deleted_at IS NULL
+        AND ${customerVisibilitySql(sql, session)}
+      LIMIT 1`;
+    if (!cust) throw new ApiClientError("Customer not found.", { status: 404, code: "NOT_FOUND" });
 
-    if (!cust) throw new Error("Customer not found");
-
-    const actorId = params.session.userId || "usr-admin";
-    const actorName = params.session.fullName || "Sales Rep";
-    const actorRole = params.session.roles?.[0] || "user";
-    const partyName = cust.company_name || cust.customer_name;
-
-    // 2. Insert or find CRM action item
+    // Serialize activity writes per customer. Never reuse another customer's same-name item.
+    await sql`SELECT pg_advisory_xact_lock(hashtextextended(${cust.id}::text, 0))`;
     const existingItems = await sql`
-      SELECT id FROM public.crm_action_items
-      WHERE party_name = ${partyName}
-      ORDER BY created_at DESC
-      LIMIT 1;
-    `;
-
+      SELECT a.id FROM public.crm_action_items a
+      WHERE a.source_type = 'customer' AND a.source_id = ${cust.id}::text
+        AND a.is_completed = false AND ${crmActionScopeSql(sql, session)}
+        AND a.country_id IS NOT DISTINCT FROM ${cust.country_id}::text
+        AND a.country_branch_id IS NOT DISTINCT FROM ${cust.country_branch_id}::text
+        AND a.city_branch_id IS NOT DISTINCT FROM ${cust.city_branch_id}::text
+      ORDER BY a.created_at DESC LIMIT 1 FOR UPDATE`;
     let crmItemId = existingItems[0]?.id;
-
+    const actorId = session.userId;
+    const actorName = session.fullName || session.userId;
+    const actorRole = session.roles[0] || "user";
     if (!crmItemId) {
-      const inserted = await sql`
+      const [item] = await sql`
         INSERT INTO public.crm_action_items (
           source_type, source_id, reference_no, party_name, due_date,
           item_type, module, amount, paid_amount, remaining_amount, currency,
-          country_id, city_branch_id, responsible_user_id, responsible_user_name,
+          country_id, country_branch_id, city_branch_id, responsible_user_id, responsible_user_name,
           urgency_class, status, notes
         ) VALUES (
-          'customer', ${cust.id}, ${`CRM-${Date.now().toString(36).toUpperCase()}`},
-          ${partyName}, ${params.promiseDate ? `${params.promiseDate}::date` : sql`CURRENT_DATE`},
-          ${params.activityType}, 'CRM', 0, 0, 0, 'AED',
-          ${cust.country_id}, ${cust.city_id}, ${actorId}, ${actorName},
+          'customer', ${cust.id}, ${`CRM-${cust.id}`}, ${cust.company_name || cust.customer_name},
+          COALESCE(${params.promiseDate ?? null}::date, CURRENT_DATE),
+          ${params.activityType}, 'CRM', 0, 0, 0, ${cust.currency_code || 'USD'},
+          ${cust.country_id}, ${cust.country_branch_id}, ${cust.city_branch_id}, ${actorId}, ${actorName},
           'due_today', 'In Progress', ${params.notes}
-        ) RETURNING id;
-      `;
-      crmItemId = inserted[0]?.id;
+        ) RETURNING id`;
+      crmItemId = item.id;
     }
-
-    // 3. Insert note into crm_followup_notes
     const [note] = await sql`
       INSERT INTO public.crm_followup_notes (
-        crm_item_id, user_id, user_name, user_role,
-        note_type, note_text, promise_date, promise_amount, created_at
+        crm_item_id, user_id, user_name, user_role, note_type, note_text, promise_date, promise_amount
       ) VALUES (
-        ${crmItemId}, ${actorId}, ${actorName}, ${actorRole},
-        ${params.activityType}, ${params.notes},
-        ${params.promiseDate ? `${params.promiseDate}::date` : null},
-        ${params.promiseAmount || null}, NOW()
-      ) RETURNING id;
-    `;
-
-    // 4. Update action item
+        ${crmItemId}, ${actorId}, ${actorName}, ${actorRole}, ${params.activityType}, ${params.notes},
+        ${params.promiseDate ?? null}::date, ${params.promiseAmount ?? null}
+      ) RETURNING id`;
     await sql`
-      UPDATE public.crm_action_items
-      SET 
-        last_follow_up = NOW(),
-        next_follow_up = COALESCE(${params.promiseDate ? `${params.promiseDate}::date` : null}, next_follow_up),
-        status = 'In Progress',
-        notes = ${params.notes},
-        updated_at = NOW()
-      WHERE id = ${crmItemId};
-    `;
-
-    return { success: true, noteId: note?.id };
-  });
+      UPDATE public.crm_action_items SET last_follow_up = NOW(),
+        next_follow_up = COALESCE(${params.promiseDate ?? null}::date, next_follow_up),
+        status = 'In Progress', notes = ${params.notes}, updated_at = NOW()
+      WHERE id = ${crmItemId}`;
+    return { success: true, noteId: note.id };
+  }));
+  if (!result) throw new ApiClientError("Database unavailable", { status: 503, code: "DATABASE_UNAVAILABLE" });
+  return result;
 }
