@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sessionSqlScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertAuditAccess,  } from "@/lib/reports/report-access";
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertAuditAccess(session, "The daily branch activity monitor");
+    assertNotShippingOnly(session, "The daily branch activity monitor");
     const { searchParams } = new URL(request.url);
 
     const startDate = searchParams.get("startDate") || new Date().toISOString().split("T")[0];
@@ -159,6 +163,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ error: error.message || "Failed to fetch daily branch activity." }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to fetch daily branch activity." }, { status: error?.status === 403 ? 403 : 500 });
   }
 }

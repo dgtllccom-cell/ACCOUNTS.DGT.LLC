@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { requireErpSession } from "@/lib/auth/session";
+import { accessibleCategories } from "@/lib/reports/center-nav";
+import { ReportsCenterNav } from "@/features/reports/components/reports-center-nav";
 import { resolveReportContext } from "@/lib/reports/resolve-report-context";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { PaymentReportView } from "@/features/reports/components/payment-report-view";
@@ -32,5 +34,10 @@ export default async function PaymentReportPage() {
     lists = { countries: [], branches: [] };
   }
 
-  return <PaymentReportView context={context} countries={lists.countries} branches={lists.branches} />;
+  return (
+    <div className="w-full">
+      <div className="px-3 pt-3 sm:px-6"><ReportsCenterNav lang={session.preferredLanguage ?? "en"} items={accessibleCategories(session)} activeKey="payments" /></div>
+      <PaymentReportView context={context} countries={lists.countries} branches={lists.branches} />
+    </div>
+  );
 }

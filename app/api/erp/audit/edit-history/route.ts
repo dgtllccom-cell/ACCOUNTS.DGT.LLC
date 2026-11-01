@@ -3,6 +3,7 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertAuditAccess, auditTableVisible } from "@/lib/reports/report-access";
 import { resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
@@ -20,6 +21,7 @@ import {
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertAuditAccess(session, "Edit history");
     const scope = resolveReportScope(session);
     const { searchParams } = new URL(request.url);
     const lang = await getRequestLanguage(searchParams.get("lang"));
@@ -72,6 +74,8 @@ export async function GET(request: NextRequest) {
         limit 5000
       `) as any[];
 
+      // Business and Shipping Line records stay separate: a login only sees the change history of its own operational domain
+      historyRows = historyRows.filter((row) => auditTableVisible(session, row.record_table));
       if (userFilter) historyRows = historyRows.filter((row) => row.actor_id === userFilter);
       if (fromDate) historyRows = historyRows.filter((row) => String(row.created_at).slice(0, 10) >= fromDate);
       if (toDate) historyRows = historyRows.filter((row) => String(row.created_at).slice(0, 10) <= toDate);
@@ -170,7 +174,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, records: paged, total, kpis });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ error: error.message || "Failed to fetch edit history." }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to fetch edit history." }, { status: error?.status === 403 ? 403 : 500 });
   }
 }
 

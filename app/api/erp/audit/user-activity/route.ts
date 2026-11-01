@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertAuditAccess,  } from "@/lib/reports/report-access";
+import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { assertExplicitScopeAllowed, recordInSessionScope, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
@@ -16,6 +18,8 @@ import { ErpPermissionError } from "@/lib/permissions/middleware";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertAuditAccess(session, "User activity");
+    assertNotShippingOnly(session, "User activity");
     const { searchParams } = new URL(request.url);
 
     const userId = searchParams.get("userId");

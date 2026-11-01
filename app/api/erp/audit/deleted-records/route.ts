@@ -3,6 +3,7 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertAuditAccess, auditTableVisible } from "@/lib/reports/report-access";
 import { resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
@@ -25,6 +26,7 @@ import {
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertAuditAccess(session, "Deleted records");
     const scope = resolveReportScope(session);
     const { searchParams } = new URL(request.url);
     const lang = await getRequestLanguage(searchParams.get("lang"));
@@ -81,7 +83,8 @@ export async function GET(request: NextRequest) {
         ? (await sql`select user_id, role, country_id, country_branch_id, city_branch_id from public.user_role_assignments where is_active = true and deleted_at is null and user_id = any(${actorIds})`)
         : [];
 
-      return { deleteRows, mainBranches, cityBranches, profiles, assignments, countryName };
+      // Business and Shipping Line records stay separate: a login only sees the deletions of its own operational domain
+      return { deleteRows: deleteRows.filter((r) => auditTableVisible(session, r.record_table)), mainBranches, cityBranches, profiles, assignments, countryName };
     });
 
     if (!result) return NextResponse.json({ success: true, records: [], total: 0, kpis: emptyKpis() });
@@ -166,7 +169,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, records: paged, total, kpis });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ error: error.message || "Failed to fetch deleted records." }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to fetch deleted records." }, { status: error?.status === 403 ? 403 : 500 });
   }
 }
 

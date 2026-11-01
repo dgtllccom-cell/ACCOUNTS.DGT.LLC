@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sessionSqlScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertAuditAccess } from "@/lib/reports/report-access";
 import { getMonthlyEditSummary } from "@/lib/audit/enterprise-audit-service";
 import { canAccessCountry, canAccessCityBranch } from "@/lib/permissions/middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
@@ -8,6 +9,7 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertAuditAccess(session, "The monthly edit summary");
     const { searchParams } = new URL(request.url);
 
     const year = searchParams.get("year") ? Number(searchParams.get("year")) : undefined;
@@ -40,6 +42,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ error: error.message || "Failed to fetch monthly edit summary." }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to fetch monthly edit summary." }, { status: error?.status === 403 ? 403 : 500 });
   }
 }

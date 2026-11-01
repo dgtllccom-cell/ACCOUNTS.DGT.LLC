@@ -5,6 +5,12 @@ import { savedReports, reportAutoEmailConfigs } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { sendBranchEmail } from "@/lib/email/titan-smtp-service";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { authorize } from "@/lib/permissions/middleware";
+import { and } from "drizzle-orm";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
+const failure = (error: any) => NextResponse.json({ error: error?.message || "Request failed" }, { status: error?.status === 403 ? 403 : 500 });
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +24,15 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    authorize(session, { resource: "reports", action: "read" });
     const { searchParams } = new URL(req.url);
     const savedReportId = searchParams.get("savedReportId");
     if (!savedReportId) {
       return NextResponse.json({ error: "savedReportId is required" }, { status: 400 });
     }
+    const [owned] = await db.select({ id: savedReports.id }).from(savedReports).where(and(eq(savedReports.id, savedReportId), eq(savedReports.userId, session.userId)));
+    if (!owned) return NextResponse.json({ error: "Saved report not found" }, { status: 404 });
 
     const rows = await db
       .select()
@@ -33,21 +42,25 @@ export async function GET(req: Request) {
     return NextResponse.json({ success: true, data: rows[0] ?? null });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return failure(error);
   }
 }
 
 export async function POST(req: Request) {
   try {
     const session = await requireErpSession();
+    authorize(session, { resource: "reports", action: "read" });
     const body = await req.json();
     const { savedReportId, recipients, frequency, format } = body;
 
     if (!savedReportId || !Array.isArray(recipients) || recipients.length === 0) {
       return NextResponse.json({ error: "savedReportId and at least one recipient are required" }, { status: 400 });
     }
+    if (recipients.length > 10 || recipients.some((r: unknown) => typeof r !== "string" || !EMAIL_RE.test(r.trim()))) {
+      return NextResponse.json({ error: "Recipients must be up to 10 valid email addresses" }, { status: 400 });
+    }
 
-    const [report] = await db.select().from(savedReports).where(eq(savedReports.id, savedReportId));
+    const [report] = await db.select().from(savedReports).where(and(eq(savedReports.id, savedReportId), eq(savedReports.userId, session.userId)));
     if (!report) {
       return NextResponse.json({ error: "Saved report not found" }, { status: 404 });
     }
@@ -80,21 +93,38 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, data: row });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return failure(error);
   }
 }
 
 export async function PATCH(req: Request) {
   try {
     const session = await requireErpSession();
+    authorize(session, { resource: "reports", action: "read" });
     const { searchParams } = new URL(req.url);
     const action = searchParams.get("action");
     const body = await req.json();
 
     if (action === "send-now") {
-      const { recipients, reportName, htmlBody } = body;
+      const { recipients, reportName, htmlBody, attachment } = body;
       if (!Array.isArray(recipients) || recipients.length === 0 || !htmlBody) {
         return NextResponse.json({ error: "recipients and htmlBody are required" }, { status: 400 });
+      }
+      if (recipients.length > 10 || recipients.some((r: unknown) => typeof r !== "string" || !EMAIL_RE.test(r.trim()))) {
+        return NextResponse.json({ error: "Recipients must be up to 10 valid email addresses" }, { status: 400 });
+      }
+      if (String(htmlBody).length > 400_000) {
+        return NextResponse.json({ error: "The message body is too large" }, { status: 413 });
+      }
+      // a real PDF attachment (the report the user is looking at), never a link or an empty composer
+      let attachments: Array<{ filename: string; content: Buffer; contentType: string }> | undefined;
+      if (attachment) {
+        const bytes = Buffer.from(String(attachment.contentBase64 || ""), "base64");
+        if (bytes.length < 100 || bytes.length > MAX_ATTACHMENT_BYTES || bytes.subarray(0, 5).toString("latin1") !== "%PDF-") {
+          return NextResponse.json({ error: "The attachment is not a valid PDF (or is larger than 8 MB)" }, { status: 400 });
+        }
+        const safe = String(attachment.filename || "report.pdf").replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 120);
+        attachments = [{ filename: /\.pdf$/i.test(safe) ? safe : `${safe}.pdf`, content: bytes, contentType: "application/pdf" }];
       }
       if (!session.email) {
         return NextResponse.json({ error: "Your account has no sender email configured — cannot send." }, { status: 400 });
@@ -113,19 +143,20 @@ export async function PATCH(req: Request) {
           senderUserId: session.userId,
           senderEmail: session.email,
           recipientEmail,
-          subject: `Report: ${reportName || "Custom Report"}`,
-          bodyHtml: htmlBody
+          subject: `Report: ${String(reportName || "Custom Report").slice(0, 150)}`,
+          bodyHtml: htmlBody,
+          attachments
         });
         results.push({ to: recipientEmail, ...result });
       }
 
       const anyFailed = results.some((r) => !r.success);
-      return NextResponse.json({ success: !anyFailed, results });
+      return NextResponse.json({ success: !anyFailed, attached: Boolean(attachments), results });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return failure(error);
   }
 }
