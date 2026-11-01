@@ -14,6 +14,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 
 export type DueLoading = {
   id: string; loadingNo: string | null; container: string | null; quantity: number; netWeightKg: number;
+  grossWeightKg?: number | null;
   value: number; advanceAllocated: number; paid: number; outstanding: number; complete: boolean;
 };
 export type DueBill = {

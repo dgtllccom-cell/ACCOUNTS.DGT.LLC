@@ -68,6 +68,7 @@ import {
   type TransferType,
 } from "@/lib/purchases/lane-rules";
 import { Th } from "@/components/ui/translated-th";
+import { LanePaymentPreview } from "./lane-payment-preview";
 
 type Row = Record<string, any>;
 type Detail = { load: Row; events: Row[]; expenses: Row[]; canAct: boolean };
@@ -845,6 +846,7 @@ function CenterTransferConfirmationModal({
     : "general_purchase_expenses";
 
   const [type, setType] = useState<TransferType>(defaultDest);
+  const [paymentReviewReady, setPaymentReviewReady] = useState(false);
   const [countryId, setCountryId] = useState("");
   const [countryBranchId, setCountryBranchId] = useState("");
   const [cityBranchId, setCityBranchId] = useState("");
@@ -917,6 +919,7 @@ function CenterTransferConfirmationModal({
   };
 
   const submit = async () => {
+    if (type === "remaining_payment" && loads.every(l => l.source_type === "purchase_booking") && !paymentReviewReady) return;
     const p = transferProblems(req);
     setProblems(p);
     if (p.length) return;
@@ -948,7 +951,7 @@ function CenterTransferConfirmationModal({
       dir={s.dir}
       data-testid="transfer-modal"
     >
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800 animate-in fade-in-50 zoom-in-95 duration-150">
+      <div className="relative w-full max-w-[1600px] h-[94vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800 animate-in fade-in-50 zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
@@ -974,7 +977,12 @@ function CenterTransferConfirmationModal({
           </button>
         </div>
 
-        {/* Scrollable Body */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_340px] lg:overflow-hidden" dir="ltr">
+          <div className="overflow-y-auto bg-slate-100 p-3 sm:p-5 dark:bg-slate-950" dir={s.dir}>
+            <LanePaymentPreview loads={loads.map(l => ({ id: String(l.id), source_id: l.source_id, source_type: l.source_type, purchase_ref_no: l.purchase_ref_no }))} lang={s.lang} onReady={setPaymentReviewReady} />
+          </div>
+          <div className="flex min-h-0 flex-col border-l border-slate-200 dark:border-slate-800" dir={s.dir}>
+        {/* Scrollable controls remain on the physical right in every language. */}
         <div className="overflow-y-auto px-5 py-4 space-y-4 text-xs">
           {/* Review Selected Bills Card */}
           <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
@@ -1227,7 +1235,7 @@ function CenterTransferConfirmationModal({
           </button>
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || (type === "remaining_payment" && loads.every(l => l.source_type === "purchase_booking") && !paymentReviewReady)}
             onClick={() => void submit()}
             className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/20`}
             data-testid="tr-submit"
@@ -1235,6 +1243,8 @@ function CenterTransferConfirmationModal({
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
             {T("confirm_transfer", "Confirm Transfer")}
           </button>
+        </div>
+          </div>
         </div>
       </div>
     </div>

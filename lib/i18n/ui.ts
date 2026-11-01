@@ -2,6 +2,11 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translateHeader, registerUiDictionaryFallback } from "@/lib/i18n/table-headers";
 
 export type UiKey =
+  | "plane.payment_unverified"
+  | "plane.preview_unavailable"
+  | "plane.preview_detail"
+  | "plane.preview_branch"
+
   | "invtpl.center_template_tab"
   | "invtpl.choose_template"
   | "invtpl.col_discount"
@@ -13087,6 +13092,11 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "plane.payment_unverified": "Paid amounts cannot be verified from cash/bank postings. The entered advance is not treated as a payment.",
+  "plane.preview_unavailable": "The complete payment review is unavailable. Remaining transfer requires a verified bill, loading, country currency and exchange rate.",
+  "plane.preview_detail": "Details",
+  "plane.preview_branch": "Branch Details",
+
   "locmaster.name_required": "Location name is required",
   "locmaster.country_required": "Please select a country first",
   "locmaster.save_failed": "Failed to save location",
@@ -39343,7 +39353,12 @@ const en: Dict = {
 };
 
 const ur: Dict = {
+
 ...en,
+  "plane.payment_unverified": "نقد یا بینک کی پوسٹنگ سے ادا شدہ رقم کی تصدیق نہیں ہو سکی۔ درج کردہ ایڈوانس کو ادائیگی نہیں گنا گیا۔",
+  "plane.preview_unavailable": "مکمل ادائیگی کی رپورٹ دستیاب نہیں۔ بقایا میں منتقلی کے لیے تصدیق شدہ بل، لوڈنگ، ملک کی کرنسی اور شرح تبادلہ ضروری ہیں۔",
+  "plane.preview_detail": "تفصیل",
+  "plane.preview_branch": "برانچ کی تفصیل",
   "locmaster.name_required": "مقام کا نام درکار ہے",
   "locmaster.country_required": "براہ کرم پہلے ملک منتخب کریں",
   "locmaster.save_failed": "مقام محفوظ کرنے میں ناکامی",
@@ -65569,7 +65584,12 @@ const ur: Dict = {
 };
 
 const ar: Dict = {
+
 ...en,
+  "plane.payment_unverified": "لا يمكن التحقق من المبالغ المدفوعة من القيود النقدية أو البنكية. لم تُحتسب الدفعة المقدمة المُدخلة كدفعة فعلية.",
+  "plane.preview_unavailable": "مراجعة الدفع الكاملة غير متاحة. يتطلب تحويل المتبقي فاتورة وتحميلاً وعملة البلد وسعر صرف موثقة.",
+  "plane.preview_detail": "التفاصيل",
+  "plane.preview_branch": "تفاصيل الفرع",
   "locmaster.name_required": "اسم الموقع مطلوب",
   "locmaster.country_required": "يرجى تحديد الدولة أولاً",
   "locmaster.save_failed": "فشل حفظ الموقع",
@@ -91796,7 +91816,12 @@ const ar: Dict = {
 };
 
 const fa: Dict = {
+
 ...en,
+  "plane.payment_unverified": "مبالغ پرداخت‌شده از ثبت نقدی یا بانکی قابل تأیید نیست. پیش‌پرداخت واردشده به‌عنوان پرداخت محاسبه نشده است.",
+  "plane.preview_unavailable": "بررسی کامل پرداخت در دسترس نیست. انتقال مانده به صورتحساب، بارگیری، ارز کشور و نرخ تبدیل تأییدشده نیاز دارد.",
+  "plane.preview_detail": "جزئیات",
+  "plane.preview_branch": "جزئیات شعبه",
   "locmaster.name_required": "نام موقعیت الزامی است",
   "locmaster.country_required": "لطفاً ابتدا کشور را انتخاب کنید",
   "locmaster.save_failed": "ذخیره موقعیت ناموفق بود",
@@ -118022,7 +118047,12 @@ const fa: Dict = {
 };
 
 const ps: Dict = {
+
 ...en,
+  "plane.payment_unverified": "له نغدي یا بانکي ثبتونو څخه ورکړل شوې پیسې نه تاییدېږي. لیکل شوی مخکینی مبلغ تادیه نه ګڼل کېږي.",
+  "plane.preview_unavailable": "د تادیې بشپړ راپور نشته. د پاتې پیسو لېږد تایید شوی بل، بار، د هېواد اسعارو او د تبادلې نرخ ته اړتیا لري.",
+  "plane.preview_detail": "تفصیل",
+  "plane.preview_branch": "د څانګې تفصیل",
   "locmaster.name_required": "د موقعیت نوم اړین دی",
   "locmaster.country_required": "مهرباني وکړئ لومړی هیواد وټاکئ",
   "locmaster.save_failed": "د موقعیت خوندي کول ناکام شول",

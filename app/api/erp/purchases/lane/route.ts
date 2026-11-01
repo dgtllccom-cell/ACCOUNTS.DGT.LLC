@@ -10,7 +10,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { TRANSFER_TYPES } from "@/lib/purchases/lane-rules";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import {
-  ensureLaneFromLoadingRecord, ensureLaneFromLocalPurchase, ensureLaneFromSalesOrder, ensureLaneFromLocalSale,
+  ensureLaneSchema, ensureLaneFromLoadingRecord, ensureLaneFromLocalPurchase, ensureLaneFromSalesOrder, ensureLaneFromLocalSale,
   laneStatesForLoadingRecords, listLaneLoads, transferLoads,
 } from "@/lib/services/purchase-lane-service";
 
@@ -66,9 +66,13 @@ export async function POST(request: NextRequest) {
     const body = bodySchema.parse(await request.json());
     if (body.action === "ensure") {
       const out = await withLocalPg(async (sql) => {
+        await ensureLaneSchema(sql);
         if (body.loadingRecordId) return ensureLaneFromLoadingRecord(sql, body.loadingRecordId, session);
         if (body.localPurchaseId) return ensureLaneFromLocalPurchase(sql, body.localPurchaseId, session);
-        if (body.salesOrderId) return ensureLaneFromSalesOrder(sql, body.salesOrderId, session);
+        if (body.salesOrderId) {
+          return await ensureLaneFromLocalSale(sql, body.salesOrderId, session)
+            ?? await ensureLaneFromSalesOrder(sql, body.salesOrderId, session);
+        }
         return null;
       });
       return apiOk({ lane: out });
