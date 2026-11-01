@@ -76,8 +76,31 @@ export function PdfPreviewModal() {
   useEffect(() => {
     if (isOpen && htmlContent) {
       // Estimate pages (very rough estimate based on sheet class if used, or just default to 1)
+      // Estimate pages dynamically:
+      // 1. Explicit meta count (e.g. meta name="erp-page-count")
+      // 2. Count of sheet classes if multi-sheet HTML
+      // 3. Dynamic row count estimation for large tables
+      const metaMatch = htmlContent.match(/<meta\s+name=["']erp-page-count["']\s+content=["'](\d+)["']/i);
+      const metaPages = metaMatch ? parseInt(metaMatch[1], 10) : 0;
+
       const sheetCount = (htmlContent.match(/class="sheet"/g) || []).length;
-      setPages(Array.from({ length: Math.max(1, sheetCount) }, (_, i) => i + 1));
+
+      let detectedPages = 1;
+      if (metaPages > 0) {
+        detectedPages = metaPages;
+      } else if (sheetCount > 0) {
+        detectedPages = sheetCount;
+      } else {
+        const rowCount = (htmlContent.match(/<tr\b[^>]*>/gi) || []).length;
+        const wantsLandscape = /@page[^}]*\blandscape\b/i.test(htmlContent) || /size\s*:\s*landscape/i.test(htmlContent);
+        const firstCap = wantsLandscape ? 14 : 28;
+        const nextCap = wantsLandscape ? 22 : 36;
+        if (rowCount > firstCap) {
+          detectedPages = 1 + Math.ceil((rowCount - firstCap) / nextCap);
+        }
+      }
+
+      setPages(Array.from({ length: Math.max(1, detectedPages) }, (_, i) => i + 1));
       setCurrentPage(1);
       // Honour the orientation the report builder chose: many wide registers ship
       // `@page { size: A4 landscape }`. Opening them in the modal's default
@@ -212,14 +235,28 @@ export function PdfPreviewModal() {
     }
   };
 
-  const handleShareWhatsApp = () => {
-    const text = encodeURIComponent(`Please find the attached document: ${title}`);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
+  const handleShareWhatsApp = async () => {
+    // 1. Download/prepare the PDF first so the user has the official file ready to attach
+    try {
+      await handleDownloadPdf();
+    } catch {
+      // Continue to messaging window
+    }
+    // 2. Open WhatsApp Web / app with clear professional handover message
+    const msg = encodeURIComponent(`Official ERP Document: ${title}\n\nPlease find the downloaded PDF statement / profile attached above.\nGenerated via Digital Dock ERP.`);
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
   };
 
-  const handleShareEmail = () => {
-    const subject = encodeURIComponent(title);
-    const body = encodeURIComponent(`Please find the document attached or printed via our system.\n\nBest Regards`);
+  const handleShareEmail = async () => {
+    // 1. Ensure verified PDF document is generated/downloaded for the user
+    try {
+      await handleDownloadPdf();
+    } catch {
+      // Continue to mail client
+    }
+    // 2. Open verified email client with standardized ERP reference
+    const subject = encodeURIComponent(`ERP Document: ${title}`);
+    const body = encodeURIComponent(`Dear Recipient,\n\nPlease find attached the verified ERP report for ${title}.\n\nThe PDF file has been prepared from the Digital Dock ERP system.\n\nBest regards,\nERP Operations Team`);
     window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
   };
 

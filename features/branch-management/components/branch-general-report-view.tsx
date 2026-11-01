@@ -1334,10 +1334,11 @@ export function BranchGeneralReportView({
             size="sm"
             className="h-7 text-[11px] font-bold gap-1 bg-white border-slate-300 hover:bg-slate-50 focus:ring-1 focus:ring-indigo-500 py-0 px-2"
             onClick={() => {
-              const link = document.createElement("a");
-              link.href = "/exports/DGT_Standard_Branch_Users.pdf";
-              link.download = "DGT_Standard_Branch_Users.pdf";
-              link.click();
+              import("@/lib/reports/print-dom-fragment").then((m) => {
+                if (!m.printDomFragmentViaModal("branch-general-report-shell", tt("bgr.title", "Branch General Report"), { lang })) {
+                  window.print();
+                }
+              });
             }}
           >
             <Download className="h-3 w-3 text-blue-600" />

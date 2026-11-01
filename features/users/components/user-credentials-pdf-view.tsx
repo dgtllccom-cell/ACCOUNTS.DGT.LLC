@@ -147,7 +147,7 @@ export function UserCredentialsPdfView() {
             {tt("user_credentials_pdf_title", "Enterprise User Accounts, Usernames & Credentials")}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {tt("user_credentials_pdf_sub", "Official verified usernames, logins and passwords (Chaman@9090) directory for all system users.")}
+            {tt("user_credentials_pdf_sub", "Official verified usernames, logins and passwords (••••••••) directory for all system users.")}
           </p>
         </div>
 
@@ -201,8 +201,8 @@ export function UserCredentialsPdfView() {
             <span className="text-[11px] font-bold uppercase tracking-wider">{tt("master_password", "Master Password")}</span>
             <Lock className="h-4 w-4 text-rose-500" />
           </div>
-          <div className="mt-2 font-mono text-xl font-bold text-rose-600 dark:text-rose-400">Chaman@9090</div>
-          <p className="text-[11px] text-slate-400 mt-0.5">Standardized test credentials</p>
+          <div className="mt-2 font-mono text-xl font-bold text-rose-600 dark:text-rose-400">••••••••</div>
+          <p className="text-[11px] text-slate-400 mt-0.5">Restricted security credentials</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-xs">
@@ -254,7 +254,7 @@ export function UserCredentialsPdfView() {
                 <Th className="py-2.5 px-3">Username (لاگ ان یوزر نیم)</Th>
                 <Th className="py-2.5 px-3">Full Name (صارف کا نام)</Th>
                 <Th className="py-2.5 px-3">Login Email</Th>
-                <Th className="py-2.5 px-3">Password</Th>
+                <Th className="py-2.5 px-3">Access Clearance</Th>
                 <Th className="py-2.5 px-3">Role</Th>
                 <Th className="py-2.5 px-3">Branch / Country</Th>
                 <Th className="py-2.5 px-3 text-center">Copy</Th>
