@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorize } from "@/lib/permissions/middleware";
+import { authorize, ErpPermissionError } from "@/lib/permissions/middleware";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { getAccessRegisterData } from "@/lib/repositories/access-register-repository";
 
 export async function GET(request: NextRequest) {
@@ -119,6 +120,9 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error: any) {
+    // a signed-out visitor is redirected to sign-in (Next control flow), a missing permission is a 403 - neither is a "500"
+    rethrowIfNextControlFlow(error);
+    if (error instanceof ErpPermissionError) return NextResponse.json({ error: error.message }, { status: 403 });
     return NextResponse.json({ error: error.message || "Failed to serve Handover PDF report" }, { status: 500 });
   }
 }
