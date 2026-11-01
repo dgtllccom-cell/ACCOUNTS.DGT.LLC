@@ -18,6 +18,7 @@ const data = (normal: "debit" | "credit"): LedgerPrintData => ({
     stateProvince: "Dubai",
     city: "Deira",
     finalAddress: "Office 402, Al Ras Building, Deira, Dubai",
+    address: "Deira, Dubai",
     phone: "+97142233445",
     whatsapp: "+971501234567",
     email: "billing@acme.ae",
@@ -93,39 +94,42 @@ describe("ledger statement print layouts", () => {
     expect(landscapeColsHeader).toContain(">Branch<");
   });
 
-  it("renders 17 bank-statement account details fields in sequence on page 1 with Account Number before Account Name", () => {
+  it("renders three small information panels at the top: Branch Details, Customer / Account Details, and Ledger / Balance Summary", () => {
     const html = buildLedgerStatementPrintHtml(data("debit"), { lang: "en", orientation: "portrait" });
+    
+    // Panel headers
+    expect(html).toContain("Branch Details");
+    expect(html).toContain("Customer / Account Details");
+    expect(html).toContain("Ledger / Balance Summary");
+
+    // Panel 1: Branch Details fields
+    expect(html).toContain("Deira Main Branch");
+    expect(html).toContain("BR-01");
+    expect(html).toContain("United Arab Emirates");
+    expect(html).toContain("Dubai");
+    expect(html).toContain("Deira");
+
+    // Panel 2: Customer / Account Details fields
     expect(html).toContain("ACC-1001");
     expect(html).toContain("CUST-500");
     expect(html).toContain("Acme &lt;Ltd&gt;");
     expect(html).toContain("Customer Account");
     expect(html).toContain("Trade Receivable");
     expect(html).toContain("AED");
-    expect(html).toContain("2025-01-15");
-    expect(html).toContain("Deira Main Branch");
-    expect(html).toContain("BR-01");
-    expect(html).toContain("ARE");
-    expect(html).toContain("United Arab Emirates");
-    expect(html).toContain("Dubai");
-    expect(html).toContain("Deira");
-    expect(html).toContain("Office 402, Al Ras Building, Deira, Dubai");
     expect(html).toContain("+97142233445");
     expect(html).toContain("+971501234567");
     expect(html).toContain("billing@acme.ae");
+    expect(html).toContain("Office 402, Al Ras Building, Deira, Dubai");
 
-    // Verify Account Number appears before Account Name in the Account Details section
-    const gridHtml = html.match(/<div class="acct-grid">([\s\S]*?)<\/div>\s*<div class="fin-summary">/)?.[1] ?? "";
-    const accNumIndex = gridHtml.indexOf("ACC-1001");
-    const accNameIndex = gridHtml.indexOf("Acme &lt;Ltd&gt;");
+    // Verify Account Number appears before Account Name in the Customer / Account Details panel
+    const panelHtml = html.match(/<div class="card-hdr">Customer \/ Account Details<\/div>([\s\S]*?)<\/div>\s*<\/div>/)?.[1] ?? "";
+    const accNumIndex = panelHtml.indexOf("ACC-1001");
+    const accNameIndex = panelHtml.indexOf("Acme &lt;Ltd&gt;");
     expect(accNumIndex).toBeGreaterThan(-1);
     expect(accNameIndex).toBeGreaterThan(-1);
     expect(accNumIndex).toBeLessThan(accNameIndex);
-  });
 
-  it("renders integrated financial summary and does not repeat totals underneath the table", () => {
-    const html = buildLedgerStatementPrintHtml(data("debit"), { lang: "en", orientation: "portrait" });
-
-    // Integrated financial summary presence
+    // Panel 3: Ledger / Balance Summary fields
     expect(html).toContain("Total Debit");
     expect(html).toContain("Total Credit");
     expect(html).toContain("Grand Balance");
@@ -133,9 +137,15 @@ describe("ledger statement print layouts", () => {
     expect(html).toContain("Last Date");
     expect(html).toContain("Total Entries");
 
-    // Must NOT have repeated totals underneath the table
-    expect(html).not.toContain("Totals for the period");
-    expect(html).not.toContain("Closing balance carried forward");
+    // No SAMPLE DATA watermarks
+    expect(html).not.toContain("SAMPLE DATA");
+    expect(html).not.toContain("PRINT LAYOUT SAMPLE");
+  });
+
+  it("applies yellow/amber header styling to the ledger table", () => {
+    const html = buildLedgerStatementPrintHtml(data("debit"), { lang: "en", orientation: "portrait" });
+    expect(html).toContain("#fef08a");
+    expect(html).toContain("#713f12");
   });
 
   it("sets the A4 page size per layout and repeats the header", () => {
