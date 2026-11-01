@@ -1,42 +1,51 @@
+// File: lib/reports/ledger-statement-print.ts
 /**
- * Account Ledger Statement — print / PDF layouts for the EXISTING Detailed Ledger (features/reports/ledger-report).
+ * Detailed Account Ledger Statement — A4 Portrait & Landscape Printing Engine
  *
- * Two independently designed A4 layouts (not one table rotated):
- *   portrait  — 7 columns. Voucher + manual ref stacked in one cell; source · branch · user · foreign-currency detail printed as a
- *               small second line under the particulars, so the money columns keep their full width.
- *   landscape — 12 columns. Every field in its own column, including currency / exchange rate, branch and user.
- *
- * Both: letterhead + account panel + period summary on page 1; a compact account line and the column header repeat on every
- * page (<thead> = table-header-group); rows never split across pages; opening / totals / closing rows; signatures kept together
- * on the last page; "Page x / N" + printed-by in the @page margin boxes; five languages with RTL for UR / AR / FA / PS.
- * Amounts, dates and codes are data — printed as-is in an LTR isolate so they never reorder inside RTL text.
- *
- * Pure: builds HTML only. The data it receives is whatever the scoped, permission-checked ledger API returned to this login
- * (assertFinancialAccess + hierarchy scope on /api/erp/accounting/reports/ledger/*) — printing cannot widen access.
+ * Implements the approved compact ledger layout:
+ * - Three small information panels at the top (Branch Details, Customer / Account Details, Ledger / Balance Summary)
+ * - Original yellow/amber ledger table underneath with right-aligned monetary values
+ * - 8 columns in Portrait (Customer statement)
+ * - 10 columns in Landscape (Internal detailed statement)
+ * - Clean multi-page continuation and 5-language RTL support
+ * - No SAMPLE DATA watermarks on real business reports
  */
 
 import { t } from "@/lib/i18n/ui";
-import { printStore } from "@/lib/store/print-store";
-import type { ERPCompanyInfo } from "@/lib/reports/erp-report-template-builder";
 
 export type LedgerPrintOrientation = "portrait" | "landscape";
 
+export type ERPCompanyInfo = {
+  name?: string | null;
+  legalName?: string | null;
+  taxNo?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  website?: string | null;
+  address?: string | null;
+  logoUrl?: string | null;
+};
+
 export type LedgerPrintLine = {
-  date: string | null;
-  serial: string | null;
-  manualRef: string | null;
-  source: "ledger_posting_batches" | "roznamcha_entries" | string | null;
-  branch: string | null;
-  user: string | null;
-  description: string | null;
-  /** currency of the original posting; differs from the ledger currency for foreign-currency entries */
-  currency: string | null;
+  date: string;
+  serial?: string | null;
+  manualRef?: string | null;
+  source: string;
+  branch?: string | null;
+  user?: string | null;
+  description?: string | null;
+  currency?: string | null;
   usdRate?: number | null;
-  usdAmount?: number | null;
   debit: number;
   credit: number;
   /** running balance on the account's NORMAL side (positive = normal side) */
   balance: number;
+  /** Specific columns requested */
+  entryNo?: string | null;
+  rznNo?: string | null;
+  rznName?: string | null;
+  userCode?: string | null;
+  branchCode?: string | null;
 };
 
 export type LedgerPrintData = {
@@ -47,11 +56,22 @@ export type LedgerPrintData = {
     customerNumber?: string | null;
     manualReference?: string | null;
     kind?: string | null;
+    category?: string | null;
     currency: string;
+    openedDate?: string | null;
+    branchName?: string | null;
+    branchCode?: string | null;
+    countryCode?: string | null;
     country?: string | null;
+    stateProvince?: string | null;
+    city?: string | null;
+    finalAddress?: string | null;
+    address?: string | null;
+    phone?: string | null;
+    whatsapp?: string | null;
+    email?: string | null;
     branch?: string | null;
     company?: string | null;
-    address?: string | null;
   };
   normalBalance: "debit" | "credit";
   fromDate: string;
@@ -70,12 +90,19 @@ export type LedgerPrintData = {
 const RTL = new Set(["ur", "ar", "fa", "ps"]);
 
 function esc(v: unknown): string {
-  return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
+
 function money(n: number): string {
   const v = Number.isFinite(n) ? Math.abs(n) : 0;
   return v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
 /** an LTR island for data inside RTL text (numbers, dates, codes) */
 function ltr(v: unknown): string {
   return `<bdi dir="ltr">${esc(v)}</bdi>`;
@@ -86,75 +113,91 @@ export function buildLedgerStatementPrintHtml(data: LedgerPrintData, opts: { lan
   const isRtl = RTL.has(lang);
   const portrait = opts.orientation === "portrait";
   const L = (key: string, fallback: string) => t(lang as never, `lprint.${key}` as never, fallback);
+
   const dr = L("dr", "Dr");
   const cr = L("cr", "Cr");
-  // a positive running balance sits on the account's normal side
-  const side = (bal: number) => (bal >= 0) === (data.normalBalance === "debit") ? dr : cr;
+
+  // a positive balance sits on the account's normal side; negative is overdrawn
+  const side = (bal: number) => ((bal >= 0) === (data.normalBalance === "debit") ? dr : cr);
   const bal = (n: number) => `${ltr(money(n))} <span class="dc">${esc(side(n))}</span>`;
-  const amt = (n: number) => (n ? ltr(money(n)) : "");
+  const amt = (n: number) => (n ? ltr(money(n)) : `<span class="dash">-</span>`);
+
   const src = (s: LedgerPrintLine["source"]) =>
-    s === "roznamcha_entries" ? L("src_roznamcha", "Roznamcha") : s === "ledger_posting_batches" ? L("src_journal", "Journal") : esc(s || "");
+    s === "roznamcha_entries"
+      ? L("src_roznamcha", "Roznamcha")
+      : s === "ledger_posting_batches"
+      ? L("src_journal", "Journal")
+      : esc(s || "");
+
   const dateOf = (d: string | null) => (d ? ltr(String(d).slice(0, 10)) : "");
   const c = data.company || {};
   const a = data.account;
   const printedAt = data.printedAt || new Date().toISOString().slice(0, 16).replace("T", " ");
-  const countryBranch = [a.country, a.branch].filter(Boolean).join(" · ");
+
   const foreign = (l: LedgerPrintLine) => Boolean(l.currency && a.currency && l.currency !== a.currency);
   const rateText = (l: LedgerPrintLine) =>
     foreign(l) ? `${esc(l.currency)}${l.usdRate && l.usdRate !== 1 ? ` @ ${ltr(l.usdRate)}` : ""}` : esc(l.currency || a.currency);
 
-  // ── column sets: designed per orientation ─────────────────────────────────────────────────────────────────────────
+  // ── Column Sets Designed Exactly to Specification ──────────────────────────────────────────
   type Col = { key: string; label: string; w: number; cls?: string };
-  const cols: Col[] = portrait
-    ? [
-        { key: "no", label: L("col_no", "No."), w: 4, cls: "c" },
-        { key: "date", label: L("col_date", "Date"), w: 10, cls: "nw" },
-        { key: "voucher", label: L("col_voucher", "Voucher / Ref."), w: 14 },
-        { key: "particulars", label: L("col_particulars", "Particulars"), w: 32 },
-        { key: "debit", label: L("col_debit", "Debit"), w: 12, cls: "num" },
-        { key: "credit", label: L("col_credit", "Credit"), w: 12, cls: "num" },
-        { key: "balance", label: L("col_balance", "Balance"), w: 16, cls: "num" },
-      ]
-    : [
-        // Particulars gets the width the short columns (source, branch, user, rate) do not need
-        { key: "no", label: L("col_no", "No."), w: 3, cls: "c" },
-        { key: "date", label: L("col_date", "Date"), w: 6.5, cls: "nw" },
-        { key: "serial", label: L("col_serial", "Voucher / Serial"), w: 7.5 },
-        { key: "manualRef", label: L("col_manual_ref", "Manual Ref."), w: 11 },
-        { key: "source", label: L("col_source", "Source"), w: 6.5 },
-        { key: "branch", label: L("col_branch", "Branch"), w: 8 },
-        { key: "user", label: L("col_user", "User"), w: 6 },
-        { key: "particulars", label: L("col_particulars", "Particulars"), w: 21 },
-        { key: "rate", label: L("col_currency_rate", "Currency / Rate"), w: 6 },
-        { key: "debit", label: L("col_debit", "Debit"), w: 7.5, cls: "num" },
-        { key: "credit", label: L("col_credit", "Credit"), w: 7.5, cls: "num" },
-        { key: "balance", label: L("col_balance", "Balance"), w: 9.5, cls: "num" },
-      ];
+
+  // Portrait (8 columns): Date | Entry No. | Rzn. No. | Rzn. Name | Details | DR | CR | Balance
+  const portraitCols: Col[] = [
+    { key: "date", label: L("col_date", "Date"), w: 10, cls: "nw" },
+    { key: "entryNo", label: L("col_entry_no", "Entry No."), w: 9, cls: "nw" },
+    { key: "rznNo", label: L("col_rzn_no", "Rzn. No."), w: 9, cls: "nw" },
+    { key: "rznName", label: L("col_rzn_name", "Rzn. Name"), w: 11 },
+    { key: "details", label: L("col_details", "Details"), w: 34 },
+    { key: "debit", label: L("col_debit", "Debit (Dr)"), w: 9, cls: "num" },
+    { key: "credit", label: L("col_credit", "Credit (Cr)"), w: 9, cls: "num" },
+    { key: "balance", label: L("col_balance", "Balance"), w: 9, cls: "num" },
+  ];
+
+  // Landscape (10 columns): Date | Entry No. | Rzn. No. | Rzn. Name | User | Branch | Details | DR | CR | Balance
+  const landscapeCols: Col[] = [
+    { key: "date", label: L("col_date", "Date"), w: 7, cls: "nw" },
+    { key: "entryNo", label: L("col_entry_no", "Entry No."), w: 8, cls: "nw" },
+    { key: "rznNo", label: L("col_rzn_no", "Rzn. No."), w: 8, cls: "nw" },
+    { key: "rznName", label: L("col_rzn_name", "Rzn. Name"), w: 9 },
+    { key: "user", label: L("col_user", "User"), w: 7 },
+    { key: "branch", label: L("col_branch", "Branch"), w: 7 },
+    { key: "details", label: L("col_details", "Details"), w: 32 },
+    { key: "debit", label: L("col_debit", "Debit (Dr)"), w: 7, cls: "num" },
+    { key: "credit", label: L("col_credit", "Credit (Cr)"), w: 7, cls: "num" },
+    { key: "balance", label: L("col_balance", "Balance"), w: 8, cls: "num" },
+  ];
+
+  const cols = portrait ? portraitCols : landscapeCols;
   const span = cols.length;
   const amountStart = cols.findIndex((k) => k.key === "debit");
 
-  const cell = (l: LedgerPrintLine, i: number, key: string): string => {
+  const cell = (l: LedgerPrintLine, key: string): string => {
     switch (key) {
-      case "no": return String(i + 1);
-      case "date": return dateOf(l.date);
-      case "voucher":
-        return `<div class="strong">${ltr(l.serial || "—")}</div>${l.manualRef ? `<div class="sub">${ltr(l.manualRef)}</div>` : ""}`;
-      case "serial": return ltr(l.serial || "—");
-      case "manualRef": return l.manualRef ? ltr(l.manualRef) : "";
-      case "source": return src(l.source);
-      case "branch": return esc(l.branch || "");
-      case "user": return esc(l.user || "");
-      case "rate": return rateText(l);
-      case "particulars": {
+      case "date":
+        return dateOf(l.date);
+      case "entryNo":
+        return ltr(l.entryNo || l.serial || "—");
+      case "rznNo":
+        return ltr(l.rznNo || l.manualRef || "—");
+      case "rznName":
+        return esc(l.rznName || src(l.source) || "—");
+      case "user":
+        return esc(l.userCode || l.user || "—");
+      case "branch":
+        return esc(l.branchCode || l.branch || "—");
+      case "details": {
         const main = `<div class="desc">${esc(l.description || "—")}</div>`;
-        if (!portrait) return main;
-        const meta = [src(l.source), l.branch ? esc(l.branch) : "", l.user ? esc(l.user) : "", foreign(l) ? rateText(l) : ""].filter(Boolean).join(" · ");
-        return main + (meta ? `<div class="sub">${meta}</div>` : "");
+        const rateInfo = foreign(l) ? `<div class="sub">${rateText(l)}</div>` : "";
+        return main + rateInfo;
       }
-      case "debit": return amt(l.debit);
-      case "credit": return amt(l.credit);
-      case "balance": return bal(l.balance);
-      default: return "";
+      case "debit":
+        return amt(l.debit);
+      case "credit":
+        return amt(l.credit);
+      case "balance":
+        return bal(l.balance);
+      default:
+        return "";
     }
   };
 
@@ -162,36 +205,19 @@ export function buildLedgerStatementPrintHtml(data: LedgerPrintData, opts: { lan
     `<tr class="${cls}"><td colspan="${amountStart}" class="lbl">${esc(label)}</td><td class="num">${debit}</td><td class="num">${credit}</td><td class="num">${balance}</td></tr>`;
 
   const bodyRows = data.lines.length
-    ? data.lines.map((l, i) => `<tr>${cols.map((k) => `<td class="${k.cls ?? ""}">${cell(l, i, k.key)}</td>`).join("")}</tr>`).join("\n")
+    ? data.lines
+        .map((l) => `<tr>${cols.map((k) => `<td class="${k.cls ?? ""}">${cell(l, k.key)}</td>`).join("")}</tr>`)
+        .join("\n")
     : `<tr><td colspan="${span}" class="empty">${esc(L("no_entries", "No entries in this period."))}</td></tr>`;
 
-  const accountFields: [string, string][] = [
-    [L("account", "Account"), esc(a.name)],
-    [L("account_code", "Account No."), ltr(a.code || "—")],
-    ...(a.customerNumber ? [[L("customer_no", "Customer No."), ltr(a.customerNumber)] as [string, string]] : []),
-    ...(a.manualReference ? [[L("manual_ref", "Manual Ref."), ltr(a.manualReference)] as [string, string]] : []),
-    [L("currency", "Currency"), ltr(a.currency)],
-    ...(countryBranch ? [[L("country_branch", "Country / Branch"), esc(countryBranch)] as [string, string]] : []),
-    ...(a.company ? [[L("company", "Company"), esc(a.company)] as [string, string]] : []),
-    ...(a.kind ? [[L("account_type", "Account Type"), esc(a.kind)] as [string, string]] : []),
-    [L("normal_balance", "Normal Balance"), esc(data.normalBalance === "credit" ? L("normal_credit", "Credit (Cr)") : L("normal_debit", "Debit (Dr)"))],
-  ];
+  const footLeft = esc(`${c.name || "DGT ERP"} — ${L("title", "Account Ledger Statement")}`);
+  const footRight = `${L("page", "Page")} counter(page) ${L("of", "of")} counter(pages)`;
+  const fontFamily = isRtl
+    ? "'Noto Naskh Arabic', 'Segoe UI', Tahoma, Arial, sans-serif"
+    : "'Inter', 'Segoe UI', Roboto, Arial, sans-serif";
+  const base = portrait ? 7.6 : 7.4;
 
-  // portrait: one row of five; landscape: a 2×2 block (opening/closing, debit/credit) + a slim entries line
-  const sOpen = [L("opening", "Opening Balance"), bal(data.openingBalance), "op"];
-  const sDr = [L("total_debit", "Total Debit"), ltr(money(data.totalDebit)), "dr"];
-  const sCr = [L("total_credit", "Total Credit"), ltr(money(data.totalCredit)), "cr"];
-  const sClose = [L("closing", "Closing Balance"), bal(data.closingBalance), "cl"];
-  const sEnt = [L("entries", "Entries"), ltr(data.lines.length), "en"];
-  const summary = portrait ? [sOpen, sDr, sCr, sClose, sEnt] : [sOpen, sClose, sDr, sCr, sEnt];
-
-  const contact = [c.address, c.phone, c.email, c.website].filter(Boolean).map((x) => esc(x)).join(" · ");
-  const footLeft = `${c.name ? `${c.name} · ` : ""}${a.code || ""}`.replace(/"/g, "'");
-  const footRight = `${L("printed_by", "Printed by")}: ${data.printedBy || "—"} · ${printedAt}`.replace(/"/g, "'");
-  const pageWord = L("page", "Page").replace(/"/g, "'");
-  const ofWord = L("of", "of").replace(/"/g, "'");
-  const fontFamily = isRtl ? "'Noto Naskh Arabic', 'Segoe UI', Tahoma, Arial, sans-serif" : "'Inter', 'Segoe UI', Roboto, Arial, sans-serif";
-  const base = portrait ? 7.8 : 7.6;
+  const contact = [c.phone, c.email, c.address].filter(Boolean).map(esc).join(" · ");
 
   return `<!doctype html>
 <html lang="${esc(lang)}" dir="${isRtl ? "rtl" : "ltr"}">
@@ -200,86 +226,174 @@ export function buildLedgerStatementPrintHtml(data: LedgerPrintData, opts: { lan
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${esc(L("title", "Account Ledger Statement"))} — ${esc(a.name)}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Naskh+Arabic:wght@400;600;700;800&display=swap');
   @page {
     size: A4 ${portrait ? "portrait" : "landscape"};
-    margin: ${portrait ? "11mm 10mm 14mm 10mm" : "9mm 9mm 13mm 9mm"};
+    margin: ${portrait ? "10mm 9mm 12mm 9mm" : "8mm 8mm 11mm 8mm"};
     @bottom-left { content: "${isRtl ? footRight : footLeft}"; font: 7pt ${fontFamily}; color: #64748b; }
-    @bottom-center { content: "${pageWord} " counter(page) " ${ofWord} " counter(pages); font: 700 7.5pt ${fontFamily}; color: #0f172a; }
-    @bottom-right { content: "${isRtl ? footLeft : footRight}"; font: 7pt ${fontFamily}; color: #64748b; }
+    @bottom-right { content: "${isRtl ? footLeft : footRight}"; font: 700 7.5pt ${fontFamily}; color: #0f172a; }
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #fff; color: #0f172a; }
   body { font-family: ${fontFamily}; font-size: ${base}pt; line-height: ${isRtl ? 1.45 : 1.25}; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .doc { width: 100%; max-width: ${portrait ? "190mm" : "279mm"}; margin: 0 auto; padding: 6mm 0; }
+  .doc { width: 100%; max-width: ${portrait ? "192mm" : "281mm"}; margin: 0 auto; padding: 4mm 0; }
   bdi { unicode-bidi: isolate; }
   .no-print-toolbar { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0; background: #fff; }
-  .no-print-toolbar button { font: 600 12px ${fontFamily}; padding: 6px 14px; border-radius: 6px; border: 1px solid #0f172a; background: #0f172a; color: #fff; cursor: pointer; }
+  .no-print-toolbar button { font: 600 12px ${fontFamily}; padding: 6px 14px; border-radius: 6px; border: 1px solid #d97706; background: #f59e0b; color: #0f172a; cursor: pointer; }
   @media print { .no-print-toolbar { display: none; } .doc { padding: 0; max-width: none; } }
 
-  /* letterhead */
-  .lh { display: flex; justify-content: space-between; align-items: flex-start; gap: 6mm; border-bottom: 2px solid #0f172a; padding-bottom: 2.5mm; }
-  .lh .brand { display: flex; gap: 3mm; align-items: center; min-width: 0; }
-  .lh img { max-height: ${portrait ? "15mm" : "13mm"}; max-width: 35mm; object-fit: contain; }
-  .lh .co { font-size: ${portrait ? 12 : 12.5}pt; font-weight: 800; letter-spacing: .2px; }
-  .lh .co-sub { color: #475569; font-size: 7.4pt; margin-top: .6mm; overflow-wrap: anywhere; }
-  .lh .title { text-align: end; flex-shrink: 0; }
-  .lh .title h1 { margin: 0; font-size: ${portrait ? 13 : 14}pt; font-weight: 800; color: #0f172a; text-transform: ${isRtl ? "none" : "uppercase"}; letter-spacing: ${isRtl ? 0 : ".6px"}; }
-  .lh .title .meta { color: #334155; font-size: 7.6pt; margin-top: .8mm; }
+  /* Company Letterhead */
+  .lh { display: flex; justify-content: space-between; align-items: flex-start; gap: 5mm; padding-bottom: 2mm; margin-bottom: 2mm; border-bottom: 1.5px solid #e2e8f0; }
+  .lh .brand { display: flex; gap: 3.5mm; align-items: center; }
+  .lh .brand img { width: 13mm; height: 13mm; object-fit: contain; }
+  .lh .co { font-size: 11pt; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
+  .lh .co-sub { font-size: 7.2pt; color: #64748b; margin-top: 0.3mm; }
+  .lh .title { text-align: end; }
+  .lh .title h1 { margin: 0; font-size: 13pt; font-weight: 900; color: #78350f; text-transform: uppercase; letter-spacing: 0.5px; }
+  .lh .title .meta { font-size: 7.2pt; color: #64748b; margin-top: 0.5mm; font-weight: 600; }
 
-  /* account panel + summary */
-  .panel { display: grid; grid-template-columns: ${portrait ? "1fr" : "1.55fr 1fr"}; gap: 3mm; margin: 3mm 0 2.5mm; break-inside: avoid; }
-  .acct { border: 1px solid #cbd5e1; border-radius: 1.5mm; padding: 2mm 2.5mm; display: grid; grid-template-columns: ${portrait ? "repeat(2, minmax(0, 1fr))" : "repeat(3, minmax(0, 1fr))"}; gap: 1.2mm 4mm; }
-  .acct .f .k { color: #64748b; font-size: 6.8pt; text-transform: ${isRtl ? "none" : "uppercase"}; letter-spacing: ${isRtl ? 0 : ".3px"}; }
-  .acct .f .v { font-weight: 700; font-size: 8pt; overflow-wrap: anywhere; }
-  .acct .f.wide { grid-column: 1 / -1; }
-  .sum { display: grid; grid-template-columns: repeat(${portrait ? 5 : 2}, minmax(0, 1fr)); gap: 1.5mm; align-content: start; }
-  .sum .b { border: 1px solid #cbd5e1; border-radius: 1.5mm; padding: 1.6mm 2mm; background: #f8fafc; }
-  .sum .b .k { color: #64748b; font-size: 6.6pt; }
-  .sum .b .v { font-weight: 800; font-size: ${portrait ? 8.4 : 9}pt; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .sum .b.cl { background: #0f172a; color: #fff; border-color: #0f172a; } .sum .b.cl .k { color: #cbd5e1; }
-  ${portrait ? "" : ".sum .b.en { grid-column: 1 / -1; padding: .8mm 2mm; display: flex; justify-content: space-between; align-items: baseline; }"}
-  .filter-note { margin: 0 0 2mm; padding: 1.2mm 2mm; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 1mm; font-size: 7.4pt; color: #92400e; }
+  /* Three Compact Information Panels (Page 1 Only) */
+  .panels-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2.5mm;
+    margin: 2mm 0 3mm;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .info-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 1.5mm;
+    background: #ffffff;
+    overflow: hidden;
+  }
+  .card-hdr {
+    background: #f1f5f9;
+    color: #1e293b;
+    font-size: 7.2pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 1.4mm 2.5mm;
+    border-bottom: 1px solid #cbd5e1;
+  }
+  .card-body {
+    padding: 1.8mm 2.5mm;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9mm;
+    font-size: 6.8pt;
+  }
+  .kv {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5mm;
+    align-items: baseline;
+  }
+  .kv .k {
+    color: #64748b;
+    font-weight: 600;
+    white-space: nowrap;
+    text-transform: ${isRtl ? "none" : "capitalize"};
+  }
+  .kv .v {
+    color: #0f172a;
+    font-weight: 600;
+    text-align: end;
+    overflow-wrap: anywhere;
+  }
+  .font-bold { font-weight: 800 !important; }
+  .text-debit { color: #be123c !important; font-weight: 700; }
+  .text-credit { color: #047857 !important; font-weight: 700; }
 
-  /* ledger table */
+  /* Ledger Table with Original Yellow / Amber Header */
   table.data-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   thead { display: table-header-group; }
   tfoot { display: table-row-group; }
-  thead tr.run th { background: #fff; color: #334155; font-weight: 600; font-size: 7pt; text-align: start; padding: 0 0 1mm; border: 0; }
-  thead tr.run th .acc { font-weight: 800; color: #0f172a; }
-  thead tr.cols th { background: #0f172a; color: #fff; font-weight: 700; font-size: 7.2pt; padding: 1.3mm 1.2mm; text-align: start; border: 1px solid #0f172a; vertical-align: bottom; overflow-wrap: break-word; word-break: normal; hyphens: manual; }
-  thead tr.cols th.num { text-align: end; } thead tr.cols th.c { text-align: center; }
-  tbody td { padding: .9mm 1.2mm; border-bottom: 1px solid #e2e8f0; vertical-align: top; overflow-wrap: break-word; word-break: normal; }
+  thead tr.run th {
+    background: #ffffff;
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 7.2pt;
+    text-align: start;
+    padding: 0 0 1.5mm;
+    border: 0;
+  }
+  .cont-head { padding-bottom: 1.5mm; }
+  .cont-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 9pt;
+    font-weight: 800;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 1mm;
+    margin-bottom: 1mm;
+  }
+  .cont-title {
+    font-size: 8pt;
+    font-weight: 800;
+    color: #78350f;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  thead tr.cols th {
+    background: #fef08a; /* Original Yellow/Amber */
+    color: #713f12;
+    font-weight: 800;
+    font-size: 7.2pt;
+    padding: 1.4mm 1.2mm;
+    text-align: start;
+    border: 1px solid #eab308;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+  thead tr.cols th.num { text-align: end; }
+  thead tr.cols th.c { text-align: center; }
+
+  tbody td {
+    padding: 1mm 1.2mm;
+    border-bottom: 1px solid #eef2f7;
+    vertical-align: top;
+    overflow-wrap: break-word;
+    word-break: normal;
+    font-size: 7.2pt;
+  }
   tbody tr { break-inside: avoid; page-break-inside: avoid; }
-  tbody tr:nth-child(even) td { background: #f8fafc; }
-  td.num { text-align: end; white-space: nowrap; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
-  td.c { text-align: center; color: #64748b; } td.nw { white-space: nowrap; }
-  td .strong { font-weight: 700; } td .sub { color: #64748b; font-size: 6.6pt; margin-top: .2mm; line-height: 1.2; }
-  td .desc { white-space: pre-wrap; }
-  .dc { font-size: 6.6pt; font-weight: 700; color: #475569; margin-inline-start: .6mm; }
-  tr.opening td { background: #eff6ff !important; font-style: italic; border-bottom: 1px solid #93c5fd; }
-  tr.total-row td { font-weight: 800; background: #f1f5f9 !important; border-top: 1.5px solid #0f172a; border-bottom: 1px solid #0f172a; }
-  tr.total-row.closing td { background: #0f172a !important; color: #fff; } tr.total-row.closing .dc { color: #cbd5e1; }
-  td.lbl { text-align: end; padding-inline-end: 2.5mm; }
+  tbody tr:nth-child(even) td { background: #fefce8; /* Subtle yellow alternating tint */ }
+  td.num { text-align: end; white-space: nowrap; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; font-weight: 600; }
+  td.c { text-align: center; color: #64748b; }
+  td.nw { white-space: nowrap; }
+  td .desc { white-space: pre-wrap; font-size: 7.2pt; }
+  td .sub { color: #64748b; font-size: 6.5pt; margin-top: 0.2mm; line-height: 1.2; }
+  td .dash { color: #94a3b8; font-weight: 400; }
+  .dc { font-size: 6.5pt; font-weight: 700; color: #475569; margin-inline-start: 0.5mm; }
+  tr.opening td { background: #fef9c3 !important; font-style: italic; border-bottom: 1px solid #fde047; }
+  td.lbl { text-align: end; padding-inline-end: 2mm; font-weight: 700; }
   td.empty { text-align: center; color: #64748b; padding: 6mm; }
 
-  /* the end block (totals, closing, note, signatures) is chained to the last entries: it never starts a page on its own */
+  /* Totals row & signatures block */
   tr.total-row { break-before: avoid; page-break-before: avoid; }
+  tr.total-row.totals td { background: #fef9c3 !important; font-weight: 800; border-top: 2px solid #eab308; border-bottom: 1px solid #eab308; }
   tr.total-row.end td { background: #fff !important; color: #0f172a; border: 0; padding: 3mm 0 0; font-weight: 400; }
   .note { color: #64748b; font-size: 6.8pt; }
-  .sign { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: ${portrait ? "8mm" : "16mm"}; margin-top: ${portrait ? "13mm" : "11mm"}; }
-  .sign div { border-top: 1px solid #0f172a; padding-top: 1mm; text-align: center; font-size: 7.4pt; font-weight: 700; }
+  .sign { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: ${portrait ? "8mm" : "16mm"}; margin-top: ${portrait ? "10mm" : "8mm"}; }
+  .sign div { border-top: 1px solid #0f172a; padding-top: 1mm; text-align: center; font-size: 7.2pt; font-weight: 700; }
 </style>
 </head>
 <body>
 <div class="doc" data-layout="${portrait ? "portrait" : "landscape"}">
   <div class="no-print-toolbar"><button type="button" onclick="window.print()">${esc(L("print", "Print"))}</button></div>
 
+  <!-- Letterhead -->
   <header class="lh">
     <div class="brand">
       ${c.logoUrl ? `<img src="${esc(c.logoUrl)}" alt="" />` : ""}
       <div>
-        ${c.name ? `<div class="co">${esc(c.name)}</div>` : ""}
+        <div class="co">${esc(c.name || "DAMAAN GENERAL TRADING L.L.C")}</div>
         ${contact ? `<div class="co-sub">${contact}</div>` : ""}
         ${c.taxNo ? `<div class="co-sub">${esc(L("tax_no", "TRN / Tax No."))}: ${ltr(c.taxNo)}</div>` : ""}
       </div>
@@ -291,57 +405,117 @@ export function buildLedgerStatementPrintHtml(data: LedgerPrintData, opts: { lan
     </div>
   </header>
 
-  <section class="panel">
-    <div class="acct">
-      ${accountFields.map(([k, v], i) => `<div class="f${portrait && i === 0 ? " wide" : ""}"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`).join("")}
+  <!-- Page 1 Only: Three Small Information Panels at the Top -->
+  <section class="panels-row">
+    <!-- Panel 1: Branch Details -->
+    <div class="info-card">
+      <div class="card-hdr">${esc(L("branch_details", "Branch Details"))}</div>
+      <div class="card-body">
+        <div class="kv"><span class="k">${esc(L("branch_name", "Branch Name"))}:</span><span class="v">${esc(a.branchName || a.branch || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("branch_code", "Branch Code"))}:</span><span class="v">${ltr(a.branchCode || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("country", "Country"))}:</span><span class="v">${esc(a.country || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("state_province", "State / Province"))}:</span><span class="v">${esc(a.stateProvince || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("city", "City"))}:</span><span class="v">${esc(a.city || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("final_address", "Address"))}:</span><span class="v">${esc(a.address || [a.city, a.country].filter(Boolean).join(", ") || "—")}</span></div>
+      </div>
     </div>
-    <div class="sum">
-      ${summary.map(([k, v, cls]) => `<div class="b ${cls}"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`).join("")}
+
+    <!-- Panel 2: Customer / Account Details -->
+    <div class="info-card">
+      <div class="card-hdr">${esc(L("customer_account_details", "Customer / Account Details"))}</div>
+      <div class="card-body">
+        <div class="kv"><span class="k">${esc(L("account_code", "Account No."))}:</span><span class="v font-bold">${ltr(a.code || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("customer_no", "Customer No."))}:</span><span class="v">${ltr(a.customerNumber || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("account", "Account Name"))}:</span><span class="v font-bold">${esc(a.name || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("account_type", "Account Type"))}:</span><span class="v">${esc(a.kind || a.category || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("category", "Category"))}:</span><span class="v">${esc(a.category || a.kind || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("currency", "Currency"))}:</span><span class="v font-bold">${ltr(a.currency || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("phone", "Phone"))}:</span><span class="v">${ltr(a.phone || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("whatsapp", "WhatsApp"))}:</span><span class="v">${ltr(a.whatsapp || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("email", "Email"))}:</span><span class="v">${ltr(a.email || "—")}</span></div>
+        <div class="kv"><span class="k">${esc(L("final_address", "Final Address"))}:</span><span class="v">${esc(a.finalAddress || a.address || "—")}</span></div>
+      </div>
+    </div>
+
+    <!-- Panel 3: Ledger / Balance Summary -->
+    <div class="info-card">
+      <div class="card-hdr">${esc(L("ledger_balance_summary", "Ledger / Balance Summary"))}</div>
+      <div class="card-body">
+        <div class="kv"><span class="k">${esc(L("total_debit", "Total Debit"))}:</span><span class="v text-debit">${ltr(money(data.totalDebit))} ${esc(a.currency)}</span></div>
+        <div class="kv"><span class="k">${esc(L("total_credit", "Total Credit"))}:</span><span class="v text-credit">${ltr(money(data.totalCredit))} ${esc(a.currency)}</span></div>
+        <div class="kv"><span class="k">${esc(L("grand_balance", "Grand Balance"))}:</span><span class="v font-bold">${bal(data.closingBalance)} ${esc(a.currency)}</span></div>
+        <div class="kv"><span class="k">${esc(L("starting_date", "Starting Date"))}:</span><span class="v">${ltr(data.fromDate)}</span></div>
+        <div class="kv"><span class="k">${esc(L("last_date", "Last Date"))}:</span><span class="v">${ltr(data.toDate)}</span></div>
+        <div class="kv"><span class="k">${esc(L("total_entries", "Total Entries"))}:</span><span class="v font-bold">${ltr(data.lines.length)}</span></div>
+      </div>
     </div>
   </section>
-  ${data.filterNote ? `<div class="filter-note">${esc(L("filtered", "Filtered view"))}: ${esc(data.filterNote)}</div>` : ""}
 
+  ${data.filterNote ? `<div class="filter-note">${esc(data.filterNote)}</div>` : ""}
+
+  <!-- Ledger Table with Yellow / Amber Header -->
   <table class="data-table">
-    <colgroup>${cols.map((k) => `<col style="width:${k.w}%" />`).join("")}</colgroup>
+    <colgroup>
+      ${cols.map((k) => `<col style="width:${k.w}%" />`).join("")}
+    </colgroup>
     <thead>
-      <tr class="run"><th colspan="${span}"><span class="acc">${esc(a.name)}</span> · ${ltr(a.code || "")} · ${ltr(a.currency)} · ${ltr(data.fromDate)} — ${ltr(data.toDate)}</th></tr>
-      <tr class="cols">${cols.map((k) => `<th class="${k.cls ?? ""}">${esc(k.label)}${k.cls === "num" ? ` <bdi dir="ltr">(${esc(a.currency)})</bdi>` : ""}</th>`).join("")}</tr>
+      <tr class="run">
+        <th colspan="${span}">
+          <div class="cont-head">
+            <div class="cont-top">
+              <span>${esc(c.name || "DAMAAN GENERAL TRADING L.L.C")}</span>
+              <span>${esc(a.name)} (${ltr(a.code)})</span>
+            </div>
+            <div class="cont-title">${esc(L("title", "Account Ledger Statement"))} · ${ltr(data.fromDate)} — ${ltr(data.toDate)}</div>
+          </div>
+        </th>
+      </tr>
+      <tr class="cols">
+        ${cols.map((k) => `<th class="${k.cls ?? ""}">${esc(k.label)}</th>`).join("")}
+      </tr>
     </thead>
     <tbody>
-      ${labelRow(L("opening_row", "Opening balance brought forward"), "opening", "", "", bal(data.openingBalance))}
+      ${
+        data.openingBalance
+          ? labelRow(L("opening_row", "Opening balance brought forward"), "opening", "", "", bal(data.openingBalance))
+          : ""
+      }
       ${bodyRows}
-      ${labelRow(L("totals_row", "Totals for the period"), "total-row", ltr(money(data.totalDebit)), ltr(money(data.totalCredit)), "")}
-      ${labelRow(L("closing_row", "Closing balance carried forward"), "total-row closing", "", "", bal(data.closingBalance))}
-      <tr class="total-row end"><td colspan="${span}">
-        <div class="note">${esc(L("note", "Balances are shown on the account's normal side; Dr = debit, Cr = credit. This is a computer-generated statement."))}</div>
-        <div class="sign">
-          <div>${esc(L("prepared_by", "Prepared by"))}</div>
-          <div>${esc(L("checked_by", "Checked by"))}</div>
-          <div>${esc(L("approved_by", "Approved by"))}</div>
-        </div>
-      </td></tr>
     </tbody>
+    <tfoot>
+      ${labelRow(
+        L("totals_row", "Totals for the period"),
+        "total-row totals",
+        ltr(money(data.totalDebit)),
+        ltr(money(data.totalCredit)),
+        bal(data.closingBalance)
+      )}
+      <tr class="total-row end">
+        <td colspan="${span}">
+          <div class="note">${esc(L("note", "Balances shown on account normal side. Dr = Debit, Cr = Credit. This is a computer-generated statement."))}</div>
+          <div class="sign">
+            <div>${esc(L("prepared_by", "Prepared by"))}</div>
+            <div>${esc(L("checked_by", "Checked by"))}</div>
+            <div>${esc(L("approved_by", "Approved by"))}</div>
+          </div>
+        </td>
+      </tr>
+    </tfoot>
   </table>
 </div>
 </body>
 </html>`;
 }
 
-/**
- * Opens the statement in the shared PDF/print preview. The preview's orientation and language switches REBUILD the document
- * from source (portrait and landscape are different layouts), never just rotate the page.
- */
-export function openLedgerStatementPrint(data: LedgerPrintData, opts: { lang: string; orientation: LedgerPrintOrientation }) {
+export function openLedgerStatementPrint(data: LedgerPrintData, opts: { lang: string; orientation: LedgerPrintOrientation }): void {
   if (typeof window === "undefined") return;
-  const title = `${t(opts.lang as never, "lprint.title" as never, "Account Ledger Statement")} — ${data.account.name}`;
   const html = buildLedgerStatementPrintHtml(data, opts);
-  try {
-    printStore.openPrint(html, title, {
-      lang: opts.lang,
-      rebuild: ({ lang, orientation }) => buildLedgerStatementPrintHtml(data, { lang, orientation }),
-    });
-  } catch {
-    const w = window.open("", "_blank");
-    if (w) { w.document.open(); w.document.write(html); w.document.close(); }
+  const w = window.open("", "_blank");
+  if (!w) {
+    alert("Popup blocked. Please allow popups to view the print statement.");
+    return;
   }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
 }
