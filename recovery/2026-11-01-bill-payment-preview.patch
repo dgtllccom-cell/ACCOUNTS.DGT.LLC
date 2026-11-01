@@ -1,0 +1,726 @@
+diff --git a/app/api/erp/purchases/lane/[id]/payment-preview/route.ts b/app/api/erp/purchases/lane/[id]/payment-preview/route.ts
+new file mode 100644
+index 0000000..74ec594
+--- /dev/null
++++ b/app/api/erp/purchases/lane/[id]/payment-preview/route.ts
+@@ -0,0 +1,18 @@
++import { NextRequest } from "next/server";
++import { z } from "zod";
++import { requireErpSession } from "@/lib/auth/session";
++import { authorizeLogistics } from "@/lib/api/scope-middleware";
++import { apiOk, apiError, handleApiError } from "@/lib/api/response";
++import { getLaneLoad } from "@/lib/services/purchase-lane-service";
++import { laneSettlementPreview } from "@/lib/services/lane-settlement-preview";
++
++export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
++  try {
++    const session = await requireErpSession();
++    authorizeLogistics(session, { action: "read" });
++    const id = z.string().uuid().parse((await context.params).id);
++    const detail = await getLaneLoad(session,id);
++    if (!detail) return apiError("NOT_FOUND", "Load not found in your scope.",404);
++    return apiOk({ bills: [await laneSettlementPreview(session,detail.load)].filter(Boolean) });
++  } catch (error) { return handleApiError(error); }
++}
+diff --git a/app/api/erp/purchases/lane/route.ts b/app/api/erp/purchases/lane/route.ts
+index 15fdfcb..643f839 100644
+--- a/app/api/erp/purchases/lane/route.ts
++++ b/app/api/erp/purchases/lane/route.ts
+@@ -10,7 +10,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
+ import { TRANSFER_TYPES } from "@/lib/purchases/lane-rules";
+ import { getRequestLanguage } from "@/lib/i18n/server";
+ import {
+-  ensureLaneFromLoadingRecord, ensureLaneFromLocalPurchase, ensureLaneFromSalesOrder, ensureLaneFromLocalSale,
++  ensureLaneSchema, ensureLaneFromLoadingRecord, ensureLaneFromLocalPurchase, ensureLaneFromSalesOrder, ensureLaneFromLocalSale,
+   laneStatesForLoadingRecords, listLaneLoads, transferLoads,
+ } from "@/lib/services/purchase-lane-service";
+ 
+@@ -66,9 +66,13 @@ export async function POST(request: NextRequest) {
+     const body = bodySchema.parse(await request.json());
+     if (body.action === "ensure") {
+       const out = await withLocalPg(async (sql) => {
++        await ensureLaneSchema(sql);
+         if (body.loadingRecordId) return ensureLaneFromLoadingRecord(sql, body.loadingRecordId, session);
+         if (body.localPurchaseId) return ensureLaneFromLocalPurchase(sql, body.localPurchaseId, session);
+-        if (body.salesOrderId) return ensureLaneFromSalesOrder(sql, body.salesOrderId, session);
++        if (body.salesOrderId) {
++          return await ensureLaneFromLocalSale(sql, body.salesOrderId, session)
++            ?? await ensureLaneFromSalesOrder(sql, body.salesOrderId, session);
++        }
+         return null;
+       });
+       return apiOk({ lane: out });
+diff --git a/app/api/erp/purchases/remaining-due/route.ts b/app/api/erp/purchases/remaining-due/route.ts
+index c15c5af..139c8b2 100644
+--- a/app/api/erp/purchases/remaining-due/route.ts
++++ b/app/api/erp/purchases/remaining-due/route.ts
+@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
+           container: l.container_number ?? null,
+           quantity: Number(l.loaded_quantity || 0),
+           netWeightKg: Number(l.net_weight || 0),
++          grossWeightKg: l.gross_weight == null ? null : Number(l.gross_weight),
+           loadedAt: l.created_at ?? null,
+           value: st?.valueFC ?? 0,
+           advanceAllocated: st?.advanceAllocFC ?? 0,
+@@ -104,8 +105,15 @@ export async function GET(request: NextRequest) {
+         country: po.country_name ?? null,
+         branch: po.branch_name ?? null,
+         currency: bill.currency,
+-        localCurrency: String(po.base_currency || bill.currency).toUpperCase(),
+-        exchangeRate: Number(po.exchange_rate || 1),
++        localCurrency: String(po.base_currency || "").toUpperCase(),
++        exchangeRate: bill.currency === String(po.base_currency || "").toUpperCase() ? 1 : Number(po.exchange_rate || 0),
++        purchaseAccount: form.purchaseAccountName || null,
++        purchaseAccountNo: form.purchaseAccountNo || null,
++        salesAccount: form.salesAccountName || null,
++        salesAccountNo: form.salesAccountNo || null,
++        totalContainers: Number(fd.workflow?.totalContainers || 0),
++        loadedContainers: Number(fd.workflow?.loadedContainers || 0),
++        remainingContainers: Number(fd.workflow?.remainingContainers || 0),
+         condition: bill.condition,
+         billTotal: bill.billTotal,
+         advancePercent: bill.advancePercent,
+diff --git a/features/journal/components/remaining-due-bills.tsx b/features/journal/components/remaining-due-bills.tsx
+index a07c711..24bde95 100644
+--- a/features/journal/components/remaining-due-bills.tsx
++++ b/features/journal/components/remaining-due-bills.tsx
+@@ -14,6 +14,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+ 
+ export type DueLoading = {
+   id: string; loadingNo: string | null; container: string | null; quantity: number; netWeightKg: number;
++  grossWeightKg?: number | null;
+   value: number; advanceAllocated: number; paid: number; outstanding: number; complete: boolean;
+ };
+ export type DueBill = {
+diff --git a/features/purchases/components/lane-payment-preview.tsx b/features/purchases/components/lane-payment-preview.tsx
+new file mode 100644
+index 0000000..83430cb
+--- /dev/null
++++ b/features/purchases/components/lane-payment-preview.tsx
+@@ -0,0 +1,61 @@
++"use client";
++
++import { useEffect, useState } from "react";
++import { apiGet } from "@/lib/api/client";
++import { useErpScreen } from "@/lib/i18n/use-erp-screen";
++import type { DueBill } from "@/features/journal/components/remaining-due-bills";
++import { finalCurrencyAmount } from "@/lib/purchases/final-currency";
++
++type PreviewBill = DueBill & { paymentKnown?: boolean; purchaseAccount?: string; purchaseAccountNo?: string; salesAccount?: string; salesAccountNo?: string; totalContainers?: number; loadedContainers?: number; remainingContainers?: number };
++type Load = { id: string; source_id?: string; source_type?: string; purchase_ref_no?: string };
++const nf = (v: number) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
++
++/** Read-only review of the original bill. Reuses Remaining's calculation, never posts a payment. */
++export function LanePaymentPreview({ loads, lang, onReady }: { loads: Load[]; lang: string; onReady: (ready: boolean) => void }) {
++  const s = useErpScreen("rdue", lang);
++  const [bills, setBills] = useState<PreviewBill[]>([]);
++  const [loading, setLoading] = useState(true);
++  const [failed, setFailed] = useState(false);
++  const [retry, setRetry] = useState(0);
++  const loadKey = JSON.stringify(loads);
++  useEffect(() => {
++    let active = true;
++    setLoading(true); setFailed(false); onReady(false);
++    const selected = JSON.parse(loadKey) as Load[];
++    const urls = [...new Set(selected.map(l => l.source_type === "purchase_booking"
++      ? `/api/erp/purchases/remaining-due?orderNo=${encodeURIComponent(l.purchase_ref_no || "")}&includeSettled=1&lang=${lang}`
++      : `/api/erp/purchases/lane/${encodeURIComponent(l.id)}/payment-preview?lang=${lang}`))];
++    Promise.all(urls.map(url => apiGet<{ bills: PreviewBill[] }>(url)))
++      .then(results => { if (active) setBills([...new Map(results.flatMap(r => r.bills).map(b => [b.id,b])).values()]); })
++      .catch(() => { if (active) { setBills([]); setFailed(true); } })
++      .finally(() => { if (active) setLoading(false); });
++    return () => { active = false; };
++  }, [loadKey, lang, retry, onReady]);
++  const ready = !loading && !failed && loads.every(l => {
++    const b = bills.find(b => b.billNo === l.purchase_ref_no);
++    return !!b && b.loadings.some(x => x.id === l.source_id) && finalCurrencyAmount(b.billTotal, b.currency, b.localCurrency, b.exchangeRate) != null;
++  });
++  const financialReady = ready && bills.every(b => b.paymentKnown !== false);
++  useEffect(() => { onReady(financialReady); }, [financialReady, onReady]);
++  if (loading) return <p role="status">{s.tGlobal("report.builder_loading", "Loading data...")}</p>;
++  if (failed || !ready) return <div role="alert" className="rounded-xl border border-amber-300 p-4"><p>{s.tGlobal("plane.preview_unavailable", "The complete payment review is unavailable. Remaining transfer requires a verified bill, loading, country currency and exchange rate.")}</p><button type="button" className="mt-3 rounded border px-3 py-2" onClick={() => setRetry(n => n + 1)}>{s.tGlobal("go.go_retry_loading", "Retry Loading")}</button></div>;
++  const moneyTable = (b: PreviewBill, rows: [string, number | null][]) => <div className="overflow-x-auto"><table className="w-full text-xs"><thead className="bg-slate-100 dark:bg-slate-800"><tr><th className="p-2 text-start">{s.tGlobal("plane.preview_detail", "Details")}</th><th className="p-2">{b.currency}</th><th className="p-2 font-black">{b.localCurrency}</th></tr></thead><tbody>{rows.map(([label, value]) => <tr key={label} className="border-b border-slate-200 dark:border-slate-700"><th className="p-2 text-start font-medium">{label}</th><td className="p-2 text-end tabular-nums" dir="ltr">{value == null ? "—" : nf(value)}</td><td className="p-2 text-end font-bold tabular-nums" dir="ltr">{value == null ? "—" : nf(finalCurrencyAmount(value, b.currency, b.localCurrency, b.exchangeRate)!)}</td></tr>)}</tbody></table></div>;
++  return <div className="space-y-6" dir={s.dir}>{bills.map(b => {
++    const selected = b.loadings.filter(x => loads.some(l => l.source_id === x.id));
++    return <article key={b.id} className="rounded-xl border border-slate-200 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-white">
++      <h3 className="mb-3 font-mono font-black" dir="ltr">{b.billNo}</h3>
++      {b.paymentKnown === false && <p role="status" className="mb-3 rounded border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">{s.tGlobal("plane.payment_unverified", "Paid amounts cannot be verified from cash/bank postings. The entered advance is not treated as a payment.")}</p>}
++      {!!b.totalContainers && <section className="mb-3 rounded-lg bg-slate-50 p-3 text-xs dark:bg-slate-800"><h4 className="mb-2 font-bold">{s.tGlobal("log.seg_containers", "Containers")}</h4><div className="grid grid-cols-3 gap-2">{[[s.t("col_total_qty", "Total qty"),b.totalContainers],[s.t("col_loaded_qty", "Loaded"),b.loadedContainers],[s.t("col_balance_qty", "Balance qty"),b.remainingContainers]].map(([label,v]) => <div key={String(label)}><span>{label}</span><strong className="block tabular-nums">{v ?? "—"}</strong></div>)}</div></section>}
++      <div className="overflow-x-auto"><table className="mb-4 w-full text-xs"><thead className="bg-amber-50 dark:bg-slate-800"><tr>{[s.t("col_total_qty", "Total qty"), s.t("col_loaded_qty", "Loaded"), s.t("col_balance_qty", "Balance qty")].map(t => <th key={t} className="p-2">{t}</th>)}</tr></thead><tbody><tr>{[b.totalQuantity,b.loadedQuantity,b.balanceQuantity].map((v,i) => <td key={i} className="p-2 text-center tabular-nums">{v.toLocaleString()}</td>)}</tr></tbody></table></div>
++      <div className="mb-4 grid gap-2 sm:grid-cols-3">{[
++        [s.tGlobal("plane.preview_branch", "Branch Details"), b.branch, b.country],
++        [s.tGlobal("purchase.card_purchase_account_details", "Purchase Account Details"), b.purchaseAccount, b.purchaseAccountNo],
++        [s.tGlobal("purchase.sales_account_short_title", "Sales Account"), b.salesAccount, b.salesAccountNo]
++      ].map(([title,name,code]) => <section key={title} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"><h4 className="mb-1 text-[10px] font-bold text-slate-500">{title}</h4><p dir="auto" className="text-xs font-semibold">{name || "—"}</p><p dir="auto" className="text-[10px]">{code || "—"}</p></section>)}</div>
++      <p className="mb-2 text-xs" dir="auto">{b.goods}</p>
++      <p className="mb-3 text-xs" dir="ltr">{b.currency} × {b.exchangeRate} = {b.localCurrency}</p>
++      {moneyTable(b, [[s.t("col_bill_total", "Bill total"),b.billTotal],[s.t("col_advance", "Advance paid / required"),b.advancePaid],[s.t("col_total_paid", "Total paid"),b.totalPaid],[s.t("col_outstanding", "Outstanding"),b.outstanding]])}
++      {selected.map(l => <section key={l.id} className="mt-5"><h4 className="mb-2 text-xs font-bold" dir="auto">{l.loadingNo} · {l.container} · {l.quantity.toLocaleString()}</h4><dl className="mb-3 grid grid-cols-2 gap-2 rounded bg-slate-50 p-2 text-xs dark:bg-slate-800"><div><dt>{s.tGlobal("tl.gross_weight_kg", "Gross Weight (KG)")}</dt><dd className="font-bold tabular-nums">{l.grossWeightKg == null ? "—" : nf(l.grossWeightKg)}</dd></div><div><dt>{s.t("col_net_kg", "Net weight (kg)")}</dt><dd className="font-bold tabular-nums">{nf(l.netWeightKg)}</dd></div></dl>{moneyTable(b, [[s.t("col_value", "Loaded goods value"),l.value],[s.t("col_adv_alloc", "Advance allocated"),l.advanceAllocated],[s.t("col_paid_loading", "Paid"),l.paid],[s.t("col_payable", "Payable now"),l.outstanding]])}</section>)}
++    </article>;
++  })}</div>;
++}
+diff --git a/features/purchases/components/purchase-transit-lane-view.tsx b/features/purchases/components/purchase-transit-lane-view.tsx
+index 5c69405..504b694 100644
+--- a/features/purchases/components/purchase-transit-lane-view.tsx
++++ b/features/purchases/components/purchase-transit-lane-view.tsx
+@@ -68,6 +68,7 @@ import {
+   type TransferType,
+ } from "@/lib/purchases/lane-rules";
+ import { Th } from "@/components/ui/translated-th";
++import { LanePaymentPreview } from "./lane-payment-preview";
+ 
+ type Row = Record<string, any>;
+ type Detail = { load: Row; events: Row[]; expenses: Row[]; canAct: boolean };
+@@ -845,6 +846,7 @@ function CenterTransferConfirmationModal({
+     : "general_purchase_expenses";
+ 
+   const [type, setType] = useState<TransferType>(defaultDest);
++  const [paymentReviewReady, setPaymentReviewReady] = useState(false);
+   const [countryId, setCountryId] = useState("");
+   const [countryBranchId, setCountryBranchId] = useState("");
+   const [cityBranchId, setCityBranchId] = useState("");
+@@ -917,6 +919,7 @@ function CenterTransferConfirmationModal({
+   };
+ 
+   const submit = async () => {
++    if (type === "remaining_payment" && loads.every(l => l.source_type === "purchase_booking") && !paymentReviewReady) return;
+     const p = transferProblems(req);
+     setProblems(p);
+     if (p.length) return;
+@@ -948,7 +951,7 @@ function CenterTransferConfirmationModal({
+       dir={s.dir}
+       data-testid="transfer-modal"
+     >
+-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800 animate-in fade-in-50 zoom-in-95 duration-150">
++      <div className="relative w-full max-w-[1600px] h-[94vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800 animate-in fade-in-50 zoom-in-95 duration-150">
+         {/* Header */}
+         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+           <div className="flex items-center gap-2.5">
+@@ -974,7 +977,12 @@ function CenterTransferConfirmationModal({
+           </button>
+         </div>
+ 
+-        {/* Scrollable Body */}
++        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_340px] lg:overflow-hidden" dir="ltr">
++          <div className="overflow-y-auto bg-slate-100 p-3 sm:p-5 dark:bg-slate-950" dir={s.dir}>
++            <LanePaymentPreview loads={loads.map(l => ({ id: String(l.id), source_id: l.source_id, source_type: l.source_type, purchase_ref_no: l.purchase_ref_no }))} lang={s.lang} onReady={setPaymentReviewReady} />
++          </div>
++          <div className="flex min-h-0 flex-col border-l border-slate-200 dark:border-slate-800" dir={s.dir}>
++        {/* Scrollable controls remain on the physical right in every language. */}
+         <div className="overflow-y-auto px-5 py-4 space-y-4 text-xs">
+           {/* Review Selected Bills Card */}
+           <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+@@ -1227,7 +1235,7 @@ function CenterTransferConfirmationModal({
+           </button>
+           <button
+             type="button"
+-            disabled={busy}
++            disabled={busy || (type === "remaining_payment" && loads.every(l => l.source_type === "purchase_booking") && !paymentReviewReady)}
+             onClick={() => void submit()}
+             className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/20`}
+             data-testid="tr-submit"
+@@ -1236,6 +1244,8 @@ function CenterTransferConfirmationModal({
+             {T("confirm_transfer", "Confirm Transfer")}
+           </button>
+         </div>
++          </div>
++        </div>
+       </div>
+     </div>
+   );
+diff --git a/lib/i18n/ui.ts b/lib/i18n/ui.ts
+index 3b64a2d..825cd90 100644
+--- a/lib/i18n/ui.ts
++++ b/lib/i18n/ui.ts
+@@ -2,6 +2,11 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
+ import { translateHeader, registerUiDictionaryFallback } from "@/lib/i18n/table-headers";
+ 
+ export type UiKey =
++  | "plane.payment_unverified"
++  | "plane.preview_unavailable"
++  | "plane.preview_detail"
++  | "plane.preview_branch"
++
+   | "invtpl.center_template_tab"
+   | "invtpl.choose_template"
+   | "invtpl.col_discount"
+@@ -13087,6 +13092,11 @@ export type UiKey =
+ type Dict = Record<string, string>;
+ 
+ const en: Dict = {
++  "plane.payment_unverified": "Paid amounts cannot be verified from cash/bank postings. The entered advance is not treated as a payment.",
++  "plane.preview_unavailable": "The complete payment review is unavailable. Remaining transfer requires a verified bill, loading, country currency and exchange rate.",
++  "plane.preview_detail": "Details",
++  "plane.preview_branch": "Branch Details",
++
+   "locmaster.name_required": "Location name is required",
+   "locmaster.country_required": "Please select a country first",
+   "locmaster.save_failed": "Failed to save location",
+@@ -39343,7 +39353,12 @@ const en: Dict = {
+ };
+ 
+ const ur: Dict = {
++
+ ...en,
++  "plane.payment_unverified": "نقد یا بینک کی پوسٹنگ سے ادا شدہ رقم کی تصدیق نہیں ہو سکی۔ درج کردہ ایڈوانس کو ادائیگی نہیں گنا گیا۔",
++  "plane.preview_unavailable": "مکمل ادائیگی کی رپورٹ دستیاب نہیں۔ بقایا میں منتقلی کے لیے تصدیق شدہ بل، لوڈنگ، ملک کی کرنسی اور شرح تبادلہ ضروری ہیں۔",
++  "plane.preview_detail": "تفصیل",
++  "plane.preview_branch": "برانچ کی تفصیل",
+   "locmaster.name_required": "مقام کا نام درکار ہے",
+   "locmaster.country_required": "براہ کرم پہلے ملک منتخب کریں",
+   "locmaster.save_failed": "مقام محفوظ کرنے میں ناکامی",
+@@ -65569,7 +65584,12 @@ const ur: Dict = {
+ };
+ 
+ const ar: Dict = {
++
+ ...en,
++  "plane.payment_unverified": "لا يمكن التحقق من المبالغ المدفوعة من القيود النقدية أو البنكية. لم تُحتسب الدفعة المقدمة المُدخلة كدفعة فعلية.",
++  "plane.preview_unavailable": "مراجعة الدفع الكاملة غير متاحة. يتطلب تحويل المتبقي فاتورة وتحميلاً وعملة البلد وسعر صرف موثقة.",
++  "plane.preview_detail": "التفاصيل",
++  "plane.preview_branch": "تفاصيل الفرع",
+   "locmaster.name_required": "اسم الموقع مطلوب",
+   "locmaster.country_required": "يرجى تحديد الدولة أولاً",
+   "locmaster.save_failed": "فشل حفظ الموقع",
+@@ -91796,7 +91816,12 @@ const ar: Dict = {
+ };
+ 
+ const fa: Dict = {
++
+ ...en,
++  "plane.payment_unverified": "مبالغ پرداخت‌شده از ثبت نقدی یا بانکی قابل تأیید نیست. پیش‌پرداخت واردشده به‌عنوان پرداخت محاسبه نشده است.",
++  "plane.preview_unavailable": "بررسی کامل پرداخت در دسترس نیست. انتقال مانده به صورتحساب، بارگیری، ارز کشور و نرخ تبدیل تأییدشده نیاز دارد.",
++  "plane.preview_detail": "جزئیات",
++  "plane.preview_branch": "جزئیات شعبه",
+   "locmaster.name_required": "نام موقعیت الزامی است",
+   "locmaster.country_required": "لطفاً ابتدا کشور را انتخاب کنید",
+   "locmaster.save_failed": "ذخیره موقعیت ناموفق بود",
+@@ -118022,7 +118047,12 @@ const fa: Dict = {
+ };
+ 
+ const ps: Dict = {
++
+ ...en,
++  "plane.payment_unverified": "له نغدي یا بانکي ثبتونو څخه ورکړل شوې پیسې نه تاییدېږي. لیکل شوی مخکینی مبلغ تادیه نه ګڼل کېږي.",
++  "plane.preview_unavailable": "د تادیې بشپړ راپور نشته. د پاتې پیسو لېږد تایید شوی بل، بار، د هېواد اسعارو او د تبادلې نرخ ته اړتیا لري.",
++  "plane.preview_detail": "تفصیل",
++  "plane.preview_branch": "د څانګې تفصیل",
+   "locmaster.name_required": "د موقعیت نوم اړین دی",
+   "locmaster.country_required": "مهرباني وکړئ لومړی هیواد وټاکئ",
+   "locmaster.save_failed": "د موقعیت خوندي کول ناکام شول",
+diff --git a/lib/purchases/final-currency.ts b/lib/purchases/final-currency.ts
+new file mode 100644
+index 0000000..a40e156
+--- /dev/null
++++ b/lib/purchases/final-currency.ts
+@@ -0,0 +1,7 @@
++/** Historical bill rate to the booking country's functional currency. Never guess an FX rate. */
++export function finalCurrencyAmount(amount: number, purchaseCurrency: string, countryCurrency: string | null | undefined, exchangeRate: number | null | undefined): number | null {
++  if (!Number.isFinite(amount) || !purchaseCurrency?.trim() || !countryCurrency?.trim()) return null;
++  const same = purchaseCurrency.trim().toUpperCase() === countryCurrency.trim().toUpperCase();
++  if (!same && (!Number.isFinite(exchangeRate) || Number(exchangeRate) <= 0)) return null;
++  return Math.round((amount * (same ? 1 : Number(exchangeRate)) + Number.EPSILON) * 100) / 100;
++}
+diff --git a/lib/purchases/lane-settlement.ts b/lib/purchases/lane-settlement.ts
+new file mode 100644
+index 0000000..a0b6f62
+--- /dev/null
++++ b/lib/purchases/lane-settlement.ts
+@@ -0,0 +1,14 @@
++import { loadingPaymentStates } from "@/lib/purchases/loaded-payable";
++import { finalCurrencyAmount } from "@/lib/purchases/final-currency";
++
++/** All sources share the same value-based allocation; receipts/payments remain in their original ledgers. */
++export function laneSettlement(input: { total: number; quantity: number; currency: string; finalCurrency: string; rate: number; advance: number; paid: number; loadings: { id: string; quantity: number; value?: number }[] }) {
++  const { total, quantity, advance, paid } = input;
++  if ([total, quantity, advance, paid].some(n => !Number.isFinite(n) || n < 0) || advance > paid + 0.01 || paid > total + 0.01) return null;
++  if (finalCurrencyAmount(total, input.currency, input.finalCurrency, input.rate) == null) return null;
++  const outstanding = Math.max(0, total - paid);
++  const states = loadingPaymentStates({ orderTotalFC: total, advancePaidFC: advance, totalQuantity: quantity,
++    loadings: input.loadings.map(l => ({ id: l.id, quantity: l.quantity, reportedValueFC: l.value })),
++    remainingPayments: [{ amountFC: Math.max(0, paid - advance), loadingId: null }], orderRemainingDueFC: outstanding });
++  return { outstanding, states };
++}
+diff --git a/lib/services/lane-settlement-preview.ts b/lib/services/lane-settlement-preview.ts
+new file mode 100644
+index 0000000..e405c56
+--- /dev/null
++++ b/lib/services/lane-settlement-preview.ts
+@@ -0,0 +1,53 @@
++import { withLocalPg } from "@/lib/db/local-postgres";
++import { parseJsonish } from "@/lib/stock-journal/model";
++import { laneSettlement } from "@/lib/purchases/lane-settlement";
++import { authorizeApiScope } from "@/lib/api/scope-middleware";
++import type { ErpSession } from "@/lib/auth/session";
++import { resolveBookingRate } from "@/lib/sales/sales-goods-model";
++
++const num = (v: unknown) => Number(v || 0);
++/** Caller first resolves the lane through getLaneLoad, retaining its scope check. No writes. */
++export async function laneSettlementPreview(session: ErpSession, lane: Record<string, any>) {
++  const sales = lane.source_type === "sales_booking" || lane.source_type === "local_sales";
++  if (!sales && lane.source_type !== "local_purchase") return null;
++  return withLocalPg(async sql => {
++    const sourceId = sales ? lane.sales_order_id || lane.source_id : lane.local_purchase_id || lane.source_id;
++    const rows = sales
++      ? await sql`select so.*, c.currency_code as final_currency, c.name as country_name, cb.name as branch_name from public.sales_orders so left join public.countries c on c.id=so.country_id left join public.city_branches cb on cb.id=so.city_branch_id where so.id=${sourceId}::uuid and so.deleted_at is null`
++      : await sql`select lp.*, c.currency_code as final_currency, c.name as country_name, cb.name as branch_name from public.local_purchases lp left join public.countries c on c.id=lp.country_id left join public.city_branches cb on cb.id=lp.city_branch_id where lp.id=${sourceId}::uuid and lp.deleted_at is null`;
++    const row = rows[0];
++    if (!row || [row.status,row.sales_status].some(s => ["cancelled","canceled","void"].includes(String(s || "").toLowerCase()))) return null;
++    authorizeApiScope(session, { resource: sales ? "sales" : "purchases", action: "read", countryId: row.country_id, countryBranchId: row.country_branch_id, cityBranchId: row.city_branch_id });
++    const fd = parseJsonish(row.form_data) || {};
++    const form = fd.form || {};
++    const currency = String(sales ? row.original_currency_code || form.currencyType || form.salesCurrency || row.currency_code || "" : row.purchase_currency || "").toUpperCase();
++    const localCurrency = String(row.final_currency || "").toUpperCase();
++    const resolved = resolveBookingRate({ invoiceCurrency: currency, settlementCurrency: localCurrency, exchangeRate: row.exchange_rate, operator: form.operator });
++    const exchangeRate = resolved.ok ? resolved.operator === "/" ? 1 / resolved.rate : resolved.rate : 0;
++    const total = sales ? num(row.total_goods_original || (Array.isArray(fd.goodsEntries) ? fd.goodsEntries.reduce((sum: number,g: any) => sum+num(g.totalAmount),0) : 0) || fd.totals?.grandPrimaryFinal) : num(row.final_cost);
++    const quantity = sales ? num(row.quantity) : num(row.numbers);
++    const sourceLanes = await sql`select id,source_id,loaded_quantity,net_weight,gross_weight,container_number,loading_record_no from public.purchase_lane_loads where source_type=${lane.source_type} and source_id=${sourceId}::uuid and deleted_at is null order by created_at,id`;
++    // A booking transfer is an accrual, even if its legacy payment_kind says "advance". It is NEVER a receipt.
++    const receipts = sales ? await sql`select p.payment_kind,p.currency_code,p.amount,p.base_currency_amount from public.sales_order_payments p join public.roznamcha_entries re on re.id=p.roznamcha_entry_id where p.sales_order_id=${sourceId}::uuid and p.deleted_at is null and p.status='posted' and p.payment_kind <> 'booking' and re.deleted_at is null and re.status='posted' and re.source_transaction_type in ('sales_payment','sales_order_payment','sales_advance_payment','sales_remaining_payment','sales_cash_payment','sales_invoice_payment','sales_credit_payment')` : [];
++    let paid = 0, advance = 0;
++    let paymentKnown = sales;
++    for (const p of receipts) {
++      const ccy = String(p.currency_code || "").toUpperCase();
++      const value = ccy === currency ? num(p.amount) : exchangeRate > 0 && p.base_currency_amount != null ? num(p.base_currency_amount) / exchangeRate : NaN;
++      if (!Number.isFinite(value)) { paymentKnown = false; continue; }
++      paid += value;
++      if (String(p.payment_kind).toLowerCase() === "advance") advance += value;
++    }
++    // Local Purchase's advance_amount is entered in the booking form, not a verified cash/bank payment.
++    // Keep it informational; never turn it into a paid ledger balance in this read-only report.
++    const settlement = laneSettlement({ total, quantity, currency, finalCurrency: localCurrency, rate: exchangeRate, advance, paid, loadings: sourceLanes.map(l => ({ id: String(l.source_id), quantity: num(l.loaded_quantity) })) });
++    if (!settlement || total <= 0 || quantity <= 0) return null;
++    const loadings = sourceLanes.map(l => { const st = settlement.states.find(s => s.id === String(l.source_id))!; return { id: String(l.source_id), loadingNo: l.loading_record_no, container: l.container_number, quantity: num(l.loaded_quantity), netWeightKg: num(l.net_weight), grossWeightKg: l.gross_weight == null ? null : num(l.gross_weight), value: st.valueFC, advanceAllocated: paymentKnown ? st.advanceAllocFC : null, paid: paymentKnown ? st.paidFC : null, outstanding: paymentKnown ? st.outstandingFC : null, complete: paymentKnown && st.complete }; });
++    const loadedQuantity = sourceLanes.reduce((sum,l) => sum+num(l.loaded_quantity),0);
++    return { id: String(row.id), billNo: lane.purchase_ref_no, manualBillNo: form.billNo || row.manual_bill_no || null, supplier: row.customer_name || row.supplier_name, goods: row.product_summary || row.goods_name || lane.goods_name, country: row.country_name, branch: row.branch_name,
++      purchaseAccount: form.purchaseAccountName, purchaseAccountNo: form.purchaseAccountNo || row.purchase_account_no, salesAccount: form.salesAccountName, salesAccountNo: form.salesAccountNo || row.sales_account_no,
++      currency, localCurrency, exchangeRate, condition: form.paymentType || row.payment_mode, billTotal: total, advancePercent: num(form.advancePercent || row.advance_percentage), advanceRequired: total*num(form.advancePercent || row.advance_percentage)/100,
++      advancePaid: paymentKnown ? advance : null, remainingPaid: paymentKnown ? paid-advance : null, totalPaid: paymentKnown ? paid : null, outstanding: paymentKnown ? settlement.outstanding : null,
++      paymentKnown, totalQuantity: quantity, loadedQuantity, balanceQuantity: Math.max(0,quantity-loadedQuantity), payableNow: paymentKnown ? loadings.reduce((sum,l) => sum+num(l.outstanding),0) : null, loadings };
++  });
++}
+diff --git a/lib/services/purchase-lane-service.ts b/lib/services/purchase-lane-service.ts
+index 42da28c..52fe3d4 100644
+--- a/lib/services/purchase-lane-service.ts
++++ b/lib/services/purchase-lane-service.ts
+@@ -76,32 +76,40 @@ async function addEvent(sql: Sql, load: Record<string, any>, ev: { type: string;
+ 
+ // ───────────────────────────── schema assurance & entering the lane ─────────────────────────────
+ 
+-async function ensureLaneSchema(sql: Sql) {
+-  try {
+-    await sql`
+-      DO $
++export async function ensureLaneSchema(sql: Sql) {
++  // One atomic statement: a failed repair must not leave the source constraint
++  // removed, or be mistaken for a successful migration. Healthy schemas avoid DDL.
++  await sql`
++      DO $lane_schema$
+       BEGIN
+-        IF EXISTS (
+-          SELECT 1 FROM pg_constraint WHERE conname = 'purchase_lane_loads_source_type_check'
++        IF (SELECT count(*) FROM information_schema.columns
++            WHERE table_schema = 'public' AND table_name = 'purchase_lane_loads'
++              AND column_name IN ('sales_order_id', 'remaining_quantity', 'transfer_destination')) < 3
++          OR NOT EXISTS (
++            SELECT 1 FROM pg_constraint
++            WHERE conrelid = 'public.purchase_lane_loads'::regclass
++              AND conname = 'purchase_lane_loads_source_type_check'
++              AND pg_get_constraintdef(oid) LIKE '%sales_booking%'
++              AND pg_get_constraintdef(oid) LIKE '%local_sales%'
++        ) OR NOT EXISTS (
++            SELECT 1 FROM pg_constraint
++            WHERE conrelid = 'public.purchase_lane_loads'::regclass
++              AND conname = 'purchase_lane_loads_owner_type_check'
++              AND pg_get_constraintdef(oid) LIKE '%module%'
+         ) THEN
+-          ALTER TABLE public.purchase_lane_loads DROP CONSTRAINT purchase_lane_loads_source_type_check;
++          ALTER TABLE public.purchase_lane_loads
++            ADD COLUMN IF NOT EXISTS sales_order_id uuid REFERENCES public.sales_orders(id) ON DELETE SET NULL,
++            ADD COLUMN IF NOT EXISTS remaining_quantity numeric NOT NULL DEFAULT 0,
++            ADD COLUMN IF NOT EXISTS transfer_destination text,
++            DROP CONSTRAINT IF EXISTS purchase_lane_loads_source_type_check,
++            ADD CONSTRAINT purchase_lane_loads_source_type_check
++              CHECK (source_type IN ('purchase_booking', 'local_purchase', 'sales_booking', 'local_sales')),
++            DROP CONSTRAINT IF EXISTS purchase_lane_loads_owner_type_check,
++            ADD CONSTRAINT purchase_lane_loads_owner_type_check
++              CHECK (owner_type IN ('branch', 'internal_agent', 'external_agent', 'user', 'self', 'module'));
+         END IF;
+-      END $;
+-    `;
+-    await sql`
+-      ALTER TABLE public.purchase_lane_loads
+-        ADD CONSTRAINT purchase_lane_loads_source_type_check
+-        CHECK (source_type IN ('purchase_booking', 'local_purchase', 'sales_booking', 'local_sales'));
+-    `;
+-    await sql`
+-      ALTER TABLE public.purchase_lane_loads
+-        ADD COLUMN IF NOT EXISTS sales_order_id uuid REFERENCES public.sales_orders(id) ON DELETE SET NULL,
+-        ADD COLUMN IF NOT EXISTS remaining_quantity numeric NOT NULL DEFAULT 0,
+-        ADD COLUMN IF NOT EXISTS transfer_destination text;
+-    `;
+-  } catch {
+-    // schema already up to date
+-  }
++      END $lane_schema$;
++  `;
+ }
+ 
+ export async function ensureLaneFromSalesOrder(sql: Sql, salesOrderId: string, session: ErpSession): Promise<{ id: string; created: boolean } | null> {
+@@ -132,7 +140,7 @@ export async function ensureLaneFromSalesOrder(sql: Sql, salesOrderId: string, s
+       so.country_id, so.country_branch_id, so.city_branch_id, ${session.userId}::uuid
+     from public.sales_orders so
+     where so.id = ${salesOrderId}::uuid and so.deleted_at is null
+-      and (so.form_data->>'saleSource' is null or so.form_data->>'saleSource' <> 'local')
++      and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') <> 'local'
+     on conflict (source_type, source_id) where deleted_at is null do nothing
+     returning id`;
+   if (rows[0]) {
+@@ -167,7 +175,7 @@ export async function ensureLaneFromLocalSale(sql: Sql, salesOrderId: string, se
+       so.country_id, so.country_branch_id, so.city_branch_id, ${session.userId}::uuid
+     from public.sales_orders so
+     where so.id = ${salesOrderId}::uuid and so.deleted_at is null
+-      and so.form_data->>'saleSource' = 'local'
++      and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') = 'local'
+     on conflict (source_type, source_id) where deleted_at is null do nothing
+     returning id`;
+   if (rows[0]) {
+@@ -266,7 +274,7 @@ async function backfillScope(sql: Sql, session: ErpSession) {
+   // 3. Sales Booking
+   const sbIds = await sql`
+     select so.id from public.sales_orders so
+-    where so.deleted_at is null and (so.form_data->>'saleSource' is null or so.form_data->>'saleSource' <> 'local')
++    where so.deleted_at is null and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') <> 'local'
+       and ${sqlScopeCondition(sql, scope, "so")}
+       and not exists (select 1 from public.purchase_lane_loads l where l.source_type='sales_booking' and l.source_id = so.id and l.deleted_at is null)
+     limit 100`;
+@@ -275,7 +283,7 @@ async function backfillScope(sql: Sql, session: ErpSession) {
+   // 4. Local Sales
+   const lsIds = await sql`
+     select so.id from public.sales_orders so
+-    where so.deleted_at is null and so.form_data->>'saleSource' = 'local'
++    where so.deleted_at is null and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') = 'local'
+       and ${sqlScopeCondition(sql, scope, "so")}
+       and not exists (select 1 from public.purchase_lane_loads l where l.source_type='local_sales' and l.source_id = so.id and l.deleted_at is null)
+     limit 100`;
+diff --git a/supabase/migrations/20261101120727_fix_ps_lane_schema_and_module_transfers.sql b/supabase/migrations/20261101120727_fix_ps_lane_schema_and_module_transfers.sql
+new file mode 100644
+index 0000000..45d3a44
+--- /dev/null
++++ b/supabase/migrations/20261101120727_fix_ps_lane_schema_and_module_transfers.sql
+@@ -0,0 +1,31 @@
++-- Applied and verified on DEV csesvyxxjivnkkozgopt; version from Supabase migration history.
++-- Keep the data and existing responsibility/stock/accounting workflow intact.
++DO $lane_schema$
++      BEGIN
++        IF (SELECT count(*) FROM information_schema.columns
++            WHERE table_schema = 'public' AND table_name = 'purchase_lane_loads'
++              AND column_name IN ('sales_order_id', 'remaining_quantity', 'transfer_destination')) < 3
++          OR NOT EXISTS (
++            SELECT 1 FROM pg_constraint
++            WHERE conrelid = 'public.purchase_lane_loads'::regclass
++              AND conname = 'purchase_lane_loads_source_type_check'
++              AND pg_get_constraintdef(oid) LIKE '%sales_booking%'
++              AND pg_get_constraintdef(oid) LIKE '%local_sales%'
++        ) OR NOT EXISTS (
++            SELECT 1 FROM pg_constraint
++            WHERE conrelid = 'public.purchase_lane_loads'::regclass
++              AND conname = 'purchase_lane_loads_owner_type_check'
++              AND pg_get_constraintdef(oid) LIKE '%module%'
++        ) THEN
++          ALTER TABLE public.purchase_lane_loads
++            ADD COLUMN IF NOT EXISTS sales_order_id uuid REFERENCES public.sales_orders(id) ON DELETE SET NULL,
++            ADD COLUMN IF NOT EXISTS remaining_quantity numeric NOT NULL DEFAULT 0,
++            ADD COLUMN IF NOT EXISTS transfer_destination text,
++            DROP CONSTRAINT IF EXISTS purchase_lane_loads_source_type_check,
++            ADD CONSTRAINT purchase_lane_loads_source_type_check
++              CHECK (source_type IN ('purchase_booking', 'local_purchase', 'sales_booking', 'local_sales')),
++            DROP CONSTRAINT IF EXISTS purchase_lane_loads_owner_type_check,
++            ADD CONSTRAINT purchase_lane_loads_owner_type_check
++              CHECK (owner_type IN ('branch', 'internal_agent', 'external_agent', 'user', 'self', 'module'));
++        END IF;
++      END $lane_schema$;
+diff --git a/tests/purchases/final-currency.test.ts b/tests/purchases/final-currency.test.ts
+new file mode 100644
+index 0000000..808fc3a
+--- /dev/null
++++ b/tests/purchases/final-currency.test.ts
+@@ -0,0 +1,21 @@
++import { describe, expect, it } from "vitest";
++import { finalCurrencyAmount } from "@/lib/purchases/final-currency";
++
++describe("country final currency", () => {
++  it.each(["EUR","SAR","KES","THB","AFN","GBP"])("uses configured %s currency without a country-specific branch", countryCurrency => {
++    expect(finalCurrencyAmount(250, "USD", countryCurrency, 2)).toBe(500);
++    expect(finalCurrencyAmount(250, countryCurrency, countryCurrency, 2)).toBe(250);
++  });
++  it("converts the selected loading's unpaid share at the historical bill rate", () => {
++    expect(finalCurrencyAmount(104287.5, "USD", "AED", 3.67)).toBe(382735.13);
++    expect(finalCurrencyAmount(100, "EUR", "PKR", 310)).toBe(31000);
++  });
++  it("does not convert twice for a domestic bill", () => {
++    expect(finalCurrencyAmount(100, "AED", "AED", 3.67)).toBe(100);
++  });
++  it("leaves missing country currency or cross-currency rates unresolved", () => {
++    expect(finalCurrencyAmount(100, "USD", null, 3.67)).toBeNull();
++    expect(finalCurrencyAmount(100, "USD", "AED", 0)).toBeNull();
++    expect(finalCurrencyAmount(100, "USD", "AED", NaN)).toBeNull();
++  });
++});
+diff --git a/tests/purchases/lane-ensure-api.test.ts b/tests/purchases/lane-ensure-api.test.ts
+new file mode 100644
+index 0000000..f106735
+--- /dev/null
++++ b/tests/purchases/lane-ensure-api.test.ts
+@@ -0,0 +1,47 @@
++import { beforeEach, describe, expect, it, vi } from "vitest";
++import type { NextRequest } from "next/server";
++
++const mocks = vi.hoisted(() => ({
++  schema: vi.fn(), localSale: vi.fn(), booking: vi.fn(), sql: vi.fn(),
++}));
++vi.mock("@/lib/auth/session", () => ({ requireErpSession: vi.fn(async () => ({ userId: "actor" })) }));
++vi.mock("@/lib/api/scope-middleware", () => ({ authorizeLogistics: vi.fn() }));
++vi.mock("@/lib/api/supabase", () => ({ writeAuditLog: vi.fn() }));
++vi.mock("@/lib/i18n/server", () => ({ getRequestLanguage: vi.fn() }));
++vi.mock("@/lib/db/local-postgres", () => ({ withLocalPg: (fn: (sql: unknown) => unknown) => fn(mocks.sql) }));
++vi.mock("@/lib/api/response", () => ({ apiOk: (data: unknown) => data, handleApiError: (error: unknown) => ({ error }) }));
++vi.mock("@/lib/services/purchase-lane-service", () => ({
++  ensureLaneSchema: mocks.schema,
++  ensureLaneFromLocalSale: mocks.localSale,
++  ensureLaneFromSalesOrder: mocks.booking,
++  ensureLaneFromLoadingRecord: vi.fn(), ensureLaneFromLocalPurchase: vi.fn(),
++  laneStatesForLoadingRecords: vi.fn(), listLaneLoads: vi.fn(), transferLoads: vi.fn(),
++}));
++
++import { POST } from "@/app/api/erp/purchases/lane/route";
++const request = () => ({ json: async () => ({ action: "ensure", salesOrderId: "12345678-1234-4234-8234-123456789012" }) }) as NextRequest;
++
++describe("P/S sales transfer entry", () => {
++  beforeEach(() => { vi.clearAllMocks(); mocks.schema.mockResolvedValue(undefined); mocks.localSale.mockResolvedValue(null); mocks.booking.mockResolvedValue(null); });
++  it("uses the local sales lane without also creating a booking lane", async () => {
++    const lane = { id: "local", created: true };
++    mocks.localSale.mockResolvedValue(lane);
++    expect(await POST(request())).toEqual({ lane });
++    expect(mocks.schema).toHaveBeenCalledOnce();
++    expect(mocks.booking).not.toHaveBeenCalled();
++  });
++  it("falls back to sales booking for a non-local bill", async () => {
++    const lane = { id: "booking", created: true };
++    mocks.booking.mockResolvedValue(lane);
++    expect(await POST(request())).toEqual({ lane });
++    expect(mocks.localSale).toHaveBeenCalledOnce();
++    expect(mocks.booking).toHaveBeenCalledOnce();
++  });
++  it("stops before creating a lane if schema repair fails", async () => {
++    const error = new Error("schema unavailable");
++    mocks.schema.mockRejectedValue(error);
++    expect(await POST(request())).toEqual({ error });
++    expect(mocks.localSale).not.toHaveBeenCalled();
++    expect(mocks.booking).not.toHaveBeenCalled();
++  });
++});
+diff --git a/tests/purchases/lane-schema.test.ts b/tests/purchases/lane-schema.test.ts
+new file mode 100644
+index 0000000..16b5f75
+--- /dev/null
++++ b/tests/purchases/lane-schema.test.ts
+@@ -0,0 +1,30 @@
++import { describe, expect, it, vi } from "vitest";
++
++vi.mock("@/lib/db/local-postgres", () => ({ withLocalPg: vi.fn() }));
++vi.mock("@/lib/api/scope-middleware", () => ({ sessionSqlScope: vi.fn(), sqlScopeCondition: vi.fn() }));
++vi.mock("@/lib/services/purchase-warehouse-stock", () => ({ stockInToWarehouse: vi.fn() }));
++vi.mock("@/lib/api/response", () => ({ ApiClientError: Error }));
++
++import { ensureLaneSchema } from "@/lib/services/purchase-lane-service";
++
++describe("lane schema recovery", () => {
++  it("propagates database errors instead of proceeding with missing columns", async () => {
++    const denied = new Error("permission denied for table purchase_lane_loads");
++    const sql = vi.fn().mockRejectedValue(denied);
++    await expect(ensureLaneSchema(sql)).rejects.toBe(denied);
++    expect(sql).toHaveBeenCalledTimes(1);
++  });
++
++  it("sends one atomic, correctly delimited block covering all required columns", async () => {
++    const statements: string[] = [];
++    const sql = vi.fn(async (parts: TemplateStringsArray) => { statements.push(parts.join("")); return []; });
++    await ensureLaneSchema(sql);
++    expect(statements).toHaveLength(1);
++    expect(statements[0]).toMatch(/DO \$lane_schema\$[\s\S]*END \$lane_schema\$;/);
++    for (const column of ["sales_order_id", "remaining_quantity", "transfer_destination"]) {
++      expect(statements[0]).toContain(`ADD COLUMN IF NOT EXISTS ${column}`);
++    }
++    expect(statements[0]).toContain("conrelid = 'public.purchase_lane_loads'::regclass");
++    expect(statements[0]).toContain("CHECK (owner_type IN ('branch', 'internal_agent', 'external_agent', 'user', 'self', 'module'))");
++  });
++});
+diff --git a/tests/purchases/lane-settlement-preview.test.ts b/tests/purchases/lane-settlement-preview.test.ts
+new file mode 100644
+index 0000000..c7a5495
+--- /dev/null
++++ b/tests/purchases/lane-settlement-preview.test.ts
+@@ -0,0 +1,30 @@
++import { beforeEach, describe, expect, it, vi } from "vitest";
++import type { ErpSession } from "@/lib/auth/session";
++const mocks=vi.hoisted(()=>({sql:vi.fn(),authorize:vi.fn()}));
++vi.mock("@/lib/db/local-postgres",()=>({withLocalPg:(fn:(sql:unknown)=>unknown)=>fn(mocks.sql)}));
++vi.mock("@/lib/api/scope-middleware",()=>({authorizeApiScope:mocks.authorize}));
++import { laneSettlementPreview } from "@/lib/services/lane-settlement-preview";
++const session={} as ErpSession;
++const lanes=[{source_id:"source",loaded_quantity:5,net_weight:50}];
++
++describe("settlement source adapters",()=>{
++  beforeEach(()=>vi.clearAllMocks());
++  it.each(["sales_booking","local_sales"])("uses original sales currency and verified receipts for %s",async source_type=>{
++    mocks.sql.mockResolvedValueOnce([{id:"source",quantity:10,original_currency_code:"USD",currency_code:"AED",final_currency:"AED",exchange_rate:3.67,total_goods_original:1000,form_data:{form:{advancePercent:20}}}]).mockResolvedValueOnce(lanes).mockResolvedValueOnce([{payment_kind:"advance",currency_code:"AED",amount:734,base_currency_amount:734}]);
++    const b=await laneSettlementPreview(session,{source_type,source_id:"source",purchase_ref_no:"S-1"});
++    expect(b).toMatchObject({currency:"USD",localCurrency:"AED",advancePaid:200,totalPaid:200,paymentKnown:true});
++    expect(b?.loadings[0]).toMatchObject({value:500,advanceAllocated:100,outstanding:400});
++  });
++  it.each([["AED",1],["USD",3.67]])("UAE local purchase in %s exposes unverified advance without inventing paid money",async(purchase_currency,exchange_rate)=>{
++    mocks.sql.mockResolvedValueOnce([{id:"source",numbers:10,purchase_currency,final_currency:"AED",exchange_rate,final_cost:1000,advance_amount:200,remaining_balance:800}]).mockResolvedValueOnce(lanes);
++    const b=await laneSettlementPreview(session,{source_type:"local_purchase",source_id:"source"});
++    expect(b).toMatchObject({billTotal:1000,currency:purchase_currency,localCurrency:"AED",paymentKnown:false,advancePaid:null,outstanding:null});
++    expect(b?.loadings[0].value).toBe(500);
++  });
++  it("checks the original source's financial scope before reading its payment rows",async()=>{
++    mocks.sql.mockResolvedValueOnce([{id:"source",country_id:"other"}]);
++    mocks.authorize.mockImplementationOnce(()=>{throw new Error("Forbidden");});
++    await expect(laneSettlementPreview(session,{source_type:"sales_booking",source_id:"source"})).rejects.toThrow("Forbidden");
++    expect(mocks.sql).toHaveBeenCalledOnce();
++  });
++});
+diff --git a/tests/purchases/lane-settlement.test.ts b/tests/purchases/lane-settlement.test.ts
+new file mode 100644
+index 0000000..769eeca
+--- /dev/null
++++ b/tests/purchases/lane-settlement.test.ts
+@@ -0,0 +1,25 @@
++import { describe, expect, it } from "vitest";
++import { laneSettlement } from "@/lib/purchases/lane-settlement";
++import { finalCurrencyAmount } from "@/lib/purchases/final-currency";
++
++describe("shared purchase/sales settlement", () => {
++  it("allocates only the loaded value using the shared settlement rule", () => {
++    const result = laneSettlement({ total: 1158750, quantity:22500,currency:"USD",finalCurrency:"AED",rate:3.67,advance:115875,paid:115875,loadings:[{id:"one",quantity:2250,value:115875}] })!;
++    expect(result.states[0]).toMatchObject({ valueFC:115875,advanceAllocFC:11587.5,outstandingFC:104287.5 });
++    expect(finalCurrencyAmount(result.states[0].outstandingFC,"USD","AED",3.67)).toBe(382735.13);
++  });
++  it("UAE domestic purchase does not reconvert an AED balance", () => {
++    const r=laneSettlement({total:1000,quantity:10,currency:"AED",finalCurrency:"AED",rate:1,advance:200,paid:300,loadings:[{id:"one",quantity:5}]})!;
++    expect(r.states[0].outstandingFC).toBe(300);
++    expect(finalCurrencyAmount(r.states[0].outstandingFC,"AED","AED",1)).toBe(300);
++  });
++  it("weights unequal loads by value and applies additional receipts only once", () => {
++    const r=laneSettlement({total:1000,quantity:10,currency:"USD",finalCurrency:"AED",rate:3.67,advance:200,paid:500,loadings:[{id:"a",quantity:5,value:700},{id:"b",quantity:5,value:300}]})!;
++    expect(r.states.map(s=>s.outstandingFC)).toEqual([260,240]);
++  });
++  it("refuses inconsistent money or missing country conversion", () => {
++    const row={total:1000,quantity:10,currency:"USD",finalCurrency:"AED",rate:3.67,advance:200,paid:100,loadings:[]};
++    expect(laneSettlement(row)).toBeNull();
++    expect(laneSettlement({...row,paid:200,rate:0})).toBeNull();
++  });
++});
