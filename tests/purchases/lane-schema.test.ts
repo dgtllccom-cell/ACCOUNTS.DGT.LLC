@@ -25,5 +25,6 @@ describe("lane schema recovery", () => {
       expect(statements[0]).toContain(`ADD COLUMN IF NOT EXISTS ${column}`);
     }
     expect(statements[0]).toContain("conrelid = 'public.purchase_lane_loads'::regclass");
+    expect(statements[0]).toContain("CHECK (owner_type IN ('branch', 'internal_agent', 'external_agent', 'user', 'self', 'module'))");
   });
 });

@@ -91,6 +91,11 @@ export async function ensureLaneSchema(sql: Sql) {
               AND conname = 'purchase_lane_loads_source_type_check'
               AND pg_get_constraintdef(oid) LIKE '%sales_booking%'
               AND pg_get_constraintdef(oid) LIKE '%local_sales%'
+        ) OR NOT EXISTS (
+            SELECT 1 FROM pg_constraint
+            WHERE conrelid = 'public.purchase_lane_loads'::regclass
+              AND conname = 'purchase_lane_loads_owner_type_check'
+              AND pg_get_constraintdef(oid) LIKE '%module%'
         ) THEN
           ALTER TABLE public.purchase_lane_loads
             ADD COLUMN IF NOT EXISTS sales_order_id uuid REFERENCES public.sales_orders(id) ON DELETE SET NULL,
@@ -98,7 +103,10 @@ export async function ensureLaneSchema(sql: Sql) {
             ADD COLUMN IF NOT EXISTS transfer_destination text,
             DROP CONSTRAINT IF EXISTS purchase_lane_loads_source_type_check,
             ADD CONSTRAINT purchase_lane_loads_source_type_check
-              CHECK (source_type IN ('purchase_booking', 'local_purchase', 'sales_booking', 'local_sales'));
+              CHECK (source_type IN ('purchase_booking', 'local_purchase', 'sales_booking', 'local_sales')),
+            DROP CONSTRAINT IF EXISTS purchase_lane_loads_owner_type_check,
+            ADD CONSTRAINT purchase_lane_loads_owner_type_check
+              CHECK (owner_type IN ('branch', 'internal_agent', 'external_agent', 'user', 'self', 'module'));
         END IF;
       END $lane_schema$;
   `;
