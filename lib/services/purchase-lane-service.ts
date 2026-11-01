@@ -76,32 +76,32 @@ async function addEvent(sql: Sql, load: Record<string, any>, ev: { type: string;
 
 // ───────────────────────────── schema assurance & entering the lane ─────────────────────────────
 
-async function ensureLaneSchema(sql: Sql) {
-  try {
-    await sql`
-      DO $
+export async function ensureLaneSchema(sql: Sql) {
+  // One atomic statement: a failed repair must not leave the source constraint
+  // removed, or be mistaken for a successful migration. Healthy schemas avoid DDL.
+  await sql`
+      DO $lane_schema$
       BEGIN
-        IF EXISTS (
-          SELECT 1 FROM pg_constraint WHERE conname = 'purchase_lane_loads_source_type_check'
+        IF (SELECT count(*) FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'purchase_lane_loads'
+              AND column_name IN ('sales_order_id', 'remaining_quantity', 'transfer_destination')) < 3
+          OR NOT EXISTS (
+            SELECT 1 FROM pg_constraint
+            WHERE conrelid = 'public.purchase_lane_loads'::regclass
+              AND conname = 'purchase_lane_loads_source_type_check'
+              AND pg_get_constraintdef(oid) LIKE '%sales_booking%'
+              AND pg_get_constraintdef(oid) LIKE '%local_sales%'
         ) THEN
-          ALTER TABLE public.purchase_lane_loads DROP CONSTRAINT purchase_lane_loads_source_type_check;
+          ALTER TABLE public.purchase_lane_loads
+            ADD COLUMN IF NOT EXISTS sales_order_id uuid REFERENCES public.sales_orders(id) ON DELETE SET NULL,
+            ADD COLUMN IF NOT EXISTS remaining_quantity numeric NOT NULL DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS transfer_destination text,
+            DROP CONSTRAINT IF EXISTS purchase_lane_loads_source_type_check,
+            ADD CONSTRAINT purchase_lane_loads_source_type_check
+              CHECK (source_type IN ('purchase_booking', 'local_purchase', 'sales_booking', 'local_sales'));
         END IF;
-      END $;
-    `;
-    await sql`
-      ALTER TABLE public.purchase_lane_loads
-        ADD CONSTRAINT purchase_lane_loads_source_type_check
-        CHECK (source_type IN ('purchase_booking', 'local_purchase', 'sales_booking', 'local_sales'));
-    `;
-    await sql`
-      ALTER TABLE public.purchase_lane_loads
-        ADD COLUMN IF NOT EXISTS sales_order_id uuid REFERENCES public.sales_orders(id) ON DELETE SET NULL,
-        ADD COLUMN IF NOT EXISTS remaining_quantity numeric NOT NULL DEFAULT 0,
-        ADD COLUMN IF NOT EXISTS transfer_destination text;
-    `;
-  } catch {
-    // schema already up to date
-  }
+      END $lane_schema$;
+  `;
 }
 
 export async function ensureLaneFromSalesOrder(sql: Sql, salesOrderId: string, session: ErpSession): Promise<{ id: string; created: boolean } | null> {
@@ -132,7 +132,7 @@ export async function ensureLaneFromSalesOrder(sql: Sql, salesOrderId: string, s
       so.country_id, so.country_branch_id, so.city_branch_id, ${session.userId}::uuid
     from public.sales_orders so
     where so.id = ${salesOrderId}::uuid and so.deleted_at is null
-      and (so.form_data->>'saleSource' is null or so.form_data->>'saleSource' <> 'local')
+      and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') <> 'local'
     on conflict (source_type, source_id) where deleted_at is null do nothing
     returning id`;
   if (rows[0]) {
@@ -167,7 +167,7 @@ export async function ensureLaneFromLocalSale(sql: Sql, salesOrderId: string, se
       so.country_id, so.country_branch_id, so.city_branch_id, ${session.userId}::uuid
     from public.sales_orders so
     where so.id = ${salesOrderId}::uuid and so.deleted_at is null
-      and so.form_data->>'saleSource' = 'local'
+      and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') = 'local'
     on conflict (source_type, source_id) where deleted_at is null do nothing
     returning id`;
   if (rows[0]) {
@@ -266,7 +266,7 @@ async function backfillScope(sql: Sql, session: ErpSession) {
   // 3. Sales Booking
   const sbIds = await sql`
     select so.id from public.sales_orders so
-    where so.deleted_at is null and (so.form_data->>'saleSource' is null or so.form_data->>'saleSource' <> 'local')
+    where so.deleted_at is null and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') <> 'local'
       and ${sqlScopeCondition(sql, scope, "so")}
       and not exists (select 1 from public.purchase_lane_loads l where l.source_type='sales_booking' and l.source_id = so.id and l.deleted_at is null)
     limit 100`;
@@ -275,7 +275,7 @@ async function backfillScope(sql: Sql, session: ErpSession) {
   // 4. Local Sales
   const lsIds = await sql`
     select so.id from public.sales_orders so
-    where so.deleted_at is null and so.form_data->>'saleSource' = 'local'
+    where so.deleted_at is null and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') = 'local'
       and ${sqlScopeCondition(sql, scope, "so")}
       and not exists (select 1 from public.purchase_lane_loads l where l.source_type='local_sales' and l.source_id = so.id and l.deleted_at is null)
     limit 100`;
