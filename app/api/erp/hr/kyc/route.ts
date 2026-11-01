@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
-import { guardHr } from "@/lib/services/hr-api";
+import { guardHr, guardHrKyc } from "@/lib/services/hr-api";
 import { hrKycService } from "@/lib/services/hr-kyc-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeJoinedNames } from "@/lib/i18n/localize-records";
@@ -10,7 +10,7 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    const { scope } = await guardHr("read");
+    const { scope, caps } = await guardHrKyc("read");
     const sp = request.nextUrl.searchParams;
     let rows: any[] = await hrKycService.queue(scope, {
       status: sp.get("status") || undefined,
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     } catch {
       // keep original country names
     }
-    return apiOk({ rows });
+    return apiOk({ rows, caps });
   } catch (error) {
     return handleApiError(error);
   }

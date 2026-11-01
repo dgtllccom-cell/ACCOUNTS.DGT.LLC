@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertCrmRead, assertBusinessCrm } from "@/lib/crm/crm-access";
 import { ErpPermissionError, isStrictOperationalSession } from "@/lib/permissions/middleware";
 import { assertShippingUserExplicitPermission } from "@/lib/permissions/shipping-explicit-gate";
 import { getCrmPayablesReceivablesData } from "@/lib/crm/crm-payables-receivables-service";
@@ -11,6 +12,8 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertCrmRead(session);
+    assertBusinessCrm(session);
     if (isStrictOperationalSession(session) || session.canViewFinancials === false) {
       throw new ErpPermissionError("CRM financial views are outside your access.");
     }

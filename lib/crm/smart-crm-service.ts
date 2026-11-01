@@ -1,5 +1,8 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { ErpSession } from "@/lib/auth/session";
+import { crmItemExtraSql, crmModuleFor, crmScopeIds } from "@/lib/crm/crm-access";
+import { recordInSessionScope } from "@/lib/api/scope-middleware";
+import { reportScopeLevel, sessionReportDomains } from "@/lib/reports/report-access";
 
 export interface CrmActionItem {
   id: string;
@@ -154,11 +157,9 @@ export async function getSmartCrmDashboardData(params: {
     const offset = (page - 1) * pageSize;
 
     // Enforce permission scope hierarchy: Super Admin -> Country -> Main Branch -> City Branch
-    let allowedCountryIds: string[] = [];
-    let allowedBranchIds: string[] = [];
+    // fail-closed scope (lib/crm/crm-access.ts): no usable country / branch list means NO rows, never "no filter"
+    let { countries: allowedCountryIds, branches: allowedBranchIds } = crmScopeIds(params.session);
     if (!params.session.isSuperAdmin && !params.session.roles?.includes("super_admin")) {
-      allowedCountryIds = params.session.countryIds || [];
-      allowedBranchIds = params.session.cityBranchIds || [];
     }
 
     // 1. Calculate 7 Summary KPI metrics, grouped by real currency (a bucket can
@@ -176,6 +177,7 @@ export async function getSmartCrmDashboardData(params: {
         ${params.cityBranchId ? sql`AND city_branch_id = ${params.cityBranchId}` : sql``}
         ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
         ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``}
+        ${crmItemExtraSql(sql, params.session)}
       GROUP BY item_type, currency;
     `;
 
@@ -187,6 +189,7 @@ export async function getSmartCrmDashboardData(params: {
         ${params.cityBranchId ? sql`AND city_branch_id = ${params.cityBranchId}` : sql``}
         ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
         ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``}
+        ${crmItemExtraSql(sql, params.session)}
       GROUP BY currency;
     `;
 
@@ -243,6 +246,7 @@ export async function getSmartCrmDashboardData(params: {
         ${params.cityBranchId ? sql`AND city_branch_id = ${params.cityBranchId}` : sql``}
         ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
         ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``}
+        ${crmItemExtraSql(sql, params.session)}
         ${params.search ? sql`AND (reference_no ILIKE ${`%${params.search}%`} OR party_name ILIKE ${`%${params.search}%`} OR responsible_user_name ILIKE ${`%${params.search}%`})` : sql``}
       ORDER BY due_date ASC, created_at DESC
       LIMIT ${pageSize} OFFSET ${offset};
@@ -256,6 +260,7 @@ export async function getSmartCrmDashboardData(params: {
         ${params.cityBranchId ? sql`AND city_branch_id = ${params.cityBranchId}` : sql``}
         ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
         ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``}
+        ${crmItemExtraSql(sql, params.session)}
         ${params.search ? sql`AND (reference_no ILIKE ${`%${params.search}%`} OR party_name ILIKE ${`%${params.search}%`} OR responsible_user_name ILIKE ${`%${params.search}%`})` : sql``};
     `;
 
@@ -272,6 +277,7 @@ export async function getSmartCrmDashboardData(params: {
         ${params.cityBranchId ? sql`AND city_branch_id = ${params.cityBranchId}` : sql``}
         ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
         ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``}
+        ${crmItemExtraSql(sql, params.session)}
       ORDER BY overdue_days DESC
       LIMIT 10;
     `;
@@ -285,6 +291,7 @@ export async function getSmartCrmDashboardData(params: {
         ${params.cityBranchId ? sql`AND city_branch_id = ${params.cityBranchId}` : sql``}
         ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
         ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``}
+        ${crmItemExtraSql(sql, params.session)}
       ORDER BY due_date ASC
       LIMIT 10;
     `;
@@ -512,11 +519,9 @@ export async function getCrmUniversalReportData(params: {
   userId?: string | null;
 }) {
   return withLocalPg(async (sql) => {
-    let allowedCountryIds: string[] = [];
-    let allowedBranchIds: string[] = [];
+    // fail-closed scope (lib/crm/crm-access.ts): no usable country / branch list means NO rows, never "no filter"
+    let { countries: allowedCountryIds, branches: allowedBranchIds } = crmScopeIds(params.session);
     if (!params.session.isSuperAdmin && !params.session.roles?.includes("super_admin")) {
-      allowedCountryIds = params.session.countryIds || [];
-      allowedBranchIds = params.session.cityBranchIds || [];
       // Country CRM: a city-scoped login only sees its whole country when explicitly granted.
       if (params.reportType === "country_crm" && (params.session.permissions ?? []).includes("crm:report_country")) allowedBranchIds = [];
     }
@@ -544,6 +549,7 @@ export async function getCrmUniversalReportData(params: {
         ${params.cityBranchId ? sql`AND city_branch_id = ${params.cityBranchId}` : sql``}
         ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
         ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``}
+        ${crmItemExtraSql(sql, params.session)}
         ${params.userId ? sql`AND responsible_user_id = ${params.userId}` : sql``}
         ${params.startDate ? sql`AND due_date >= ${params.startDate}::date` : sql``}
         ${params.endDate ? sql`AND due_date <= ${params.endDate}::date` : sql``}
@@ -598,17 +604,19 @@ export async function getCrmUniversalReportData(params: {
 export async function assertCrmItemInScope(session: ErpSession, crmItemId: string) {
   if (session.isSuperAdmin || session.roles?.includes("super_admin")) return;
   const rows = await withLocalPg(async (sql) =>
-    sql`SELECT country_id, city_branch_id FROM crm_action_items WHERE id = ${crmItemId}::uuid LIMIT 1`
+    sql`SELECT country_id, country_branch_id, city_branch_id, responsible_user_id, item_type, module, source_type FROM crm_action_items WHERE id = ${crmItemId}::uuid LIMIT 1`
   );
   const item = rows?.[0];
   if (!item) throw Object.assign(new Error("CRM item not found."), { status: 404 });
-  const countries = session.countryIds ?? [];
-  const cities = session.cityBranchIds ?? [];
-  if (item.country_id && !countries.includes(item.country_id)) {
-    throw Object.assign(new Error("This CRM item is outside your authorised country."), { status: 403 });
+  // the shared scope rule: an item with no country / branch recorded is a global one (Super Admin only), an empty country list is no scope at all
+  if (!recordInSessionScope(session, { country_id: item.country_id, country_branch_id: item.country_branch_id, city_branch_id: item.city_branch_id })) {
+    throw Object.assign(new Error("This CRM item is outside your authorised country / branch."), { status: 404 });
   }
-  if (item.city_branch_id && cities.length > 0 && !cities.includes(item.city_branch_id)) {
-    throw Object.assign(new Error("This CRM item is outside your authorised branch."), { status: 403 });
+  const dom = sessionReportDomains(session);
+  const shipping = /shipping|clearing|customs/i.test(String(item.item_type ?? "")) || /shipping|clearing|customs/i.test(String(item.module ?? "")) || /shipping|clearing|customs/i.test(String(item.source_type ?? ""));
+  if (shipping ? !dom.shipping : !dom.business) throw Object.assign(new Error("This CRM item belongs to the other operational domain."), { status: 404 });
+  if (reportScopeLevel(session) === "own" && String(item.responsible_user_id ?? "") !== String(session.userId)) {
+    throw Object.assign(new Error("This CRM item is assigned to another user."), { status: 404 });
   }
 }
 
@@ -622,7 +630,7 @@ export async function createManualCrmItem(session: ErpSession, input: {
   const countryId = input.countryId ?? countries[0] ?? null;
   const cityBranchId = input.cityBranchId ?? cities[0] ?? null;
   if (!session.isSuperAdmin) {
-    if (!countryId || !countries.includes(countryId)) throw Object.assign(new Error("Country scope is not allowed for this user."), { status: 403 });
+    if (!countryId || !countries.includes(countryId) || !recordInSessionScope(session, { country_id: countryId, city_branch_id: cityBranchId })) throw Object.assign(new Error("Country / branch scope is not allowed for this user."), { status: 403 });
     if (cityBranchId && cities.length > 0 && !cities.includes(cityBranchId)) throw Object.assign(new Error("Branch scope is not allowed for this user."), { status: 403 });
   }
   const rows = await withLocalPg(async (sql) => {
@@ -635,7 +643,7 @@ export async function createManualCrmItem(session: ErpSession, input: {
         amount, paid_amount, remaining_amount, currency, country_id, country_name, city_branch_id, branch_name,
         responsible_user_id, responsible_user_name, urgency_class, status, notes
       ) VALUES (
-        'manual', ${crypto.randomUUID()}, ${ref}, ${input.partyName}, ${input.dueDate}::date, ${input.itemType}, 'shipping',
+        'manual', ${crypto.randomUUID()}, ${ref}, ${input.partyName}, ${input.dueDate}::date, ${input.itemType}, ${crmModuleFor(session)},
         ${input.amount}, 0, ${input.amount}, ${input.currency.toUpperCase()}, ${countryId}, ${ctry?.name ?? null}, ${cityBranchId}, ${br?.name ?? null},
         ${session.userId}, ${session.fullName ?? null},
         CASE WHEN ${input.dueDate}::date < CURRENT_DATE THEN 'overdue' WHEN ${input.dueDate}::date = CURRENT_DATE THEN 'due_today' ELSE 'upcoming' END,

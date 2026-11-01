@@ -31,14 +31,20 @@ async function session(key) {
   const page = await ctx.newPage();
   const res = await page.goto(BASE + "/dashboard/ledger/detailed", { waitUntil: "networkidle", timeout: 180000 });
   check("Detailed Ledger opens for the finance user", res?.status() === 200, res?.status());
-  const portraitBtn = page.locator('[data-testid="ledger-print-portrait"]');
-  await portraitBtn.waitFor({ timeout: 120000 });
-  await page.waitForFunction(() => !document.querySelector('[data-testid="ledger-print-portrait"]')?.hasAttribute("disabled"), null, { timeout: 180000 }).catch(() => {});
-  const enabled = await portraitBtn.isEnabled();
-  check("print buttons enabled once a statement is loaded", enabled);
+  // ONE compact ⋮ menu holds Print (portrait / landscape), PDF export (portrait / landscape) and CSV
+  const menuBtn = page.locator('[data-testid="ledger-actions-menu"]');
+  await menuBtn.waitFor({ timeout: 120000 });
+  await page.waitForFunction(() => !document.querySelector('[data-testid="ledger-actions-menu"]')?.hasAttribute("disabled"), null, { timeout: 180000 }).catch(() => {});
+  const enabled = await menuBtn.isEnabled();
+  check("actions menu enabled once a statement is loaded", enabled);
+  const legacyButtons = await page.locator('button:has-text("Print Portrait"), button:has-text("Print Landscape")').count();
+  check("no duplicate Print Portrait / Print Landscape toolbar buttons remain", legacyButtons === 0, legacyButtons);
   await page.screenshot({ path: path.join(DIR, "ledger-ui-screen.png") });
   if (enabled) {
-    await portraitBtn.click();
+    await menuBtn.click();
+    const items = await page.locator('[role="menuitem"]').allInnerTexts();
+    check("menu offers Print + PDF in both orientations and CSV", ["ledger-print-portrait", "ledger-print-landscape", "ledger-pdf-portrait", "ledger-pdf-landscape", "ledger-export-csv"].length === 5 && items.length === 5, items.join(" | "));
+    await page.locator('[data-testid="ledger-print-portrait"]').click();
     const frame = page.locator("iframe").first();
     await frame.waitFor({ timeout: 60000 });
     const srcdoc = async () => (await frame.getAttribute("srcdoc")) || "";

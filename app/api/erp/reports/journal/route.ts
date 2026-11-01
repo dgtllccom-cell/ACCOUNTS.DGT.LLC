@@ -118,10 +118,22 @@ export async function GET(request: NextRequest) {
       language
     } as const;
 
-    const [rows, openingBalance] = await Promise.all([
+    const [allRows, openingByCurrency] = await Promise.all([
       journalReportService.getJournalRegister(baseFilters),
-      journalReportService.getOpeningBalance(baseFilters)
+      journalReportService.getOpeningBalances(baseFilters)
     ]);
+
+    // ── Currency safety: debit / credit / balance are NEVER added across currencies. ──
+    // Every card, chart and the register below are computed for ONE currency: the one chosen in the filter, otherwise the only currency present,
+    // otherwise the currency with the most lines (the response names it and lists the others, so the screen can offer them).
+    const lineCount = new Map<string, number>();
+    for (const r of allRows) lineCount.set(String(r.currency || "").toUpperCase(), (lineCount.get(String(r.currency || "").toUpperCase()) ?? 0) + 1);
+    const availableCurrencies = [...lineCount.entries()].sort((a, b) => b[1] - a[1]).map(([currency, lines]) => ({ currency, lines }));
+    const wanted = query.currency ? query.currency.toUpperCase() : null;
+    const activeCurrency = wanted ?? availableCurrencies[0]?.currency ?? null;
+    const rows = activeCurrency ? allRows.filter((r) => String(r.currency || "").toUpperCase() === activeCurrency) : allRows;
+    const openingBalance = activeCurrency ? openingByCurrency[activeCurrency] ?? 0 : 0;
+    const currencyNotice = !wanted && availableCurrencies.length > 1 ? { applied: activeCurrency, available: availableCurrencies.map((c) => c.currency) } : null;
 
     // ── Everything below reads ONLY `rows` (+ openingBalance) — the single filtered set. ──
 
@@ -194,6 +206,9 @@ export async function GET(request: NextRequest) {
       reportScope,
       generatedAt: new Date().toISOString(),
       filters: { ...baseFilters, session: undefined },
+      currency: activeCurrency,
+      availableCurrencies,
+      currencyNotice,
       kpis,
       charts,
       table: { rows: pageRows, totalCount, page: query.page, pageSize: query.pageSize },

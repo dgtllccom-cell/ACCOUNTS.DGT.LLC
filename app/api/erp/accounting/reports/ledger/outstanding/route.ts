@@ -4,7 +4,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { assertFinancialAccess } from "@/lib/permissions/middleware";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, recordInSessionScope, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { allowedRowDomains } from "@/lib/permissions/domain-scope";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -21,12 +21,17 @@ import { localizeRecordFields } from "@/lib/i18n/localize-records";
  *        &branchId=<uuid>       (optional filter)
  *        &overdueDays=<n>       (optional; only rows aged >= n days)
  *        &side=all|debit|credit (optional; receivable=debit, payable=credit)
+ *        &currency=<ISO>        (optional; every figure is in ONE currency - the one asked for, the only one present, else the one with most ledgers)
+ *
+ * Scope = the shared rule (sessionSqlScope): a branch login stays on its branch, a country login on its country, only global scope sees everything.
+ * Receivable / payable / overdue amounts are NEVER added across currencies; the response lists the other currencies so the screen can offer them.
  */
 const querySchema = z.object({
   countryId: z.string().uuid().optional(),
   branchId: z.string().uuid().optional(),
   overdueDays: z.coerce.number().int().min(0).optional(),
   side: z.enum(["all", "debit", "credit"]).optional().default("all"),
+  currency: z.string().trim().toUpperCase().regex(/^[A-Z]{3,5}$/).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -42,17 +47,14 @@ export async function GET(request: NextRequest) {
       branchId: request.nextUrl.searchParams.get("branchId") ?? undefined,
       overdueDays: request.nextUrl.searchParams.get("overdueDays") ?? undefined,
       side: request.nextUrl.searchParams.get("side") ?? undefined,
+      currency: request.nextUrl.searchParams.get("currency") || undefined,
     });
 
     const rowsRaw = await withLocalPg(async (sql) => {
-      // Build RBAC scope condition
-      const scopeCond = session.isSuperAdmin
-        ? (q.countryId ? sql`v.country_id = ${q.countryId}` : sql`true`)
-        : sql`(
-            v.country_id = any(${session.countryIds}::uuid[])
-            or v.country_branch_id = any(${session.countryBranchIds}::uuid[])
-            or v.city_branch_id = any(${session.cityBranchIds}::uuid[])
-          )`;
+      // ONE scope rule. The old OR of country / main-branch / city-branch ids widened a branch login to its whole country (its session also carries the
+      // parent ids) and let a login with empty lists through; an explicit country filter now narrows INSIDE the scope instead of being ignored.
+      const scopeCond = sqlScopeCondition(sql, sessionSqlScope(session), "v");
+      const countryCond = q.countryId ? sql`v.country_id = ${q.countryId}` : sql`true`;
 
       const branchCond = q.branchId
         ? sql`(v.city_branch_id = ${q.branchId} or v.country_branch_id = ${q.branchId})`
@@ -95,7 +97,7 @@ export async function GET(request: NextRequest) {
         left join public.country_branches cb on cb.id = v.country_branch_id
         left join public.city_branches cib on cib.id = v.city_branch_id
         left join public.enterprise_accounts ea on ea.id = v.account_id
-        where ${scopeCond} and ${branchCond} and ${domainCond}
+        where ${scopeCond} and ${countryCond} and ${branchCond} and ${domainCond}
         order by v.days_since_movement desc nulls last, v.current_balance desc
       `;
     });
@@ -163,20 +165,12 @@ export async function GET(request: NextRequest) {
           "id, scope, country_id, country_branch_id, city_branch_id, account_id, code, name, currency, opening_balance, current_balance, debit_total, credit_total, last_movement_date, days_since_movement"
         );
 
-      if (!session.isSuperAdmin) {
-        const conditions: string[] = [];
-        if (session.cityBranchIds?.length) conditions.push(`city_branch_id.in.(${session.cityBranchIds.join(",")})`);
-        if (session.countryBranchIds?.length) conditions.push(`country_branch_id.in.(${session.countryBranchIds.join(",")})`);
-        if (session.countryIds?.length) conditions.push(`country_id.in.(${session.countryIds.join(",")})`);
-        view = conditions.length ? view.or(conditions.join(",")) : view.eq("id", "00000000-0000-0000-0000-000000000000");
-      } else if (q.countryId) {
-        view = view.eq("country_id", q.countryId);
-      }
+      if (q.countryId) view = view.eq("country_id", q.countryId);
 
       const { data, error } = await view.order("days_since_movement", { ascending: false, nullsFirst: false });
       if (error) throw new Error(error.message);
 
-      rows = (data ?? []).map((r: any) => {
+      rows = (data ?? []).filter((r: any) => recordInSessionScope(session, r)).map((r: any) => {
         const bal = Number(r.current_balance ?? 0);
         return {
           id: r.id,
@@ -223,12 +217,20 @@ export async function GET(request: NextRequest) {
       // keep original names
     }
 
+    // ── one currency at a time ──
+    const perCurrency = new Map<string, number>();
+    for (const r of rows) perCurrency.set(String(r.currency || "").toUpperCase(), (perCurrency.get(String(r.currency || "").toUpperCase()) ?? 0) + 1);
+    const currencies = [...perCurrency.entries()].sort((a, b) => b[1] - a[1]).map(([currency, accounts]) => ({ currency, accounts }));
+    const activeCurrency = q.currency ?? currencies[0]?.currency ?? null;
+    if (activeCurrency) rows = rows.filter((x: any) => String(x.currency || "").toUpperCase() === activeCurrency);
+
     const totalReceivable = rows.filter((x: any) => x.outstanding > 0).reduce((s: number, x: any) => s + x.outstanding, 0);
     const totalPayable = rows.filter((x: any) => x.outstanding < 0).reduce((s: number, x: any) => s + Math.abs(x.outstanding), 0);
     const overdueRows = rows.filter((x: any) => (x.daysOutstanding ?? 0) >= overdueThreshold);
     const overdueAmounts = overdueRows.reduce((s: number, x: any) => s + Math.abs(x.outstanding), 0);
 
     const summary = {
+      currency: activeCurrency,
       totalAccounts: rows.length,
       accounts: rows.length,
       totalReceivable,
@@ -241,7 +243,7 @@ export async function GET(request: NextRequest) {
       overdue10: rows.filter((x: any) => (x.daysOutstanding ?? 0) > 10).length,
     };
 
-    return apiOk({ rows, summary });
+    return apiOk({ rows, summary, currencies, currencyNotice: !q.currency && currencies.length > 1 ? { applied: activeCurrency, available: currencies.map((c) => c.currency) } : null });
   } catch (error) {
     return handleApiError(error);
   }

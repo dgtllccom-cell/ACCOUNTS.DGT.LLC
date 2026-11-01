@@ -78,7 +78,8 @@ export async function loadCenterRows(session: ErpSession, f: CenterFilters): Pro
 
   const scope = sessionSqlScope(session);
   const roles: string[] = session.roles ?? [];
-  const assignedOnly = !session.isSuperAdmin && (Boolean((session as any).isShippingScoped) || (roles.length > 0 && roles.every((r) => ASSIGNED_ONLY_ROLES.includes(r))));
+  // a normal user (no admin scope) sees only the records it created - never every transaction of its branch
+  const assignedOnly = !session.isSuperAdmin && (reportScopeLevel(session) === "own" || Boolean((session as any).isShippingScoped) || (roles.length > 0 && roles.every((r) => ASSIGNED_ONLY_ROLES.includes(r))));
   const search = s(f.search).toLowerCase();
   const like = search ? `%${search.replace(/[%_\\]/g, (c) => "\\" + c)}%` : null;
   const wantType = (t: string) => !f.type || f.type === "all" || f.type === t;

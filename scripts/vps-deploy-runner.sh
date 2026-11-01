@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+[ -n "$DGT_ALLOW_LEGACY_DEPLOY" ] || { echo "DISABLED: this script can change the LIVE server. Production is deployed only through the controlled gate (scripts/production/deploy-via-gate.sh -> dgt-approve-deploy / dgt-deploy) from the protected 'production' branch, with the owner's approval. See docs/production-deployment-control.md. Pushing or resetting main never deploys. (Owner-approved legacy use: the CALLER sets DGT_ALLOW_LEGACY_DEPLOY=1 - a script must never set it for itself.)" >&2; exit 1; }
 set -euo pipefail
 
 echo "=========================================================="
@@ -6,8 +7,7 @@ echo "  DGT ERP — PRODUCTION VPS ATOMIC DEPLOYMENT RUNNER"
 echo "  Target: root@72.60.209.121 (/var/www/dgt-nextjs)"
 echo "=========================================================="
 
-# Crucial for bypassing VPS reference-transaction git hook
-export DGT_DEPLOY_GATE=1
+# (this runner used to export DGT_DEPLOY_GATE=1 here to defeat the live-checkout ref lock; only dgt-deploy may set it)
 
 cd /var/www/dgt-nextjs
 

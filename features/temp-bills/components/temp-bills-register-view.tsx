@@ -106,7 +106,15 @@ export function TempBillsRegisterView({ lang: langProp, section = "all" }: { lan
       { key: "currency_code", label: s.t("col_currency", "Currency") },
       { key: "remarks", label: s.t("col_remarks", "Remarks") },
     ];
-    const totalAmt = rows.reduce((a, r) => a + (Number(r.amount) || 0), 0);
+    // amounts are totalled PER CURRENCY - a register holding AED, PKR and USD bills never gets one meaningless grand total
+    const byCcy = new Map<string, number>();
+    for (const r of rows) {
+      const c = String((r as any).currency_code || "").toUpperCase() || "—";
+      byCcy.set(c, (byCcy.get(c) ?? 0) + (Number(r.amount) || 0));
+    }
+    const singleCcy = byCcy.size === 1;
+    const totalAmt = singleCcy ? [...byCcy.values()][0] : 0;
+    const fmtAmt = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 2 });
     openGenericErpReport({
       title: s.t("report_title", "Temporary Purchase & Sales Bills Register"),
       subtitle: s.t("report_sub", "Historical tracking only — not connected to Ledger / Roznamcha / Journal / Stock"),
@@ -125,11 +133,11 @@ export function TempBillsRegisterView({ lang: langProp, section = "all" }: { lan
       summary: {
         [s.t("kpi_bills", "Bills")]: rows.length,
         [s.t("kpi_parties", "Parties")]: grouped.size,
-        [s.t("kpi_total_amount", "Total Amount")]: totalAmt.toLocaleString(undefined, { maximumFractionDigits: 2 }),
+        ...(singleCcy
+          ? { [s.t("kpi_total_amount", "Total Amount")]: `${fmtAmt(totalAmt)} ${[...byCcy.keys()][0]}` }
+          : Object.fromEntries([...byCcy.entries()].map(([c, n]) => [`${s.t("kpi_total_amount", "Total Amount")} (${c})`, fmtAmt(n)]))),
       },
-      totalsRow: {
-        amount: totalAmt,
-      } as any,
+      ...(singleCcy ? { totalsRow: { amount: totalAmt } as any } : {}),
     });
   };
 

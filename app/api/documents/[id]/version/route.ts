@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { requireErpSession } from "@/lib/auth/session";
+import { gateDocument } from "@/lib/documents/document-access";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { saveDocumentBlob } from "@/lib/documents/document-storage";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
@@ -29,7 +30,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const session = await requireErpSession();
     const { id } = await params;
 
-    const form = await request.formData();
+    // a new version is an edit: documents:update + the document's own country / branch scope and operational domain
+    const gate = await gateDocument(session, id, "update");
+    if ("response" in gate) return gate.response;
+
+    // a body that is not multipart is a 400 (missing file), never a server error
+    const form = await request.formData().catch(() => null);
+    if (!form) return NextResponse.json({ error: "A replacement file is required." }, { status: 400 });
     const file = form.get("file");
     const note = (form.get("note") as string) || null;
     if (!(file instanceof File)) {

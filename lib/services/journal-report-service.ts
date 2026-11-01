@@ -3,6 +3,7 @@ import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { localizeRecordGroups } from "@/lib/i18n/localize-records";
+import { reportScopeLevel, sessionReportDomains } from "@/lib/reports/report-access";
 
 /**
  * Journal Reporting data layer — sibling to ledger-report-service.ts, not a duplicate of it.
@@ -127,14 +128,20 @@ export class JournalReportService {
    * narrows to a single account/ledger; across a mixed set of accounts it is still the correct
    * arithmetic amount brought forward for that same filtered population — never fabricated.
    */
-  async getOpeningBalance(input: JournalRegisterFilters): Promise<number> {
+  async getOpeningBalances(input: JournalRegisterFilters): Promise<Record<string, number>> {
     const priorRows = await this.getJournalRegister({
       ...input,
       fromDate: "1900-01-01",
       toDate: input.fromDate,
       limit: 50000
     });
-    return priorRows.filter((r) => r.date < input.fromDate).reduce((sum, r) => sum + (r.debit - r.credit), 0);
+    const out: Record<string, number> = {};
+    for (const r of priorRows) {
+      if (r.date >= input.fromDate) continue;
+      const ccy = String(r.currency || "").toUpperCase();
+      out[ccy] = (out[ccy] ?? 0) + (r.debit - r.credit);
+    }
+    return out;
   }
 
   private async queryViaPg(sql: any, input: JournalRegisterFilters): Promise<JournalRegisterRow[]> {
@@ -161,6 +168,19 @@ export class JournalReportService {
       input.reportScope === "country" ? sql`lpb.scope != 'super_admin'`
       : input.reportScope === "branch" ? sql`lpb.scope = 'city_branch'`
       : sql`true`;
+
+    // Business and Shipping Line accounting stay apart, and a login that only sees its own work sees only the entries it created.
+    const dom = sessionReportDomains(session);
+    const SHIP_TYPE = "shipping|clearing|customs";
+    const domainRoz = session.isSuperAdmin || (dom.business && dom.shipping) ? sql`true`
+      : dom.shipping ? sql`coalesce(re.operational_domain, 'business') = 'shipping'`
+      : dom.business ? sql`coalesce(re.operational_domain, 'business') <> 'shipping'` : sql`false`;
+    const domainLpb = session.isSuperAdmin || (dom.business && dom.shipping) ? sql`true`
+      : dom.shipping ? sql`coalesce(lpb.transaction_type, '') ~* ${SHIP_TYPE}`
+      : dom.business ? sql`coalesce(lpb.transaction_type, '') !~* ${SHIP_TYPE}` : sql`false`;
+    const ownOnly = !session.isSuperAdmin && reportScopeLevel(session) === "own";
+    const ownRoz = ownOnly ? sql`re.created_by = ${session.userId}::uuid` : sql`true`;
+    const ownLpb = ownOnly ? sql`lpb.created_by = ${session.userId}::uuid` : sql`true`;
 
     const countryCondRoz = input.countryId ? sql`re.country_id = ${input.countryId}` : sql`true`;
     const countryCondLpb = input.countryId ? sql`lpb.country_id = ${input.countryId}` : sql`true`;
@@ -225,7 +245,7 @@ export class JournalReportService {
           join roznamcha_entries re on re.id = rl.roznamcha_entry_id
           left join enterprise_accounts ea on ea.id = rl.enterprise_account_id
           where re.deleted_at is null
-            and ${scopeCondRoz} and ${scopeTabRoz}
+            and ${scopeCondRoz} and ${scopeTabRoz} and ${domainRoz} and ${ownRoz}
             and re.entry_date::date >= ${input.fromDate}::date and re.entry_date::date <= ${input.toDate}::date
             and ${countryCondRoz} and ${countryBranchCondRoz} and ${cityBranchCondRoz}
             and ${ledgerCondRoz} and ${companyCondRoz} and ${customerCondRoz}
@@ -250,7 +270,7 @@ export class JournalReportService {
           join ledger_posting_batches lpb on lpb.id = lpl.batch_id
           left join enterprise_accounts ea2 on ea2.id = lpl.enterprise_account_id
           where lpb.deleted_at is null
-            and ${scopeCondLpb} and ${scopeTabLpb}
+            and ${scopeCondLpb} and ${scopeTabLpb} and ${domainLpb} and ${ownLpb}
             and lpb.entry_date::date >= ${input.fromDate}::date and lpb.entry_date::date <= ${input.toDate}::date
             and ${countryCondLpb} and ${countryBranchCondLpb} and ${cityBranchCondLpb}
             and ${ledgerCondLpb} and ${companyCondLpb} and ${customerCondLpb}
@@ -424,12 +444,14 @@ export class JournalReportService {
       return a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
     });
 
-    // Compute chronological cumulative running balance across the active filtered dataset
-    let running = 0;
+    // Chronological cumulative running balance - kept PER CURRENCY, because adding AED to PKR to USD gives a number that means nothing.
+    const running = new Map<string, number>();
     for (const row of filtered) {
-      running += (row.debit - row.credit);
-      row.finalBalance = Math.abs(running);
-      row.balanceDirection = running > 0 ? "DR" : running < 0 ? "CR" : "—";
+      const key = String(row.currency || "").toUpperCase();
+      const next = (running.get(key) ?? 0) + (row.debit - row.credit);
+      running.set(key, next);
+      row.finalBalance = Math.abs(next);
+      row.balanceDirection = next > 0 ? "DR" : next < 0 ? "CR" : "—";
     }
 
     return filtered;

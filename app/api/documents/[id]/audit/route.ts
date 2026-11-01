@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow, invalidIdErrorOf } from "@/lib/api/response";
+import { gateDocument, mayDoDocumentAction } from "@/lib/documents/document-access";
+import { canReadAudit } from "@/lib/reports/report-access";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -16,6 +18,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   try {
     const session = await requireErpSession();
     const { id } = await params;
+
+    // the audit trail names who did what from which address: for editors / audit-eligible roles, and only for a document the login may open
+    if (!canReadAudit(session) && !mayDoDocumentAction(session, "update")) return NextResponse.json({ error: "The document audit trail is restricted to editors and audit-eligible roles." }, { status: 403 });
+    const gate = await gateDocument(session, id, "read");
+    if ("response" in gate) return gate.response;
 
     const rows = await withLocalPg(async (sql) => {
       const doc = (await sql`

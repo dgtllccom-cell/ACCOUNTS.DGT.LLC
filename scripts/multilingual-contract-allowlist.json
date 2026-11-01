@@ -84,7 +84,8 @@
     "app/api/erp/uae-tax/vat-return/preview/route.ts": "UAE tax: VAT returns / tax numbers / e-invoice codes / periods / rules — figures and codes only, no translatable master text",
     "app/api/erp/uae-tax/vat-return/route.ts": "UAE tax: VAT returns / tax numbers / e-invoice codes / periods / rules — figures and codes only, no translatable master text",
     "app/api/erp/voice-messages/route.ts": "transcript is free-form spoken/typed user content (message-like); uploaded_by_name is a denormalized snapshot with no id in this projection",
-    "app/api/erp/whatsapp/qr-code/route.ts": "generates its own display-name string dynamically; no stored business-name field to localize"
+    "app/api/erp/whatsapp/qr-code/route.ts": "generates its own display-name string dynamically; no stored business-name field to localize",
+    "app/api/erp/reports/handover-summary/route.ts": "returns counts by status code and handover / BL reference numbers; created_by_name is a saved source name that is printed exactly as saved, the status code is translated by the screen"
   },
   "unlocalizedRoutes": [],
   "dynamicLocalizeTables": []

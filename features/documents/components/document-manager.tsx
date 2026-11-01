@@ -236,7 +236,13 @@ function formatBytes(bytes: number, decimals = 1) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 
-export function DocumentManager() {
+export type DocumentScopeRole = "super_admin" | "country_admin" | "branch_user";
+
+/**
+ * `initialScope` / `allowedScopes` come from the SERVER (the signed-in login's real reach). The scope switcher used to start as "Super Admin" for
+ * everybody; it is only a view preset - the documents API enforces the real scope - but a Branch User must never be offered, or start in, a Super Admin view.
+ */
+export function DocumentManager({ initialScope = "branch_user", allowedScopes = ["branch_user"] }: { initialScope?: DocumentScopeRole; allowedScopes?: DocumentScopeRole[] } = {}) {
   const router = useRouter();
   const lang = useActiveLanguage();
   const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
@@ -269,7 +275,8 @@ export function DocumentManager() {
     let active = true;
     fetch("/api/erp/auth/session", { credentials: "include" })
       .then((r) => r.json())
-      .then((json: any) => {
+      .then((raw: any) => {
+        const json = raw?.data ?? raw;
         if (!active || !json?.user) return;
         setSessionCtx({
           userName: json.user.fullName || json.user.email || "—",
@@ -294,7 +301,9 @@ export function DocumentManager() {
   const [selectedCityBranchId, setSelectedCityBranchId] = useState<string>("");
   const [selectedModule, setSelectedModule] = useState<string>("all");
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
-  const [scopeRole, setScopeRole] = useState<"super_admin" | "country_admin" | "branch_user">("super_admin");
+  const [scopeRole, setScopeRole] = useState<DocumentScopeRole>(allowedScopes.includes(initialScope) ? initialScope : (allowedScopes[0] ?? "branch_user"));
+  const rootIcon = scopeRole === "super_admin" ? "👑" : scopeRole === "country_admin" ? "🌍" : "🏢";
+  const rootLabel = scopeRole === "super_admin" ? th("Super Admin Storage") : scopeRole === "country_admin" ? th("Country Admin") : th("Branch User");
 
   // Dropdown / Popover states
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState<boolean>(false);
@@ -1339,6 +1348,7 @@ export function DocumentManager() {
 
             {isScopeMenuOpen && (
               <div className="absolute right-0 mt-1.5 w-48 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-xs font-semibold space-y-0.5">
+                {allowedScopes.includes("super_admin") && (
                 <button
                   type="button"
                   onClick={() => {
@@ -1354,6 +1364,8 @@ export function DocumentManager() {
                   <span className="flex items-center gap-1.5">👑 {th("Super Admin Storage")}</span>
                   {scopeRole === "super_admin" && <Check className="h-3.5 w-3.5" />}
                 </button>
+                )}
+                {allowedScopes.includes("country_admin") && (
                 <button
                   type="button"
                   onClick={() => {
@@ -1368,6 +1380,8 @@ export function DocumentManager() {
                   <span className="flex items-center gap-1.5">🌍 {th("Country Admin Scope")}</span>
                   {scopeRole === "country_admin" && <Check className="h-3.5 w-3.5" />}
                 </button>
+                )}
+                {allowedScopes.includes("branch_user") && (
                 <button
                   type="button"
                   onClick={() => {
@@ -1382,6 +1396,7 @@ export function DocumentManager() {
                   <span className="flex items-center gap-1.5">🏢 {th("Branch User Scope")}</span>
                   {scopeRole === "branch_user" && <Check className="h-3.5 w-3.5" />}
                 </button>
+                )}
               </div>
             )}
           </div>
@@ -1756,7 +1771,7 @@ export function DocumentManager() {
             >
               <span className="flex items-center gap-1.5 truncate">
                 <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                👑 {th("Super Admin Storage")} ({th("All")})
+                {rootIcon} {rootLabel} ({th("All")})
               </span>
               <span className="text-[11px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded-full font-mono">
                 {documents.length}
@@ -1995,7 +2010,7 @@ export function DocumentManager() {
                   !selectedCountryId ? "text-blue-600 font-black bg-blue-50 dark:bg-blue-950" : "text-slate-600"
                 )}
               >
-                👑 {th("Super Admin")}
+                {rootIcon} {scopeRole === "super_admin" ? th("Super Admin") : rootLabel}
               </button>
 
               {/* 2. Country Link */}
@@ -2089,7 +2104,9 @@ export function DocumentManager() {
                     ? `${activeMainBranch.name} Documents`
                     : activeCountry
                     ? `${activeCountry.name} Documents`
-                    : "All Super Admin Repository Documents"}{" "}
+                    : scopeRole === "super_admin"
+                    ? "All Super Admin Repository Documents"
+                    : `${rootLabel} Documents`}{" "}
                   ({filteredDocuments.length})
                 </span>
               </div>
@@ -2519,7 +2536,7 @@ export function DocumentManager() {
             <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-2.5 border border-slate-200 dark:border-slate-700 space-y-1">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{th("Destination Filing Path")}</span>
               <div className="text-[11px] font-mono text-slate-700 dark:text-slate-300 truncate">
-                {activeCountry?.name || th("Super Admin Storage")} › {activeMainBranch?.name || th("All Branches")} › {selectedModule}
+                {activeCountry?.name || rootLabel} › {activeMainBranch?.name || th("All Branches")} › {selectedModule}
               </div>
             </div>
 

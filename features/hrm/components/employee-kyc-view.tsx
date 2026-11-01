@@ -3,8 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Loader2, ShieldCheck, ShieldAlert, Clock, X, Check, Ban, RefreshCw,
-  Building2, Globe, Search,
+  Loader2, ShieldCheck, ShieldAlert, X, Check, Ban, RefreshCw, Search, Eye, Download,
   ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
@@ -35,19 +34,7 @@ const STATUS_TONE: Record<string, string> = {
   expired: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300",
 };
 
-function getCountryFlagAndName(country?: string): { flag: string; name: string } {
-  if (!country) return { flag: "🇦🇪", name: "UAE" };
-  const lower = country.toLowerCase();
-  if (lower.includes("uae") || lower.includes("emirates") || lower.includes("united arab")) return { flag: "🇦🇪", name: "UAE" };
-  if (lower.includes("pak")) return { flag: "🇵🇰", name: "Pakistan" };
-  if (lower.includes("oman")) return { flag: "🇴🇲", name: "Oman" };
-  if (lower.includes("saudi")) return { flag: "🇸🇦", name: "Saudi Arabia" };
-  if (lower.includes("india")) return { flag: "🇮🇳", name: "India" };
-  if (lower.includes("qatar")) return { flag: "🇶🇦", name: "Qatar" };
-  if (lower.includes("kuwait")) return { flag: "🇰🇼", name: "Kuwait" };
-  if (lower.includes("bahrain")) return { flag: "🇧🇭", name: "Bahrain" };
-  return { flag: "🌐", name: country };
-}
+type Caps = { ownOnly: boolean; upload: boolean; verify: boolean; identifiers: boolean };
 
 export function EmployeeKycView({ lang }: { lang?: string }) {
   const s = useErpScreen("hrm", lang);
@@ -59,6 +46,10 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
   const [countryOptions, setCountryOptions] = useState<CountryOpt[]>([]);
   const [branchOptions, setBranchOptions] = useState<BranchOpt[]>([]);
   const [requirementOptions, setRequirementOptions] = useState<ReqOpt[]>([]);
+  // what this login may do (the server decides; the buttons just follow): view only / upload+edit / approve+reject
+  // null until the server has answered - nothing is claimed ("View only" ...) before the real capabilities are known
+  const [capsLoaded, setCapsLoaded] = useState<Caps | null>(null);
+  const caps: Caps = capsLoaded ?? { ownOnly: false, upload: false, verify: false, identifiers: false };
 
   // Toolbar filter states
   const [search, setSearch] = useState("");
@@ -69,7 +60,6 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [expiryFilter, setExpiryFilter] = useState("all");
 
-  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
   const [openEmp, setOpenEmp] = useState<Row | null>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -83,10 +73,11 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
       if (search) qs.set("search", search);
       if (countryFilter !== "all") qs.set("countryId", countryFilter);
       const [q, k] = await Promise.all([
-        apiGet<{ rows: Row[] }>(`/api/erp/hr/kyc?${qs.toString()}`),
+        apiGet<{ rows: Row[]; caps?: Caps }>(`/api/erp/hr/kyc?${qs.toString()}`),
         apiGet<{ kpis: Record<string, number> }>("/api/erp/hr/kyc/kpis"),
       ]);
       setRows(q.rows ?? []);
+      if (q.caps) setCapsLoaded(q.caps);
       setKpis(k.kpis ?? {});
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -132,7 +123,7 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
         employee_id: r.employee_id || String(idx + 1),
         employee_code: r.employee_code || "—",
         employee_name: r.employee_name || "—",
-        country: getCountryFlagAndName(r.country_name),
+        country: r.country_name || "—",
         country_id: r.country_id ?? null,
         branch: branchName,
         branch_id: branchId,
@@ -190,27 +181,11 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
     const totalDocs = normalizedList.reduce((sum, r) => sum + r.required_count, 0);
     const verifiedDocs = normalizedList.reduce((sum, r) => sum + r.verified_count, 0);
     const missingDocs = normalizedList.reduce((sum, r) => sum + r.missing_count, 0);
-    const countries = new Set(normalizedList.filter((r) => r.country_id).map((r) => r.country_id)).size;
-    const branches = new Set(normalizedList.filter((r) => r.branch_id).map((r) => r.branch_id)).size;
     const complianceRate = normalizedList.length
       ? Math.round(normalizedList.reduce((sum, r) => sum + r.compliance_rate, 0) / normalizedList.length)
       : 0;
-    return { totalDocs, verifiedDocs, missingDocs, countries, branches, complianceRate };
+    return { totalDocs, verifiedDocs, missingDocs, complianceRate };
   }, [normalizedList]);
-
-  const toggleSelectAll = () => {
-    if (Object.keys(selectedIds).length === kycList.length) {
-      setSelectedIds({});
-    } else {
-      const next: Record<string, boolean> = {};
-      kycList.forEach((k) => { next[k.id] = true; });
-      setSelectedIds(next);
-    }
-  };
-
-  const toggleSelectRow = (id: string) => {
-    setSelectedIds((p) => ({ ...p, [id]: !p[id] }));
-  };
 
   const printConfig = () => ({
     moduleType: "register" as const,
@@ -228,7 +203,7 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
     columns: [
       { key: "employee_code", label: s.t("kyc_col_employee_id", "Employee ID") },
       { key: "employee_name", label: s.t("kyc_col_employee_name", "Employee Name") },
-      { key: "country", label: s.t("country", "Country"), render: (r: any) => `${r.country.flag} ${r.country.name}` },
+      { key: "country", label: s.t("country", "Country") },
       { key: "branch", label: s.tGlobal("common.branch", "Branch") },
       { key: "required_count", label: s.t("kyc_col_required", "Required"), align: "right" as const },
       { key: "verified_count", label: s.t("kyc_k_verified", "Verified"), align: "right" as const },
@@ -244,24 +219,29 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
     <div dir={s.dir} className="min-h-screen bg-[#f8fafc] dark:bg-[#0b1120] text-slate-800 dark:text-slate-100 pb-16 font-sans">
       <div className="mx-auto max-w-[1700px] p-4 sm:p-6 lg:p-7 space-y-6">
 
-        {/* 1. TOP BREADCRUMBS */}
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
+        {/* 1. COMPACT HEADER: title, scope line, actions */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
             <Link
               href="/dashboard/general-office"
-              className="inline-flex items-center gap-1 font-medium text-slate-500 hover:text-purple-600 transition"
+              className="inline-flex shrink-0 items-center rounded-lg border border-slate-200 bg-white p-1.5 text-slate-500 hover:text-purple-600 dark:border-slate-700 dark:bg-slate-900"
+              aria-label={s.tGlobal("common.back", "Back")}
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              {s.tGlobal("common.back", "Back")}
+              {s.isRtl ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </Link>
-            <span className="text-slate-300 dark:text-slate-700">/</span>
-            <span className="text-slate-400">{s.tGlobal("common.dashboard", "Dashboard")}</span>
-            <span className="text-slate-300 dark:text-slate-700">&gt;</span>
-            <span className="text-slate-400">{s.t("kyc_breadcrumb_general_office", "General Office")}</span>
-            <span className="text-slate-300 dark:text-slate-700">&gt;</span>
-            <span className="text-slate-400">{s.t("kyc_breadcrumb_module", "Employee KYC & Documents")}</span>
-            <span className="text-slate-300 dark:text-slate-700">&gt;</span>
-            <span className="font-semibold text-purple-600 dark:text-purple-400">{s.t("kyc_title", "Employee KYC / QVC Register")}</span>
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-black tracking-tight text-slate-900 dark:text-slate-50">
+                {s.t("kyc_title", "Employee KYC / QVC Register")}
+              </h1>
+              <p data-testid="kyc-scope-line" className="truncate text-[11px] text-slate-500 dark:text-slate-400">
+                {[
+                  session?.scopes?.summary?.branchDisplayName || session?.scopes?.summary?.countryName || null,
+                  session?.user?.fullName || null,
+                  isSuperAdmin ? s.t("kyc_super_admin", "Super Admin") : (session?.scopes?.summary?.scopeLabel || null),
+                  !capsLoaded ? null : caps.ownOnly ? s.t("kyc_own_only", "You can view your own employee profile only.") : (!caps.upload && !caps.verify ? s.t("kyc_view_only", "View only") : null),
+                ].filter(Boolean).join("  ·  ")}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -274,173 +254,42 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-purple-600" : ""}`} />
               {s.t("refresh", "Refresh")}
             </button>
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  const r = await apiPost<{ hr: number }>("/api/erp/hr/reminders/sync", { daysAhead: 30 });
-                  window.alert(s.t("hr_reminders_done", "{n} HR reminders sent to Smart CRM").replace("{n}", String(r.hr ?? 0)));
-                } catch (e) {
-                  setError(e instanceof Error ? e.message : String(e));
-                }
-              }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition"
-            >
-              <ShieldAlert className="h-3.5 w-3.5" />
-              {s.t("hr_reminders_sync", "Generate CRM Reminders")}
-            </button>
+            {caps.upload ? (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const r = await apiPost<{ hr: number }>("/api/erp/hr/reminders/sync", { daysAhead: 30 });
+                    window.alert(s.t("hr_reminders_done", "{n} HR reminders sent to Smart CRM").replace("{n}", String(r.hr ?? 0)));
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : String(e));
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition"
+              >
+                <ShieldAlert className="h-3.5 w-3.5" />
+                {s.t("hr_reminders_sync", "Generate CRM Reminders")}
+              </button>
+            ) : null}
           </div>
         </div>
 
-        {/* 2. TITLE HEADER */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 shadow-inner">
-              <ShieldCheck className="h-6 w-6" />
+        {/* 2. COMPACT KPI STRIP - real counts from hr_employee_kyc_status_v */}
+        <div data-testid="kyc-kpis" className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7">
+          {[
+            { k: "total", label: s.t("kyc_total_employees", "Total Employees"), v: kpis.total ?? 0, tone: "text-slate-900 dark:text-slate-100" },
+            { k: "verified", label: s.t("kyc_k_verified", "Verified"), v: kpis.verified ?? 0, tone: "text-emerald-600 dark:text-emerald-400" },
+            { k: "pending", label: s.t("kyc_k_pending", "Pending Verification"), v: kpis.pending ?? 0, tone: "text-amber-600 dark:text-amber-400" },
+            { k: "incomplete", label: s.t("kyc_k_incomplete", "Incomplete"), v: kpis.incomplete ?? 0, tone: "text-rose-600 dark:text-rose-400" },
+            { k: "expired", label: s.t("kyc_k_expired", "Expired"), v: kpis.expired ?? 0, tone: "text-rose-600 dark:text-rose-400" },
+            { k: "expiring", label: s.t("kyc_k_expiring", "Expiring ≤ 30 Days"), v: kpis.docs_expiring_30d ?? 0, tone: "text-amber-600 dark:text-amber-400" },
+            { k: "rate", label: s.t("kyc_compliance_rate", "Compliance Rate"), v: `${docStats.complianceRate}%`, tone: "text-blue-600 dark:text-blue-400" },
+          ].map((c) => (
+            <div key={c.k} data-testid={`kyc-kpi-${c.k}`} className="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="truncate text-[11px] font-semibold text-slate-500 dark:text-slate-400">{c.label}</div>
+              <div className={`mt-0.5 text-lg font-black tabular-nums ${c.tone}`}>{c.v}</div>
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50">
-                {s.t("kyc_title", "Employee KYC / QVC Register")}
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {s.t("kyc_subtitle_full", "Complete employee KYC compliance verification, document status, missing documents tracking and renewal reminders.")}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. FOUR KPI CARDS (Screenshot 5 layout) */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Card 1: Branch & User Details (Purple) */}
-          <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/70 via-white to-purple-50/20 p-4 shadow-sm dark:border-purple-950/60 dark:from-purple-950/30 dark:via-slate-900 dark:to-slate-900">
-            <div className="flex items-center justify-between pb-3 border-b border-purple-100/70 dark:border-purple-900/40">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-purple-100 p-1.5 text-purple-600 dark:bg-purple-900/60 dark:text-purple-300">
-                  <Building2 className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-bold text-purple-950 dark:text-purple-200">{s.t("kyc_branch_user_details", "Branch & User Details")}</span>
-              </div>
-            </div>
-            <div className="mt-3 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.tGlobal("common.branch", "Branch")}:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">{session?.scopes?.summary?.branchDisplayName || "—"}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_user", "User")}:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">{session?.user?.fullName || "—"}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_role", "Role")}:</span>
-                <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 whitespace-nowrap">
-                  {isSuperAdmin ? s.t("kyc_super_admin", "Super Admin") : (session?.scopes?.summary?.scopeLabel || "—")}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_employees_access", "Employees Access")}:</span>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">{isSuperAdmin ? s.t("kyc_all_employees", "All Employees") : (session?.scopes?.summary?.countryName || "—")}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: KYC / QVC Summary (Emerald) */}
-          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 via-white to-emerald-50/20 p-4 shadow-sm dark:border-emerald-950/60 dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900">
-            <div className="flex items-center justify-between pb-3 border-b border-emerald-100/70 dark:border-emerald-900/40">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-emerald-100 p-1.5 text-emerald-600 dark:bg-emerald-900/60 dark:text-emerald-300">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200">{s.t("kyc_summary", "KYC / QVC Summary")}</span>
-              </div>
-            </div>
-            <div className="mt-3 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_total_employees", "Total Employees")}:</span>
-                <span className="font-black text-slate-900 dark:text-slate-100">{kpis.total ?? 0}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_k_verified", "Verified")}:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">{kpis.verified ?? 0}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_k_pending", "Pending Verification")}:</span>
-                <span className="font-bold text-amber-600 dark:text-amber-400">{kpis.pending ?? 0}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_k_incomplete", "Incomplete")}:</span>
-                <span className="font-bold text-rose-600 dark:text-rose-400">{kpis.incomplete ?? 0}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3: Document Verification Summary (Amber) */}
-          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/70 via-white to-amber-50/20 p-4 shadow-sm dark:border-amber-950/60 dark:from-amber-950/30 dark:via-slate-900 dark:to-slate-900">
-            <div className="flex items-center justify-between pb-3 border-b border-amber-100/70 dark:border-amber-900/40">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-amber-100 p-1.5 text-amber-600 dark:bg-amber-900/60 dark:text-amber-300">
-                  <Clock className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-bold text-amber-950 dark:text-amber-200">{s.t("kyc_doc_verification_summary", "Document Verification Summary")}</span>
-              </div>
-            </div>
-            <div className="mt-3 space-y-1.5 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_k_total", "Total Documents")}:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">{docStats.totalDocs}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_verified_documents", "Verified Documents")}:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">{docStats.verifiedDocs}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_missing_documents", "Missing Documents")}:</span>
-                <span className="font-bold text-rose-600 dark:text-rose-400">{docStats.missingDocs}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_k_expired", "Expired")}:</span>
-                <span className="font-bold text-rose-600 dark:text-rose-400">{kpis.expired ?? 0}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_k_expiring", "Expiring ≤ 30 Days")}:</span>
-                <span className="font-bold text-amber-600 dark:text-amber-400">{kpis.docs_expiring_30d ?? 0}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 4: All Countries KYC Report (Blue + Super Admin Only) */}
-          {isSuperAdmin ? (
-            <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/70 via-white to-blue-50/20 p-4 shadow-sm dark:border-blue-950/60 dark:from-blue-950/30 dark:via-slate-900 dark:to-slate-900">
-              <div className="flex items-center justify-between pb-3 border-b border-blue-100/70 dark:border-blue-900/40">
-                <div className="flex items-center gap-2">
-                  <div className="rounded-lg bg-blue-100 p-1.5 text-blue-600 dark:bg-blue-900/60 dark:text-blue-300">
-                    <Globe className="h-4 w-4" />
-                  </div>
-                  <span className="text-xs font-bold text-blue-950 dark:text-blue-200">{s.t("kyc_all_countries_report", "All Countries KYC Report")}</span>
-                </div>
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider whitespace-nowrap">
-                  {s.t("super_admin_only", "Super Admin Only")}
-                </span>
-              </div>
-              <div className="mt-3 space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">{s.t("countries", "Countries")}:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{docStats.countries}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">{s.tGlobal("common.branch", "Branches")}:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{docStats.branches}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_total_employees", "Total Employees")}:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{kpis.total ?? 0}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">{s.t("kyc_compliance_rate", "Compliance Rate")}:</span>
-                  <span className="font-black text-blue-600 dark:text-blue-400">{docStats.complianceRate}%</span>
-                </div>
-              </div>
-            </div>
-          ) : null}
+          ))}
         </div>
 
         {/* 4. FILTER TOOLBAR */}
@@ -524,17 +373,6 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
               <option value="expired">{s.t("kyc_status_expired", "Expired")}</option>
             </select>
 
-            {/* Refresh Button */}
-            <div className="ms-auto">
-              <button
-                type="button"
-                onClick={() => void load()}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-purple-600" : ""}`} />
-                {s.t("refresh", "Refresh")}
-              </button>
-            </div>
           </div>
         </div>
 
@@ -557,9 +395,6 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <UniversalPrintActionButton reportConfig={printConfig} />
-            </div>
           </div>
 
           {/* Table */}
@@ -567,14 +402,6 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
-                  <Th className="w-10 px-4 py-3 text-center">
-                    <input
-                      type="checkbox"
-                      checked={kycList.length > 0 && Object.keys(selectedIds).length === kycList.length}
-                      onChange={toggleSelectAll}
-                      className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
-                    />
-                  </Th>
                   <Th className="w-12 px-3 py-3 text-center">#</Th>
                   <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("kyc_col_employee_id", "Employee ID")}</Th>
                   <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("kyc_col_employee_name", "Employee Name")}</Th>
@@ -593,56 +420,36 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {loading ? (
                   <tr>
-                    <td colSpan={14} className="py-12 text-center text-slate-400">
+                    <td colSpan={13} className="py-12 text-center text-slate-400">
                       <Loader2 className="mx-auto h-5 w-5 animate-spin text-purple-600" />
                       <span className="mt-2 block text-xs">{s.t("kyc_loading", "Loading KYC compliance records...")}</span>
                     </td>
                   </tr>
                 ) : kycList.length === 0 ? (
                   <tr>
-                    <td colSpan={14} className="py-12 text-center text-slate-400">
+                    <td colSpan={13} className="py-12 text-center text-slate-400">
                       {s.t("kyc_no_records", "No employee KYC records match your criteria.")}
                     </td>
                   </tr>
                 ) : (
                   pageRows.map((row, idx) => {
-                    const isSelected = !!selectedIds[row.id];
                     return (
                       <tr
                         key={row.id}
-                        className={`transition-colors hover:bg-purple-50/20 dark:hover:bg-purple-950/10 ${
-                          isSelected ? "bg-purple-50/40 dark:bg-purple-950/20" : ""
-                        }`}
+                        data-testid="kyc-row"
+                        className="transition-colors hover:bg-purple-50/20 dark:hover:bg-purple-950/10"
                       >
-                        <td className="px-4 py-2.5 text-center">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSelectRow(row.id)}
-                            className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
-                          />
-                        </td>
                         <td className="px-3 py-2.5 text-center font-mono text-[11px] text-slate-400">
                           {(currentPage - 1) * pageSize + idx + 1}
                         </td>
-                        <td className="px-3 py-2.5 font-mono text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <td className="px-3 py-2 font-mono text-xs font-bold text-slate-800 dark:text-slate-200">
                           {row.employee_code}
                         </td>
                         <td className="px-3 py-2.5">
-                          <div className="flex items-center gap-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-[11px] font-black text-purple-700 dark:bg-purple-900/60 dark:text-purple-300">
-                              {row.employee_name.slice(0, 2).toUpperCase()}
-                            </div>
-                            <span className="font-semibold text-slate-900 dark:text-slate-100">
-                              {row.employee_name}
-                            </span>
-                          </div>
+                          <span className="font-semibold text-slate-900 dark:text-slate-100">{row.employee_name}</span>
                         </td>
                         <td className="px-3 py-2.5">
-                          <div className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
-                            <span>{row.country.flag}</span>
-                            <span>{row.country.name}</span>
-                          </div>
+                          <span className="font-medium text-slate-700 dark:text-slate-300">{row.country}</span>
                         </td>
                         <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">
                           {row.branch}
@@ -778,6 +585,7 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
         <KycChecklistDrawer
           s={s}
           employeeId={openEmp.employee_id}
+          caps={caps}
           onClose={() => setOpenEmp(null)}
           onChanged={() => void load()}
         />
@@ -787,14 +595,18 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
 }
 
 function KycChecklistDrawer({
-  s, employeeId, onClose, onChanged,
+  s, employeeId, caps: listCaps, onClose, onChanged,
 }: {
   s: ReturnType<typeof useErpScreen>;
   employeeId: string;
+  caps: Caps;
   onClose: () => void;
   onChanged: () => void;
 }) {
-  const [data, setData] = useState<{ employee: Row | null; items: Row[] } | null>(null);
+  const [data, setData] = useState<{ employee: Row | null; items: Row[]; caps?: Caps } | null>(null);
+  const [preview, setPreview] = useState<{ docId: string; label: string } | null>(null);
+  // the checklist answer carries the same capabilities (the server is the authority); fall back to the list ones until it arrives
+  const caps = data?.caps ?? listCaps;
   const [loading, setLoading] = useState(true);
   const [editCode, setEditCode] = useState<string | null>(null);
   const [form, setForm] = useState<Row>({});
@@ -805,7 +617,7 @@ function KycChecklistDrawer({
     setLoading(true);
     setErr(null);
     try {
-      const r = await apiGet<{ employee: Row; items: Row[] }>(`/api/erp/hr/kyc/${employeeId}`);
+      const r = await apiGet<{ employee: Row; items: Row[]; caps?: Caps }>(`/api/erp/hr/kyc/${employeeId}`);
       setData(r);
     } catch (e) {
       setData(null);
@@ -878,6 +690,11 @@ function KycChecklistDrawer({
         </div>
 
         {err ? <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{err}</p> : null}
+        {!caps.identifiers ? (
+          <p data-testid="kyc-masked-note" className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+            {s.t("kyc_masked_note", "Document numbers are masked and scans are hidden for your role.")}
+          </p>
+        ) : null}
 
         {loading ? (
           <div className="py-16 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-purple-600" /></div>
@@ -899,14 +716,28 @@ function KycChecklistDrawer({
                     ) : null}
                   </div>
                   <div className="flex gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => startEdit(it)}
-                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 shadow-sm"
-                    >
-                      {it.document_number ? s.t("kyc_update_edit", "Update / Edit") : s.t("kyc_add_doc", "Add Document")}
-                    </button>
-                    {it.document_id && it.status !== "verified" ? (
+                    {it.document_id && it.office_document_id && caps.identifiers ? (
+                      <button
+                        type="button"
+                        data-testid="kyc-preview"
+                        onClick={() => setPreview({ docId: it.document_id, label: it.label })}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                      >
+                        <Eye className="h-3 w-3" /> {s.t("kyc_preview", "Preview")}
+                      </button>
+                    ) : it.file_hidden ? (
+                      <span className="text-[11px] italic text-slate-400">{s.t("kyc_file_hidden", "Scan hidden for your role")}</span>
+                    ) : null}
+                    {caps.upload ? (
+                      <button
+                        type="button"
+                        onClick={() => startEdit(it)}
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 shadow-sm"
+                      >
+                        {it.document_number ? s.t("kyc_update_edit", "Update / Edit") : s.t("kyc_add_doc", "Add Document")}
+                      </button>
+                    ) : null}
+                    {caps.verify && it.document_id && it.status !== "verified" ? (
                       <button
                         type="button"
                         disabled={busy}
@@ -916,7 +747,7 @@ function KycChecklistDrawer({
                         <Check className="h-3 w-3" /> {s.t("kyc_verify", "Verify")}
                       </button>
                     ) : null}
-                    {it.document_id && it.status !== "rejected" ? (
+                    {caps.verify && it.document_id && it.status !== "rejected" ? (
                       <button
                         type="button"
                         disabled={busy}
@@ -936,7 +767,7 @@ function KycChecklistDrawer({
                   </div>
                 ) : null}
 
-                {editCode === it.code ? (
+                {caps.upload && editCode === it.code ? (
                   <div className="mt-3 grid grid-cols-2 gap-2.5 border-t border-slate-200/60 pt-3 dark:border-slate-700">
                     <L label={s.t("kyc_number", "Document No")}><input value={form.documentNumber ?? ""} onChange={(e) => setForm((p) => ({ ...p, documentNumber: e.target.value }))} className={INP} /></L>
                     <L label={s.t("kyc_authority", "Issuing Authority")}><input value={form.issuingAuthority ?? ""} onChange={(e) => setForm((p) => ({ ...p, issuingAuthority: e.target.value }))} className={INP} /></L>
@@ -955,6 +786,33 @@ function KycChecklistDrawer({
           </div>
         )}
       </div>
+      {preview ? (
+        <div data-testid="kyc-preview-modal" className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-3 backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); setPreview(null); }}>
+          <div dir={s.dir} className="flex h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-2 border-b px-4 py-2.5 dark:border-slate-800">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-black text-slate-900 dark:text-slate-100">{preview.label}</div>
+                <div className="truncate text-[11px] text-slate-500">
+                  {s.t("kyc_preview_title", "Employee document")}
+                  {data?.employee ? ` · ${data.employee.employee_code} (${data.employee.name})` : ""}
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <a
+                  href={`/api/erp/hr/kyc/documents/${preview.docId}/file?disposition=attachment`}
+                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200"
+                >
+                  <Download className="h-3.5 w-3.5" /> {s.t("kyc_download", "Download")}
+                </a>
+                <button type="button" onClick={() => setPreview(null)} aria-label={s.tGlobal("common.close", "Close")} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <iframe title={preview.label} src={`/api/erp/hr/kyc/documents/${preview.docId}/file`} className="h-full w-full flex-1 bg-slate-100 dark:bg-slate-950" />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

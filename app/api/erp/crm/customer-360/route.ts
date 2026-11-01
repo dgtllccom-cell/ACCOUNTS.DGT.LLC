@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertCrmRead, assertBusinessCrm } from "@/lib/crm/crm-access";
 import { ErpPermissionError, isStrictOperationalSession } from "@/lib/permissions/middleware";
 import { 
   getCustomer360Data, 
@@ -13,6 +14,8 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertCrmRead(session);
+    assertBusinessCrm(session);
     // amount-bearing CRM views: never for an operational login nor for a login whose financial field access is denied
     if (isStrictOperationalSession(session) || session.canViewFinancials === false) throw new ErpPermissionError("CRM financial views are outside your access.");
     const { searchParams } = request.nextUrl;
@@ -20,11 +23,14 @@ export async function GET(request: NextRequest) {
     const customerId = searchParams.get("customerId");
     if (customerId) {
       // Return full 360 profile for a single customer
-      const profile = await getCustomer360Profile({
-        session,
-        customerId
-      });
-      return apiOk(profile);
+      try {
+        const profile = await getCustomer360Profile({ session, customerId });
+        return apiOk(profile);
+      } catch (e) {
+        // a customer that does not exist - or lies outside the login's scope - is a 404, never a server error
+        if (e instanceof Error && /^Customer not found/i.test(e.message)) return apiError("NOT_FOUND", "Customer not found.", 404);
+        throw e;
+      }
     }
 
     // Otherwise return Customer 360 register and KPIs
@@ -60,6 +66,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertCrmRead(session);
+    assertBusinessCrm(session);
     // amount-bearing CRM views: never for an operational login nor for a login whose financial field access is denied
     if (isStrictOperationalSession(session) || session.canViewFinancials === false) throw new ErpPermissionError("CRM financial views are outside your access.");
     const body = await request.json();

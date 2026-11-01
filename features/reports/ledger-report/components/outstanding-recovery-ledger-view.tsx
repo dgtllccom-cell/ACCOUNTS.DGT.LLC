@@ -63,7 +63,10 @@ type Row = {
 
 type Resp = {
   rows: Row[];
+  currencies?: Array<{ currency: string; accounts: number }>;
+  currencyNotice?: { applied: string | null; available: string[] } | null;
   summary: {
+    currency?: string | null;
     accounts: number;
     totalAccounts?: number;
     totalReceivable: number;
@@ -112,17 +115,6 @@ function exportCsv(filename: string, rows: string[][]) {
   URL.revokeObjectURL(url);
 }
 
-function getFlag(countryName?: string | null) {
-  if (!countryName) return "🇦🇪";
-  const cName = countryName.toLowerCase();
-  if (cName.includes("uae") || cName.includes("united arab") || cName.includes("امارات")) return "🇦🇪";
-  if (cName.includes("pakistan") || cName.includes("پاکستان")) return "🇵🇰";
-  if (cName.includes("turkey") || cName.includes("تراکی")) return "🇹🇷";
-  if (cName.includes("china") || cName.includes("چین")) return "🇨🇳";
-  if (cName.includes("afghanistan") || cName.includes("افغانستان")) return "🇦🇫";
-  if (cName.includes("iran") || cName.includes("ایران")) return "🇮🇷";
-  return "🌐";
-}
 
 export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle }: { lang?: string; pageTitle: string }) {
   const router = useRouter();
@@ -134,6 +126,9 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
 
   const [rows, setRows] = useState<Row[]>([]);
   const [summary, setSummary] = useState<Resp["summary"] | null>(null);
+  const [currencies, setCurrencies] = useState<Array<{ currency: string; accounts: number }>>([]);
+  const [currencyChoice, setCurrencyChoice] = useState<string>("");
+  const [currencyNotice, setCurrencyNotice] = useState<Resp["currencyNotice"]>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("all");
@@ -153,8 +148,12 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
   const [statementError, setStatementError] = useState<string | null>(null);
 
   const scopeSummary = sessionInfo?.scopes?.summary ?? null;
-  const scopeCountry = scopeSummary?.countryName || translateHeader(lang, "All Countries");
-  const scopeBranch = scopeSummary?.branchDisplayName || scopeSummary?.branchName || translateHeader(lang, "All Branches");
+  // "All Countries" / "All Branches" is only TRUE for global scope; everybody else is shown what they really hold (never a misleading global label)
+  const isGlobalScope = Boolean(sessionInfo?.scopes?.isSuperAdmin);
+  const scopeCountry = scopeSummary?.countryName || (isGlobalScope ? translateHeader(lang, "All Countries") : "—");
+  const scopeBranch = scopeSummary?.branchDisplayName || scopeSummary?.branchName || (isGlobalScope || scopeSummary?.scopeLabel === "Country" ? translateHeader(lang, "All Branches") : "—");
+  // every figure on this screen is in ONE currency - the API tells which one (never a hard-coded AED)
+  const ccy = summary?.currency || currencyChoice || rows[0]?.currency || "";
   const scopeRole = sessionInfo?.roles?.[0]?.replace(/_/g, " ") || "—";
   const scopeUserName = sessionInfo?.user?.fullName || sessionInfo?.user?.email || "—";
   // the report time is the viewer's local time: set it in the browser only (rendering it on the server too caused a hydration error)
@@ -164,7 +163,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     setGeneratedAt(`${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, ${now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}`);
   }, []);
   const scopeUserId = sessionInfo?.user?.id || "-";
-  const scopeStatus = sessionInfo?.authenticated ? "ACTIVE" : "SESSION UNKNOWN";
+  const scopeStatus = sessionInfo?.user ? "ACTIVE" : "SESSION UNKNOWN";
 
   useEffect(() => {
     if (!selectedLedgerAccount) {
@@ -193,7 +192,8 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
   useEffect(() => {
     fetch("/api/erp/auth/session", { credentials: "include" })
       .then((r) => r.json())
-      .then((info) => setSessionInfo(info))
+      // the session endpoint answers { ok, data }: reading the envelope itself left every scope panel blank and the status on "SESSION UNKNOWN"
+      .then((info) => setSessionInfo(info?.data ?? info))
       .catch(() => null);
   }, []);
 
@@ -229,9 +229,11 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     setLoading(true);
     setErr(null);
     try {
-      const data = await apiGet<Resp>("/api/erp/accounting/reports/ledger/outstanding");
+      const data = await apiGet<Resp>(`/api/erp/accounting/reports/ledger/outstanding${currencyChoice ? `?currency=${encodeURIComponent(currencyChoice)}` : ""}`);
       setRows(data.rows ?? []);
       setSummary(data.summary ?? null);
+      setCurrencies(data.currencies ?? []);
+      setCurrencyNotice(data.currencyNotice ?? null);
     } catch (e: any) {
       setErr(e?.message || "Failed to load outstanding ledger");
     } finally {
@@ -241,7 +243,8 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currencyChoice]);
 
   const filtered = useMemo(() => {
     let r = rows;
@@ -276,9 +279,10 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     >();
 
     for (const row of filtered) {
-      const countryName = row.countryName || scopeCountry;
+      // the API answers "—" for a ledger that carries no country of its own: it belongs to the login's own country, not to a second "—" country
+      const countryName = row.countryName && row.countryName !== "—" ? row.countryName : scopeCountry;
       const branchName = row.branchName || scopeBranch;
-      const currency = row.currency || "AED";
+      const currency = row.currency || ccy;
 
       if (!map.has(countryName)) {
         map.set(countryName, {
@@ -329,13 +333,13 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     { key: "name", label: "Account Name" },
     { key: "accountType", label: "Account Type", align: "center" },
     { key: "status", label: "Status", align: "center", format: "status" },
-    { key: "credit", label: "Credit (AED)", align: "right", format: "currency" },
-    { key: "debit", label: "Debit (AED)", align: "right", format: "currency" },
+    { key: "credit", label: `Credit (${ccy})`, align: "right", format: "currency" },
+    { key: "debit", label: `Debit (${ccy})`, align: "right", format: "currency" },
     { key: "currency", label: "Curr", align: "center" },
     { key: "lastMovementDate", label: "Last Date", align: "center", format: "text" },
     { key: "daysOutstanding", label: "Days (Diff.)", align: "center", format: "number" },
     { key: "type", label: "Type", align: "center" },
-    { key: "balance", label: "Balance (AED)", align: "right", format: "currency" },
+    { key: "balance", label: `Balance (${ccy})`, align: "right", format: "currency" },
   ];
 
   const previewRows = filtered.map((x, idx) => {
@@ -352,7 +356,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
       status: isOverdue ? "overdue" : x.accountStatus || "active",
       credit: x.creditTotal,
       debit: x.debitTotal,
-      currency: x.currency || "AED",
+      currency: x.currency || ccy,
       lastMovementDate: lastDate,
       daysOutstanding: x.daysOutstanding ?? null,
       type: x.balanceDirection || (x.outstanding > 0 ? "DR" : x.outstanding < 0 ? "CR" : "—"),
@@ -372,7 +376,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         accountCode: r.code,
         accountType: r.accountType || (r as any).accountKind || "—",
         branchAndCountry,
-        currency: r.currency || "AED",
+        currency: r.currency || ccy,
         debit: r.debitTotal,
         credit: r.creditTotal,
         outstandingAmount: r.finalBalance,
@@ -448,13 +452,13 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         "BRANCH",
         "ACCOUNT TYPE",
         "STATUS",
-        "TOTAL CREDIT (AED)",
-        "TOTAL DEBIT (AED)",
+        `TOTAL CREDIT (${ccy})`,
+        `TOTAL DEBIT (${ccy})`,
         "CURR",
         "LAST DATE",
         "DAYS (Diff.)",
         "DR / CR",
-        "FINAL BALANCE (AED)",
+        `FINAL BALANCE (${ccy})`,
       ],
       ...filtered.map((x, idx) => {
         const isOverdue = (x.daysOutstanding ?? 0) > overdueDays;
@@ -472,7 +476,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           isOverdue ? "Overdue" : x.accountStatus || "Active",
           fmt(x.creditTotal),
           fmt(x.debitTotal),
-          x.currency || "AED",
+          x.currency || ccy,
           lastDate,
           x.daysOutstanding != null ? String(x.daysOutstanding) : "—",
           x.balanceDirection || (x.outstanding > 0 ? "DR" : x.outstanding < 0 ? "CR" : "—"),
@@ -656,7 +660,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
-              {tr("2. GLOBAL FINANCIAL SUMMARY")}
+              {isGlobalScope ? tr("2. GLOBAL FINANCIAL SUMMARY") : t(lang, "ledger.orlv_p2_scoped", "2. FINANCIAL SUMMARY")}
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
@@ -666,11 +670,11 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("TOTAL RECEIVABLE:")}</span>
-              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">AED {fmt(summary?.totalReceivable ?? 0)}</span>
+              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{ccy} {fmt(summary?.totalReceivable ?? 0)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("TOTAL PAYABLE:")}</span>
-              <span className="font-mono font-bold text-amber-600 dark:text-amber-400">AED {fmt(summary?.totalPayable ?? 0)}</span>
+              <span className="font-mono font-bold text-amber-600 dark:text-amber-400">{ccy} {fmt(summary?.totalPayable ?? 0)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("OVERDUE ACCOUNTS:")}</span>
@@ -679,7 +683,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "ledger.orlv_net_outstanding_colon", "NET OUTSTANDING:")}</span>
               <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-xs">
-                AED {fmt(summary?.netOutstanding ?? ((summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0)))}
+                {ccy} {fmt(summary?.netOutstanding ?? ((summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0)))}
               </span>
             </div>
           </div>
@@ -710,7 +714,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("OVERDUE AMOUNT:")}</span>
-              <span className="font-mono font-bold text-rose-600 dark:text-rose-400">AED {fmt(summary?.overdueAmounts ?? 0)}</span>
+              <span className="font-mono font-bold text-rose-600 dark:text-rose-400">{ccy} {fmt(summary?.overdueAmounts ?? 0)}</span>
             </div>
             <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "rozrep.system_status", "SYSTEM STATUS:")}</span>
@@ -727,7 +731,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                 <Globe className="h-3.5 w-3.5" />
               </div>
               <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
-                {tr("4. ALL COUNTRIES REPORT")}
+                {isGlobalScope ? tr("4. ALL COUNTRIES REPORT") : t(lang, "ledger.orlv_p4_scoped", "4. COUNTRY & BRANCH REPORT")}
               </h4>
             </div>
             <button
@@ -749,15 +753,39 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("ACTIVE CURRENCY:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">AED</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{ccy || "—"}</span>
             </div>
             <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "ledger.orlv_coverage_colon", "COVERAGE:")}</span>
-              <span className="font-bold text-blue-600 dark:text-blue-400">{t(lang, "ledger.orlv_global_network", "GLOBAL NETWORK")}</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400">{isGlobalScope ? t(lang, "ledger.orlv_global_network", "GLOBAL NETWORK") : t(lang, "ledger.orlv_scope_network", "YOUR AUTHORIZED SCOPE")}</span>
             </div>
           </div>
         </div>
       </div>
+
+      {currencies.length > 1 ? (
+        <div data-testid="orlv-currency-bar" className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs dark:border-amber-900 dark:bg-amber-950/30">
+          <span className="font-bold text-amber-800 dark:text-amber-200">{tr("ACTIVE CURRENCY:")}</span>
+          {currencies.map((c) => (
+            <button
+              key={c.currency}
+              type="button"
+              onClick={() => setCurrencyChoice(c.currency)}
+              className={cn(
+                "rounded-full border px-2.5 py-0.5 font-mono text-[11px] font-bold",
+                (summary?.currency || currencyChoice) === c.currency ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              )}
+            >
+              {c.currency} <span className="opacity-70">({c.accounts})</span>
+            </button>
+          ))}
+          {currencyNotice?.applied ? (
+            <span className="text-[11px] font-semibold text-amber-800 dark:text-amber-200">
+              {t(lang, "ledger.orlv_currency_notice", "Figures are shown in {ccy} only - different currencies are never added together. Pick another currency to see it.").replace("{ccy}", currencyNotice.applied)}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* Accordion Expandable Detailed Countries Drawer */}
       {showAllCountries && (
@@ -765,7 +793,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           <div className="flex items-center justify-between border-b border-amber-200/60 pb-2 dark:border-amber-900/60">
             <h5 className="text-xs font-black uppercase text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
               <Globe className="h-4 w-4 text-amber-600" />
-              {t(lang, "ledger.orlv_global_breakdown", "GLOBAL BREAKDOWN BY COUNTRY & BRANCH")}
+              {isGlobalScope ? t(lang, "ledger.orlv_global_breakdown", "GLOBAL BREAKDOWN BY COUNTRY & BRANCH") : t(lang, "ledger.orlv_scope_breakdown", "BREAKDOWN BY COUNTRY & BRANCH")}
             </h5>
             <span className="text-[11px] text-slate-500 dark:text-slate-400">{countryDashboardData.length} active region(s)</span>
           </div>
@@ -775,7 +803,6 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
               <details key={c.name} className="group rounded-lg border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
                 <summary className="flex cursor-pointer items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
                   <span className="flex items-center gap-2">
-                    <span className="text-base">{getFlag(c.name)}</span>
                     {c.name}
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400 whitespace-nowrap">
                       {c.accounts} accounts
@@ -783,7 +810,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                   </span>
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-blue-600 dark:text-blue-400 text-xs">
-                      AED {fmt(c.net)}
+                      {ccy} {fmt(c.net)}
                     </span>
                     <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180 text-slate-400" />
                   </div>
@@ -807,7 +834,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                     {Array.from(c.branchData.values()).map((b) => (
                       <div key={b.name} className="flex items-center justify-between rounded px-2 py-1 bg-slate-50 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300">
                         <span className="font-semibold">{b.name} ({b.accounts} accs)</span>
-                        <span className="font-mono text-[11px] font-bold text-slate-900 dark:text-slate-100">AED {fmt(b.net)}</span>
+                        <span className="font-mono text-[11px] font-bold text-slate-900 dark:text-slate-100">{ccy} {fmt(b.net)}</span>
                       </div>
                     ))}
                   </div>
@@ -924,13 +951,13 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                 <Th className="px-2.5 py-2.5 text-[11px] tracking-wider">{tr("BRANCH")}</Th>
                 <Th className="px-2.5 py-2.5 text-[11px] tracking-wider">{tr("TYPE")}</Th>
                 <Th className="px-2.5 py-2.5 text-center text-[11px] tracking-wider">{tr("STATUS")}</Th>
-                <Th className="px-2.5 py-2.5 text-right text-[11px] tracking-wider text-emerald-600">{tr("TOTAL CREDIT")} (AED)</Th>
-                <Th className="px-2.5 py-2.5 text-right text-[11px] tracking-wider text-rose-600">{tr("TOTAL DEBIT")} (AED)</Th>
+                <Th className="px-2.5 py-2.5 text-right text-[11px] tracking-wider text-emerald-600">{tr("TOTAL CREDIT")} ({ccy})</Th>
+                <Th className="px-2.5 py-2.5 text-right text-[11px] tracking-wider text-rose-600">{tr("TOTAL DEBIT")} ({ccy})</Th>
                 <Th className="px-2.5 py-2.5 text-center text-[11px] tracking-wider">{tr("CURR")}</Th>
                 <Th className="px-2.5 py-2.5 text-center text-[11px] tracking-wider">{tr("LAST DATE")}</Th>
                 <Th className="px-2.5 py-2.5 text-right text-[11px] tracking-wider">{tr("DAYS")}</Th>
                 <Th className="px-2.5 py-2.5 text-center text-[11px] tracking-wider">{tr("DR / CR")}</Th>
-                <Th className="px-2.5 py-2.5 text-right text-[11px] tracking-wider text-blue-600">{tr("FINAL BALANCE")} (AED)</Th>
+                <Th className="px-2.5 py-2.5 text-right text-[11px] tracking-wider text-blue-600">{tr("FINAL BALANCE")} ({ccy})</Th>
                 <Th className="px-2.5 py-2.5 text-center text-[11px] tracking-wider">{tr("CONTACT")}</Th>
                 <Th className="px-2.5 py-2.5 text-center text-[11px] tracking-wider">{tr("ACTIONS")}</Th>
               </tr>
@@ -984,10 +1011,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                         {x.name}
                       </td>
                       <td className="px-2.5 py-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-                        <span className="inline-flex items-center gap-1">
-                          <span>{getFlag(x.countryName)}</span>
-                          <span>{x.countryName || scopeCountry}</span>
-                        </span>
+                        <span>{x.countryName && x.countryName !== "—" ? x.countryName : scopeCountry}</span>
                       </td>
                       <td className="px-2.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                         <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
@@ -1016,7 +1040,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                         {fmt(x.debitTotal)}
                       </td>
                       <td className="px-2.5 py-2 text-center font-mono text-xs text-slate-600 dark:text-slate-400">
-                        {x.currency || "AED"}
+                        {x.currency || ccy}
                       </td>
                       <td className="px-2.5 py-2 text-center font-mono text-[11px] text-slate-600 dark:text-slate-400">
                         {formatDateSlash(x.lastMovementDate)}
@@ -1183,25 +1207,25 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/40">
                       <div className="text-[11px] font-bold uppercase text-slate-500">Opening Balance</div>
                       <div className="mt-1 font-mono text-sm font-black text-slate-800 dark:text-slate-200">
-                        AED {fmt(Number(statementData?.totals?.openingBalance ?? statementData?.openingBalance ?? 0))}
+                        {selectedLedgerAccount.currency || ccy} {fmt(Number(statementData?.totals?.openingBalance ?? statementData?.openingBalance ?? 0))}
                       </div>
                     </div>
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 dark:border-emerald-900/40 dark:bg-emerald-950/20">
                       <div className="text-[11px] font-bold uppercase text-emerald-700 dark:text-emerald-400">Total Credit</div>
                       <div className="mt-1 font-mono text-sm font-black text-emerald-600 dark:text-emerald-400">
-                        AED {fmt(Number(statementData?.totals?.credit ?? selectedLedgerAccount.creditTotal ?? 0))}
+                        {selectedLedgerAccount.currency || ccy} {fmt(Number(statementData?.totals?.credit ?? selectedLedgerAccount.creditTotal ?? 0))}
                       </div>
                     </div>
                     <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-3 dark:border-rose-900/40 dark:bg-rose-950/20">
                       <div className="text-[11px] font-bold uppercase text-rose-700 dark:text-rose-400">Total Debit</div>
                       <div className="mt-1 font-mono text-sm font-black text-rose-600 dark:text-rose-400">
-                        AED {fmt(Number(statementData?.totals?.debit ?? selectedLedgerAccount.debitTotal ?? 0))}
+                        {selectedLedgerAccount.currency || ccy} {fmt(Number(statementData?.totals?.debit ?? selectedLedgerAccount.debitTotal ?? 0))}
                       </div>
                     </div>
                     <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-3 dark:border-blue-900/40 dark:bg-blue-950/20">
                       <div className="text-[11px] font-bold uppercase text-blue-700 dark:text-blue-400">Final Balance</div>
                       <div className="mt-1 flex items-baseline gap-1 font-mono text-sm font-black text-blue-600 dark:text-blue-400">
-                        <span>AED {fmt(Number(statementData?.totals?.balance ?? selectedLedgerAccount.finalBalance ?? 0))}</span>
+                        <span>{selectedLedgerAccount.currency || ccy} {fmt(Number(statementData?.totals?.balance ?? selectedLedgerAccount.finalBalance ?? 0))}</span>
                         <span className="text-[11px] font-extrabold">{selectedLedgerAccount.balanceDirection}</span>
                       </div>
                     </div>

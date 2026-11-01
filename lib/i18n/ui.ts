@@ -7012,6 +7012,7 @@ export type UiKey =
   | "ledger.lgrv_account_colon" | "ledger.lgrv_no_entries_range" | "ledger.lgrv_adjust_filters_msg" | "ledger.lgrv_statement_entries" | "ledger.lgrv_voucher_ref" | "ledger.lgrv_no_entries_period" | "ledger.lgrv_debit_total" | "ledger.lgrv_credit_total" | "ledger.lgrv_export_options"
   | "ledger.view_ledger" | "ledger.loading_ledger_statement_lines"
   | "ledger.lgrv_filter_text_ph" | "ledger.lgrv_pdf_export" | "ledger.lgrv_open_journal" | "ledger.lgrv_account_activity"
+  | "ledger.orlv_p2_scoped" | "ledger.orlv_p4_scoped" | "ledger.orlv_scope_network" | "ledger.orlv_scope_breakdown" | "ledger.orlv_currency_notice"
   | "ledger.orlv_net_outstanding_colon" | "ledger.orlv_all_clear" | "ledger.orlv_coverage_colon" | "ledger.orlv_global_network" | "ledger.orlv_global_breakdown" | "ledger.orlv_branches_word" | "ledger.orlv_ledger_entries_word" | "ledger.orlv_print_export"
   | "ledger.orlv_call_word" | "ledger.orlv_subtitle"
   | "ledger.nld_ledger_statement" | "ledger.nld_no_entries" | "ledger.nld_no_entries_sub"
@@ -8512,6 +8513,7 @@ export type UiKey =
   | "jrpt.approval_pending"
   | "jrpt.dr_cr_debit"
   | "jrpt.dr_cr_credit"
+  | "jrpt.currency_notice"
   | "jrpt.kpi_opening_balance"
   | "jrpt.kpi_total_debit"
   | "jrpt.kpi_total_credit"
@@ -9316,6 +9318,7 @@ export type UiKey =
   | "hrm.kyc_col_expired" | "hrm.kyc_col_required" | "hrm.kyc_col_required_docs" | "hrm.kyc_compliance_rate"
   | "hrm.kyc_doc_verification_summary" | "hrm.kyc_employees_access" | "hrm.kyc_k_expiring_soon" | "hrm.kyc_loading"
   | "hrm.kyc_missing_documents" | "hrm.kyc_next" | "hrm.kyc_no_records" | "hrm.kyc_of" | "hrm.kyc_previous"
+  | "hrm.kyc_preview" | "hrm.kyc_download" | "hrm.kyc_preview_title" | "hrm.kyc_masked_note" | "hrm.kyc_own_only" | "hrm.kyc_view_only" | "hrm.kyc_no_file" | "hrm.kyc_file_hidden"
   | "hrm.kyc_records" | "hrm.kyc_register_subtitle" | "hrm.kyc_register_title" | "hrm.kyc_role"
   | "hrm.kyc_search_placeholder" | "hrm.kyc_showing" | "hrm.kyc_subtitle_full" | "hrm.kyc_summary"
   | "hrm.kyc_super_admin" | "hrm.kyc_to" | "hrm.kyc_total_employees" | "hrm.kyc_update_edit" | "hrm.kyc_user"
@@ -13004,6 +13007,7 @@ export type UiKey =
   | "rcd.f.user"
   | "rcd.f.status"
   | "rcd.f.currency"
+  | "rcd.f.txn_type" | "rcd.f.approved_by" | "rcd.f.approval" | "rcd.f.global_ref" | "rc.type.posting_batch"
   | "rcd.f.rate"
   | "rcd.f.name"
   | "rcd.f.legal_name"
@@ -13076,6 +13080,7 @@ export type UiKey =
   | "rcd.f.remarks"
   | "rcd.a.due_receive"
   | "rcd.col.user"
+  | "rc.nav.handover"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -18527,6 +18532,11 @@ const en: Dict = {
   "ledger.orlv_coverage_colon": "COVERAGE:",
   "ledger.orlv_global_network": "GLOBAL NETWORK",
   "ledger.orlv_global_breakdown": "GLOBAL BREAKDOWN BY COUNTRY & BRANCH",
+  "ledger.orlv_p2_scoped": "2. FINANCIAL SUMMARY",
+  "ledger.orlv_p4_scoped": "4. COUNTRY & BRANCH REPORT",
+  "ledger.orlv_scope_network": "YOUR AUTHORIZED SCOPE",
+  "ledger.orlv_scope_breakdown": "BREAKDOWN BY COUNTRY & BRANCH",
+  "ledger.orlv_currency_notice": "Figures are shown in {ccy} only - different currencies are never added together. Pick another currency to see it.",
   "ledger.orlv_branches_word": "Branches",
   "ledger.orlv_ledger_entries_word": "LEDGER ENTRIES",
   "ledger.orlv_print_export": "Print / Export",
@@ -24086,6 +24096,14 @@ const en: Dict = {
   "hrm.kyc_status_expired": "Expired",
   "hrm.kyc_status_verified": "Verified",
   "hrm.kyc_open": "Open Checklist",
+  "hrm.kyc_preview": "Preview",
+  "hrm.kyc_download": "Download",
+  "hrm.kyc_preview_title": "Employee document",
+  "hrm.kyc_masked_note": "Document numbers are masked and scans are hidden for your role.",
+  "hrm.kyc_own_only": "You can view your own employee profile only.",
+  "hrm.kyc_view_only": "View only",
+  "hrm.kyc_no_file": "No scan attached",
+  "hrm.kyc_file_hidden": "Scan hidden for your role",
   "hrm.kyc_checklist": "KYC Checklist",
   "hrm.kyc_reject_reason": "Rejection reason:",
   "hrm.kyc_add_doc": "Add Document",
@@ -32735,6 +32753,7 @@ const en: Dict = {
   "jrpt.dr_cr_debit": "Debit",
   "jrpt.dr_cr_credit": "Credit",
   "jrpt.kpi_opening_balance": "Opening Balance",
+  "jrpt.currency_notice": "Amounts are shown in {ccy} only - different currencies are never added together. Pick another currency in the filters to see it.",
   "jrpt.kpi_total_debit": "Total Debit",
   "jrpt.kpi_total_credit": "Total Credit",
   "jrpt.kpi_closing_balance": "Closing Balance",
@@ -39242,6 +39261,11 @@ const en: Dict = {
   "rcd.f.status": "Status",
   "rcd.f.currency": "Currency",
   "rcd.f.rate": "Exchange rate",
+  "rcd.f.txn_type": "Transaction type",
+  "rcd.f.approved_by": "Approved by",
+  "rcd.f.approval": "Approval",
+  "rcd.f.global_ref": "Original reference",
+  "rc.type.posting_batch": "Journal Posting",
   "rcd.f.name": "Name",
   "rcd.f.legal_name": "Legal name",
   "rcd.a.total": "Bill total",
@@ -39313,6 +39337,7 @@ const en: Dict = {
   "rcd.f.remarks": "Remarks",
   "rcd.a.due_receive": "Still to receive",
   "rcd.col.user": "User",
+  "rc.nav.handover": "Handover & Journal PDF Report",
 };
 
 const ur: Dict = {
@@ -46366,6 +46391,11 @@ const ur: Dict = {
   "ledger.orlv_coverage_colon": "احاطہ:",
   "ledger.orlv_global_network": "عالمی نیٹ ورک",
   "ledger.orlv_global_breakdown": "ملک اور برانچ کے لحاظ سے عالمی تفصیل",
+  "ledger.orlv_p2_scoped": "2. مالی خلاصہ",
+  "ledger.orlv_p4_scoped": "4. ملک اور برانچ رپورٹ",
+  "ledger.orlv_scope_network": "آپ کا مجاز دائرہ کار",
+  "ledger.orlv_scope_breakdown": "ملک اور برانچ کے لحاظ سے تفصیل",
+  "ledger.orlv_currency_notice": "اعداد و شمار صرف {ccy} میں دکھائے گئے ہیں - مختلف کرنسیاں کبھی جمع نہیں کی جاتیں۔ دوسری کرنسی دیکھنے کے لیے منتخب کریں۔",
   "ledger.orlv_branches_word": "برانچز",
   "ledger.orlv_ledger_entries_word": "لیجر اندراجات",
   "ledger.orlv_print_export": "پرنٹ / برآمد",
@@ -50458,6 +50488,14 @@ const ur: Dict = {
   "hrm.kyc_status_expired": "میعاد ختم",
   "hrm.kyc_status_verified": "تصدیق شدہ",
   "hrm.kyc_open": "چیک لسٹ کھولیں",
+  "hrm.kyc_preview": "پیش منظر",
+  "hrm.kyc_download": "ڈاؤن لوڈ",
+  "hrm.kyc_preview_title": "ملازم کی دستاویز",
+  "hrm.kyc_masked_note": "آپ کے کردار کے لیے دستاویز نمبر چھپائے گئے ہیں اور اسکین دستیاب نہیں ہیں۔",
+  "hrm.kyc_own_only": "آپ صرف اپنا ملازم پروفائل دیکھ سکتے ہیں۔",
+  "hrm.kyc_view_only": "صرف دیکھنے کے لیے",
+  "hrm.kyc_no_file": "کوئی اسکین منسلک نہیں",
+  "hrm.kyc_file_hidden": "آپ کے کردار کے لیے اسکین پوشیدہ ہے",
   "hrm.kyc_checklist": "KYC چیک لسٹ",
   "hrm.kyc_reject_reason": "مسترد کرنے کی وجہ:",
   "hrm.kyc_add_doc": "دستاویز شامل کریں",
@@ -59051,6 +59089,7 @@ const ur: Dict = {
   "jrpt.dr_cr_debit": "ڈیبٹ",
   "jrpt.dr_cr_credit": "کریڈٹ",
   "jrpt.kpi_opening_balance": "ابتدائی بیلنس",
+  "jrpt.currency_notice": "رقوم صرف {ccy} میں دکھائی گئی ہیں - مختلف کرنسیاں کبھی جمع نہیں کی جاتیں۔ دوسری کرنسی دیکھنے کے لیے فلٹر میں منتخب کریں۔",
   "jrpt.kpi_total_debit": "کل ڈیبٹ",
   "jrpt.kpi_total_credit": "کل کریڈٹ",
   "jrpt.kpi_closing_balance": "اختتامی بیلنس",
@@ -65447,6 +65486,11 @@ const ur: Dict = {
   "rcd.f.status": "حالت",
   "rcd.f.currency": "کرنسی",
   "rcd.f.rate": "شرح تبادلہ",
+  "rcd.f.txn_type": "لین دین کی قسم",
+  "rcd.f.approved_by": "منظور کنندہ",
+  "rcd.f.approval": "منظوری",
+  "rcd.f.global_ref": "اصل حوالہ",
+  "rc.type.posting_batch": "جرنل پوسٹنگ",
   "rcd.f.name": "نام",
   "rcd.f.legal_name": "قانونی نام",
   "rcd.a.total": "بل کی کل رقم",
@@ -65518,6 +65562,7 @@ const ur: Dict = {
   "rcd.f.remarks": "ریمارکس",
   "rcd.a.due_receive": "ابھی وصول کرنا باقی",
   "rcd.col.user": "صارف",
+  "rc.nav.handover": "ہینڈ اوور اور جرنل پی ڈی ایف رپورٹ",
 };
 
 const ar: Dict = {
@@ -72525,6 +72570,11 @@ const ar: Dict = {
   "ledger.orlv_coverage_colon": "التغطية:",
   "ledger.orlv_global_network": "الشبكة العالمية",
   "ledger.orlv_global_breakdown": "التوزيع العالمي حسب الدولة والفرع",
+  "ledger.orlv_p2_scoped": "2. الملخص المالي",
+  "ledger.orlv_p4_scoped": "4. تقرير الدولة والفرع",
+  "ledger.orlv_scope_network": "نطاقك المصرّح به",
+  "ledger.orlv_scope_breakdown": "التفصيل حسب الدولة والفرع",
+  "ledger.orlv_currency_notice": "تُعرض الأرقام بعملة {ccy} فقط - لا تُجمع العملات المختلفة معاً أبداً. اختر عملة أخرى لعرضها.",
   "ledger.orlv_branches_word": "الفروع",
   "ledger.orlv_ledger_entries_word": "قيود دفتر الأستاذ",
   "ledger.orlv_print_export": "طباعة / تصدير",
@@ -76613,6 +76663,14 @@ const ar: Dict = {
   "hrm.kyc_status_expired": "منتهي الصلاحية",
   "hrm.kyc_status_verified": "متحقق",
   "hrm.kyc_open": "فتح قائمة المراجعة",
+  "hrm.kyc_preview": "معاينة",
+  "hrm.kyc_download": "تنزيل",
+  "hrm.kyc_preview_title": "مستند الموظف",
+  "hrm.kyc_masked_note": "أرقام المستندات مخفية والنسخ الممسوحة غير متاحة لدورك.",
+  "hrm.kyc_own_only": "يمكنك عرض ملفك الوظيفي الشخصي فقط.",
+  "hrm.kyc_view_only": "للعرض فقط",
+  "hrm.kyc_no_file": "لا يوجد ملف ممسوح مرفق",
+  "hrm.kyc_file_hidden": "النسخة الممسوحة مخفية لدورك",
   "hrm.kyc_checklist": "قائمة مراجعة KYC",
   "hrm.kyc_reject_reason": "سبب الرفض:",
   "hrm.kyc_add_doc": "إضافة مستند",
@@ -85257,6 +85315,7 @@ const ar: Dict = {
   "jrpt.dr_cr_debit": "مدين",
   "jrpt.dr_cr_credit": "دائن",
   "jrpt.kpi_opening_balance": "الرصيد الافتتاحي",
+  "jrpt.currency_notice": "تُعرض المبالغ بعملة {ccy} فقط - لا تُجمع العملات المختلفة معاً أبداً. اختر عملة أخرى من عوامل التصفية لعرضها.",
   "jrpt.kpi_total_debit": "إجمالي المدين",
   "jrpt.kpi_total_credit": "إجمالي الدائن",
   "jrpt.kpi_closing_balance": "الرصيد الختامي",
@@ -91653,6 +91712,11 @@ const ar: Dict = {
   "rcd.f.status": "الحالة",
   "rcd.f.currency": "العملة",
   "rcd.f.rate": "سعر الصرف",
+  "rcd.f.txn_type": "نوع المعاملة",
+  "rcd.f.approved_by": "تمت الموافقة بواسطة",
+  "rcd.f.approval": "الموافقة",
+  "rcd.f.global_ref": "المرجع الأصلي",
+  "rc.type.posting_batch": "ترحيل قيد يومية",
   "rcd.f.name": "الاسم",
   "rcd.f.legal_name": "الاسم القانوني",
   "rcd.a.total": "إجمالي الفاتورة",
@@ -91724,6 +91788,7 @@ const ar: Dict = {
   "rcd.f.remarks": "ملاحظات",
   "rcd.a.due_receive": "المتبقي للقبض",
   "rcd.col.user": "المستخدم",
+  "rc.nav.handover": "تقرير التسليم واليومية PDF",
 };
 
 const fa: Dict = {
@@ -98710,6 +98775,11 @@ const fa: Dict = {
   "ledger.orlv_coverage_colon": "پوشش:",
   "ledger.orlv_global_network": "شبکه جهانی",
   "ledger.orlv_global_breakdown": "تفکیک جهانی بر اساس کشور و شعبه",
+  "ledger.orlv_p2_scoped": "2. خلاصه مالی",
+  "ledger.orlv_p4_scoped": "4. گزارش کشور و شعبه",
+  "ledger.orlv_scope_network": "محدوده مجاز شما",
+  "ledger.orlv_scope_breakdown": "تفکیک بر اساس کشور و شعبه",
+  "ledger.orlv_currency_notice": "ارقام فقط به {ccy} نمایش داده می‌شوند - ارزهای مختلف هرگز با هم جمع نمی‌شوند. برای دیدن ارز دیگر آن را انتخاب کنید.",
   "ledger.orlv_branches_word": "شعبه‌ها",
   "ledger.orlv_ledger_entries_word": "ثبت‌های دفتر کل",
   "ledger.orlv_print_export": "چاپ / خروجی",
@@ -102818,6 +102888,14 @@ const fa: Dict = {
   "hrm.kyc_status_expired": "منقضی",
   "hrm.kyc_status_verified": "تأییدشده",
   "hrm.kyc_open": "باز کردن چک‌لیست",
+  "hrm.kyc_preview": "پیش‌نمایش",
+  "hrm.kyc_download": "دانلود",
+  "hrm.kyc_preview_title": "سند کارمند",
+  "hrm.kyc_masked_note": "شماره‌های سند پنهان و تصاویر اسکن‌شده برای نقش شما در دسترس نیست.",
+  "hrm.kyc_own_only": "فقط می‌توانید پروفایل کارمندی خودتان را ببینید.",
+  "hrm.kyc_view_only": "فقط مشاهده",
+  "hrm.kyc_no_file": "اسکنی پیوست نشده",
+  "hrm.kyc_file_hidden": "اسکن برای نقش شما پنهان است",
   "hrm.kyc_checklist": "چک‌لیست KYC",
   "hrm.kyc_reject_reason": "دلیل رد:",
   "hrm.kyc_add_doc": "افزودن سند",
@@ -111462,6 +111540,7 @@ const fa: Dict = {
   "jrpt.dr_cr_debit": "بدهکار",
   "jrpt.dr_cr_credit": "بستانکار",
   "jrpt.kpi_opening_balance": "مانده ابتدای دوره",
+  "jrpt.currency_notice": "مبالغ فقط به {ccy} نمایش داده می‌شوند - ارزهای مختلف هرگز با هم جمع نمی‌شوند. برای دیدن ارز دیگر آن را در فیلترها انتخاب کنید.",
   "jrpt.kpi_total_debit": "مجموع بدهکار",
   "jrpt.kpi_total_credit": "مجموع بستانکار",
   "jrpt.kpi_closing_balance": "مانده پایان دوره",
@@ -117858,6 +117937,11 @@ const fa: Dict = {
   "rcd.f.status": "وضعیت",
   "rcd.f.currency": "ارز",
   "rcd.f.rate": "نرخ تبدیل",
+  "rcd.f.txn_type": "نوع تراکنش",
+  "rcd.f.approved_by": "تأییدکننده",
+  "rcd.f.approval": "تأیید",
+  "rcd.f.global_ref": "مرجع اصلی",
+  "rc.type.posting_batch": "ثبت سند روزنامه",
   "rcd.f.name": "نام",
   "rcd.f.legal_name": "نام حقوقی",
   "rcd.a.total": "جمع صورت‌حساب",
@@ -117929,6 +118013,7 @@ const fa: Dict = {
   "rcd.f.remarks": "توضیحات",
   "rcd.a.due_receive": "مانده برای دریافت",
   "rcd.col.user": "کاربر",
+  "rc.nav.handover": "گزارش تحویل و دفتر روزنامه PDF",
 };
 
 const ps: Dict = {
@@ -124922,6 +125007,11 @@ const ps: Dict = {
   "ledger.orlv_coverage_colon": "پوښښ:",
   "ledger.orlv_global_network": "نړېوال شبکه",
   "ledger.orlv_global_breakdown": "د هېواد او برانچ له مخې نړېوال ویش",
+  "ledger.orlv_p2_scoped": "2. مالي لنډیز",
+  "ledger.orlv_p4_scoped": "4. د هیواد او څانګې راپور",
+  "ledger.orlv_scope_network": "ستاسو واک لرونکی ساحه",
+  "ledger.orlv_scope_breakdown": "د هیواد او څانګې له مخې تفصیل",
+  "ledger.orlv_currency_notice": "شمیرې یوازې په {ccy} ښودل کیږي - مختلف اسعار هیڅکله یو ځای نه جمع کیږي. د لیدلو لپاره بل اسعار وټاکئ.",
   "ledger.orlv_branches_word": "برانچونه",
   "ledger.orlv_ledger_entries_word": "د لیجر ننوتنې",
   "ledger.orlv_print_export": "چاپ / صادرول",
@@ -129021,6 +129111,14 @@ const ps: Dict = {
   "hrm.kyc_status_expired": "پای ته رسیدلی",
   "hrm.kyc_status_verified": "تایید شوی",
   "hrm.kyc_open": "چک لیست پرانیستل",
+  "hrm.kyc_preview": "مخکتنه",
+  "hrm.kyc_download": "ډاونلوډ",
+  "hrm.kyc_preview_title": "د کارمند سند",
+  "hrm.kyc_masked_note": "د سندونو شمیرې پټې دي او سکینونه ستاسو د رول لپاره نشته.",
+  "hrm.kyc_own_only": "تاسو یوازې خپل د کارمند پروفایل لیدلی شئ.",
+  "hrm.kyc_view_only": "یوازې لیدنه",
+  "hrm.kyc_no_file": "هیڅ سکین نه دی ضمیمه شوی",
+  "hrm.kyc_file_hidden": "سکین ستاسو د رول لپاره پټ دی",
   "hrm.kyc_checklist": "د KYC چک لیست",
   "hrm.kyc_reject_reason": "د رد دلیل:",
   "hrm.kyc_add_doc": "سند زیاتول",
@@ -137665,6 +137763,7 @@ const ps: Dict = {
   "jrpt.dr_cr_debit": "ډیبٹ",
   "jrpt.dr_cr_credit": "کریډیټ",
   "jrpt.kpi_opening_balance": "پرانستې پاتې",
+  "jrpt.currency_notice": "مبالغ یوازې په {ccy} ښودل کیږي - مختلف اسعار هیڅکله یو ځای نه جمع کیږي. بل اسعار د فلټرونو په ذریعه وټاکئ.",
   "jrpt.kpi_total_debit": "ټول ډیبٹ",
   "jrpt.kpi_total_credit": "ټول کریډیټ",
   "jrpt.kpi_closing_balance": "پایله پاتې",
@@ -144070,6 +144169,11 @@ const ps: Dict = {
   "rcd.f.status": "حالت",
   "rcd.f.currency": "اسعار",
   "rcd.f.rate": "د تبادلې نرخ",
+  "rcd.f.txn_type": "د معاملې ډول",
+  "rcd.f.approved_by": "تصویب کوونکی",
+  "rcd.f.approval": "تصویب",
+  "rcd.f.global_ref": "اصلي مرجع",
+  "rc.type.posting_batch": "د ژورنال پوسټینګ",
   "rcd.f.name": "نوم",
   "rcd.f.legal_name": "قانوني نوم",
   "rcd.a.total": "د بل ټوله پیسه",
@@ -144141,6 +144245,7 @@ const ps: Dict = {
   "rcd.f.remarks": "یادښتونه",
   "rcd.a.due_receive": "لا هم د ترلاسه کولو",
   "rcd.col.user": "کارن",
+  "rc.nav.handover": "د سپارلو او ژورنال PDF راپور",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

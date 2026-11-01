@@ -52,6 +52,10 @@ PM2_APP="${PM2_APP_NAME:-dgt-nextjs}"
 
 log() { echo "[safe-build-deploy] $*"; }
 
+# On the gated server only the controlled gate (dgt-deploy) may build the live tree: the checked-out commit must be exactly the one the owner approved.
+# A runner that resets the checkout to origin/main (and builds it in place) fails here instead of overwriting the live build.
+if [ "${1:-}" != "--rollback" ]; then bash "$APP_DIR/scripts/production/require-approved-commit.sh" "$APP_DIR" || exit 1; fi
+
 require_manifest_complete() {
   local dir="$1"
   [ -f "$dir/BUILD_ID" ] || { log "!! $dir/BUILD_ID missing"; return 1; }

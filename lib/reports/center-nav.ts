@@ -11,6 +11,7 @@ export const REPORT_CATEGORIES: readonly ReportCategory[] = [
   { key: "center", href: "/dashboard/reports", labelKey: "rc.nav.center", fallback: "Reports Center" },
   { key: "country", href: "/dashboard/reports/country", labelKey: "rc.nav.country", fallback: "Country Reports" },
   { key: "branch", href: "/dashboard/reports/branch", labelKey: "rc.nav.branch", fallback: "Branch Reports" },
+  { key: "handover", href: "/dashboard/reports/handover", labelKey: "rc.nav.handover", fallback: "Handover & Journal PDF Report" },
   { key: "payments", href: "/dashboard/reports/payments", labelKey: "rc.nav.payments", fallback: "Payment Reports" },
   { key: "shipping", href: "/dashboard/reports/shipping", labelKey: "rc.nav.shipping", fallback: "Shipping & Clearing Reports" },
   { key: "super_admin", href: "/dashboard/reports/super-admin", labelKey: "rc.nav.super_admin", fallback: "Super Admin Reports" },

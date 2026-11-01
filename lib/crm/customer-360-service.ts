@@ -1,3 +1,4 @@
+import { crmScopeIds } from "@/lib/crm/crm-access";
 import { withReadPg, withLocalPg } from "@/lib/db/local-postgres";
 import { ErpSession } from "@/lib/auth/session";
 
@@ -133,11 +134,9 @@ export async function getCustomer360Data(params: {
     const offset = (page - 1) * pageSize;
 
     // Permissions scoping
-    let allowedCountryIds: string[] = [];
-    let allowedBranchIds: string[] = [];
+    // fail-closed scope (lib/crm/crm-access.ts): no usable country / branch list means NO rows, never "no filter"
+    let { countries: allowedCountryIds, branches: allowedBranchIds } = crmScopeIds(params.session);
     if (!params.session.isSuperAdmin && !params.session.roles?.includes("super_admin")) {
-      allowedCountryIds = params.session.countryIds || [];
-      allowedBranchIds = params.session.cityBranchIds || [];
     }
 
     // 1. Fetch available filter options

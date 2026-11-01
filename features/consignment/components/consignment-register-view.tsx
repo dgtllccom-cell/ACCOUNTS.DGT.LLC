@@ -13,6 +13,7 @@ import {
 import { CONSIGNMENT_STATUSES } from "@/lib/consignment/types";
 import { MasterCombo } from "@/components/ui/master-combo";
 import { Th } from "@/components/ui/translated-th";
+import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
 
 const CCY = ["USD", "AED", "PKR", "AFN", "EUR", "GBP", "INR", "CNY", "SAR", "IRR"];
 
@@ -66,6 +67,38 @@ export function ConsignmentRegisterView({ lang: langProp }: { lang?: string }) {
           <h1 className="text-xl font-black text-foreground">{s.t("title", "Consignment Stock & Sales Register")}</h1>
           <p className="mt-0.5 max-w-2xl text-xs text-muted-foreground">{s.t("subtitle", "Track received containers, expenses, sales and collections per Party — tracking only, no accounting posting")}</p>
         </div>
+        <UniversalPrintActionButton
+          variant="menu"
+          reportConfig={() => ({
+            moduleType: "register" as const,
+            reportType: "register" as const,
+            title: s.t("title", "Consignment Register"),
+            subtitle: status ? s.t(statusKey(status), status) : undefined,
+            lang,
+            orientation: "landscape" as const,
+            columns: [
+              { key: "consignment_no", label: s.t("col_no", "Consignment No") },
+              { key: "party", label: s.t("col_party", "Party / Account") },
+              { key: "date", label: s.t("col_date", "Date") },
+              { key: "containers", label: s.t("col_containers", "Containers"), align: "center" as const },
+              { key: "sales", label: s.t("col_sales", "Sales"), align: "right" as const },
+              { key: "receipts", label: s.t("col_receipts", "Receipts"), align: "right" as const },
+              { key: "receivable", label: s.t("col_receivable", "Receivable"), align: "right" as const },
+              { key: "status", label: s.t("col_status", "Status") },
+            ],
+            // every amount keeps its own consignment currency - nothing is added across currencies
+            rows: rows.map((r) => ({
+              consignment_no: r.consignment_no,
+              party: [r.party_name, r.title].filter(Boolean).join(" - "),
+              date: String(r.consignment_date || "").slice(0, 10),
+              containers: r.container_count ?? 0,
+              sales: money(r.total_sales, r.base_currency),
+              receipts: money(r.total_receipts, r.base_currency),
+              receivable: money(Number(r.total_sales || 0) - Number(r.total_receipts || 0), r.base_currency),
+              status: s.t(statusKey(r.status), r.status),
+            })),
+          })}
+        />
         <button
           type="button"
           onClick={() => setShowCreate(true)}

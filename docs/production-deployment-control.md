@@ -73,3 +73,12 @@ No other user can log in (`ubuntu` has no keys). The provider's web console logi
 2. **Decide the two unused keys** (`claude-deploy-20260803`, `codex-vps-cleanup-temporary`): tell me whether you know their holders; if not, I recommend disabling them (kept in a backup file, restorable).
 3. **GitHub:** protect branch `production` (steps in section "Steps", item 2).
 4. **Stop unattended agents from deploying:** they all use the laptop key. Recommended: create a second key with a **passphrase** for you (kept off this laptop, e.g. another PC/phone), and give the laptop key a restricted role (status/logs/dry-run only). I did not change the laptop key because that could interrupt tools you use today.
+
+## Deployment runner policy (2026-11-02) - why Production stopped being overwritten
+Between 31 Oct and 1 Nov a runner (`scripts/vps-deploy-runner.sh`, and the "1-click" `deploy-vps-and-local.mjs` which also set `DGT_PROD_PUSH_APPROVED` and applied database migrations) reset the live checkout to `origin/main` and built it in place, exporting `DGT_DEPLOY_GATE=1` to defeat the ref lock. Three times it replaced a gated build with an older `main` build and silently removed Production fixes.
+What is in place now:
+1. `main` is the production lineage (fast-forwarded to the deployed commit); `production` is what the gate deploys.
+2. The runner and the other legacy deploy scripts are disabled unless the *caller* sets `DGT_ALLOW_LEGACY_DEPLOY=1`; no script sets that flag or `DGT_PROD_PUSH_APPROVED` or `DGT_DEPLOY_GATE` for itself any more.
+3. `scripts/safe-build-deploy.sh` (the build primitive every path calls) refuses on the gated server unless the checked-out commit is exactly the commit the owner approved and the gate consumed (`scripts/production/require-approved-commit.sh`, sandbox test `test-require-approved.sh`). A reset-to-main-and-build now fails instead of replacing the live build.
+4. Supported deployment: `scripts/production/deploy-via-gate.sh <commit>` (push to `production`, approve, dry-run, backup, isolated build, atomic swap; `--dry-run` to rehearse).
+Pushing to `main` never deploys. Promote work with a normal merge to `main`, then deploy the same commit through the gate.

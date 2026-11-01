@@ -5,6 +5,7 @@ import { Loader2, RefreshCw, CheckCircle2, AlertTriangle, Scale } from "lucide-r
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
+import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
 
 type Row = Record<string, any>;
 
@@ -43,6 +44,35 @@ export function PayrollReconciliationView({ lang }: { lang?: string }) {
   }, [period]);
   useEffect(() => { void load(); }, [load]);
 
+  const printConfig = () => ({
+    moduleType: "register" as const,
+    reportType: "register" as const,
+    title: s.t("recon_title", "Payroll ↔ Accounting ↔ Tax Reconciliation"),
+    subtitle: period || undefined,
+    lang: s.lang,
+    orientation: "landscape" as const,
+    columns: [
+      { key: "run_no", label: s.t("recon_c_run", "Run") },
+      { key: "period_month", label: s.t("recon_c_period", "Period") },
+      { key: "employee_code", label: s.t("recon_c_emp", "Employee") },
+      { key: "gross", label: s.t("recon_c_gross", "Gross"), align: "right" as const },
+      { key: "tax_employee", label: s.t("recon_c_tax", "Tax"), align: "right" as const },
+      { key: "net_salary", label: s.t("recon_c_net", "Net"), align: "right" as const },
+      { key: "salary_due_status", label: s.t("recon_c_due", "Salary Due") },
+      { key: "accrual_voucher_no", label: s.t("recon_c_accrual", "Accrual Voucher") },
+      { key: "accrual_dr_minus_cr", label: s.t("recon_c_drcr", "Dr − Cr"), align: "right" as const },
+      { key: "check", label: s.t("recon_c_check", "Check") },
+    ],
+    rows: rows.map((r) => ({
+      ...r,
+      gross: `${r.gross_salary ?? ""} ${r.line_currency ?? ""}`.trim(),
+      salary_due_status: r.salary_due_status || "—",
+      accrual_voucher_no: r.accrual_voucher_no || "—",
+      accrual_dr_minus_cr: r.accrual_dr_minus_cr ?? "—",
+      check: s.t(`recon_chk_${r.accrual_balance_check || "not_posted"}`, String(r.accrual_balance_check || "not_posted")),
+    })),
+  });
+
   return (
     <section dir={s.dir} className="min-h-screen bg-slate-50/50 dark:bg-slate-950/50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-screen-2xl space-y-5">
@@ -56,6 +86,7 @@ export function PayrollReconciliationView({ lang }: { lang?: string }) {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <UniversalPrintActionButton variant="menu" reportConfig={printConfig} />
             <input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="YYYY-MM" className="w-28 rounded-lg border border-slate-200 bg-transparent px-2.5 py-1.5 text-xs dark:border-slate-700" />
             <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
               <RefreshCw className="h-3.5 w-3.5" />{s.t("refresh", "Refresh")}

@@ -1,3 +1,4 @@
+import { crmScopeIds } from "@/lib/crm/crm-access";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { ErpSession } from "@/lib/auth/session";
 import { calculatePaymentDueTracking, PaymentDueTrackingResult } from "@/lib/services/payment-due-tracking";
@@ -111,11 +112,9 @@ export async function getCrmPayablesReceivablesData(params: {
     const forecastRangeLabel = `${fmtShort(todayStr)} – ${fmtShort(end5DayStr)}`;
 
     // 2. Permission Scoping
-    let allowedCountryIds: string[] = [];
-    let allowedBranchIds: string[] = [];
+    // fail-closed scope (lib/crm/crm-access.ts): no usable country / branch list means NO rows, never "no filter"
+    let { countries: allowedCountryIds, branches: allowedBranchIds } = crmScopeIds(params.session);
     if (!params.session.isSuperAdmin && !params.session.roles?.includes("super_admin")) {
-      allowedCountryIds = params.session.countryIds || [];
-      allowedBranchIds = params.session.cityBranchIds || [];
     }
 
     // 3. Fetch Real Purchase Orders & Local Purchases

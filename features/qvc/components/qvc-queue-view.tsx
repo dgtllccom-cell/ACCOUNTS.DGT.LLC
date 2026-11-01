@@ -4,6 +4,8 @@ import { Loader2, CheckCircle2, AlertTriangle, Search } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type QvcRow = {
   id: string; manualNumber: string; accountCode: string; accountName: string;
@@ -53,6 +55,33 @@ export function QvcQueueView() {
 
   useEffect(() => { load(); }, [load]);
 
+  const th = (label: string) => translateHeader(lang, label);
+
+  // Print / PDF / Excel of the queue exactly as filtered on screen (every loaded account, not a screenshot of the table)
+  const printConfig = () => ({
+    moduleType: "register" as const,
+    reportType: "register" as const,
+    title: tt("qvc.title", "QVC Review Queue"),
+    subtitle: FILTERS.map((f) => (f.key === filter ? tt(f.labelKey, f.labelFallback) : "")).filter(Boolean).join(""),
+    lang,
+    orientation: "landscape" as const,
+    columns: [
+      { key: "manualNumber", label: th("Manual #") },
+      { key: "accountName", label: th("Account Name") },
+      { key: "companyName", label: th("Company") },
+      { key: "businessName", label: th("Business") },
+      { key: "country", label: th("Country") },
+      { key: "branch", label: th("Branch") },
+      { key: "category", label: th("Category") },
+      { key: "city", label: th("City") },
+      { key: "mobile", label: th("Mobile") },
+      { key: "phone", label: th("Phone") },
+      { key: "email", label: th("Email") },
+      { key: "qvcStatus", label: th("QVC Status") },
+    ],
+    rows: rows.map((r) => ({ ...r, category: [r.category, r.subcategory].filter(Boolean).join(" / ") })),
+  });
+
   async function setStatus(id: string, qvc_status: string) {
     await fetch("/api/erp/qvc/accounts", { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ id, qvc_status }) });
     load();
@@ -66,6 +95,7 @@ export function QvcQueueView() {
           <p className="text-xs text-slate-500">{tt("qvc.subtitle", "Excel → Import Completed → QVC Pending → Manual Review → QVC Approved. Review each account, complete translations, then approve.")}</p>
         </div>
         <div className="flex items-center gap-2">
+          <UniversalPrintActionButton variant="menu" reportConfig={printConfig} />
           <div className="relative">
             <Search className="absolute left-2 top-2 h-3.5 w-3.5 text-slate-400" />
             <input value={q} onChange={e => setQ(e.target.value)} placeholder={tt("qvc.search", "Search manual # / name / code")} className="w-64 rounded-lg border border-slate-200 py-1.5 pl-7 pr-2 text-xs dark:border-slate-700 dark:bg-slate-900" />

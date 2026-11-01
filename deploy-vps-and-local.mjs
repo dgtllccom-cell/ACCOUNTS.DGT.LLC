@@ -1,5 +1,4 @@
-process.env.DGT_ALLOW_LEGACY_DEPLOY = process.env.DGT_ALLOW_LEGACY_DEPLOY || "1";
-process.env.DGT_PROD_PUSH_APPROVED = "1";
+if (!process.env.DGT_ALLOW_LEGACY_DEPLOY) { console.error("DISABLED: this script can change the LIVE server. Production is deployed only through the controlled gate (scripts/production/deploy-via-gate.sh -> dgt-approve-deploy / dgt-deploy) from the protected 'production' branch, with the owner's approval. See docs/production-deployment-control.md. Pushing or resetting main never deploys. (Owner-approved legacy use: the CALLER sets DGT_ALLOW_LEGACY_DEPLOY=1 - a script must never set it for itself.)"); process.exit(1); }
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';

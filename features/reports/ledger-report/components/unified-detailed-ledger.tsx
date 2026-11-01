@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
-import { openLedgerStatementPrint, type LedgerPrintOrientation } from "@/lib/reports/ledger-statement-print";
+import { buildLedgerStatementPrintHtml, type LedgerPrintData, type LedgerPrintOrientation } from "@/lib/reports/ledger-statement-print";
+import { printStore } from "@/lib/store/print-store";
+import { renderPaginatedPdf } from "@/lib/reports/pdf-paginate";
 import { t as centralT } from "@/lib/i18n/ui";
 import { resolveLedgerBranding } from "@/lib/reports/resolve-ledger-branding";
 import {
@@ -20,6 +22,7 @@ import {
   Calendar,
   Download,
   Loader2,
+  MoreVertical,
   Printer,
   RefreshCw,
   Search,
@@ -329,7 +332,27 @@ export function UnifiedDetailedLedgerView() {
     return parsedContacts.find((c) => types.includes(String(c?.type || "").toLowerCase()) && String(c?.value || "").trim())?.value?.trim() || null;
   }, [parsedContacts]);
 
-  async function printStatement(orientation: LedgerPrintOrientation) {
+  const [actionsOpen, setActionsOpen] = useState(false);
+
+  /** Print = the shared A4 preview (orientation / language switch, "Page x of N", Print and Download PDF); PDF = the same document rendered straight to a file. */
+  async function deliverStatement(data: LedgerPrintData, orientation: LedgerPrintOrientation, mode: "print" | "pdf") {
+    const build = (l: string, o: LedgerPrintOrientation) => buildLedgerStatementPrintHtml(data, { lang: l, orientation: o });
+    const title = `${tr("Detailed Ledger Statement")} - ${data.account.name}`;
+    if (mode === "print") {
+      printStore.openPrint(build(lang, orientation), title, { lang, rebuild: ({ lang: l, orientation: o }) => build(l, o) });
+      return;
+    }
+    const safe = (v: string) => String(v || "").replace(/[^\w.-]+/g, "_");
+    await renderPaginatedPdf({
+      html: build(lang, orientation),
+      orientation,
+      filename: `ledger-statement-${safe(data.account.code || data.account.name)}-${data.fromDate}_${data.toDate}.pdf`,
+      pageWord: translateHeader(lang, "PAGE"),
+      rtl: isRtl,
+    });
+  }
+
+  async function printStatement(orientation: LedgerPrintOrientation, mode: "print" | "pdf" = "print") {
     if (!header) return;
     const printedBy = sessionInfo?.user?.fullName || sessionInfo?.user?.email || null;
     const brand = await resolveLedgerBranding(header, lang, printedBy);
@@ -361,8 +384,7 @@ export function UnifiedDetailedLedgerView() {
     const city = (header as any).cityName || null;
     const category = header.accountKind ? tv(header.accountKind) : null;
 
-    openLedgerStatementPrint(
-      {
+    const data: LedgerPrintData = {
         company: brand.companyInfo,
         account: {
           name: header.accountName || header.ledgerName || "—",
@@ -425,9 +447,8 @@ export function UnifiedDetailedLedgerView() {
         printedBy,
         printedAt: new Date().toISOString().slice(0, 16).replace("T", " "),
         filterNote: filtered ? `${tr(filterType === "user" ? "User" : filterType === "branch" ? "Branch" : "Country")}: ${filterValue}` : null,
-      },
-      { lang, orientation }
-    );
+    };
+    await deliverStatement(data, orientation, mode);
   }
 
   return (
@@ -465,43 +486,47 @@ export function UnifiedDetailedLedgerView() {
 
           {/* Quick Print / Export Tools */}
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              data-testid="ledger-print-portrait"
-              disabled={!header}
-              onClick={() => { void printStatement("portrait"); }}
-              className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-bold shadow-xs"
-              title={centralT(lang, "lprint.portrait", "Print Portrait")}
-            >
-              <Printer className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{centralT(lang, "lprint.portrait", "Print Portrait")}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              data-testid="ledger-print-landscape"
-              disabled={!header}
-              onClick={() => { void printStatement("landscape"); }}
-              className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-bold shadow-xs"
-              title={centralT(lang, "lprint.landscape", "Print Landscape")}
-            >
-              <Printer className="h-3.5 w-3.5 rotate-90" />
-              <span className="hidden sm:inline">{centralT(lang, "lprint.landscape", "Print Landscape")}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={exportCsv}
-              disabled={!calculatedTotals.lines.length}
-              className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-bold shadow-xs"
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{tr("Export CSV")}</span>
-            </Button>
+            <div className="relative">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                data-testid="ledger-actions-menu"
+                disabled={!header}
+                aria-label={centralT(lang, "pdfui.ram_report_actions", "Report actions")}
+                aria-haspopup="menu"
+                aria-expanded={actionsOpen}
+                onClick={() => setActionsOpen((v) => !v)}
+                className="h-8 w-8 rounded-lg shadow-xs"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+              {actionsOpen ? (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setActionsOpen(false)} />
+                  <div role="menu" className="absolute end-0 top-full z-40 mt-1.5 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                    <div className="flex items-center gap-1.5 px-3 pb-0.5 pt-1.5 text-[11px] font-black uppercase tracking-wider text-slate-400"><Printer className="h-3 w-3" />{centralT(lang, "common.print", "Print")}</div>
+                <button type="button" role="menuitem" data-testid="ledger-print-portrait" onClick={() => { setActionsOpen(false); void printStatement("portrait", "print"); }} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+                  {centralT(lang, "pdfprev.portrait", "Portrait")} · A4
+                </button>
+                <button type="button" role="menuitem" data-testid="ledger-print-landscape" onClick={() => { setActionsOpen(false); void printStatement("landscape", "print"); }} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+                  {centralT(lang, "pdfprev.landscape", "Landscape")} · A4
+                </button>
+                    <div className="mt-1 flex items-center gap-1.5 border-t border-slate-100 px-3 pb-0.5 pt-1.5 text-[11px] font-black uppercase tracking-wider text-slate-400 dark:border-slate-800"><Download className="h-3 w-3" />{centralT(lang, "ledger.lgrv_pdf_export", "PDF Export")}</div>
+                <button type="button" role="menuitem" data-testid="ledger-pdf-portrait" onClick={() => { setActionsOpen(false); void printStatement("portrait", "pdf"); }} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+                  {centralT(lang, "pdfprev.portrait", "Portrait")} · A4
+                </button>
+                <button type="button" role="menuitem" data-testid="ledger-pdf-landscape" onClick={() => { setActionsOpen(false); void printStatement("landscape", "pdf"); }} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+                  {centralT(lang, "pdfprev.landscape", "Landscape")} · A4
+                </button>
+                    <div className="mt-1 border-t border-slate-100 dark:border-slate-800" />
+                <button type="button" role="menuitem" data-testid="ledger-export-csv" onClick={() => { setActionsOpen(false); exportCsv(); }} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+                  {tr("Export CSV")}
+                </button>
+                  </div>
+                </>
+              ) : null}
+            </div>
             <Button
               type="button"
               variant="outline"

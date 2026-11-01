@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertCrmRead } from "@/lib/crm/crm-access";
 import { ErpPermissionError, isStrictOperationalSession } from "@/lib/permissions/middleware";
 import { getCrmInsights } from "@/lib/crm/crm-insights-service";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
@@ -11,6 +12,7 @@ export const revalidate = 0;
 export async function GET() {
   try {
     const session = await requireErpSession();
+    assertCrmRead(session);
     // amount-bearing CRM views: never for an operational login nor for a login whose financial field access is denied
     if (isStrictOperationalSession(session) || session.canViewFinancials === false) throw new ErpPermissionError("CRM financial views are outside your access.");
     const groups = await getCrmInsights(session);

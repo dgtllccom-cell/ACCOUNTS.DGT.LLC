@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { ErpAuthError, requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { auditApiAction } from "@/lib/api/audit";
-import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
+import { authorize, resolveReportScope, ErpPermissionError } from "@/lib/permissions/middleware";
+import { recordInSessionScope } from "@/lib/api/scope-middleware";
+import type { ErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
@@ -37,17 +39,18 @@ type ScopedEntityRow = {
   city_branch_id?: string | null;
 };
 
-function rowMatchesScope(row: ScopedEntityRow, scope: ReturnType<typeof resolveReportScope>) {
-  if (scope.level === "global") return true;
-  if (scope.level === "country") {
-    const countryId = row.country_id ?? null;
-    return !countryId || countryId === scope.countryId;
-  }
-  return Boolean(
-    (row.city_branch_id && row.city_branch_id === scope.branchId) ||
-    (row.country_branch_id && row.country_branch_id === scope.countryBranchId) ||
-    (row.country_id && row.country_id === scope.countryId)
-  );
+/**
+ * ONE scope rule for every KYC entity (sessionSqlScope via recordInSessionScope). The old rule let a country login see every row with NO country, and
+ * let a branch login see its WHOLE country (row.country_id === scope.countryId). A row outside the login's country / main branch / city branch,
+ * or with no scope at all, is now invisible to everyone except global scope.
+ */
+function rowMatchesScope(session: ErpSession, row: ScopedEntityRow) {
+  return recordInSessionScope(session, row);
+}
+
+/** A user is in scope when ANY of their active role assignments lies inside the login scope. */
+function userInScope(session: ErpSession, assignments: ScopedEntityRow[] | undefined) {
+  return (assignments ?? []).some((a) => recordInSessionScope(session, a));
 }
 
 function calculateGraceStatus(createdAt: string, missingReqs: string[]) {
@@ -173,15 +176,6 @@ export async function GET(request: Request) {
           where deleted_at is null
         `
       );
-      const users = await timedQuery(
-        "profiles",
-        sql`
-          select id, full_name, preferred_language_code, created_at
-          from public.profiles
-          order by created_at desc
-          limit 50
-        `
-      );
       const assignments = await timedQuery(
         "assignments",
         sql`
@@ -190,6 +184,26 @@ export async function GET(request: Request) {
           where deleted_at is null
         `
       );
+      // only the logins whose assignment lies inside the caller scope (the old "50 newest of everybody, then filter" could hide every in-scope user)
+      const scopedUserIds = [
+        ...new Set(
+          (assignments as any[])
+            .filter((a) => a?.user_id && a.is_active !== false && recordInSessionScope(session, a))
+            .map((a) => String(a.user_id))
+        )
+      ];
+      const users = scopedUserIds.length
+        ? await timedQuery(
+            "profiles",
+            sql`
+              select id, full_name, preferred_language_code, created_at
+              from public.profiles
+              where id = any(${scopedUserIds}::uuid[])
+              order by created_at desc
+              limit 500
+            `
+          )
+        : [];
       const enterpriseAccounts = await timedQuery(
         "enterpriseAccounts",
         sql`
@@ -259,25 +273,19 @@ export async function GET(request: Request) {
       countriesMap.set(c.id, c.name);
     });
 
-    const userAssignmentScope = new Map<string, { countryIds: Set<string>; countryBranchIds: Set<string>; cityBranchIds: Set<string> }>();
+    const userAssignmentScope = new Map<string, ScopedEntityRow[]>();
     (assignmentsRes.data ?? []).forEach((assignment: any) => {
       if (!assignment?.user_id || assignment.is_active === false) return;
-      const current = userAssignmentScope.get(assignment.user_id) ?? {
-        countryIds: new Set<string>(),
-        countryBranchIds: new Set<string>(),
-        cityBranchIds: new Set<string>()
-      };
-      if (assignment.country_id) current.countryIds.add(assignment.country_id);
-      if (assignment.country_branch_id) current.countryBranchIds.add(assignment.country_branch_id);
-      if (assignment.city_branch_id) current.cityBranchIds.add(assignment.city_branch_id);
-      userAssignmentScope.set(assignment.user_id, current);
+      const list = userAssignmentScope.get(assignment.user_id) ?? [];
+      list.push({ country_id: assignment.country_id ?? null, country_branch_id: assignment.country_branch_id ?? null, city_branch_id: assignment.city_branch_id ?? null });
+      userAssignmentScope.set(assignment.user_id, list);
     });
 
     const items: KycReportItem[] = [];
 
     // 1. Process Country Branches (e.g. Pakistan Country Branch)
     (countryBranchesRes.data ?? []).forEach((cb: any) => {
-      if (!rowMatchesScope(cb, reportScope)) return;
+      if (!rowMatchesScope(session, { country_id: cb.country_id, country_branch_id: cb.id })) return;
       const missing: string[] = [];
       if (!cb.owner_name) missing.push("Missing Registered Owner Name");
       if (!cb.phone && !cb.whatsapp_number) missing.push("Missing Contact Phone / WhatsApp");
@@ -313,7 +321,7 @@ export async function GET(request: Request) {
 
     // 2. Process City Branches (e.g. Lahore / Karachi Branches)
     (cityBranchesRes.data ?? []).forEach((cbr: any) => {
-      if (!rowMatchesScope(cbr, reportScope)) return;
+      if (!rowMatchesScope(session, { country_id: cbr.country_id, country_branch_id: cbr.country_branch_id, city_branch_id: cbr.id })) return;
       const missing: string[] = [];
       if (!cbr.phone) missing.push("Missing Branch Telephone");
       if (!cbr.address) missing.push("Missing City Branch Physical Address");
@@ -348,16 +356,7 @@ export async function GET(request: Request) {
 
     // 3. Process User Accounts (Staff / Employees)
     (usersRes.data ?? []).forEach((u: any) => {
-      const assignment = userAssignmentScope.get(u.id);
-      const assignmentMatches =
-        reportScope.level === "global" ||
-        (reportScope.level === "country" && assignment?.countryIds.has(reportScope.countryId || "") ) ||
-        (reportScope.level === "branch" && (
-          assignment?.cityBranchIds.has(reportScope.branchId || "") ||
-          assignment?.countryBranchIds.has(reportScope.countryBranchId || "") ||
-          assignment?.countryIds.has(reportScope.countryId || "")
-        ));
-      if (!assignmentMatches) return;
+      if (!userInScope(session, userAssignmentScope.get(u.id))) return;
       const missing: string[] = [];
       // Check real DB fields — only flag missing if column actually absent
       if (!u.full_name) missing.push("Missing Official Full Name Verification");
@@ -392,7 +391,7 @@ export async function GET(request: Request) {
 
     // 4. Process Commercial / New Enterprise Accounts (including newly created ones)
     (enterpriseAccountsRes.data ?? []).forEach((acc: any) => {
-      if (!rowMatchesScope(acc, reportScope)) return;
+      if (!rowMatchesScope(session, acc)) return;
       const missing: string[] = [];
       if (!acc.name) missing.push("Missing Account Title");
       // Only flag NTN/tax registration if the column exists and is empty
@@ -440,28 +439,22 @@ export async function GET(request: Request) {
       metrics,
       scope: reportScope,
       totals: {
-        countries: (countriesRes.data ?? []).length,
-        countryBranches: (countryBranchesRes.data ?? []).filter((row: any) => rowMatchesScope(row, reportScope)).length,
-        cityBranches: (cityBranchesRes.data ?? []).filter((row: any) => rowMatchesScope(row, reportScope)).length,
-        users: (usersRes.data ?? []).filter((row: any) => {
-          const assignment = userAssignmentScope.get(row.id);
-          return reportScope.level === "global" ||
-            (reportScope.level === "country" && assignment?.countryIds.has(reportScope.countryId || "")) ||
-            (reportScope.level === "branch" && (
-              assignment?.cityBranchIds.has(reportScope.branchId || "") ||
-              assignment?.countryBranchIds.has(reportScope.countryBranchId || "") ||
-              assignment?.countryIds.has(reportScope.countryId || "")
-            ));
-        }).length,
-        enterpriseAccounts: (enterpriseAccountsRes.data ?? []).filter((row: any) => rowMatchesScope(row, reportScope)).length,
-        companies: (companiesRes.data ?? []).filter((row: any) => rowMatchesScope(row, reportScope)).length,
-        customers: (customersRes.data ?? []).filter((row: any) => rowMatchesScope(row, reportScope)).length
+        countries: (countriesRes.data ?? []).filter((c: any) => rowMatchesScope(session, { country_id: c.id })).length,
+        countryBranches: items.filter((i) => i.type === "country_branch").length,
+        cityBranches: items.filter((i) => i.type === "city_branch").length,
+        users: items.filter((i) => i.type === "user_account").length,
+        enterpriseAccounts: items.filter((i) => i.type === "new_account").length,
+        companies: (companiesRes.data ?? []).filter((row: any) => rowMatchesScope(session, { country_id: row.country_id })).length,
+        customers: (customersRes.data ?? []).filter((row: any) => rowMatchesScope(session, { country_id: row.country_id })).length
       }
     }, { status: 200 });
   } catch (error) {
     rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof ErpPermissionError) {
+      return NextResponse.json({ error: error.message, items: [], metrics: { total: 0, incomplete: 0, nearExpiry: 0, suspended: 0, compliant: 0 } }, { status: 403 });
     }
     const message = error instanceof Error ? error.message : "Failed to load KYC reports.";
     return NextResponse.json({ error: message, items: [], metrics: { total: 0, incomplete: 0, nearExpiry: 0, suspended: 0, compliant: 0 } }, { status: 500 });
@@ -478,6 +471,26 @@ export async function POST(request: Request) {
 
     if (!entityId || !entityType) {
       return NextResponse.json({ error: "Missing entityId or entityType" }, { status: 400 });
+    }
+    if (!["country_branch", "city_branch", "user_account"].includes(String(entityType)) || !/^[0-9a-fA-F-]{36}$/.test(String(entityId))) {
+      return NextResponse.json({ error: "Unsupported KYC entity" }, { status: 400 });
+    }
+
+    // the update runs with the service-role client, so the caller scope is checked HERE against the stored record (never trusting the browser)
+    const target = await withLocalPg(async (sql) => {
+      if (entityType === "country_branch") {
+        const r = await sql`select country_id::text country_id, id::text country_branch_id from public.country_branches where id = ${entityId}::uuid and deleted_at is null`;
+        return r[0] ? ([{ country_id: r[0].country_id, country_branch_id: r[0].country_branch_id }] as ScopedEntityRow[]) : null;
+      }
+      if (entityType === "city_branch") {
+        const r = await sql`select country_id::text country_id, country_branch_id::text country_branch_id, id::text city_branch_id from public.city_branches where id = ${entityId}::uuid and deleted_at is null`;
+        return r[0] ? ([{ country_id: r[0].country_id, country_branch_id: r[0].country_branch_id, city_branch_id: r[0].city_branch_id }] as ScopedEntityRow[]) : null;
+      }
+      const r = await sql`select country_id::text country_id, country_branch_id::text country_branch_id, city_branch_id::text city_branch_id from public.user_role_assignments where user_id = ${entityId}::uuid and deleted_at is null and coalesce(is_active, true)`;
+      return r.length ? (r as unknown as ScopedEntityRow[]) : null;
+    });
+    if (!target || !target.some((row) => recordInSessionScope(session, row))) {
+      return NextResponse.json({ error: "KYC record not found" }, { status: 404 });
     }
 
     const supabase = createSupabaseAdminClient() as any;
@@ -526,6 +539,9 @@ export async function POST(request: Request) {
     rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof ErpPermissionError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
     }
     const message = error instanceof Error ? error.message : "Failed to update KYC record.";
     return NextResponse.json({ error: message }, { status: 500 });

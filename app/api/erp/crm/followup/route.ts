@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertCrmRead } from "@/lib/crm/crm-access";
 import { ErpPermissionError, isStrictOperationalSession } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
@@ -10,6 +11,7 @@ import { assertCrmItemInScope } from "@/lib/crm/smart-crm-service";
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertCrmRead(session);
     if (isStrictOperationalSession(session)) throw new ErpPermissionError("CRM is outside this operational role.");
     assertShippingUserExplicitPermission(session, "crm", "followup");
     const body = await request.json();

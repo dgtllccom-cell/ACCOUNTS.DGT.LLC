@@ -12,6 +12,7 @@ import {
 import { invalidRecordIdMessage, rethrowIfNextControlFlow } from "@/lib/api/response";
 import { resolveEnterpriseAccountId } from "@/lib/db/account-refs";
 import { isUuid } from "@/lib/utils";
+import { canAccessDocumentRow, canFileDocumentAt, documentScopeSql, gateDocument, mayDoDocumentAction } from "@/lib/documents/document-access";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -128,9 +129,8 @@ export async function GET(request: NextRequest) {
     // already used by documents/download, [id]/audit, and [id]/version.
     // Without it, any authenticated user could list every country's
     // documents regardless of their own assignment.
-    const isSuperAdmin = session.isSuperAdmin;
-    const allowedCountries: string[] = session.countryIds ?? [];
-    const scopeCountryFilter = !isSuperAdmin && allowedCountries.length > 0;
+    // (the old test `allowedCountries.length > 0` switched the filter OFF for a login with no country list - a branch-only assignment - so it listed every document)
+    if (!mayDoDocumentAction(session, "read")) return NextResponse.json({ error: "Missing permission: documents:read" }, { status: 403 });
 
     const countryId = searchParams.get("countryId");
     const mainBranchId = searchParams.get("mainBranchId");
@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
         select *
         from public.office_documents
         where deleted_at is null
-          and (${scopeCountryFilter ? sql`(country_id is null or country_id = any(${allowedCountries}))` : sql`true`})
+          and ${documentScopeSql(sql, session, "office_documents")}
           and (${countryId ? sql`country_id = ${countryId}` : sql`true`})
           and (${mainBranchId ? sql`country_branch_id = ${mainBranchId}` : sql`true`})
           and (${cityBranchId ? sql`city_branch_id = ${cityBranchId}` : sql`true`})
@@ -234,7 +234,7 @@ export async function GET(request: NextRequest) {
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
-    if (scopeCountryFilter) query = query.or(`country_id.is.null,country_id.in.(${allowedCountries.join(",")})`);
+    // service-role fallback (no direct database): the same scope rule is applied to the rows below, never skipped
     if (countryId) query = query.eq("country_id", countryId);
     if (mainBranchId) query = query.eq("country_branch_id", mainBranchId);
     if (cityBranchId) query = query.eq("city_branch_id", cityBranchId);
@@ -280,7 +280,7 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
 
     const resolvedDocs = await Promise.all(
-      (docs ?? []).map(async (doc: any) => {
+      (docs ?? []).filter((doc: any) => canAccessDocumentRow(session, doc, false)).map(async (doc: any) => {
         const resolvedFileUrl = doc.storage_key ? await resolveDocumentFileUrl(doc.storage_key) : null;
         return {
           ...doc,
@@ -343,11 +343,11 @@ export async function POST(request: NextRequest) {
     const parsedTags = parseMaybeJson<any[]>(tags, []);
     const parsedMetadata = parseMaybeJson<Record<string, any>>(metadata, {});
     const normalizedFileSize = Number(file_size ?? 0) || 0;
-    const normalizedCountryId = normalizeNullable(country_id);
+    let normalizedCountryId = normalizeNullable(country_id);
     const normalizedCountryName = normalizeNullable(country_name);
-    const normalizedCountryBranchId = normalizeNullable(country_branch_id);
+    let normalizedCountryBranchId = normalizeNullable(country_branch_id);
     const normalizedMainBranchName = normalizeNullable(main_branch_name);
-    const normalizedCityBranchId = normalizeNullable(city_branch_id);
+    let normalizedCityBranchId = normalizeNullable(city_branch_id);
     const normalizedCityBranchName = normalizeNullable(city_branch_name);
     const normalizedCompanyId = normalizeNullable(company_id);
     const normalizedCompanyCode = normalizeNullable(company_code);
@@ -370,6 +370,18 @@ export async function POST(request: NextRequest) {
     const normalizedCreatedBy = normalizeNullable(created_by) ?? "Admin";
     const normalizedScannerDeviceName = normalizeNullable(scanner_device_name);
     const normalizedScannerBridge = normalizeNullable(scanner_bridge);
+
+    // Filing is limited to the uploader's own scope: the country / branch ids come from the browser and are never trusted.
+    if (!mayDoDocumentAction(session, "create")) return NextResponse.json({ error: "Missing permission: documents:create" }, { status: 403 });
+    if (!session.isSuperAdmin && !normalizedCountryId && !normalizedCountryBranchId && !normalizedCityBranchId) {
+      // nothing chosen: file it at the uploader's own place (only when that place is unambiguous)
+      if ((session.cityBranchIds ?? []).length === 1) normalizedCityBranchId = session.cityBranchIds[0];
+      if ((session.countryBranchIds ?? []).length === 1) normalizedCountryBranchId = session.countryBranchIds[0];
+      normalizedCountryId = (session.countryIds ?? [])[0] ?? (session.assignments ?? []).find((a: any) => a.countryId)?.countryId ?? null;
+    }
+    if (!canFileDocumentAt(session, { country_id: normalizedCountryId, country_branch_id: normalizedCountryBranchId, city_branch_id: normalizedCityBranchId, module_type: normalizeNullable(module_type) ?? "Purchase Documents", source_module: normalizeNullable(source_module) })) {
+      return NextResponse.json({ error: "You can only file documents inside your own country / branch and operational domain." }, { status: 403 });
+    }
     const baseFileName =
       typeof rawFileName === "string" && rawFileName.trim()
         ? rawFileName.trim()
@@ -577,23 +589,10 @@ export async function PATCH(request: NextRequest) {
 
     if (!id) return NextResponse.json({ error: "Document ID required" }, { status: 400 });
 
-    // Country scope enforcement for non-super-admins — matches documents/download,
-    // [id]/audit, and [id]/version. Without it, any authenticated user could edit
-    // any other country's document by id.
+    // permission, country / branch scope and operational domain of THIS document (an empty country list no longer skips the check)
     {
-      const isSuperAdmin = session.isSuperAdmin;
-      const allowedCountries: string[] = session.countryIds ?? [];
-      if (!isSuperAdmin && allowedCountries.length > 0) {
-        const { data: scopeDoc } = await createSupabaseAdminClient()
-          .from("office_documents" as any)
-          .select("country_id")
-          .eq("id", id)
-          .maybeSingle();
-        const docCountryId = (scopeDoc as any)?.country_id ?? null;
-        if (docCountryId && !allowedCountries.includes(docCountryId)) {
-          return NextResponse.json({ error: "This document is outside your assigned country scope." }, { status: 403 });
-        }
-      }
+      const gate = await gateDocument(session, String(id), "update");
+      if ("response" in gate) return gate.response;
     }
 
     const updatedAt = new Date().toISOString();
@@ -708,23 +707,10 @@ export async function DELETE(request: NextRequest) {
 
     if (!id) return NextResponse.json({ error: "Document ID required" }, { status: 400 });
 
-    // Country scope enforcement for non-super-admins — matches documents/download,
-    // [id]/audit, and [id]/version. Without it, any authenticated user could
-    // delete any other country's document by id.
+    // permission, country / branch scope and operational domain of THIS document (an empty country list no longer skips the check)
     {
-      const isSuperAdmin = session.isSuperAdmin;
-      const allowedCountries: string[] = session.countryIds ?? [];
-      if (!isSuperAdmin && allowedCountries.length > 0) {
-        const { data: scopeDoc } = await createSupabaseAdminClient()
-          .from("office_documents" as any)
-          .select("country_id")
-          .eq("id", id)
-          .maybeSingle();
-        const docCountryId = (scopeDoc as any)?.country_id ?? null;
-        if (docCountryId && !allowedCountries.includes(docCountryId)) {
-          return NextResponse.json({ error: "This document is outside your assigned country scope." }, { status: 403 });
-        }
-      }
+      const gate = await gateDocument(session, String(id), "delete");
+      if ("response" in gate) return gate.response;
     }
 
     const deletedAt = new Date().toISOString();

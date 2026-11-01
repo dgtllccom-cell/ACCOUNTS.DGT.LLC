@@ -1,7 +1,7 @@
 import { requireErpSession } from "@/lib/auth/session";
 import type { ErpSession } from "@/lib/auth/session";
 import { ErpPermissionError } from "@/lib/permissions/middleware";
-import { sessionSqlScope } from "@/lib/api/scope-middleware";
+import { sessionSqlScope, type SqlScope } from "@/lib/api/scope-middleware";
 
 /**
  * Shared guard for the HRM / Office-Management routes (departments, designations,
@@ -45,6 +45,10 @@ export type HrScope = {
   /** Set for branch-level users (sessionSqlScope kind "cityBranch"): employee-level HR records
    *  are limited to these city branches. null = country-level or global access. */
   branchCityIds: string[] | null;
+  /** The shared scope rule (sessionSqlScope) - KYC / document queries apply it with sqlScopeCondition so main-branch logins stay on their branch. */
+  sqlScope: SqlScope;
+  /** Set for a login that may only see its OWN employee profile (no HR role): every query narrows to employees.user_id = this. */
+  ownUserId?: string | null;
 };
 
 /** Branch restriction for an HR record alias whose table carries city_branch_id. */
@@ -56,7 +60,7 @@ export function hrBranch(sql: any, scope: HrScope, alias: string) {
 
 export function hrScopeFromSession(session: ErpSession): HrScope {
   if (session.isSuperAdmin || session.roles?.includes("super_admin_reports")) {
-    return { countryIds: null, cityBranchIds: null, countryBranchIds: null, branchCityIds: null };
+    return { countryIds: null, cityBranchIds: null, countryBranchIds: null, branchCityIds: null, sqlScope: { kind: "all" } };
   }
   // A real city/branch-admin assignment carries country_id + country_branch_id +
   // city_branch_id, but getAssignmentRoots() only keeps the deepest level as the
@@ -74,6 +78,7 @@ export function hrScopeFromSession(session: ErpSession): HrScope {
     countryBranchIds: session.countryBranchIds.length ? session.countryBranchIds : null,
     // One scope rule (sessionSqlScope): branch users see only their own branch's HR records.
     branchCityIds: (() => { const sc = sessionSqlScope(session); return sc.kind === "cityBranch" ? sc.ids : null; })(),
+    sqlScope: sessionSqlScope(session),
   };
 }
 
@@ -92,6 +97,34 @@ export async function guardHr(action: "read" | "write"): Promise<{ session: ErpS
     throw new ErpPermissionError(`HRM ${action} is not permitted for this user.`);
   }
   return { session, scope: hrScopeFromSession(session) };
+}
+
+/**
+ * Employee KYC / QVC permissions - VIEW, UPLOAD/EDIT and APPROVE/REJECT are three different rights.
+ *   - view:   any HR reader inside the HR scope; every other login sees ONLY its own employee profile (employees.user_id).
+ *   - upload: the HR write roles (not own-profile logins).
+ *   - verify: the narrower approver list (payroll officers and accountants keep their HR write rights but do not approve identity documents).
+ *   - identifiers: ID / passport numbers and the file reference are shown in full only to those who maintain them (and to the employee himself);
+ *     read-only HR roles (auditor, country user) see them masked.
+ */
+const HR_KYC_VERIFY_ROLES = new Set(["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "hr_admin", "hr_manager"]);
+
+export type HrKycCaps = { ownOnly: boolean; upload: boolean; verify: boolean; identifiers: boolean };
+
+export function hrKycCaps(session: ErpSession): HrKycCaps {
+  const isHrReader = hasHrRole(session, "read");
+  const upload = isHrReader && hasHrRole(session, "write");
+  const verify = isHrReader && (session.isSuperAdmin || (session.roles ?? []).some((r) => HR_KYC_VERIFY_ROLES.has(r)));
+  return { ownOnly: !isHrReader, upload, verify, identifiers: !isHrReader || upload };
+}
+
+export async function guardHrKyc(action: "read" | "upload" | "verify"): Promise<{ session: ErpSession; scope: HrScope; caps: HrKycCaps }> {
+  const session = await requireErpSession();
+  const caps = hrKycCaps(session);
+  if (action === "upload" && !caps.upload) throw new ErpPermissionError("Uploading or editing employee KYC documents is not permitted for this user.");
+  if (action === "verify" && !caps.verify) throw new ErpPermissionError("Approving or rejecting employee KYC documents is not permitted for this user.");
+  const scope = hrScopeFromSession(session);
+  return { session, caps, scope: caps.ownOnly ? { ...scope, ownUserId: session.userId } : scope };
 }
 
 /** True when the session may edit/approve payroll specifically. */

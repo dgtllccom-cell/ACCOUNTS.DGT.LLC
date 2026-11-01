@@ -1,5 +1,7 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { type HrScope, hrBranch } from "@/lib/services/hr-api";
+import { type HrScope } from "@/lib/services/hr-api";
+import { sqlScopeCondition } from "@/lib/api/scope-middleware";
+import { ErpPermissionError } from "@/lib/permissions/middleware";
 
 /**
  * HRM employee KYC / QVC service.
@@ -9,20 +11,34 @@ import { type HrScope, hrBranch } from "@/lib/services/hr-api";
  * Scope repeated in every WHERE.
  */
 
-function scopeWhere(sql: any, scope: HrScope, col = "v.country_id") {
-  if (scope.countryIds === null) return sql`TRUE`;
-  return sql`(${sql(col)} = ANY(${scope.countryIds}) OR ${sql(col)} IS NULL) AND ${hrBranch(sql, scope, col.split(".")[0])}`;
+/**
+ * ONE scope rule for every KYC query (alias `v` = hr_employee_kyc_status_v, `e` = employees).
+ *   - a login without an HR role sees ONLY its own employee profile (employees.user_id);
+ *   - everybody else is limited by the shared scope rule (sessionSqlScope): country / main branch / city branch.
+ *     An employee with NO country used to match every scoped login (`OR country_id IS NULL`); such a record is global and is now Super Admin only.
+ */
+function scopeWhere(sql: any, scope: HrScope, alias = "v", idCol = "employee_id") {
+  if (scope.ownUserId) {
+    return sql`${sql(`${alias}.${idCol}`)} IN (SELECT id FROM public.employees WHERE user_id = ${scope.ownUserId}::uuid AND deleted_at IS NULL)`;
+  }
+  return sqlScopeCondition(sql, scope.sqlScope, alias);
 }
 
 async function assertEmployeeInScope(employeeId: string, scope: HrScope) {
-  if (scope.countryIds === null) return;
+  if (scope.sqlScope.kind === "all" && !scope.ownUserId) return;
   const ok = await withLocalPg(async (sql) => {
     const r = await sql`SELECT 1 FROM public.employees e
-      WHERE e.id = ${employeeId} AND e.deleted_at IS NULL
-        AND (e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) AND ${hrBranch(sql, scope, "e")} LIMIT 1`;
+      WHERE e.id = ${employeeId}::uuid AND e.deleted_at IS NULL AND ${scopeWhere(sql, scope, "e", "id")} LIMIT 1`;
     return (r?.length ?? 0) > 0;
   });
-  if (!ok) throw new Error("Employee not found in your scope.");
+  if (!ok) throw new ErpPermissionError("Employee is outside your authorized scope.");
+}
+
+/** 1234567890 -> ******7890 (the last four characters only). */
+export function maskIdentifier(v: unknown): string | null {
+  const t = String(v ?? "").trim();
+  if (!t) return null;
+  return t.length <= 4 ? "****" : "*".repeat(t.length - 4) + t.slice(-4);
 }
 
 export type KycDocInput = {
@@ -80,7 +96,8 @@ export class HrKycService {
   }
 
   /** One employee's full checklist (requirement rows joined to their document rows). */
-  async employeeChecklist(employeeId: string, scope: HrScope) {
+  async employeeChecklist(employeeId: string, scope: HrScope, opts: { identifiers?: boolean } = {}) {
+    const showIdentifiers = opts.identifiers !== false;
     await assertEmployeeInScope(employeeId, scope);
     return withLocalPg(async (sql) => {
       const emp = (await sql`SELECT e.id, e.employee_code, e.country_id,
@@ -99,7 +116,13 @@ export class HrKycService {
         WHERE r.deleted_at IS NULL AND r.is_active
           AND (r.country_id IS NULL OR r.country_id = ${emp?.country_id ?? null})
         ORDER BY r.rank_order ASC`;
-      return { employee: emp, items: items ?? [] };
+      // read-only HR roles see ID / passport numbers masked and never the file reference (only maintainers and the employee himself get them in full)
+      const safe = (items ?? []).map((it: any) =>
+        showIdentifiers
+          ? it
+          : { ...it, document_number: maskIdentifier(it.document_number), file_url: null, office_document_id: null, file_hidden: Boolean(it.file_url || it.office_document_id) }
+      );
+      return { employee: emp, items: safe };
     });
   }
 
@@ -132,11 +155,16 @@ export class HrKycService {
     });
   }
 
-  async verifyDocument(documentId: string, decision: "verified" | "rejected", actorId: string, scope: HrScope, reason?: string) {
+  async verifyDocument(documentId: string, decision: "verified" | "rejected", actorId: string, scope: HrScope, reason?: string, opts: { allowSelf?: boolean } = {}) {
     return withLocalPg(async (sql) => {
-      const row = (await sql`SELECT * FROM public.hr_employee_kyc_documents WHERE id = ${documentId} AND deleted_at IS NULL`)?.[0];
-      if (!row) throw new Error("KYC document not found.");
+      const row = (await sql`SELECT * FROM public.hr_employee_kyc_documents WHERE id = ${documentId}::uuid AND deleted_at IS NULL`)?.[0];
+      if (!row) throw new ErpPermissionError("KYC document is outside your authorized scope.");
       await assertEmployeeInScope(row.employee_id, scope);
+      // nobody approves or rejects their own identity documents (Super Admin excepted)
+      if (!opts.allowSelf) {
+        const own = await sql`SELECT 1 FROM public.employees WHERE id = ${row.employee_id}::uuid AND user_id = ${actorId}::uuid LIMIT 1`;
+        if (own.length > 0) throw new ErpPermissionError("You cannot verify or reject your own KYC documents.");
+      }
       await sql`
         UPDATE public.hr_employee_kyc_documents SET
           status = ${decision},
@@ -146,6 +174,20 @@ export class HrKycService {
           updated_at = now()
         WHERE id = ${documentId}`;
       return { id: documentId, status: decision };
+    });
+  }
+
+  /** The office_documents id behind one KYC document, or null when the document does not exist, is not stored as a file, or lies outside the scope. */
+  async fileOfficeDocumentId(documentId: string, scope: HrScope): Promise<string | null> {
+    return withLocalPg(async (sql) => {
+      const row = (await sql`SELECT employee_id::text AS employee_id, office_document_id::text AS office_document_id
+        FROM public.hr_employee_kyc_documents WHERE id = ${documentId}::uuid AND deleted_at IS NULL`)?.[0];
+      if (!row?.office_document_id) return null;
+      if (!(scope.sqlScope.kind === "all" && !scope.ownUserId)) {
+        const ok = await sql`SELECT 1 FROM public.employees e WHERE e.id = ${row.employee_id}::uuid AND e.deleted_at IS NULL AND ${scopeWhere(sql, scope, "e", "id")} LIMIT 1`;
+        if (ok.length === 0) return null;
+      }
+      return row.office_document_id as string;
     });
   }
 

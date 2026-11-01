@@ -16,7 +16,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { canAccessOrder } from "@/lib/services/clearing-customer-order-scope";
 import { paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
-import { sessionReportDomains } from "@/lib/reports/report-access";
+import { reportScopeLevel, sessionReportDomains } from "@/lib/reports/report-access";
 import { type CenterDomain, purchaseTotalInOrderCurrency } from "@/lib/reports/center-totals";
 
 export type DocField = { key: string; label: string; value: string; strong?: boolean };
@@ -39,7 +39,7 @@ export type RecordDoc = {
 };
 
 export const RECORD_TABLES = [
-  "purchase_orders", "local_purchases", "sales_orders", "purchase_order_payments", "sales_order_payments", "roznamcha_entries",
+  "purchase_orders", "local_purchases", "sales_orders", "purchase_order_payments", "sales_order_payments", "roznamcha_entries", "ledger_posting_batches",
   "clearing_customer_orders", "clearing_payment_bills", "clearing_bill_customer_charges", "customer_receipts"
 ] as const;
 export type RecordTable = (typeof RECORD_TABLES)[number];
@@ -65,7 +65,7 @@ async function auditOf(sql: any, table: string, id: string) {
 async function scopedHead(session: ErpSession, sql: any, table: RecordTable, id: string): Promise<{ domain: CenterDomain; createdBy: string | null; agentId: string | null } | null> {
   const scope = sessionSqlScope(session);
   const roles: string[] = session.roles ?? [];
-  const assignedOnly = !session.isSuperAdmin && (Boolean((session as any).isShippingScoped) || (roles.length > 0 && roles.every((r) => ["agent_user", "shipping_line_user", "shipping_line_admin"].includes(r))));
+  const assignedOnly = !session.isSuperAdmin && (reportScopeLevel(session) === "own" || Boolean((session as any).isShippingScoped) || (roles.length > 0 && roles.every((r) => ["agent_user", "shipping_line_user", "shipping_line_admin"].includes(r))));
   const own = (alias: string) => (assignedOnly ? sql`and ${sql.unsafe(alias + ".created_by")} = ${session.userId}::uuid` : sql``);
   let rows: any[] = [];
   switch (table) {
@@ -82,6 +82,11 @@ async function scopedHead(session: ErpSession, sql: any, table: RecordTable, id:
     case "roznamcha_entries": {
       const r = await sql`select re.created_by::text created_by, coalesce(re.entry_category, re.operational_domain, 'business') dom from roznamcha_entries re where re.id = ${id}::uuid and re.deleted_at is null and ${sqlScopeCondition(sql, scope, "re")} ${own("re")}`;
       return r[0] ? { domain: s(r[0].dom) === "shipping" ? "shipping" : "business", createdBy: r[0].created_by, agentId: null } : null;
+    }
+    case "ledger_posting_batches": {
+      // no domain column on a posting batch: a shipping / clearing / customs transaction type is Shipping Line accounting
+      const r = await sql`select lpb.created_by::text created_by, lpb.transaction_type tt from ledger_posting_batches lpb where lpb.id = ${id}::uuid and lpb.deleted_at is null and ${sqlScopeCondition(sql, scope, "lpb")} ${own("lpb")}`;
+      return r[0] ? { domain: /shipping|clearing|customs/i.test(s(r[0].tt)) ? "shipping" : "business", createdBy: r[0].created_by ?? null, agentId: null } : null;
     }
     case "clearing_customer_orders":
       rows = await sql`select o.created_by::text created_by, o.clearing_agent_id::text agent from clearing_customer_orders o where o.id = ${id}::uuid and o.deleted_at is null and ${sqlScopeCondition(sql, scope, "o")}`;
@@ -111,6 +116,7 @@ export async function loadCenterRecord(session: ErpSession, table: RecordTable, 
       case "purchase_order_payments": return purchasePaymentDoc(sql, id);
       case "sales_order_payments": return salesPaymentDoc(sql, id);
       case "roznamcha_entries": return roznamchaDoc(sql, id, head.domain);
+      case "ledger_posting_batches": return postingBatchDoc(sql, id, head.domain);
       case "clearing_customer_orders": return shippingOrderDoc(sql, id);
       case "clearing_payment_bills": return clearingBillDoc(sql, id);
       case "clearing_bill_customer_charges": return customerBillDoc(sql, id);
@@ -348,11 +354,11 @@ async function roznamchaDoc(sql: any, id: string, domain: CenterDomain): Promise
     where re.id = ${id}::uuid and re.deleted_at is null`;
   if (!re) return null;
   const lines = (await sql`
-    select rl.description, rl.debit, rl.credit, rl.currency, l.name ledger_name, l.code ledger_code
+    select rl.description, rl.debit, rl.credit, rl.currency, rl.usd_rate, l.name ledger_name, l.code ledger_code
     from roznamcha_lines rl left join ledgers l on l.id = rl.ledger_id where rl.roznamcha_entry_id = ${id}::uuid order by rl.id`) as any[];
-  const ccy = s(re.original_currency_code).toUpperCase() || s(lines.find((l) => s(l.currency))?.currency).toUpperCase();
-  const dr = lines.reduce((a, l) => a + num(l.debit), 0);
-  const cr = lines.reduce((a, l) => a + num(l.credit), 0);
+  // the totals are in the currency of the LINES (original_currency_code is the source document's currency and can differ - it printed USD over AED lines)
+  const lineTotals = totalsByCurrency(lines);
+  const ccy = lineTotals.length === 1 ? lineTotals[0].ccy : "";
   const typeKey = re.bank_id ? "rc.type.bank_entry" : s(re.voucher_no || re.journal_no) ? "rc.type.cash_entry" : "rc.type.journal_entry";
   return {
     table: "roznamcha_entries", id, domain, typeKey, typeLabel: re.bank_id ? "Bank Entry" : "Cash Entry", entryNo: s(re.voucher_no) || s(re.journal_no), status: s(re.status), currency: ccy,
@@ -361,14 +367,78 @@ async function roznamchaDoc(sql: any, id: string, domain: CenterDomain): Promise
       fld("rcd.f.country", "Country", re.country_name), fld("rcd.f.branch", "Branch", re.branch_name), fld("rcd.f.user", "Created by", re.user_name), fld("rcd.f.status", "Status", re.status), fld("rcd.f.narration", "Narration", re.narration)
     ],
     party: null,
-    amounts: [fld("rcd.a.debit", "Total debit", withCcy(dr, ccy), true), fld("rcd.a.credit_total", "Total credit", withCcy(cr, ccy), true)],
+    amounts: lineTotals.flatMap((t) => [fld("rcd.a.debit", "Total debit", withCcy(t.dr, t.ccy), true), fld("rcd.a.credit_total", "Total credit", withCcy(t.cr, t.ccy), true)]),
     tables: lines.length ? [{
       titleKey: "rcd.sec.lines", title: "Voucher lines",
-      columns: [col("account", "Account"), col("description", "Description"), col("debit", "Debit", true), col("credit", "Credit", true), col("currency", "Currency")],
-      rows: lines.map((l) => ({ account: [s(l.ledger_code), s(l.ledger_name)].filter(Boolean).join(" · "), description: s(l.description), debit: num(l.debit) ? money(l.debit) : "", credit: num(l.credit) ? money(l.credit) : "", currency: s(l.currency).toUpperCase() })),
-      totals: { account: "", debit: money(dr), credit: money(cr) }
+      columns: [col("account", "Account"), col("description", "Description"), col("debit", "Debit", true), col("credit", "Credit", true), col("balance", "Balance after", true), col("currency", "Currency"), col("rate", "Rate", true)],
+      rows: withRunning(lines).map((l) => ({
+        balance: l.balance, rate: l.rate, account: [s(l.ledger_code), s(l.ledger_name)].filter(Boolean).join(" · "), description: s(l.description), debit: num(l.debit) ? money(l.debit) : "", credit: num(l.credit) ? money(l.credit) : "", currency: s(l.currency).toUpperCase() })),
+      totals: lineTotals.length === 1 ? { account: "", debit: money(lineTotals[0].dr), credit: money(lineTotals[0].cr) } : undefined
     }] : [],
     audit: await auditOf(sql, "roznamcha_entries", id)
+  };
+}
+
+/** Running balance after each line, per currency (never mixed), as "1,200.00 DR" - plus the line's exchange rate. */
+function withRunning(lines: any[]): Array<any & { balance: string; rate: string }> {
+  const run = new Map<string, number>();
+  return lines.map((l) => {
+    const ccy = s(l.currency).toUpperCase();
+    const next = (run.get(ccy) ?? 0) + num(l.debit) - num(l.credit);
+    run.set(ccy, next);
+    return { ...l, balance: next === 0 ? money(0) : `${money(Math.abs(next))} ${next > 0 ? "DR" : "CR"}`, rate: num(l.usd_rate) ? String(num(l.usd_rate)) : "" };
+  });
+}
+
+/** Totals per currency for a set of lines. */
+function totalsByCurrency(lines: any[]): Array<{ ccy: string; dr: number; cr: number }> {
+  const m = new Map<string, { ccy: string; dr: number; cr: number }>();
+  for (const l of lines) {
+    const ccy = s(l.currency).toUpperCase();
+    const t = m.get(ccy) ?? { ccy, dr: 0, cr: 0 };
+    t.dr += num(l.debit);
+    t.cr += num(l.credit);
+    m.set(ccy, t);
+  }
+  return [...m.values()];
+}
+
+// ── ledger posting batch (the journal / transfer posting of the Ledger module) ─────────────────────────────────
+async function postingBatchDoc(sql: any, id: string, domain: CenterDomain): Promise<RecordDoc | null> {
+  const [b] = await sql`
+    select b.*, co.name country_name, coalesce(cib.name, cb.name) branch_name, pr.full_name user_name, ap.full_name approver_name
+    from ledger_posting_batches b left join countries co on co.id = b.country_id left join city_branches cib on cib.id = b.city_branch_id
+      left join country_branches cb on cb.id = b.country_branch_id left join profiles pr on pr.id = b.created_by left join profiles ap on ap.id = b.approved_by
+    where b.id = ${id}::uuid and b.deleted_at is null`;
+  if (!b) return null;
+  const lines = (await sql`
+    select l.description, l.debit, l.credit, l.currency, l.usd_rate, coalesce(ea.name, lg.name, l.ledger_name_snapshot) account_name, coalesce(ea.code, lg.code, l.account_number) account_code
+    from ledger_posting_lines l left join enterprise_accounts ea on ea.id = l.enterprise_account_id left join ledgers lg on lg.id = l.ledger_id
+    where l.batch_id = ${id}::uuid order by l.created_at, l.id`) as any[];
+  const totals = totalsByCurrency(lines);
+  const ccy = totals.length === 1 ? totals[0].ccy : "";
+  const approved = Boolean(b.approved_by) || s(b.approval_status) === "approved";
+  return {
+    table: "ledger_posting_batches", id, domain, typeKey: "rc.type.posting_batch", typeLabel: "Journal Posting", entryNo: s(b.reference_no) || s(b.global_reference_id) || id.slice(0, 8), status: s(b.status), currency: ccy,
+    general: [
+      fld("rcd.f.reference", "Reference", b.reference_no, true), fld("rcd.f.global_ref", "Original reference", b.global_reference_id), fld("rcd.f.date", "Date", day(b.entry_date || b.created_at)),
+      fld("rcd.f.txn_type", "Transaction type", s(b.transaction_type).replace(/_/g, " ")), fld("rcd.f.country", "Country", b.country_name), fld("rcd.f.branch", "Branch", b.branch_name || b.branch_name_snapshot),
+      fld("rcd.f.user", "Created by", b.user_name || b.user_name_snapshot), fld("rcd.f.approved_by", "Approved by", b.approver_name), fld("rcd.f.approval", "Approval", approved ? "approved" : "pending"),
+      fld("rcd.f.status", "Status", b.status), fld("rcd.f.narration", "Narration", b.narration)
+    ],
+    party: null,
+    // one debit / credit pair per currency - currencies are never added together
+    amounts: totals.flatMap((t) => [fld("rcd.a.debit", "Total debit", withCcy(t.dr, t.ccy), true), fld("rcd.a.credit_total", "Total credit", withCcy(t.cr, t.ccy), true)]),
+    tables: lines.length ? [{
+      titleKey: "rcd.sec.lines", title: "Voucher lines",
+      columns: [col("account", "Account"), col("description", "Description"), col("debit", "Debit", true), col("credit", "Credit", true), col("balance", "Balance after", true), col("currency", "Currency"), col("rate", "Rate", true)],
+      rows: withRunning(lines).map((l) => ({
+        account: [s(l.account_code), s(l.account_name)].filter(Boolean).join(" · "), description: s(l.description), debit: num(l.debit) ? money(l.debit) : "", credit: num(l.credit) ? money(l.credit) : "",
+        balance: l.balance, currency: s(l.currency).toUpperCase(), rate: l.rate
+      })),
+      totals: totals.length === 1 ? { account: "", debit: money(totals[0].dr), credit: money(totals[0].cr) } : undefined
+    }] : [],
+    audit: await auditOf(sql, "ledger_posting_batches", id)
   };
 }
 

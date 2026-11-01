@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
-import { guardHr } from "@/lib/services/hr-api";
+import { guardHrKyc } from "@/lib/services/hr-api";
 import { hrKycService } from "@/lib/services/hr-kyc-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
@@ -25,10 +25,11 @@ const docSchema = z.object({
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ employeeId: string }> }) {
   try {
-    const { scope } = await guardHr("read");
+    const { scope, caps } = await guardHrKyc("read");
     const { employeeId } = paramSchema.parse(await ctx.params);
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
-    const data: any = await hrKycService.employeeChecklist(employeeId, scope);
+    const data: any = await hrKycService.employeeChecklist(employeeId, scope, { identifiers: caps.identifiers });
+    data.caps = { upload: caps.upload, verify: caps.verify, identifiers: caps.identifiers, ownOnly: caps.ownOnly };
     try {
       if (data.employee) {
         [data.employee] = await localizeJoinedNames<any>([data.employee], lang, [
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ employe
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ employeeId: string }> }) {
   try {
-    const { session, scope } = await guardHr("write");
+    const { session, scope } = await guardHrKyc("upload");
     const { employeeId } = paramSchema.parse(await ctx.params);
     const body = docSchema.parse(await request.json());
     const res = await hrKycService.upsertDocument({ employeeId, ...body }, session.userId, scope);

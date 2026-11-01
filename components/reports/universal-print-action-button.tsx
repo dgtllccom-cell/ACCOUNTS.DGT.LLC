@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Printer, FileText, Download, ChevronDown, Check } from "lucide-react";
+import { Printer, FileText, Download, ChevronDown, Check, MoreVertical } from "lucide-react";
 import { openUniversalPrintReport, type UniversalPrintInput } from "@/lib/reports/universal-print-engine";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
@@ -12,13 +12,20 @@ export interface UniversalPrintActionButtonProps {
   className?: string;
   buttonLabel?: string;
   hideExcel?: boolean;
+  /**
+   * "buttons" (default, unchanged) renders Print / PDF / Excel side by side.
+   * "menu" renders ONE compact ⋮ button whose menu holds Print, Download PDF and Excel/CSV - used by every register that gets its Print / PDF from this
+   * shared engine, so the same action looks and behaves the same across the ERP.
+   */
+  variant?: "buttons" | "menu";
 }
 
 export function UniversalPrintActionButton({
   reportConfig,
   className,
   buttonLabel,
-  hideExcel = false
+  hideExcel = false,
+  variant = "buttons"
 }: UniversalPrintActionButtonProps) {
   const lang = useActiveLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -59,6 +66,46 @@ export function UniversalPrintActionButton({
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  if (variant === "menu") {
+    return (
+      <div className="relative inline-flex">
+        <button
+          type="button"
+          data-testid="register-actions-menu"
+          aria-label={buttonLabel || tr("Print")}
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          title={buttonLabel || tr("Print")}
+          onClick={() => setIsOpen((v) => !v)}
+          className={cn(
+            "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200",
+            className
+          )}
+        >
+          <MoreVertical className="h-4 w-4" />
+        </button>
+        {isOpen ? (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setIsOpen(false)} />
+            <div role="menu" className="absolute end-0 top-full z-40 mt-1.5 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+              <button type="button" role="menuitem" data-testid="register-menu-print" onClick={() => handleAction("print")} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+                <Printer className="h-3.5 w-3.5" /> {tr("Print")}
+              </button>
+              <button type="button" role="menuitem" data-testid="register-menu-pdf" onClick={() => handleAction("pdf")} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+                <FileText className="h-3.5 w-3.5" /> {tr("PDF")}
+              </button>
+              {!hideExcel ? (
+                <button type="button" role="menuitem" data-testid="register-menu-excel" onClick={() => handleAction("excel")} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+                  <Download className="h-3.5 w-3.5" /> {tr("Excel")}
+                </button>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="relative inline-flex items-center gap-1.5">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertCrmRead } from "@/lib/crm/crm-access";
 import { ErpPermissionError, isStrictOperationalSession } from "@/lib/permissions/middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { hasRolePermission } from "@/lib/permissions/middleware";
@@ -23,6 +24,7 @@ const schema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertCrmRead(session);
     if (isStrictOperationalSession(session)) throw new ErpPermissionError("CRM is outside this operational role.");
     assertShippingUserExplicitPermission(session, "crm", "create");
     if (!session.isSuperAdmin && !hasRolePermission(session, "crm", "create") && (session.roles?.includes("agent_user") || session.isShippingScoped)) {
