@@ -13080,6 +13080,7 @@ export type UiKey =
   | "rcd.f.remarks"
   | "rcd.a.due_receive"
   | "rcd.col.user"
+  | "rc.handover_operational_subtitle"
   | "rc.nav.handover"
   | (string & {});
 
@@ -39338,6 +39339,7 @@ const en: Dict = {
   "rcd.a.due_receive": "Still to receive",
   "rcd.col.user": "User",
   "rc.nav.handover": "Handover & Journal PDF Report",
+  "rc.handover_operational_subtitle": "Business to Shipping Line handovers inside your own country and branch scope.",
 };
 
 const ur: Dict = {
@@ -65563,6 +65565,7 @@ const ur: Dict = {
   "rcd.a.due_receive": "ابھی وصول کرنا باقی",
   "rcd.col.user": "صارف",
   "rc.nav.handover": "ہینڈ اوور اور جرنل پی ڈی ایف رپورٹ",
+  "rc.handover_operational_subtitle": "آپ کے اپنے ملک اور برانچ کے دائرہ کار میں بزنس سے شپنگ لائن کے ہینڈ اوورز۔",
 };
 
 const ar: Dict = {
@@ -91789,6 +91792,7 @@ const ar: Dict = {
   "rcd.a.due_receive": "المتبقي للقبض",
   "rcd.col.user": "المستخدم",
   "rc.nav.handover": "تقرير التسليم واليومية PDF",
+  "rc.handover_operational_subtitle": "عمليات التسليم من الأعمال إلى خط الشحن ضمن نطاق دولتك وفرعك.",
 };
 
 const fa: Dict = {
@@ -118014,6 +118018,7 @@ const fa: Dict = {
   "rcd.a.due_receive": "مانده برای دریافت",
   "rcd.col.user": "کاربر",
   "rc.nav.handover": "گزارش تحویل و دفتر روزنامه PDF",
+  "rc.handover_operational_subtitle": "تحویل‌های کسب‌وکار به خط کشتیرانی در محدوده کشور و شعبه خودتان.",
 };
 
 const ps: Dict = {
@@ -144246,6 +144251,7 @@ const ps: Dict = {
   "rcd.a.due_receive": "لا هم د ترلاسه کولو",
   "rcd.col.user": "کارن",
   "rc.nav.handover": "د سپارلو او ژورنال PDF راپور",
+  "rc.handover_operational_subtitle": "ستاسو د هیواد او څانګې په ساحه کې له سوداګرۍ څخه شپنګ لاین ته سپارنې.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

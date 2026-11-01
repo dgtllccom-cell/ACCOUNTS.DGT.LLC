@@ -164,7 +164,9 @@ export function HandoverReportView({ privileged = false }: { privileged?: boolea
           </div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{th("Journal Report PDF ERP")}</h1>
           <p className="text-slate-400 text-sm max-w-3xl">
-            {th("Country & Branch Login Access Register, complete ERP system architecture, database data migration proof, and living PDF handover.")}
+            {privileged
+              ? th("Country & Branch Login Access Register, complete ERP system architecture, database data migration proof, and living PDF handover.")
+              : t(lang, "rc.handover_operational_subtitle", "Business to Shipping Line handovers inside your own country and branch scope.")}
           </p>
         </div>
 
