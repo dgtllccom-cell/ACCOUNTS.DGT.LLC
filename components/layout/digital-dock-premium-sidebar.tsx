@@ -242,10 +242,10 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("Purchase Payments"),
         icon: Receipt,
         children: [
-          { label: nt("Advance Payment"), href: "/dashboard/journal/purchase-order-payment/advance", icon: Receipt },
+          { label: nt("Advance Payment"), href: "/dashboard/journal/purchase-order-payment/advance", icon: Receipt, isNew: true },
           { label: nt("Endorsement Payment"), href: "/dashboard/journal/purchase-order-payment/endorsement", icon: FileCheck2 },
           { label: nt("Credit Payment"), href: "/dashboard/journal/purchase-order-payment/charges", icon: CreditCard },
-          { label: nt("Remaining Payment"), href: "/dashboard/journal/purchase-order-payment/remaining", icon: CreditCard },
+          { label: nt("Remaining Payment"), href: "/dashboard/journal/purchase-order-payment/remaining", icon: CreditCard, isNew: true },
           { label: nt("Purchase Payment History"), href: "/dashboard/journal/purchase-order-payment/history", icon: Clock },
           { label: nt("Final Payment"), href: "/dashboard/journal/purchase-order-payment/final", icon: CheckCircle2 },
         ],

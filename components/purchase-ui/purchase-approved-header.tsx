@@ -31,6 +31,25 @@ export interface PapMetric { label: string; value: string; note?: string; tone?:
 export interface PapStageRow { key: string; label: string; value: string; count?: string; countLabel?: string; tone: "purple" | "blue" | "red" | "green"; valueTone?: PapTone; onClick?: () => void }
 export interface PapCountryRow { key: string; name: string; value: string; count?: string; onClick?: () => void }
 
+export interface PapSummaryRow {
+  key: string;
+  label: string;
+  totalBills: number;
+  paidBills: number;
+  remainingBills: number;
+  onFilterTotal?: () => void;
+  onFilterPaid?: () => void;
+  onFilterRemaining?: () => void;
+}
+
+export interface ScopeUserInfo {
+  countryCode?: string;
+  branchCode?: string;
+  userCode?: string;
+  userName?: string;
+  role?: string;
+}
+
 export interface PurchaseApprovedHeaderProps {
   page: ApprovedPurchasePage;
   /** page title for the ten Purchase/Sales payment pages (already translated); the five Purchase pages use the built-in titles */
@@ -39,9 +58,9 @@ export interface PurchaseApprovedHeaderProps {
   crumbModule?: string;
   /** localized, authorized scope text e.g. "All Countries"; defaults to the localized "All Countries" */
   scopeLabel?: string;
-  summary: { title: string; subtitle?: string; metrics: readonly [PapMetric, PapMetric, PapMetric] };
+  summary: { title: string; subtitle?: string; metrics?: readonly [PapMetric, PapMetric, PapMetric]; summaryRows?: readonly PapSummaryRow[] };
   stages: { title: string; subtitle?: string; rows: readonly PapStageRow[] };
-  countries: { title: string; subtitle?: string; rows: readonly PapCountryRow[]; emptyLabel?: string };
+  countries: { title: string; subtitle?: string; rows: readonly PapCountryRow[]; emptyLabel?: string; branchScopeInfo?: ScopeUserInfo };
   /** the page's EXISTING controls (search, filters, date, refresh, more-actions, New) — compose with the Pap* helpers below */
   toolbar?: ReactNode;
   langProp?: string | null;
@@ -76,15 +95,67 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
             <div><div className="dgt-pa-headname">{summary.title}</div>{summary.subtitle && <div className="dgt-pa-sub">{summary.subtitle}</div>}</div>
             <Bars />
           </div>
-          <div className="dgt-pa-kps">
-            {summary.metrics.map((m, i) => (
-              <div className="dgt-pa-kp" key={i}>
-                <div className="dgt-pa-kp-name">{m.label}</div>
-                <div className={cn("dgt-pa-kp-value", `t-${m.tone ?? (i === 1 ? "green" : i === 2 ? "red" : "dark")}`)} data-len={(m.value || "").length > 12 ? "long" : "short"} dir="auto">{m.value || "—"}</div>
-                {m.note && <div className={cn("dgt-pa-kp-note", `t-${m.tone ?? (i === 1 ? "green" : i === 2 ? "red" : "dark")}`)} dir="auto">{m.note}</div>}
-              </div>
-            ))}
-          </div>
+          {summary.summaryRows && summary.summaryRows.length > 0 ? (
+            <div className="p-2 overflow-x-auto">
+              <table className="dgt-pa-summary-table">
+                <thead>
+                  <tr>
+                    <th className="text-left">{s.t("sourceCategory", "Category")}</th>
+                    <th className="text-center">{s.t("totalBills", "Total Bills")}</th>
+                    <th className="text-center">{s.t("paidBills", "Paid Bills")}</th>
+                    <th className="text-center">{s.t("remainingBills", "Remaining Bills")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.summaryRows.map((row) => (
+                    <tr key={row.key}>
+                      <td className="dgt-pa-summary-rowname">{row.label}</td>
+                      <td className="text-center">
+                        <button
+                          type="button"
+                          className="dgt-pa-summary-btn total"
+                          title={s.t("filterTotalBills", "Filter All Bills")}
+                          onClick={row.onFilterTotal}
+                        >
+                          {row.totalBills}
+                        </button>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          type="button"
+                          className="dgt-pa-summary-btn paid"
+                          title={s.t("filterPaidBills", "Filter Paid Bills")}
+                          onClick={row.onFilterPaid}
+                        >
+                          {row.paidBills}
+                        </button>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          type="button"
+                          className="dgt-pa-summary-btn remaining"
+                          title={s.t("filterRemainingBills", "Filter Remaining Bills")}
+                          onClick={row.onFilterRemaining}
+                        >
+                          {row.remainingBills}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="dgt-pa-kps">
+              {(summary.metrics || []).map((m, i) => (
+                <div className="dgt-pa-kp" key={i}>
+                  <div className="dgt-pa-kp-name">{m.label}</div>
+                  <div className={cn("dgt-pa-kp-value", `t-${m.tone ?? (i === 1 ? "green" : i === 2 ? "red" : "dark")}`)} data-len={(m.value || "").length > 12 ? "long" : "short"} dir="auto">{m.value || "—"}</div>
+                  {m.note && <div className={cn("dgt-pa-kp-note", `t-${m.tone ?? (i === 1 ? "green" : i === 2 ? "red" : "dark")}`)} dir="auto">{m.note}</div>}
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="dgt-pa-card sky" aria-label={stages.title}>
@@ -120,22 +191,32 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
             </div>
             <Bars />
           </div>
-          <div className="dgt-pa-rows dgt-pa-scroll">
-            {countries.rows.length === 0 && <div className="dgt-pa-empty">{countries.emptyLabel ?? "—"}</div>}
-            {countries.rows.map((c) => {
-              const inner = (
-                <>
-                  <span className="dgt-pa-country-name">{localizeCountryName(c.name, s.lang)}</span>
-                  <span className="dgt-pa-country-money" dir="auto">{c.value || "—"}</span>
-                  {c.count !== undefined && <span className="dgt-pa-country-count" dir="auto">{c.count}</span>}
-                  <Go />
-                </>
-              );
-              return c.onClick
-                ? <button type="button" className="dgt-pa-country" key={c.key} onClick={c.onClick}>{inner}</button>
-                : <div className="dgt-pa-country" key={c.key}>{inner}</div>;
-            })}
-          </div>
+          {countries.branchScopeInfo ? (
+            <div className="dgt-pa-scope-card">
+              <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("countryCode", "Country Code")}:</span><span className="dgt-pa-scope-val">{countries.branchScopeInfo.countryCode || "—"}</span></div>
+              <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("branchCode", "Branch Code")}:</span><span className="dgt-pa-scope-val">{countries.branchScopeInfo.branchCode || "—"}</span></div>
+              <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("userCode", "User Code")}:</span><span className="dgt-pa-scope-val">{countries.branchScopeInfo.userCode || "—"}</span></div>
+              <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("userName", "User Name")}:</span><span className="dgt-pa-scope-val truncate max-w-[130px]" title={countries.branchScopeInfo.userName}>{countries.branchScopeInfo.userName || "—"}</span></div>
+              <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("role", "Role")}:</span><span className="dgt-pa-scope-val text-blue-600 dark:text-blue-400 font-bold uppercase">{countries.branchScopeInfo.role || "—"}</span></div>
+            </div>
+          ) : (
+            <div className="dgt-pa-rows dgt-pa-scroll">
+              {countries.rows.length === 0 && <div className="dgt-pa-empty">{countries.emptyLabel ?? "—"}</div>}
+              {countries.rows.map((c) => {
+                const inner = (
+                  <>
+                    <span className="dgt-pa-country-name">{localizeCountryName(c.name, s.lang)}</span>
+                    <span className="dgt-pa-country-money" dir="auto">{c.value || "—"}</span>
+                    {c.count !== undefined && <span className="dgt-pa-country-count" dir="auto">{c.count}</span>}
+                    <Go />
+                  </>
+                );
+                return c.onClick
+                  ? <button type="button" className="dgt-pa-country" key={c.key} onClick={c.onClick}>{inner}</button>
+                  : <div className="dgt-pa-country" key={c.key}>{inner}</div>;
+              })}
+            </div>
+          )}
         </section>
       </div>
     </section>

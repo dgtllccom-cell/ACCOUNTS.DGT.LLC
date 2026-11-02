@@ -2832,6 +2832,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     }, 250);
   };
   const [sourceFilter, setSourceFilter] = useState<"all" | "purchase_booking" | "local_purchase">("all");
+  const [settlementFilter, setSettlementFilter] = useState<"all" | "paid" | "remaining">("all");
   const [query, setQuery] = useState("");
   const [draftFilter, setDraftFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
@@ -2844,6 +2845,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
   const reset = () => {
     setSourceFilter("all");
+    setSettlementFilter("all");
     setQuery("");
     setDraftFilter("");
     setCountryFilter("");
@@ -3627,6 +3629,58 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     });
   }, [activeMode, branchFilter, countryFilter, currencyFilter, draftFilter, orders, query, startDateFilter, endDateFilter]);
 
+  const isSettledRow = (r: any) => {
+    const status = String(r.payment_status || "").toLowerCase();
+    const total = orderTotal(r);
+    const paid = Number(r.advance_paid || 0) + Number(r.remaining_paid || 0) + Number(r.credit_amount || 0);
+    const rawDue = r.remaining_due;
+    const due = rawDue === null || rawDue === undefined ? Math.max(0, total - paid) : Math.max(0, Number(rawDue) || 0);
+    return status === "paid" || status === "completed" || (total > 0 && due <= 0.01);
+  };
+
+  const billSummaryCounts = useMemo(() => {
+    const totalAll = modeFilteredAll.length;
+    const paidAll = modeFilteredAll.filter(isSettledRow).length;
+    const remainingAll = Math.max(0, totalAll - paidAll);
+
+    const bookingRows = modeFilteredAll.filter((o: any) => o.order_type !== "local_purchase");
+    const totalBooking = bookingRows.length;
+    const paidBooking = bookingRows.filter(isSettledRow).length;
+    const remainingBooking = Math.max(0, totalBooking - paidBooking);
+
+    const localRows = modeFilteredAll.filter((o: any) => o.order_type === "local_purchase");
+    const totalLocal = localRows.length;
+    const paidLocal = localRows.filter(isSettledRow).length;
+    const remainingLocal = Math.max(0, totalLocal - paidLocal);
+
+    return {
+      total: {
+        totalBills: totalAll,
+        paidBills: paidAll,
+        remainingBills: remainingAll,
+        onFilterTotal: () => { setSourceFilter("all"); setSettlementFilter("all"); setPageIndex(0); },
+        onFilterPaid: () => { setSourceFilter("all"); setSettlementFilter("paid"); setPageIndex(0); },
+        onFilterRemaining: () => { setSourceFilter("all"); setSettlementFilter("remaining"); setPageIndex(0); }
+      },
+      booking: {
+        totalBills: totalBooking,
+        paidBills: paidBooking,
+        remainingBills: remainingBooking,
+        onFilterTotal: () => { setSourceFilter("purchase_booking"); setSettlementFilter("all"); setPageIndex(0); },
+        onFilterPaid: () => { setSourceFilter("purchase_booking"); setSettlementFilter("paid"); setPageIndex(0); },
+        onFilterRemaining: () => { setSourceFilter("purchase_booking"); setSettlementFilter("remaining"); setPageIndex(0); }
+      },
+      local: {
+        totalBills: totalLocal,
+        paidBills: paidLocal,
+        remainingBills: remainingLocal,
+        onFilterTotal: () => { setSourceFilter("local_purchase"); setSettlementFilter("all"); setPageIndex(0); },
+        onFilterPaid: () => { setSourceFilter("local_purchase"); setSettlementFilter("paid"); setPageIndex(0); },
+        onFilterRemaining: () => { setSourceFilter("local_purchase"); setSettlementFilter("remaining"); setPageIndex(0); }
+      }
+    };
+  }, [modeFilteredAll]);
+
   const sourceCounts = useMemo(() => ({
     all: modeFilteredAll.length,
     booking: modeFilteredAll.filter((o: any) => o.order_type !== "local_purchase").length,
@@ -3634,12 +3688,20 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   }), [modeFilteredAll]);
 
   const filtered = useMemo(() => {
-    if (sourceFilter === "all") return modeFilteredAll;
-    return modeFilteredAll.filter((row: any) => {
-      const rowSource = row.order_type === "local_purchase" ? "local_purchase" : "purchase_booking";
-      return rowSource === sourceFilter;
-    });
-  }, [modeFilteredAll, sourceFilter]);
+    let rows = modeFilteredAll;
+    if (sourceFilter !== "all") {
+      rows = rows.filter((row: any) => {
+        const rowSource = row.order_type === "local_purchase" ? "local_purchase" : "purchase_booking";
+        return rowSource === sourceFilter;
+      });
+    }
+    if (settlementFilter === "paid") {
+      rows = rows.filter(isSettledRow);
+    } else if (settlementFilter === "remaining") {
+      rows = rows.filter((r) => !isSettledRow(r));
+    }
+    return rows;
+  }, [modeFilteredAll, sourceFilter, settlementFilter]);
 
   // ── Approved header data: this page's RBAC-scoped orders (narrowed by the Country / Branch filters) + the real payment records ──
   const modulePayments = useModulePayments("purchase");
@@ -5105,6 +5167,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         scopeCountry={countryFilter && countryFilter !== "All Countries" ? countryFilter : undefined}
         onCountryOpen={(name) => { setCountryFilter(name); setPageIndex(0); }}
         translateLabel={(label) => translateHeader(currentLanguage, label)}
+        summaryBillCounts={billSummaryCounts}
+        branchScopeInfo={!erpScope.isSuperAdmin ? {
+          countryCode: erpScope.countryName ? (getCountryCode(erpScope.countryName) || erpScope.countryName).toUpperCase() : undefined,
+          branchCode: erpScope.branchDisplayName ? erpScope.branchDisplayName.toUpperCase() : undefined,
+          userCode: erpScope.userId ? String(erpScope.userId).slice(0, 8).toUpperCase() : undefined,
+          userName: erpScope.userName || undefined,
+          role: erpScope.role || (erpScope.roles?.[0] ?? undefined),
+        } : undefined}
         toolbar={
           <>
             <PapSearch

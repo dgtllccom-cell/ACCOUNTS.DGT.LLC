@@ -78,6 +78,7 @@ const SALES_TYPES: TypeDef[] = [
 
 export function PaymentModuleHeader({
   module, title, activeKey, rows, payments, rates, scopeCountry, toolbar, onCountryOpen, translateLabel,
+  summaryBillCounts, branchScopeInfo,
 }: {
   module: PayModule;
   /** page title, already translated */
@@ -92,6 +93,18 @@ export function PaymentModuleHeader({
   onCountryOpen?: (country: string) => void;
   /** translates a menu/page label with the ERP's existing header/menu dictionary (the same words as the sidebar) */
   translateLabel: (label: string) => string;
+  summaryBillCounts?: {
+    total: { totalBills: number; paidBills: number; remainingBills: number; onFilterTotal?: () => void; onFilterPaid?: () => void; onFilterRemaining?: () => void };
+    booking: { totalBills: number; paidBills: number; remainingBills: number; onFilterTotal?: () => void; onFilterPaid?: () => void; onFilterRemaining?: () => void };
+    local: { totalBills: number; paidBills: number; remainingBills: number; onFilterTotal?: () => void; onFilterPaid?: () => void; onFilterRemaining?: () => void };
+  };
+  branchScopeInfo?: {
+    countryCode?: string;
+    branchCode?: string;
+    userCode?: string;
+    userName?: string;
+    role?: string;
+  };
 }) {
   const s = useErpScreen("pap");
   const router = useRouter();
@@ -146,25 +159,32 @@ export function PaymentModuleHeader({
     onClick: onCountryOpen && c.name !== "—" ? () => onCountryOpen(c.name) : undefined,
   }));
 
-  return (
-    <PurchaseApprovedHeader
-      page="payment-module"
-      title={title}
-      crumbModule={isPurchase ? s.t("purchase", "Purchase") : s.t("sales", "Sales")}
-      toolbar={toolbar}
-      summary={{
-        title: `${isPurchase ? s.t("paymentSummary", "Purchase Summary") : s.t("salesSummary", "Sales Summary")} (${scope})`,
-        subtitle: s.t("currentPeriod", "Current period"),
-        metrics: [
-          { label: isPurchase ? s.t("totalPurchaseBills", "Total Purchase Bills") : s.t("totalSalesBills", "Total Sales Bills"), value: f(m.total), note, tone: "dark" },
-          { label: isPurchase ? s.t("totalPaid", "Total Paid Payments") : s.t("totalReceived", "Total Received"), value: f(m.paid), note: fmtPct(m.paid, m.total) ? `${fmtPct(m.paid, m.total)} ${s.t("paid", "Paid Payment")}` : undefined, tone: "green" },
-          { label: isPurchase ? s.t("remainingBalance", "Remaining Balance") : s.t("receivableBalance", "Receivable Balance"), value: f(m.due), note: fmtPct(m.due, m.total) ? `${fmtPct(m.due, m.total)} ${s.t("outstanding", "Outstanding")}` : undefined, tone: "red" },
-        ],
-      }}
-      stages={{ title: `${s.t("paymentType", "Payment Type")} (${scope})`, subtitle: s.t("currentPeriod", "Current period"), rows: stageRows }}
-      countries={{ title: `${s.t("countries", "Countries")} (${countryRows.length})`, subtitle: scope, rows: countryRows, emptyLabel: "—" }}
-    />
-  );
+  const summaryRows = summaryBillCounts ? [
+      { key: "total", label: translateLabel("Total Purchase"), ...summaryBillCounts.total },
+      { key: "booking", label: translateLabel("Purchase Booking"), ...summaryBillCounts.booking },
+      { key: "local", label: translateLabel("Local Purchase"), ...summaryBillCounts.local },
+    ] : undefined;
+
+    return (
+      <PurchaseApprovedHeader
+        page="payment-module"
+        title={title}
+        crumbModule={isPurchase ? s.t("purchase", "Purchase") : s.t("sales", "Sales")}
+        toolbar={toolbar}
+        summary={{
+          title: `${isPurchase ? s.t("paymentSummary", "Purchase Summary") : s.t("salesSummary", "Sales Summary")} (${scope})`,
+          subtitle: s.t("currentPeriod", "Current period"),
+          metrics: [
+            { label: isPurchase ? s.t("totalPurchaseBills", "Total Purchase Bills") : s.t("totalSalesBills", "Total Sales Bills"), value: f(m.total), note, tone: "dark" },
+            { label: isPurchase ? s.t("totalPaid", "Total Paid Payments") : s.t("totalReceived", "Total Received"), value: f(m.paid), note: fmtPct(m.paid, m.total) ? `${fmtPct(m.paid, m.total)} ${s.t("paid", "Paid Payment")}` : undefined, tone: "green" },
+            { label: isPurchase ? s.t("remainingBalance", "Remaining Balance") : s.t("receivableBalance", "Receivable Balance"), value: f(m.due), note: fmtPct(m.due, m.total) ? `${fmtPct(m.due, m.total)} ${s.t("outstanding", "Outstanding")}` : undefined, tone: "red" },
+          ],
+          summaryRows,
+        }}
+        stages={{ title: `${s.t("paymentType", "Payment Type")} (${scope})`, subtitle: s.t("currentPeriod", "Current period"), rows: stageRows }}
+        countries={{ title: `${s.t("countries", "Countries")} (${countryRows.length})`, subtitle: scope, rows: countryRows, emptyLabel: "—", branchScopeInfo }}
+      />
+    );
 }
 
 /** Module rows from the Purchase order rows the Journal pages already load (same fields the journal's own table reads). */
