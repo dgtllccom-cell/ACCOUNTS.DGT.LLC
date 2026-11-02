@@ -10,7 +10,7 @@ import {
   Coins, Loader2, CheckCircle2, Send, Printer,
   Scale, CreditCard, ArrowDownLeft, Ship, Warehouse,
   PauseCircle, Package, Truck, ArrowRight, Check, X,
-  MapPin, User, Clock, AlertTriangle, Layers
+  MapPin, User, Clock, AlertTriangle, Layers, MoreVertical
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -191,6 +191,7 @@ export function LocalPurchaseTransferPaymentView({
 
   // 4 Actions Modal state
   const [actionTargetRow, setActionTargetRow] = useState<LocalPurchaseRecord | null>(null);
+  const [openRowActionId, setOpenRowActionId] = useState<string | null>(null);
   const [actionType, setActionType] = useState<ActionModalType>("warehouse");
   const [actionQty, setActionQty] = useState<number>(0);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("");
@@ -302,7 +303,7 @@ export function LocalPurchaseTransferPaymentView({
     const totalQty = Number(row.numbers || row.quantityKgs || row.quantity_kgs || 0);
     const transferred = Number(row.goods_receipt_details?.transferQty || 0);
     const remaining = Math.max(0, totalQty - transferred);
-    setActionQty(remaining > 0 ? remaining : totalQty);
+    setActionQty(remaining);
     setSelectedWarehouseId(row.warehouseId || row.warehouse_id || warehousesList[0]?.id || "");
     setWarehousePlotNo(row.warehousePlotNo || row.warehouse_plot_no || "");
     setDestCountryBranchId(countryBranches[0]?.id || "");
@@ -317,6 +318,11 @@ export function LocalPurchaseTransferPaymentView({
   const handleExecuteAction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!actionTargetRow) return;
+    const availableQty = Math.max(0, Number(actionTargetRow.numbers || actionTargetRow.quantityKgs || actionTargetRow.quantity_kgs || 0) - Number(actionTargetRow.goods_receipt_details?.transferQty || 0));
+    if (!Number.isFinite(actionQty) || actionQty <= 0 || actionQty > availableQty) {
+      alert("Transfer quantity must be greater than zero and must not exceed available quantity.");
+      return;
+    }
 
     setSavingAction(true);
     try {
@@ -573,7 +579,7 @@ export function LocalPurchaseTransferPaymentView({
                       <Th className="p-2.5 border-r border-slate-700">{loc("TRANSFER DESTINATION", "منتقلی منزل", "وجهة التحويل", "مقصد انتقال", "د لېږد ځای")}</Th>
                       <Th className="p-2.5 border-r border-slate-700 text-center">{loc("LOADING DATE", "لوڈنگ کی تاریخ", "تاريخ التحميل", "تاریخ بارگیری", "د بارولو نېټه")}</Th>
                       <Th className="p-2.5 border-r border-slate-700 text-center">{loc("RECEIVING STATUS", "وصولی کی صورتحال", "حالة الاستلام", "وضعیت دریافت", "د ترلاسه کولو حالت")}</Th>
-                      <Th className="p-2.5 text-center font-black text-amber-300">{loc("4 TRANSFER ACTIONS", "4 منتقلی کے اقدامات", "4 إجراءات تحويل", "۴ اقدام انتقال", "د لېږد ۴ کړنې")}</Th>
+                      <Th className="p-2.5 text-center font-black text-amber-300">{loc("ACTIONS", "اقدامات", "الإجراءات", "اقدامات", "کړنې")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[11px]">
@@ -627,53 +633,24 @@ export function LocalPurchaseTransferPaymentView({
                               </span>
                             </td>
                             <td className="p-2 text-center">
-                              <div className="flex items-center justify-center gap-1">
-                                <Button
-                                  size="sm"
-                                  title={translateHeader(activeLang, "A. Export Shipment")}
-                                  onClick={() => openActionModal(row, "export")}
-                                  className="h-6 px-1.5 text-[11px] font-black bg-amber-600 hover:bg-amber-700 text-white rounded-md flex items-center gap-0.5 whitespace-nowrap"
-                                >
-                                  <Ship className="h-3 w-3" />
-                                  <span>{loc("Export", "ایکسپورٹ", "تصدير", "صادرات", "صادرات")}</span>
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  title={translateHeader(activeLang, "B. Warehouse Transfer")}
-                                  onClick={() => openActionModal(row, "warehouse")}
-                                  className="h-6 px-1.5 text-[11px] font-black bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-0.5 whitespace-nowrap"
-                                >
-                                  <Warehouse className="h-3 w-3" />
-                                  <span>{loc("Warehouse", "گودام", "مستودع", "انبار", "ګودام")}</span>
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  title={translateHeader(activeLang, "C. Branch Transfer")}
-                                  onClick={() => openActionModal(row, "branch")}
-                                  className="h-6 px-1.5 text-[11px] font-black bg-purple-600 hover:bg-purple-700 text-white rounded-md flex items-center gap-0.5 whitespace-nowrap"
-                                >
-                                  <Building2 className="h-3 w-3" />
-                                  <span>{loc("Branch", "برانچ", "فرع", "شعبه", "څانګه")}</span>
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  title={translateHeader(activeLang, "D. Confirm & Hold")}
-                                  onClick={() => openActionModal(row, "hold")}
-                                  className="h-6 px-1.5 text-[11px] font-black bg-slate-600 hover:bg-slate-700 text-white rounded-md flex items-center gap-0.5 whitespace-nowrap"
-                                >
-                                  <PauseCircle className="h-3 w-3" />
-                                  <span>{loc("Hold", "روکیں", "احتجاز", "نگهداری", "ساتل")}</span>
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  title={loc("Full Lot Journal", "مکمل لاٹ جرنل", "دفتر يومية الحصة الكاملة", "دفتر روزنامه کامل بهر", "د بشپړ لاټ ورځنۍ")}
-                                  onClick={() => router.push(`/dashboard/purchase/local-purchase/${row.id}/goods-transfer`)}
-                                  className="h-6 px-1 text-[11px] font-bold text-slate-600 border-slate-300 hover:bg-slate-100 rounded-md whitespace-nowrap"
-                                >
-                                  <Package className="h-3 w-3 text-indigo-600" />
-                                </Button>
-                              </div>
+  <div className="relative inline-block text-start">
+    <button type="button" aria-label={loc("Purchase actions", "پرچیز کے اقدامات", "إجراءات الشراء", "اقدامات خرید", "د پېرود کړنې")} aria-expanded={openRowActionId === row.id} onClick={() => setOpenRowActionId(openRowActionId === row.id ? null : row.id)} className="inline-flex h-7 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-600"><MoreVertical className="h-4 w-4" /></button>
+    {openRowActionId === row.id && (
+      <div className="absolute end-0 top-full z-40 mt-1 min-w-[190px] rounded-lg border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+        <button type="button" onClick={() => { setOpenRowActionId(null); router.push(`/dashboard/purchase/local-purchase/${row.id}`); }} className="block w-full rounded px-3 py-2 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">{loc("View Purchase", "پرچیز دیکھیں", "عرض الشراء", "مشاهده خرید", "پېرود کتل")}</button>
+        <button type="button" onClick={() => { setOpenRowActionId(null); router.push("/dashboard/purchase/purchase-payments"); }} className="block w-full rounded px-3 py-2 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">{loc("Purchase Payments", "پرچیز ادائیگیاں", "مدفوعات الشراء", "پرداخت های خرید", "د پېرود تادیات")}</button>
+        {([
+          ["export", loc("Export Transfer", "ایکسپورٹ منتقلی", "تحويل التصدير", "انتقال صادرات", "د صادراتو لېږد")],
+          ["warehouse", loc("Warehouse Transfer", "گودام منتقلی", "تحويل المستودع", "انتقال انبار", "د ګودام لېږد")],
+          ["branch", loc("Branch Transfer", "برانچ منتقلی", "تحويل الفرع", "انتقال شعبه", "د څانګې لېږد")],
+          ["hold", loc("Hold", "روکیں", "تعليق", "توقف", "درول")],
+        ] as const).map(([type, label]) => (
+          <button key={type} type="button" onClick={() => { setOpenRowActionId(null); openActionModal(row, type); }} className="block w-full rounded px-3 py-2 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">{label}</button>
+        ))}
+        <button type="button" onClick={() => { setOpenRowActionId(null); router.push(`/dashboard/purchase/local-purchase/${row.id}/goods-transfer`); }} className="block w-full rounded px-3 py-2 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">{loc("Full Lot Journal", "مکمل لاٹ جرنل", "سجل الدفعة", "دفتر کامل بهر", "د لاټ ژورنال")}</button>
+      </div>
+    )}
+  </div>
                             </td>
                           </tr>
                         );
