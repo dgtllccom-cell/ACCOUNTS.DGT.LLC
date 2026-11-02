@@ -103,6 +103,7 @@ export type SidebarDeepChild = {
    *  Omit to keep the current behaviour (visible to everyone; the page still enforces access). */
   roles?: string[];
   tone?: "red" | "default";
+  isNew?: boolean;
   /** Strengthened by the current ERP upgrade project — renders the green UPGRADED marker. */
   upgraded?: boolean;
 };
@@ -115,6 +116,7 @@ export type SidebarSubItem = {
   children?: SidebarDeepChild[];
   roles?: string[];
   tone?: "red" | "default";
+  isNew?: boolean;
   /** Strengthened by the current ERP upgrade project — renders the green UPGRADED marker. */
   upgraded?: boolean;
 };
@@ -128,6 +130,7 @@ export type SidebarMenuItem = {
   children?: SidebarSubItem[];
   roles?: string[];
   tone?: "red" | "default";
+  isNew?: boolean;
   badge?: string;
   /** Strengthened by the current ERP upgrade project — renders the green UPGRADED marker. */
   upgraded?: boolean;
@@ -266,8 +269,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("Expenses"),
     icon: Banknote,
     children: [
-      { label: nt("Purchase Expenses"), href: "/dashboard/expenses/purchase", icon: ShoppingCart },
-      { label: nt("Sales Expenses"), href: "/dashboard/expenses/sales", icon: TrendingUp },
+      { label: nt("Purchase Expenses"), href: "/dashboard/expenses/purchase", icon: ShoppingCart, isNew: true },
+      { label: nt("Sales Expenses"), href: "/dashboard/expenses/sales", icon: TrendingUp, isNew: true },
 
     ],
   },
@@ -305,6 +308,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("P/S General Transfer"),
         href: "/dashboard/purchase/purchase-transit-lane",
         icon: ArrowRightLeft,
+        isNew: true,
         upgraded: true,
       },
       {
@@ -313,6 +317,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: ClipboardList,
         children: [
           { label: nt("New Booking"), href: "/dashboard/purchase/new-purchase-booking-order", icon: ClipboardList },
+          { label: nt("Purchase Journal Booking Stock"), href: "/dashboard/purchase/journal-booking-stock", icon: Boxes, isNew: true },
           { label: nt("Transport Payment Booking"), href: "/dashboard/purchase/transport-payment", icon: Receipt },
           { label: nt("Loading Booking"), href: "/dashboard/purchase/purchase-loading-records", icon: Truck },
           { label: nt("Confirmed Booking"), href: "/dashboard/purchase/purchase-confirm", icon: CheckCircle2 },
@@ -324,7 +329,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: ShoppingCart,
         children: [
           { label: nt("Local Purchase Bills"), href: "/dashboard/purchase/local-purchase", icon: ShoppingCart, upgraded: true },
-          { label: nt("Local Purchase Transfer & Loading"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft, upgraded: true },
+          { label: nt("Local Purchase Transfer & Loading"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft, isNew: true, upgraded: true },
           { label: nt("Local Purchase Journal Report"), href: "/dashboard/purchase/local-purchase-journal-report", icon: FileBarChart },
         ],
       },
@@ -547,7 +552,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Shipping & Clearing Reports"), href: "/dashboard/reports/shipping", icon: Ship },
           { label: nt("Financial Statements"), href: "/dashboard/reports/financial-statements", icon: FileSpreadsheet },
           { label: nt("Journal Report PDF ERP"), href: "/dashboard/reports/handover", icon: FileText },
-          { label: nt("System Forms Directory"), href: "/dashboard/reports/system-forms-directory", icon: ListPlus },
+          { label: nt("System Forms Directory"), href: "/dashboard/reports/system-forms-directory", icon: ListPlus, isNew: true },
         ],
       },
       {
@@ -1355,6 +1360,7 @@ export function DigitalDockPremiumSidebar({
                     <div className="mt-1 ps-2 pe-1 space-y-0.5 animate-in fade-in-50 duration-150">
                       {item.children.map((sub) => {
                         const isSubRed = isRed || sub.tone === "red";
+                        const isSubNew = sub.isNew;
                         const SubIcon = sub.icon;
                         const subHasChildren = Boolean(sub.children?.length);
                         const subKey = sub.key || `${item.key}-${sub.label}`;
@@ -1371,30 +1377,39 @@ export function DigitalDockPremiumSidebar({
                                 type="button"
                                 onClick={() => toggleKey(subKey, 2, item.key)}
                                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all duration-150 cursor-pointer ${
-                                  isSubActive || isSubOpen
-                                    ? isSubRed
-                                      ? "text-red-700 font-bold bg-red-100/70 border border-red-200/70"
-                                      : "text-[#2563eb] font-bold bg-blue-50/70"
-                                    : isSubRed
-                                      ? "text-red-700 font-semibold hover:text-red-800 hover:bg-red-50/60"
-                                      : "text-[#0f172a] font-semibold hover:text-[#2563eb] hover:bg-slate-50"
+                                  isSubNew
+                                    ? "bg-red-600 text-white font-bold shadow-xs hover:bg-red-700"
+                                    : isSubActive || isSubOpen
+                                      ? isSubRed
+                                        ? "text-red-700 font-bold bg-red-100/70 border border-red-200/70"
+                                        : "text-[#2563eb] font-bold bg-blue-50/70"
+                                      : isSubRed
+                                        ? "text-red-700 font-semibold hover:text-red-800 hover:bg-red-50/60"
+                                        : "text-[#0f172a] font-semibold hover:text-[#2563eb] hover:bg-slate-50"
                                 }`}
                               >
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                   <SubIcon className={`h-4 w-4 shrink-0 transition-colors ${
-                                    isSubActive || isSubOpen
-                                      ? isSubRed ? "text-red-600" : "text-[#2563eb]"
-                                      : isSubRed ? "text-red-500" : "text-[#0f172a]"
+                                    isSubNew
+                                      ? "text-white"
+                                      : isSubActive || isSubOpen
+                                        ? isSubRed ? "text-red-600" : "text-[#2563eb]"
+                                        : isSubRed ? "text-red-500" : "text-[#0f172a]"
                                   }`} />
-                                  <span className={`truncate text-start tracking-tight ${isSubRed ? "text-red-600 font-bold" : ""}`}>
+                                  <span className={`truncate text-start tracking-tight ${isSubNew ? "text-white font-bold" : isSubRed ? "text-red-600 font-bold" : ""}`}>
                                     {tr(sub.label)}
                                   </span>
-                                  {hasUpgraded(sub) && <UpgradedMark lang={lang} />}
+                                  {isSubNew && (
+                                    <span className="ms-auto px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-white text-red-700">
+                                      NEW
+                                    </span>
+                                  )}
+                                  {hasUpgraded(sub) && !isSubNew && <UpgradedMark lang={lang} />}
                                 </div>
                                 {isSubOpen ? (
-                                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 ${isSubRed ? "text-red-600" : "text-[#2563eb]"}`} />
+                                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 ${isSubNew ? "text-white" : isSubRed ? "text-red-600" : "text-[#2563eb]"}`} />
                                 ) : (
-                                  <ChevronRight className={`h-3.5 w-3.5 shrink-0 rtl:rotate-180 ${isSubRed ? "text-red-400" : "text-slate-400"}`} />
+                                  <ChevronRight className={`h-3.5 w-3.5 shrink-0 rtl:rotate-180 ${isSubNew ? "text-white/80" : isSubRed ? "text-red-400" : "text-slate-400"}`} />
                                 )}
                               </button>
 
@@ -1405,6 +1420,7 @@ export function DigitalDockPremiumSidebar({
                                 }`}>
                                   {sub.children.map((leaf) => {
                                     const isLeafRed = isSubRed || leaf.tone === "red";
+                                    const isLeafNew = leaf.isNew;
                                     const LeafIcon = leaf.icon;
                                     const isLeafActive = isPathActive(leaf.href, pathname);
                                     return (
@@ -1414,32 +1430,43 @@ export function DigitalDockPremiumSidebar({
                                         aria-current={isLeafActive ? "page" : undefined}
                                         onClick={onNavigate}
                                         className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[12px] transition-all duration-150 ${
-                                          isLeafActive
-                                            ? isLeafRed
-                                              ? "text-red-700 font-bold bg-red-100/90"
-                                              : "text-[#2563eb] font-bold bg-blue-50/90"
-                                            : isLeafRed
-                                              ? "text-red-600 font-bold hover:text-red-700 hover:bg-red-50/70"
-                                              : "text-slate-600 font-medium hover:text-[#2563eb] hover:bg-slate-50"
+                                          isLeafNew
+                                            ? "bg-red-600 text-white font-black shadow-xs hover:bg-red-700"
+                                            : isLeafActive
+                                              ? isLeafRed
+                                                ? "text-red-700 font-bold bg-red-100/90"
+                                                : "text-[#2563eb] font-bold bg-blue-50/90"
+                                              : isLeafRed
+                                                ? "text-red-600 font-bold hover:text-red-700 hover:bg-red-50/70"
+                                                : "text-slate-600 font-medium hover:text-[#2563eb] hover:bg-slate-50"
                                         }`}
                                       >
                                         {LeafIcon ? (
                                           <LeafIcon className={`h-3.5 w-3.5 shrink-0 ${
-                                            isLeafActive
-                                              ? isLeafRed ? "text-red-600" : "text-[#2563eb]"
-                                              : isLeafRed ? "text-red-500" : "text-slate-400"
+                                            isLeafNew
+                                              ? "text-white"
+                                              : isLeafActive
+                                                ? isLeafRed ? "text-red-600" : "text-[#2563eb]"
+                                                : isLeafRed ? "text-red-500" : "text-slate-400"
                                           }`} />
                                         ) : (
                                           <span className={`h-1.5 w-1.5 rounded-full ${
-                                            isLeafActive
-                                              ? isLeafRed ? "bg-red-600" : "bg-[#2563eb]"
-                                              : isLeafRed ? "bg-red-400" : "bg-slate-300"
+                                            isLeafNew
+                                              ? "bg-white"
+                                              : isLeafActive
+                                                ? isLeafRed ? "bg-red-600" : "bg-[#2563eb]"
+                                                : isLeafRed ? "bg-red-400" : "bg-slate-300"
                                           }`} />
                                         )}
-                                        <span className={`tracking-tight ${isLeafRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
+                                        <span className={`tracking-tight ${isLeafNew ? "text-white font-bold truncate" : isLeafRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
                                           {tr(leaf.label)}
                                         </span>
-                                        {leaf.upgraded && <UpgradedMark lang={lang} />}
+                                        {isLeafNew && (
+                                          <span className="ms-auto px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-white text-red-700">
+                                            NEW
+                                          </span>
+                                        )}
+                                        {leaf.upgraded && !isLeafNew && <UpgradedMark lang={lang} />}
                                       </Link>
                                     );
                                   })}
@@ -1450,6 +1477,7 @@ export function DigitalDockPremiumSidebar({
                         }
 
                         /* Level 2 Direct Link */
+                        const isDirectNew = sub.isNew;
                         return (
                           <Link
                             key={sub.label + (sub.href || "")}
@@ -1457,24 +1485,33 @@ export function DigitalDockPremiumSidebar({
                             aria-current={isSubDirectActive ? "page" : undefined}
                             onClick={onNavigate}
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${
-                              isSubDirectActive
-                                ? isSubRed
-                                  ? "text-red-700 font-bold bg-red-100/90 border border-red-300 shadow-xs"
-                                  : "text-[#2563eb] font-bold bg-blue-50/70"
-                                : isSubRed
-                                  ? "text-red-600 font-bold hover:text-red-700 hover:bg-red-100/60 bg-red-50/40 border border-red-200/50"
-                                  : "text-[#0f172a] font-medium hover:text-[#2563eb] hover:bg-slate-50"
+                              isDirectNew
+                                ? "bg-red-600 text-white font-bold shadow-xs hover:bg-red-700"
+                                : isSubDirectActive
+                                  ? isSubRed
+                                    ? "text-red-700 font-bold bg-red-100/90 border border-red-300 shadow-xs"
+                                    : "text-[#2563eb] font-bold bg-blue-50/70"
+                                  : isSubRed
+                                    ? "text-red-600 font-bold hover:text-red-700 hover:bg-red-100/60 bg-red-50/40 border border-red-200/50"
+                                    : "text-[#0f172a] font-medium hover:text-[#2563eb] hover:bg-slate-50"
                             }`}
                           >
                             <SubIcon className={`h-4 w-4 shrink-0 transition-colors ${
-                              isSubDirectActive
-                                ? isSubRed ? "text-red-600" : "text-[#2563eb]"
-                                : isSubRed ? "text-red-500" : "text-[#0f172a]"
+                              isDirectNew
+                                ? "text-white"
+                                : isSubDirectActive
+                                  ? isSubRed ? "text-red-600" : "text-[#2563eb]"
+                                  : isSubRed ? "text-red-500" : "text-[#0f172a]"
                             }`} />
-                            <span className={`tracking-tight flex-1 ${isSubRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
+                            <span className={`tracking-tight flex-1 ${isDirectNew ? "text-white font-bold truncate" : isSubRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
                               {tr(sub.label)}
                             </span>
-                            {sub.upgraded && <UpgradedMark lang={lang} />}
+                            {isDirectNew && (
+                              <span className="ms-auto px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-white text-red-700">
+                                NEW
+                              </span>
+                            )}
+                            {sub.upgraded && !isDirectNew && <UpgradedMark lang={lang} />}
                           </Link>
                         );
                       })}
@@ -1529,27 +1566,36 @@ export function DigitalDockPremiumSidebar({
                   href={item.href || "/dashboard"}
                   onClick={onNavigate}
                   className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 ${
-                    isDirectActive
-                      ? isRed
-                        ? "bg-red-50 text-red-600 font-bold border border-red-200/80 shadow-xs"
-                        : "bg-[#2563eb] text-white font-bold shadow-md shadow-blue-500/25"
-                      : isRed
-                        ? "text-red-600 font-bold hover:bg-red-100/70 hover:text-red-700 bg-red-50/40 border border-red-200/60"
-                        : "text-[#0f172a] hover:bg-slate-50 font-medium hover:text-[#2563eb]"
+                    item.isNew
+                      ? "bg-red-600 text-white font-bold shadow-md hover:bg-red-700"
+                      : isDirectActive
+                        ? isRed
+                          ? "bg-red-50 text-red-600 font-bold border border-red-200/80 shadow-xs"
+                          : "bg-[#2563eb] text-white font-bold shadow-md shadow-blue-500/25"
+                        : isRed
+                          ? "text-red-600 font-bold hover:bg-red-100/70 hover:text-red-700 bg-red-50/40 border border-red-200/60"
+                          : "text-[#0f172a] hover:bg-slate-50 font-medium hover:text-[#2563eb]"
                   }`}
                 >
                   <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${
-                    isRed
-                      ? "text-red-600"
-                      : isDirectActive
-                        ? "text-white"
-                        : "text-[#0f172a]"
+                    item.isNew
+                      ? "text-white"
+                      : isRed
+                        ? "text-red-600"
+                        : isDirectActive
+                          ? "text-white"
+                          : "text-[#0f172a]"
                   }`} />
-                  <span className={`truncate tracking-tight flex-1 ${isRed ? "text-red-600 font-bold" : ""}`}>
+                  <span className={`truncate tracking-tight flex-1 ${item.isNew ? "text-white font-bold" : isRed ? "text-red-600 font-bold" : ""}`}>
                     {tr(item.label)}
                   </span>
-                  {item.upgraded && <UpgradedMark lang={lang} />}
-                  {item.badge && (
+                  {item.isNew && (
+                    <span className="px-1.5 py-0.5 text-[10px] font-black rounded uppercase tracking-wider bg-white text-red-700">
+                      NEW
+                    </span>
+                  )}
+                  {item.upgraded && !item.isNew && <UpgradedMark lang={lang} />}
+                  {item.badge && !item.isNew && (
                     <span className={`px-1.5 py-0.5 text-[11px] font-extrabold rounded uppercase tracking-wider ${
                       isRed ? "bg-red-600 text-white" : "bg-blue-100 text-blue-700"
                     }`}>
