@@ -3,7 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { invalidIdErrorOf, rethrowIfNextControlFlow } from "@/lib/api/response";
+import { ErpPermissionError } from "@/lib/permissions/middleware";
 
 // withLocalPg, not the RLS-gated Supabase admin client — see ../route.ts for the root cause.
 
@@ -23,7 +24,7 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
       const rows = await sql`
         select t.*,
                owner.customer_name as owner_display_name, owner.mobile as owner_display_mobile,
-               owner.cnic as owner_display_cnic, owner.address as owner_display_address,
+               t.owner_cnic_passport as owner_display_cnic, owner.address as owner_display_address,
                driver.customer_name as driver_display_name, driver.mobile as driver_display_mobile,
                transporter.customer_name as transporter_display_name, transporter.mobile as transporter_display_mobile,
                company.name as company_display_name, company.company_code as company_display_code,
@@ -52,6 +53,9 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
     return NextResponse.json({ truck: data });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
+    const invalid = await invalidIdErrorOf(err);
+    if (invalid) return NextResponse.json({ error: invalid.message, code: invalid.code }, { status: 400 });
+    if (err instanceof ErpPermissionError) return NextResponse.json({ error: err.message }, { status: 403 });
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

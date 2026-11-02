@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { hasRolePermission } from "@/lib/permissions/middleware";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { invalidRecordIdMessage, rethrowIfNextControlFlow } from "@/lib/api/response";
 import { getCustomerOrderById } from "@/lib/services/clearing-customer-order-service";
 import { canAccessOrder } from "@/lib/services/clearing-customer-order-scope";
 import { httpStatusOfError } from "@/lib/services/clearing-customer-order-workflow-rules";
@@ -30,7 +30,13 @@ const bodySchema = z.object({
   routingStage: z.string().trim().max(60).nullish(),
 });
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 async function openOrder(id: string, session: any) {
+  // an order number / account number typed or linked in place of the order id is a 400 (INVALID_ID), never a uuid-cast 500
+  if (!UUID.test(String(id))) {
+    return { error: NextResponse.json({ success: false, error: await invalidRecordIdMessage(String(id)), code: "INVALID_ID" }, { status: 400 }) };
+  }
   const order = await getCustomerOrderById(id);
   if (!order) return { error: NextResponse.json({ success: false, error: "Customer order not found" }, { status: 404 }) };
   if (!canAccessOrder(session, order)) return { error: NextResponse.json({ success: false, error: "Not authorized to open this order" }, { status: 403 }) };
