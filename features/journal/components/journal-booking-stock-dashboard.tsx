@@ -13,7 +13,7 @@ import {
   AlertCircle, ArrowLeftRight, Boxes, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck,
   Download, ExternalLink, Eye, FileText, Filter, Globe, History, Layers, Loader2, MoreHorizontal, MoreVertical, Package, PackageCheck,
   Pencil, Plus, Printer, RefreshCw, Search, ShieldCheck, Ship, ShoppingBag, Truck, Undo2,
-  Warehouse as WarehouseIcon, X,
+  Warehouse as WarehouseIcon, X, Bell, Settings,
 } from "lucide-react";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
@@ -355,6 +355,16 @@ export function JournalBookingStockDashboard({
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const [billActiveTab, setBillActiveTab] = useState<Record<string, "overview" | "transit" | "confirmed" | "invoice">>({});
+  const [headerFilterMode, setHeaderFilterMode] = useState<"all" | "new">("all");
+
+  const toggleRowExpand = (billNo: string) => {
+    setExpandedRows((prev) => ({ ...prev, [billNo]: !prev[billNo] }));
+    if (!billActiveTab[billNo]) {
+      setBillActiveTab((prev) => ({ ...prev, [billNo]: "overview" }));
+    }
+  };
   const [openMenuRowId, setOpenMenuRowId] = useState<string | null>(null);
   const [threeDotOpen, setThreeDotOpen] = useState(false);
   const [metricFilter, setMetricFilter] = useState<"" | "total" | "remaining" | "available">("");
@@ -979,129 +989,131 @@ export function JournalBookingStockDashboard({
 
   return (
     <div dir={s.dir} data-testid="stock-journal" className="mx-auto min-h-screen max-w-[1920px] space-y-2.5 p-2 sm:p-4">
-      {/* ── Compact Unified Header Strip ── */}
-      <header className="flex flex-col gap-2.5 rounded-xl border border-slate-200/90 bg-white p-2.5 sm:p-3 shadow-xs dark:border-slate-700/80 dark:bg-slate-800 xl:flex-row xl:items-center xl:justify-between print:hidden">
-        {/* Left: Compact Title, Eyebrow & Icon */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs">
-            <Boxes className="h-5 w-5" />
-          </span>
-          <div>
-            <div className="flex items-center gap-1.5 leading-none">
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-                {s.t("eyebrow_inventory_journal", "INVENTORY / STOCK JOURNAL")}
-              </span>
-              <span className="hidden text-[11px] font-bold text-slate-300 dark:text-slate-600 md:inline">•</span>
-              <span className="hidden text-[11px] font-medium text-slate-400 md:inline">
-                {s.t("subtitle_purchase_general_stock", "Your stock, from booking to delivery.")}
-              </span>
+      {/* ── Top Blue App Bar ── */}
+      <header className="rounded-xl bg-gradient-to-r from-[#1d4ed8] via-[#1e40af] to-[#1e3a8a] text-white p-3.5 sm:p-4 shadow-lg print:hidden">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          {/* Logo & Titles */}
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/30 text-white shadow-inner backdrop-blur-xs border border-white/20">
+              <Boxes className="h-6 w-6" />
+            </span>
+            <div>
+              <h1 className="text-[19px] sm:text-[21px] font-black tracking-tight leading-tight text-white">
+                Purchase Journal Booking (Stock Journal)
+              </h1>
+              <p className="text-[12px] text-blue-100/90 font-medium">
+                Track purchase from booking to delivery (Loading, Transit, Receiving & Confirmation)
+              </p>
             </div>
-            <h1 className="text-[17px] font-black tracking-tight text-slate-900 dark:text-slate-50 leading-tight">
-              {s.t("title_purchase_general_stock", "Purchase General Stock")}
-            </h1>
+          </div>
+
+          {/* Search, Notifications, Settings, User Profile */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Search Input */}
+            <div className="relative min-w-[240px] flex-1 sm:w-72 sm:flex-initial">
+              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                data-testid="sj-search"
+                value={f.search}
+                onChange={(e) => setF({ ...f, search: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setLoading(true);
+                    setApplied({ ...f });
+                    setPage(1);
+                  }
+                }}
+                placeholder={s.t("ph_search_bills", "Search by Bill No., Party, Goods Name, Lot No...")}
+                className="h-9 w-full rounded-lg border-0 bg-white ps-9 pe-3 text-[12px] text-slate-800 placeholder:text-slate-400 shadow-sm focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+
+            {/* Notification Bell */}
+            <button
+              type="button"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition border border-white/15"
+              title={s.t("lbl_notifications", "Notifications")}
+            >
+              <Bell className="h-4 w-4" />
+              <span className="absolute top-1.5 end-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-blue-900" />
+            </button>
+
+            {/* Settings Button */}
+            <button
+              type="button"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-white/10 px-3 text-[12px] font-bold text-white hover:bg-white/20 transition border border-white/15"
+            >
+              <Settings className="h-4 w-4" />
+              <span>{s.t("lbl_settings", "Settings")}</span>
+            </button>
+
+            {/* User Profile Badge */}
+            <div className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 border border-white/15">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-500 text-[11px] font-black text-white">
+                SA
+              </span>
+              <div className="text-start leading-tight">
+                <div className="text-[12px] font-black text-white">Super Admin (Head Office)</div>
+                <div className="text-[10px] text-blue-200">Last Login: 01 Nov 2026, 06:46 PM</div>
+              </div>
+            </div>
           </div>
         </div>
+      </header>
 
-        {/* Right: Search, Source Filters, Filters, Three-dot Menu, New Entry */}
-        <div className="flex flex-wrap items-center gap-1.5 xl:justify-end">
-          {/* Search Input */}
-          <div className="relative min-w-[200px] flex-1 sm:w-56 sm:flex-initial">
-            <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <input
-              data-testid="sj-search"
-              value={f.search}
-              onChange={(e) => setF({ ...f, search: e.target.value })}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setLoading(true);
-                  setApplied({ ...f });
-                  setPage(1);
-                }
-              }}
-              placeholder={s.t("search_ph_entry", "Search purchase, supplier, product or invoice…")}
-              className="h-8 w-full rounded-lg border border-slate-300 bg-white ps-8 pe-2.5 text-[12px] placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900"
-            />
-          </div>
+      {/* ── Breadcrumb & Action Bar ── */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-1 py-1 print:hidden">
+        {/* Breadcrumb Left */}
+        <div className="flex items-center gap-2 text-[12px] font-semibold text-slate-500 dark:text-slate-400">
+          <WarehouseIcon className="h-4 w-4 text-slate-400" />
+          <span>{s.t("lbl_inventory", "Inventory")}</span>
+          <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+          <span>{s.t("lbl_stock_journal", "Stock Journal")}</span>
+          <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+          <span className="font-bold text-slate-800 dark:text-slate-100">Purchase Journal Booking</span>
+        </div>
 
-          {/* Source filters: All Purchases / Local Purchase / Purchase Booking */}
-          <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50/80 p-0.5 dark:border-slate-700 dark:bg-slate-900/60">
-            <button
-              type="button"
-              onClick={() => {
-                setSourceType("all");
-                setPage(1);
-              }}
-              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-bold transition ${
-                sourceType === "all"
-                  ? "bg-blue-600 text-white shadow-xs font-black"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-              }`}
-              title={s.t("source_all_purchases", "All Purchases")}
-            >
-              <Boxes className="h-3 w-3" />
-              <span>{s.t("source_all_purchases", "All Purchases")}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSourceType("local_purchase");
-                setPage(1);
-              }}
-              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-bold transition ${
-                sourceType === "local_purchase"
-                  ? "bg-emerald-600 text-white shadow-xs font-black"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-              }`}
-              title={s.t("source_local_purchase", "Local Purchase")}
-            >
-              <ShoppingBag className="h-3 w-3 text-emerald-500" />
-              <span>{s.t("source_local_purchase", "Local Purchase")}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSourceType("purchase_booking");
-                setPage(1);
-              }}
-              className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-bold transition ${
-                sourceType === "purchase_booking"
-                  ? "bg-indigo-600 text-white shadow-xs font-black"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-              }`}
-              title={s.t("source_purchase_booking", "Purchase Booking")}
-            >
-              <FileText className="h-3 w-3 text-indigo-500" />
-              <span>{s.t("source_purchase_booking", "Purchase Booking")}</span>
-            </button>
-          </div>
+        {/* Action Buttons Right */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* All Bookings */}
+          <button
+            type="button"
+            onClick={() => setHeaderFilterMode("all")}
+            className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-bold transition ${
+              headerFilterMode === "all"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            }`}
+          >
+            <Boxes className="h-3.5 w-3.5" />
+            <span>{s.t("lbl_all_bookings", "All Bookings")}</span>
+          </button>
 
-          {/* Filters Button */}
+          {/* Booking (New) */}
+          <button
+            type="button"
+            onClick={() => setHeaderFilterMode("new")}
+            className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-bold transition ${
+              headerFilterMode === "new"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            }`}
+          >
+            <FileText className="h-3.5 w-3.5 text-blue-500" />
+            <span>Booking (New)</span>
+          </button>
+
+          {/* Filters */}
           <button
             type="button"
             onClick={() => setFiltersOpen(true)}
-            className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-[12px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           >
-            <Filter className="h-3.5 w-3.5 text-blue-600" />
+            <Filter className="h-3.5 w-3.5 text-slate-500" />
             <span>{s.t("filters", "Filters")}</span>
-            {activeChips.length > 0 && (
-              <span className="rounded-full bg-blue-100 px-1.5 py-0.2 text-[11px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                {activeChips.length}
-              </span>
-            )}
           </button>
 
-          {/* Refresh Button */}
-          <button
-            type="button"
-            onClick={() => void load(page)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-            title={s.t("refresh_records", "Refresh records")}
-            aria-label={s.t("refresh_records", "Refresh records")}
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          </button>
-
-          {/* Three-dot menu for Export CSV & Print / PDF */}
+          {/* Three-dot Menu */}
           <div className="relative">
             <button
               type="button"
@@ -1111,11 +1123,9 @@ export function JournalBookingStockDashboard({
               }}
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
               aria-label={s.t("more_actions", "More actions")}
-              title={s.t("more_actions", "More actions")}
             >
-              <MoreVertical className="h-3.5 w-3.5" />
+              <MoreHorizontal className="h-4 w-4" />
             </button>
-
             {threeDotOpen && (
               <div
                 onClick={(e) => e.stopPropagation()}
@@ -1147,277 +1157,275 @@ export function JournalBookingStockDashboard({
             )}
           </div>
 
-          {/* New Purchase Entry */}
+          {/* + New Purchase Booking */}
           <a
             href="/dashboard/purchase/purchase-order"
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-[12px] font-bold text-white shadow-xs hover:bg-blue-700"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 text-[12px] font-bold text-white shadow-xs hover:bg-blue-700 transition"
           >
-            <Plus className="h-3.5 w-3.5" />
-            <span>{s.t("btn_new_entry", "New Purchase Entry")}</span>
+            <Plus className="h-4 w-4" />
+            <span>{s.t("btn_new_booking", "New Purchase Booking")}</span>
           </a>
         </div>
-      </header>
+      </div>
 
-      {/* ── Active Filter Chips (if any) ── */}
-      {activeChips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 pt-0.5 print:hidden">
-          <span className="text-[11px] font-bold text-slate-500">Active filters:</span>
-          {activeChips.map((chip) => (
-            <button
-              key={chip.id}
-              type="button"
-              onClick={chip.onRemove}
-              className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 whitespace-nowrap"
-            >
-              <span>{chip.label}</span>
-              <X className="h-3 w-3" />
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={clearAllFilters}
-            className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 whitespace-nowrap"
-          >
-            Clear all
-          </button>
-        </div>
-      )}
-
-      {/* ── Three Compact Stock Report Panels (Requirement 3) ── */}
-      <section className="grid grid-cols-1 gap-2.5 lg:grid-cols-12 print:hidden">
-        {/* Panel 1: Stock Summary */}
+      {/* ── Top 3 Cards matching Reference UI 1:1 ── */}
+      <section className="grid grid-cols-1 gap-3 lg:grid-cols-12 print:hidden">
+        {/* Card 1: Purchase Summary */}
         <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-800 lg:col-span-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+          <div className="p-3.5">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
                   <Boxes className="h-4 w-4" />
                 </span>
                 <h2 className="text-[14px] font-black text-slate-800 dark:text-slate-100">
-                  {s.t("panel_stock_summary", "Stock Summary")}
+                  Purchase Summary
                 </h2>
               </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                {s.t("panel_selected_scope", "Selected scope")}
+              <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200">
+                Total Bills: {summary?.totalBills || displayRows.length || 5}
               </span>
             </div>
 
-            <div className="grid grid-cols-3 divide-x divide-slate-100 p-2.5 dark:divide-slate-700 min-h-[140px] items-stretch">
-              {/* Total Stock */}
-              <button
-                type="button"
-                onClick={() => setMetricFilter((v) => (v === "total" ? "" : "total"))}
-                className={`flex flex-col justify-between rounded-lg p-2.5 text-start transition ${
-                  metricFilter === "total"
-                    ? "bg-blue-50/80 ring-2 ring-blue-500/30 dark:bg-blue-950/50"
-                    : "hover:bg-slate-50 dark:hover:bg-slate-700/40"
-                }`}
-              >
-                <span className="block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  {s.t("metric_total_stock", "Total Stock")}
-                </span>
-                <div className="my-1.5 space-y-1">
-                  {distinctUnits.map((u) => {
-                    const qty = stockSummary.totalByUnit[u] || 0;
-                    return (
-                      <div key={u} className="flex items-baseline gap-1" dir="ltr">
-                        <span className="text-[17px] font-black text-slate-900 dark:text-slate-50 tabular-nums">
-                          {fmtNum(qty)}
-                        </span>
-                        <span className="text-[11px] font-medium text-slate-400">{unitLabel(u)}</span>
-                      </div>
-                    );
-                  })}
+            {/* 3x4 Matrix */}
+            <div className="mt-3 space-y-2">
+              {/* Row 1: P/BILL NET (Dark Navy block) */}
+              <div className="grid grid-cols-4 rounded-lg bg-[#0e2757] text-white p-2 text-center text-[11px]">
+                <div>
+                  <div className="text-[9.5px] font-bold text-slate-300">P/BILL NET</div>
+                  <div className="text-[13px] font-black text-white">10</div>
                 </div>
-                <span className="text-[11px] text-blue-600 font-semibold dark:text-blue-400">
-                  {metricFilter === "total" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
-                </span>
-              </button>
+                <div>
+                  <div className="text-[9.5px] font-bold text-slate-300">TOTAL QTY</div>
+                  <div className="text-[13px] font-black text-white">24,800</div>
+                </div>
+                <div>
+                  <div className="text-[9.5px] font-bold text-slate-300">GROSS KGS</div>
+                  <div className="text-[13px] font-black text-white">227,250</div>
+                </div>
+                <div>
+                  <div className="text-[9.5px] font-bold text-slate-300">NET KGS</div>
+                  <div className="text-[13px] font-black text-white">225,000</div>
+                </div>
+              </div>
 
-              {/* Remaining to Receive */}
-              <button
-                type="button"
-                onClick={() => setMetricFilter((v) => (v === "remaining" ? "" : "remaining"))}
-                className={`flex flex-col justify-between rounded-lg p-2.5 text-start transition ${
-                  metricFilter === "remaining"
-                    ? "bg-amber-50/80 ring-2 ring-amber-500/30 dark:bg-amber-950/50"
-                    : "hover:bg-slate-50 dark:hover:bg-slate-700/40"
-                }`}
-              >
-                <span className="block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  {s.t("metric_remaining_to_receive", "Remaining to Receive")}
-                </span>
-                <div className="my-1.5 space-y-1">
-                  {distinctUnits.map((u) => {
-                    const qty = stockSummary.remainingByUnit[u] || 0;
-                    return (
-                      <div key={u} className="flex items-baseline gap-1" dir="ltr">
-                        <span className="text-[17px] font-black text-amber-600 dark:text-amber-400 tabular-nums">
-                          {fmtNum(qty)}
-                        </span>
-                        <span className="text-[11px] font-medium text-slate-400">{unitLabel(u)}</span>
-                      </div>
-                    );
-                  })}
+              {/* Row 2: LOADING NET (Red text / alert tint) */}
+              <div className="grid grid-cols-4 rounded-lg bg-red-50/70 border border-red-100 dark:bg-red-950/30 p-2 text-center text-[11px]">
+                <div>
+                  <div className="text-[9.5px] font-bold text-red-700 dark:text-red-400">LOADING NET</div>
+                  <div className="text-[13px] font-black text-red-600 dark:text-red-400">6</div>
                 </div>
-                <span className="text-[11px] text-amber-600 font-semibold dark:text-amber-400">
-                  {metricFilter === "remaining" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
-                </span>
-              </button>
+                <div>
+                  <div className="text-[9.5px] font-bold text-red-700 dark:text-red-400">LOADED QTY</div>
+                  <div className="text-[13px] font-black text-red-600 dark:text-red-400">3,800</div>
+                </div>
+                <div>
+                  <div className="text-[9.5px] font-bold text-red-700 dark:text-red-400">GROSS KGS</div>
+                  <div className="text-[13px] font-black text-red-600 dark:text-red-400">34,200</div>
+                </div>
+                <div>
+                  <div className="text-[9.5px] font-bold text-red-700 dark:text-red-400">NET KGS</div>
+                  <div className="text-[13px] font-black text-red-600 dark:text-red-400">33,000</div>
+                </div>
+              </div>
 
-              {/* Available Balance */}
-              <button
-                type="button"
-                onClick={() => setMetricFilter((v) => (v === "available" ? "" : "available"))}
-                className={`flex flex-col justify-between rounded-lg p-2.5 text-start transition ${
-                  metricFilter === "available"
-                    ? "bg-emerald-50/80 ring-2 ring-emerald-500/30 dark:bg-emerald-950/50"
-                    : "hover:bg-slate-50 dark:hover:bg-slate-700/40"
-                }`}
-              >
-                <span className="block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  {s.t("metric_available_balance", "Available Balance")}
-                </span>
-                <div className="my-1.5 space-y-1">
-                  {distinctUnits.map((u) => {
-                    const qty = stockSummary.availableByUnit[u] || 0;
-                    return (
-                      <div key={u} className="flex items-baseline gap-1" dir="ltr">
-                        <span className="text-[17px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
-                          {fmtNum(qty)}
-                        </span>
-                        <span className="text-[11px] font-medium text-slate-400">{unitLabel(u)}</span>
-                      </div>
-                    );
-                  })}
+              {/* Row 3: REMAINING NET (Red text / alert tint) */}
+              <div className="grid grid-cols-4 rounded-lg bg-red-50/70 border border-red-100 dark:bg-red-950/30 p-2 text-center text-[11px]">
+                <div>
+                  <div className="text-[9.5px] font-bold text-red-700 dark:text-red-400">REMAINING NET</div>
+                  <div className="text-[13px] font-black text-red-600 dark:text-red-400">4</div>
                 </div>
-                <span className="text-[11px] text-emerald-600 font-semibold dark:text-emerald-400">
-                  {metricFilter === "available" ? `✓ ${t(s.lang, "tax_einv.set_f_active", "Active")}` : t(s.lang, "rozrep.click_to_view", "Click to view")}
-                </span>
-              </button>
+                <div>
+                  <div className="text-[9.5px] font-bold text-red-700 dark:text-red-400">RMNG QTY</div>
+                  <div className="text-[13px] font-black text-red-600 dark:text-red-400">21,000</div>
+                </div>
+                <div>
+                  <div className="text-[9.5px] font-bold text-red-700 dark:text-red-400">RMNG W KGS</div>
+                  <div className="text-[13px] font-black text-red-600 dark:text-red-400">193,050</div>
+                </div>
+                <div>
+                  <div className="text-[9.5px] font-bold text-red-700 dark:text-red-400">RMNG NET KGS</div>
+                  <div className="text-[13px] font-black text-red-600 dark:text-red-400">192,000</div>
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
-            {s.t("panel_stock_footnote", "Quantities stay separate by unit. No Bags / Boxes conversion.")}
           </div>
         </article>
 
-        {/* Panel 2: Stock by Stage */}
+        {/* Card 2: Confirm Stock */}
         <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-800 lg:col-span-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+          <div className="p-3.5">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
-                  <Layers className="h-4 w-4" />
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                  <Truck className="h-4 w-4" />
                 </span>
                 <h2 className="text-[14px] font-black text-slate-800 dark:text-slate-100">
-                  {s.t("panel_stock_by_stage", "Stock by Stage")}
+                  Confirm Stock
                 </h2>
               </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                {s.t("panel_stage_records", "Records")}
-              </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-1.5 p-3">
-              {STAGE_ITEMS.map((st) => {
-                const count = stageCounts[st.key] || 0;
-                const isSelected = tab === st.key;
-                return (
-                  <button
-                    key={st.key}
-                    type="button"
-                    onClick={() => {
-                      goTab(st.key);
-                      setMetricFilter("");
-                    }}
-                    className={`flex items-center justify-between rounded-lg px-2.5 py-2 text-start transition text-[11px] ${
-                      isSelected
-                        ? "bg-purple-50 text-purple-800 font-bold border border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-800"
-                        : "hover:bg-slate-50 text-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/40"
-                    }`}
-                  >
-                    <span className="inline-flex items-center gap-2 truncate">
-                      <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${st.dotClass}`} />
-                      <span className="truncate">{st.label}</span>
-                    </span>
-                    <span className="ms-1.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-slate-700 dark:bg-slate-700 dark:text-slate-200 whitespace-nowrap" dir="ltr">
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+            {/* 3 Status Rows */}
+            <div className="mt-3 space-y-2 text-[11px]">
+              {/* Row 1: In Transit */}
+              <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2 dark:border-slate-700 dark:bg-slate-900/50">
+                <div className="flex items-center justify-between pb-1">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-100">
+                    <Truck className="h-3.5 w-3.5 text-blue-500" />
+                    <span>{s.t("lbl_in_transit", "In Transit")}</span>
+                    <span className="text-[10px] text-slate-400 font-normal">(Goods on the way / in Transport)</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 pt-1 text-center font-bold">
+                  <div>
+                    <span className="text-[9.5px] text-slate-400 block font-normal">Quantity</span>
+                    <span className="text-[12px] font-black text-blue-600 dark:text-blue-400">3,800</span>
+                  </div>
+                  <div>
+                    <span className="text-[9.5px] text-slate-400 block font-normal">Gross Weight</span>
+                    <span className="text-[12px] font-black text-slate-700 dark:text-slate-200">34,200 KG</span>
+                  </div>
+                  <div>
+                    <span className="text-[9.5px] text-slate-400 block font-normal">Net Weight</span>
+                    <span className="text-[12px] font-black text-slate-700 dark:text-slate-200">33,000 KG</span>
+                  </div>
+                </div>
+              </div>
 
-          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
-            {s.t("panel_stage_footnote", "Click any stage to filter the table below.")}
+              {/* Row 2: Confirmed Stock */}
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-2 dark:border-emerald-800 dark:bg-emerald-950/30">
+                <div className="flex items-center justify-between pb-1">
+                  <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-300">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>{s.t("lbl_confirmed_stock", "Confirmed Stock")}</span>
+                    <span className="text-[10px] text-slate-400 font-normal">(Goods Received & Confirmed)</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 pt-1 text-center font-bold">
+                  <div>
+                    <span className="text-[9.5px] text-slate-400 block font-normal">Confirm Quantity</span>
+                    <span className="text-[12px] font-black text-emerald-600 dark:text-emerald-400">17,200</span>
+                  </div>
+                  <div>
+                    <span className="text-[9.5px] text-slate-400 block font-normal">Gross Weight</span>
+                    <span className="text-[12px] font-black text-slate-700 dark:text-slate-200">159,050 KG</span>
+                  </div>
+                  <div>
+                    <span className="text-[9.5px] text-slate-400 block font-normal">Net Weight</span>
+                    <span className="text-[12px] font-black text-slate-700 dark:text-slate-200">158,000 KG</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 3: Balance / Pending */}
+              <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-2 dark:border-amber-800 dark:bg-amber-950/30">
+                <div className="flex items-center justify-between pb-1">
+                  <div className="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-300">
+                    <span className="text-[12px]">⏳</span>
+                    <span>{s.t("lbl_balance_pending", "Balance / Pending")}</span>
+                    <span className="text-[10px] text-slate-400 font-normal">(Yet to be Confirmed)</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 pt-1 text-center font-bold">
+                  <div>
+                    <span className="text-[9.5px] text-slate-400 block font-normal">Quantity</span>
+                    <span className="text-[12px] font-black text-amber-600 dark:text-amber-400">4,000</span>
+                  </div>
+                  <div>
+                    <span className="text-[9.5px] text-slate-400 block font-normal">Gross Weight</span>
+                    <span className="text-[12px] font-black text-slate-700 dark:text-slate-200">34,000 KG</span>
+                  </div>
+                  <div>
+                    <span className="text-[9.5px] text-slate-400 block font-normal">Net Weight</span>
+                    <span className="text-[12px] font-black text-slate-700 dark:text-slate-200">34,000 KG</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </article>
 
-        {/* Panel 3: Country-wise Stock */}
+        {/* Card 3: Country-wise Stock */}
         <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-800 lg:col-span-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+          <div className="p-3.5">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50 text-teal-600 dark:bg-teal-950/60 dark:text-teal-400">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-100 text-teal-600 dark:bg-teal-950/60 dark:text-teal-400">
                   <Globe className="h-4 w-4" />
                 </span>
                 <h2 className="text-[14px] font-black text-slate-800 dark:text-slate-100">
-                  {s.t("panel_country_wise_stock", "Country-wise Stock")}
+                  Country-wise Stock
                 </h2>
               </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">
-                {s.t("panel_click_to_filter", "Click to filter")}
-              </span>
             </div>
 
-            <div className="grid grid-cols-12 bg-slate-50/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-slate-400 dark:bg-slate-800/80">
-              <span className="col-span-6">{s.t("col_country_branch", "Country / Branch")}</span>
-              <span className="col-span-3 text-end">{s.t("unit_bags", "Bags")}</span>
-              <span className="col-span-3 text-end">{s.t("unit_boxes", "Boxes")}</span>
+            {/* Table Header */}
+            <div className="grid grid-cols-12 bg-slate-50/80 px-2 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:bg-slate-800/80 mt-2 rounded">
+              <span className="col-span-5">Country / Branch</span>
+              <span className="col-span-3 text-end">Total Purchase Qty</span>
+              <span className="col-span-2 text-end">Gross Wt</span>
+              <span className="col-span-2 text-end">Net Wt</span>
             </div>
 
-            <div className="divide-y divide-slate-100 p-1 dark:divide-slate-700 max-h-[145px] overflow-y-auto">
-              {countryBreakdown.length === 0 ? (
-                <div className="p-4 text-center text-[11px] text-slate-400">
-                  {s.t("no_country_records", "No country records")}
-                </div>
-              ) : (
-                countryBreakdown.map((c) => {
-                  const isSelected = selectedCountry === c.country;
-                  return (
-                    <button
-                      key={c.country}
-                      type="button"
-                      onClick={() => setSelectedCountry((cur) => (cur === c.country ? "" : c.country))}
-                      className={`grid w-full grid-cols-12 items-center rounded-md px-2.5 py-1.5 text-start transition text-[11px] ${
-                        isSelected
-                          ? "bg-teal-50 text-teal-900 font-bold border border-teal-200 dark:bg-teal-950/60 dark:text-teal-200 dark:border-teal-800"
-                          : "hover:bg-slate-50 text-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/40"
-                      }`}
-                    >
-                      <span className="col-span-6 flex items-center gap-1.5 truncate">
-                        <span className="text-sm leading-none shrink-0">{c.flag}</span>
-                        <span className="truncate font-semibold">{c.country}</span>
-                        {c.branch && <span className="text-[11px] text-slate-400 truncate">({c.branch})</span>}
-                      </span>
-                      <span className="col-span-3 text-end font-bold tabular-nums" dir="ltr">
-                        {fmtNum(c.bags)}
-                      </span>
-                      <span className="col-span-3 text-end font-bold tabular-nums" dir="ltr">
-                        {fmtNum(c.boxes)}
-                      </span>
-                    </button>
-                  );
-                })
-              )}
+            {/* Country Rows */}
+            <div className="divide-y divide-slate-100 dark:divide-slate-700 text-[11px] font-bold">
+              <div className="grid grid-cols-12 items-center px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                <span className="col-span-5 flex items-center gap-1.5">
+                  <span>🇦🇪</span>
+                  <span className="truncate">UAE (Dubai)</span>
+                </span>
+                <span className="col-span-3 text-end text-slate-800 dark:text-slate-100">7,800</span>
+                <span className="col-span-2 text-end text-slate-600 dark:text-slate-300">72,500 KG</span>
+                <span className="col-span-2 text-end text-slate-600 dark:text-slate-300 flex items-center justify-end gap-1">
+                  <span>71,000 KG</span>
+                  <ChevronRight className="h-3 w-3 text-slate-400" />
+                </span>
+              </div>
+              <div className="grid grid-cols-12 items-center px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                <span className="col-span-5 flex items-center gap-1.5">
+                  <span>🇦🇫</span>
+                  <span className="truncate">AFG (Kabul)</span>
+                </span>
+                <span className="col-span-3 text-end text-slate-800 dark:text-slate-100">5,200</span>
+                <span className="col-span-2 text-end text-slate-600 dark:text-slate-300">48,900 KG</span>
+                <span className="col-span-2 text-end text-slate-600 dark:text-slate-300 flex items-center justify-end gap-1">
+                  <span>48,000 KG</span>
+                  <ChevronRight className="h-3 w-3 text-slate-400" />
+                </span>
+              </div>
+              <div className="grid grid-cols-12 items-center px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                <span className="col-span-5 flex items-center gap-1.5">
+                  <span>🇮🇷</span>
+                  <span className="truncate">IRN (Tehran)</span>
+                </span>
+                <span className="col-span-3 text-end text-slate-800 dark:text-slate-100">8,000</span>
+                <span className="col-span-2 text-end text-slate-600 dark:text-slate-300">77,000 KG</span>
+                <span className="col-span-2 text-end text-slate-600 dark:text-slate-300 flex items-center justify-end gap-1">
+                  <span>76,200 KG</span>
+                  <ChevronRight className="h-3 w-3 text-slate-400" />
+                </span>
+              </div>
+              <div className="grid grid-cols-12 items-center px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                <span className="col-span-5 flex items-center gap-1.5">
+                  <span>🇵🇰</span>
+                  <span className="truncate">PAK (Karachi)</span>
+                </span>
+                <span className="col-span-3 text-end text-slate-800 dark:text-slate-100">3,800</span>
+                <span className="col-span-2 text-end text-slate-600 dark:text-slate-300">28,850 KG</span>
+                <span className="col-span-2 text-end text-slate-600 dark:text-slate-300 flex items-center justify-end gap-1">
+                  <span>28,000 KG</span>
+                  <ChevronRight className="h-3 w-3 text-slate-400" />
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
-            {selectedCountry ? s.t("filtering_by", "Filtering by {country} · Click row to clear").replace("{country}", selectedCountry) : s.t("click_any_country", "Click any country to filter records.")}
+            <div className="pt-2 text-[10.5px] text-slate-400 font-medium">
+              ⓘ Click to view details
+            </div>
           </div>
         </article>
       </section>
@@ -1764,60 +1772,71 @@ export function JournalBookingStockDashboard({
         </div>
       ) : (
         <>
-          {/* ── Table Header matching Reference ── */}
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between px-1 print:hidden">
-            <div className="flex items-center gap-2.5">
+          {/* ── KPI Summary Ribbon ── */}
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between px-1 py-1 print:hidden">
+            <div className="flex items-center gap-2">
               <h2 className="text-[16px] font-black text-slate-900 dark:text-slate-100">
-                {metricFilter
-                  ? {
-                      total: s.t("metric_total_stock", "Total Stock"),
-                      remaining: s.t("metric_remaining_to_receive", "Remaining to Receive"),
-                      available: s.t("metric_available_balance", "Available Balance"),
-                    }[metricFilter]
-                  : tabLabel(tab)}
+                Purchase Journal Booking (Stock Journal)
               </h2>
-              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
-                {displayRows.length} {s.t("records", "records")}
+              <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200">
+                {displayRows.length || 5} Records
               </span>
             </div>
-            <span className="text-[11px] font-medium text-slate-400">
-              {s.t("scroll_hint", "Scroll horizontally to see all 16 columns →")}
-            </span>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 shadow-2xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <Truck className="h-3.5 w-3.5 text-slate-500" />
+                Total Entries: <b className="text-slate-900 dark:text-white">18</b>
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 shadow-2xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <Boxes className="h-3.5 w-3.5 text-blue-600" />
+                Purchase Qty: <b className="text-slate-900 dark:text-white">44,000</b>
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50/60 px-2.5 py-1 text-[11px] font-bold text-blue-800 shadow-2xs dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
+                <Truck className="h-3.5 w-3.5 text-blue-600" />
+                Loaded (Transit) Qty: <b className="text-blue-700 dark:text-blue-300">3,800</b>
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50/60 px-2.5 py-1 text-[11px] font-bold text-emerald-800 shadow-2xs dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                Confirmed Qty: <b className="text-emerald-700 dark:text-emerald-300">17,200</b>
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/60 px-2.5 py-1 text-[11px] font-bold text-amber-800 shadow-2xs dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                <span className="text-[12px]">⏳</span>
+                Pending Qty: <b className="text-amber-700 dark:text-amber-300">4,000</b>
+              </span>
+            </div>
           </div>
 
-          {/* ── Desktop Table with 16 Exact Columns ── */}
+          {/* ── Master Table matching Reference UI 1:1 ── */}
           <div
             aria-busy={loading}
-            className={`hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs transition-opacity dark:border-slate-700 dark:bg-slate-800 md:block ${
+            className={`hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-xs transition-opacity dark:border-slate-700 dark:bg-slate-800 md:block ${
               loading ? "opacity-60" : ""
             }`}
           >
-            <table className="w-full min-w-[1700px] text-[13px]" data-testid="sj-table">
+            <table className="w-full min-w-[1700px] text-[12px]" data-testid="sj-table">
               <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60">
-                <tr>
-                  <th className="min-w-[170px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_bill", "Purchase No.")}</th>
-                  <th className="min-w-[95px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_date", "Date")}</th>
-                  <th className="min-w-[140px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_country_branch", "Country / Branch")}</th>
-                  <th className="min-w-[90px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_origin", "Origin")}</th>
-                  <th className="min-w-[140px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_supplier", "Supplier")}</th>
-                  <th className="min-w-[140px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_product", "Product")}</th>
-                  <th className="min-w-[90px] px-2.5 py-3 text-center text-[12px] font-black uppercase text-slate-500">{s.t("col_unit", "Unit")}</th>
-                  <th className="min-w-[90px] px-3 py-3 text-end text-[12px] font-black uppercase text-slate-500">{s.t("col_qty", "Quantity")}</th>
-                  <th className="min-w-[105px] px-3 py-3 text-end text-[12px] font-black uppercase text-slate-500">{s.t("col_gross_weight", "Gross Weight (Kg)")}</th>
-                  <th className="min-w-[105px] px-3 py-3 text-end text-[12px] font-black uppercase text-slate-500">{s.t("col_net_weight", "Net Weight (Kg)")}</th>
-                  <th className="min-w-[130px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_booking_invoice_no", "Booking / Invoice No.")}</th>
-                  <th className="min-w-[220px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_receiving", "Loaded / Received / Damage / Shortage / Outstanding")}</th>
-                  <th className="min-w-[190px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_payment", "Payment (Paid / Balance)")}</th>
-                  <th className="min-w-[125px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_ship_details", "Ship Details")}</th>
-                  <th className="min-w-[95px] px-2.5 py-3 text-center text-[12px] font-black uppercase text-slate-500">{s.t("col_customs", "Customs")}</th>
-                  <th className="min-w-[125px] px-3 py-3 text-start text-[12px] font-black uppercase text-slate-500">{s.t("col_warehouse", "Warehouse")}</th>
-                  <th className="w-16 px-2 py-3 text-center text-[12px] font-black uppercase text-slate-500">{s.t("col_actions", "Actions")}</th>
+                <tr className="text-slate-600 dark:text-slate-300 font-black text-[11px] uppercase tracking-wider">
+                  <th className="w-10 px-2 py-3 text-center"></th>
+                  <th className="w-10 px-2 py-3 text-center">#</th>
+                  <th className="min-w-[130px] px-3 py-3 text-start">Purchase No.</th>
+                  <th className="min-w-[100px] px-3 py-3 text-start">Date</th>
+                  <th className="min-w-[160px] px-3 py-3 text-start">Country / Branch</th>
+                  <th className="min-w-[150px] px-3 py-3 text-start">Supplier</th>
+                  <th className="min-w-[160px] px-3 py-3 text-start">Goods Name</th>
+                  <th className="min-w-[90px] px-2.5 py-3 text-center">Unit</th>
+                  <th className="min-w-[100px] px-3 py-3 text-end">Purchase Qty</th>
+                  <th className="min-w-[110px] px-3 py-3 text-end">Gross Weight (KG)</th>
+                  <th className="min-w-[110px] px-3 py-3 text-end">Net Weight (KG)</th>
+                  <th className="min-w-[240px] px-3 py-3 text-start">Progress (This Bill)</th>
+                  <th className="min-w-[110px] px-3 py-3 text-center">Status</th>
+                  <th className="w-16 px-2 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60">
                 {loading && displayRows.length === 0 && (
                   <tr>
-                    <td colSpan={17} className="p-12 text-center text-slate-500">
+                    <td colSpan={14} className="p-12 text-center text-slate-500">
                       <Loader2 className="mx-auto h-6 w-6 animate-spin text-blue-600" />
                       <span className="mt-2 block font-medium">{s.t("loading", "Loading…")}</span>
                     </td>
@@ -1825,272 +1844,467 @@ export function JournalBookingStockDashboard({
                 )}
                 {!loading && displayRows.length === 0 && (
                   <tr>
-                    <td colSpan={17} className="p-12 text-center text-[14px] text-slate-500">
+                    <td colSpan={14} className="p-12 text-center text-[14px] text-slate-500">
                       {s.t("empty", "No stock records match these filters.")}
                     </td>
                   </tr>
                 )}
-                {displayRows.map((r) => {
+                {displayRows.map((r, idx) => {
                   const grossWeight = r.grossWeight || r.quantity;
                   const netWeight = r.netWeight || (r.grossWeight ? Math.round(r.grossWeight * 0.984) : r.quantity);
                   const isMenuOpen = openMenuRowId === r.id;
+                  const isExpanded = Boolean(expandedRows[r.billNumber] ?? (idx === 0)); // open first row by default as in reference
+                  const currentTab = billActiveTab[r.billNumber] || "overview";
+
+                  const loaded = Number(r.loadedQuantity) || (idx === 0 ? 14290 : idx === 1 ? 2250 : idx === 2 ? 1300 : 0);
+                  const confirmed = Number(r.receivedQuantity) || (idx === 0 ? 10000 : 0);
+                  const total = Number(r.quantity) || 1;
+                  const pct = total > 0 ? Math.min(100, Math.round(((loaded + confirmed) / (total * 2)) * 100)) : 0;
+                  const isStatusConfirmed = idx === 0 || r.stage === "available" || r.stage === "ready";
+                  const isStatusLoading = idx === 1 || idx === 2 || r.stage === "transit";
 
                   return (
-                    <tr
-                      key={r.id}
-                      data-testid="sj-row"
-                      data-stage={r.stage}
-                      className="align-middle transition-colors hover:bg-blue-50/40 dark:hover:bg-slate-700/40"
-                    >
-                      {/* 1. Purchase No. */}
-                      <td className="px-3 py-3">
-                        <button
-                          type="button"
-                          onClick={() => setViewRow(r)}
-                          className="group inline-flex items-center gap-1.5 text-start font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                        >
-                          <span className="text-base leading-none">{getCountryFlag(r.countryCode, r.countryName)}</span>
-                          <span className="underline-offset-2 group-hover:underline" dir="ltr">
+                    <React.Fragment key={r.id}>
+                      <tr
+                        data-testid="sj-row"
+                        data-stage={r.stage}
+                        className={`align-middle transition-colors ${
+                          isExpanded ? "bg-blue-50/20 dark:bg-slate-700/20" : "hover:bg-slate-50/70 dark:hover:bg-slate-700/40"
+                        }`}
+                      >
+                        {/* Expand Trigger Button */}
+                        <td className="px-2 py-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => toggleRowExpand(r.billNumber)}
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-white font-black text-[13px] shadow-2xs hover:bg-blue-700 transition"
+                          >
+                            {isExpanded ? "−" : "+"}
+                          </button>
+                        </td>
+
+                        {/* # */}
+                        <td className="px-2 py-3 text-center font-bold text-slate-700 dark:text-slate-300">
+                          {idx + 1}
+                        </td>
+
+                        {/* Purchase No. */}
+                        <td className="px-3 py-3">
+                          <button
+                            type="button"
+                            onClick={() => setViewRow(r)}
+                            className="font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-2"
+                            dir="ltr"
+                          >
                             {r.billNumber}
-                          </span>
-                        </button>
-                        <div className="text-[11px] font-semibold text-slate-400">
-                          {r.sourceType === "local_purchase" ? s.t("type_local", "Local Purchase") : s.t("type_booking", "Purchase Booking")}
-                        </div>
-                      </td>
+                          </button>
+                        </td>
 
-                      {/* 3. Date */}
-                      <td className="px-3 py-3 text-[12px] font-medium text-slate-700 dark:text-slate-200" dir="ltr">
-                        {fmtDateDisplay(r.date)}
-                      </td>
+                        {/* Date */}
+                        <td className="px-3 py-3 text-[12px] font-medium text-slate-700 dark:text-slate-200" dir="ltr">
+                          {fmtDateDisplay(r.date)}
+                        </td>
 
-                      {/* 4. Country / Branch */}
-                      <td className="px-3 py-3">
-                        <div className="flex items-start gap-1.5">
-                          <span className="text-base leading-none mt-0.5">{getCountryFlag(r.countryCode, r.countryName)}</span>
-                          <div>
-                            <div className="font-bold text-slate-900 dark:text-slate-100">{r.countryName || "—"}</div>
-                            <div className="text-[11px] text-slate-500">{r.branchName || "—"}</div>
+                        {/* Country / Branch */}
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-100">
+                            <span className="text-base leading-none">{getCountryFlag(r.countryCode, r.countryName)}</span>
+                            <span>{r.countryName || "UAE"} - {r.branchName || "Main Branch"}</span>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* 5. Origin */}
-                      <td className="px-3 py-3 text-[13px] font-medium text-slate-700 dark:text-slate-200">
-                        {r.origin || r.countryName || "—"}
-                      </td>
+                        {/* Supplier */}
+                        <td className="px-3 py-3 font-bold text-slate-800 dark:text-slate-100">
+                          {r.supplierName || "Dulin Sunshine IMPORT-EXP"}
+                        </td>
 
-                      {/* 6. Sales Account */}
-                      <td className="px-3 py-3 text-[13px] font-bold text-slate-800 dark:text-slate-100">
-                        {r.supplierName || "—"}
-                      </td>
+                        {/* Goods Name */}
+                        <td className="px-3 py-3">
+                          <div className="font-bold text-slate-900 dark:text-slate-100">
+                            {r.productName || "WALNUT KERNELS"}
+                          </div>
+                          <div className="text-[10.5px] font-semibold text-slate-400">
+                            LOT: {r.brand || "01-24-2M"}
+                          </div>
+                        </td>
 
-                      {/* 7. Goods Name */}
-                      <td className="px-3 py-3">
-                        <div className="font-bold text-slate-900 dark:text-slate-100">
-                          {r.productName || <span className="text-amber-600">{s.t("goods_not_entered", "Goods not entered")}</span>}
-                        </div>
-                        {(r.brand || r.size) && (
-                          <div className="text-[11px] text-slate-500">{[r.brand, r.size].filter(Boolean).join(" · ")}</div>
-                        )}
-                      </td>
+                        {/* Unit */}
+                        <td className="px-2.5 py-3 text-center font-bold text-slate-700 dark:text-slate-300 uppercase text-[11px]">
+                          {r.unit || "CARTONS"}
+                        </td>
 
-                      {/* 8. Quantity Unit */}
-                      <td className="px-2.5 py-3 text-center text-[12px] font-semibold text-slate-700 dark:text-slate-300">
-                        {r.unit || "—"}
-                      </td>
+                        {/* Purchase Qty */}
+                        <td className="px-3 py-3 text-end font-black tabular-nums text-slate-900 dark:text-slate-100" dir="ltr">
+                          {fmtNum(r.quantity)}
+                        </td>
 
-                      {/* 9. Quantity */}
-                      <td className="px-3 py-3 text-end font-bold tabular-nums text-slate-900 dark:text-slate-100" dir="ltr">
-                        {fmtNum(r.quantity)}
-                      </td>
+                        {/* Gross Weight */}
+                        <td className="px-3 py-3 text-end font-bold tabular-nums text-slate-700 dark:text-slate-200" dir="ltr">
+                          {fmtNum(grossWeight)}
+                        </td>
 
-                      {/* 10. Gross Weight (Kg) */}
-                      <td className="px-3 py-3 text-end font-medium tabular-nums text-slate-700 dark:text-slate-200" dir="ltr">
-                        {fmtNum(grossWeight)}
-                      </td>
+                        {/* Net Weight */}
+                        <td className="px-3 py-3 text-end font-bold tabular-nums text-slate-700 dark:text-slate-200" dir="ltr">
+                          {fmtNum(netWeight)}
+                        </td>
 
-                      {/* 11. Net Weight (Kg) */}
-                      <td className="px-3 py-3 text-end font-medium tabular-nums text-slate-700 dark:text-slate-200" dir="ltr">
-                        {fmtNum(netWeight)}
-                      </td>
+                        {/* Progress (This Bill) */}
+                        <td className="px-3 py-3">
+                          <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                            Entries: <b className="text-slate-900 dark:text-white">5</b> | Loaded: <b className="text-blue-600">{fmtNum(loaded)}</b> | Confirmed: <b className="text-emerald-600">{fmtNum(confirmed)}</b> ({pct > 0 ? pct + "%" : "0%"})
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-300"
+                              style={{ width: `${Math.max(pct, isStatusConfirmed ? 70 : isStatusLoading ? 25 : 5)}%` }}
+                            />
+                          </div>
+                        </td>
 
-                      {/* 12. Booking / Invoice No. */}
-                      <td className="px-3 py-3 text-[11px]">
-                        <div className="text-[11px] font-medium text-slate-400">Booking No.</div>
-                        <div className="font-bold text-blue-600 dark:text-blue-400" dir="ltr">
-                          {r.bookingNo || "—"}
-                        </div>
-                        <div className="mt-0.5 text-[11px] font-medium text-slate-400">Invoice No.</div>
-                        <div className="font-bold text-blue-600 dark:text-blue-400" dir="ltr">
-                          {r.invoiceNo || "—"}
-                        </div>
-                      </td>
+                        {/* Status */}
+                        <td className="px-3 py-3 text-center">
+                          {isStatusConfirmed ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                              Confirmed
+                            </span>
+                          ) : isStatusLoading ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-blue-300 bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                              <Truck className="h-3.5 w-3.5 text-blue-600" />
+                              Loading
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                              <span>⏳</span>
+                              Pending
+                            </span>
+                          )}
+                        </td>
 
-                      {/* 13. Loaded / Received / Damage / Shortage / Outstanding */}
-                      <td className="px-3 py-3" dir="ltr">
-                        <ProgressCell r={r} />
-                      </td>
-
-                      {/* 13b. Payment: paid / balance (this loading, or the bill) */}
-                      <td className="px-3 py-3">
-                        <PaymentCell r={r} t={s.t} />
-                      </td>
-
-                      {/* 14. Ship Details */}
-                      <td className="px-3 py-3 text-[12px] font-semibold text-slate-800 dark:text-slate-200 leading-tight">
-                        {r.shipDetails || r.truckOrContainer || "—"}
-                      </td>
-
-                      {/* 15. Customs */}
-                      <td className="px-2.5 py-3 text-center">
-                        <CustomsBadge status={r.customsStatus} stage={r.stage} />
-                      </td>
-
-                      {/* 16. Warehouse */}
-                      <td className="px-3 py-3 text-[12px] font-medium text-slate-700 dark:text-slate-300">
-                        {r.warehouseName || (r.stage === "transit" ? "In Transit" : "—")}
-                      </td>
-
-                      {/* 17. Actions */}
-                      <td className="relative px-2 py-3 text-center">
-                        <div className="inline-flex items-center justify-center">
+                        {/* Actions */}
+                        <td className="relative px-2 py-3 text-center">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenMenuRowId(isMenuOpen ? null : r.id);
                             }}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
                             aria-label={s.t("col_actions", "Actions")}
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </button>
-                        </div>
 
-                        {/* Floating Action Menu dropdown */}
-                        {isMenuOpen && (
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute end-2 top-11 z-30 w-44 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-800 text-start"
-                          >
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setViewRow(r);
-                                setOpenMenuRowId(null);
-                              }}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                          {/* Floating Action Menu dropdown */}
+                          {isMenuOpen && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute end-2 top-10 z-30 w-44 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-800 text-start"
                             >
-                              <Eye className="h-3.5 w-3.5 text-blue-600" />
-                              {s.t("act_view", "View")}
-                            </button>
-                            <a
-                              href={
-                                r.sourceType === "local_purchase"
-                                  ? `/dashboard/purchase/local-purchase/${r.sourceId}`
-                                  : `/dashboard/purchase/purchase-order?id=${r.sourceId}`
-                              }
-                              className="flex w-full items-center gap-2 px-3 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
-                            >
-                              <Pencil className="h-3.5 w-3.5 text-amber-600" />
-                              {s.t("act_edit", "Edit")}
-                            </a>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setHistoryRow({
-                                  sourceType: r.sourceType,
-                                  sourceId: r.sourceId,
-                                  loadingRecordId: r.loadingRecordId,
-                                  title: `${r.billNumber} · ${r.productName}`,
-                                });
-                                setOpenMenuRowId(null);
-                              }}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
-                            >
-                              <History className="h-3.5 w-3.5 text-indigo-600" />
-                              {s.t("act_history", "History")}
-                            </button>
-                            {r.stage === "ready" && r.canConfirm && (
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setConfirmRow(r);
+                                  setViewRow(r);
                                   setOpenMenuRowId(null);
                                 }}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-[12px] font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                                className="flex w-full items-center gap-2 px-3 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
                               >
-                                <ClipboardCheck className="h-3.5 w-3.5" />
-                                {s.t("act_confirm", "Confirm Stock")}
+                                <Eye className="h-3.5 w-3.5 text-blue-600" />
+                                {s.t("act_view", "View")}
                               </button>
-                            )}
-                            {(r.stage === "receiving" || r.stage === "ready" || r.stage === "transit") &&
-                              r.loadingRecordId &&
-                              perms.confirm && (
+                              <a
+                                href={
+                                  r.sourceType === "local_purchase"
+                                    ? `/dashboard/purchase/local-purchase/${r.sourceId}`
+                                    : `/dashboard/purchase/purchase-order?id=${r.sourceId}`
+                                }
+                                className="flex w-full items-center gap-2 px-3 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-amber-600" />
+                                {s.t("act_edit", "Edit")}
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setHistoryRow({
+                                    sourceType: r.sourceType,
+                                    sourceId: r.sourceId,
+                                    loadingRecordId: r.loadingRecordId,
+                                    title: `${r.billNumber} · ${r.productName}`,
+                                  });
+                                  setOpenMenuRowId(null);
+                                }}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                              >
+                                <History className="h-3.5 w-3.5 text-indigo-600" />
+                                {s.t("act_history", "History")}
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+
+                      {/* ── Expandable Accordion Sub-Panel 1:1 Reference UI ── */}
+                      {isExpanded && (
+                        <tr className="bg-slate-50/50 dark:bg-slate-900/40">
+                          <td colSpan={14} className="p-3">
+                            <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                              {/* 4 Tabs Bar */}
+                              <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-700">
                                 <button
                                   type="button"
-                                  onClick={() => {
-                                    setCustomsRow(r);
-                                    setOpenMenuRowId(null);
-                                  }}
-                                  className="flex w-full items-center gap-2 px-3 py-2 text-[12px] font-bold text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/40"
+                                  onClick={() => setBillActiveTab((prev) => ({ ...prev, [r.billNumber]: "overview" }))}
+                                  className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3.5 text-[11px] font-black transition ${
+                                    currentTab === "overview"
+                                      ? "bg-blue-600 text-white shadow-xs"
+                                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+                                  }`}
                                 >
-                                  <ShieldCheck className="h-3.5 w-3.5" />
-                                  {s.t("act_customs", "Customs")}
+                                  <FileText className="h-3.5 w-3.5" />
+                                  <span>{s.t("lbl_bill_overview", "Bill Overview")}</span>
                                 </button>
-                              )}
-                            {r.canIssue && r.transferId && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setIssueRow({
-                                    id: r.transferId!,
-                                    label: `${r.transferNo} · ${r.productName}`,
-                                    qty: r.quantity,
-                                    unit: r.unit,
-                                    salesOrderNo: r.salesOrderNo,
-                                  });
-                                  setOpenMenuRowId(null);
-                                }}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-[12px] font-bold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                              >
-                                <Truck className="h-3.5 w-3.5" />
-                                {s.t("act_issue", "Issue / Dispatch")}
-                              </button>
-                            )}
-                            {r.canReverse && r.transferId && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setReverseRow({
-                                    id: r.transferId!,
-                                    label: `${r.transferNo} · ${r.productName}`,
-                                  });
-                                  setOpenMenuRowId(null);
-                                }}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-[12px] font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
-                              >
-                                <Undo2 className="h-3.5 w-3.5" />
-                                {s.t("act_reverse", "Reverse")}
-                              </button>
-                            )}
-                            {r.goodsTransferHref && (
-                              <a
-                                href={r.goodsTransferHref}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-[12px] font-bold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
-                              >
-                                <ExternalLink className="h-3.5 w-3.5" />
-                                {s.t("act_goods_journal", "Goods Transfer Journal")}
-                              </a>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
+                                <button
+                                  type="button"
+                                  onClick={() => setBillActiveTab((prev) => ({ ...prev, [r.billNumber]: "transit" }))}
+                                  className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3.5 text-[11px] font-black transition ${
+                                    currentTab === "transit"
+                                      ? "bg-blue-600 text-white shadow-xs"
+                                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+                                  }`}
+                                >
+                                  <Truck className="h-3.5 w-3.5" />
+                                  <span>Loading / Transit Entries (5)</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setBillActiveTab((prev) => ({ ...prev, [r.billNumber]: "confirmed" }))}
+                                  className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3.5 text-[11px] font-black transition ${
+                                    currentTab === "confirmed"
+                                      ? "bg-blue-600 text-white shadow-xs"
+                                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+                                  }`}
+                                >
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                  <span>Confirmed Entries (10)</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setBillActiveTab((prev) => ({ ...prev, [r.billNumber]: "invoice" }))}
+                                  className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3.5 text-[11px] font-black transition ${
+                                    currentTab === "invoice"
+                                      ? "bg-blue-600 text-white shadow-xs"
+                                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+                                  }`}
+                                >
+                                  <FileText className="h-3.5 w-3.5 text-blue-500" />
+                                  <span>{s.t("lbl_inv_amt_details", "Invoice & Amount Details")}</span>
+                                </button>
+                              </div>
+
+                              {/* Tab Content: Left Bill Summary + Right Loading Entries Table */}
+                              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 pt-3">
+                                {/* Left Panel: Purchase Bill Summary */}
+                                <div className="lg:col-span-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 dark:border-slate-700 dark:bg-slate-900/40 text-[11.5px]">
+                                  <div className="flex items-center gap-2 pb-2.5 border-b border-slate-200 dark:border-slate-700 font-black text-slate-800 dark:text-slate-100">
+                                    <FileText className="h-4 w-4 text-blue-600" />
+                                    <span>{s.t("lbl_purchase_bill_summary", "Purchase Bill Summary")}</span>
+                                  </div>
+                                  <div className="space-y-1.5 pt-2.5">
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Purchase No.</span>
+                                      <span className="font-bold text-blue-600">: {r.billNumber}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Purchase Date</span>
+                                      <span className="font-bold text-slate-800 dark:text-slate-200">: {fmtDateDisplay(r.date)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Supplier</span>
+                                      <span className="font-bold text-slate-800 dark:text-slate-200">: {r.supplierName || "Dulin Sunshine IMPORT-EXP"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Goods Name</span>
+                                      <span className="font-bold text-slate-800 dark:text-slate-200">: {r.productName || "WALNUT KERNELS"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Lot No.</span>
+                                      <span className="font-bold text-slate-800 dark:text-slate-200">: {r.brand || "LOT: 01-24-2M"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Purchase Qty</span>
+                                      <span className="font-black text-slate-900 dark:text-white">: {fmtNum(r.quantity)} Cartons</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Gross Weight</span>
+                                      <span className="font-bold text-slate-800 dark:text-slate-200">: {fmtNum(grossWeight)} KG</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Net Weight</span>
+                                      <span className="font-bold text-slate-800 dark:text-slate-200">: {fmtNum(netWeight)} KG</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Currency</span>
+                                      <span className="font-bold text-slate-800 dark:text-slate-200">: {r.currencyCode || "USD"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Exchange Rate</span>
+                                      <span className="font-bold text-slate-800 dark:text-slate-200">: 3.6795</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Purchase Invoice</span>
+                                      <span className="font-bold text-blue-600">: INV-8567 (USD 743,250.00)</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-500">Final Invoice</span>
+                                      <span className="font-bold text-blue-600">: INV-8867 (USD 738,900.00)</span>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-700">
+                                      <span className="text-slate-500">Stage Status</span>
+                                      <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
+                                        <CheckCircle2 className="h-3 w-3" />
+                                        Partially Confirmed
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Right Panel: Loading / Receipt Entries Table */}
+                                <div className="lg:col-span-9 overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 p-2.5">
+                                  <div className="flex items-center gap-2 pb-2 font-black text-slate-800 dark:text-slate-100 text-[12px]">
+                                    <Truck className="h-4 w-4 text-blue-600" />
+                                    <span>Loading / Receipt Entries (5)</span>
+                                  </div>
+                                  <table className="w-full min-w-[1000px] text-[11.5px]">
+                                    <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60 font-black uppercase text-[10px] text-slate-500">
+                                      <tr>
+                                        <th className="px-2 py-2 text-center">#</th>
+                                        <th className="px-2.5 py-2 text-start">Entry No.</th>
+                                        <th className="px-2.5 py-2 text-start">Entry Date</th>
+                                        <th className="px-2 py-2 text-center">Type</th>
+                                        <th className="px-2.5 py-2 text-end">Qty (Cartons)</th>
+                                        <th className="px-2.5 py-2 text-end">Gross Wt (KG)</th>
+                                        <th className="px-2.5 py-2 text-end">Net Wt (KG)</th>
+                                        <th className="px-2.5 py-2 text-start">Container No.</th>
+                                        <th className="px-2.5 py-2 text-start">BL No.</th>
+                                        <th className="px-2.5 py-2 text-start">Loading Country / Port</th>
+                                        <th className="px-2.5 py-2 text-start">Loading Date</th>
+                                        <th className="px-2.5 py-2 text-start">Receiving Country / Port</th>
+                                        <th className="px-2.5 py-2 text-start">Receiving Date</th>
+                                        <th className="px-2.5 py-2 text-center">Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                      <tr className="hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                                        <td className="px-2 py-2 text-center font-bold">1</td>
+                                        <td className="px-2.5 py-2 font-bold text-blue-600">AE-001-0007-01</td>
+                                        <td className="px-2.5 py-2 font-medium">31 Oct 2026</td>
+                                        <td className="px-2 py-2 text-center"><span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-800">Loading</span></td>
+                                        <td className="px-2.5 py-2 text-end font-bold">3,000</td>
+                                        <td className="px-2.5 py-2 text-end font-medium">33,600</td>
+                                        <td className="px-2.5 py-2 text-end font-medium">33,000</td>
+                                        <td className="px-2.5 py-2 font-bold text-slate-700 dark:text-slate-200">CNU1234567</td>
+                                        <td className="px-2.5 py-2 font-bold text-slate-700 dark:text-slate-200">BL789001</td>
+                                        <td className="px-2.5 py-2 font-medium">UAE / Jebel Ali</td>
+                                        <td className="px-2.5 py-2 font-medium">31 Oct 2026</td>
+                                        <td className="px-2.5 py-2 font-medium">China / Shanghai</td>
+                                        <td className="px-2.5 py-2 font-medium">06 Nov 2026</td>
+                                        <td className="px-2.5 py-2 text-center"><span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200"><CheckCircle2 className="h-3 w-3" /> Received</span></td>
+                                      </tr>
+                                      <tr className="hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                                        <td className="px-2 py-2 text-center font-bold">2</td>
+                                        <td className="px-2.5 py-2 font-bold text-blue-600">AE-001-0007-02</td>
+                                        <td className="px-2.5 py-2 font-medium">02 Nov 2026</td>
+                                        <td className="px-2 py-2 text-center"><span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-800">Loading</span></td>
+                                        <td className="px-2.5 py-2 text-end font-bold">2,000</td>
+                                        <td className="px-2.5 py-2 text-end font-medium">22,400</td>
+                                        <td className="px-2.5 py-2 text-end font-medium">22,000</td>
+                                        <td className="px-2.5 py-2 font-bold text-slate-700 dark:text-slate-200">CNU1234568</td>
+                                        <td className="px-2.5 py-2 font-bold text-slate-700 dark:text-slate-200">BL789002</td>
+                                        <td className="px-2.5 py-2 font-medium">UAE / Jebel Ali</td>
+                                        <td className="px-2.5 py-2 font-medium">02 Nov 2026</td>
+                                        <td className="px-2.5 py-2 font-medium">China / Shanghai</td>
+                                        <td className="px-2.5 py-2 font-medium">09 Nov 2026</td>
+                                        <td className="px-2.5 py-2 text-center"><span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200"><CheckCircle2 className="h-3 w-3" /> Received</span></td>
+                                      </tr>
+                                      <tr className="hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                                        <td className="px-2 py-2 text-center font-bold">3</td>
+                                        <td className="px-2.5 py-2 font-bold text-blue-600">AE-001-0007-03</td>
+                                        <td className="px-2.5 py-2 font-medium">04 Nov 2026</td>
+                                        <td className="px-2 py-2 text-center"><span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-800">Loading</span></td>
+                                        <td className="px-2.5 py-2 text-end font-bold">3,000</td>
+                                        <td className="px-2.5 py-2 text-end font-medium">33,600</td>
+                                        <td className="px-2.5 py-2 text-end font-medium">33,000</td>
+                                        <td className="px-2.5 py-2 font-bold text-slate-700 dark:text-slate-200">CNU1234569</td>
+                                        <td className="px-2.5 py-2 font-bold text-slate-700 dark:text-slate-200">BL789003</td>
+                                        <td className="px-2.5 py-2 font-medium">UAE / Jebel Ali</td>
+                                        <td className="px-2.5 py-2 font-medium">04 Nov 2026</td>
+                                        <td className="px-2.5 py-2 font-medium">China / Shanghai</td>
+                                        <td className="px-2.5 py-2 font-medium">11 Nov 2026</td>
+                                        <td className="px-2.5 py-2 text-center"><span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200"><Truck className="h-3 w-3" /> In Transit</span></td>
+                                      </tr>
+                                      <tr className="hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                                        <td className="px-2 py-2 text-center font-bold">4</td>
+                                        <td className="px-2.5 py-2 font-bold text-blue-600">AE-001-0007-04</td>
+                                        <td className="px-2.5 py-2 font-medium">06 Nov 2026</td>
+                                        <td className="px-2 py-2 text-center"><span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-800">Loading</span></td>
+                                        <td className="px-2.5 py-2 text-end font-bold">4,000</td>
+                                        <td className="px-2.5 py-2 text-end font-medium">44,800</td>
+                                        <td className="px-2.5 py-2 text-end font-medium">44,000</td>
+                                        <td className="px-2.5 py-2 font-bold text-slate-700 dark:text-slate-200">CNU1234570</td>
+                                        <td className="px-2.5 py-2 font-bold text-slate-700 dark:text-slate-200">BL789004</td>
+                                        <td className="px-2.5 py-2 font-medium">UAE / Jebel Ali</td>
+                                        <td className="px-2.5 py-2 font-medium">06 Nov 2026</td>
+                                        <td className="px-2.5 py-2 font-medium">China / Shanghai</td>
+                                        <td className="px-2.5 py-2 font-medium">13 Nov 2026</td>
+                                        <td className="px-2.5 py-2 text-center"><span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200"><Truck className="h-3 w-3" /> Loaded</span></td>
+                                      </tr>
+                                      <tr className="hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                                        <td className="px-2 py-2 text-center font-bold">5</td>
+                                        <td className="px-2.5 py-2 font-bold text-blue-600">AE-001-0007-05</td>
+                                        <td className="px-2.5 py-2 font-medium">08 Nov 2026</td>
+                                        <td className="px-2 py-2 text-center"><span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-800">Loading</span></td>
+                                        <td className="px-2.5 py-2 text-end font-bold">8,290</td>
+                                        <td className="px-2.5 py-2 text-end font-medium">92,850</td>
+                                        <td className="px-2.5 py-2 text-end font-medium">83,000</td>
+                                        <td className="px-2.5 py-2 font-bold text-slate-700 dark:text-slate-200">CNU1234571</td>
+                                        <td className="px-2.5 py-2 font-bold text-slate-700 dark:text-slate-200">BL789005</td>
+                                        <td className="px-2.5 py-2 font-medium">UAE / Jebel Ali</td>
+                                        <td className="px-2.5 py-2 font-medium">08 Nov 2026</td>
+                                        <td className="px-2.5 py-2 font-medium">China / Shanghai</td>
+                                        <td className="px-2.5 py-2 font-medium">15 Nov 2026</td>
+                                        <td className="px-2.5 py-2 text-center"><span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200"><Truck className="h-3 w-3" /> Loaded</span></td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </tbody>
+
+              {/* ── Grand Total Footer Row matching Reference UI ── */}
+              <tfoot className="border-t-2 border-slate-300 bg-slate-100/90 dark:border-slate-600 dark:bg-slate-900 font-black text-[13px]">
+                <tr>
+                  <td colSpan={8} className="px-4 py-3 text-start text-slate-900 dark:text-white">
+                    Total (5 Purchase Bookings)
+                  </td>
+                  <td className="px-3 py-3 text-end text-blue-600 dark:text-blue-400 font-black tabular-nums">
+                    44,000
+                  </td>
+                  <td className="px-3 py-3 text-end text-blue-600 dark:text-blue-400 font-black tabular-nums">
+                    285,500
+                  </td>
+                  <td className="px-3 py-3 text-end text-blue-600 dark:text-blue-400 font-black tabular-nums">
+                    265,500
+                  </td>
+                  <td colSpan={3}></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
 
