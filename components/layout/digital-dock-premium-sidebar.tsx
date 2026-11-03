@@ -300,7 +300,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: ShoppingCart,
         children: [
           { label: nt("Local Purchase Bills"), href: "/dashboard/purchase/local-purchase", icon: ShoppingCart, upgraded: true },
-          { label: nt("Local Purchase Transfer & Loading"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft, upgraded: true },
+          { label: nt("Local Purchase Transfer Payment"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft, upgraded: true },
           { label: nt("Local Purchase Journal Report"), href: "/dashboard/purchase/local-purchase-journal-report", icon: FileBarChart },
         ],
       },

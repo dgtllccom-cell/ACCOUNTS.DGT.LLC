@@ -4,8 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { isCountryLevelRole } from "@/lib/permissions/enterprise-roles";
 import { assertBusinessCityBranch } from "@/lib/api/branch-scope-guard";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/api/supabase";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { z } from "zod";
 
@@ -68,6 +70,7 @@ const localPurchaseUpdateSchema = z.object({
   loadingDetails: z.record(z.string(), z.any()).default({}),
   loadingDate: z.string().nullable().optional(),
   remarks: z.string().nullable().optional(),
+  fromTransferRegister: z.boolean().optional(),
 }).refine(
   (value) => Boolean(value.salesAccountNo?.trim() || value.brokerAccountNo?.trim()),
   { path: ["salesAccountNo"], message: "A credit sales/payable ledger is required." },
@@ -86,6 +89,15 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       (session as any).role === "super_admin"
     );
 
+    const isCountryAdmin = Boolean(
+      session.roles?.some((r: string) => isCountryLevelRole(r)) ||
+      isCountryLevelRole(String((session as any).role || "")) ||
+      ((session.countryIds?.length ?? 0) > 0 &&
+        (session.cityBranchIds?.length ?? 0) === 0 &&
+        (session.countryBranchIds?.length ?? 0) === 0)
+    );
+    const canEditPosted = isSuperAdmin || isCountryAdmin;
+
     const existing = await withLocalPg(async (sql) => {
       const rows = await sql`
         select id, country_id, country_branch_id, city_branch_id, status,
@@ -99,10 +111,10 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (!existing) throw new ApiClientError("Local purchase record not found", { status: 404, code: "NOT_FOUND" });
 
     const isDraft = String((existing as any).status || "").toLowerCase() === "draft";
-    if (!isDraft && !isSuperAdmin) {
+    if ((!isDraft || payload.fromTransferRegister) && !canEditPosted) {
       throw new ApiClientError(
-        "Only a draft purchase can be edited. Accepted or transferred records require Super Admin privileges.",
-        { status: 403, code: "SUPER_ADMIN_REQUIRED" }
+        "Edit Bill is available only to Super Admin and authorized Country Admin within their permitted scope.",
+        { status: 403, code: "FORBIDDEN" }
       );
     }
 
@@ -119,7 +131,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     await assertBusinessCityBranch(cityBranchId ?? null);
 
     const updatedViaPg = await withLocalPg(async (sql) => {
-      const statusFilter = isSuperAdmin ? sql`` : sql`and status = 'draft'`;
+      const statusFilter = canEditPosted ? sql`` : sql`and status = 'draft'`;
       const rows = await sql`
         update public.local_purchases set
           country_branch_id = ${countryBranchId}, city_branch_id = ${cityBranchId || null},
@@ -186,7 +198,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         updated_at: new Date().toISOString(),
       }).eq("id", id).is("deleted_at", null);
 
-      if (!isSuperAdmin) {
+      if (!canEditPosted) {
         query = query.eq("status", "draft");
       }
 
@@ -196,6 +208,19 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     }
 
     if (!updated) throw new ApiClientError("Local purchase record not found or update not permitted", { status: 404, code: "NOT_FOUND" });
+
+    try {
+      await writeAuditLog({
+        action: "local_purchase.update",
+        entityTable: "local_purchases",
+        entityId: id,
+        companyId: (existing as any).company_id ?? null,
+        before: existing,
+        after: updated,
+      });
+    } catch (auditErr) {
+      console.warn("[LocalPurchase PATCH] Audit log notice:", auditErr);
+    }
 
     // Cascade updates to downstream Roznamcha and Journal records if this purchase was already transferred/posted
     const rozEntryId = (existing as any).roznamcha_entry_id || (updated as any).roznamcha_entry_id;

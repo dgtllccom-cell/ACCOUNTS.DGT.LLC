@@ -1959,7 +1959,7 @@ export function LocalPurchaseView({
       setCurrentStep(1);
       await loadHistory();
       // Financial posting is done. Where the goods physically go is a separate decision in the Goods Transfer Journal.
-      if (savedPurchase?.id) router.push(`/dashboard/purchase/local-purchase/${savedPurchase.id}/goods-transfer`);
+      if (savedPurchase?.id) router.push(`/dashboard/purchase/local-purchase-transfer-payment?billId=${savedPurchase.id}`);
     } catch (err: any) {
       alert(err.message || "Failed to transfer and post to General Ledger.");
     } finally {
@@ -5703,7 +5703,7 @@ export function LocalPurchaseView({
                         // Update local row status and reload registry
                         setSelectedRowForVoucher((prev: any | null) => prev ? { ...prev, status: "posted" } : null);
                         await loadHistory();
-                        router.push(`/dashboard/purchase/local-purchase/${selectedRowForVoucher.id}/goods-transfer`);
+                        router.push(`/dashboard/purchase/local-purchase-transfer-payment?billId=${selectedRowForVoucher.id}`);
                       } catch (err: any) {
                         alert(err.message || "An error occurred during transfer.");
                       }

@@ -1,1495 +1,2327 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { openTransferPaymentPrintReport } from "@/lib/reports/open-transfer-payment-print-report";
-import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
-import { LocalGoodsReceivedView } from "@/features/purchases/components/local-goods-received-view";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
-  Building2, FileText, Search, RefreshCw,
-  Coins, Loader2, CheckCircle2, Send, Printer,
-  Scale, CreditCard, ArrowDownLeft, Ship, Warehouse,
-  PauseCircle, Package, Truck, ArrowRight, Check, X,
-  MapPin, User, Clock, AlertTriangle, Layers, MoreVertical
+  FileText,
+  Search,
+  Filter,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  Printer,
+  Eye,
+  Pencil,
+  MoreVertical,
+  Globe2,
+  Building2,
+  Users,
+  Package,
+  Receipt,
+  Scale,
+  Check,
+  X,
+  Download,
+  RefreshCw,
+  ArrowLeft,
+  Layers,
+  CreditCard,
+  Wallet,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { t } from "@/lib/i18n/ui";
-import { Button } from "@/components/ui/button";
-import { Th } from "@/components/ui/translated-th";
+import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { cn } from "@/lib/utils";
 
-const UAE_COUNTRY_MATCHERS = ["UNITED ARAB", "UAE", "EMIRATES", "AE"];
-
-function isUaeCountryName(value?: string | null) {
-  const normalized = String(value || "").trim().toUpperCase();
-  return UAE_COUNTRY_MATCHERS.some(token => normalized.includes(token));
+export interface LocalPurchaseTransferPaymentViewProps {
+  session?: any;
+  goodsList?: any[];
+  countryBranches?: any[];
+  cityBranches?: any[];
+  companies?: any[];
+  countries?: any[];
 }
 
-function amountToWordsEn(amount: number, currency = "AED") {
-  if (!Number.isFinite(amount)) return `${currency} zero only`;
-  const ones = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
-  const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
-  const chunkToWords = (num: number): string => {
-    const hundred = Math.floor(num / 100);
-    const rest = num % 100;
-    const parts: string[] = [];
-    if (hundred) parts.push(`${ones[hundred]} hundred`);
-    if (rest < 20) {
-      if (rest) parts.push(ones[rest]);
-    } else {
-      const ten = Math.floor(rest / 10);
-      const one = rest % 10;
-      parts.push(one ? `${tens[ten]}-${ones[one]}` : tens[ten]);
-    }
-    return parts.join(" ");
-  };
-  const whole = Math.floor(Math.abs(amount));
-  if (whole === 0) return `${currency} zero only`;
-  const scales = ["", "thousand", "million", "billion"];
-  const parts: string[] = [];
-  let remaining = whole;
-  let scaleIndex = 0;
-  while (remaining > 0) {
-    const chunk = remaining % 1000;
-    if (chunk) parts.unshift(`${chunkToWords(chunk)} ${scales[scaleIndex]}`.trim());
-    remaining = Math.floor(remaining / 1000);
-    scaleIndex += 1;
+type PaymentOptionCategory = "invoice" | "credit" | "final" | "cash";
+
+interface ResolvedPaymentMeta {
+  category: PaymentOptionCategory;
+  optionLabel: string;
+  destinationLabel: string;
+  pillClass: string;
+  totalPayment: number;
+  actualPaid: number;
+  balance: number;
+}
+
+function toNum(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function deriveCountryCode(countryName?: string | null, isoCode?: string | null): string {
+  const iso = String(isoCode || "").trim().toUpperCase();
+  if (iso && iso.length <= 3) return iso;
+  const s = String(countryName || "").trim().toUpperCase();
+  if (!s) return "AE";
+  if (s.includes("EMIRATES") || s.includes("UAE") || s === "AE") return "AE";
+  if (s.includes("PAKISTAN") || s === "PK") return "PK";
+  if (s.includes("AFGHANISTAN") || s === "AF") return "AF";
+  if (s.includes("IRAN") || s === "IR") return "IR";
+  if (s.includes("INDIA") || s === "IN") return "IN";
+  if (s.includes("CHINA") || s === "CN") return "CN";
+  if (s.includes("OMAN") || s === "OM") return "OM";
+  if (s.includes("UZBEKISTAN") || s === "UZ") return "UZ";
+  if (s.includes("TAJIKISTAN") || s === "TJ") return "TJ";
+  if (s.includes("TURKEY") || s === "TR") return "TR";
+  return s.slice(0, 2);
+}
+
+function deriveBranchCode(row: any, countryCode: string): string {
+  const rawCode = String(row.city_branch_code || row.branch_code || "").trim().toUpperCase();
+  if (rawCode) {
+    if (rawCode.startsWith(countryCode + "-")) return rawCode;
+    if (/^[A-Z]{2}-\d+/.test(rawCode)) return rawCode;
+    return `${countryCode}-${rawCode}`;
   }
-  return `${currency} ${parts.join(" ")} only`.replace(/\s+/g, " ");
+  return `${countryCode}-001`;
 }
 
-interface LocalPurchaseRecord {
-  id: string;
-  serialNo?: string;
-  serial_no?: string;
-  billNo?: string;
-  bill_no?: string;
-  superAdminSerialNo?: string;
-  super_admin_serial_no?: string;
-  global_serial_no?: string;
-  countrySerialNo?: string;
-  country_serial_no?: string;
-  computedCountrySerial?: string;
-  branchSerialNo?: string;
-  branch_serial_no?: string;
-  computedBranchSerial?: string;
-  countryId?: string;
-  country_id?: string;
-  countryName?: string;
-  country_name?: string;
-  countryBranchId?: string;
-  country_branch_id?: string;
-  branchName?: string;
-  branch_name?: string;
-  goodsName?: string;
-  goods_name?: string;
-  brand?: string;
-  originCountryName?: string;
-  origin_country_name?: string;
-  chassisCode?: string;
-  chassis_code?: string;
-  lotNo?: string;
-  lot_no?: string;
-  quantityKgs?: number;
-  quantity_kgs?: number;
-  numbers?: number;
-  quantityName?: string;
-  quantity_name?: string;
-  totalGrossWeight?: number;
-  total_gross_weight?: number;
-  emptyKgs?: number;
-  empty_kgs?: number;
-  netWeight?: number;
-  net_weight?: number;
-  purchaseRate?: number;
-  purchase_rate?: number;
-  purchaseCost?: number;
-  purchase_cost?: number;
-  taxAmount?: number;
-  tax_amount?: number;
-  finalCost?: number;
-  final_cost?: number;
-  localCurrency?: string;
-  local_currency?: string;
-  paymentMode?: string;
-  payment_mode?: string;
-  purchaseAccountNo?: string;
-  purchase_account_no?: string;
-  salesAccountNo?: string;
-  sales_account_no?: string;
-  brokerAccountNo?: string;
-  broker_account_no?: string;
-  createdAt?: string;
-  created_at?: string;
-  form_data?: any;
-  status?: string;
-  supplierName?: string;
-  supplier_name?: string;
-  journal_serial_no?: string | null;
-  shippingMode?: string;
-  shipping_mode?: string;
-  warehouseName?: string;
-  warehouse_name?: string;
-  warehouseId?: string;
-  warehouse_id?: string;
-  warehousePlotNo?: string;
-  warehouse_plot_no?: string;
-  truckNo?: string;
-  truck_no?: string;
-  driverName?: string;
-  driver_name?: string;
-  size?: string;
-  applyTax?: string;
-  apply_tax?: string;
-  taxType?: string;
-  tax_type?: string;
-  taxPercentage?: number;
-  tax_percentage?: number;
-  remainingBalance?: number;
-  remaining_balance?: number;
-  loadingDate?: string;
-  loading_date?: string;
-  goods_receipt_type?: string;
-  goods_receipt_status?: string;
-  goods_receipt_details?: any;
-  goods_received_at?: string;
-  created_by_name?: string;
+function formatBillNo(row: any, indexFallback?: number): string {
+  // Do not display Invoice Number or transaction Reference in this register;
+  // show the original Bill / Entry No.
+  const candidates = [
+    row.bill_no,
+    row.entry_serial,
+    row.branch_serial_no,
+    row.branch_serial,
+    row.country_serial_no,
+    row.country_serial,
+    row.super_admin_serial,
+    row.journal_serial_no,
+  ];
+  for (const c of candidates) {
+    const val = String(c || "").trim();
+    if (val) return val;
+  }
+  const idStr = String(row.id || "").replace(/[^0-9a-f]/gi, "");
+  if (idStr.length >= 4) {
+    const num = (parseInt(idStr.slice(-4), 16) % 9000) + 1000;
+    return `LP-${String(num).padStart(4, "0")}`;
+  }
+  return `LP-${String((indexFallback ?? 0) + 1).padStart(4, "0")}`;
 }
 
-type ActionModalType = "export" | "warehouse" | "branch" | "hold";
+function formatDisplayDate(raw?: string | null): string {
+  if (!raw) return "—";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return String(raw).slice(0, 10);
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatMoneyAmount(currency: string, amount: number): string {
+  const cur = String(currency || "AED").trim().toUpperCase() || "AED";
+  const rounded = Math.round((Number(amount) || 0) * 100) / 100;
+  const hasDecimals = Math.abs(rounded % 1) > 0.001;
+  return `${cur} ${rounded.toLocaleString("en-US", {
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function resolvePaymentMeta(row: any): ResolvedPaymentMeta {
+  const totalPayment = Math.max(0, toNum(row.final_cost ?? row.finalCost ?? row.purchase_cost ?? row.purchaseCost));
+  const rawMode = String(row.payment_mode ?? row.paymentMode ?? "Cash").trim();
+  const modeLower = rawMode.toLowerCase();
+  const latestKind = String(row.latest_payment_kind || "").toLowerCase();
+  const statusLower = String(row.status || row.bill_status || "draft").toLowerCase();
+  const isPosted = ["posted", "accepted", "transferred", "completed", "paid"].includes(statusLower);
+
+  // Determine actual posted paid amount (never treat a bill transfer or credit allocation as paid money)
+  let actualPaid = 0;
+  if (row.paid_amount !== undefined && row.paid_amount !== null) {
+    actualPaid = Math.min(totalPayment, Math.max(0, toNum(row.paid_amount)));
+  } else if (toNum(row.posted_payment_count) > 0) {
+    actualPaid = Math.min(totalPayment, Math.max(0, toNum(row.posted_paid_amount)));
+  } else if (modeLower.includes("credit")) {
+    actualPaid = 0;
+  } else if (
+    modeLower.includes("advance") ||
+    modeLower.includes("invoice") ||
+    modeLower.includes("final") ||
+    modeLower.includes("remaining")
+  ) {
+    const advAmt = Math.max(0, toNum(row.advance_amount ?? row.advanceAmount));
+    actualPaid = isPosted && advAmt > 0 ? Math.min(totalPayment, advAmt) : 0;
+  } else if (modeLower.includes("cash") || modeLower.includes("bank") || modeLower.includes("hawala")) {
+    actualPaid = isPosted && Boolean(row.roznamcha_entry_id) ? totalPayment : 0;
+  }
+
+  const balance = Math.max(0, totalPayment - actualPaid);
+
+  // Classify option & destination
+  if (modeLower.includes("credit") || latestKind === "credit") {
+    return {
+      category: "credit",
+      optionLabel: "Credit",
+      destinationLabel: "Credit Payment",
+      pillClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800",
+      totalPayment,
+      actualPaid,
+      balance,
+    };
+  }
+
+  if (
+    modeLower.includes("final") ||
+    modeLower.includes("remaining") ||
+    latestKind === "remaining" ||
+    latestKind === "final"
+  ) {
+    return {
+      category: "final",
+      optionLabel: "Final Payment",
+      destinationLabel: "Final Payment",
+      pillClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800",
+      totalPayment,
+      actualPaid,
+      balance,
+    };
+  }
+
+  if (modeLower.includes("advance") || modeLower.includes("invoice") || latestKind === "advance") {
+    return {
+      category: "invoice",
+      optionLabel: "Invoice Payment",
+      destinationLabel: "Invoice Payment",
+      pillClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800",
+      totalPayment,
+      actualPaid,
+      balance,
+    };
+  }
+
+  if (modeLower.includes("bank")) {
+    return {
+      category: "cash",
+      optionLabel: "Bank Transfer",
+      destinationLabel: "Bank / Cheque Roznamcha",
+      pillClass: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
+      totalPayment,
+      actualPaid,
+      balance,
+    };
+  }
+
+  if (modeLower.includes("hawala")) {
+    return {
+      category: "cash",
+      optionLabel: "Hawala / Transfer",
+      destinationLabel: "Hawala Roznamcha",
+      pillClass: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
+      totalPayment,
+      actualPaid,
+      balance,
+    };
+  }
+
+  return {
+    category: "cash",
+    optionLabel: "Cash",
+    destinationLabel: "Cash Roznamcha",
+    pillClass: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
+    totalPayment,
+    actualPaid,
+    balance,
+  };
+}
 
 export function LocalPurchaseTransferPaymentView({
   session,
+  goodsList = [],
   countryBranches = [],
   cityBranches = [],
-}: {
-  session: any;
-  countryBranches?: any[];
-  cityBranches?: any[];
-}) {
-  const router = useRouter();
-  const activeLang = useActiveLanguage();
-  const isRtl = ["ur","ar","fa","ps"].includes(activeLang);
-  const tt = (key: string, fb: string) => t(activeLang, key as never, fb);
+  countries = [],
+}: LocalPurchaseTransferPaymentViewProps) {
+  const { lang, isRtl } = useErpScreen("lp_transfer");
+  const tr = useCallback((label: string) => translateHeader(lang, label), [lang]);
+  const searchParams = useSearchParams();
+  const highlightBillId = searchParams?.get("billId") || searchParams?.get("highlight") || "";
 
-  const loc = (en: string, ur: string, ar: string, fa: string, ps: string) => {
-    if (activeLang === "ur") return ur;
-    if (activeLang === "ar") return ar;
-    if (activeLang === "fa") return fa;
-    if (activeLang === "ps") return ps;
-    return en;
-  };
-
-  const [activeWorkflowTab, setActiveWorkflowTab] = useState<"operations" | "goods_received" | "pending_gl">("operations");
-  const [allConfirmedPurchases, setAllConfirmedPurchases] = useState<LocalPurchaseRecord[]>([]);
-  const [pendingGlPurchases, setPendingGlPurchases] = useState<LocalPurchaseRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRowForVoucher, setSelectedRowForVoucher] = useState<LocalPurchaseRecord | null>(null);
-  const [transferringId, setTransferringId] = useState<string | null>(null);
-
-  // 4 Actions Modal state
-  const [actionTargetRow, setActionTargetRow] = useState<LocalPurchaseRecord | null>(null);
-  const [openRowActionId, setOpenRowActionId] = useState<string | null>(null);
-  const [actionType, setActionType] = useState<ActionModalType>("warehouse");
-  const [actionQty, setActionQty] = useState<number>(0);
-  const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("");
-  const [warehousePlotNo, setWarehousePlotNo] = useState<string>("");
-  const [destCountryBranchId, setDestCountryBranchId] = useState<string>("");
-  const [exportDestination, setExportDestination] = useState<string>("");
-  const [truckNo, setTruckNo] = useState<string>("");
-  const [driverName, setDriverName] = useState<string>("");
-  const [actionNotes, setActionNotes] = useState<string>("");
-  const [confirmReceiptImmediate, setConfirmReceiptImmediate] = useState<boolean>(true);
-  const [savingAction, setSavingAction] = useState<boolean>(false);
-
-  // Warehouses list
-  const [warehousesList, setWarehousesList] = useState<any[]>([]);
-
-  useEffect(() => {
-    async function loadWhs() {
-      try {
-        const whs = await fetchWarehouses();
-        setWarehousesList(whs || []);
-      } catch (err) {
-        console.warn("Failed to load warehouses list:", err);
-      }
+  // Role detection: each user sees only one set of three cards for their signed-in role and permitted scope.
+  const roleTier = useMemo<"super_admin" | "country_admin" | "branch_admin">(() => {
+    if (!session) return "super_admin";
+    const roles: string[] = Array.isArray(session.roles) ? session.roles.map(String) : [];
+    const primaryRole = String(session.role || session.user?.role || "").toLowerCase();
+    if (
+      session.isSuperAdmin ||
+      session.scopes?.isSuperAdmin ||
+      roles.includes("super_admin") ||
+       roles.includes("business_super_admin") ||
+      primaryRole === "super_admin"
+    ) {
+      return "super_admin";
     }
-    void loadWhs();
-  }, []);
+    if (
+      roles.includes("country_admin") ||
+      roles.includes("country_manager") ||
+      roles.includes("country_user") ||
+      primaryRole.includes("country") ||
+      ((session.countryIds?.length ?? 0) > 0 &&
+        (session.cityBranchIds?.length ?? 0) === 0 &&
+        (session.countryBranchIds?.length ?? 0) === 0)
+    ) {
+      return "country_admin";
+    }
+    return "branch_admin";
+  }, [session]);
 
-  // Fetch local purchases
-  const loadReports = async () => {
+  const canEditBill = roleTier === "super_admin" || roleTier === "country_admin";
+
+  // Data state
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCountryId, setSelectedCountryId] = useState<string>("all");
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("all");
+  const [selectedPaymentCategory, setSelectedPaymentCategory] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+
+  // Super Admin country-to-branch drilldown state inside Card 3
+  const [drilledCountryId, setDrilledCountryId] = useState<string | null>(null);
+
+  // Popovers & Menus
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [openRowMenuId, setOpenRowMenuId] = useState<string | null>(null);
+
+  const filterRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+
+  // Modals (View Bill, Edit Bill, Print A4)
+  const [viewingBill, setViewingBill] = useState<any | null>(null);
+  const [editingBill, setEditingBill] = useState<any | null>(null);
+  const [printingBill, setPrintingBill] = useState<any | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  // Edit Form State
+  const [editForm, setEditForm] = useState({
+    goodsName: "",
+    supplierName: "",
+    purchaseAccountNo: "",
+    salesAccountNo: "",
+    quantityName: "Cartons",
+    numbers: "",
+    totalGrossWeight: "",
+    emptyKgs: "",
+    netWeight: "",
+    purchaseRate: "",
+    localCurrency: "AED",
+    paymentMode: "Cash",
+    advanceAmount: "",
+    contractNo: "",
+    remarks: "",
+  });
+
+  // Pagination
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  const fetchBills = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch("/api/erp/purchases/local-purchase");
-      const payload = await res.json();
-      if (payload.ok && payload.data?.purchases) {
-        const raw = payload.data.purchases as LocalPurchaseRecord[];
-
-        // 1. All confirmed / accepted / posted bills available for transfer & loading
-        const confirmed = raw.filter(p => {
-          const st = String(p.status || "").toLowerCase();
-          return ["accepted", "posted", "transferred", "approved", "completed"].includes(st);
-        });
-        setAllConfirmedPurchases(confirmed);
-
-        // 2. Pending GL transfers: accepted bills awaiting GL posting
-        const pending = raw.filter(p => {
-          if (p.status !== "accepted") return false;
-          const mode = String(p.paymentMode || p.payment_mode || "").trim().toLowerCase().split("(")[0].trim();
-          return mode !== "credit";
-        });
-        setPendingGlPurchases(pending);
+      const res = await fetch(`/api/erp/purchases/local-purchase?lang=${encodeURIComponent(lang)}`, {
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        throw new Error(json?.error?.message || "Failed to load Local Purchase Transfer Register.");
       }
-    } catch (err) {
-      console.error("Failed to load local purchase transfers:", err);
+      const list = Array.isArray(json.data) ? json.data : [];
+      setRows(list);
+    } catch (e: any) {
+      setError(e?.message || "Failed to load records.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [lang]);
 
   useEffect(() => {
-    void loadReports();
+    fetchBills();
+  }, [fetchBills]);
+
+  // Close popovers on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (filterRef.current && !filterRef.current.contains(target)) {
+        setFilterOpen(false);
+      }
+      if (actionsRef.current && !actionsRef.current.contains(target)) {
+        setActionsOpen(false);
+      }
+      if (!(target as HTMLElement)?.closest?.("[data-row-action-menu]")) {
+        setOpenRowMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Filter confirmed purchases by search query
-  const filteredOperations = useMemo(() => {
-    let result = allConfirmedPurchases;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(p =>
-        (p.goodsName || p.goods_name || "").toLowerCase().includes(q) ||
-        (p.brand || "").toLowerCase().includes(q) ||
-        (p.serialNo || p.serial_no || p.billNo || "").toLowerCase().includes(q) ||
-        (p.branchName || p.branch_name || "").toLowerCase().includes(q) ||
-        (p.countryName || p.country_name || "").toLowerCase().includes(q) ||
-        (p.supplierName || p.supplier_name || "").toLowerCase().includes(q) ||
-        (p.warehouseName || p.warehouse_name || "").toLowerCase().includes(q) ||
-        (p.shippingMode || p.shipping_mode || "").toLowerCase().includes(q) ||
-        (p.goods_receipt_status || "").toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [allConfirmedPurchases, searchQuery]);
+  // Transferred / Posted bills for the Transfer Payment Register
+  // When a Local Purchase bill is transferred, it appears here automatically.
+  // If all rows in a dev environment are draft, we still include them if status filter is 'all' and no posted rows exist,
+  // or show all Local Purchase bills with their accurate Posting & Transfer status counts.
+  const enrichedRows = useMemo(() => {
+    return rows.map((r, idx) => {
+      const countryCode = deriveCountryCode(r.country_name, r.country_code);
+      const branchCode = deriveBranchCode(r, countryCode);
+      const billNo = formatBillNo(r, rows.length - 1 - idx);
+      const paymentMeta = resolvePaymentMeta(r);
+      const currency = String(r.local_currency || r.purchase_currency || "AED").trim().toUpperCase() || "AED";
+      const qty = toNum(r.numbers || r.quantity_kgs);
+      const unit = String(r.quantity_name || "Cartons").trim() || "Cartons";
+      const grossKg = toNum(r.total_gross_weight || r.quantity_kgs);
+      const netKg = toNum(r.net_weight || r.total_gross_weight);
 
-  // Filter pending GL purchases
-  const filteredPendingGl = useMemo(() => {
-    let result = pendingGlPurchases;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(p =>
-        (p.goodsName || p.goods_name || "").toLowerCase().includes(q) ||
-        (p.brand || "").toLowerCase().includes(q) ||
-        (p.serialNo || p.serial_no || p.billNo || "").toLowerCase().includes(q) ||
-        (p.branchName || p.branch_name || "").toLowerCase().includes(q) ||
-        (p.countryName || p.country_name || "").toLowerCase().includes(q) ||
-        (p.supplierName || p.supplier_name || "").toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [pendingGlPurchases, searchQuery]);
-
-  // Financial KPI totals
-  const totalPendingAmount = useMemo(() => {
-    return filteredPendingGl.reduce((acc, p) => acc + Number(p.finalCost || p.final_cost || p.purchaseCost || p.purchase_cost || 0), 0);
-  }, [filteredPendingGl]);
-
-  // Open 4 Actions Modal
-  const openActionModal = (row: LocalPurchaseRecord, type: ActionModalType) => {
-    setActionTargetRow(row);
-    setActionType(type);
-    const totalQty = Number(row.numbers || row.quantityKgs || row.quantity_kgs || 0);
-    const transferred = Number(row.goods_receipt_details?.transferQty || 0);
-    const remaining = Math.max(0, totalQty - transferred);
-    setActionQty(remaining);
-    setSelectedWarehouseId(row.warehouseId || row.warehouse_id || warehousesList[0]?.id || "");
-    setWarehousePlotNo(row.warehousePlotNo || row.warehouse_plot_no || "");
-    setDestCountryBranchId(countryBranches[0]?.id || "");
-    setExportDestination(row.originCountryName || row.origin_country_name || "Overseas Port");
-    setTruckNo(row.truckNo || row.truck_no || "");
-    setDriverName(row.driverName || row.driver_name || "");
-    setActionNotes("");
-    setConfirmReceiptImmediate(true);
-  };
-
-  // Submit 4 Actions Modal
-  const handleExecuteAction = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!actionTargetRow) return;
-    const availableQty = Math.max(0, Number(actionTargetRow.numbers || actionTargetRow.quantityKgs || actionTargetRow.quantity_kgs || 0) - Number(actionTargetRow.goods_receipt_details?.transferQty || 0));
-    if (!Number.isFinite(actionQty) || actionQty <= 0 || actionQty > availableQty) {
-      alert("Transfer quantity must be greater than zero and must not exceed available quantity.");
-      return;
-    }
-
-    setSavingAction(true);
-    try {
-      let receiptType: "warehouse" | "loading" | "export" = "warehouse";
-      let statusLabel = "Confirmed";
-      const details: Record<string, any> = {
-        action: actionType,
-        transferQty: actionQty,
-        loadingDate: new Date().toISOString().slice(0, 10),
-        notes: actionNotes,
-        truckNo,
-        driverName,
+      return {
+        ...r,
+        _billNo: billNo,
+        _countryCode: countryCode,
+        _branchCode: branchCode,
+        _currency: currency,
+        _qty: qty,
+        _unit: unit,
+        _grossKg: grossKg,
+        _netKg: netKg,
+        _drName: r.purchase_account_name || "Purchase Inventory",
+        _drCode: r.purchase_account_code || "DR-001",
+        _crName: r.sales_account_name || r.supplier_name || "Local Supplier",
+        _crCode: r.sales_account_code || "CR-101",
+        _paymentMeta: paymentMeta,
       };
+    });
+  }, [rows]);
 
-      if (actionType === "export") {
-        receiptType = "export";
-        statusLabel = "Export Shipment Dispatched";
-        details.exportDestination = exportDestination;
-      } else if (actionType === "warehouse") {
-        receiptType = "warehouse";
-        const matchedWh = warehousesList.find(w => w.id === selectedWarehouseId);
-        statusLabel = confirmReceiptImmediate ? "Warehouse Received" : "Warehouse Dispatched";
-        details.warehouseId = selectedWarehouseId;
-        details.warehouseName = matchedWh?.warehouse_name || matchedWh?.name || "Warehouse";
-        details.warehousePlotNo = warehousePlotNo;
-        details.receivingConfirmed = confirmReceiptImmediate;
-      } else if (actionType === "branch") {
-        receiptType = "loading";
-        const matchedBr = countryBranches.find(b => b.id === destCountryBranchId);
-        statusLabel = "Branch Transfer Dispatched";
-        details.destCountryBranchId = destCountryBranchId;
-        details.destBranchName = matchedBr?.name || "Authorized Branch";
-      } else if (actionType === "hold") {
-        receiptType = "warehouse";
-        statusLabel = "Confirmed & Held at Current Location";
-        details.holdLocation = actionTargetRow.warehouseName || actionTargetRow.warehouse_name || "Purchase Location";
+  // Filtered rows
+  const filteredRows = useMemo(() => {
+    return enrichedRows.filter((r) => {
+      if (selectedCountryId !== "all" && String(r.country_id || "") !== selectedCountryId) {
+        return false;
+      }
+      if (
+        selectedBranchId !== "all" &&
+        String(r.country_branch_id || "") !== selectedBranchId &&
+        String(r.city_branch_id || "") !== selectedBranchId
+      ) {
+        return false;
+      }
+      if (selectedPaymentCategory !== "all" && r._paymentMeta.category !== selectedPaymentCategory) {
+        return false;
+      }
+      if (selectedStatus !== "all") {
+        const st = String(r.status || "draft").toLowerCase();
+        if (selectedStatus === "posted" && !["posted", "accepted", "transferred", "paid"].includes(st)) {
+          return false;
+        }
+        if (selectedStatus === "draft" && st !== "draft") {
+          return false;
+        }
+        if (selectedStatus === "pending" && ["posted", "accepted", "transferred", "paid", "draft"].includes(st)) {
+          return false;
+        }
+      }
+      if (dateFrom) {
+        const d = String(r.transfer_date || r.created_at || "").slice(0, 10);
+        if (d && d < dateFrom) return false;
+      }
+      if (dateTo) {
+        const d = String(r.transfer_date || r.created_at || "").slice(0, 10);
+        if (d && d > dateTo) return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        const hay = [
+          r._billNo,
+          r._countryCode,
+          r._branchCode,
+          r._drName,
+          r._drCode,
+          r._crName,
+          r._crCode,
+          r.goods_name,
+          r.supplier_name,
+          r._paymentMeta.optionLabel,
+          r._paymentMeta.destinationLabel,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [
+    enrichedRows,
+    selectedCountryId,
+    selectedBranchId,
+    selectedPaymentCategory,
+    selectedStatus,
+    dateFrom,
+    dateTo,
+    searchQuery,
+  ]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCountryId, selectedBranchId, selectedPaymentCategory, selectedStatus, dateFrom, dateTo]);
+
+  // Scope Subtitle for the 3 top cards
+  const scopeSubtitle = useMemo(() => {
+    if (roleTier === "super_admin") {
+      if (selectedCountryId !== "all") {
+        const c = countries.find((x: any) => String(x.id) === selectedCountryId);
+        const code = deriveCountryCode(c?.name, c?.iso_code);
+        return `${code} — ${tr("Authorized branches — Current period")}`;
+      }
+      return tr("All authorized countries — Current period");
+    }
+    if (roleTier === "country_admin") {
+      const firstCountry = countries[0] || countryBranches[0];
+      const code = deriveCountryCode(
+        firstCountry?.name || firstCountry?.country_name,
+        firstCountry?.iso_code || firstCountry?.country_code
+      );
+      return `${code} — ${tr("Authorized branches — Current period")}`;
+    }
+    // branch_admin
+    const firstBranch = cityBranches[0] || countryBranches[0];
+    const cCode = deriveCountryCode(firstBranch?.country_name, firstBranch?.country_code);
+    const bCode = firstBranch?.code
+      ? String(firstBranch.code).toUpperCase().startsWith(cCode)
+        ? String(firstBranch.code).toUpperCase()
+        : `${cCode}-${String(firstBranch.code).toUpperCase()}`
+      : enrichedRows[0]?._branchCode || `${cCode}-001`;
+    return `${bCode} — ${tr("Current period")}`;
+  }, [roleTier, selectedCountryId, countries, countryBranches, cityBranches, enrichedRows, tr]);
+
+  // Dashboard Metrics for the 3 Approved Top Cards
+  const dashboardMetrics = useMemo(() => {
+    const primaryCurrency =
+      filteredRows[0]?._currency ||
+      enrichedRows[0]?._currency ||
+      (roleTier === "branch_admin" || roleTier === "country_admin" ? "AED" : "AED");
+
+    let totalFinalAmount = 0;
+    let postedAcceptedCount = 0;
+    let draftCount = 0;
+    let pendingCount = 0;
+
+    let invoiceOptionTotal = 0;
+    let remainingOptionTotal = 0;
+    let creditOptionTotal = 0;
+    let paidOptionTotal = 0;
+
+    let actualPaidTotal = 0;
+    let balanceTotal = 0;
+
+    const suppliersSet = new Set<string>();
+    const goodsSet = new Set<string>();
+    const unitTotals = new Map<string, number>();
+
+    filteredRows.forEach((r) => {
+      const amt = r._paymentMeta.totalPayment;
+      totalFinalAmount += amt;
+      actualPaidTotal += r._paymentMeta.actualPaid;
+      balanceTotal += r._paymentMeta.balance;
+
+      const st = String(r.status || "draft").toLowerCase();
+      if (["posted", "accepted", "transferred", "paid", "completed"].includes(st)) {
+        postedAcceptedCount++;
+      } else if (st === "draft") {
+        draftCount++;
+      } else {
+        pendingCount++;
       }
 
-      const res = await fetch("/api/erp/purchases/local-purchase", {
+      if (r._paymentMeta.category === "invoice") {
+        invoiceOptionTotal += amt;
+      } else if (r._paymentMeta.category === "final") {
+        remainingOptionTotal += amt;
+      } else if (r._paymentMeta.category === "credit") {
+        creditOptionTotal += amt;
+      } else {
+        paidOptionTotal += amt;
+      }
+
+      if (r._crName) suppliersSet.add(String(r._crName).toLowerCase());
+      if (r.goods_name) goodsSet.add(String(r.goods_name).toLowerCase());
+      const u = r._unit || "Cartons";
+      unitTotals.set(u, (unitTotals.get(u) || 0) + r._qty);
+    });
+
+    const totalBills = filteredRows.length;
+    const avgBillAmount = totalBills > 0 ? totalFinalAmount / totalBills : 0;
+
+    const pct = (part: number) => (totalFinalAmount > 0 ? Math.round((part / totalFinalAmount) * 100) : 0);
+
+    // Format total quantity summary for Branch Admin card
+    let totalQuantityLabel = "0";
+    if (unitTotals.size === 1) {
+      const [[u, q]] = Array.from(unitTotals.entries());
+      totalQuantityLabel = `${q.toLocaleString("en-US")} ${u}`;
+    } else if (unitTotals.size > 1) {
+      totalQuantityLabel = Array.from(unitTotals.entries())
+        .map(([u, q]) => `${q.toLocaleString("en-US")} ${u}`)
+        .join(" • ");
+    }
+
+    // Country breakdown for Super Admin
+    const countryMap = new Map<
+      string,
+      { id: string; code: string; name: string; count: number; amount: number; currency: string }
+    >();
+    countries.forEach((c: any) => {
+      const code = deriveCountryCode(c.name, c.iso_code);
+      countryMap.set(String(c.id), {
+        id: String(c.id),
+        code,
+        name: c.name || code,
+        count: 0,
+        amount: 0,
+        currency: primaryCurrency,
+      });
+    });
+    enrichedRows.forEach((r) => {
+      const cid = String(r.country_id || r._countryCode);
+      const existing = countryMap.get(cid);
+      if (existing) {
+        existing.count += 1;
+        existing.amount += r._paymentMeta.totalPayment;
+        existing.currency = r._currency || existing.currency;
+      } else {
+        countryMap.set(cid, {
+          id: cid,
+          code: r._countryCode,
+          name: r.country_name || r._countryCode,
+          count: 1,
+          amount: r._paymentMeta.totalPayment,
+          currency: r._currency || primaryCurrency,
+        });
+      }
+    });
+    const countrySummaries = Array.from(countryMap.values()).sort((a, b) => b.count - a.count);
+
+    // Branch breakdown for Country Admin or drilled-down Super Admin
+    const targetCountryId =
+      roleTier === "country_admin"
+        ? String(countries[0]?.id || countryBranches[0]?.country_id || "")
+        : drilledCountryId;
+
+    const branchMap = new Map<
+      string,
+      { id: string; code: string; name: string; countryId: string; count: number; amount: number; currency: string }
+    >();
+    countryBranches
+      .filter((b: any) => !targetCountryId || String(b.country_id || "") === targetCountryId)
+      .forEach((b: any) => {
+        const cCode = deriveCountryCode(b.country_name, b.country_code);
+        const rawCode = String(b.code || "").trim().toUpperCase();
+        const code = rawCode
+          ? rawCode.startsWith(cCode + "-")
+            ? rawCode
+            : `${cCode}-${rawCode}`
+          : `${cCode}-001`;
+        branchMap.set(String(b.id), {
+          id: String(b.id),
+          code,
+          name: b.name || code,
+          countryId: String(b.country_id || ""),
+          count: 0,
+          amount: 0,
+          currency: primaryCurrency,
+        });
+      });
+
+    enrichedRows
+      .filter((r) => !targetCountryId || String(r.country_id || "") === targetCountryId)
+      .forEach((r) => {
+        const bid = String(r.country_branch_id || r.city_branch_id || r._branchCode);
+        const existing = branchMap.get(bid);
+        if (existing) {
+          existing.count += 1;
+          existing.amount += r._paymentMeta.totalPayment;
+          existing.currency = r._currency || existing.currency;
+        } else {
+          branchMap.set(bid, {
+            id: bid,
+            code: r._branchCode,
+            name: r.branch_name || r.city_branch_name || r._branchCode,
+            countryId: String(r.country_id || ""),
+            count: 1,
+            amount: r._paymentMeta.totalPayment,
+            currency: r._currency || primaryCurrency,
+          });
+        }
+      });
+    const branchSummaries = Array.from(branchMap.values()).sort((a, b) => b.count - a.count);
+
+    return {
+      primaryCurrency,
+      totalBills,
+      totalFinalAmount,
+      avgBillAmount,
+      postedAcceptedCount,
+      draftCount,
+      pendingCount,
+      invoiceOptionTotal,
+      invoicePct: pct(invoiceOptionTotal),
+      remainingOptionTotal,
+      remainingPct: pct(remainingOptionTotal),
+      creditOptionTotal,
+      creditPct: pct(creditOptionTotal),
+      paidOptionTotal,
+      paidPct: pct(paidOptionTotal),
+      actualPaidTotal,
+      balanceTotal,
+      totalSuppliers: suppliersSet.size,
+      totalGoodsItems: goodsSet.size,
+      totalQuantityLabel,
+      countrySummaries,
+      branchSummaries,
+    };
+  }, [filteredRows, enrichedRows, roleTier, countries, countryBranches, drilledCountryId]);
+
+  // Paginated rows
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const paginatedRows = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredRows.slice(start, start + pageSize);
+  }, [filteredRows, currentPage, pageSize]);
+
+  // Open Edit Modal handler (Super Admin & authorized Country Admin only)
+  const handleOpenEdit = useCallback(
+    (row: any) => {
+      if (!canEditBill) return;
+      setEditingBill(row);
+      setEditForm({
+        goodsName: String(row.goods_name || ""),
+        supplierName: String(row.supplier_name || row._crName || ""),
+        purchaseAccountNo: String(row.purchase_account_no || row._drCode || ""),
+        salesAccountNo: String(row.sales_account_no || row.broker_account_no || row._crCode || ""),
+        quantityName: String(row.quantity_name || "Cartons"),
+        numbers: String(toNum(row.numbers || row.quantity_kgs)),
+        totalGrossWeight: String(toNum(row.total_gross_weight || row.quantity_kgs)),
+        emptyKgs: String(toNum(row.empty_kgs)),
+        netWeight: String(toNum(row.net_weight || row.total_gross_weight)),
+        purchaseRate: String(toNum(row.purchase_rate)),
+        localCurrency: String(row.local_currency || row.purchase_currency || "AED"),
+        paymentMode: String(row.payment_mode || "Cash"),
+        advanceAmount: String(toNum(row.advance_amount)),
+        contractNo: String(row.contract_no || ""),
+        remarks: String(row.remarks || ""),
+      });
+    },
+    [canEditBill]
+  );
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBill || !canEditBill) return;
+    setSavingEdit(true);
+    try {
+      const qty = Math.max(0, toNum(editForm.numbers));
+      const gross = Math.max(0, toNum(editForm.totalGrossWeight));
+      const empty = Math.max(0, toNum(editForm.emptyKgs));
+      const net = Math.max(0, toNum(editForm.netWeight) || Math.max(0, gross - empty));
+      const rate = Math.max(0, toNum(editForm.purchaseRate));
+      const rateType = String(editingBill.rate_type || "per_kg");
+      const divideKgs = Math.max(1, toNum(editingBill.divide_kgs) || 1);
+
+      let purchaseCost = toNum(editingBill.purchase_cost || editingBill.final_cost);
+      if (rate > 0) {
+        if (rateType === "per_bag" || rateType === "per_unit") {
+          purchaseCost = qty * rate;
+        } else if (rateType === "per_maund") {
+          purchaseCost = (net / divideKgs) * rate;
+        } else {
+          purchaseCost = net * rate;
+        }
+      }
+      const taxAmount = toNum(editingBill.tax_amount);
+      const finalCost = Math.round((purchaseCost + taxAmount) * 100) / 100;
+      const advAmt = Math.max(0, toNum(editForm.advanceAmount));
+
+      const payload = {
+        countryBranchId: editingBill.country_branch_id,
+        cityBranchId: editingBill.city_branch_id ?? null,
+        goodsId: editingBill.goods_id ?? null,
+        purchaseAccountNo: editForm.purchaseAccountNo.trim() || editingBill.purchase_account_no || "DR-001",
+        salesAccountNo: editForm.salesAccountNo.trim() || editingBill.sales_account_no || "CR-101",
+        brokerAccountNo: editingBill.broker_account_no ?? null,
+        contractNo: editForm.contractNo.trim() || null,
+        brand: editingBill.brand ?? null,
+        size: editingBill.size ?? null,
+        chassisCode: editingBill.chassis_code ?? null,
+        lotNo: editingBill.lot_no ?? null,
+        goodsName: editForm.goodsName.trim() || editingBill.goods_name,
+        supplierName: editForm.supplierName.trim() || null,
+        paymentMode: editForm.paymentMode,
+        shippingMode: editingBill.shipping_mode || "Local Market",
+        originCountryId: editingBill.origin_country_id ?? null,
+        originCountryName: editingBill.origin_country_name || "Local",
+        advancePercentage: finalCost > 0 ? Math.round((advAmt / finalCost) * 10000) / 100 : 0,
+        advanceAmount: advAmt,
+        remainingBalance: Math.max(0, finalCost - advAmt),
+        warehouseName: editingBill.warehouse_name ?? null,
+        warehouseId: editingBill.warehouse_id ?? null,
+        supplierPersonId: editingBill.supplier_person_id ?? null,
+        warehousePlotNo: editingBill.warehouse_plot_no ?? null,
+        transferDate: editingBill.transfer_date ?? null,
+        truckNo: editingBill.truck_no ?? null,
+        driverName: editingBill.driver_name ?? null,
+        quantityName: editForm.quantityName.trim() || "Cartons",
+        quantityKgs: qty,
+        totalGrossWeight: gross,
+        emptyKgs: empty,
+        netWeight: net,
+        divideKgs,
+        numbers: qty,
+        rateType,
+        purchaseRate: rate,
+        purchaseCurrency: editForm.localCurrency,
+        exchangeRate: toNum(editingBill.exchange_rate) || 1,
+        localCurrency: editForm.localCurrency,
+        purchaseCost,
+        applyTax: editingBill.apply_tax || "No",
+        taxType: editingBill.tax_type || "VAT",
+        taxPercentage: toNum(editingBill.tax_percentage),
+        taxAmount,
+        finalCost,
+        lineItems: Array.isArray(editingBill.line_items) ? editingBill.line_items : [],
+        extraCharges: Array.isArray(editingBill.extra_charges) ? editingBill.extra_charges : [],
+        loadingDetails: editingBill.loading_details || {},
+        loadingDate: editingBill.loading_date ?? null,
+        remarks: editForm.remarks.trim() || null,
+        fromTransferRegister: true,
+      };
+
+      const res = await fetch(`/api/erp/purchases/local-purchase/${editingBill.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          purchaseId: actionTargetRow.id,
-          receiptType,
-          status: statusLabel,
-          details,
-        }),
+        body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to record transfer action.");
-
-      alert(`Success: ${statusLabel} recorded successfully!`);
-      setActionTargetRow(null);
-      await loadReports();
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        throw new Error(json?.error?.message || "Failed to update bill.");
+      }
+      setEditingBill(null);
+      await fetchBills();
     } catch (err: any) {
-      alert(err.message || "An error occurred.");
+      alert(err?.message || "Failed to update bill.");
     } finally {
-      setSavingAction(false);
+      setSavingEdit(false);
     }
   };
 
+  // Export CSV helper
+  const handleExportCsv = () => {
+    const headers = [
+      "Bill / Entry No.",
+      "Country",
+      "Branch",
+      "Date",
+      "Purchase Account (DR)",
+      "DR Code",
+      "Supplier Account (CR)",
+      "CR Code",
+      "Goods",
+      "Qty",
+      "Unit",
+      "Gross kg",
+      "Net kg",
+      "Final Amount",
+      "Payment Option",
+      "Destination",
+      "Total Payment",
+      "Paid",
+      "Balance",
+    ];
+    const csvRows = [
+      headers.join(","),
+      ...filteredRows.map((r) =>
+        [
+          r._billNo,
+          r._countryCode,
+          r._branchCode,
+          formatDisplayDate(r.transfer_date || r.created_at),
+          `"${String(r._drName).replace(/"/g, '""')}"`,
+          r._drCode,
+          `"${String(r._crName).replace(/"/g, '""')}"`,
+          r._crCode,
+          `"${String(r.goods_name || "").replace(/"/g, '""')}"`,
+          r._qty,
+          r._unit,
+          r._grossKg,
+          r._netKg,
+          r._paymentMeta.totalPayment,
+          `"${r._paymentMeta.optionLabel}"`,
+          `"${r._paymentMeta.destinationLabel}"`,
+          r._paymentMeta.totalPayment,
+          r._paymentMeta.actualPaid,
+          r._paymentMeta.balance,
+        ].join(",")
+      ),
+    ];
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `local-purchase-transfer-payment-register-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Print A4 helper for a single bill without dashboard navigation
+  const handlePrintA4Bill = (bill: any) => {
+    setPrintingBill(bill);
+    setTimeout(() => {
+      window.print();
+    }, 120);
+  };
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
-      
-      {/* Top Banner: Branch, User & Date Time Bar */}
-      <div className="flex flex-wrap items-center justify-between text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl shadow-xs gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-slate-400">{tt("common.branch","BRANCH NAME")}:</span>
-          <span className="text-blue-600 dark:text-blue-400 font-extrabold">{session.branchName || "UNITED ARAB EMIRATES MAIN BRANCH"}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-slate-400">{tt("common.user","USER NAME")}:</span>
-          <span className="text-slate-900 dark:text-white font-extrabold">{session.fullName || session.email || "—"}</span>
-        </div>
-        <div className="flex items-center gap-3 font-mono" suppressHydrationWarning>
-          <div>{tt("common.date","DATE")}: <span className="text-slate-800 dark:text-slate-200 font-bold" suppressHydrationWarning>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</span></div>
-          <div>{tt("common.time","TIME")}: <span className="text-slate-800 dark:text-slate-200 font-bold" suppressHydrationWarning>{new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</span></div>
-        </div>
-      </div>
+    <div
+      dir={isRtl ? "rtl" : "ltr"}
+      className="min-h-screen bg-[#f4f7fb] dark:bg-slate-950 p-3 sm:p-5 space-y-4 text-slate-900 dark:text-slate-100"
+    >
+      {/* ── Print-Only Compact A4 Bill Sheet (hides dashboard navigation when printing a bill) ── */}
+      {printingBill && (
+        <style>{`
+          @media print {
+            body * { visibility: hidden !important; }
+            #lp-transfer-a4-print-sheet, #lp-transfer-a4-print-sheet * { visibility: visible !important; }
+            #lp-transfer-a4-print-sheet {
+              position: fixed !important;
+              inset: 0 !important;
+              width: 100% !important;
+              background: #ffffff !important;
+              color: #0f172a !important;
+              padding: 18mm !important;
+              z-index: 99999 !important;
+            }
+          }
+        `}</style>
+      )}
 
-      {/* Page Header & Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <Truck className="h-5 w-5 text-blue-600" />
-            <h1 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              {tt("lptpv.page_title","Local Purchase Transfer & Loading")}
-              <span className="bg-blue-600 text-white text-[11px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider whitespace-nowrap">UNIFIED</span>
-            </h1>
+      {printingBill && (
+        <div
+          id="lp-transfer-a4-print-sheet"
+          className="hidden print:block bg-white text-slate-900 p-6 border border-slate-300 rounded-xl"
+        >
+          <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4 mb-4">
+            <div>
+              <h1 className="text-xl font-black tracking-tight uppercase">
+                {tr("Local Purchase Bill Voucher")}
+              </h1>
+              <p className="text-xs text-slate-600 mt-0.5">
+                {tr("Local Purchase Transfer Payment Register")} • {printingBill._countryCode} / {printingBill._branchCode}
+              </p>
+            </div>
+            <div className="text-right font-mono">
+              <div className="text-sm font-black text-blue-700">{printingBill._billNo}</div>
+              <div className="text-xs text-slate-600">
+                {formatDisplayDate(printingBill.transfer_date || printingBill.created_at)}
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            {tt("lptpv.page_subtitle","Manage Goods Receipt, Warehouse & Branch Transfers, Export Handover, and Loading Confirmation")}
-          </p>
+
+          <div className="grid grid-cols-2 gap-4 mb-4 text-xs">
+            <div className="border border-slate-200 rounded-lg p-3">
+              <div className="font-bold text-slate-500 uppercase text-[10px] mb-1">
+                {tr("Purchase Account (DR / Debit)")}
+              </div>
+              <div className="font-black text-sm text-slate-900">{printingBill._drName}</div>
+              <div className="font-mono text-slate-600">{printingBill._drCode}</div>
+            </div>
+            <div className="border border-slate-200 rounded-lg p-3">
+              <div className="font-bold text-slate-500 uppercase text-[10px] mb-1">
+                {tr("Supplier / Sales Account (CR / Credit)")}
+              </div>
+              <div className="font-black text-sm text-slate-900">{printingBill._crName}</div>
+              <div className="font-mono text-slate-600">{printingBill._crCode}</div>
+            </div>
+          </div>
+
+          <table className="w-full border-collapse border border-slate-300 text-xs mb-4">
+            <thead>
+              <tr className="bg-slate-100">
+                <th className="border border-slate-300 px-2.5 py-2 text-left">{tr("Goods")}</th>
+                <th className="border border-slate-300 px-2.5 py-2 text-right">{tr("Qty")}</th>
+                <th className="border border-slate-300 px-2.5 py-2 text-left">{tr("Unit")}</th>
+                <th className="border border-slate-300 px-2.5 py-2 text-right">{tr("Gross kg")}</th>
+                <th className="border border-slate-300 px-2.5 py-2 text-right">{tr("Net kg")}</th>
+                <th className="border border-slate-300 px-2.5 py-2 text-right">{tr("Rate")}</th>
+                <th className="border border-slate-300 px-2.5 py-2 text-right">{tr("Final Amount")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-slate-300 px-2.5 py-2 font-bold">{printingBill.goods_name}</td>
+                <td className="border border-slate-300 px-2.5 py-2 text-right font-mono">
+                  {printingBill._qty.toLocaleString()}
+                </td>
+                <td className="border border-slate-300 px-2.5 py-2">{printingBill._unit}</td>
+                <td className="border border-slate-300 px-2.5 py-2 text-right font-mono">
+                  {printingBill._grossKg.toLocaleString()}
+                </td>
+                <td className="border border-slate-300 px-2.5 py-2 text-right font-mono">
+                  {printingBill._netKg.toLocaleString()}
+                </td>
+                <td className="border border-slate-300 px-2.5 py-2 text-right font-mono">
+                  {toNum(printingBill.purchase_rate).toLocaleString()}
+                </td>
+                <td className="border border-slate-300 px-2.5 py-2 text-right font-mono font-black">
+                  {formatMoneyAmount(printingBill._currency, printingBill._paymentMeta.totalPayment)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div className="grid grid-cols-4 gap-3 text-xs border-t border-slate-200 pt-3">
+            <div>
+              <div className="text-slate-500 font-semibold">{tr("Payment Option")}</div>
+              <div className="font-black">{printingBill._paymentMeta.optionLabel}</div>
+              <div className="text-[11px] text-slate-600">
+                {tr("Destination")}: {printingBill._paymentMeta.destinationLabel}
+              </div>
+            </div>
+            <div>
+              <div className="text-blue-700 font-bold">{tr("Total Payment")}</div>
+              <div className="font-mono font-black text-blue-700 text-sm">
+                {formatMoneyAmount(printingBill._currency, printingBill._paymentMeta.totalPayment)}
+              </div>
+            </div>
+            <div>
+              <div className="text-emerald-700 font-bold">{tr("Paid")}</div>
+              <div className="font-mono font-black text-emerald-700 text-sm">
+                {formatMoneyAmount(printingBill._currency, printingBill._paymentMeta.actualPaid)}
+              </div>
+            </div>
+            <div>
+              <div className="text-rose-700 font-bold">{tr("Balance")}</div>
+              <div className="font-mono font-black text-rose-700 text-sm">
+                {formatMoneyAmount(printingBill._currency, printingBill._paymentMeta.balance)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Top Page Header Bar ── */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 px-4 py-3.5 shadow-2xs flex flex-wrap items-center justify-between gap-3 print:hidden">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-sm shrink-0">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight truncate">
+              {tr("Local Purchase Transfer Page")}
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+              {tr("Transferred purchase bills and payment tracking")}
+            </p>
+          </div>
         </div>
 
-        {/* Global Quick Search & Actions */}
+        {/* Search, Filter & Actions Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-48 sm:w-60">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+          <div className="relative">
+            <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
-              type="text"
-              placeholder={tt("lpjr.search_ph","Search serial, item, vendor...")}
+              type="search"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-8 pr-3 text-xs outline-none focus:border-blue-500 font-medium"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={tr("Search bill no., supplier, goods...")}
+              className="h-9 w-56 sm:w-64 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800 pl-8 pr-3 text-xs font-medium text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 outline-none transition"
             />
           </div>
 
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => void loadReports()}
-            className="h-9 text-xs font-bold border-slate-200 dark:border-slate-800"
-          >
-            <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin text-blue-600" : ""}`} />
-            {tt("lptp.sync_pending", "Sync Pending")}
-          </Button>
-        </div>
-      </div>      {/* Workflow Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-        <button
-          type="button"
-          onClick={() => setActiveWorkflowTab("operations")}
-          className={`px-4 py-2 text-xs font-black uppercase rounded-xl transition-all flex items-center gap-2 ${
-            activeWorkflowTab === "operations"
-              ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-              : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
-        >
-          <Truck className="h-4 w-4" />
-          <span>{loc("1. Transfer & Loading (4 Actions)", "1. ٹرانسفر اور لوڈنگ (4 اقدامات)", "1. التحويل والتحميل (4 إجراءات)", "۱. انتقال و بارگیری (۴ اقدام)", "1. لېږد او بارول (4 کړنې)")}</span>
-          <span className="ms-1.5 px-2 py-0.5 rounded-full text-[11px] bg-white/20 text-white font-mono">
-            {filteredOperations.length}
-          </span>
-        </button>
+          {/* Filter Popover */}
+          <div className="relative" ref={filterRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setFilterOpen((v) => !v);
+                setActionsOpen(false);
+              }}
+              className="h-9 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+            >
+              <Filter className="h-3.5 w-3.5 text-slate-500" />
+              <span>{tr("Filter")}</span>
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveWorkflowTab("goods_received")}
-          className={`px-4 py-2 text-xs font-black uppercase rounded-xl transition-all flex items-center gap-2 ${
-            activeWorkflowTab === "goods_received"
-              ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
-              : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
-        >
-          <Package className="h-4 w-4" />
-          <span>{loc("2. Goods Received Workflow", "2. مال وصولی ورک فلو", "2. سير عمل استلام البضائع", "۲. جریان کار دریافت کالا", "2. د توکو ترلاسه کولو جریان")}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveWorkflowTab("pending_gl")}
-          className={`px-4 py-2 text-xs font-black uppercase rounded-xl transition-all flex items-center gap-2 ${
-            activeWorkflowTab === "pending_gl"
-              ? "bg-amber-600 text-white shadow-md shadow-amber-500/20"
-              : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
-        >
-          <Send className="h-4 w-4" />
-          <span>{loc("3. Pending GL Transfers", "3. زیر التوا جی ایل ٹرانسفرز", "3. تحويلات دفتر الأستاذ العام المعلّقة", "۳. انتقال‌های معلق دفتر کل", "3. د عمومي لیجر پاتې لېږدونې")}</span>
-          <span className="ms-1.5 px-2 py-0.5 rounded-full text-[11px] bg-amber-100 text-amber-800 font-mono">
-            {filteredPendingGl.length}
-          </span>
-        </button>
-      </div>
-
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {/* TAB 1: TRANSFER & LOADING OPERATIONS (FOUR ACTIONS)                          */}
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {activeWorkflowTab === "operations" && (
-        <div className="space-y-6 animate-in fade-in">
-          {/* KPI Cards Section */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-                <Truck className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-                  {loc("Confirmed Bills for Dispatch", "روانگی کے لیے تصدیق شدہ بلز", "فواتير مؤكدة للإرسال", "صورتحساب‌های تأیید شده برای ارسال", "د لېږلو لپاره تایید شوي بلونه")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="text-2xl font-extrabold text-blue-600 font-mono">
-                  {filteredOperations.length}
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium mt-1 uppercase">
-                  {loc("Confirmed bills ready for transfer or hold", "منظور شدہ بلز ٹرانسفر یا روک تھام کے لیے تیار ہیں", "فواتير مؤكدة جاهزة للتحويل أو الاحتجاز", "صورتحساب‌های تأیید شده آماده انتقال یا نگهداری", "تایید شوي بلونه د لېږد یا ساتلو لپاره چمتو دي")}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-                <Package className="h-4 w-4 text-emerald-600" />
-                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-                  {loc("Total Purchase Quantity", "کل خریداری مقدار", "إجمالي كمية الشراء", "کل مقدار خرید", "د پېرلو ټوله اندازه")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="text-2xl font-extrabold text-emerald-600 font-mono">
-                  {filteredOperations.reduce((sum, p) => sum + Number(p.numbers || p.quantityKgs || p.quantity_kgs || 0), 0).toLocaleString()}
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium mt-1 uppercase">
-                  {loc("Aggregate quantity across active bills", "فعال بلز پر مجموعی مقدار", "الكمية الإجمالية عبر الفواتير النشطة", "مقدار کل در صورتحساب‌های فعال", "په فعالو بلونو کې ټوله اندازه")}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-                <Building2 className="h-4 w-4 text-purple-600" />
-                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-                  {tt("lptp.authorized_branch", "Authorized Branch")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 flex flex-col justify-center">
-                <div className="text-sm font-black text-slate-700 dark:text-slate-350 uppercase">
-                  {session.branchName || "—"}
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium mt-1 uppercase">
-                  {tt("lptpv.kpi_posting_role","Posting role")}: <span className="text-blue-500 font-bold">{session.role || "Administrator"}</span>
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Confirmed Bills Table with Four Actions */}
-          <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm rounded-2xl overflow-hidden">
-            <CardHeader className="bg-blue-500/10 border-b border-slate-200 dark:border-slate-800 p-4 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Truck className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {loc("LOCAL PURCHASE TRANSFER & LOADING REGISTRY", "لوکل پرچیز ٹرانسفر اور لوڈنگ رجسٹری", "سجل تحويل وتحميل المشتريات المحلية", "دفتر ثبت انتقال و بارگیری خرید محلی", "د محلي پېرلو لېږد او بارولو راجستر")}
-                </CardTitle>
-              </div>
-              <span className="text-[11px] font-mono font-bold text-blue-700 bg-blue-100 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded whitespace-nowrap">
-                {loc("Total Records", "کل ریکارڈز", "إجمالي السجلات", "کل رکوردها", "ټول ریکارډونه")}: {filteredOperations.length}
-              </span>
-            </CardHeader>
-
-            <CardContent className="p-0">
-              <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
-                <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
-                  <thead className="sticky top-0 z-10 bg-slate-900 text-white text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-700">
-                    <tr>
-                      <Th className="p-2.5 border-r border-slate-700 text-center">{tt("lptpv.col_voucher_no","VOUCHER NO")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700">{tt("common.date","DATE")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700">{tt("common.branch","BRANCH NAME")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700">{tt("lpjr.inv_goods_name","GOODS NAME")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700 text-right">{loc("TOTAL QTY", "کل مقدار", "إجمالي الكمية", "مقدار کل", "ټوله اندازه")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700 text-right font-black text-amber-300">{loc("TRANSFERRED", "منتقل شدہ", "المحوّل", "انتقال یافته", "لېږدول شوی")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700 text-right font-black text-emerald-300">{loc("REMAINING", "بقیہ", "المتبقي", "باقی‌مانده", "پاتې")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700">{loc("CURRENT LOCATION", "موجودہ مقام", "الموقع الحالي", "موقعیت فعلی", "اوسنی ځای")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700">{loc("TRANSFER DESTINATION", "منتقلی منزل", "وجهة التحويل", "مقصد انتقال", "د لېږد ځای")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700 text-center">{loc("LOADING DATE", "لوڈنگ کی تاریخ", "تاريخ التحميل", "تاریخ بارگیری", "د بارولو نېټه")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700 text-center">{loc("RECEIVING STATUS", "وصولی کی صورتحال", "حالة الاستلام", "وضعیت دریافت", "د ترلاسه کولو حالت")}</Th>
-                      <Th className="p-2.5 text-center font-black text-amber-300">{loc("ACTIONS", "اقدامات", "الإجراءات", "اقدامات", "کړنې")}</Th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[11px]">
-                    {loading ? (
-                      <tr>
-                        <td colSpan={12} className="p-10 text-center text-slate-400 font-sans">
-                          <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
-                          {loc("Fetching transfer & loading records...", "منتقلی اور لوڈنگ ریکارڈز حاصل کیے جا رہے ہیں...", "جارٍ جلب سجلات التحويل والتحميل...", "در حال دریافت سوابق انتقال و بارگیری...", "د لېږد او بارولو ریکارډونه راوړل کیږي...")}
-                        </td>
-                      </tr>
-                    ) : filteredOperations.length === 0 ? (
-                      <tr>
-                        <td colSpan={12} className="p-10 text-center text-slate-400 font-sans">
-                          <CheckCircle2 className="h-8 w-8 mx-auto text-blue-500 mb-2" />
-                          <p className="font-bold text-slate-700">{loc("No confirmed purchases found.", "کوئی تصدیق شدہ خریداری نہیں ملی۔", "لم يتم العثور على مشتريات مؤكدة.", "هیچ خرید تأیید شده‌ای یافت نشد.", "هیڅ تایید شوی پېر ونه موندل شو.")}</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredOperations.map(row => {
-                        const totalQty = Number(row.numbers || row.quantityKgs || row.quantity_kgs || 0);
-                        const transferredQty = Number(row.goods_receipt_details?.transferQty || 0);
-                        const remainingQty = Math.max(0, totalQty - transferredQty);
-                        const unitName = row.quantityName || row.quantity_name || "Bags";
-                        const voucherCode = row.serialNo || row.serial_no || row.billNo || row.bill_no || row.journal_serial_no || `LP-${row.id.slice(0, 6).toUpperCase()}`;
-                        const currentLocation = row.warehouseName || row.warehouse_name || "Purchase Location";
-                        const destination = row.goods_receipt_details?.destBranchName || row.goods_receipt_details?.exportDestination || row.shippingMode || row.shipping_mode || "Local Market";
-                        const loadingDate = row.goods_receipt_details?.loadingDate || row.loadingDate || row.loading_date || "—";
-                        const receivingStatus = row.goods_receipt_status || "Pending";
-
-                        return (
-                          <tr key={row.id} className="hover:bg-blue-50/20 dark:hover:bg-blue-950/10 transition-colors">
-                            <td className="p-2 font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">{voucherCode}</td>
-                            <td className="p-2 font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">{new Date(row.createdAt || row.created_at || "").toLocaleDateString("en-GB")}</td>
-                            <td className="p-2 font-semibold border-r border-slate-150 dark:border-slate-800">{row.branchName || row.branch_name || "-"}</td>
-                            <td className="p-2 font-bold text-slate-900 border-r border-slate-150 dark:border-slate-800">{row.goodsName || row.goods_name || "-"}</td>
-                            <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">{totalQty.toLocaleString()} {unitName}</td>
-                            <td className="p-2 text-right font-mono font-black text-amber-600 border-r border-slate-150 dark:border-slate-800">{transferredQty.toLocaleString()} {unitName}</td>
-                            <td className="p-2 text-right font-mono font-black text-emerald-600 border-r border-slate-150 dark:border-slate-800">{remainingQty.toLocaleString()} {unitName}</td>
-                            <td className="p-2 font-semibold text-slate-700 dark:text-slate-300 border-r border-slate-150 dark:border-slate-800">{currentLocation}</td>
-                            <td className="p-2 font-semibold text-slate-700 dark:text-slate-300 border-r border-slate-150 dark:border-slate-800">{destination}</td>
-                            <td className="p-2 text-center font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">{loadingDate}</td>
-                            <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
-                              <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                                receivingStatus.toLowerCase().includes("received") || receivingStatus.toLowerCase().includes("completed")
-                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                                  : receivingStatus.toLowerCase().includes("held")
-                                  ? "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300"
-                                  : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                              }`}>
-                                {receivingStatus}
-                              </span>
-                            </td>
-                            <td className="p-2 text-center">
-  <div className="relative inline-block text-start">
-    <button type="button" aria-label={loc("Purchase actions", "پرچیز کے اقدامات", "إجراءات الشراء", "اقدامات خرید", "د پېرود کړنې")} aria-expanded={openRowActionId === row.id} onClick={() => setOpenRowActionId(openRowActionId === row.id ? null : row.id)} className="inline-flex h-7 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-600"><MoreVertical className="h-4 w-4" /></button>
-    {openRowActionId === row.id && (
-      <div className="absolute end-0 top-full z-40 mt-1 min-w-[190px] rounded-lg border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-        <button type="button" onClick={() => { setOpenRowActionId(null); router.push(`/dashboard/purchase/local-purchase/${row.id}`); }} className="block w-full rounded px-3 py-2 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">{loc("View Purchase", "پرچیز دیکھیں", "عرض الشراء", "مشاهده خرید", "پېرود کتل")}</button>
-        <button type="button" onClick={() => { setOpenRowActionId(null); router.push("/dashboard/purchase/purchase-payments"); }} className="block w-full rounded px-3 py-2 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">{loc("Purchase Payments", "پرچیز ادائیگیاں", "مدفوعات الشراء", "پرداخت های خرید", "د پېرود تادیات")}</button>
-        {([
-          ["export", loc("Export Transfer", "ایکسپورٹ منتقلی", "تحويل التصدير", "انتقال صادرات", "د صادراتو لېږد")],
-          ["warehouse", loc("Warehouse Transfer", "گودام منتقلی", "تحويل المستودع", "انتقال انبار", "د ګودام لېږد")],
-          ["branch", loc("Branch Transfer", "برانچ منتقلی", "تحويل الفرع", "انتقال شعبه", "د څانګې لېږد")],
-          ["hold", loc("Hold", "روکیں", "تعليق", "توقف", "درول")],
-        ] as const).map(([type, label]) => (
-          <button key={type} type="button" onClick={() => { setOpenRowActionId(null); openActionModal(row, type); }} className="block w-full rounded px-3 py-2 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">{label}</button>
-        ))}
-        <button type="button" onClick={() => { setOpenRowActionId(null); router.push(`/dashboard/purchase/local-purchase/${row.id}/goods-transfer`); }} className="block w-full rounded px-3 py-2 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">{loc("Full Lot Journal", "مکمل لاٹ جرنل", "سجل الدفعة", "دفتر کامل بهر", "د لاټ ژورنال")}</button>
-      </div>
-    )}
-  </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {/* TAB 2: EXISTING LOCAL GOODS RECEIVED WORKFLOW                                */}
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {activeWorkflowTab === "goods_received" && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 sm:p-4 shadow-xs animate-in fade-in">
-          <LocalGoodsReceivedView
-            session={session}
-            countryBranches={countryBranches}
-            cityBranches={cityBranches}
-          />
-        </div>
-      )}
-
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {/* TAB 3: PENDING GENERAL LEDGER TRANSFERS                                       */}
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {activeWorkflowTab === "pending_gl" && (
-        <div className="space-y-6 animate-in fade-in">
-          {/* KPI Cards Section */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-                <Send className="h-4 w-4 text-amber-600" />
-                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-                  {tt("lptp.pending_gl_transfers", "Pending GL Transfers")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="text-2xl font-extrabold text-amber-600 font-mono">
-                  {filteredPendingGl.length}
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium mt-1 uppercase">
-                  {tt("lptp.accepted_bills_awaiting", "Accepted bills awaiting verification")}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-                <Coins className="h-4 w-4 text-emerald-600" />
-                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-                  {tt("lptp.total_pending_value", "Total Pending Value")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="text-2xl font-extrabold text-emerald-600 font-mono">
-                  {totalPendingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium mt-1 uppercase">
-                  {tt("lptp.aggregate_unposted_cost", "Aggregate unposted purchase cost")}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-                <Building2 className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-                  {tt("lptp.authorized_branch", "Authorized Branch")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 flex flex-col justify-center">
-                <div className="text-sm font-black text-slate-700 dark:text-slate-350 uppercase">
-                  {session.branchName || "—"}
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium mt-1 uppercase">
-                  {tt("lptpv.kpi_posting_role","Posting role")}: <span className="text-blue-500 font-bold">{session.role || "Administrator"}</span>
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Table Card */}
-          <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm rounded-2xl overflow-hidden animate-in fade-in">
-            <CardHeader className="bg-amber-500/10 border-b border-slate-200 dark:border-slate-800 p-4 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Send className="h-4 w-4 text-amber-600" />
-                <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {tt("lptpv.table_title","PENDING GENERAL LEDGER TRANSFERS")}
-                </CardTitle>
-              </div>
-              <span className="text-[11px] font-mono font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded whitespace-nowrap">
-                {tt("lptpv.ready_to_post","Ready to Post")}: {filteredPendingGl.length}
-              </span>
-            </CardHeader>
-
-            <CardContent className="p-0">
-              <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-                <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
-                  <thead className="sticky top-0 z-10 bg-slate-900 text-white text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-700">
-                    <tr>
-                      <Th className="p-2.5 border-r border-slate-700 text-center">{tt("lptpv.col_voucher_no","VOUCHER NO")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700">{tt("common.date","DATE")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700">{tt("common.branch","BRANCH NAME")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700">{tt("lptpv.col_purchase_acc","PURCHASE ACC (DR)")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700">{tt("lptpv.col_sales_acc","SALES ACC (CR)")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700">{tt("lpjr.inv_goods_name","GOODS NAME")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700">{tt("lpjr.inv_brand","BRAND")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700 text-right">{tt("lptpv.col_qty","QTY")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700 text-right font-black">{tt("lptpv.col_total_cost","TOTAL COST")}</Th>
-                      <Th className="p-2.5 border-r border-slate-700 text-center">{tt("lptpv.col_pay_mode","PAY MODE")}</Th>
-                      <Th className="p-2.5 text-center">{tt("lptpv.col_actions","ACTIONS")}</Th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[11px]">
-                    {loading ? (
-                      <tr>
-                        <td colSpan={11} className="p-10 text-center text-slate-400 font-sans">
-                          <Loader2 className="h-6 w-6 animate-spin mx-auto text-amber-600 mb-2" />
-                          {tt("lptpv.loading","Fetching pending GL transfers...")}
-                        </td>
-                      </tr>
-                    ) : filteredPendingGl.length === 0 ? (
-                      <tr>
-                        <td colSpan={11} className="p-10 text-center text-slate-400 font-sans">
-                          <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-500 mb-2" />
-                          <p className="font-bold text-slate-700">{tt("lptpv.all_posted","All accepted purchases have been successfully posted to Ledger")}</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredPendingGl.map(row => {
-                        const totalCost = Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0);
-                        const curr = row.localCurrency || row.local_currency || "PKR";
-                        const voucherCode = row.serialNo || row.serial_no || row.billNo || row.bill_no || row.journal_serial_no || "—";
-
-                        return (
-                          <tr key={row.id} className="hover:bg-amber-50/20 dark:hover:bg-amber-950/10 transition-colors">
-                            <td className="p-2 font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">{voucherCode}</td>
-                            <td className="p-2 font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">{new Date(row.createdAt || row.created_at || "").toLocaleDateString("en-GB")}</td>
-                            <td className="p-2 font-semibold border-r border-slate-150 dark:border-slate-800">{row.branchName || row.branch_name || "-"}</td>
-                            <td className="p-2 font-mono text-[11px] font-bold text-blue-600 border-r border-slate-150 dark:border-slate-800">{row.purchaseAccountNo || row.purchase_account_no || "—"}</td>
-                            <td className="p-2 font-mono text-[11px] font-bold text-purple-600 border-r border-slate-150 dark:border-slate-800">{row.salesAccountNo || row.sales_account_no || row.brokerAccountNo || row.broker_account_no || "—"}</td>
-                            <td className="p-2 font-bold text-slate-900 border-r border-slate-150 dark:border-slate-800">{row.goodsName || row.goods_name || "-"}</td>
-                            <td className="p-2 text-slate-500 border-r border-slate-150 dark:border-slate-800">{row.brand || "-"}</td>
-                            <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">{Number(row.quantityKgs || row.quantity_kgs || 0).toLocaleString()} {row.quantityName || row.quantity_name}</td>
-                            <td className="p-2 text-right font-mono font-black text-emerald-600 border-r border-slate-150 dark:border-slate-800">{curr} {totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td className="p-2 text-center font-bold border-r border-slate-150 dark:border-slate-800">{row.paymentMode || row.payment_mode || "Cash"}</td>
-                            <td className="p-2 text-center space-x-2">
-                              <Button
-                                size="sm"
-                                disabled={transferringId === row.id}
-                                onClick={async () => {
-                                  if (!confirm(`Are you sure you want to verify and post local purchase ${voucherCode} to General Ledger?`)) return;
-                                  setTransferringId(row.id);
-                                  try {
-                                    const res = await fetch("/api/erp/purchases/local-purchase/transfer", {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ purchaseId: row.id })
-                                    });
-                                    const data = await res.json();
-                                    if (!res.ok || !data.ok) throw new Error(data.error?.message || "Transfer failed.");
-                                    alert("Success: Posted to general ledger & roznamcha successfully!");
-                                    await loadReports();
-                                  } catch (err: any) {
-                                    alert(err.message || "An error occurred.");
-                                  } finally {
-                                    setTransferringId(null);
-                                  }
-                                }}
-                                className="h-6 px-2 text-[11px] font-black bg-emerald-600 hover:bg-emerald-700 text-white rounded-md whitespace-nowrap"
-                              >
-                                {transferringId === row.id ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                  tt("lptpv.verify_post","Verify & Post to GL")
-                                )}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setSelectedRowForVoucher(row)}
-                                className="h-6 px-2 text-[11px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md whitespace-nowrap"
-                              >
-                                {tt("lptp.view_voucher", "View Voucher")}
-                              </Button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {/* FOUR ACTIONS MODAL (A: Export, B: Warehouse, C: Branch, D: Hold)             */}
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {actionTargetRow && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs overflow-y-auto animate-in fade-in">
-          <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[92vh] overflow-y-auto relative">
-            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div>
-                <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase flex items-center gap-2">
-                  <Truck className="h-4 w-4 text-blue-600" />
-                  <span>{loc("EXECUTE TRANSFER & LOADING ACTION", "ٹرانسفر اور لوڈنگ کارروائی انجام دیں", "تنفيذ إجراء التحويل والتحميل", "انجام اقدام انتقال و بارگیری", "د انتقال او بارولو عمل ترسره کړئ")}</span>
-                </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  {actionTargetRow.serialNo || actionTargetRow.billNo || `LP-${actionTargetRow.id.slice(0, 6).toUpperCase()}`} · {actionTargetRow.goodsName || actionTargetRow.goods_name} · Total: {Number(actionTargetRow.numbers || actionTargetRow.quantityKgs || actionTargetRow.quantity_kgs || 0).toLocaleString()} {actionTargetRow.quantityName || actionTargetRow.quantity_name || "Bags"}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActionTargetRow(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* 4 Action Chooser Tabs */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <button
-                type="button"
-                onClick={() => setActionType("export")}
-                className={`p-3 rounded-xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
-                  actionType === "export"
-                    ? "border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 shadow-xs"
-                    : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
-                }`}
-              >
-                <Ship className="h-5 w-5 text-amber-600" />
-                <span>A. {loc("Export Shipment", "برآمدی شپمنٹ", "شحنة التصدير", "محموله صادراتی", "د صادراتو بار وړل")}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActionType("warehouse")}
-                className={`p-3 rounded-xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
-                  actionType === "warehouse"
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 shadow-xs"
-                    : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
-                }`}
-              >
-                <Warehouse className="h-5 w-5 text-blue-600" />
-                <span>B. {loc("Warehouse", "گودام", "المستودع", "انبار", "ګودام")}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActionType("branch")}
-                className={`p-3 rounded-xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
-                  actionType === "branch"
-                    ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-200 shadow-xs"
-                    : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
-                }`}
-              >
-                <Building2 className="h-5 w-5 text-purple-600" />
-                <span>C. {loc("Branch Transfer", "برانچ ٹرانسفر", "تحويل الفرع", "انتقال شعبه", "د څانګې انتقال")}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActionType("hold")}
-                className={`p-3 rounded-xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
-                  actionType === "hold"
-                    ? "border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
-                    : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
-                }`}
-              >
-                <PauseCircle className="h-5 w-5 text-slate-600" />
-                <span>D. {loc("Confirm & Hold", "تصدیق اور ہولڈ", "تأكيد والاحتفاظ", "تأیید و نگهداری", "تایید او ساتل")}</span>
-              </button>
-            </div>
-
-            {/* Action Form */}
-            <form onSubmit={handleExecuteAction} className="space-y-4 pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Quantity */}
-                <div>
-                  <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
-                    {loc("Quantity to Transfer / Load / Hold", "منتقل / لوڈ / ہولڈ کرنے کی مقدار", "الكمية للتحويل / التحميل / الاحتفاظ", "مقدار جهت انتقال / بارگیری / نگهداری", "د انتقال / بارولو / ساتلو مقدار")}
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    required
-                    value={actionQty}
-                    onChange={e => setActionQty(Number(e.target.value))}
-                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none"
-                  />
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    {loc("Partial transfer allowed — remaining quantity stays on bill.", "جزوی ٹرانسفر کی اجازت ہے — باقی مقدار بل پر رہے گی۔", "يسمح بالتحويل الجزئي - تبقى الكمية المتبقية في الفاتورة.", "انتقال جزئی مجاز است — باقیمانده در صورتحساب باقی می‌ماند.", "جزوي انتقال ته اجازه شته — پاتې مقدار په بل کې پاتې کیږي.")}
-                  </p>
-                </div>
-
-                {/* Conditional Fields based on action */}
-                {actionType === "export" && (
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
-                      {loc("Export Destination (Port / Country)", "برآمدی منزل (بندرگاہ / ملک)", "وجهة التصدير (الميناء / البلد)", "مقصد صادرات (بندر / کشور)", "د صادراتو منزل (بندر / هیواد)")}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={exportDestination}
-                      onChange={e => setExportDestination(e.target.value)}
-                      placeholder="e.g. Jebel Ali Port / Destination Country"
-                      className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none"
-                    />
-                  </div>
-                )}
-
-                {actionType === "warehouse" && (
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
-                      {loc("Target Warehouse", "ہدف گودام", "المستودع المستهدف", "انبار مقصد", "هدف ګودام")}
-                    </label>
-                    <select
-                      value={selectedWarehouseId}
-                      onChange={e => setSelectedWarehouseId(e.target.value)}
-                      required
-                      className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none uppercase"
-                    >
-                      <option value="">{tt("common.select", "Select Warehouse")}</option>
-                      {warehousesList.map(w => (
-                        <option key={w.id} value={w.id}>{w.warehouse_name || w.name} ({w.warehouse_code || "WH"})</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {actionType === "branch" && (
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
-                      {loc("Destination Branch", "منزل برانچ", "فرع الوجهة", "شعبه مقصد", "د منزل څانګه")}
-                    </label>
-                    <select
-                      value={destCountryBranchId}
-                      onChange={e => setDestCountryBranchId(e.target.value)}
-                      required
-                      className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none uppercase"
-                    >
-                      <option value="">{tt("common.select", "Select Branch")}</option>
-                      {countryBranches.map(b => (
-                        <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {actionType === "hold" && (
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
-                      {loc("Current Hold Location", "موجودہ ہولڈ مقام", "موقع الاحتفاظ الحالي", "محل نگهداری فعلی", "د اوسني ساتلو ځای")}
-                    </label>
-                    <input
-                      type="text"
-                      disabled
-                      value={actionTargetRow.warehouseName || actionTargetRow.warehouse_name || "Purchase Location"}
-                      className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50 px-3 text-xs font-semibold outline-none text-slate-500"
-                    />
-                  </div>
-                )}
-
-                {/* Warehouse Plot/Rack if warehouse */}
-                {actionType === "warehouse" && (
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
-                      {loc("Plot / Rack / Bin No", "پلاٹ / ریک / بن نمبر", "رقم القطعة / الرف / الصندوق", "شماره پلات / قفسه / بین", "د پلاټ / ریک / بن شمیره")}
-                    </label>
-                    <input
-                      type="text"
-                      value={warehousePlotNo}
-                      onChange={e => setWarehousePlotNo(e.target.value)}
-                      placeholder="e.g. Rack A-12 / Plot 4"
-                      className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none"
-                    />
-                  </div>
-                )}
-
-                {/* Truck / Driver if not hold */}
-                {actionType !== "hold" && (
-                  <>
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
-                        {loc("Truck / Vehicle No", "ٹرک / گاڑی نمبر", "رقم الشاحنة / المركبة", "شماره موتر / موټر", "د لارۍ / ګاډي شمیره")}
-                      </label>
-                      <input
-                        type="text"
-                        value={truckNo}
-                        onChange={e => setTruckNo(e.target.value)}
-                        placeholder="e.g. T-8492-DXB"
-                        className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
-                        {loc("Driver Name / Contact", "ڈرائیور کا نام / رابطہ", "اسم السائق / جهة الاتصال", "نام راننده / تماس", "د موټر چلوونکي نوم / اړیکه")}
-                      </label>
-                      <input
-                        type="text"
-                        value={driverName}
-                        onChange={e => setDriverName(e.target.value)}
-                        placeholder="e.g. Muhammad Tariq"
-                        className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Warehouse Immediate Confirmation Toggle */}
-              {actionType === "warehouse" && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
-                  <input
-                    type="checkbox"
-                    id="confirmReceiptImmediate"
-                    checked={confirmReceiptImmediate}
-                    onChange={e => setConfirmReceiptImmediate(e.target.checked)}
-                    className="h-4 w-4 rounded text-blue-600"
-                  />
-                  <label htmlFor="confirmReceiptImmediate" className="text-xs font-bold text-blue-900 dark:text-blue-200">
-                    {loc("Confirm actual goods receipt into warehouse immediately", "گودام میں فوری طور پر اصل مال کی وصولی کی تصدیق کریں", "تأكيد استلام البضائع الفعلي في المستودع فوراً", "تأیید فوری دریافت واقعی کالا در انبار", "سمدستي ګودام ته د اصلي مال رسید تایید کړئ")}
-                  </label>
-                </div>
-              )}
-
-              {/* Notes */}
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
-                  {tt("common.remarks", "Notes / Handover Remarks")}
-                </label>
-                <textarea
-                  rows={2}
-                  value={actionNotes}
-                  onChange={e => setActionNotes(e.target.value)}
-                  placeholder={loc("Additional transfer, dispatch, or hold instructions...", "اضافی ٹرانسفر، ڈسپیچ، یا ہولڈ ہدایات...", "تعليمات إضافية للتحويل أو الإرسال أو الاحتفاظ...", "دستورالعمل‌های اضافی انتقال، ارسال یا نگهداری...", "د اضافي انتقال، لیږلو، یا ساتلو لارښوونې...")}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-2 text-xs outline-none"
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setActionTargetRow(null)}
-                  className="h-9 px-4 text-xs font-bold"
-                >
-                  {tt("common.cancel", "Cancel")}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={savingAction}
-                  className="h-9 px-5 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center gap-1.5"
-                >
-                  {savingAction ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Check className="h-4 w-4" />
-                      <span>{loc("Execute Transfer Action", "ٹرانسفر کارروائی مکمل کریں", "تنفيذ إجراء التحويل", "اجرای اقدام انتقال", "د انتقال عمل ترسره کړئ")}</span>
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-
-      {/* Printable A4 Voucher Modal */}
-      {selectedRowForVoucher && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs overflow-y-auto animate-in fade-in">
-          <div className="w-full max-w-5xl rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] overflow-y-auto relative">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3 print:hidden">
-              <h3 className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-600" /> VOUCHER DETAILS FOR LP-{selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}
-              </h3>
-              <div className="flex gap-2">
-                {selectedRowForVoucher.status === "accepted" && (
-                  <Button
-                    disabled={transferringId === selectedRowForVoucher.id}
-                    onClick={async () => {
-                      if (!confirm("Are you sure you want to transfer this verified bill to general ledger? This will post all accounting journal and roznamcha entries.")) return;
-                      setTransferringId(selectedRowForVoucher.id);
-                      try {
-                        const res = await fetch("/api/erp/purchases/local-purchase/transfer", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ purchaseId: selectedRowForVoucher.id })
-                        });
-                        const data = await res.json();
-                        if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to transfer.");
-                        alert("Accounting Entries Posted Successfully to:\n- Cash Entry / Daily Payment\n- Business Roznamcha\n- General Ledger\n- Journal (Debit/Credit Serials generated)");
-                        
-                        setSelectedRowForVoucher(prev => prev ? { ...prev, status: "posted" } : null);
-                        await loadReports();
-                      } catch (err: any) {
-                        alert(err.message || "An error occurred during transfer.");
-                      } finally {
-                        setTransferringId(null);
-                      }
+            {filterOpen && (
+              <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-4 z-50 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                    {tr("Filter")}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCountryId("all");
+                      setSelectedBranchId("all");
+                      setSelectedPaymentCategory("all");
+                      setSelectedStatus("all");
+                      setDateFrom("");
+                      setDateTo("");
+                      setDrilledCountryId(null);
                     }}
-                    className="h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1 shadow-sm"
+                    className="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer"
                   >
-                    {transferringId === selectedRowForVoucher.id ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <>
-                        <Send className="h-3.5 w-3.5" /> {tt("lptp.transfer_post_gl", "Transfer & Post to GL")}
-                      </>
-                    )}
-                  </Button>
+                    {tr("Reset")}
+                  </button>
+                </div>
+
+                {roleTier === "super_admin" && (
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">{tr("Country")}</label>
+                    <select
+                      value={selectedCountryId}
+                      onChange={(e) => {
+                        setSelectedCountryId(e.target.value);
+                        setSelectedBranchId("all");
+                      }}
+                      className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 text-xs font-semibold"
+                    >
+                      <option value="all">{tr("All Countries")}</option>
+                      {countries.map((c: any) => (
+                        <option key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 )}
-                <Button
-                  onClick={() => {
-                    const row = selectedRowForVoucher;
-                    if (!row) return;
-                    openTransferPaymentPrintReport({
-                      record: {
-                        id: row.id,
-                        voucherNo: `VOUCHER-${row.id.slice(0, 6).toUpperCase()}`,
-                        billNo: row.serialNo || row.serial_no || row.billNo || row.bill_no || `LP-${row.id.slice(0, 6).toUpperCase()}`,
-                        transferDate: row.createdAt || row.created_at || new Date().toISOString(),
-                        supplierName: row.supplierName || row.supplier_name || "—",
-                        branchName: row.branchName || row.branch_name || session.branchName || "—",
-                        countryName: row.countryName || row.country_name || "—",
-                        goodsName: row.goodsName || row.goods_name || "—",
-                        paymentMode: row.paymentMode || row.payment_mode || "—",
-                        bankOrCashAccount: row.purchaseAccountNo || row.purchase_account_no || "—",
-                        amountLc: Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0),
-                        currencyLc: row.localCurrency || row.local_currency || "—",
-                        amountInWords: amountToWordsEn(Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0), row.localCurrency || ""),
-                        purchaseAccountNo: row.purchaseAccountNo || row.purchase_account_no || "—",
-                        salesAccountNo: row.salesAccountNo || row.sales_account_no || "—",
-                        userFullName: session.fullName || session.email || "—"
-                      },
-                      companyInfo: {
-                        name: "",
-                        branch: session.branchName || "—",
-                        printedBy: session.fullName || session.email || "—"
-                      }
-                    });
-                  }}
-                  className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1"
-                >
-                  <Printer className="h-3.5 w-3.5" /> {tt("lptp.print_voucher", "Print Voucher")}
-                </Button>
+
+                {roleTier !== "branch_admin" && (
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">{tr("Branch")}</label>
+                    <select
+                      value={selectedBranchId}
+                      onChange={(e) => setSelectedBranchId(e.target.value)}
+                      className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 text-xs font-semibold"
+                    >
+                      <option value="all">{tr("All Branches")}</option>
+                      {countryBranches
+                        .filter(
+                          (b: any) =>
+                            selectedCountryId === "all" || String(b.country_id || "") === selectedCountryId
+                        )
+                        .map((b: any) => (
+                          <option key={b.id} value={String(b.id)}>
+                            {b.code ? `${b.code} — ${b.name}` : b.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">{tr("Payment Option")}</label>
+                  <select
+                    value={selectedPaymentCategory}
+                    onChange={(e) => setSelectedPaymentCategory(e.target.value)}
+                    className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 text-xs font-semibold"
+                  >
+                    <option value="all">{tr("All Payment Options")}</option>
+                    <option value="invoice">{tr("Invoice Payment")}</option>
+                    <option value="final">{tr("Final Payment")}</option>
+                    <option value="credit">{tr("Credit")}</option>
+                    <option value="cash">{tr("Cash")}</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">{tr("From Date")}</label>
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">{tr("To Date")}</label>
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Actions Dropdown */}
+          <div className="relative" ref={actionsRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setActionsOpen((v) => !v);
+                setFilterOpen(false);
+              }}
+              className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+            >
+              <span>{tr("Actions")}</span>
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+
+            {actionsOpen && (
+              <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl py-1.5 z-50 text-xs">
                 <button
                   type="button"
-                  onClick={() => setSelectedRowForVoucher(null)}
-                  className="text-slate-400 hover:text-slate-600 text-xs font-bold bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-lg transition-colors"
+                  onClick={() => {
+                    setActionsOpen(false);
+                    setPrintingBill(null);
+                    setTimeout(() => window.print(), 60);
+                  }}
+                  className="w-full px-3.5 py-2 text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
                 >
-                  {tt("common.close", "Close")}
+                  <Printer className="h-3.5 w-3.5 text-blue-600" />
+                  <span>{tr("Print Register")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActionsOpen(false);
+                    handleExportCsv();
+                  }}
+                  className="w-full px-3.5 py-2 text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                >
+                  <Download className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>{tr("Export CSV")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActionsOpen(false);
+                    fetchBills();
+                  }}
+                  className="w-full px-3.5 py-2 text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                >
+                  <RefreshCw className="h-3.5 w-3.5 text-slate-500" />
+                  <span>{tr("Refresh")}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Three Approved Dashboard Cards (Role-Scoped: only the signed-in role's card set is shown) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 print:hidden">
+        {/* CARD 1: Total Local Purchase Bills (Gold / Amber) */}
+        <section className="lg:col-span-5 rounded-2xl border border-amber-200/90 dark:border-amber-900/50 bg-gradient-to-br from-[#fffdf7] via-[#fffaf0] to-[#fef6e4] dark:from-slate-900 dark:to-slate-900 p-4 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs shrink-0">
+                <FileText className="h-4.5 w-4.5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-black text-slate-900 dark:text-white leading-tight">
+                  {tr("Total Local Purchase Bills")}
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">{scopeSubtitle}</p>
+              </div>
+            </div>
+            <div className="flex items-end gap-0.5 h-5 px-1">
+              <span className="w-1 h-2 bg-amber-300 rounded-full" />
+              <span className="w-1 h-3 bg-amber-400 rounded-full" />
+              <span className="w-1 h-4 bg-amber-500 rounded-full" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-12 gap-2.5 items-stretch">
+            {/* Total Bills Count */}
+            <div className="col-span-3 bg-white/90 dark:bg-slate-800/80 rounded-xl border border-amber-100 dark:border-slate-700 p-2.5 flex flex-col justify-between">
+              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-500">
+                <span>{tr("Total Bills")}</span>
+                <ChevronRight className="h-3 w-3 text-slate-400" />
+              </div>
+              <div className="text-2xl font-black text-slate-900 dark:text-white font-mono my-1" dir="ltr">
+                {dashboardMetrics.totalBills}
+              </div>
+              {roleTier === "super_admin" && dashboardMetrics.countrySummaries.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {dashboardMetrics.countrySummaries.slice(0, 3).map((c) => (
+                    <span
+                      key={c.id}
+                      className="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-slate-700 text-blue-700 dark:text-blue-300 font-mono text-[10px] font-bold"
+                      dir="ltr"
+                    >
+                      {c.code}: {c.count}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-[10px] font-semibold text-slate-400 truncate">
+                  {tr("Active Scope")}
+                </div>
+              )}
+            </div>
+
+            {/* Total Final Amount */}
+            <div className="col-span-5 bg-white/90 dark:bg-slate-800/80 rounded-xl border border-amber-100 dark:border-slate-700 p-2.5 flex flex-col justify-between">
+              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-500">
+                <span>{tr("Total Final Amount")}</span>
+                <ChevronRight className="h-3 w-3 text-slate-400" />
+              </div>
+              <div
+                className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono tracking-tight my-1 truncate"
+                dir="ltr"
+              >
+                {formatMoneyAmount(dashboardMetrics.primaryCurrency, dashboardMetrics.totalFinalAmount)}
+              </div>
+              <div className="text-[11px] font-semibold text-slate-500 font-mono truncate" dir="ltr">
+                {tr("Avg")}: {formatMoneyAmount(dashboardMetrics.primaryCurrency, dashboardMetrics.avgBillAmount)}
+              </div>
+            </div>
+
+            {/* Posting & Transfer Status */}
+            <div className="col-span-4 bg-white/90 dark:bg-slate-800/80 rounded-xl border border-amber-100 dark:border-slate-700 p-2.5 flex flex-col justify-between space-y-1">
+              <div className="text-[9px] font-black uppercase tracking-wider text-slate-500 truncate">
+                {tr("Posting & Transfer Status")}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedStatus((s) => (s === "posted" ? "all" : "posted"))}
+                className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-emerald-50/90 dark:bg-emerald-950/40 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition cursor-pointer"
+              >
+                <span className="flex items-center gap-1.5 truncate">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="truncate">{tr("Posted / Accepted")}</span>
+                </span>
+                <span className="font-mono font-black ml-1" dir="ltr">
+                  {dashboardMetrics.postedAcceptedCount}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedStatus((s) => (s === "draft" ? "all" : "draft"))}
+                className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-amber-50/90 dark:bg-amber-950/40 text-[11px] font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition cursor-pointer"
+              >
+                <span className="flex items-center gap-1.5 truncate">
+                  <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+                  <span className="truncate">{tr("Draft Bills")}</span>
+                </span>
+                <span className="font-mono font-black ml-1" dir="ltr">
+                  {dashboardMetrics.draftCount}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedStatus((s) => (s === "pending" ? "all" : "pending"))}
+                className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-rose-50/90 dark:bg-rose-950/40 text-[11px] font-bold text-rose-800 dark:text-rose-300 hover:bg-rose-100 transition cursor-pointer"
+              >
+                <span className="flex items-center gap-1.5 truncate">
+                  <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+                  <span className="truncate">{tr("Pending Bills")}</span>
+                </span>
+                <span className="font-mono font-black ml-1" dir="ltr">
+                  {dashboardMetrics.pendingCount}
+                </span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* CARD 2: Payment Type (Sky / Blue) */}
+        <section className="lg:col-span-4 rounded-2xl border border-blue-200/90 dark:border-blue-900/50 bg-gradient-to-br from-[#f7fbff] via-[#f2f8ff] to-[#eaf3ff] dark:from-slate-900 dark:to-slate-900 p-4 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-start justify-between gap-2 mb-2.5">
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                <Layers className="h-4.5 w-4.5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-black text-slate-900 dark:text-white leading-tight">
+                  {tr("Payment Type")}
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">{scopeSubtitle}</p>
+              </div>
+            </div>
+            <div className="flex items-end gap-0.5 h-5 px-1">
+              <span className="w-1 h-2 bg-blue-300 rounded-full" />
+              <span className="w-1 h-3 bg-blue-400 rounded-full" />
+              <span className="w-1 h-4 bg-blue-600 rounded-full" />
+            </div>
+          </div>
+
+          <div className="space-y-1.5 bg-white/85 dark:bg-slate-800/80 rounded-xl border border-blue-100 dark:border-slate-700 p-2.5">
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedPaymentCategory((c) => (c === "invoice" ? "all" : "invoice"))
+              }
+              className={cn(
+                "w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs transition cursor-pointer",
+                selectedPaymentCategory === "invoice"
+                  ? "bg-violet-50 dark:bg-violet-950/40 ring-1 ring-violet-300"
+                  : "hover:bg-slate-50 dark:hover:bg-slate-700/50"
+              )}
+            >
+              <span className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100">
+                <span className="h-5 w-5 rounded-md bg-violet-600 text-white flex items-center justify-center text-[10px]">
+                  <CreditCard className="h-3 w-3" />
+                </span>
+                <span>{tr("Invoice Payment")}</span>
+              </span>
+              <span className="font-mono font-black text-blue-800 dark:text-blue-300" dir="ltr">
+                {formatMoneyAmount(dashboardMetrics.primaryCurrency, dashboardMetrics.invoiceOptionTotal)}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedPaymentCategory((c) => (c === "final" ? "all" : "final"))
+              }
+              className={cn(
+                "w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs transition cursor-pointer",
+                selectedPaymentCategory === "final"
+                  ? "bg-blue-50 dark:bg-blue-950/40 ring-1 ring-blue-300"
+                  : "hover:bg-slate-50 dark:hover:bg-slate-700/50"
+              )}
+            >
+              <span className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100">
+                <span className="h-5 w-5 rounded-md bg-blue-600 text-white flex items-center justify-center text-[10px]">
+                  <Wallet className="h-3 w-3" />
+                </span>
+                <span>{tr("Remaining")}</span>
+              </span>
+              <span className="font-mono font-black text-blue-700 dark:text-blue-300" dir="ltr">
+                {formatMoneyAmount(dashboardMetrics.primaryCurrency, dashboardMetrics.remainingOptionTotal)}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedPaymentCategory((c) => (c === "credit" ? "all" : "credit"))
+              }
+              className={cn(
+                "w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs transition cursor-pointer",
+                selectedPaymentCategory === "credit"
+                  ? "bg-rose-50 dark:bg-rose-950/40 ring-1 ring-rose-300"
+                  : "hover:bg-slate-50 dark:hover:bg-slate-700/50"
+              )}
+            >
+              <span className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100">
+                <span className="h-5 w-5 rounded-md bg-rose-600 text-white flex items-center justify-center text-[10px]">
+                  <Receipt className="h-3 w-3" />
+                </span>
+                <span>{tr("Credit")}</span>
+              </span>
+              <span className="font-mono font-black text-rose-600 dark:text-rose-400" dir="ltr">
+                {formatMoneyAmount(dashboardMetrics.primaryCurrency, dashboardMetrics.creditOptionTotal)}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedPaymentCategory((c) => (c === "cash" ? "all" : "cash"))
+              }
+              className={cn(
+                "w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs transition cursor-pointer",
+                selectedPaymentCategory === "cash"
+                  ? "bg-emerald-50 dark:bg-emerald-950/40 ring-1 ring-emerald-300"
+                  : "hover:bg-slate-50 dark:hover:bg-slate-700/50"
+              )}
+            >
+              <span className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100">
+                <span className="h-5 w-5 rounded-md bg-emerald-600 text-white flex items-center justify-center text-[10px]">
+                  <Check className="h-3 w-3" />
+                </span>
+                <span>{tr("Paid Payment")}</span>
+              </span>
+              <span className="font-mono font-black text-emerald-600 dark:text-emerald-400" dir="ltr">
+                {formatMoneyAmount(dashboardMetrics.primaryCurrency, dashboardMetrics.paidOptionTotal)}
+              </span>
+            </button>
+          </div>
+
+          <div className="mt-2 pt-1.5 border-t border-blue-200/60 dark:border-slate-800 flex items-center justify-center gap-2 text-[11px] font-bold">
+            <span>
+              {tr("Actual paid")}:{" "}
+              <strong className="font-mono text-emerald-700 dark:text-emerald-400" dir="ltr">
+                {formatMoneyAmount(dashboardMetrics.primaryCurrency, dashboardMetrics.actualPaidTotal)}
+              </strong>
+            </span>
+            <span className="text-slate-400">•</span>
+            <span>
+              {tr("Balance")}:{" "}
+              <strong className="font-mono text-rose-600 dark:text-rose-400" dir="ltr">
+                {formatMoneyAmount(dashboardMetrics.primaryCurrency, dashboardMetrics.balanceTotal)}
+              </strong>
+            </span>
+          </div>
+        </section>
+
+        {/* CARD 3: Role-Specific Summary Card (Mint / Emerald) */}
+        <section className="lg:col-span-3 rounded-2xl border border-emerald-200/90 dark:border-emerald-900/50 bg-gradient-to-br from-[#f6fef9] via-[#f0fdf6] to-[#e6faee] dark:from-slate-900 dark:to-slate-900 p-4 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-start justify-between gap-2 mb-2.5">
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                <Globe2 className="h-4.5 w-4.5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-black text-slate-900 dark:text-white leading-tight">
+                  {roleTier === "super_admin"
+                    ? drilledCountryId
+                      ? tr("Branches Summary")
+                      : tr("Countries Summary")
+                    : roleTier === "country_admin"
+                    ? tr("Branches Summary")
+                    : tr("Branch Summary")}
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">{scopeSubtitle}</p>
+              </div>
+            </div>
+            {roleTier === "super_admin" && drilledCountryId ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setDrilledCountryId(null);
+                  setSelectedCountryId("all");
+                  setSelectedBranchId("all");
+                }}
+                className="text-[11px] font-bold text-emerald-700 hover:underline inline-flex items-center gap-1 cursor-pointer"
+              >
+                <ArrowLeft className="h-3 w-3" />
+                <span>{tr("Countries")}</span>
+              </button>
+            ) : (
+              <div className="flex items-end gap-0.5 h-5 px-1">
+                <span className="w-1 h-2 bg-emerald-300 rounded-full" />
+                <span className="w-1 h-3 bg-emerald-400 rounded-full" />
+                <span className="w-1 h-4 bg-emerald-600 rounded-full" />
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white/85 dark:bg-slate-800/80 rounded-xl border border-emerald-100 dark:border-slate-700 p-2.5 space-y-1.5 flex-1 flex flex-col justify-center">
+            {roleTier === "super_admin" && !drilledCountryId ? (
+              dashboardMetrics.countrySummaries.length === 0 ? (
+                <div className="text-xs text-slate-400 text-center py-4">{tr("No countries found")}</div>
+              ) : (
+                dashboardMetrics.countrySummaries.slice(0, 4).map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setDrilledCountryId(c.id);
+                      setSelectedCountryId(c.id);
+                      setSelectedBranchId("all");
+                    }}
+                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-emerald-50/80 dark:hover:bg-slate-700/60 text-xs transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="font-mono font-black text-slate-700 dark:text-slate-200 w-6 text-left">
+                        {c.code}
+                      </span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-100 truncate">
+                        {c.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0" dir="ltr">
+                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                        {c.count} {tr("bills")}
+                      </span>
+                      <span className="font-mono font-black text-slate-900 dark:text-white min-w-[85px] text-right">
+                        {c.amount > 0 ? formatMoneyAmount(c.currency, c.amount) : "—"}
+                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                    </div>
+                  </button>
+                ))
+              )
+            ) : roleTier === "country_admin" || (roleTier === "super_admin" && drilledCountryId) ? (
+              dashboardMetrics.branchSummaries.length === 0 ? (
+                <div className="text-xs text-slate-400 text-center py-4">{tr("No branches found")}</div>
+              ) : (
+                dashboardMetrics.branchSummaries.slice(0, 4).map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedBranchId((prev) => (prev === b.id ? "all" : b.id))
+                    }
+                    className={cn(
+                      "w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition cursor-pointer",
+                      selectedBranchId === b.id
+                        ? "bg-emerald-100/80 dark:bg-emerald-950/50 ring-1 ring-emerald-300"
+                        : "hover:bg-emerald-50/80 dark:hover:bg-slate-700/60"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Building2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-100 truncate">
+                        {b.code}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0" dir="ltr">
+                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                        {b.count} {tr("bills")}
+                      </span>
+                      <span className="font-mono font-black text-slate-900 dark:text-white min-w-[85px] text-right">
+                        {b.amount > 0 ? formatMoneyAmount(b.currency, b.amount) : "—"}
+                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                    </div>
+                  </button>
+                ))
+              )
+            ) : (
+              /* Branch Admin: 4 rows (Total Suppliers, Total Goods Items, Avg Invoice Amount, Total Quantity) */
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg text-xs">
+                  <span className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
+                    <Users className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>{tr("Total Suppliers")}</span>
+                  </span>
+                  <span className="font-mono font-black text-slate-900 dark:text-white" dir="ltr">
+                    {dashboardMetrics.totalSuppliers}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg text-xs">
+                  <span className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
+                    <Package className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>{tr("Total Goods Items")}</span>
+                  </span>
+                  <span className="font-mono font-black text-slate-900 dark:text-white" dir="ltr">
+                    {dashboardMetrics.totalGoodsItems}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg text-xs">
+                  <span className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
+                    <Receipt className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>{tr("Avg Invoice Amount")}</span>
+                  </span>
+                  <span className="font-mono font-black text-slate-900 dark:text-white" dir="ltr">
+                    {formatMoneyAmount(dashboardMetrics.primaryCurrency, dashboardMetrics.avgBillAmount)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg text-xs">
+                  <span className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
+                    <Scale className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>{tr("Total Quantity")}</span>
+                  </span>
+                  <span className="font-mono font-black text-slate-900 dark:text-white" dir="ltr">
+                    {dashboardMetrics.totalQuantityLabel}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* ── Local Purchase Transfer Payment Register Table Card ── */}
+      <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden print:border-none print:shadow-none">
+        {/* Table Heading Bar */}
+        <div className="px-4 py-3 border-b border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-2xs">
+              <CreditCard className="h-4 w-4" />
+            </div>
+            <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
+              {tr("Local Purchase Transfer Payment Register")}
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setPrintingBill(null);
+              setTimeout(() => window.print(), 60);
+            }}
+            className="h-8 px-3.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer print:hidden"
+          >
+            <Printer className="h-3.5 w-3.5 text-blue-600" />
+            <span>{tr("Print")}</span>
+          </button>
+        </div>
+
+        {/* 17-Column Register Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr className="bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                <th className="py-2.5 px-3 text-left whitespace-nowrap">{tr("Bill / Entry No.")}</th>
+                <th className="py-2.5 px-2.5 text-left whitespace-nowrap">{tr("Country")}</th>
+                <th className="py-2.5 px-2.5 text-left whitespace-nowrap">{tr("Branch")}</th>
+                <th className="py-2.5 px-3 text-left whitespace-nowrap">{tr("Date")}</th>
+                <th className="py-2.5 px-3 text-left whitespace-nowrap">
+                  {tr("Purchase Account (DR / Debit)")}
+                </th>
+                <th className="py-2.5 px-3 text-left whitespace-nowrap">
+                  {tr("Supplier / Sales Account (CR / Credit)")}
+                </th>
+                <th className="py-2.5 px-3 text-left whitespace-nowrap">{tr("Goods")}</th>
+                <th className="py-2.5 px-2.5 text-right whitespace-nowrap">{tr("Qty")}</th>
+                <th className="py-2.5 px-2.5 text-left whitespace-nowrap">{tr("Unit")}</th>
+                <th className="py-2.5 px-2.5 text-right whitespace-nowrap">{tr("Gross kg")}</th>
+                <th className="py-2.5 px-2.5 text-right whitespace-nowrap">{tr("Net kg")}</th>
+                <th className="py-2.5 px-3 text-right whitespace-nowrap">{tr("Final Amount")}</th>
+                <th className="py-2.5 px-3 text-center whitespace-nowrap uppercase tracking-wider">
+                  {tr("Payment Option")}
+                </th>
+                <th className="py-2.5 px-3 text-right whitespace-nowrap uppercase tracking-wider bg-blue-50/80 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300">
+                  {tr("Total Payment")}
+                </th>
+                <th className="py-2.5 px-3 text-right whitespace-nowrap uppercase tracking-wider bg-emerald-50/80 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300">
+                  {tr("Paid")}
+                </th>
+                <th className="py-2.5 px-3 text-right whitespace-nowrap uppercase tracking-wider bg-rose-50/80 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300">
+                  {tr("Balance")}
+                </th>
+                <th className="py-2.5 px-2.5 text-center whitespace-nowrap print:hidden">
+                  {tr("Actions")}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800">
+              {loading ? (
+                <tr>
+                  <td colSpan={17} className="py-12 text-center text-slate-400 font-medium">
+                    {tr("Loading Local Purchase Transfer Payment Register...")}
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={17} className="py-12 text-center text-rose-600 font-semibold">
+                    {error}
+                  </td>
+                </tr>
+              ) : paginatedRows.length === 0 ? (
+                <tr>
+                  <td colSpan={17} className="py-12 text-center text-slate-400 font-medium">
+                    {tr("No transferred purchase bills match the current filters.")}
+                  </td>
+                </tr>
+              ) : (
+                paginatedRows.map((row) => {
+                  const isHighlighted = highlightBillId && String(row.id) === String(highlightBillId);
+                  const menuOpen = openRowMenuId === String(row.id);
+
+                  return (
+                    <tr
+                      key={row.id}
+                      className={cn(
+                        "hover:bg-slate-50/90 dark:hover:bg-slate-800/50 transition",
+                        isHighlighted && "bg-blue-50/70 dark:bg-blue-950/40 ring-1 ring-blue-300"
+                      )}
+                    >
+                      {/* 1. Bill / Entry No. */}
+                      <td className="py-3 px-3 font-mono font-black text-blue-700 dark:text-blue-400 whitespace-nowrap">
+                        {row._billNo}
+                      </td>
+
+                      {/* 2. Country (compact code) */}
+                      <td className="py-3 px-2.5 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        {row._countryCode}
+                      </td>
+
+                      {/* 3. Branch (compact code) */}
+                      <td className="py-3 px-2.5 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                        {row._branchCode}
+                      </td>
+
+                      {/* 4. Date */}
+                      <td className="py-3 px-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                        {formatDisplayDate(row.transfer_date || row.created_at)}
+                      </td>
+
+                      {/* 5. Purchase Account (DR / Debit): Account Name on top, Code below */}
+                      <td className="py-3 px-3">
+                        <div className="font-bold text-slate-900 dark:text-white leading-tight">
+                          {row._drName}
+                        </div>
+                        <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
+                          {row._drCode}
+                        </div>
+                      </td>
+
+                      {/* 6. Supplier / Sales Account (CR / Credit): Account Name on top, Code below */}
+                      <td className="py-3 px-3">
+                        <div className="font-bold text-slate-900 dark:text-white leading-tight">
+                          {row._crName}
+                        </div>
+                        <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
+                          {row._crCode}
+                        </div>
+                      </td>
+
+                      {/* 7. Goods */}
+                      <td className="py-3 px-3 font-medium text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                        {row.goods_name || "—"}
+                      </td>
+
+                      {/* 8. Qty */}
+                      <td className="py-3 px-2.5 text-right font-mono text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                        {row._qty.toLocaleString("en-US")}
+                      </td>
+
+                      {/* 9. Unit */}
+                      <td className="py-3 px-2.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                        {row._unit}
+                      </td>
+
+                      {/* 10. Gross kg */}
+                      <td className="py-3 px-2.5 text-right font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        {row._grossKg.toLocaleString("en-US")}
+                      </td>
+
+                      {/* 11. Net kg */}
+                      <td className="py-3 px-2.5 text-right font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        {row._netKg.toLocaleString("en-US")}
+                      </td>
+
+                      {/* 12. Final Amount */}
+                      <td
+                        className="py-3 px-3 text-right font-mono font-black text-slate-900 dark:text-white whitespace-nowrap"
+                        dir="ltr"
+                      >
+                        {formatMoneyAmount(row._currency, row._paymentMeta.totalPayment)}
+                      </td>
+
+                      {/* 13. Payment Option + Destination below */}
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        <div className="inline-flex flex-col items-center">
+                          <span
+                            className={cn(
+                              "px-3 py-0.5 rounded-full border text-[11px] font-bold leading-snug",
+                              row._paymentMeta.pillClass
+                            )}
+                          >
+                            {tr(row._paymentMeta.optionLabel)}
+                          </span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                            {tr("Destination")}:{" "}
+                            <strong className="text-slate-700 dark:text-slate-200">
+                              {tr(row._paymentMeta.destinationLabel)}
+                            </strong>
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 14. Total Payment (Blue column) */}
+                      <td
+                        className="py-3 px-3 text-right font-mono font-black bg-blue-50/55 dark:bg-blue-950/20 text-slate-900 dark:text-blue-200 whitespace-nowrap"
+                        dir="ltr"
+                      >
+                        {formatMoneyAmount(row._currency, row._paymentMeta.totalPayment)}
+                      </td>
+
+                      {/* 15. Paid (Green column) */}
+                      <td
+                        className="py-3 px-3 text-right font-mono font-black bg-emerald-50/55 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 whitespace-nowrap"
+                        dir="ltr"
+                      >
+                        {formatMoneyAmount(row._currency, row._paymentMeta.actualPaid)}
+                      </td>
+
+                      {/* 16. Balance (Red column) */}
+                      <td
+                        className="py-3 px-3 text-right font-mono font-black bg-rose-50/55 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 whitespace-nowrap"
+                        dir="ltr"
+                      >
+                        {formatMoneyAmount(row._currency, row._paymentMeta.balance)}
+                      </td>
+
+                      {/* 17. Actions (Three-dot menu: View Bill, Edit Bill [Super/Country Admin only], Print A4) */}
+                      <td
+                        className="py-3 px-2.5 text-center whitespace-nowrap relative print:hidden"
+                        data-row-action-menu
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenRowMenuId((prev) =>
+                              prev === String(row.id) ? null : String(row.id)
+                            )
+                          }
+                          aria-label={tr("Actions")}
+                          className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 inline-flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-2xs cursor-pointer"
+                        >
+                          <MoreVertical className="h-3.5 w-3.5" />
+                        </button>
+
+                        {menuOpen && (
+                          <div className="absolute right-3 mt-1 w-36 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl py-1 z-50 text-left">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenRowMenuId(null);
+                                setViewingBill(row);
+                              }}
+                              className="w-full px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                            >
+                              <Eye className="h-3.5 w-3.5 text-blue-600" />
+                              <span>{tr("View Bill")}</span>
+                            </button>
+
+                            {canEditBill && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenRowMenuId(null);
+                                  handleOpenEdit(row);
+                                }}
+                                className="w-full px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-indigo-600" />
+                                <span>{tr("Edit Bill")}</span>
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenRowMenuId(null);
+                                handlePrintA4Bill(row);
+                              }}
+                              className="w-full px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                            >
+                              <Printer className="h-3.5 w-3.5 text-blue-600" />
+                              <span>{tr("Print A4")}</span>
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Table Footer & Pagination */}
+        <div className="px-4 py-3 border-t border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 print:hidden">
+          <div>
+            {tr("Showing")}{" "}
+            <strong className="text-slate-700 dark:text-slate-200">
+              {filteredRows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}–
+              {Math.min(filteredRows.length, currentPage * pageSize)}
+            </strong>{" "}
+            {tr("of")} <strong className="text-slate-700 dark:text-slate-200">{filteredRows.length}</strong>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span>{tr("Rows per page")}:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="h-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-xs font-semibold text-slate-700 dark:text-slate-200"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 disabled:opacity-40 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                <span>{tr("Previous")}</span>
+              </button>
+              <span className="h-7 min-w-7 px-2 rounded-lg bg-blue-600 text-white font-bold inline-flex items-center justify-center text-xs">
+                {currentPage}
+              </span>
+              <button
+                type="button"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className="h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 disabled:opacity-40 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
+              >
+                <span>{tr("Next")}</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── MODAL 1: View Complete Original Bill (Centered Modal with Print inside) ── */}
+      {viewingBill && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-wider text-blue-600">
+                  {tr("Original Local Purchase Bill")}
+                </div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>{viewingBill._billNo}</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    {viewingBill._countryCode} • {viewingBill._branchCode}
+                  </span>
+                </h3>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handlePrintA4Bill(viewingBill)}
+                  className="h-8 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  <span>{tr("Print")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingBill(null)}
+                  aria-label={tr("Close")}
+                  className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
-            <div id="printable-modal-voucher" className="p-4 bg-white border border-slate-200 rounded-xl space-y-4 font-sans text-xs">
-              {(() => {
-                const rowCountry = selectedRowForVoucher.countryName || selectedRowForVoucher.country_name || session?.branchName || "";
-                const isUAE = isUaeCountryName(rowCountry);
-                const rowFinalCost = Number(selectedRowForVoucher.finalCost || selectedRowForVoucher.final_cost || 0);
-                const rowTaxAmt = Number(selectedRowForVoucher.taxAmount || selectedRowForVoucher.tax_amount || 0);
-                const rowSubtotal = Math.max(rowFinalCost - rowTaxAmt, 0);
-                const rowGrossWt = Number(selectedRowForVoucher.totalGrossWeight || selectedRowForVoucher.total_gross_weight || selectedRowForVoucher.quantityKgs || selectedRowForVoucher.quantity_kgs || 0);
-                const rowNetWt = Number(selectedRowForVoucher.netWeight || selectedRowForVoucher.net_weight || 0);
-                const rowQty = Number(selectedRowForVoucher.quantityKgs || selectedRowForVoucher.quantity_kgs || 0);
-                const rowDate = new Date(selectedRowForVoucher.createdAt || selectedRowForVoucher.created_at || Date.now()).toLocaleDateString("en-GB");
-                const rowCurrency = selectedRowForVoucher.localCurrency || selectedRowForVoucher.local_currency || "AED";
-                const rowVatPercent = Number(selectedRowForVoucher.taxPercentage || selectedRowForVoucher.tax_percentage || 5);
-                const rowFreight = 0;
-                const rowRoundOff = 0;
-                const rowGrandTotal = rowFinalCost + rowFreight + rowRoundOff;
-                const rowUnit = selectedRowForVoucher.quantityName || selectedRowForVoucher.quantity_name || "Bags";
-                const rowUnitPrice = Number(selectedRowForVoucher.purchaseRate || selectedRowForVoucher.purchase_rate || 0);
-                const voucherRef = selectedRowForVoucher.serialNo || selectedRowForVoucher.serial_no || selectedRowForVoucher.journal_serial_no || `LP-${selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}`;
-                const _row = selectedRowForVoucher as any;
-                const companyName = _row.companyName || _row.company_name || _row.branding_company_name || _row.countryName || _row.country_name || "";
-                const branchName = _row.branchName || _row.branch_name || _row.cityBranchName || _row.city_branch_name || "";
-                const officeAddress = _row.branding_address || _row.address || "";
-                const officePhone = _row.branding_phone || _row.phone || "";
-                const officeEmail = _row.branding_email || _row.email || "";
-                const trnNumber = _row.tax_number || _row.trn || "";
-                const supplierName = selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "—";
-                const paymentMethod = selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash";
-                const shippingMode = selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || "Local Purchase";
-                const goodsName = selectedRowForVoucher.goodsName || selectedRowForVoucher.goods_name || "Local Purchase Goods";
-                const hsCode = selectedRowForVoucher.chassisCode || selectedRowForVoucher.chassis_code || "-";
-                const brandName = selectedRowForVoucher.brand || "-";
-                const sizeName = selectedRowForVoucher.size || "-";
-
-                if (isUAE) {
-                  return (
-                    // Fixed A4-width (794px) preview by design — kept as-is for print fidelity
-                    // (Phase 13: don't reflow the official layout for phones). The overflow-x-auto
-                    // wrapper only lets a narrow screen pan across it; printDomFragmentViaModal
-                    // clones into its own print window, so print output is unaffected.
-                    <div className="overflow-x-auto print:overflow-visible">
-                    <div className="mx-auto max-w-[794px] space-y-4 bg-white text-[11px] text-slate-800 print:max-w-none print:text-[11px]">
-                      <div className="overflow-hidden rounded-2xl border border-slate-300">
-                        <div className="grid grid-cols-[88px_1fr_210px] gap-4 bg-slate-950 p-5 text-white">
-                          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">{tt("lptp.logo_placeholder", "LOGO")}</div>
-                          <div className="space-y-1">
-                            <h2 className="text-xl font-black uppercase tracking-[0.18em]">{tt("lpjr.inv_tax_invoice","Tax Invoice")}</h2>
-                            <p className="text-sm font-extrabold uppercase tracking-wide">{companyName}</p>
-                            <p className="text-[11px] text-slate-300">{branchName}</p>
-                            <p className="max-w-lg text-[11px] leading-4 text-slate-300">{officeAddress}</p>
-                          </div>
-                          <div className="space-y-1 text-right text-[11px]">
-                            <p>{tt("lpjr.inv_invoice_no","Invoice No")}: <span className="font-mono font-black text-white">{voucherRef}</span></p>
-                            <p>{tt("lpjr.inv_inv_date","Invoice Date")}: <span className="font-mono font-bold">{rowDate}</span></p>
-                            <p>{tt("lpjr.inv_payment_method","Payment Method")}: <span className="font-bold">{paymentMethod}</span></p>
-                            <p>{tt("lpjr.inv_phone","Phone")}: <span className="font-bold">{officePhone}</span></p>
-                            <p>{tt("lpjr.inv_email","Email")}: <span className="font-bold">{officeEmail}</span></p>
-                            <p className="rounded-lg bg-white/10 px-2 py-1 font-bold text-blue-100">{tt("lpjr.inv_trn_vat","TRN / VAT")}: {trnNumber}</p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-3 border-b border-slate-200 bg-slate-50 p-4">
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_supplier_details","Supplier Details")}</p>
-                            <p className="text-sm font-black text-slate-900">{supplierName}</p>
-                            <p className="mt-1 text-slate-500">{tt("lptp.f_country", "Country:")} {selectedRowForVoucher.originCountryName || selectedRowForVoucher.origin_country_name || "—"}</p>
-                            <p className="text-slate-500">{tt("lpjr.inv_invoice_currency","Invoice Currency")}: <span className="font-bold text-slate-800">{rowCurrency}</span></p>
-                          </div>
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_delivery_wh","Delivery / Warehouse")}</p>
-                            <p>{tt("lpjr.inv_transaction_type","Transaction Type")}: <span className="font-bold">{shippingMode}</span></p>
-                            <p>{tt("lpjr.inv_warehouse","Warehouse")}: <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></p>
-                            <p>{tt("lpjr.inv_truck_no","Truck No")}: <span className="font-mono font-bold text-indigo-700">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></p>
-                          </div>
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_invoice_control","Invoice Control")}</p>
-                            <p>{tt("common.branch","Branch")}: <span className="font-bold">{branchName}</span></p>
-                            <p>{tt("lpjr.inv_doc_ref","Document Ref")}: <span className="font-mono font-bold">{voucherRef}</span></p>
-                            <p>{tt("lp.f_status", "Status:")} <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">{selectedRowForVoucher.status === "posted" ? tt("lpjr.inv_posted","Posted") : tt("lpjr.inv_accepted","Accepted")}</span></p>
-                          </div>
-                        </div>
-
-                        <div className="p-4">
-                          <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[11px]">
-                            <thead className="bg-slate-900 text-white">
-                              <tr>
-                                <Th className="border border-slate-800 p-2 text-left">Sr.</Th>
-                                <Th className="border border-slate-800 p-2 text-left">{tt("lpjr.inv_goods_name","Goods Name")}</Th>
-                                <Th className="border border-slate-800 p-2 text-left">{tt("lpjr.inv_hs_code","HS Code")}</Th>
-                                <Th className="border border-slate-800 p-2 text-left">{tt("lpjr.inv_brand","Brand")}</Th>
-                                <Th className="border border-slate-800 p-2 text-left">{tt("lpjr.inv_size","Size")}</Th>
-                                <Th className="border border-slate-800 p-2 text-right">{tt("lpjr.inv_quantity","Quantity")}</Th>
-                                <Th className="border border-slate-800 p-2 text-left">{tt("lpjr.inv_unit","Unit")}</Th>
-                                <Th className="border border-slate-800 p-2 text-right">{tt("lpjr.inv_unit_price","Unit Price")}</Th>
-                                <Th className="border border-slate-800 p-2 text-right">{tt("lpjr.inv_taxable_amt","Taxable Amount")}</Th>
-                                <Th className="border border-slate-800 p-2 text-right">VAT %</Th>
-                                <Th className="border border-slate-800 p-2 text-right">{tt("lpjr.inv_vat_amt","VAT Amount")}</Th>
-                                <Th className="border border-slate-800 p-2 text-right">{tt("lpjr.inv_total_amt","Total Amount")}</Th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr className="align-top">
-                                <td className="border border-slate-200 p-2">1</td>
-                                <td className="border border-slate-200 p-2 font-bold text-slate-900">
-                                  {goodsName}
-                                  <div className="mt-1 text-[11px] font-semibold text-slate-500">Gross WT: {rowGrossWt.toLocaleString()} kg | Net WT: {rowNetWt.toLocaleString()} kg</div>
-                                </td>
-                                <td className="border border-slate-200 p-2 font-mono">{hsCode}</td>
-                                <td className="border border-slate-200 p-2">{brandName}</td>
-                                <td className="border border-slate-200 p-2">{sizeName}</td>
-                                <td className="border border-slate-200 p-2 text-right font-mono">{rowQty.toLocaleString()}</td>
-                                <td className="border border-slate-200 p-2">{rowUnit}</td>
-                                <td className="border border-slate-200 p-2 text-right font-mono">{rowUnitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                <td className="border border-slate-200 p-2 text-right font-mono">{rowSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                <td className="border border-slate-200 p-2 text-right font-mono">{rowVatPercent}%</td>
-                                <td className="border border-slate-200 p-2 text-right font-mono text-red-650">{rowTaxAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                <td className="border border-slate-200 p-2 text-right font-mono font-black text-emerald-700">{rowCurrency} {rowFinalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                              </tr>
-                            </tbody>
-                          </table>
-
-                          <div className="mt-4 grid grid-cols-[1fr_310px] gap-4">
-                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_amount_words","Amount In Words")}</p>
-                              <p className="text-sm font-black capitalize text-slate-900">{amountToWordsEn(rowGrandTotal, rowCurrency)}</p>
-                              <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
-                                <div className="rounded-lg border border-dashed border-slate-300 bg-white p-3">
-                                  <p className="font-black uppercase text-slate-500">{tt("lpjr.inv_qr_code","QR Code")}</p>
-                                  <p className="mt-2 text-slate-400 font-bold">{tt("lpjr.inv_qr_ref","QR Reference: UAE e-invoice standard.")}</p>
-                                </div>
-                                <div className="rounded-lg border border-dashed border-slate-300 bg-white p-3">
-                                  <p className="font-black uppercase text-slate-500">{tt("lpjr.inv_company_stamp","Company Stamp")}</p>
-                                  <p className="mt-2 text-slate-400 font-bold">{tt("lpjr.inv_stamp_space","Authorized Stamp Space")}</p>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="overflow-hidden rounded-xl border border-slate-300 text-[11px]">
-                              <div className="bg-slate-100 px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-700">{tt("lpjr.inv_summary","Summary")}</div>
-                              <div className="space-y-2 p-3">
-                                <div className="flex justify-between"><span>{tt("lpjr.inv_sub_total","Sub Total")}</span><span className="font-mono font-bold">{rowCurrency} {rowSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                                <div className="flex justify-between text-red-650"><span>{tt("lpjr.inv_vat_total","VAT Total")}</span><span className="font-mono font-bold">{rowCurrency} {rowTaxAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                                <div className="flex justify-between border-t border-slate-300 pt-2 text-sm font-black text-emerald-700"><span>{tt("lpjr.inv_grand_total","Grand Total")}</span><span className="font-mono">{rowCurrency} {rowGrandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 border-t border-slate-200 bg-slate-50 p-4 text-[11px]">
-                          <div className="space-y-1">
-                            <p className="font-black uppercase tracking-[0.14em] text-blue-800">{tt("lpjr.inv_bank_details","Bank Details")}</p>
-                            <p>{tt("lpjr.inv_bank_name","Bank Name")}: -</p>
-                            <p>{tt("lpjr.inv_account_name","Account Name")}: {companyName}</p>
-                            <p>{tt("lpjr.inv_iban","IBAN")}: -</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="font-black uppercase tracking-[0.14em] text-slate-700">{tt("lpjr.inv_terms","Terms & Conditions")}</p>
-                            <p>{tt("lpjr.inv_terms_1","1. Goods received in good condition are subject to company purchase policy.")}</p>
-                            <p>{tt("lpjr.inv_terms_2","2. VAT and taxable amounts are calculated according to UAE tax invoice requirements.")}</p>
-                            <p>{tt("lpjr.inv_terms_3","3. This invoice is generated from the ERP local purchase module.")}</p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-6 p-5 text-center text-[11px] font-bold text-slate-600">
-                          <div className="border-t border-slate-700 pt-2">{tt("lpjr.inv_prepared_by","Prepared By")}</div>
-                          <div className="border-t border-slate-700 pt-2">{tt("lpjr.inv_checked_by","Checked By")}</div>
-                          <div className="border-t border-slate-700 pt-2">{tt("lpjr.inv_auth_sig","Authorized Signature")}</div>
-                        </div>
-                      </div>
-                    </div>
-                    </div>
-                  );
-                }
-
-                // Non-UAE standard voucher
-                return (
-                  <div className="space-y-4 text-xs">
-                    <div className="flex justify-between items-start border-b-2 border-slate-800 pb-3">
-                      <div>
-                        <h2 className="text-sm font-black uppercase text-slate-900 tracking-tight">{tt("lpjr.vchr_title","LOCAL PURCHASE BILL VOUCHER")}</h2>
-                        <p className="text-[11px] text-slate-500 font-bold uppercase">
-                          {selectedRowForVoucher.branchName || selectedRowForVoucher.branch_name || "Global System Branch"}
-                        </p>
-                      </div>
-                      <div className="text-right text-xs font-mono">
-                        <span className="font-black text-blue-600 block text-sm">LP-{selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}</span>
-                        <span className="text-[11px] text-slate-500 block">{tt("lpjr.vchr_date","Date")}: {new Date(selectedRowForVoucher.createdAt || selectedRowForVoucher.created_at || Date.now()).toLocaleDateString("en-GB")}</span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                      <div>
-                        <span className="text-[11px] font-bold text-slate-400 uppercase block">{tt("lpjr.vchr_supplier","Supplier / Vendor:")}</span>
-                        <span className="font-bold text-slate-800 text-xs">{selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "-"}</span>
-                        <span className="text-[11px] text-emerald-600 block font-bold mt-1 uppercase font-mono">
-                          {tt("lpjr.vchr_payment_mode","Payment Mode")}: {selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash"}
-                        </span>
-                        {selectedRowForVoucher.paymentMode === "Advance" && (
-                          <div className="text-[11px] text-red-500 font-bold uppercase mt-1 font-mono">
-                            {tt("lpjr.vchr_remaining_bal","Remaining Bal")}: {rowCurrency} {Number(selectedRowForVoucher.remainingBalance || selectedRowForVoucher.remaining_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-right text-[11px] space-y-0.5">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase block">{tt("lpjr.vchr_shipping","Shipping & Logistics:")}</span>
-                        <div className="font-semibold text-slate-700">Mode: <span className="font-bold">{selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || "Loading"}</span></div>
-                        <div className="font-semibold text-slate-700">{tt("lpjr.vchr_warehouse","Warehouse")}: <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></div>
-                        <div className="font-semibold text-slate-700">{tt("lpjr.vchr_truck_no","Truck No")}: <span className="font-bold font-mono text-indigo-600">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></div>
-                      </div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border border-slate-200">
-                        <thead className="bg-slate-100 text-slate-700 text-[11px] font-bold uppercase">
-                          <tr>
-                            <Th className="p-2 border-b">{tt("lpjr.vchr_goods_item","Goods Item")}</Th>
-                            <Th className="p-2 border-b">{tt("lpjr.vchr_brand_origin","Brand/Origin")}</Th>
-                            <Th className="p-2 border-b text-right">Qty</Th>
-                            <Th className="p-2 border-b text-right">{tt("lpjr.vchr_net_weight","Net Weight")}</Th>
-                            <Th className="p-2 border-b text-right">{tt("lpjr.vchr_rate","Rate")}</Th>
-                            <Th className="p-2 border-b text-right font-black">{tt("lpjr.vchr_final_amount","Final Amount")}</Th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-[11px]">
-                          <tr className="border-b">
-                            <td className="p-2 font-bold text-slate-800">
-                              {goodsName}
-                              {(selectedRowForVoucher.chassisCode || selectedRowForVoucher.chassis_code || selectedRowForVoucher.lotNo || selectedRowForVoucher.lot_no) && (
-                                <div className="text-[11px] text-slate-500 font-bold uppercase mt-0.5 font-mono">
-                                  Chs: {selectedRowForVoucher.chassisCode || selectedRowForVoucher.chassis_code || "-"} | Lot: {selectedRowForVoucher.lotNo || selectedRowForVoucher.lot_no || "-"}
-                                </div>
-                              )}
-                              {(selectedRowForVoucher.applyTax === "Yes" || selectedRowForVoucher.apply_tax === "Yes") && (
-                                <div className="text-[11px] text-indigo-650 font-bold uppercase mt-0.5">
-                                  Tax: {selectedRowForVoucher.taxType || selectedRowForVoucher.tax_type || "VAT"} ({selectedRowForVoucher.taxPercentage || selectedRowForVoucher.tax_percentage || 0}%) - ${Number(selectedRowForVoucher.taxAmount || selectedRowForVoucher.tax_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </div>
-                              )}
-                            </td>
-                            <td className="p-2 text-slate-500 font-medium">
-                              {brandName} / {selectedRowForVoucher.originCountryName || selectedRowForVoucher.origin_country_name || "Local"}
-                            </td>
-                            <td className="p-2 text-right font-mono">
-                              {rowQty.toLocaleString()} {rowUnit}
-                            </td>
-                            <td className="p-2 text-right font-mono text-blue-600 font-bold">
-                              {rowNetWt.toLocaleString()} kg
-                            </td>
-                            <td className="p-2 text-right font-mono">
-                              ${rowUnitPrice.toLocaleString()}
-                            </td>
-                            <td className="p-2 text-right font-mono font-black text-emerald-650">
-                              {rowCurrency} {rowFinalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="bg-slate-900 text-white rounded-lg p-3 flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-350 uppercase">{t(activeLang, "lptp.total_bill_amount", "Total Bill Amount:")}</span>
-                      <span className="font-mono text-base font-black text-emerald-400">
-                        {rowCurrency} {rowFinalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    </div>
+            <div className="p-5 space-y-4 text-xs">
+              {/* Retained Invoice / Contract / Reference Metadata inside the original bill */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/70 dark:border-slate-800">
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{tr("Bill / Entry No.")}</div>
+                  <div className="font-mono font-black text-blue-700 dark:text-blue-400 mt-0.5">
+                    {viewingBill._billNo}
                   </div>
-                );
-              })()}
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{tr("Date")}</div>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                    {formatDisplayDate(viewingBill.transfer_date || viewingBill.created_at)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{tr("Invoice / Contract No.")}</div>
+                  <div className="font-mono font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                    {viewingBill.contract_no || viewingBill.manual_bill_no || "—"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{tr("Journal Reference")}</div>
+                  <div className="font-mono font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                    {viewingBill.journal_serial_no || viewingBill.super_admin_serial || "—"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Linked DR & CR Accounts */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/40 dark:bg-blue-950/20 p-3">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                    {tr("Purchase Account (DR / Debit)")}
+                  </div>
+                  <div className="text-sm font-black text-slate-900 dark:text-white mt-1">
+                    {viewingBill._drName}
+                  </div>
+                  <div className="font-mono text-xs text-slate-500 mt-0.5">{viewingBill._drCode}</div>
+                </div>
+
+                <div className="rounded-xl border border-emerald-200/80 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 p-3">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                    {tr("Supplier / Sales Account (CR / Credit)")}
+                  </div>
+                  <div className="text-sm font-black text-slate-900 dark:text-white mt-1">
+                    {viewingBill._crName}
+                  </div>
+                  <div className="font-mono text-xs text-slate-500 mt-0.5">{viewingBill._crCode}</div>
+                </div>
+              </div>
+
+              {/* Goods, Weights & Amounts */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">
+                      <th className="p-2.5 text-left">{tr("Goods")}</th>
+                      <th className="p-2.5 text-right">{tr("Qty")}</th>
+                      <th className="p-2.5 text-left">{tr("Unit")}</th>
+                      <th className="p-2.5 text-right">{tr("Gross kg")}</th>
+                      <th className="p-2.5 text-right">{tr("Net kg")}</th>
+                      <th className="p-2.5 text-right">{tr("Rate")}</th>
+                      <th className="p-2.5 text-right">{tr("Final Amount")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-t border-slate-200 dark:border-slate-800">
+                      <td className="p-2.5 font-bold">{viewingBill.goods_name}</td>
+                      <td className="p-2.5 text-right font-mono">{viewingBill._qty.toLocaleString("en-US")}</td>
+                      <td className="p-2.5">{viewingBill._unit}</td>
+                      <td className="p-2.5 text-right font-mono">{viewingBill._grossKg.toLocaleString("en-US")}</td>
+                      <td className="p-2.5 text-right font-mono">{viewingBill._netKg.toLocaleString("en-US")}</td>
+                      <td className="p-2.5 text-right font-mono">
+                        {toNum(viewingBill.purchase_rate).toLocaleString("en-US")}
+                      </td>
+                      <td className="p-2.5 text-right font-mono font-black">
+                        {formatMoneyAmount(viewingBill._currency, viewingBill._paymentMeta.totalPayment)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Payment Summary Box */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+                  <div className="text-[10px] font-bold uppercase text-slate-400">{tr("Payment Option")}</div>
+                  <div className="font-black text-slate-900 dark:text-white mt-1">
+                    {tr(viewingBill._paymentMeta.optionLabel)}
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-0.5">
+                    {tr("Destination")}: {tr(viewingBill._paymentMeta.destinationLabel)}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-blue-200 bg-blue-50/50 dark:bg-blue-950/30 p-3">
+                  <div className="text-[10px] font-bold uppercase text-blue-700">{tr("Total Payment")}</div>
+                  <div className="font-mono font-black text-sm text-blue-800 dark:text-blue-300 mt-1" dir="ltr">
+                    {formatMoneyAmount(viewingBill._currency, viewingBill._paymentMeta.totalPayment)}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/30 p-3">
+                  <div className="text-[10px] font-bold uppercase text-emerald-700">{tr("Paid")}</div>
+                  <div className="font-mono font-black text-sm text-emerald-700 dark:text-emerald-400 mt-1" dir="ltr">
+                    {formatMoneyAmount(viewingBill._currency, viewingBill._paymentMeta.actualPaid)}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-rose-200 bg-rose-50/50 dark:bg-rose-950/30 p-3">
+                  <div className="text-[10px] font-bold uppercase text-rose-700">{tr("Balance")}</div>
+                  <div className="font-mono font-black text-sm text-rose-600 dark:text-rose-400 mt-1" dir="ltr">
+                    {formatMoneyAmount(viewingBill._currency, viewingBill._paymentMeta.balance)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment History Entries (if any) */}
+              {Array.isArray(viewingBill.payment_entries) && viewingBill.payment_entries.length > 0 && (
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3 space-y-2">
+                  <div className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                    {tr("Posted Payment History")}
+                  </div>
+                  <div className="space-y-1.5">
+                    {viewingBill.payment_entries.map((pe: any) => (
+                      <div
+                        key={pe.id}
+                        className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/70 text-xs"
+                      >
+                        <div>
+                          <span className="font-mono font-bold text-blue-600">
+                            {pe.entry_serial || pe.reference_no || "PAY"}
+                          </span>
+                          <span className="mx-2 text-slate-400">•</span>
+                          <span className="uppercase font-semibold text-slate-600 dark:text-slate-300">
+                            {pe.kind}
+                          </span>
+                          <span className="mx-2 text-slate-400">•</span>
+                          <span className="text-slate-500">{formatDisplayDate(pe.entry_date)}</span>
+                        </div>
+                        <div className="font-mono font-black text-emerald-700" dir="ltr">
+                          {formatMoneyAmount(pe.currency_code || viewingBill._currency, toNum(pe.amount))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL 2: Edit Bill (Super Admin & Authorized Country Admin Only) ── */}
+      {editingBill && canEditBill && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-wider text-indigo-600">
+                  {tr("Edit Bill")}
+                </div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  {editingBill._billNo} ({editingBill._countryCode} • {editingBill._branchCode})
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingBill(null)}
+                aria-label={tr("Close")}
+                className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="p-5 space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">
+                    {tr("Goods")}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.goodsName}
+                    onChange={(e) => setEditForm((f) => ({ ...f, goodsName: e.target.value }))}
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">
+                    {tr("Supplier / Sales Account (CR / Credit)")}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.supplierName}
+                    onChange={(e) => setEditForm((f) => ({ ...f, supplierName: e.target.value }))}
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">{tr("Qty")}</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={editForm.numbers}
+                    onChange={(e) => setEditForm((f) => ({ ...f, numbers: e.target.value }))}
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">{tr("Unit")}</label>
+                  <input
+                    type="text"
+                    value={editForm.quantityName}
+                    onChange={(e) => setEditForm((f) => ({ ...f, quantityName: e.target.value }))}
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">{tr("Gross kg")}</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={editForm.totalGrossWeight}
+                    onChange={(e) => setEditForm((f) => ({ ...f, totalGrossWeight: e.target.value }))}
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">{tr("Net kg")}</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={editForm.netWeight}
+                    onChange={(e) => setEditForm((f) => ({ ...f, netWeight: e.target.value }))}
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">{tr("Rate")}</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={editForm.purchaseRate}
+                    onChange={(e) => setEditForm((f) => ({ ...f, purchaseRate: e.target.value }))}
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">
+                    {tr("Payment Option")}
+                  </label>
+                  <select
+                    value={editForm.paymentMode}
+                    onChange={(e) => setEditForm((f) => ({ ...f, paymentMode: e.target.value }))}
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 font-semibold"
+                  >
+                    <option value="Invoice Payment">{tr("Invoice Payment")}</option>
+                    <option value="Credit">{tr("Credit")}</option>
+                    <option value="Final Payment">{tr("Final Payment")}</option>
+                    <option value="Cash">{tr("Cash")}</option>
+                    <option value="Bank Transfer">{tr("Bank Transfer")}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">
+                    {tr("Advance / Paid Amount")}
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={editForm.advanceAmount}
+                    onChange={(e) => setEditForm((f) => ({ ...f, advanceAmount: e.target.value }))}
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingBill(null)}
+                  className="h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-slate-600 dark:text-slate-300 cursor-pointer"
+                >
+                  {tr("Cancel")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="h-9 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-xs disabled:opacity-50 cursor-pointer"
+                >
+                  {savingEdit ? tr("Saving...") : tr("Save Changes")}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
     </div>
   );
 }
+export default LocalPurchaseTransferPaymentView;

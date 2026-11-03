@@ -242,11 +242,11 @@ export function LocalPurchaseApprovedHeader({
       }
 
       // Amount paid on this bill
-      let paid = 0;
+      let paid = (r.paid_amount !== undefined && r.paid_amount !== null) ? Math.min(cost, Math.max(0, Number(r.paid_amount) || 0)) : pMode.includes("credit") ? 0 : (pMode.includes("advance") || pMode.includes("invoice") || pMode.includes("final") || pMode.includes("remaining")) ? (isCompleted ? Math.min(cost, Number(r.advance_amount || r.advanceAmount || 0)) : 0) : (isCompleted || pMode === "cash") ? cost : 0;
       if (isCompleted) {
-        paid = cost;
+        paid = paid;
       } else if (pMode === "cash") {
-        paid = cost;
+        paid = paid;
       } else if (Number(r.advance_amount || r.advanceAmount || 0) > 0) {
         paid = Number(r.advance_amount || r.advanceAmount || 0);
       }
@@ -275,7 +275,7 @@ export function LocalPurchaseApprovedHeader({
       const cost = amountOf(r);
       const st = String(r.status || r.bill_status || "").toLowerCase();
       const pMode = String(r.payment_mode || r.paymentMode || "").toLowerCase();
-      if (["posted", "accepted", "transferred", "completed"].includes(st) || pMode === "cash") return cost;
+      if (r.paid_amount !== undefined && r.paid_amount !== null) return Math.min(cost, Math.max(0, Number(r.paid_amount) || 0)); if (pMode.includes("credit")) return 0; if (pMode.includes("advance") || pMode.includes("invoice") || pMode.includes("final") || pMode.includes("remaining")) return Number(r.advance_amount || r.advanceAmount || 0); if (["posted", "accepted", "transferred", "completed"].includes(st) || pMode === "cash") return cost;
       return Number(r.advance_amount || r.advanceAmount || 0);
     }, rateOf);
 
@@ -283,7 +283,7 @@ export function LocalPurchaseApprovedHeader({
       const cost = amountOf(r);
       const st = String(r.status || r.bill_status || "").toLowerCase();
       const pMode = String(r.payment_mode || r.paymentMode || "").toLowerCase();
-      const paid = (["posted", "accepted", "transferred", "completed"].includes(st) || pMode === "cash")
+      const paid = (r.paid_amount !== undefined && r.paid_amount !== null) ? Math.min(cost, Math.max(0, Number(r.paid_amount) || 0)) : pMode.includes("credit") ? 0 : (pMode.includes("advance") || pMode.includes("invoice") || pMode.includes("final") || pMode.includes("remaining")) ? Number(r.advance_amount || r.advanceAmount || 0) : (["posted", "accepted", "transferred", "completed"].includes(st) || pMode === "cash")
         ? cost
         : Number(r.advance_amount || r.advanceAmount || 0);
       return Math.max(0, cost - paid);
