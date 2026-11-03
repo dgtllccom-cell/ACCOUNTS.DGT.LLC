@@ -1,3 +1,4 @@
+import { SourceFilteredTable } from "./source-filtered-table";
 "use client";
  
 import { pl } from "@/lib/reports/print-label";
@@ -5104,7 +5105,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className={cn("flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950", isRtl ? "text-right" : "text-left")}>
-      {docMode ? null : activeMode === "remaining" ? (
+      {docMode ? null : (activeMode === "remaining" && !paymentPage) ? (
         // Owner-approved 1:1 screenshot restyle — mode="remaining" only (the route
         // this ships on: /dashboard/purchase/purchase-payments). Every other mode
         // keeps rendering the unchanged header/filters/table JSX below. The modals
@@ -5282,223 +5283,19 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         </div>
       )}
 
-      {/* ── Main Table Card ── */}
-      <div className="dgt-purchase-table-skin mx-6 mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        {/* Table Title Bar (Matching Reference Screenshot: PURCHASE ORDER PAYMENTS (18)) */}
-        <div className="px-6 py-4 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#091020] flex flex-wrap justify-between items-center gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <h3 className="text-sm font-black tracking-wider text-slate-900 dark:text-slate-100 uppercase">
-              {tGlobal(currentLanguage, "pojp.table_title", "PURCHASE ORDER PAYMENTS")} ({filtered.length})
-            </h3>
-            {/* Source Segmented Control */}
-            <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-800 p-0.5 bg-slate-100/60 dark:bg-slate-950/60 text-xs">
-              <button
-                type="button"
-                onClick={() => { setSourceFilter("all"); setPageIndex(0); }}
-                className={cn(
-                  "px-3 py-1 rounded-md font-bold transition-all text-[11px] cursor-pointer",
-                  sourceFilter === "all"
-                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-                )}
-              >
-                {tGlobal(currentLanguage, "pojp.all_sources", "All Sources")} ({sourceCounts.all})
-              </button>
-              <button
-                type="button"
-                onClick={() => { setSourceFilter("purchase_booking"); setPageIndex(0); }}
-                className={cn(
-                  "px-3 py-1 rounded-md font-bold transition-all text-[11px] cursor-pointer",
-                  sourceFilter === "purchase_booking"
-                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-                )}
-              >
-                {tGlobal(currentLanguage, "pojp.src_booking", "Purchase Booking")} ({sourceCounts.booking})
-              </button>
-              <button
-                type="button"
-                onClick={() => { setSourceFilter("local_purchase"); setPageIndex(0); }}
-                className={cn(
-                  "px-3 py-1 rounded-md font-bold transition-all text-[11px] cursor-pointer",
-                  sourceFilter === "local_purchase"
-                    ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-                )}
-              >
-                {tGlobal(currentLanguage, "pojp.src_local", "Local Purchase")} ({sourceCounts.local})
-              </button>
-            </div>
-            {activeFiltersCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-[#2563eb] border border-blue-200/80 dark:bg-blue-950/50 dark:text-blue-400 whitespace-nowrap">
-                {activeFiltersCount} {tGlobal(currentLanguage, "pojp.active_count", "Active")}
-              </span>
-            )}
-          </div>
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            {tGlobal(currentLanguage, "pojp.showing_range", "Showing {from} to {to} of {total} entries")
-              .replace("{from}", String(displayRows.length > 0 ? pageIndex * pageSize + 1 : 0))
-              .replace("{to}", String(Math.min((pageIndex + 1) * pageSize, displayRows.length)))
-              .replace("{total}", String(displayRows.length))}
-          </span>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
-          <table className="w-full min-w-[1780px] border-collapse text-left text-[12.5px]">
-            <thead>
-              <tr className="border-b border-slate-300 bg-slate-100/95 dark:border-slate-700 dark:bg-[#0c1424] text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
-                {[
-                  { label: "BILL #", tip: "Purchase Order / Bill Number" },
-                  { label: "TYPE", tip: "Order Type" },
-                  { label: "BRANCH", tip: "Branch Code" },
-                  { label: "COUNTRY", tip: "Country Code" },
-                  { label: "DATE", tip: "Order Date" },
-                  { label: "SUPPLIER", tip: "Supplier / Party Name" },
-                  { label: "GOODS", tip: "Goods Description" },
-                  { label: "QTY", tip: "Quantity" },
-                  { label: "GROSS WT", tip: "Gross Weight (Kgs)" },
-                  { label: "NET WT", tip: "Net Weight (Kgs)" },
-                  { label: "TOTAL AMT", tip: "Total Purchase Amount (Original Currency)" },
-                  { label: "ADV %", tip: "Advance Percentage" },
-                  { label: "ADV AMT", tip: "Purchase Advance Amount (Original Currency)" },
-                  { label: "REM AMT", tip: "Remaining Purchase Amount (Original Currency)" },
-                  { label: "DUE DATE", tip: "Advance Payment Due Date" },
-                  { label: "FX RATE", tip: "Exchange Rate" },
-                  { label: "CURR", tip: "Branch Currency" },
-                  { label: "FINAL ADV", tip: "Final Advance Amount (Branch Currency)" },
-                  { label: "P CODE", tip: "Purchase Account Code" },
-                  { label: "S CODE", tip: "Sales Account Code" },
-                  { label: "ROUTE", tip: "Shipping Line / Route" },
-                  { label: "LOAD CNT", tip: "Loading Country" },
-                  { label: "LOAD PORT", tip: "Loading Port" },
-                  { label: "LOAD DATE", tip: "Loading Date" },
-                  { label: "RCV CNT", tip: "Receiving Country" },
-                  { label: "RCV PORT", tip: "Receiving Port" },
-                  { label: "RCV DATE", tip: "Receiving Date" },
-                  { label: "ACTION", tip: "Available Actions" }
-                ].map((col, i) => (
-                  <Th
-                    key={col.label}
-                    title={translateHeader(currentLanguage, col.tip)}
-                    className={cn(
-                      "px-3 py-3.5 whitespace-nowrap border-r border-slate-300 dark:border-slate-700 last:border-0 cursor-default select-none",
-                      i === 6 ? "w-[200px] max-w-[200px]" : "",
-                      i === 7 || i === 8 || i === 9 || i === 10 || i === 12 || i === 13 || i === 17 ? "text-right" :
-                      i === 1 || i === 11 || i === 15 || i === 16 || i === 27 ? "text-center" : "text-left"
-                    )}
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      {translateHeader(currentLanguage, col.label)}
-                      <span className="text-slate-400 text-[11px]">↕</span>
-                    </span>
-                  </Th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {pageRows.map((row, index) => renderRow(row, index))}
-
-              {!pageRows.length && !loading && !loadingRemainingLoadingRecords && (
-                <tr>
-                  <td
-                    colSpan={28}
-                    className="py-16 text-center text-slate-400 dark:text-slate-500 text-xs"
-                  >
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <FileSpreadsheet className="h-10 w-10 opacity-30" />
-                      <span>{t("no_payment_records_found", currentLanguage)}</span>
-                      {(activeMode as string) === "remaining" ? (
-                        <div className="max-w-md text-center">
-                          <span className="text-[11px] text-amber-500 font-bold block">
-                            {tGlobal(currentLanguage, "pay.remaining_workflow_warning", "Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.")}
-                          </span>
-                          <span className="text-[11px] text-slate-400 block mt-1">
-                            {tGlobal(currentLanguage, "pay.remaining_workflow_steps", "Orders only appear here after: Booking â Advance Payment â Transfer to Loading â Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.")}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-[11px] text-slate-400">{t("try_adjusting_filters", currentLanguage)}</span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              )}
-
-              {(loading || loadingRemainingLoadingRecords) && (
-                <tr>
-                  <td colSpan={28} className="py-16 text-center text-slate-400 text-xs font-bold animate-pulse">
-                    {t("loading_records", currentLanguage)}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer / Pagination */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center gap-6">
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              {t("showing", currentLanguage)} <strong className="font-semibold text-slate-700 dark:text-slate-300">{pageRows.length ? pageIndex * pageSize + 1 : 0} {t("range_to", currentLanguage)} {Math.min(displayRows.length, (pageIndex + 1) * pageSize)}</strong> {t("of_records", currentLanguage)} <strong className="font-semibold text-slate-700 dark:text-slate-300">{displayRows.length}</strong> {t("records_word", currentLanguage)}
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400">{t("rows_per_page", currentLanguage)}</span>
-              <select
-                value={pageSize}
-                onChange={(event) => {
-                  setPageSize(Number(event.target.value));
-                  setPageIndex(0);
-                }}
-                className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
-              >
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              disabled={pageIndex === 0}
-              onClick={() => setPageIndex((idx) => Math.max(0, idx - 1))}
-              className={cn(
-                "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-650 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400",
-                pageIndex === 0 && "text-slate-400 opacity-50 cursor-not-allowed"
-              )}
-              aria-label={t("previous_page", currentLanguage)}
-            >
-              <ChevronRight className="h-3.5 w-3.5" style={{ transform: isRtl ? "none" : "rotate(180deg)" }} />
-            </button>
-            {Array.from({ length: Math.ceil(displayRows.length / pageSize) }).slice(0, 5).map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setPageIndex(idx)}
-                className={cn(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-lg border text-xs font-bold transition",
-                  pageIndex === idx
-                    ? "border-blue-500 bg-blue-50 text-blue-600 dark:border-blue-500 dark:bg-blue-950/20 dark:text-blue-400"
-                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
-                )}
-              >
-                {idx + 1}
-              </button>
-            ))}
-            <button
-              disabled={(pageIndex + 1) * pageSize >= displayRows.length}
-              onClick={() => setPageIndex((idx) => idx + 1)}
-              className={cn(
-                "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-655 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400",
-                (pageIndex + 1) * pageSize >= displayRows.length && "text-slate-400 opacity-50 cursor-not-allowed"
-              )}
-              aria-label={t("next_page", currentLanguage)}
-            >
-              <ChevronRight className="h-3.5 w-3.5" style={{ transform: isRtl ? "rotate(180deg)" : "none" }} />
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* ── 3-State Source Table Component (All Sources, Purchase Booking with Same-Row Loading/Receiving, Local Purchase) ── */}
+      <SourceFilteredTable
+        sourceFilter={sourceFilter}
+        onSourceChange={(s: any) => { setSourceFilter(s); setPageIndex(0); }}
+        rows={displayRows}
+        counts={{ all: sourceCounts.all, booking: sourceCounts.booking, local: sourceCounts.local }}
+        lang={currentLanguage}
+        onSelectOrder={(id: any) => selectOrder(id)}
+        onOpenFullBill={(row: any) => setViewingRow(row)}
+        onPrintStatement={(row: any) => handleOpenA4PDF(row, true)}
+        tGlobal={tGlobal}
+        activeMode={activeMode}
+      />
       </>
       )}
 
