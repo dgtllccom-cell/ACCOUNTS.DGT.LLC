@@ -99,6 +99,13 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "all-entries",
+    labelKey: "nav.all_entries" as UiKey,
+    iconKey: "file-spreadsheet",
+    href: "/dashboard/reports/trading-general" as Route,
+    roles: ["super_admin", "business_super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "staff_user", "accountant", "cashier"]
+  },
+  {
     // Central operational control center — read-only aggregation of the real ERP
     // (Smart Due engine + approvals + user tasks). Every item deep-links to the
     // original record; nothing here posts to accounting.
