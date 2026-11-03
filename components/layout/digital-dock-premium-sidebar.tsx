@@ -265,6 +265,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         key: "sub-local-purchase",
         label: nt("Local Purchase"),
         icon: ShoppingCart,
+        tone: "red", // In-progress review: restore default when the Local Purchase checks are cleared.
         children: [
           { label: nt("Local Purchase Bills"), href: "/dashboard/purchase/local-purchase", icon: ShoppingCart },
           { label: nt("Local Purchase Payment Transfer"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft },
