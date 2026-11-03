@@ -1341,9 +1341,11 @@ export function DigitalDockPremiumSidebar({
                                 type="button"
                                 onClick={() => toggleKey(subKey, 2, item.key)}
                                 className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md text-[13px] transition-colors duration-150 cursor-pointer ${
-                                  isSubActive || isSubOpen
-                                    ? "bg-slate-100 text-black font-semibold"
-                                    : "text-black hover:bg-slate-50 font-normal"
+                                  subKey === "sub-local-purchase" && isSubRed
+                                    ? "bg-red-50 text-red-700 border border-red-200 font-semibold hover:bg-red-100"
+                                    : isSubActive || isSubOpen
+                                      ? "bg-slate-100 text-black font-semibold"
+                                      : "text-black hover:bg-slate-50 font-normal"
                                 }`}
                               >
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -1384,9 +1386,13 @@ export function DigitalDockPremiumSidebar({
                                         aria-current={isLeafActive ? "page" : undefined}
                                         onClick={onNavigate}
                                         className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] transition-colors duration-150 ${
-                                          isLeafActive
-                                            ? "bg-slate-100 text-black font-semibold"
-                                            : "text-black hover:bg-slate-50 font-normal"
+                                          subKey === "sub-local-purchase" && isLeafRed
+                                            ? isLeafActive
+                                              ? "bg-red-100 text-red-700 font-semibold"
+                                              : "bg-red-50 text-red-700 hover:bg-red-100 font-medium"
+                                            : isLeafActive
+                                              ? "bg-slate-100 text-black font-semibold"
+                                              : "text-black hover:bg-slate-50 font-normal"
                                         }`}
                                       >
                                         {LeafIcon ? (
