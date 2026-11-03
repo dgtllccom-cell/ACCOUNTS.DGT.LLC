@@ -265,6 +265,14 @@ async function detachBranchScopedRows(
 
 export async function POST() {
   try {
+    // Production records, ledgers, branch relations and Roznamcha must never be
+    // destroyed by a development/demo setup endpoint, even for Super Admin.
+    if (process.env.NODE_ENV === "production" || process.env.APP_ENV === "production") {
+      return NextResponse.json(
+        { error: "Branch setup reset is disabled in Production. Use audited, record-specific maintenance." },
+        { status: 403 }
+      );
+    }
     const session = await requireErpSession();
     if (!session.isSuperAdmin) {
       return NextResponse.json({ error: "Only Super Admin can reset branch setup." }, { status: 403 });
