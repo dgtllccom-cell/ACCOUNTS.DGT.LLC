@@ -129,106 +129,117 @@ export async function GET(request: NextRequest) {
     };
 
     const recordsViaPg = await withLocalPg(async (sql) => {
-      const rows = await sql`
-        select lp.*,
-               c.name as country_name,
-               c.iso_code as country_code,
-               cb.name as branch_name,
-               cb.code as branch_code,
-               city.name as city_branch_name,
-               city.code as city_branch_code,
-               co.name as company_name,
-               dr_acc.account_name as resolved_dr_account_name,
-               dr_acc.account_code as resolved_dr_account_code,
-               cr_acc.account_name as resolved_cr_account_name,
-               cr_acc.account_code as resolved_cr_account_code,
-               coalesce(pay_agg.posted_paid_amount, 0)::numeric as posted_paid_amount,
-               coalesce(pay_agg.posted_payment_count, 0)::int as posted_payment_count,
-               pay_agg.latest_payment_kind,
-               coalesce(pay_agg.payment_entries, '[]'::jsonb) as payment_entries
-        from local_purchases lp
-        left join countries c on c.id = lp.country_id
-        left join country_branches cb on cb.id = lp.country_branch_id
-        left join city_branches city on city.id = lp.city_branch_id
-        left join companies co on co.id = lp.company_id
-        left join lateral (
-          select
-            coalesce(rl_l.name, l.name, ea.name, a.name) as account_name,
-            coalesce(rl_l.code, l.code, ea.code, a.code) as account_code
-          from (select 1) _
-          left join public.roznamcha_lines rl on lp.roznamcha_entry_id is not null and rl.roznamcha_entry_id = lp.roznamcha_entry_id and rl.debit > 0
-          left join public.ledgers rl_l on rl_l.id = rl.ledger_id and rl_l.deleted_at is null
-          left join public.ledgers l on l.deleted_at is null and (
-            (lp.purchase_account_no ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' and (
-              l.id = lp.purchase_account_no::uuid or l.account_id = lp.purchase_account_no::uuid or l.enterprise_account_id = lp.purchase_account_no::uuid
-            ))
-            or l.code = lp.purchase_account_no
-          )
-          left join public.enterprise_accounts ea on ea.deleted_at is null and (
-            (lp.purchase_account_no ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' and ea.id = lp.purchase_account_no::uuid)
-            or ea.code = lp.purchase_account_no
-          )
-          left join public.accounts a on a.deleted_at is null and (
-            (lp.purchase_account_no ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' and a.id = lp.purchase_account_no::uuid)
-            or a.code = lp.purchase_account_no
-          )
-          limit 1
-        ) dr_acc on true
-        left join lateral (
-          select
-            coalesce(rl_l.name, l.name, ea.name, a.name) as account_name,
-            coalesce(rl_l.code, l.code, ea.code, a.code) as account_code
-          from (select coalesce(nullif(trim(lp.sales_account_no), ''), nullif(trim(lp.broker_account_no), '')) as ref_val) ref
-          left join public.roznamcha_lines rl on lp.roznamcha_entry_id is not null and rl.roznamcha_entry_id = lp.roznamcha_entry_id and rl.credit > 0
-          left join public.ledgers rl_l on rl_l.id = rl.ledger_id and rl_l.deleted_at is null
-          left join public.ledgers l on ref.ref_val is not null and l.deleted_at is null and (
-            (ref.ref_val ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' and (
-              l.id = ref.ref_val::uuid or l.account_id = ref.ref_val::uuid or l.enterprise_account_id = ref.ref_val::uuid
-            ))
-            or l.code = ref.ref_val
-          )
-          left join public.enterprise_accounts ea on ref.ref_val is not null and ea.deleted_at is null and (
-            (ref.ref_val ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' and ea.id = ref.ref_val::uuid)
-            or ea.code = ref.ref_val
-          )
-          left join public.accounts a on ref.ref_val is not null and a.deleted_at is null and (
-            (ref.ref_val ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' and a.id = ref.ref_val::uuid)
-            or a.code = ref.ref_val
-          )
-          limit 1
-        ) cr_acc on true
-        left join lateral (
-          select
-            coalesce(sum(case when p.status = 'posted' then p.amount else 0 end), 0)::numeric as posted_paid_amount,
-            count(case when p.status = 'posted' then 1 end)::int as posted_payment_count,
-            (array_agg(p.kind order by p.entry_date desc, p.created_at desc) filter (where p.status = 'posted'))[1]::text as latest_payment_kind,
-            coalesce(
-              jsonb_agg(
-                jsonb_build_object(
-                  'id', p.id,
-                  'kind', p.kind,
-                  'entry_date', p.entry_date,
-                  'amount', p.amount,
-                  'currency_code', p.currency_code,
-                  'exchange_rate', p.exchange_rate,
-                  'status', p.status,
-                  'reference_no', p.reference_no,
-                  'narration', p.narration,
-                  'entry_serial', coalesce(p.super_admin_serial, p.entry_serial, p.branch_serial, p.country_serial),
-                  'roznamcha_entry_id', p.roznamcha_entry_id,
-                  'created_at', p.created_at
-                ) order by p.entry_date desc, p.created_at desc
-              ) filter (where p.id is not null),
-              '[]'::jsonb
-            ) as payment_entries
-          from public.purchase_order_payments p
-          where p.local_purchase_id = lp.id
-            and p.deleted_at is null
-            and p.kind != 'booking'
-        ) pay_agg on true
-        where lp.deleted_at is null
-        order by lp.created_at desc;
-      `;
+      let rows: any[] = [];
+      try {
+        rows = await sql`
+          select lp.*,
+                 c.name as country_name,
+                 c.iso_code as country_code,
+                 cb.name as branch_name,
+                 cb.code as branch_code,
+                 city.name as city_branch_name,
+                 city.code as city_branch_code,
+                 co.name as company_name,
+                 dr_acc.account_name as resolved_dr_account_name,
+                 dr_acc.account_code as resolved_dr_account_code,
+                 cr_acc.account_name as resolved_cr_account_name,
+                 cr_acc.account_code as resolved_cr_account_code,
+                 coalesce(pay_agg.posted_paid_amount, 0)::numeric as posted_paid_amount,
+                 coalesce(pay_agg.posted_payment_count, 0)::int as posted_payment_count,
+                 pay_agg.latest_payment_kind,
+                 coalesce(pay_agg.payment_entries, '[]'::jsonb) as payment_entries
+          from local_purchases lp
+          left join countries c on c.id = lp.country_id
+          left join country_branches cb on cb.id = lp.country_branch_id
+          left join city_branches city on city.id = lp.city_branch_id
+          left join companies co on co.id = lp.company_id
+          left join lateral (
+            select
+              coalesce(rl_l.name, l.name, ea.name, a.name) as account_name,
+              coalesce(rl_l.code, l.code, ea.code, a.code) as account_code
+            from (select nullif(trim(lp.purchase_account_no), '') as dr_ref) ref
+            left join public.roznamcha_lines rl on lp.roznamcha_entry_id is not null and rl.roznamcha_entry_id = lp.roznamcha_entry_id and rl.debit > 0
+            left join public.ledgers rl_l on rl_l.id = rl.ledger_id and rl_l.deleted_at is null
+            left join public.ledgers l on ref.dr_ref is not null and l.deleted_at is null and (
+              l.id::text = ref.dr_ref or l.account_id::text = ref.dr_ref or l.enterprise_account_id::text = ref.dr_ref or l.code = ref.dr_ref
+            )
+            left join public.enterprise_accounts ea on ref.dr_ref is not null and ea.deleted_at is null and (
+              ea.id::text = ref.dr_ref or ea.code = ref.dr_ref
+            )
+            left join public.accounts a on ref.dr_ref is not null and a.deleted_at is null and (
+              a.id::text = ref.dr_ref or a.code = ref.dr_ref
+            )
+            limit 1
+          ) dr_acc on true
+          left join lateral (
+            select
+              coalesce(rl_l.name, l.name, ea.name, a.name) as account_name,
+              coalesce(rl_l.code, l.code, ea.code, a.code) as account_code
+            from (select coalesce(nullif(trim(lp.sales_account_no), ''), nullif(trim(lp.broker_account_no), '')) as ref_val) ref
+            left join public.roznamcha_lines rl on lp.roznamcha_entry_id is not null and rl.roznamcha_entry_id = lp.roznamcha_entry_id and rl.credit > 0
+            left join public.ledgers rl_l on rl_l.id = rl.ledger_id and rl_l.deleted_at is null
+            left join public.ledgers l on ref.ref_val is not null and l.deleted_at is null and (
+              l.id::text = ref.ref_val or l.account_id::text = ref.ref_val or l.enterprise_account_id::text = ref.ref_val or l.code = ref.ref_val
+            )
+            left join public.enterprise_accounts ea on ref.ref_val is not null and ea.deleted_at is null and (
+              ea.id::text = ref.ref_val or ea.code = ref.ref_val
+            )
+            left join public.accounts a on ref.ref_val is not null and a.deleted_at is null and (
+              a.id::text = ref.ref_val or a.code = ref.ref_val
+            )
+            limit 1
+          ) cr_acc on true
+          left join lateral (
+            select
+              coalesce(sum(case when p.status = 'posted' then p.amount else 0 end), 0)::numeric as posted_paid_amount,
+              count(case when p.status = 'posted' then 1 end)::int as posted_payment_count,
+              (array_agg(p.kind order by p.entry_date desc, p.created_at desc) filter (where p.status = 'posted'))[1]::text as latest_payment_kind,
+              coalesce(
+                jsonb_agg(
+                  jsonb_build_object(
+                    'id', p.id,
+                    'kind', p.kind,
+                    'entry_date', p.entry_date,
+                    'amount', p.amount,
+                    'currency_code', p.currency_code,
+                    'exchange_rate', p.exchange_rate,
+                    'status', p.status,
+                    'reference_no', p.reference_no,
+                    'narration', p.narration,
+                    'roznamcha_entry_id', p.roznamcha_entry_id,
+                    'created_at', p.created_at
+                  ) order by p.entry_date desc, p.created_at desc
+                ) filter (where p.id is not null),
+                '[]'::jsonb
+              ) as payment_entries
+            from public.purchase_order_payments p
+            where p.local_purchase_id = lp.id
+              and p.deleted_at is null
+              and p.kind != 'booking'
+          ) pay_agg on true
+          where lp.deleted_at is null
+          order by lp.created_at desc;
+        `;
+      } catch (pgErr) {
+        console.warn("[GET /api/erp/purchases/local-purchase] lateral query fallback:", pgErr);
+        rows = await sql`
+          select lp.*,
+                 c.name as country_name,
+                 c.iso_code as country_code,
+                 cb.name as branch_name,
+                 cb.code as branch_code,
+                 city.name as city_branch_name,
+                 city.code as city_branch_code,
+                 co.name as company_name
+          from local_purchases lp
+          left join countries c on c.id = lp.country_id
+          left join country_branches cb on cb.id = lp.country_branch_id
+          left join city_branches city on city.id = lp.city_branch_id
+          left join companies co on co.id = lp.company_id
+          where lp.deleted_at is null
+          order by lp.created_at desc;
+        `;
+      }
       return rows
         .filter(matchesScope)
         .filter((row: any) => !params.status || String(row.status || "").toLowerCase() === params.status)
