@@ -69,6 +69,8 @@ export type CountryFinancialSummary = {
   ledgerCurrency?: string | null;
   totalBranches: number;
   totalUsers: number;
+  /** Actual customers from the country-scoped live customer directory. */
+  totalCustomers?: number;
   isActive: boolean;
 };
 
@@ -390,7 +392,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                           </td>
                           <td className="py-2 px-1 text-center text-muted-foreground">{row.totalBranches}</td>
                           <td className="py-2 px-1 text-center text-muted-foreground">{row.totalUsers}</td>
-                          <td className="py-2 px-1 text-center text-muted-foreground">0</td>
+                          <td className="py-2 px-1 text-center text-muted-foreground">{row.totalCustomers ?? 0}</td>
                           <td className="whitespace-nowrap py-2 px-2.5 text-right font-semibold text-foreground">${row.totalSales.toLocaleString()}</td>
                           <td className="whitespace-nowrap py-2 px-2.5 text-right font-semibold text-foreground">${row.totalPurchases.toLocaleString()}</td>
                         </tr>
