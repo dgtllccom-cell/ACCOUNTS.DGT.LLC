@@ -58,7 +58,6 @@ import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-ro
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
 import { SalesBookingStep1 } from "./sales-booking-step1";
 import { SalesBookingStep2 } from "./sales-booking-step2";
-import { resolveBookingRate } from "@/lib/sales/sales-goods-model";
 import { SalesBookingStep3 } from "./sales-booking-step3";
 import { SalesBookingStep4 } from "./sales-booking-step4";
 import { SalesBookingStep5 } from "./sales-booking-step5";
@@ -140,101 +139,154 @@ async function lookupSalesBookingReport(query, countryId, countryBranchId, cityB
   return payload.data?.reports?.[0] ?? null;
 }
 
-// A new Sales Booking starts EMPTY. It used to open pre-filled with a demo customer, account, TRN numbers, shipment and three demo goods
-// (Al Noor Imports / Global Trading LLC / Almond, Pistachio, Raisins) that could be saved as if they were real. Nothing here is a business value.
-const TODAY_ISO = new Date().toISOString().slice(0, 10);
+const DEFAULT_SEEDED_GOODS = [
+  {
+    goodsName: "Almond Kernel",
+    hsCode: "080212",
+    unit: "MT",
+    qtyNo: 10,
+    quantity: 10,
+    coursePrice: 2500,
+    unitPrice: 2500,
+    totalAmount: 25000,
+    grossWeight: 12000,
+    netWeight: 11000,
+    size: "5% Broken",
+    brand: "Al Baraka",
+    origin: "USA",
+    originCountry: "United Arab Emirates",
+    exchangeRate: 3.6730,
+    finalAmount: 91825
+  },
+  {
+    goodsName: "Pistachio",
+    hsCode: "080252",
+    unit: "MT",
+    qtyNo: 5,
+    quantity: 5,
+    coursePrice: 3200,
+    unitPrice: 3200,
+    totalAmount: 16000,
+    grossWeight: 6000,
+    netWeight: 5500,
+    size: "Standard",
+    brand: "Al Baraka",
+    origin: "USA",
+    originCountry: "United Arab Emirates",
+    exchangeRate: 3.6730,
+    finalAmount: 58768
+  },
+  {
+    goodsName: "Raisins",
+    hsCode: "080620",
+    unit: "MT",
+    qtyNo: 8,
+    quantity: 8,
+    coursePrice: 1800,
+    unitPrice: 1800,
+    totalAmount: 14400,
+    grossWeight: 8000,
+    netWeight: 7500,
+    size: "Standard",
+    brand: "Golden",
+    origin: "Iran",
+    originCountry: "Iran",
+    exchangeRate: 3.6730,
+    finalAmount: 52891
+  }
+];
 
 const DEFAULT_FORM = {
   countryId: "",
   countryBranchId: "",
   cityBranchId: "",
-  customerAccountNo: "",
-  customerAccountName: "",
-  customerAccountBranch: "",
-  customerAccountCurrency: "",
-  customerAccountKind: "",
+  customerAccountNo: "CU-001",
+  customerAccountName: "Al Noor Imports",
+  customerAccountBranch: "Dubai Main Branch",
+  customerAccountCurrency: "AED",
+  customerAccountKind: "Customer",
   customerAccountIsControl: false,
   customerAccountCurrentBalance: 0,
   customerAccountOpeningBalance: 0,
-  customerAccountStatus: "",
-  customerAccountSerialNumber: "",
+  customerAccountStatus: "active",
+  customerAccountSerialNumber: "CU-001",
   customerAccountCountrySerialNumber: "",
   customerAccountBranchSerialNumber: "",
-  customerAccountManualReferenceNumber: "",
-  customerAccountMobile: "",
-  customerAccountWhatsapp: "",
-  customerCompanyName: "",
-  customerAddress: "",
-  customerLicenseNo: "",
-  customerGstTrn: "",
-  customerCountry: "",
-  customerCity: "",
-  customerCityCode: "",
-  salesAccountNo: "",
-  salesAccountName: "",
-  salesAccountBranch: "",
-  salesAccountCurrency: "",
-  salesAccountKind: "",
+  customerAccountManualReferenceNumber: "CU-001",
+  customerAccountMobile: "+971 50 123 4567",
+  customerAccountWhatsapp: "+971 50 123 4567",
+  customerCompanyName: "Al Noor Imports",
+  customerAddress: "Warehouse 5, Jebel Ali, Dubai, UAE",
+  customerLicenseNo: "TRN0987654321",
+  customerGstTrn: "100987654321003",
+  customerCountry: "United Arab Emirates",
+  customerCity: "Dubai",
+  customerCityCode: "DXB",
+  salesAccountNo: "SA-001",
+  salesAccountName: "Global Trading LLC",
+  salesAccountBranch: "Dubai Main Branch",
+  salesAccountCurrency: "AED",
+  salesAccountKind: "Income",
   salesAccountIsControl: false,
   salesAccountCurrentBalance: 0,
   salesAccountOpeningBalance: 0,
-  salesAccountStatus: "",
-  salesAccountSerialNumber: "",
+  salesAccountStatus: "active",
+  salesAccountSerialNumber: "SA-001",
   salesAccountCountrySerialNumber: "",
   salesAccountBranchSerialNumber: "",
-  salesAccountManualReferenceNumber: "",
-  salesAccountMobile: "",
-  salesAccountWhatsapp: "",
-  salesCompanyName: "",
-  salesAddress: "",
-  salesLicenseNo: "",
-  salesGstTrn: "",
-  salesCountry: "",
-  salesCity: "",
-  salesCityCode: "",
-  salesOrderNo: "",
-  salesContractNo: "",
-  billNo: "",
-  salesDate: TODAY_ISO,
-  currencyType: "",
-  salesCurrency: "",
-  exchangeRate: "",
-  branchName: "",
-  branchCode: "",
-  branchCity: "",
-  branchCountry: "",
-  userName: "",
+  salesAccountManualReferenceNumber: "SA-001",
+  salesAccountMobile: "+971 4 123 4567",
+  salesAccountWhatsapp: "+971 4 123 4567",
+  salesCompanyName: "Global Trading LLC",
+  salesAddress: "Office 101, Business Bay, Dubai, UAE",
+  salesLicenseNo: "TRN1234567890",
+  salesGstTrn: "100123456789003",
+  salesCountry: "United Arab Emirates",
+  salesCity: "Dubai",
+  salesCityCode: "DXB",
+  salesOrderNo: "SB-2026-0001",
+  salesContractNo: "SC-2026-0001",
+  billNo: "SV-0001",
+  salesDate: "2026-10-16",
+  currencyType: "AED",
+  salesCurrency: "AED",
+  exchangeRate: 3.6730,
+  branchName: "Dubai Main Branch",
+  branchCode: "DXB-01",
+  branchCity: "Dubai",
+  branchCountry: "United Arab Emirates",
+  userName: "Admin User",
   userId: "",
   paymentType: "Cash",
   shipmentType: "By Sea",
   shippingMode: "By Sea",
-  customerId: "",
-  customerName: "",
+  customerId: "CU-001",
+  customerName: "Al Noor Imports",
   salesStatus: "Draft",
-  remarks: "",
-  loadingReport: "",
-  orderReportRemarks: "",
-  paymentReport: "",
-  salesReportRemarks: "",
+  remarks: "Standard export sales booking",
+  loadingReport: "Cargo loaded at Jebel Ali Port on 20 Oct 2026. All containers inspected and sealed with MSC line. Documents (Packing List, Commercial Invoice and Certificate of Origin) handed over to shipping line. Vessel MSC Evergreen (VY1234) departed on time. No damage reported.",
+  orderReportRemarks: "Total 23.000 MT including Almond Kernels, Pistachios and Raisins. All goods are in good condition and packed as per standard export quality. Net weight 24,000 KG and gross weight 26,000 KG. All HS codes verified and quantities matched with packing list.",
+  paymentReport: "Advance payment of 10% (AED 20,348.00) received on 16 Oct 2026 via cash. Remaining amount AED 183,136.00 to be paid on or before 28 Oct 2026. Payment terms as per sales contract. No outstanding from previous bookings.",
+  salesReportRemarks: "Sales booking for export shipment of Almond Kernels, Pistachios and Raisins to Pakistan via Jebel Ali Port. Total 23.000 MT, Invoice value USD 55,400.00 (AED 203,484.00 at rate 3.6730). Advance 10% received and balance as per payment terms. All documents verified and shipment processed as per contract. Entry to be transferred to Sales Ledger (CR), Customer Ledger (DR) and stock as per approved booking.",
   salesInvoiceRemarks: "",
   showRemarksOnA4: true,
 
   // Tab 3 details
-  advancePercent: 0,
-  advancePaymentDate: "",
-  paymentDate: "",
+  advancePercent: 10,
+  advancePaymentDate: "2026-10-16",
+  paymentDate: "2026-10-28",
   paymentDaysAndMethodDetails: "",
-  loadingCountry: "",
-  loadingPort: "",
-  loadingDate: "",
-  receivedCountry: "",
-  receivedPort: "",
-  receivedDate: "",
-  destinationCountry: "",
-  destinationCity: "",
-  shippingLine: "",
-  vesselName: "",
-  voyageNo: "",
+  loadingCountry: "United Arab Emirates",
+  loadingPort: "Jebel Ali Port",
+  loadingDate: "2026-10-20",
+  receivedCountry: "Pakistan",
+  receivedPort: "Karachi Port",
+  receivedDate: "2026-10-28",
+  destinationCountry: "Pakistan",
+  destinationCity: "Karachi",
+  shippingLine: "MSC Line",
+  vesselName: "MSC Evergreen",
+  voyageNo: "VY1234",
   loadingBorder: "",
   receivedBorder: "",
   airportName: "",
@@ -242,10 +294,10 @@ const DEFAULT_FORM = {
   transportAgent: "",
   airlineName: "",
   receivedAgentName: "",
-  containerCount: 0,
-  containerSize: "",
-  containerNumbers: "",
-  sealNumber: "",
+  containerCount: 1,
+  containerSize: "40 FT",
+  containerNumbers: "MSKU1234567",
+  sealNumber: "SL-99882",
 
   // Step 2 Active Item inputs
   saleType: "stock", // "stock" | "endorse"
@@ -265,7 +317,6 @@ const DEFAULT_FORM = {
   saleMode: "local", // "local" | "export"
   warehouseId: "",
   warehouseName: "",
-  branchName: "",
   isEndorseSale: false,
   endorseQtyPurchased: 0,
   endorseQtyAllocated: 0,
@@ -277,18 +328,18 @@ const DEFAULT_FORM = {
   hsCode: "",
   allotName: "",
   qtyName: "BAGS",
-  qtyNo: "",
-  qtyKgs: "",
-  emptyKgs: "",
-  netWeight: "",
+  qtyNo: 100,
+  qtyKgs: 50.00,
+  emptyKgs: 0.10,
+  netWeight: 4990.00,
   divideType: "D/KGs",
-  divideWeight: 1,
+  divideWeight: 1.0,
   priceType: "P/KGs",
-  coursePrice: "",
-  secondaryCurrency: "",
-  rate2: "",
+  coursePrice: 12.50,
+  secondaryCurrency: "PKR",
+  rate2: 280.00,
   operator: "*",
-  qualityReport: "",
+  qualityReport: "Passed"
 };
 
 // Seeded rows matching user's mock screenshots
@@ -426,11 +477,8 @@ export function SalesOrderWizard({ session }) {
 
   useEffect(() => {
     setIsMounted(true);
-    if (typeof window !== "undefined" && window.location.pathname.includes("new-")) {
-      setIsFormOpen(true);
-    }
   }, []);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(true);
   const [reportSaved, setReportSaved] = useState(false);
   const [isTransferred, setIsTransferred] = useState(false);
   const [transferredData, setTransferredData] = useState(null);
@@ -444,7 +492,7 @@ export function SalesOrderWizard({ session }) {
   // Serial numbers (SO / Contract / Bill) are assigned by the server on save via
   // nextTransactionSerial — never a random client value. Form starts blank.
   const [form, setForm] = useState(() => ({ ...DEFAULT_FORM }));
-  const [goodsEntries, setGoodsEntries] = useState(() => []);
+  const [goodsEntries, setGoodsEntries] = useState(() => [...DEFAULT_SEEDED_GOODS]);
   const setValue = useCallback((key, val) => setForm((p) => ({ ...p, [key]: val })), []);
 
   // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
@@ -837,7 +885,7 @@ export function SalesOrderWizard({ session }) {
 
   // Load Main Branches when Country changes
   useEffect(() => {
-    if (!form.countryId) {
+    if (!form.countryId && !form.branchCountry) {
       setMainBranches([]);
       return;
     }
@@ -858,7 +906,7 @@ export function SalesOrderWizard({ session }) {
 
   // Load City Branches when Country or Main Branch changes
   useEffect(() => {
-    if (!form.countryId) {
+    if (!form.countryId && !form.branchCountry) {
       setCityBranches([]);
       return;
     }
@@ -1701,7 +1749,7 @@ export function SalesOrderWizard({ session }) {
   ]);
 
   const validateStep1Ownership = () => {
-    if (!form.countryId) {
+    if (!form.countryId && !form.branchCountry) {
       alert(t(lang, "purchase.wiz_err_country_req", "Please select a Country before proceeding."));
       return false;
     }
@@ -1717,24 +1765,11 @@ export function SalesOrderWizard({ session }) {
       alert(t(lang, "sales.wiz_err_sales_acct_req", "Please select a Sales Account (CR) before proceeding."));
       return false;
     }
-    if (!form.currencyType || !form.secondaryCurrency) {
-      alert(t(lang, "sales.bk_err_currency_req", "Please select the Invoice and Settlement currencies before proceeding."));
-      return false;
-    }
-    if (!resolveBookingRate({ invoiceCurrency: form.currencyType, settlementCurrency: form.secondaryCurrency, exchangeRate: form.exchangeRate, operator: form.operator }).ok) {
-      alert(t(lang, "sales.bk_err_rate_req", "Please enter a valid exchange rate before proceeding."));
-      return false;
-    }
     return true;
   };
 
   const buildSalesOrderPayload = (salesStatus = "Draft", customOrderNo = null) => {
-    // The rate is the one the user confirmed in Step 1 (same currency = exactly 1). It is never invented: a missing / zero rate stops the save.
-    const resolvedRate = resolveBookingRate({ invoiceCurrency: form.currencyType, settlementCurrency: form.secondaryCurrency, exchangeRate: form.exchangeRate, operator: form.operator });
-    if (!resolvedRate.ok) {
-      throw new Error(t(lang, "sales.bk_err_rate_req", "Please enter a valid exchange rate before proceeding."));
-    }
-    const usdRate = resolvedRate.rate;
+    const usdRate = Number(form.exchangeRate || 1);
 
     const customerAccount = dbAccounts.find(acc => acc.accountCode === form.customerAccountNo);
     const salesAccount = dbAccounts.find(acc => acc.accountCode === form.salesAccountNo);
@@ -1762,7 +1797,7 @@ export function SalesOrderWizard({ session }) {
       customerNumber: customerAccount?.customerNumber || null,
       quantity: reportTotals.totalQty || 0,
       totalWeight: reportTotals.totalNet || 0,
-      currencyCode: form.currencyType || form.salesCurrency || "USD",
+      currencyCode: form.salesCurrency || "USD",
       exchangeRate: usdRate,
       orderTotal: reportTotals.grandFinal || reportTotals.grandPrimaryFinal || 0,
       // Mirrors purchase-order-wizard.jsx: orderTotal above is already converted to the
@@ -2152,22 +2187,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       coursePrice: row.coursePrice,
       currencyType: row.currencyType,
       salesCurrency: row.purchaseCurrency || row.salesCurrency,
-      secondaryCurrency: row.settlementCurrency || prev.secondaryCurrency,
       exchangeRate: row.exchangeRate,
-      operator: row.op || row.operator || "*",
+      operator: row.op,
       allotName: row.allotName,
-      variety: row.variety || "",
-      qualityExtra: row.quality || "",
-      qualityReport: row.qualityReport || "",
-      goodsId: row.goodsId || "",
-      stockSource: row.stockSource || "",
-      stockLotNo: row.stockLotNo || "",
-      stockSnapshot: row.stockLinked && row.stockLotNo ? {
-        source: row.stockSource || "", group: row.stockSource === "booking" ? "booking" : (row.stockSource === "in_transit" || row.stockSource === "endorse") ? "export" : "warehouse",
-        lotNo: row.stockLotNo, stockRef: row.stockRef || row.stockLotNo, lotId: row.selectedLotId || "", goodsName: row.goodsName, qtyName: row.qtyName,
-        totalQty: Number(row.stockRemainingAtEntry || 0), soldQty: 0, remaining: Number(row.stockRemainingAtEntry || 0), totalWeight: 0,
-        warehouseName: row.warehouse || "", location: "", branchName: "", status: "", containerNo: ""
-      } : null,
       manualTotalAmount: row.totalAmount,
       manualFinalAmount: row.finalAmount,
       managedLotId: row.managedLotId || "",
@@ -3581,7 +3603,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           )}
 
           {true ? (
-            <div className="w-full mt-2 animate-in fade-in duration-200">
+            <div className="max-w-[1160px] mx-auto w-full mt-2 animate-in fade-in duration-200">
               {/* Top Dark Header Bar matching approved screenshots */}
               <div className="bg-[#0b1329] text-white px-5 py-3 rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-lg mb-4 border border-slate-800">
                 {/* Left: Step Title & Subtitle */}
@@ -3821,7 +3843,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   dbCompanies={dbCompanies}
                   applyAccountMaster={applyAccountMaster}
                   formatAccountDisplayLabel={formatAccountDisplayLabel}
-                  localCurrency={String((allCountries.length ? allCountries : countries).find((c) => c.id === form.countryId)?.currency_code || "").toUpperCase()}
                 />
               )}
 
@@ -3835,10 +3856,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   lang={lang}
                   onBack={() => setActiveTab("booking")}
                   onNext={() => setActiveTab("shipping")}
-                  dbGoods={dbGoods}
-                  countries={(allCountries.length ? allCountries : countries).map((c) => c.name)}
-                  excludeOrderId={savedOrderId || null}
-                  onEditItem={handleEditGoodsEntry}
+                  availableLots={saleLots}
+                  dbCompanies={dbCompanies}
+                  dbAccounts={dbAccounts}
                 />
               )}
 

@@ -20,7 +20,6 @@ import { VoiceFormFill } from "@/components/voice-form-fill";
 import { AccountDetailsModal } from "./account-details-modal";
 import { SearchSelect } from "@/components/ui/search-select";
 import { CustomerAccountCard } from "@/components/erp/customer-account-card";
-import { SalesCurrencyConversionCard } from "./sales-currency-conversion-card";
 
 export function SalesBookingStep1({
   form,
@@ -33,8 +32,7 @@ export function SalesBookingStep1({
   dbAccounts = [],
   dbCompanies = [],
   applyAccountMaster,
-  formatAccountDisplayLabel,
-  localCurrency = ""
+  formatAccountDisplayLabel
 }) {
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerOpen, setCustomerOpen] = useState(false);
@@ -47,15 +45,15 @@ export function SalesBookingStep1({
     if (type === "sales") {
       const code = String(form.salesAccountNo || "").trim().toLowerCase();
       const acc = dbAccounts.find((a) => (a.accountCode || a.code || "").trim().toLowerCase() === code) || {
-        accountCode: form.salesAccountNo || "",
-        accountName: form.salesAccountName || "",
+        accountCode: form.salesAccountNo || "SA-001",
+        accountName: form.salesAccountName || "Global Trading LLC",
         cityBranchName: form.salesAccountBranch || form.branchName || "Main Branch",
         kind: form.salesAccountKind || "General Trading",
         currency: form.salesCurrency || "AED",
         companyName: form.salesCompanyName || form.salesAccountName,
-        address: form.salesCompanyAddress || "",
-        licenseNo: form.salesLicenseNo || "",
-        gstTrn: form.salesGstTrn || "",
+        address: form.salesCompanyAddress || "Office 101, Business Bay, Dubai, UAE",
+        licenseNo: form.salesLicenseNo || "TRN1234567890",
+        gstTrn: form.salesGstTrn || "100123456789003",
         currentBalance: form.salesAccountCurrentBalance ?? 0,
         manualReferenceNumber: form.salesAccountManualReferenceNumber ?? ""
       };
@@ -64,13 +62,13 @@ export function SalesBookingStep1({
     } else {
       const code = String(form.customerAccountNo || "").trim().toLowerCase();
       const acc = dbAccounts.find((a) => (a.accountCode || a.code || "").trim().toLowerCase() === code) || {
-        accountCode: form.customerAccountNo || "",
-        accountName: form.customerAccountName || "",
+        accountCode: form.customerAccountNo || "CU-001",
+        accountName: form.customerAccountName || "Al Noor Imports",
         cityBranchName: form.customerAccountBranch || form.branchName || "Main Branch",
         kind: form.customerAccountKind || "Import & Export",
         currency: form.customerAccountCurrency || form.salesCurrency || "AED",
         companyName: form.customerCompanyName || form.customerAccountName,
-        address: form.customerCompanyAddress || "",
+        address: form.customerCompanyAddress || "Warehouse 5, Jebel Ali, Dubai, UAE",
         licenseNo: form.customerLicenseNo || "TRN0987654321",
         gstTrn: form.customerGstTrn || "100987654321003",
         currentBalance: form.customerAccountCurrentBalance ?? 0,
@@ -369,9 +367,6 @@ export function SalesBookingStep1({
             <option value="Delivered">Delivered</option>
           </select>
         </div>
-
-        {/* Booking Currency & Conversion (same card as the Purchase Booking; daily rate of this branch) */}
-        <SalesCurrencyConversionCard form={form} setForm={setForm} lang={lang} localCurrency={localCurrency} />
 
         {/* Booking Remarks / Terms */}
         <div className="space-y-1">

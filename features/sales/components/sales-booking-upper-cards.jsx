@@ -68,13 +68,13 @@ export function SalesBookingUpperCards({
   const [viewModalType, setViewModalType] = useState("customer");
 
   const bookingDateFormatted = formatDisplayDate(form.salesDate || form.bookingDate);
-  const bookingNo = form.salesOrderNo || "—";
-  const serialNo = form.billNo || "—";
+  const bookingNo = form.salesOrderNo || "SB-2026-0001";
+  const serialNo = form.billNo || "SV-0001";
   const paymentType = form.paymentType || "Cash";
   const shippingType = form.shippingMode || form.shipmentType || "By Sea";
-  const country = form.branchCountry || "—";
-  const branch = form.branchName || "—";
-  const createdBy = form.userName || "—";
+  const country = form.branchCountry || "United Arab Emirates";
+  const branch = form.branchName || "Dubai Main Branch";
+  const createdBy = form.userName || "Admin User";
   const operationType = form.saleMode === "export" ? "Export" : (form.operationType || "Export");
 
   const handleOpenAccountModal = (type) => {
@@ -120,34 +120,35 @@ export function SalesBookingUpperCards({
   };
 
   // Sales Account (CR)
-  const salesAccountCode = form.salesAccountNo || "—";
-  const salesAccountName = form.salesAccountName || "—";
+  const salesAccountCode = form.salesAccountNo || "SA-001";
+  const salesAccountName = form.salesAccountName || "Global Trading LLC";
   const salesBranch = form.salesAccountBranch || branch;
-  const salesBusinessName = form.salesAccountKind || "—";
-  const salesCurrency = form.salesCurrency || form.currencyType || "—";
+  const salesBusinessName = form.salesAccountKind || "General Trading";
+  const salesCurrency = form.salesCurrency || form.currencyType || "AED";
   const salesCompany = form.salesCompanyName || salesAccountName;
-  const salesAddress = form.salesCompanyAddress || "—";
-  const salesLicense = form.salesLicenseNo || "—";
-  const salesGst = form.salesGstTrn || "—";
+  const salesAddress = form.salesCompanyAddress || "Office 101, Business Bay, Dubai, UAE";
+  const salesLicense = form.salesLicenseNo || "TRN1234567890";
+  const salesGst = form.salesGstTrn || "100123456789003";
 
   // Customer Account (DR)
-  const customerAccountCode = form.customerAccountNo || "—";
-  const customerAccountName = form.customerAccountName || "—";
+  const customerAccountCode = form.customerAccountNo || "CU-001";
+  const customerAccountName = form.customerAccountName || "Al Noor Imports";
   const customerBranch = form.customerAccountBranch || branch;
-  const customerBusinessName = form.customerAccountKind || "—";
-  const customerCurrency = form.customerAccountCurrency || form.salesCurrency || "—";
+  const customerBusinessName = form.customerAccountKind || "Import & Export";
+  const customerCurrency = form.customerAccountCurrency || form.salesCurrency || "AED";
   const customerCompany = form.customerCompanyName || customerAccountName;
-  const customerAddress = form.customerCompanyAddress || "—";
-  const customerLicense = form.customerLicenseNo || "—";
-  const customerGst = form.customerGstTrn || "—";
+  const customerAddress = form.customerCompanyAddress || "Warehouse 5, Jebel Ali, Dubai, UAE";
+  const customerLicense = form.customerLicenseNo || "TRN0987654321";
+  const customerGst = form.customerGstTrn || "100987654321003";
 
   // Handle currency change
   const handleCurrencyChange = (newCurr) => {
     if (readOnly || !setForm) return;
     setForm((prev) => ({
       ...prev,
-      salesAccountCurrency: newCurr,
-      customerAccountCurrency: newCurr
+      salesCurrency: newCurr,
+      customerAccountCurrency: newCurr,
+      currencyType: newCurr === "USD" ? "USD" : prev.currencyType
     }));
   };
 
@@ -381,11 +382,11 @@ export function SalesBookingUpperCards({
           </div>
           <div className="flex justify-between gap-1">
             <span className="truncate">Country : {country}</span>
-            <span className="truncate">State : {form.salesState || "—"}</span>
+            <span className="truncate">State : Dubai</span>
           </div>
           <div className="flex justify-between gap-1">
-            <span className="truncate">City : {form.salesCity || "—"}</span>
-            <span className="truncate font-mono">City Code : {form.salesCityCode || "—"}</span>
+            <span className="truncate">City : Dubai</span>
+            <span className="truncate font-mono">City Code : DXB</span>
           </div>
           <div className="truncate">
             <span className="text-slate-400 font-medium">Address : </span>
@@ -516,11 +517,11 @@ export function SalesBookingUpperCards({
           </div>
           <div className="flex justify-between gap-1">
             <span className="truncate">Country : {country}</span>
-            <span className="truncate">State : {form.customerState || "—"}</span>
+            <span className="truncate">State : Dubai</span>
           </div>
           <div className="flex justify-between gap-1">
-            <span className="truncate">City : {form.customerCity || "—"}</span>
-            <span className="truncate font-mono">City Code : {form.customerCityCode || "—"}</span>
+            <span className="truncate">City : Dubai</span>
+            <span className="truncate font-mono">City Code : DXB</span>
           </div>
           <div className="truncate">
             <span className="text-slate-400 font-medium">Address : </span>
