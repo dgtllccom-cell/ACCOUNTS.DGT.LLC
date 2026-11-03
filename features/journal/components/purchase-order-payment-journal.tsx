@@ -1,5 +1,6 @@
-import { SourceFilteredTable } from "./source-filtered-table";
 "use client";
+
+import { SourceFilteredTable } from "./source-filtered-table";
  
 import { pl } from "@/lib/reports/print-label";
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
