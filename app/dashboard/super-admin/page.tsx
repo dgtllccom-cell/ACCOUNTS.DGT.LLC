@@ -62,7 +62,8 @@ async function loadDashboard(): Promise<DashboardV20Data> {
         }
       };
 
-      const countriesCount = await count("countries");
+      const activeCountryRows = await sql`select count(*)::int as value from countries where deleted_at is null and is_active = true`.catch(() => [{ value: 0 }]);
+      const countriesCount = Number(activeCountryRows[0]?.value || 0);
       const countryBranchesCount = await count("country_branches");
       const cityBranchesCount = await count("city_branches");
       const usersCount = await count("profiles");
