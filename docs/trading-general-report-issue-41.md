@@ -28,3 +28,8 @@ Issue: #41. This feature is an additive, **read-only** report. It does not alter
 - Add Local Sales and a canonical nested transaction/stock movement drill-down. Payment totals must reconcile to real posted Roznamcha and advance/remaining entries.
 - Add complete filters, printing, responsive layouts and translations.
 - Run `tsc`, build, stock-journal guard, regression tests, screenshot suite and browser verification on DEV; then review and deploy via existing EPS/Production gate. Do not overlap production deployments.
+
+## Menu update (2026-11-03)
+- Added top-level **All Entries** immediately beneath Dashboard in canonical `components/layout/digital-dock-premium-sidebar.tsx` and mirrored `lib/navigation/sidebar.ts`.
+- Added explicit `/dashboard/reports/trading-general` route policy.
+- IMPORTANT: nav.all_entries localization, business-domain permission hardening, real data scope, and browser verification remain required. No deployment approved yet.
