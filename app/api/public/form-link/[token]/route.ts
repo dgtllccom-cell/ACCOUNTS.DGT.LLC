@@ -66,23 +66,7 @@ export async function GET(
     const { token } = await context.params;
     if (!token) return err("Missing token", 400);
 
-    const isTestToken = token.startsWith("test_token") || token.includes("preview");
-    if (isTestToken) {
-      const payload = {
-        token,
-        formType: "Customer",
-        status: "active",
-        createdByName: "ERP Super Admin",
-        expiresAt: null,
-        notes: "Live Test & Demonstration Link",
-      };
-      return NextResponse.json({
-        ok: true,
-        data: payload,
-        link: payload,
-      }, { status: 200 });
-    }
-
+    // Every public link must exist in the authoritative database; no fabricated preview links.
     const link = await resolveLink(token);
     if (!link) return err("Link not found", 404);
 
@@ -122,32 +106,22 @@ export async function POST(
     const { token } = await context.params;
     if (!token) return err("Missing token", 400);
 
-    const isTestToken = token.startsWith("test_token") || token.includes("preview");
-    let link: any = null;
-
-    if (!isTestToken) {
-      link = await resolveLink(token);
-      if (!link) return err("Link not found", 404);
-      if (link.status === "revoked") return err("This link has been revoked", 410);
-      if (link.status === "expired") return err("This link has expired", 410);
-      if (link.status === "used" || link.status === "submitted") {
-        // Idempotent: Form was already recorded and customer created in ERP
-        return ok({
-          submittedRecordId: link.submitted_record_id,
-          formType: link.form_type,
-          alreadySubmitted: true,
-          submittedAt: link.submitted_at,
-          message: "Your submission has already been received successfully."
-        }, 200);
-      }
-    } else {
-      link = {
-        token,
-        form_type: "Customer",
-        status: "active",
-        created_by_name: "Super Admin",
-      };
+    // Do not let development/preview tokens create real records in Production.
+    // Resolve and validate every token against the existing database link.
+    const link = await resolveLink(token);
+    if (!link) return err("Link not found", 404);
+    if (link.status === "revoked") return err("This link has been revoked", 410);
+    if (link.status === "expired") return err("This link has expired", 410);
+    if (link.status === "used" || link.status === "submitted") {
+      return ok({
+        submittedRecordId: link.submitted_record_id,
+        formType: link.form_type,
+        alreadySubmitted: true,
+        submittedAt: link.submitted_at,
+        message: "Your submission has already been received successfully."
+      }, 200);
     }
+    if (link.status !== "active") return err("This link is not active", 410);
 
     const body = await request.json().catch(() => null);
     if (!body) return err("Invalid request body", 400);
