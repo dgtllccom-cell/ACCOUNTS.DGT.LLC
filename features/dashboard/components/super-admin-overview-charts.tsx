@@ -349,7 +349,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
               >
                 <span>{translateHeader(lang, "VIEW ALL")}</span>
                 <span className="text-[11px] bg-blue-600 text-white rounded-full px-1.5 py-0.2">
-                  {countrySummaries.length || 6}
+                  {countrySummaries.length}
                 </span>
               </button>
             </CardHeader>
@@ -625,7 +625,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                       {t(lang, "dash.country_performance", "Country Performance")}
                     </h3>
                     <span className="rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs px-2.5 py-0.5 font-bold whitespace-nowrap">
-                      {countrySummaries.length || 6} {translateHeader(lang, "COUNTRY")}
+                      {countrySummaries.length} {translateHeader(lang, "COUNTRY")}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -648,7 +648,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
               <div className="bg-card border border-border/80 rounded-xl p-2.5 flex items-center justify-between">
                 <span className="text-muted-foreground font-medium">{translateHeader(lang, "BRANCHES")}</span>
                 <span className="font-bold text-foreground">
-                  {countrySummaries.reduce((sum, c) => sum + c.totalBranches, 0) || 5}
+                  {countrySummaries.reduce((sum, c) => sum + c.totalBranches, 0)}
                 </span>
               </div>
               <div className="bg-card border border-border/80 rounded-xl p-2.5 flex items-center justify-between">
