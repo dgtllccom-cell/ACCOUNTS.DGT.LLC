@@ -149,6 +149,13 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Home,
     href: "/dashboard",
   },
+  {
+    key: "all-entries",
+    label: nt("All Entries"),
+    icon: FileSpreadsheet,
+    href: "/dashboard/reports/trading-general",
+    roles: ["super_admin", "business_super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "staff_user", "accountant", "cashier"],
+  },
 {
     key: "new-entry",
     label: nt("New Entry"),

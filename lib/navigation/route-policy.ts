@@ -17,6 +17,7 @@ import { NON_FINANCIAL_ROLES } from "@/lib/permissions/enterprise-roles";
 const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard": ["dashboard:read", "route:/dashboard"],
   "/dashboard/smart-operations": ["dashboard:read", "route:/dashboard/smart-operations"],
+  "/dashboard/reports/trading-general": ["reports:read", "purchases:read", "sales:read", "route:/dashboard/reports/trading-general"],
   "/dashboard/ai-assistant": ["dashboard:read", "route:/dashboard/ai-assistant"],
   // the global dashboard: Super Admin only (dashboard:read used to let every login through to the page's own redirect)
   "/dashboard/super-admin": ["super_admin", "route:/dashboard/super-admin"],
