@@ -267,7 +267,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: ShoppingCart,
         children: [
           { label: nt("Local Purchase Bills"), href: "/dashboard/purchase/local-purchase", icon: ShoppingCart },
-          { label: nt("Local Purchase Transfer Payment"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft },
+          { label: nt("Local Purchase Payment Transfer"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft },
           { label: nt("Local Purchase Journal Report"), href: "/dashboard/purchase/local-purchase-journal-report", icon: FileBarChart },
         ],
       },
@@ -704,9 +704,11 @@ function UpgradedMark(_props: { lang: string }) {
 /* ---------------- Helper to check path matches ---------------- */
 function isPathActive(href: string | undefined, currentPath: string): boolean {
   if (!href) return false;
-  if (currentPath === href) return true;
-  if (href === "/dashboard" && (currentPath === "/dashboard/super-admin" || currentPath === "/dashboard/country" || currentPath === "/dashboard/branch")) return true;
-  if (href !== "/dashboard" && currentPath.startsWith(href)) return true;
+  const cleanHref = href.split("?")[0].replace(/\/$/, "");
+  const cleanPath = currentPath.split("?")[0].replace(/\/$/, "");
+  if (cleanPath === cleanHref) return true;
+  if (cleanHref === "/dashboard" && (cleanPath === "/dashboard/super-admin" || cleanPath === "/dashboard/country" || cleanPath === "/dashboard/branch")) return true;
+  if (cleanHref !== "/dashboard" && cleanPath.startsWith(cleanHref + "/")) return true;
   return false;
 }
 
@@ -1366,7 +1368,7 @@ export function DigitalDockPremiumSidebar({
 
                               {/* Level 3 Deep Children (e.g. Local Purchase, Completed Bills...) */}
                               {isSubOpen && sub.children && (
-                                <div className={`ms-5 ps-3 pe-1 py-1 space-y-0.5 border-s-2 my-0.5 animate-in fade-in-50 duration-150 ${
+                                <div className={`ms-3.5 ps-2.5 pe-0.5 py-1 space-y-0.5 border-s-2 my-0.5 animate-in fade-in-50 duration-150 ${
                                   isSubRed ? "border-red-300" : "border-blue-200/60"
                                 }`}>
                                   {sub.children.map((leaf) => {
@@ -1380,7 +1382,7 @@ export function DigitalDockPremiumSidebar({
                                         href={leaf.href}
                                         aria-current={isLeafActive ? "page" : undefined}
                                         onClick={onNavigate}
-                                        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] transition-colors duration-150 ${
+                                        className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] transition-colors duration-150 ${
                                           isLeafActive
                                             ? "bg-slate-100 text-black font-semibold"
                                             : "text-black hover:bg-slate-50 font-normal"

@@ -99,16 +99,6 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
-    // Central operational control center — read-only aggregation of the real ERP
-    // (Smart Due engine + approvals + user tasks). Every item deep-links to the
-    // original record; nothing here posts to accounting.
-    key: "smart-operations",
-    labelKey: "nav.smart_operations" as UiKey,
-    iconKey: "gantt",
-    href: "/dashboard/smart-operations" as Route,
-    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user"]
-  },
-  {
     key: "new-entry",
     labelKey: "nav.new_entry" as any,
     iconKey: "list-plus",
@@ -236,35 +226,6 @@ export const sidebarTree: SidebarNode[] = [
         iconKey: "gantt",
         href: "/dashboard/new-entry" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      }
-    ]
-  },
-  {
-    key: "entry-edit-delete-control",
-    labelKey: "nav.entry_edit_delete_control" as any,
-    iconKey: "settings",
-    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
-    children: [
-      {
-        key: "entry-edit-invoice",
-        labelKey: "nav.business_edit_invoice" as any,
-        iconKey: "file-text",
-        href: "/dashboard/business-edit-invoice" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "entry-edit-history",
-        labelKey: "nav.edit_history" as any,
-        iconKey: "clock",
-        href: "/dashboard/super-admin/edit-history" as Route,
-        roles: ["super_admin"]
-      },
-      {
-        key: "entry-delete-records",
-        labelKey: "nav.deleted_records" as any,
-        iconKey: "scale",
-        href: "/dashboard/super-admin/deleted-records" as Route,
-        roles: ["super_admin", "country_admin"]
       }
     ]
   },
@@ -510,6 +471,35 @@ export const sidebarTree: SidebarNode[] = [
         href: "/dashboard/business-edit-invoice" as Route,
         roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "staff_user"],
         permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "local-purchase-menu",
+        labelKey: "nav.local_purchase",
+        iconKey: "globe",
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+        children: [
+          {
+            key: "local-purchase-bills",
+            labelKey: "nav.local_purchase_bills",
+            iconKey: "clipboard-list",
+            href: "/dashboard/purchase/local-purchase" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+          },
+          {
+            key: "local-purchase-transfer-loading",
+            labelKey: "nav.local_purchase_transfer_loading",
+            iconKey: "send",
+            href: "/dashboard/purchase/local-purchase-transfer-payment" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+          },
+          {
+            key: "local-purchase-journal-report",
+            labelKey: "nav.local_purchase_journal_report",
+            iconKey: "file-text",
+            href: "/dashboard/purchase/local-purchase-journal-report" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+          }
+        ]
       }
     ]
   },
@@ -604,35 +594,6 @@ export const sidebarTree: SidebarNode[] = [
     labelKey: "nav.journal_stock",
     iconKey: "clipboard-list",
     href: "/dashboard/purchase/stock/journal" as Route
-  },
-  {
-    key: "local-purchase-menu",
-    labelKey: "nav.local_purchase_management",
-    iconKey: "globe",
-    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
-    children: [
-      {
-        key: "local-purchase-bills",
-        labelKey: "nav.local_purchase_bills",
-        iconKey: "clipboard-list",
-        href: "/dashboard/purchase/local-purchase" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "local-purchase-transfer-loading",
-        labelKey: "nav.local_purchase_transfer_loading",
-        iconKey: "send",
-        href: "/dashboard/purchase/local-purchase-transfer-payment" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "local-purchase-journal-report",
-        labelKey: "nav.local_purchase_journal_report",
-        iconKey: "file-text",
-        href: "/dashboard/purchase/local-purchase-journal-report" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      }
-    ]
   },
   {
     key: "logistics",
@@ -1604,6 +1565,45 @@ export const sidebarTree: SidebarNode[] = [
       { key: "temp-bills-sales", labelKey: "nav.temp_bills_sales" as UiKey, iconKey: "badge", href: "/dashboard/temp-bills/sales" as Route },
       { key: "temp-bills-all", labelKey: "nav.temp_bills_all" as UiKey, iconKey: "list-plus", href: "/dashboard/temp-bills" as Route },
       { key: "temp-bills-reports", labelKey: "nav.temp_bills_reports" as UiKey, iconKey: "search", href: "/dashboard/temp-bills/reports" as Route }
+    ]
+  },
+  {
+    // Central operational control center — read-only aggregation of the real ERP
+    // (Smart Due engine + approvals + user tasks). Every item deep-links to the
+    // original record; nothing here posts to accounting.
+    key: "smart-operations",
+    labelKey: "nav.smart_operations" as UiKey,
+    iconKey: "gantt",
+    href: "/dashboard/smart-operations" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user"]
+  },
+  {
+    key: "entry-edit-delete-control",
+    labelKey: "nav.entry_edit_delete_control" as any,
+    iconKey: "settings",
+    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      {
+        key: "entry-edit-invoice",
+        labelKey: "nav.business_edit_invoice" as any,
+        iconKey: "file-text",
+        href: "/dashboard/business-edit-invoice" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "entry-edit-history",
+        labelKey: "nav.edit_history" as any,
+        iconKey: "clock",
+        href: "/dashboard/super-admin/edit-history" as Route,
+        roles: ["super_admin"]
+      },
+      {
+        key: "entry-delete-records",
+        labelKey: "nav.deleted_records" as any,
+        iconKey: "scale",
+        href: "/dashboard/super-admin/deleted-records" as Route,
+        roles: ["super_admin", "country_admin"]
+      }
     ]
   },
   {
