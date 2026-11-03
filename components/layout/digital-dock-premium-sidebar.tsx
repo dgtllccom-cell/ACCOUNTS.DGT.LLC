@@ -149,24 +149,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Home,
     href: "/dashboard",
   },
-  {
-    // Central operational control center — read-only aggregation (Smart Due engine
-    // + approvals + user tasks). Every alert deep-links to the original ERP record.
-    key: "smart-operations",
-    label: nt("Smart Operations"),
-    icon: Sparkles,
-    href: "/dashboard/smart-operations",
-    upgraded: true,
-    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user"],
-  },
-  {
-    key: "ai-assistant",
-    label: nt("AI Business Assistant"),
-    icon: Bot,
-    href: "/dashboard/ai-assistant",
-    upgraded: true,
-  },
-  {
+{
     key: "new-entry",
     label: nt("New Entry"),
     icon: ScanLine,
@@ -242,10 +225,10 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("Purchase Payments"),
         icon: Receipt,
         children: [
-          { label: nt("Advance Payment"), href: "/dashboard/journal/purchase-order-payment/advance", icon: Receipt, isNew: true },
+          { label: nt("Advance Payment"), href: "/dashboard/journal/purchase-order-payment/advance", icon: Receipt, },
           { label: nt("Endorsement Payment"), href: "/dashboard/journal/purchase-order-payment/endorsement", icon: FileCheck2 },
           { label: nt("Credit Payment"), href: "/dashboard/journal/purchase-order-payment/charges", icon: CreditCard },
-          { label: nt("Remaining Payment"), href: "/dashboard/journal/purchase-order-payment/remaining", icon: CreditCard, isNew: true },
+          { label: nt("Remaining Payment"), href: "/dashboard/journal/purchase-order-payment/remaining", icon: CreditCard, },
           { label: nt("Purchase Payment History"), href: "/dashboard/journal/purchase-order-payment/history", icon: Clock },
           { label: nt("Final Payment"), href: "/dashboard/journal/purchase-order-payment/final", icon: CheckCircle2 },
         ],
@@ -262,6 +245,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Final Payment"), href: "/dashboard/journal/sales-order-payment/final", icon: CheckCircle2 },
         ],
       },
+      { label: nt("Daily Exchange Rate"), href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
+      { label: nt("Money Changer (Currency Exchange)"), href: "/dashboard/roznamcha/money-exchange", icon: ArrowRightLeft },
     ],
   },
   {
@@ -269,25 +254,12 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("Expenses"),
     icon: Banknote,
     children: [
-      { label: nt("Purchase Expenses"), href: "/dashboard/expenses/purchase", icon: ShoppingCart, isNew: true },
-      { label: nt("Sales Expenses"), href: "/dashboard/expenses/sales", icon: TrendingUp, isNew: true },
+      { label: nt("Purchase Expenses"), href: "/dashboard/expenses/purchase", icon: ShoppingCart, },
+      { label: nt("Sales Expenses"), href: "/dashboard/expenses/sales", icon: TrendingUp, },
 
     ],
   },
-  {
-    key: "daily-exchange-rate",
-    label: nt("Daily Exchange Rate"),
-    icon: RefreshCw,
-    href: "/dashboard/reports/exchange-rate",
-  },
-  {
-    key: "money-changer-main",
-    label: nt("Money Changer (Currency Dealing)"),
-    icon: ArrowRightLeft,
-    href: "/dashboard/roznamcha/money-exchange",
-    tone: "red",
-  },
-  {
+{
     key: "ledgers",
     label: nt("Ledgers"),
     icon: BookOpen,
@@ -308,7 +280,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("P/S General Transfer"),
         href: "/dashboard/purchase/purchase-transit-lane",
         icon: ArrowRightLeft,
-        isNew: true,
         upgraded: true,
       },
       {
@@ -317,7 +288,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: ClipboardList,
         children: [
           { label: nt("New Booking"), href: "/dashboard/purchase/new-purchase-booking-order", icon: ClipboardList },
-          { label: nt("Purchase Journal Booking Stock"), href: "/dashboard/purchase/journal-booking-stock", icon: Boxes, isNew: true },
+          { label: nt("Purchase Journal Booking Stock"), href: "/dashboard/purchase/journal-booking-stock", icon: Boxes, },
           { label: nt("Transport Payment Booking"), href: "/dashboard/purchase/transport-payment", icon: Receipt },
           { label: nt("Loading Booking"), href: "/dashboard/purchase/purchase-loading-records", icon: Truck },
           { label: nt("Confirmed Booking"), href: "/dashboard/purchase/purchase-confirm", icon: CheckCircle2 },
@@ -329,7 +300,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: ShoppingCart,
         children: [
           { label: nt("Local Purchase Bills"), href: "/dashboard/purchase/local-purchase", icon: ShoppingCart, upgraded: true },
-          { label: nt("Local Purchase Transfer & Loading"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft, isNew: true, upgraded: true },
+          { label: nt("Local Purchase Transfer & Loading"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft, upgraded: true },
           { label: nt("Local Purchase Journal Report"), href: "/dashboard/purchase/local-purchase-journal-report", icon: FileBarChart },
         ],
       },
@@ -423,7 +394,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Agent Documents"), href: "/dashboard/clearing-agent/agent-custom-entry", icon: FileText },
           { label: nt("Agent Payment Entry"), href: "/dashboard/clearing-agent/payment-bill-entry", icon: CreditCard },
           { label: nt("Agent Reports"), href: "/dashboard/shipping-line/shipment-report", icon: FileBarChart },
-          { label: nt("Track Shipment (Clearing & Cargo)"), href: "/dashboard/tracking", icon: Compass, tone: "red" },
+          { label: nt("Track Shipment (Clearing & Cargo)"), href: "/dashboard/tracking", icon: Compass, },
         ],
       },
       {
@@ -436,7 +407,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       },
       { label: nt("Shipping Lines"), href: "/dashboard/shipping-line", icon: Ship },
       { label: nt("BL Entry"), href: "/dashboard/shipping-line/bl-entry", icon: FileText, upgraded: true },
-      { label: nt("Track Shipment (Container & Vessel)"), href: "/dashboard/shipping-line/tracking?type=vessel", icon: Compass, tone: "red" },
+      { label: nt("Track Shipment (Container & Vessel)"), href: "/dashboard/shipping-line/tracking?type=vessel", icon: Compass, },
       { label: nt("Free Country Shipping Claims"), href: "/dashboard/inter-country-transfers?category=shipping_line", icon: ArrowRightLeft },
       { label: nt("Clearing Workspace"), href: "/dashboard/clearing-agent/clearing-workspace", icon: FileCheck2 },
       { label: nt("Logistics Tracking Dashboard"), href: "/dashboard/logistics", icon: BarChart3 },
@@ -450,8 +421,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("Tracking"),
     icon: Compass,
     href: "/dashboard/shipping-line/tracking",
-    tone: "red",
-  },
+    },
   {
     key: "transfer-handover-center",
     label: nt("Transfer & Handover Center"),
@@ -492,8 +462,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       },
       { label: nt("Goods Master"), href: "/dashboard/settings/management/goods", icon: Package, upgraded: true },
       { label: nt("CHS Product Management"), href: "/dashboard/settings/management/chs-products", icon: Boxes },
-      { label: nt("Dynamic Location & Route Management"), href: "/dashboard/settings/location-master", icon: MapPin, tone: "red" },
-      { label: nt("Reusable Route Templates"), href: "/dashboard/settings/route-templates", icon: Route, tone: "red" },
+      { label: nt("Dynamic Location & Route Management"), href: "/dashboard/settings/location-master", icon: MapPin, },
+      { label: nt("Reusable Route Templates"), href: "/dashboard/settings/route-templates", icon: Route, },
     ],
   },
   {
@@ -552,7 +522,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Shipping & Clearing Reports"), href: "/dashboard/reports/shipping", icon: Ship },
           { label: nt("Financial Statements"), href: "/dashboard/reports/financial-statements", icon: FileSpreadsheet },
           { label: nt("Journal Report PDF ERP"), href: "/dashboard/reports/handover", icon: FileText },
-          { label: nt("System Forms Directory"), href: "/dashboard/reports/system-forms-directory", icon: ListPlus, isNew: true },
+          { label: nt("System Forms Directory"), href: "/dashboard/reports/system-forms-directory", icon: ListPlus, },
         ],
       },
       {
@@ -640,7 +610,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     key: "invoice-system",
     label: nt("Invoice & Templates"),
     icon: FileText,
-    tone: "red",
     children: [
       { label: nt("Invoice Templates"), href: "/dashboard/roznamcha/reports/invoice", icon: FileSpreadsheet },
     ],
@@ -649,7 +618,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     key: "journal-reporting",
     label: nt("Journal & Reporting"),
     icon: BarChart3,
-    tone: "red",
     children: [
       { label: nt("Journal / Roznamcha"), href: "/dashboard/journal", icon: BookOpen },
     ],
@@ -658,7 +626,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     key: "customs-tax-system",
     label: nt("Customs & Tax Documents"),
     icon: Scale,
-    tone: "red",
     children: [
       { label: nt("Tax Management"), href: "/dashboard/tax", icon: Scale },
       { label: nt("E-Invoicing & Tax"), href: "/dashboard/tax-einvoicing", icon: FileText },
@@ -688,8 +655,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     key: "temp-bills",
     label: nt("Temporary (Arzi) Purchase & Sales"),
     icon: FileSpreadsheet,
-    tone: "red",
-    badge: "Arzi",
     roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
     children: [
       { label: nt("Arzi Purchase Bills"), href: "/dashboard/temp-bills/purchase", icon: ShoppingCart },
@@ -697,6 +662,19 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: nt("All Arzi Bills Register"), href: "/dashboard/temp-bills", icon: FileSpreadsheet },
       { label: nt("Arzi Bills Reports & Search"), href: "/dashboard/temp-bills/reports", icon: FileBarChart },
     ],
+  },
+  {
+    key: "smart-operations",
+    label: nt("Super Operations"),
+    icon: Sparkles,
+    href: "/dashboard/smart-operations",
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user"],
+  },
+  {
+    key: "ai-assistant",
+    label: nt("AI Business Assistant"),
+    icon: Bot,
+    href: "/dashboard/ai-assistant",
   },
 ];
 
@@ -1332,13 +1310,7 @@ export function DigitalDockPremiumSidebar({
                       {hasUpgraded(item) && <UpgradedMark lang={lang} />}
                     </div>
 
-                    {item.badge && (
-                      <span className={`me-2 px-1.5 py-0.5 text-[11px] font-extrabold rounded uppercase tracking-wider ${
-                        isRed ? "bg-red-600 text-white" : "bg-blue-100 text-blue-700"
-                      }`}>
-                        {item.badge}
-                      </span>
-                    )}
+                    
 
                     {isOpen ? (
                       <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
@@ -1376,16 +1348,10 @@ export function DigitalDockPremiumSidebar({
                               <button
                                 type="button"
                                 onClick={() => toggleKey(subKey, 2, item.key)}
-                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all duration-150 cursor-pointer ${
-                                  isSubNew
-                                    ? "bg-red-600 text-white font-bold shadow-xs hover:bg-red-700"
-                                    : isSubActive || isSubOpen
-                                      ? isSubRed
-                                        ? "text-red-700 font-bold bg-red-100/70 border border-red-200/70"
-                                        : "text-[#2563eb] font-bold bg-blue-50/70"
-                                      : isSubRed
-                                        ? "text-red-700 font-semibold hover:text-red-800 hover:bg-red-50/60"
-                                        : "text-[#0f172a] font-semibold hover:text-[#2563eb] hover:bg-slate-50"
+                                className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md text-[13px] transition-colors duration-150 cursor-pointer ${
+                                  isSubActive || isSubOpen
+                                    ? "bg-slate-100 text-black font-semibold"
+                                    : "text-black hover:bg-slate-50 font-normal"
                                 }`}
                               >
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -1399,17 +1365,13 @@ export function DigitalDockPremiumSidebar({
                                   <span className={`truncate text-start tracking-tight ${isSubNew ? "text-white font-bold" : isSubRed ? "text-red-600 font-bold" : ""}`}>
                                     {tr(sub.label)}
                                   </span>
-                                  {isSubNew && (
-                                    <span className="ms-auto px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-white text-red-700">
-                                      NEW
-                                    </span>
-                                  )}
+                                  
                                   {hasUpgraded(sub) && !isSubNew && <UpgradedMark lang={lang} />}
                                 </div>
                                 {isSubOpen ? (
-                                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 ${isSubNew ? "text-white" : isSubRed ? "text-red-600" : "text-[#2563eb]"}`} />
+                                  <ChevronDown className="h-3.5 w-3.5 shrink-0 text-black" />
                                 ) : (
-                                  <ChevronRight className={`h-3.5 w-3.5 shrink-0 rtl:rotate-180 ${isSubNew ? "text-white/80" : isSubRed ? "text-red-400" : "text-slate-400"}`} />
+                                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-black rtl:rotate-180" />
                                 )}
                               </button>
 
@@ -1429,16 +1391,10 @@ export function DigitalDockPremiumSidebar({
                                         href={leaf.href}
                                         aria-current={isLeafActive ? "page" : undefined}
                                         onClick={onNavigate}
-                                        className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[12px] transition-all duration-150 ${
-                                          isLeafNew
-                                            ? "bg-red-600 text-white font-black shadow-xs hover:bg-red-700"
-                                            : isLeafActive
-                                              ? isLeafRed
-                                                ? "text-red-700 font-bold bg-red-100/90"
-                                                : "text-[#2563eb] font-bold bg-blue-50/90"
-                                              : isLeafRed
-                                                ? "text-red-600 font-bold hover:text-red-700 hover:bg-red-50/70"
-                                                : "text-slate-600 font-medium hover:text-[#2563eb] hover:bg-slate-50"
+                                        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] transition-colors duration-150 ${
+                                          isLeafActive
+                                            ? "bg-slate-100 text-black font-semibold"
+                                            : "text-black hover:bg-slate-50 font-normal"
                                         }`}
                                       >
                                         {LeafIcon ? (
@@ -1461,11 +1417,7 @@ export function DigitalDockPremiumSidebar({
                                         <span className={`tracking-tight ${isLeafNew ? "text-white font-bold truncate" : isLeafRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
                                           {tr(leaf.label)}
                                         </span>
-                                        {isLeafNew && (
-                                          <span className="ms-auto px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-white text-red-700">
-                                            NEW
-                                          </span>
-                                        )}
+                                        
                                         {leaf.upgraded && !isLeafNew && <UpgradedMark lang={lang} />}
                                       </Link>
                                     );
@@ -1484,16 +1436,10 @@ export function DigitalDockPremiumSidebar({
                             href={sub.href || "/dashboard"}
                             aria-current={isSubDirectActive ? "page" : undefined}
                             onClick={onNavigate}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${
-                              isDirectNew
-                                ? "bg-red-600 text-white font-bold shadow-xs hover:bg-red-700"
-                                : isSubDirectActive
-                                  ? isSubRed
-                                    ? "text-red-700 font-bold bg-red-100/90 border border-red-300 shadow-xs"
-                                    : "text-[#2563eb] font-bold bg-blue-50/70"
-                                  : isSubRed
-                                    ? "text-red-600 font-bold hover:text-red-700 hover:bg-red-100/60 bg-red-50/40 border border-red-200/50"
-                                    : "text-[#0f172a] font-medium hover:text-[#2563eb] hover:bg-slate-50"
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-md text-[13px] transition-colors duration-150 ${
+                              isSubDirectActive
+                                ? "bg-slate-100 text-black font-semibold"
+                                : "text-black hover:bg-slate-50 font-normal"
                             }`}
                           >
                             <SubIcon className={`h-4 w-4 shrink-0 transition-colors ${
@@ -1506,11 +1452,7 @@ export function DigitalDockPremiumSidebar({
                             <span className={`tracking-tight flex-1 ${isDirectNew ? "text-white font-bold truncate" : isSubRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
                               {tr(sub.label)}
                             </span>
-                            {isDirectNew && (
-                              <span className="ms-auto px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-white text-red-700">
-                                NEW
-                              </span>
-                            )}
+                            
                             {sub.upgraded && !isDirectNew && <UpgradedMark lang={lang} />}
                           </Link>
                         );
@@ -1565,16 +1507,10 @@ export function DigitalDockPremiumSidebar({
                 <Link
                   href={item.href || "/dashboard"}
                   onClick={onNavigate}
-                  className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 ${
-                    item.isNew
-                      ? "bg-red-600 text-white font-bold shadow-md hover:bg-red-700"
-                      : isDirectActive
-                        ? isRed
-                          ? "bg-red-50 text-red-600 font-bold border border-red-200/80 shadow-xs"
-                          : "bg-[#2563eb] text-white font-bold shadow-md shadow-blue-500/25"
-                        : isRed
-                          ? "text-red-600 font-bold hover:bg-red-100/70 hover:text-red-700 bg-red-50/40 border border-red-200/60"
-                          : "text-[#0f172a] hover:bg-slate-50 font-medium hover:text-[#2563eb]"
+                  className={`relative flex items-center gap-3 px-3.5 py-2 rounded-lg text-[13.5px] transition-colors duration-150 ${
+                    isDirectActive
+                      ? "bg-slate-100 text-black font-semibold"
+                      : "text-black hover:bg-slate-50 font-normal"
                   }`}
                 >
                   <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${
@@ -1589,19 +1525,9 @@ export function DigitalDockPremiumSidebar({
                   <span className={`truncate tracking-tight flex-1 ${item.isNew ? "text-white font-bold" : isRed ? "text-red-600 font-bold" : ""}`}>
                     {tr(item.label)}
                   </span>
-                  {item.isNew && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-black rounded uppercase tracking-wider bg-white text-red-700">
-                      NEW
-                    </span>
-                  )}
+                  
                   {item.upgraded && !item.isNew && <UpgradedMark lang={lang} />}
-                  {item.badge && !item.isNew && (
-                    <span className={`px-1.5 py-0.5 text-[11px] font-extrabold rounded uppercase tracking-wider ${
-                      isRed ? "bg-red-600 text-white" : "bg-blue-100 text-blue-700"
-                    }`}>
-                      {item.badge}
-                    </span>
-                  )}
+                  
                 </Link>
               )}
             </div>
