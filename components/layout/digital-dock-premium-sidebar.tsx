@@ -190,36 +190,11 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     ],
   },
   {
-    key: "entry-edit-delete-control",
-    label: nt("Entry Edit & Delete Control"),
-    icon: Sliders,
-    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
-    children: [
-      {
-        key: "sub-entry-edit",
-        label: nt("Entry Edit System"),
-        icon: Pencil,
-        children: [
-          { label: nt("Business Edit Invoice"), href: "/dashboard/business-edit-invoice", icon: FileText },
-          { label: nt("Edit & Version History"), href: "/dashboard/super-admin/edit-history", icon: History, roles: ["super_admin"] },
-        ],
-      },
-      {
-        key: "sub-entry-delete",
-        label: nt("Entry Delete / Delete Management"),
-        icon: Trash2,
-        children: [
-          { label: nt("Deleted Records & Trash Audit"), href: "/dashboard/super-admin/deleted-records", icon: Trash2, roles: ["super_admin", "country_admin"] },
-        ],
-      },
-    ],
-  },
-  {
     key: "daily-payment",
     label: nt("Daily Payment Entry"),
     icon: FileText,
     children: [
-      { label: nt("Daily Cash Entry (Roznamcha)"), href: "/dashboard/roznamcha/cash-entry", icon: Wallet, upgraded: true },
+      { label: nt("Daily Cash Entry (Roznamcha)"), href: "/dashboard/roznamcha/cash-entry", icon: Wallet },
       {
         key: "sub-purchase-payments",
         label: nt("Purchase Payments"),
@@ -276,19 +251,11 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: ShoppingCart,
     children: [
       {
-        key: "sub-ps-general-transfer",
-        label: nt("P/S General Transfer"),
-        href: "/dashboard/purchase/purchase-transit-lane",
-        icon: ArrowRightLeft,
-        upgraded: true,
-      },
-      {
         key: "sub-purchase-booking",
         label: nt("Purchase Booking"),
         icon: ClipboardList,
         children: [
           { label: nt("New Booking"), href: "/dashboard/purchase/new-purchase-booking-order", icon: ClipboardList },
-          { label: nt("Purchase Journal Booking Stock"), href: "/dashboard/purchase/journal-booking-stock", icon: Boxes, },
           { label: nt("Transport Payment Booking"), href: "/dashboard/purchase/transport-payment", icon: Receipt },
           { label: nt("Loading Booking"), href: "/dashboard/purchase/purchase-loading-records", icon: Truck },
           { label: nt("Confirmed Booking"), href: "/dashboard/purchase/purchase-confirm", icon: CheckCircle2 },
@@ -299,8 +266,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("Local Purchase"),
         icon: ShoppingCart,
         children: [
-          { label: nt("Local Purchase Bills"), href: "/dashboard/purchase/local-purchase", icon: ShoppingCart, upgraded: true },
-          { label: nt("Local Purchase Transfer Payment"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft, upgraded: true },
+          { label: nt("Local Purchase Bills"), href: "/dashboard/purchase/local-purchase", icon: ShoppingCart },
+          { label: nt("Local Purchase Transfer Payment"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft },
           { label: nt("Local Purchase Journal Report"), href: "/dashboard/purchase/local-purchase-journal-report", icon: FileBarChart },
         ],
       },
@@ -358,11 +325,13 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     ],
   },
   {
-    key: "journal-stock",
-    label: nt("Purchase General Stock"),
+    key: "stock",
+    label: nt("Stock"),
     icon: Boxes,
-    href: "/dashboard/purchase/stock/journal",
-    upgraded: true,
+    children: [
+      { label: nt("Journal Purchase Stock"), href: "/dashboard/purchase/journal-booking-stock", icon: Boxes },
+      { label: nt("Purchase General Stock"), href: "/dashboard/purchase/stock/journal", icon: Package },
+    ],
   },
   {
     key: "shipping-cleaning",
@@ -371,7 +340,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: nt("New Customer Order"), href: "/dashboard/clearing-agent/customer-order", icon: ListPlus },
       { label: nt("Customer Order Transfer"), href: "/dashboard/clearing-agent/order-transfer", icon: ArrowRightLeft },
-      { label: nt("Customer Bills"), href: "/dashboard/clearing-agent/customer-bill", icon: Receipt, upgraded: true },
+      { label: nt("Customer Bills"), href: "/dashboard/clearing-agent/customer-bill", icon: Receipt },
       {
         key: "sub-expenses-bill",
         label: nt("Expenses Bill"),
@@ -405,15 +374,23 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Truck Register"), href: "/dashboard/clearing-agent/truck-registration", icon: Truck },
         ],
       },
-      { label: nt("Shipping Lines"), href: "/dashboard/shipping-line", icon: Ship },
-      { label: nt("BL Entry"), href: "/dashboard/shipping-line/bl-entry", icon: FileText, upgraded: true },
-      { label: nt("Track Shipment (Container & Vessel)"), href: "/dashboard/shipping-line/tracking?type=vessel", icon: Compass, },
-      { label: nt("Free Country Shipping Claims"), href: "/dashboard/inter-country-transfers?category=shipping_line", icon: ArrowRightLeft },
+      {
+        key: "sub-shipping-line",
+        label: nt("Shipping Line"),
+        icon: Ship,
+        children: [
+          { label: nt("P/S General Transfer"), href: "/dashboard/purchase/purchase-transit-lane", icon: ArrowRightLeft },
+          { label: nt("Shipping Lines"), href: "/dashboard/shipping-line", icon: Ship },
+          { label: nt("BL Entry"), href: "/dashboard/shipping-line/bl-entry", icon: FileText },
+          { label: nt("Track Shipment (Container & Vessel)"), href: "/dashboard/shipping-line/tracking?type=vessel", icon: Compass, },
+          { label: nt("Free Country Shipping Claims"), href: "/dashboard/inter-country-transfers?category=shipping_line", icon: ArrowRightLeft },
+          { label: nt("Shipping Account Access"), href: "/dashboard/shipping-line/account-access", icon: Wallet },
+          { label: nt("Shipping Account Approvals"), href: "/dashboard/shipping-line/account-approvals", icon: ShieldCheck },
+          { label: nt("Shipping Accounts Setup"), href: "/dashboard/accounts/setup?domain=shipping", icon: BookOpen },
+        ],
+      },
       { label: nt("Clearing Workspace"), href: "/dashboard/clearing-agent/clearing-workspace", icon: FileCheck2 },
       { label: nt("Logistics Tracking Dashboard"), href: "/dashboard/logistics", icon: BarChart3 },
-      { label: nt("Shipping Account Access"), href: "/dashboard/shipping-line/account-access", icon: Wallet },
-      { label: nt("Shipping Account Approvals"), href: "/dashboard/shipping-line/account-approvals", icon: ShieldCheck },
-      { label: nt("Shipping Accounts Setup"), href: "/dashboard/accounts/setup?domain=shipping", icon: BookOpen, upgraded: true },
     ],
   },
   {
@@ -676,6 +653,31 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Bot,
     href: "/dashboard/ai-assistant",
   },
+  {
+    key: "entry-edit-delete-control",
+    label: nt("Entry Edit & Delete Control"),
+    icon: Sliders,
+    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      {
+        key: "sub-entry-edit",
+        label: nt("Entry Edit System"),
+        icon: Pencil,
+        children: [
+          { label: nt("Business Edit Invoice"), href: "/dashboard/business-edit-invoice", icon: FileText },
+          { label: nt("Edit & Version History"), href: "/dashboard/super-admin/edit-history", icon: History, roles: ["super_admin"] },
+        ],
+      },
+      {
+        key: "sub-entry-delete",
+        label: nt("Entry Delete / Delete Management"),
+        icon: Trash2,
+        children: [
+          { label: nt("Deleted Records & Trash Audit"), href: "/dashboard/super-admin/deleted-records", icon: Trash2, roles: ["super_admin", "country_admin"] },
+        ],
+      },
+    ],
+  },
 ];
 
 export const CRM_REPORT_CENTER_OPTIONS = [
@@ -690,26 +692,13 @@ export const CRM_REPORT_CENTER_OPTIONS = [
 ];
 
 /* ---------------- UPGRADED marker ---------------- */
-/** True when the item itself, or anything under it, carries `upgraded`. A parent group shows the
- *  marker when one of its screens was strengthened, so the owner can find every change. */
-function hasUpgraded(item: SidebarMenuItem | SidebarSubItem | SidebarDeepChild): boolean {
-  if (item.upgraded) return true;
-  return "children" in item && Array.isArray(item.children) ? item.children.some((c) => hasUpgraded(c)) : false;
+/** Green status dots are hidden globally until explicitly requested for an individual menu. */
+function hasUpgraded(_item: SidebarMenuItem | SidebarSubItem | SidebarDeepChild): boolean {
+  return false;
 }
 
-// A dot, not a text pill: the "UPGRADED" pill on ~20 items truncated their labels ("Daily Payment E…"). The meaning stays in the
-// tooltip and for screen readers.
-function UpgradedMark({ lang }: { lang: string }) {
-  const label = tUi(lang as never, "nav.upgraded", "Upgraded");
-  return (
-    <span
-      data-testid="nav-upgraded-mark"
-      className="ms-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-100 dark:ring-emerald-900"
-      title={`${label} — ${tUi(lang as never, "nav.upgraded_hint", "Strengthened in the latest ERP upgrade")}`}
-    >
-      <span className="sr-only">{label}</span>
-    </span>
-  );
+function UpgradedMark(_props: { lang: string }) {
+  return null;
 }
 
 /* ---------------- Helper to check path matches ---------------- */
