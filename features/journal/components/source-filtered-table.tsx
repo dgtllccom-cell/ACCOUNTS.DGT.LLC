@@ -18,6 +18,8 @@ export interface SourceFilteredTableProps {
   tGlobal: (lang: LanguageCode, key: string, fallback: string) => string;
   activeMode: string;
   loadingRecords?: any[];
+  dueBills?: any[];
+  onSelectLoading?: (orderId: string, loadingId: string) => void;
 }
 
 export function SourceFilteredTable({
@@ -32,6 +34,8 @@ export function SourceFilteredTable({
   tGlobal,
   activeMode,
   loadingRecords = [],
+  dueBills = [],
+  onSelectLoading,
 }: SourceFilteredTableProps) {
   // Format numbers helper
   const fmt = (n: any, decimals = 2) => {
@@ -105,10 +109,13 @@ export function SourceFilteredTable({
 
       {/* ── Table Container ── */}
       <div className="overflow-x-auto">
+        {sourceFilter === "all" && activeMode === "remaining" && (
+          <RemainingBookingTable rows={rows} loadingRecords={loadingRecords} dueBills={dueBills} lang={lang} onSelectOrder={onSelectOrder} onSelectLoading={onSelectLoading} />
+        )}
         {/* ========================================================================= */}
         {/* VIEW 1: ALL SOURCES (JOURNAL)                                             */}
         {/* ========================================================================= */}
-        {sourceFilter === "all" && (
+        {sourceFilter === "all" && (activeMode !== "remaining" || rows.some(r => r.is_local_purchase || r.order_type === "local_purchase" || r.source_type === "local_purchase" || Boolean(r.local_purchase_id))) && (
           <table className="w-full min-w-[1600px] border-collapse text-left text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
@@ -135,10 +142,10 @@ export function SourceFilteredTable({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-              {rows.map((r, i) => {
+              {rows.filter(r => activeMode !== "remaining" || r.is_local_purchase || r.order_type === "local_purchase" || r.source_type === "local_purchase" || Boolean(r.local_purchase_id)).map((r, i) => {
                 const form = r.form_data?.form || {};
                 const billNo = r.purchase_order_no || r.bill_no || r.order_no || "—";
-                const isLocal = r.is_local_purchase || r.source_type === "local_purchase" || Boolean(r.local_purchase_id);
+                const isLocal = r.is_local_purchase || r.order_type === "local_purchase" || r.source_type === "local_purchase" || Boolean(r.local_purchase_id);
                 const sourceLabel = isLocal ? "Local" : "Booking";
                 const date = r.order_date || form.orderDate || r.created_at?.slice(0, 10) || "—";
                 const countryBranch = `${form.countryCode || "AE"} / ${form.branchCode || "AE-001"}`;
@@ -211,7 +218,7 @@ export function SourceFilteredTable({
         {/* VIEW 2: PURCHASE BOOKING (SAME-ROW LOADING & RECEIVING)                  */}
         {/* ========================================================================= */}
         {sourceFilter === "purchase_booking" && activeMode === "remaining" && (
-          <RemainingBookingTable rows={rows} loadingRecords={loadingRecords} lang={lang} onSelectOrder={onSelectOrder} />
+          <RemainingBookingTable rows={rows} loadingRecords={loadingRecords} dueBills={dueBills} lang={lang} onSelectOrder={onSelectOrder} onSelectLoading={onSelectLoading} />
         )}
         {sourceFilter === "purchase_booking" && activeMode !== "remaining" && (
           <table className="w-full min-w-[1700px] border-collapse text-left text-xs">

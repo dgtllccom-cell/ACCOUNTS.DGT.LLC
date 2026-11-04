@@ -3086,11 +3086,20 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [loadingViewingRowPayments, setLoadingViewingRowPayments] = useState(false);
   const [showModalHistory, setShowModalHistory] = useState(false);
   const [remainingLoadingRecords, setRemainingLoadingRecords] = useState<any[]>([]);
+  const [registryDueBills, setRegistryDueBills] = useState<any[]>([]);
   const [registryLoadingRecords, setRegistryLoadingRecords] = useState<any[]>([]);
   useEffect(() => {
     if (!paymentPage || activeMode !== "remaining") return;
     let cancelled = false;
     setRegistryLoadingRecords([]);
+    setRegistryDueBills([]);
+    fetch(`/api/erp/purchases/remaining-due?includeSettled=1&lang=${currentLanguage}`, { credentials: "include", cache: "no-store" })
+      .then(async response => {
+        const body = await response.json();
+        if (!response.ok || !body?.ok || !Array.isArray(body.data?.bills)) throw new Error(body?.error?.message || tGlobal(currentLanguage, "purchase.pmw_err_load_failed", "Purchase records could not be loaded."));
+        if (!cancelled) setRegistryDueBills(body.data.bills);
+      })
+      .catch(err => { if (!cancelled) setError(err instanceof Error ? err.message : String(err)); });
     fetch(`/api/erp/purchases/loading-records?limit=10000&lang=${currentLanguage}`, { credentials: "include", cache: "no-store" })
       .then(async response => {
         const body = await response.json();
@@ -3996,7 +4005,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
     const poRow = selected || {};
     const finance = calcLoadingFinance(lr, poRow, poRow.form_data?.form || {});
-    const loadedQty = lr.report_payload?.loadedQuantity || lr.loadedQuantity || 0;
+    const loadedQty = lr.loaded_quantity ?? lr.report_payload?.loadedQuantity ?? lr.loadedQuantity ?? 0;
     const poAdvanceAmt = Number(poRow.advance_paid || poRow.form_data?.form?.advanceAmount || 0);
     
     const goods = poRow.form_data?.goodsEntries || [];
@@ -5314,6 +5323,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         tGlobal={tGlobal}
         activeMode={activeMode}
         loadingRecords={registryLoadingRecords}
+        dueBills={registryDueBills}
+        onSelectLoading={(id, loadingId) => { pendingLoadingPick.current = loadingId; selectOrder(id); }}
       />
       </>
       )}
@@ -6904,7 +6915,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                         {loadingRecords.map((lr) => {
                           const poRow = selected || {};
                           const finance = calcLoadingFinance(lr, poRow, poRow.form_data?.form || {});
-                          const loadedQty = lr.report_payload?.loadedQuantity || lr.loadedQuantity || 0;
+                          const loadedQty = lr.loaded_quantity ?? lr.report_payload?.loadedQuantity ?? lr.loadedQuantity ?? 0;
                           const poAdvanceAmt = Number(poRow.advance_paid || poRow.form_data?.form?.advanceAmount || 0);
                           const totalPOQuantity = Number(
                             poRow.form_data?.totals?.totalQuantity ||

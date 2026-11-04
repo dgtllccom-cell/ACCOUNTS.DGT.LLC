@@ -1,4 +1,3 @@
-import { buildBillPayment } from "@/lib/services/purchase-loading-payment-service";
 import { parseJsonish } from "@/lib/stock-journal/model";
 
 type Row = Record<string, any>;
@@ -11,13 +10,8 @@ const number = (...values: unknown[]): number | null => {
   }
   return null;
 };
-const sum = (lines: Row[], keys: string[]) => {
-  const values = lines.map(line => number(...keys.map(key => line[key]))).filter((n): n is number => n !== null);
-  return values.length ? values.reduce((total, n) => total + n, 0) : null;
-};
-
 /** Read-only registry projection. Money uses the existing purchase-currency model. */
-export function remainingBookingRow(row: Row, records: Row[] = []) {
+export function remainingBookingRow(row: Row, records: Row[] = [], dueBill?: Row) {
   const data = parseJsonish(row.form_data) || {};
   const form = data.form || {};
   const transport = data.transportDetails || data.transport || {};
@@ -27,7 +21,6 @@ export function remainingBookingRow(row: Row, records: Row[] = []) {
   const linked = [...(Array.isArray(row.loading_records) ? row.loading_records : []), ...(row.__loadingRecord ? [row.__loadingRecord] : []), ...records]
     .filter(matches);
   const loadings = [...new Map(linked.map(record => [record.id, record])).values()];
-  const payment = buildBillPayment(row, loadings as any[], []);
   const routes = (loadings.length ? loadings : [{}]).map(record => {
     const payload = parseJsonish(record.report_payload) || {};
     const saved = payload.form || {};
@@ -41,6 +34,19 @@ export function remainingBookingRow(row: Row, records: Row[] = []) {
       receivedDate: text(record.received_at, record.actual_arrival_date, payload.receivedDate, payload.receivingDate, transport.receivedDate, form.receivedDate, form.receivingDate),
     };
   });
+  // Financial eligibility and allocation come from the same scoped API as payment validation.
+  // Never substitute the whole contract when loading data is absent or still loading.
+  const entries = (Array.isArray(dueBill?.loadings) ? dueBill.loadings : []).map((due: Row) => {
+    const record = loadings.find(record => String(record.id) === String(due.id)) || {};
+    const payload = parseJsonish(record.report_payload) || {};
+    return {
+      ...due, id: String(due.id),
+      blNo: text(record.bl_number, payload.blNumber),
+      route: routes.find(route => route.id === String(due.id)),
+    };
+  });
+  const loadedSum = (key: string) => entries.reduce((total: number, entry: Row) => total + (number(entry[key]) ?? 0), 0);
+  const loadedWeight = (key: string) => entries.length && entries.every((entry: Row) => number(entry[key]) !== null) ? loadedSum(key) : null;
   return {
     id: String(row.id),
     billNo: text(row.purchase_order_no, row.bill_no, row.order_no),
@@ -48,16 +54,17 @@ export function remainingBookingRow(row: Row, records: Row[] = []) {
     countryBranch: [text(form.countryCode, row.country_code, row.countries?.iso3, row.countries?.iso2), text(row.audit?.branchCode, row.city_branch_code, form.branchCode, row.branch_code)].filter(Boolean).join(" / "),
     supplier: text(row.supplier_name, form.supplierName, form.salesAccountName, row.sales_account_name),
     goods: [...new Set(goods.map(line => text(line.goodsName, line.goods_name, line.name)).filter(Boolean))].join(", ") || text(row.goods_name, form.goodsName),
-    quantity: sum(goods, ["qtyNo", "quantity", "quantityNo", "qty"]) ?? number(row.total_quantity, data.totals?.totalQuantity, data.workflow?.totalQuantity, form.totalQuantity, form.qtyNo),
+    quantity: loadedSum("quantity"),
     unit: [...new Set(goods.map(line => text(line.qtyName, line.quantityName, line.unit)).filter(Boolean))].join(" / ") || text(form.quantityUnit, form.qtyName),
-    grossKg: sum(goods, ["grossWeight", "totalGrossWeight", "grossKgs", "grossWt"]) ?? number(row.gross_weight, data.totals?.totalGrossWeight, form.grossWeight),
-    netKg: sum(goods, ["netWeight", "netKgs", "netWt"]) ?? number(row.net_weight, data.totals?.totalNetWeight, form.netWeight),
-    currency: payment.currency,
+    grossKg: loadedWeight("grossWeightKg"),
+    netKg: loadedWeight("netWeightKg"),
+    currency: text(dueBill?.currency, row.purchase_currency, row.currency_code),
     exchangeRate: number(row.exchange_rate, form.exchangeRate),
-    total: payment.billTotal,
-    paid: payment.totalPaid,
-    balance: Math.max(0, payment.outstanding),
-    routes,
+    total: loadedSum("value"),
+    paid: loadedSum("advanceAllocated") + loadedSum("paid"),
+    balance: loadedSum("outstanding"),
+    entries,
+    routes: routes.filter(route => entries.some((entry: Row) => entry.id === route.id)),
   };
 }
 

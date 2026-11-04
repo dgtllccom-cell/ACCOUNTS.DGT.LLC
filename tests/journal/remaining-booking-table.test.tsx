@@ -2,6 +2,7 @@ import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { remainingBookingRow, uniqueBookingRows } from "@/lib/journal/remaining-booking-table";
+import { SourceFilteredTable } from "@/features/journal/components/source-filtered-table";
 import { RemainingBookingTable } from "@/features/journal/components/remaining-booking-table";
 import { PurchasePaymentEntryDocument } from "@/features/journal/components/purchase-payment-entry-document";
 import { buildPaymentEntryModel } from "@/lib/journal/purchase-payment-entry-model";
@@ -16,50 +17,60 @@ const bill = (over: Record<string, any> = {}) => ({
 beforeEach(() => vi.stubGlobal("React", React));
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
-describe("Remaining Booking registry reads saved bill data", () => {
-  it("reads goodsEntries quantities and weight, not absent top-level placeholders", () => {
-    expect(remainingBookingRow(bill())).toMatchObject({ goods: "Walnuts", quantity: 22500, unit: "Bags", grossKg: 23000, netKg: 22500 });
+const due = (loadings: any[] = [
+  { id: "L1", loadingNo: "LD-1", container: "C1", quantity: 2250, grossWeightKg: 2300, netWeightKg: 2250, value: 115875, advanceAllocated: 11587.5, paid: 1000, outstanding: 103287.5 },
+  { id: "L2", loadingNo: "LD-2", container: "C2", quantity: 2250, grossWeightKg: 2300, netWeightKg: 2250, value: 115875, advanceAllocated: 11587.5, paid: 0, outstanding: 104287.5 },
+]) => ({ id: "bill-one", currency: "USD", loadings });
+
+describe("Remaining totals only eligible saved loading entries", () => {
+  it("sums two partial loadings instead of the full 22500 booking", () => {
+    expect(remainingBookingRow(bill(), [], due())).toMatchObject({ quantity: 4500, grossKg: 4600, netKg: 4500, total: 231750, paid: 24175, balance: 207575, currency: "USD" });
   });
-  it("keeps USD contract total, paid and balance in the same currency when order_total is AED", () => {
-    expect(remainingBookingRow(bill())).toMatchObject({ currency: "USD", total: 1158750, paid: 115875, balance: 1042875 });
+  it("never falls back to full contract totals while due records are absent", () => {
+    expect(remainingBookingRow(bill())).toMatchObject({ quantity: 0, total: 0, paid: 0, balance: 0, entries: [] });
   });
-  it("adds multiple real goods lines once", () => {
-    const row = bill(); row.form_data.goodsEntries.push({ goodsName: "Almonds", qtyNo: 50, qtyName: "Bags", grossWeight: 60, netWeight: 55, totalAmount: 100 });
-    expect(remainingBookingRow(row)).toMatchObject({ goods: "Walnuts, Almonds", quantity: 22550, grossKg: 23060, netKg: 22555 });
+  it("retains each loading ID and only attaches matching real routes", () => {
+    const records = [{ id: "L1", purchase_order_id: "bill-one", bl_number: "BL-1", loading_location: "Ningbo" }, { id: "L2", purchase_order_id: "other", loading_location: "Wrong" }];
+    const result = remainingBookingRow(bill(), records, due());
+    expect(result.entries[0]).toMatchObject({ id: "L1", blNo: "BL-1", route: { loadingPort: "Ningbo" } });
+    expect(result.entries[1].route).toBeUndefined();
+    expect(uniqueBookingRows([bill(), bill()])).toHaveLength(1);
   });
-  it("preserves explicit zero weights and shows missing measurements as missing", () => {
-    const row = bill({ form_data: { goodsEntries: [{ qtyNo: 0, grossWeight: 0, netWeight: 0 }] } });
-    expect(remainingBookingRow(row)).toMatchObject({ quantity: 0, grossKg: 0, netKg: 0 });
-    expect(remainingBookingRow(bill({ form_data: {} })).grossKg).toBeNull();
+  it("uses actual entry value and advance allocation rather than quantity proportions", () => {
+    const result = remainingBookingRow(bill(), [], due([{ id: "L1", quantity: 100, value: 800, advanceAllocated: 200, paid: 150, outstanding: 450 }]));
+    expect(result).toMatchObject({ quantity: 100, total: 800, paid: 350, balance: 450, grossKg: null });
   });
-  it("uses real loading/receiving overrides linked by the original bill ID", () => {
-    const record = { id: "L1", purchase_order_id: "bill-one", loaded_at: "2026-11-03T09:00:00Z", received_at: "2026-11-04T12:00:00Z", loading_location: "Ningbo", receiving_location: "Karachi", report_payload: { loadingCountry: "China", receivingCountry: "Pakistan" } };
-    expect(remainingBookingRow(bill(), [record]).routes[0]).toMatchObject({ loadingPort: "Ningbo", receivingCountry: "Pakistan", receivingPort: "Karachi", receivedDate: "2026-11-04T12:00:00Z" });
-  });
-  it("does not attach another bill's loading even when its display number matches", () => {
-    const records = [{ id: "foreign", purchase_order_id: "another-id", purchase_order_no: "AE-001-0007", loading_location: "Wrong Port" }];
-    expect(remainingBookingRow(bill(), records).routes[0].loadingPort).toBe("Tianjin");
-  });
-  it("keeps multiple saved routes and deduplicates repeated loading IDs", () => {
-    const record = { id: "L1", purchase_order_id: "bill-one", loading_location: "Port One" };
-    const row = bill({ loading_records: [record], __loadingRecord: record });
-    expect(remainingBookingRow(row, [record, { ...record, id: "L2", loading_location: "Port Two" }]).routes).toHaveLength(2);
-    expect(uniqueBookingRows([row, { ...row, __rowKey: "another-loading" }])).toHaveLength(1);
-  });
-  it("does not invent route values, loading quantities or actual receipt dates", () => {
-    const row = bill({ form_data: { form: { arrivalDate: "2026-12-01" } } });
-    const result = remainingBookingRow(row, [{ id: "synthetic-pending", purchase_order_id: row.id, loading_location: "Fake" }]);
-    expect(result.routes[0]).toMatchObject({ loadingCountry: "", loadingPort: "", loadingDate: "", receivingCountry: "", receivingPort: "", receivedDate: "" });
+  it("keeps settled siblings in details without making them payable again", () => {
+    const result = remainingBookingRow(bill(), [], due([{ id: "L1", value: 100, advanceAllocated: 10, paid: 90, outstanding: 0, complete: true }, { id: "L2", value: 100, advanceAllocated: 10, paid: 0, outstanding: 90 }]));
+    expect(result.balance).toBe(90);
+    expect(result.entries).toHaveLength(2);
   });
 });
 
-it("renders six separate route columns and opens the original bill from its number", () => {
-  const onSelectOrder = vi.fn();
-  render(<RemainingBookingTable rows={[bill()]} loadingRecords={[]} lang="en" onSelectOrder={onSelectOrder} />);
-  for (const name of ["Loading Country", "Loading Port", "Loading Date", "Receiving Country", "Receiving Port", "Received Date"]) expect(screen.getByRole("columnheader", { name })).toBeTruthy();
+it("expands one bill to two loading entries and opens the selected loading", () => {
+  const onSelectLoading = vi.fn();
+  render(<RemainingBookingTable rows={[bill(), bill()]} loadingRecords={[]} dueBills={[due()]} lang="en" onSelectOrder={vi.fn()} onSelectLoading={onSelectLoading} />);
+  expect(screen.getAllByRole("button", { name: "AE-001-0007" })).toHaveLength(1);
   fireEvent.click(screen.getByRole("button", { name: "AE-001-0007" }));
-  expect(onSelectOrder).toHaveBeenCalledWith("bill-one");
-  expect(screen.queryByText("Shanghai")).toBeNull();
+  const details = screen.getByTestId("remaining-loading-details");
+  expect(within(details).getByText("LD-1")).toBeTruthy();
+  expect(within(details).getByText("LD-2")).toBeTruthy();
+  fireEvent.click(within(details).getAllByRole("button", { name: "Journal" })[1]);
+  expect(onSelectLoading).toHaveBeenCalledWith("bill-one", "L2");
+});
+
+it("does not list unloaded or fully settled bills as collectible", () => {
+  const { rerender } = render(<RemainingBookingTable rows={[bill()]} loadingRecords={[]} lang="en" onSelectOrder={vi.fn()} />);
+  expect(screen.queryByRole("button", { name: "AE-001-0007" })).toBeNull();
+  rerender(<RemainingBookingTable rows={[bill()]} loadingRecords={[]} dueBills={[due([{ id: "L1", outstanding: 0 }])]} lang="en" onSelectOrder={vi.fn()} />);
+  expect(screen.queryByRole("button", { name: "AE-001-0007" })).toBeNull();
+});
+
+it("uses loaded totals in All Sources too and does not repeat the contract row", () => {
+  render(<SourceFilteredTable sourceFilter="all" onSourceChange={vi.fn()} rows={[bill()]} counts={{ all: 1, booking: 1, local: 0 }} lang="en" onSelectOrder={vi.fn()} onOpenFullBill={vi.fn()} onPrintStatement={vi.fn()} tGlobal={(_lang, _key, fallback) => fallback} activeMode="remaining" loadingRecords={[]} dueBills={[due()]} />);
+  expect(screen.getAllByRole("button", { name: "AE-001-0007" })).toHaveLength(1);
+  expect(screen.getAllByText("4,500")).toHaveLength(2);
+  expect(screen.queryByText("4,252,612.50")).toBeNull();
 });
 
 it("shows the bill's Remaining entries while the running balance still accounts for its advance", () => {
