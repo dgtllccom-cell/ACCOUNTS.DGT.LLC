@@ -3774,10 +3774,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [loadingRecords, setLoadingRecords] = useState<any[]>([]);
   const [loadingLoadingRecords, setLoadingLoadingRecords] = useState(false);
   const isLocalSelected = Boolean(selected && (selected as any).order_type === "local_purchase");
-  const selectedDueBill = selected && !isLocalSelected
-    ? (selectedDueDetail?.id === selected.id
-        ? selectedDueDetail
-        : registryDueBills.find((bill) => String(bill.id) === String(selected.id)))
+  // Never permit a payment from stale list data. The selected bill is always
+  // fetched again through the authoritative per-order financial endpoint.
+  const selectedDueBill = selected && !isLocalSelected && selectedDueDetail?.id === selected.id
+    ? selectedDueDetail
     : undefined;
   const payableLoadingChoices = payableRemainingLoadings(selectedDueBill);
   const selectedLoadingDue = remainingLoadingEntry(selectedDueBill, selectedLoadingRecord?.id);
@@ -3991,7 +3991,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         if (cancelled) return;
         const map: Record<string, { outstanding: number; value: number; advanceAllocated: number }> = {};
         const bill = (res?.data?.bills ?? []).find((row: any) => String(row.id) === String(selected.id));
-        if (bill) setSelectedDueDetail(bill);
+        setSelectedDueDetail(bill || { id: String(selected.id), loadings: [] });
         for (const l of bill?.loadings ?? []) map[String(l.id)] = { outstanding: Number(l.outstanding || 0), value: Number(l.value || 0), advanceAllocated: Number(l.advanceAllocated || 0) };
         setDueLoadings(map);
       })
@@ -5715,7 +5715,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     </div>
                     <button type="button" onClick={() => { setSelectedLoadingRecord(null); setSelectedId(""); }} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white">Back to Register</button>
                   </div>
-                  {!registryDueReady ? (
+                  {!dueReady ? (
                     <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">Loading saved remaining-payment records…</p>
                   ) : payableLoadingChoices.length > 0 ? (
                     <div className="grid gap-3 md:grid-cols-2">
