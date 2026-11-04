@@ -36,6 +36,16 @@ describe("Remaining totals only eligible saved loading entries", () => {
     expect(result.entries[1].route).toBeUndefined();
     expect(uniqueBookingRows([bill(), bill()])).toHaveLength(1);
   });
+  it("shows saved loading and receiving gates without inventing unknown locations", () => {
+    const records = [{ id: "L1", purchase_order_id: "bill-one", report_payload: {
+      loadingCountry: "China", loadingPort: "Tianjin", loadingGate: "East Gate",
+      receivingCountry: "UAE", receivingPort: "Jebel Ali", receivingGate: "Gate 4",
+    }}];
+    const result = remainingBookingRow(bill(), records, due([{ id: "L1", outstanding: 300 }]));
+    expect(result.routes[0]).toMatchObject({ loadingGate: "East Gate", receivingGate: "Gate 4" });
+    const missing = remainingBookingRow(bill({ form_data: { form: {} } }), [], due([{ id: "L1", outstanding: 300 }]));
+    expect(missing.routes).toHaveLength(0);
+  });
   it("uses actual entry value and advance allocation rather than quantity proportions", () => {
     const result = remainingBookingRow(bill(), [], due([{ id: "L1", quantity: 100, value: 800, advanceAllocated: 200, paid: 150, outstanding: 450 }]));
     expect(result).toMatchObject({ quantity: 100, total: 800, paid: 350, balance: 450, grossKg: null });
@@ -69,7 +79,8 @@ it("does not list unloaded or fully settled bills as collectible", () => {
 it("uses loaded totals in All Sources too and does not repeat the contract row", () => {
   render(<SourceFilteredTable sourceFilter="all" onSourceChange={vi.fn()} rows={[bill()]} counts={{ all: 1, booking: 1, local: 0 }} lang="en" onSelectOrder={vi.fn()} onOpenFullBill={vi.fn()} onPrintStatement={vi.fn()} tGlobal={(_lang, _key, fallback) => fallback} activeMode="remaining" loadingRecords={[]} dueBills={[due()]} />);
   expect(screen.getAllByRole("button", { name: "AE-001-0007" })).toHaveLength(1);
-  expect(screen.getAllByText("4,500")).toHaveLength(1);
+  expect(screen.getAllByText("4,500")).toHaveLength(2); // Qty and net weight, but only one bill row.
+  expect(screen.getAllByRole("button", { name: "Journal" })).toHaveLength(1);
   expect(screen.queryByRole("columnheader", { name: "Loading Country" })).toBeNull();
   expect(screen.queryByRole("columnheader", { name: "Loading Port" })).toBeNull();
   expect(screen.queryByText("4,252,612.50")).toBeNull();
