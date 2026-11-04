@@ -375,6 +375,7 @@ export function LocalPurchaseView({
   const [goodsList, setGoodsList] = useState<any[]>(initialGoodsList);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [historyLoadError, setHistoryLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState("");
@@ -1100,6 +1101,7 @@ export function LocalPurchaseView({
   // Load registry logs
   const loadHistory = async () => {
     setLoadingHistory(true);
+    setHistoryLoadError(null);
     try {
       let query = "/api/erp/purchases/local-purchase";
       const params = new URLSearchParams();
@@ -1111,13 +1113,16 @@ export function LocalPurchaseView({
       }
       if (params.toString()) query += `?${params.toString()}`;
 
-      const res = await fetch(query);
+      const res = await fetch(query, { cache: "no-store" });
       const payload = await res.json();
-      if (payload.ok && payload.data?.purchases) {
-        setPurchases(payload.data.purchases);
+      if (!res.ok || !payload.ok || !Array.isArray(payload.data?.purchases)) {
+        throw new Error(payload.error?.message || payload.message || `Local Purchase API failed (${res.status})`);
       }
+      setPurchases(payload.data.purchases);
     } catch (err) {
       console.error("Failed to load local purchases:", err);
+      setHistoryLoadError(err instanceof Error ? err.message : "Local Purchase data could not be loaded.");
+      setPurchases([]);
     } finally {
       setLoadingHistory(false);
     }
@@ -4590,6 +4595,12 @@ export function LocalPurchaseView({
     ) : (
         /* Dual Mode Table Views: 1. Country / Branch View vs 2. Super Admin USD View */
         <div className="space-y-6 w-full animate-in fade-in duration-200">
+          {historyLoadError && (
+            <div role="alert" className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+              {t(lang, "lp.history_load_failed", "Could not load Local Purchase bills. Please retry or contact the administrator.")} ({historyLoadError})
+              <button type="button" className="ms-3 font-bold underline" onClick={() => void loadHistory()}>{t(lang, "common.retry", "Retry")}</button>
+            </div>
+          )}
           {isSuperAdminView ? (
             <div className="space-y-6">
 
