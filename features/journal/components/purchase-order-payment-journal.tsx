@@ -4305,18 +4305,22 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         }
       }
 
-      if (urlAmount) {
-        setCalcAmount(urlAmount);
-      } else {
-        setCalcAmount("");
-      }
-
-      if (urlFinalAmount) {
-        setFinalPayment(urlFinalAmount);
-      } else if (urlAmountPKR) {
-        setFinalPayment(urlAmountPKR);
-      } else {
-        setFinalPayment("");
+      // Never overwrite a user-entered partial batch amount when currency or
+      // ledgers change. For Remaining Booking the saved loading is the source
+      // of truth; query-string amounts may refer to the full contract.
+      if (!(activeMode === "remaining" && !isLocalSelected && selectedLoadingDue)) {
+        if (urlAmount) {
+          setCalcAmount(urlAmount);
+        } else {
+          setCalcAmount("");
+        }
+        if (urlFinalAmount) {
+          setFinalPayment(urlFinalAmount);
+        } else if (urlAmountPKR) {
+          setFinalPayment(urlAmountPKR);
+        } else {
+          setFinalPayment("");
+        }
       }
 
       if (urlRemarks) {
@@ -4396,7 +4400,25 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         setPaymentDebitLedgerId(foundDebit);
       }
     }
-  }, [selectedId, selected, baseCurrency, currency, getEffectiveRate, isSuperAdmin, ledgers]);
+  }, [selectedId, selected, baseCurrency, currency, getEffectiveRate, isSuperAdmin, ledgers, activeMode, isLocalSelected, selectedLoadingDue?.id]);
+
+  // One-time batch prefill, after the parent order's normal currency sync.
+  // A later manual partial amount remains untouched until the user switches
+  // loading or an actual posted payment changes the authoritative due.
+  const lastPreparedLoadingRef = React.useRef("");
+  useEffect(() => {
+    if (activeMode !== "remaining" || isLocalSelected || !selectedLoadingDue || !selected) {
+      lastPreparedLoadingRef.current = "";
+      return;
+    }
+    const key = `${selected.id}:${selectedLoadingDue.id}:${selectedLoadingDue.outstanding}`;
+    if (lastPreparedLoadingRef.current === key) return;
+    lastPreparedLoadingRef.current = key;
+    const payable = Math.max(0, selectedLoadingDue.outstanding);
+    const rate = Number(selectedDueBill?.exchangeRate || selected.exchange_rate || 1);
+    setCalcAmount(payable.toFixed(4));
+    setFinalPayment((payable * rate).toFixed(2));
+  }, [activeMode, selectedId, isLocalSelected, selectedLoadingDue?.id, selectedLoadingDue?.outstanding, selectedDueBill?.exchangeRate]);
 
   const cards = useMemo(() => kpis(filtered, baseCurrency, currentLanguage), [filtered, baseCurrency, currentLanguage]);
   const countryOptions = useMemo(() => Array.from(new Set(orders.map(rowCountryName))).filter(Boolean).sort(), [orders]);
