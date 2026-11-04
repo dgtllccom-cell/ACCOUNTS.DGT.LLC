@@ -60,7 +60,7 @@ describe("Remaining totals only eligible saved loading entries", () => {
 it("expands one bill to two loading entries and opens the selected loading", () => {
   const onSelectLoading = vi.fn();
   render(<RemainingBookingTable rows={[bill(), bill()]} loadingRecords={[]} dueBills={[due()]} lang="en" onSelectOrder={vi.fn()} onSelectLoading={onSelectLoading} />);
-  expect(screen.getAllByRole("button", { name: "AE-001-0007" })).toHaveLength(1);
+  expect(screen.getAllByRole("cell", { name: "AE-001-0007" })).toHaveLength(1); // General is a summary table; Journal is the detail action.
   fireEvent.click(screen.getByRole("button", { name: "AE-001-0007" }));
   const details = screen.getByTestId("remaining-loading-details");
   expect(within(details).getByText("LD-1")).toBeTruthy();
