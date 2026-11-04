@@ -565,6 +565,11 @@ function TransferForm({ s, purchaseId, data, purpose, lot, row, onClose, onDone,
   const [truck, setTruck] = useState("");
   const [driver, setDriver] = useState("");
   const [loadDate, setLoadDate] = useState(new Date().toISOString().slice(0, 10));
+  const [warehouseSearch, setWarehouseSearch] = useState("");
+  const [exportHandledBy, setExportHandledBy] = useState<"self" | "other">("self");
+  const [exportAgent, setExportAgent] = useState("");
+  const [saleChannel, setSaleChannel] = useState<"direct" | "broker" | "agent">("direct");
+  const [saleAgent, setSaleAgent] = useState("");
   const [provider, setProvider] = useState<{ id: string; text: string } | null>(null);
   const [pName, setPName] = useState(""); const [pCity, setPCity] = useState(""); const [pAddr, setPAddr] = useState(""); const [pRef, setPRef] = useState("");
   const [pCharge, setPCharge] = useState(""); const [pCur, setPCur] = useState(lot.currency_code || "");
@@ -577,6 +582,10 @@ function TransferForm({ s, purchaseId, data, purpose, lot, row, onClose, onDone,
   const [mode, setMode] = useState("Road"); const [confirmed, setConfirmed] = useState(false);
 
   const whs: Json[] = (data.warehouses ?? []).filter((w: Json) => w.country_id === lot.country_id);
+  const matchingWhs = whs.filter((w: Json) => [w.warehouse_code, w.warehouse_name, w.full_address, w.owner_name].some((v) => String(v ?? "").toLowerCase().includes(warehouseSearch.toLowerCase().trim())));
+  const warehouseDetail = whs.find((w: Json) => w.id === warehouseId);
+  const validDate = /^\d{4}-\d{2}-\d{2}$/.test(loadDate) && !Number.isNaN(Date.parse(`${loadDate}T00:00:00`));
+  const verifiedNotes = notes.trim().length >= 3;
   useEffect(() => {
     if (purpose !== "export_dgt_branch") return;
     void api("GET", `/api/erp/goods-transfers/trade-options?countryId=${lot.country_id}&lang=${s.lang}`).then((r) => { if (r.ok) setOpts(r.data); });
@@ -598,12 +607,13 @@ function TransferForm({ s, purchaseId, data, purpose, lot, row, onClose, onDone,
     try {
       const J = `/api/erp/purchases/local-purchase/${purchaseId}/goods-transfer`;
       const source = { warehouseId: row.warehouse_id ?? null, label: row.location_label ?? "", rack: row.rack_bin ?? "" };
+      const transferMeta = { transferDate: loadDate, verifiedDestinationCode: warehouseDetail?.warehouse_code ?? "", verifiedDestinationName: warehouseDetail?.warehouse_name ?? "" };
       if (purpose === "own_warehouse") {
-        await finish(await api("POST", J, { lotId: lot.id, purpose, qty: qn, idempotencyKey: idem.current, source, dest: { warehouseId, rack }, notes }), s.t("done_own", "Stock moved. No financial entry was posted."));
+        await finish(await api("POST", J, { lotId: lot.id, purpose, qty: qn, idempotencyKey: idem.current, source, dest: { warehouseId, rack }, transport: transferMeta, notes }), s.t("done_own", "Stock moved. No financial entry was posted."));
       } else if (purpose === "dgt_warehouse") {
-        await finish(await api("POST", J, { lotId: lot.id, purpose, qty: qn, idempotencyKey: idem.current, source, dest: { warehouseId, countryBranchId: branchId, rack }, transport: { truck, driver, loadingDate: loadDate }, notes }), s.t("done_dgt", "Dispatched. The quantity is In Transit until the destination receives it."));
+        await finish(await api("POST", J, { lotId: lot.id, purpose, qty: qn, idempotencyKey: idem.current, source, dest: { warehouseId, countryBranchId: branchId, rack }, transport: { ...transferMeta, truck, driver, loadingDate: loadDate }, notes }), s.t("done_dgt", "Dispatched. The quantity is In Transit until the destination receives it."));
       } else if (purpose === "third_party_warehouse") {
-        await finish(await api("POST", J, { lotId: lot.id, purpose, qty: qn, idempotencyKey: idem.current, source, provider: { accountId: provider?.id, name: pName, city: pCity, address: pAddr, contractRef: pRef, storageCharge: pCharge === "" ? null : Number(pCharge), chargeCurrency: pCur }, notes }), s.t("done_3p", "Goods placed with the third-party warehouse. They remain DGT stock."));
+        await finish(await api("POST", J, { lotId: lot.id, purpose, qty: qn, idempotencyKey: idem.current, source, provider: { accountId: provider?.id, name: pName, city: pCity, address: pAddr, contractRef: pRef, storageCharge: pCharge === "" ? null : Number(pCharge), chargeCurrency: pCur }, transport: { transferDate: loadDate }, notes }), s.t("done_3p", "Goods placed with the third-party warehouse. They remain DGT stock."));
       } else if (purpose === "hold") {
         await finish(await api("POST", J, { lotId: lot.id, purpose, qty: qn, idempotencyKey: idem.current, source, notes }), s.t("done_hold", "Recorded: the goods stay at their current location."));
       } else if (purpose === "export_dgt_branch") {
@@ -611,7 +621,7 @@ function TransferForm({ s, purchaseId, data, purpose, lot, row, onClose, onDone,
           lotId: lot.id, purpose, qty: qn, idempotencyKey: idem.current, source, destCountryBranchId: tBranch, destCityBranchId: tCity || null, destBranchCode: tb?.code ?? "", destWarehouseId: tWh,
           approvedExchangeRate: Number(rate), saleUnitRate: Number(saleRate),
           ledgers: { receivable: lRecv?.id, sales: lSales?.id, cogs: lCogs?.id, destInventory: lDestInv?.id, destPayable: lDestPay?.id },
-          transport: { mode, truck, driver, loadingDate: loadDate }, notes,
+          transport: { mode, truck, driver, loadingDate: loadDate, transferDate: loadDate }, notes,
         }), s.t("done_trade", "Inter-Country Trade created: source sale posted, destination purchase is In Transit."));
       }
     } finally { lock.current = false; setBusy(false); }
@@ -620,16 +630,55 @@ function TransferForm({ s, purchaseId, data, purpose, lot, row, onClose, onDone,
   const title = s.t(`purpose_${purpose}`, PURPOSE_DEFAULTS[purpose]);
   const subtitle = `${lot.goods_name} · ${lot.lot_ref} · ${s.t("from", "From")}: ${placeLabel(row)}${row.rack_bin ? `/${row.rack_bin}` : ""} (${qtyFmt(maxQty)})`;
 
-  // sale / export launch an EXISTING Sales form pre-filled with this lot — nothing is posted from here
+  // Sale/export are always routed to the existing Sales bill; never transfer stock or post a sale merely by selecting an option.
   if (purpose === "local_sale" || purpose === "export_customer") {
     const mode2 = purpose === "export_customer" ? "export" : "local";
-    const url = `/dashboard/sales/new-sales-booking-order?lotId=${lot.id}&wh=${row.warehouse_id ?? ""}&rack=${encodeURIComponent(row.rack_bin ?? "")}&label=${encodeURIComponent(row.location_label ?? "")}&mode=${mode2}`;
+    const params = new URLSearchParams({
+      lotId: String(lot.id), wh: String(row.warehouse_id ?? ""), rack: String(row.rack_bin ?? ""),
+      label: String(row.location_label ?? ""), mode: mode2, sourcePurchaseId: purchaseId,
+      handling: purpose === "export_customer" ? exportHandledBy : saleChannel,
+      handlerName: purpose === "export_customer" ? exportAgent.trim() : saleAgent.trim(),
+      transferDate: loadDate, transferNote: notes.trim(),
+    });
+    const url = `/dashboard/sales/new-sales-booking-order?${params.toString()}`;
+    const salesReady = validDate && verifiedNotes && (purpose === "export_customer" ? (exportHandledBy === "self" || exportAgent.trim().length >= 2) : (saleChannel === "direct" || saleAgent.trim().length >= 2));
     return (
       <FullScreen s={s} title={title} subtitle={subtitle} onClose={onClose}
         footer={<>
           <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-4 py-2 text-xs font-bold">{s.t("close", "Close")}</button>
-          <button type="button" onClick={() => router.push(url)} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white">{purpose === "export_customer" ? s.t("open_export_draft", "Open Export Sales Order") : s.t("open_sale_draft", "Open Local Sales Draft")}</button>
+          <button type="button" disabled={!salesReady} onClick={() => router.push(url)} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">{purpose === "export_customer" ? s.t("open_export_draft", "Create Export Sales Bill") : s.t("open_sale_draft", "Create Local Sales Bill")}</button>
         </>}>
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
+          <strong>{s.t("sale_first", "Step 1: Create the sales bill first.")}</strong>
+          <p className="mt-1">{s.t("sale_first_desc", "The stock lot, original purchase and warehouse will be linked to the sales bill. The goods are not sold, exported or deducted by opening this form.")}</p>
+        </div>
+        {purpose === "export_customer" ? (
+          <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 text-xs">
+            <Field s={s} label={s.t("export_responsibility", "Who will handle the export?")}>
+              <select className={inputCls} value={exportHandledBy} onChange={(e) => setExportHandledBy(e.target.value as "self" | "other")}>
+                <option value="self">{s.t("export_self", "We export through our own branch / team")}</option>
+                <option value="other">{s.t("export_other", "External agent / another party handles export")}</option>
+              </select>
+            </Field>
+            {exportHandledBy === "other" ? <Field s={s} label={s.t("export_handler_name", "Export agent / responsible party")}><input className={inputCls} value={exportAgent} onChange={(e) => setExportAgent(e.target.value)} placeholder={s.t("export_handler_ph", "Select or enter responsible party")} /></Field> : null}
+            <p className="text-[11px] text-slate-500">{s.t("export_destination_tip", "The destination country, loading port/gate/border, transport mode and clearing responsibility are completed in the linked Sales Shipping & Payment form.")}</p>
+          </div>
+        ) : (
+          <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 text-xs">
+            <Field s={s} label={s.t("sale_channel", "How was this stock sold?")}>
+              <select className={inputCls} value={saleChannel} onChange={(e) => setSaleChannel(e.target.value as "direct" | "broker" | "agent")}>
+                <option value="direct">{s.t("sale_direct", "Direct sale to customer")}</option>
+                <option value="broker">{s.t("sale_broker", "Sale through broker")}</option>
+                <option value="agent">{s.t("sale_agent", "Sale through agent / third party")}</option>
+              </select>
+            </Field>
+            {saleChannel !== "direct" ? <Field s={s} label={s.t("sale_agent_name", "Broker / sales agent")}><input className={inputCls} value={saleAgent} onChange={(e) => setSaleAgent(e.target.value)} /></Field> : null}
+          </div>
+        )}
+        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 text-xs sm:grid-cols-2">
+          <Field s={s} label={s.t("transfer_date", "Transfer / booking date")}><input type="date" className={inputCls} value={loadDate} onChange={(e) => setLoadDate(e.target.value)} /></Field>
+          <Field s={s} label={s.t("notes_required", "Transfer report / audit remark (required)")}><textarea className={`${inputCls} h-20 py-2`} value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
+        </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs dark:border-slate-700 dark:bg-slate-900">
           <div className="mb-3 text-sm font-black">{s.t("prefill_title", "The sales form opens pre-filled with:")}</div>
           <dl className="grid gap-2 sm:grid-cols-2">
@@ -648,7 +697,7 @@ function TransferForm({ s, purchaseId, data, purpose, lot, row, onClose, onDone,
 
   const needsQty = true;
   const canSubmit =
-    qtyOk && !busy &&
+    qtyOk && !busy && validDate && verifiedNotes &&
     (purpose === "own_warehouse" ? !!warehouseId :
      purpose === "dgt_warehouse" ? !!warehouseId && !!branchId :
      purpose === "third_party_warehouse" ? !!provider && !!pName.trim() && !!pCity.trim() && !!pAddr.trim() && !!pRef.trim() && pCharge !== "" && !!pCur.trim() :
@@ -674,10 +723,11 @@ function TransferForm({ s, purchaseId, data, purpose, lot, row, onClose, onDone,
 
       {purpose === "own_warehouse" ? (
         <>
+          <Field s={s} label={s.t("wh_lookup", "Find destination warehouse by code / number / name")}><input className={inputCls} value={warehouseSearch} onChange={(e) => setWarehouseSearch(e.target.value)} placeholder={s.t("wh_search_ph", "Type warehouse code or name…")} /></Field>
           <Field s={s} label={s.t("warehouse", "Warehouse (Warehouse Master)")}>
             <select className={inputCls} value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)}>
               <option value="">{s.t("select", "Select…")}</option>
-              {whs.map((w) => <option key={w.id} value={w.id}>{w.warehouse_code} — {w.warehouse_name}</option>)}
+              {matchingWhs.map((w) => <option key={w.id} value={w.id}>{w.warehouse_code} — {w.warehouse_name}</option>)}
             </select>
           </Field>
           {warehouseId ? (() => { const w = whs.find((x) => x.id === warehouseId); return w ? (
@@ -685,6 +735,10 @@ function TransferForm({ s, purchaseId, data, purpose, lot, row, onClose, onDone,
               <div><b>{s.t("wh_code", "Warehouse code")}:</b> {w.warehouse_code}</div>
               <div><b>{s.t("branch", "Country / Branch")}:</b> {w.country_name} · {data.purchase?.branchName}</div>
               <div><b>{s.t("col_location", "Warehouse / Location")}:</b> {w.warehouse_name}</div>
+              <div><b>{s.t("warehouse_type", "Type")}:</b> {w.warehouse_type || "—"}</div>
+              <div><b>{s.t("warehouse_address", "Address")}:</b> {w.full_address || "—"}</div>
+              <div><b>{s.t("warehouse_contact", "Contact")}:</b> {w.contact_number || "—"}</div>
+              <div><b>{s.t("warehouse_owner", "Owner / responsible")}:</b> {w.owner_name || "—"}</div>
             </div>) : null; })() : null}
           <Field s={s} label={s.t("rack_dest", "Destination rack / bin (optional)")}><input className={inputCls} value={rack} onChange={(e) => setRack(e.target.value)} /></Field>
           <p className="text-[11px] text-slate-500">{s.t("own_note", "This records a stock movement and warehouse receipt. It is not a sale and not a new purchase; the purchase is not posted again. Moving within the same warehouse (rack to rack) leaves total stock unchanged.")}</p>
@@ -698,12 +752,14 @@ function TransferForm({ s, purchaseId, data, purpose, lot, row, onClose, onDone,
               {(data.branches ?? []).map((b: Json) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
           </Field>
+          <Field s={s} label={s.t("wh_lookup", "Find destination warehouse by code / name")}><input className={inputCls} value={warehouseSearch} onChange={(e) => setWarehouseSearch(e.target.value)} /></Field>
           <Field s={s} label={s.t("dest_wh", "Destination warehouse")}>
             <select className={inputCls} value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)}>
               <option value="">{s.t("select", "Select…")}</option>
-              {whs.filter((w) => w.id !== row.warehouse_id).map((w) => <option key={w.id} value={w.id}>{w.warehouse_code} — {w.warehouse_name}</option>)}
+              {matchingWhs.filter((w) => w.id !== row.warehouse_id).map((w) => <option key={w.id} value={w.id}>{w.warehouse_code} — {w.warehouse_name}</option>)}
             </select>
           </Field>
+          {warehouseDetail ? <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-[11px] text-blue-900"><b>{warehouseDetail.warehouse_code} — {warehouseDetail.warehouse_name}</b><div>{warehouseDetail.full_address || "—"} · {warehouseDetail.contact_number || "—"}</div><div>{s.t("warehouse_type", "Type")}: {warehouseDetail.warehouse_type || "—"}</div></div> : null}
           <div className="grid gap-3 sm:grid-cols-3">
             <Field s={s} label={s.t("truck", "Truck / vehicle")}><input className={inputCls} value={truck} onChange={(e) => setTruck(e.target.value)} /></Field>
             <Field s={s} label={s.t("driver", "Driver")}><input className={inputCls} value={driver} onChange={(e) => setDriver(e.target.value)} /></Field>
@@ -797,7 +853,11 @@ function TransferForm({ s, purchaseId, data, purpose, lot, row, onClose, onDone,
         <p className="rounded-lg bg-slate-100 p-3 text-[11px] dark:bg-slate-800">{s.t("hold_note", "The goods stay where they are. This only records the decision in the journal; no stock changes and nothing is posted.")}</p>
       ) : null}
 
-      <Field s={s} label={s.t("notes", "Notes (optional)")}><textarea className={`${inputCls} h-20 py-2`} value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field s={s} label={s.t("transfer_date", "Transfer / loading date (required)")}><input type="date" className={inputCls} value={loadDate} onChange={(e) => setLoadDate(e.target.value)} /></Field>
+        <Field s={s} label={s.t("notes_required", "Transfer report / audit remark (required)")}><textarea className={`${inputCls} h-20 py-2`} value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
+      </div>
+      {!verifiedNotes ? <p className="text-[11px] font-semibold text-amber-700">{s.t("notes_hint", "Write at least 3 characters explaining where and why these goods are transferred.")}</p> : null}
     </FullScreen>
   );
 }
