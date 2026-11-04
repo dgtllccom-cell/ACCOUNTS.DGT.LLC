@@ -4565,6 +4565,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   // Final Action POST handler
   async function handleProcessPayment() {
     if (!canSave || !selected) return;
+    // The user's journal click must never allow the entire booking balance
+    // through the payment form when the purchase has only partial loadings.
+    if (activeMode === "remaining" && !isLocalSelected && !selectedLoadingDue) {
+      setPaymentError("Please select a saved, payable loading entry before recording Remaining Payment.");
+      return;
+    }
     setProcessingPayment(true);
     setPaymentSuccess("");
     setPaymentError("");
@@ -4687,8 +4693,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
       const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
       const selectedLoadingRecordId = selectedLoadingRecord?.id ? String(selectedLoadingRecord.id) : "";
-      const fromLoading = searchParams.get("fromLoading") === "true" || Boolean(selectedLoadingRecordId);
-      const loadingRecordId = selectedLoadingRecordId || searchParams.get("loadingRecordId") || "";
+      const fromLoading = activeMode === "remaining" && !isLocalSelected
+        ? Boolean(selectedLoadingDue)
+        : searchParams.get("fromLoading") === "true" || Boolean(selectedLoadingRecordId);
+      const loadingRecordId = activeMode === "remaining" && !isLocalSelected
+        ? selectedLoadingDue?.id || ""
+        : selectedLoadingRecordId || searchParams.get("loadingRecordId") || "";
 
       const payload = {
         purchaseOrderId: selected.id,
@@ -5522,9 +5532,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
             //    what the old modal showed. The legacy markup below stays mounted (hidden) so the entry form, container picker and edit modal keep
             //    their state — they are portaled into the document's slots instead of being duplicated. ──
             let docNode: React.ReactNode = null;
-            if (docMode) {
+            if (docMode && (activeMode !== "remaining" || isLocalSelected || selectedLoadingDue)) {
               const docPercent = orderPaymentPercent(form);
-              const docGoods = (Array.isArray(goods) ? goods : []).map((g: any) => ({
+              const originalGoods = (Array.isArray(goods) ? goods : []).map((g: any) => ({
                 name: String(g.goodsName || g.name || ""),
                 hsCode: String(g.hsCode || g.hs_code || ""),
                 qty: Number(g.qtyNo ?? g.quantity ?? 0),
@@ -5532,7 +5542,34 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 amount: Number(g.totalAmount ?? g.amount ?? 0),
                 finalAmount: Number(g.finalAmount ?? g.localAmount ?? 0)
               }));
-              const docPayments = historyWithBalance as unknown as EntryPaymentRow[];
+              // A saved loading has its own actual quantity, weight and payable
+              // value. Do not display the 22,500-unit contract as this 2,250-unit
+              // loading, and never apportion a multi-goods loading by guesswork.
+              const docGoods = selectedLoadingDue
+                ? [{
+                    name: originalGoods.map((g) => g.name).filter(Boolean).join(" / ") || "Loaded Goods",
+                    hsCode: originalGoods.length === 1 ? originalGoods[0].hsCode : "",
+                    qty: selectedLoadingDue.quantity,
+                    netKg: selectedLoadingDue.netWeightKg ?? 0,
+                    amount: selectedLoadingDue.value,
+                    finalAmount: selectedLoadingDue.value * exRate
+                  }]
+                : originalGoods;
+              // Remaining history is shown only for the selected loading.
+              // Historical advance is allocated for display, NOT duplicated in
+              // the ledger or added as a real payment row.
+              const docPayments = (selectedLoadingDue
+                ? historyWithBalance.filter((p: any) => p.kind === "remaining" && String(p.loading_record_id || p.typeDetails?.loadingRecordId || "") === selectedLoadingDue.id)
+                : historyWithBalance) as unknown as EntryPaymentRow[];
+              const allocatedAdvance = selectedLoadingDue?.advanceAllocated ?? 0;
+              const docModelPayments = [
+                ...(selectedLoadingDue && allocatedAdvance > 0 ? [{
+                  id: "__loading_advance_allocation__", kind: "advance",
+                  amountPurchase: allocatedAdvance, amountLocal: allocatedAdvance * exRate,
+                  date: "0000-00-00"
+                }] : []),
+                ...docPayments.map((x) => ({ id: x.id, kind: x.kind, amountPurchase: x.amtUSD, amountLocal: x.amtAED, date: String(x.entry_date || x.created_at || "") }))
+              ];
               const docModel = buildPaymentEntryModel({
                 mode: activeMode as PaymentEntryMode,
                 contractTotal: statementPurchaseForeign,
@@ -5541,9 +5578,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 percent: docPercent,
                 endorsementOrder: isEndorsementOrder(form),
                 goods: docGoods,
-                payments: docPayments.map((x) => ({ id: x.id, kind: x.kind, amountPurchase: x.amtUSD, amountLocal: x.amtAED, date: String(x.entry_date || x.created_at || "") })),
-                totalPaid: statTotalPaidFC,
-                balance: statRemainingFC
+                payments: docModelPayments,
+                totalPaid: selectedLoadingDue ? selectedLoadingDue.advanceAllocated + selectedLoadingDue.remainingPaid : statTotalPaidFC,
+                balance: selectedLoadingDue ? selectedLoadingDue.outstanding : statRemainingFC
               });
               const docEntered = amountInPurchaseCurrency({
                 amount: payloadAmount,
@@ -5553,8 +5590,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 localCurrency: baseCurrency,
                 orderRate: exRate
               });
-              // a loading-batch payment is limited by the batch, not the whole order: leave that to the payment API
-              const docLimit = fromLoading ? null : checkPaymentLimit({ entered: docEntered, balance: statRemainingFC, contractTotal: statementPurchaseForeign });
+              // The batch's verified outstanding is also the client-side cap;
+              // the payment API revalidates it using the same loaded data.
+              const docLimit = checkPaymentLimit({
+                entered: docEntered,
+                balance: selectedLoadingDue ? selectedLoadingDue.outstanding : statRemainingFC,
+                contractTotal: statementPurchaseForeign
+              });
               const ledgerLabelOf = (id?: string | null) => {
                 const l = id ? ledgers.find((x) => ledgerId(x) === id) : null;
                 return l ? ledgerName(l) : "";
@@ -5596,9 +5638,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   payments={docPayments}
                   ledgerLabel={ledgerLabelOf}
                   saving={processingPayment}
-                  saveDisabled={Boolean(docLimit?.over)}
+                  saveDisabled={Boolean(docLimit?.over) || (activeMode === "remaining" && !isLocalSelected && !selectedLoadingDue)}
                   paymentsLoading={loadingPayments}
-                  onBack={() => setSelectedId("")}
+                  onBack={() => { setSelectedLoadingRecord(null); setSelectedId(""); }}
                   onPrint={() => handleOpenA4PDF(selected, true)}
                   onSave={() => {
                     setIsDoubleEntryExpanded(true);
@@ -5612,6 +5654,49 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   onEdit={(pay) => setEditingPayment({ payment: pay, row: selected })}
                   onLimitChange={setOverLimit}
                 />
+              );
+            } else if (docMode && activeMode === "remaining" && !isLocalSelected) {
+              // Never open the whole booking as a Remaining Payment entry while
+              // a loading is unselected, still loading, or fully settled.
+              docNode = (
+                <section className="mx-auto w-full max-w-5xl space-y-4 px-4 py-5" data-testid="remaining-select-loading">
+                  <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-blue-200 bg-white p-4 shadow-xs">
+                    <div>
+                      <h2 className="text-lg font-extrabold text-slate-900">{translateHeader(currentLanguage, "Remaining Payment")} — {selected.purchase_order_no}</h2>
+                      <p className="text-xs font-semibold text-slate-500">{translateHeader(currentLanguage, "Select Loaded Container / Batch")}</p>
+                    </div>
+                    <button type="button" onClick={() => { setSelectedLoadingRecord(null); setSelectedId(""); }} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white">Back to Register</button>
+                  </div>
+                  {!registryDueReady ? (
+                    <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">Loading saved remaining-payment records…</p>
+                  ) : payableLoadingChoices.length > 0 ? (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {payableLoadingChoices.map((entry) => {
+                        const savedRecord = registryLoadingRecords.find((record) => String(record.id) === String(entry.id));
+                        const displayCcy = selectedDueBill?.currency || poCurrencyHeader;
+                        return (
+                          <button key={entry.id} type="button"
+                            onClick={() => handleSelectLoadingRecord(savedRecord || { id: entry.id, loading_record_no: entry.loadingNo, loaded_quantity: entry.quantity })}
+                            className="rounded-xl border border-blue-200 bg-white p-4 text-start shadow-xs transition hover:border-blue-500 hover:bg-blue-50"
+                            data-testid="remaining-payable-loading">
+                            <div className="font-bold text-blue-800">{entry.loadingNo || entry.container || entry.id}</div>
+                            <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-700">
+                              <span>Loaded Quantity: <b>{Number(entry.quantity || 0).toLocaleString()}</b></span>
+                              <span>Net KG: <b>{entry.netWeightKg == null ? "—" : Number(entry.netWeightKg).toLocaleString()}</b></span>
+                              <span>Loaded Value: <b>{Number(entry.value || 0).toLocaleString()} {displayCcy}</b></span>
+                              <span>Allocated Advance: <b>{Number(entry.advanceAllocated || 0).toLocaleString()} {displayCcy}</b></span>
+                              <span className="col-span-2 text-rose-700">Remaining Payable: <b>{Number(entry.outstanding || 0).toLocaleString()} {displayCcy}</b></span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+                      No verified loaded quantity is available for Remaining Payment. Return to the Loading Journal and verify the required advance and actual loaded goods.
+                    </p>
+                  )}
+                </section>
               );
             }
 
