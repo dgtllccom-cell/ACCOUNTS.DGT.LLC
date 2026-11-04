@@ -107,6 +107,9 @@ export async function GET(request: NextRequest) {
       // Country admins retain country-wide access even when their session also
       // contains expanded city assignments. Branch users never inherit country access.
       if (!recordInSessionScope(session, row)) return false;
+      const ownEntriesOnly = !session.isSuperAdmin && session.roles.length > 0 &&
+        session.roles.every(role => role === "staff_user");
+      if (ownEntriesOnly && row.created_by !== session.userId) return false;
       if (params.countryId && String(row.country_id || "") !== params.countryId) return false;
       if (params.countryBranchId && String(row.country_branch_id || "") !== params.countryBranchId) return false;
       if (params.cityBranchId && String(row.city_branch_id || "") !== params.cityBranchId) return false;

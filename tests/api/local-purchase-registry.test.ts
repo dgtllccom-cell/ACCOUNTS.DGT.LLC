@@ -36,7 +36,7 @@ function session(over: Partial<ErpSession> = {}) {
     isGlobalScope: false, operationalDomains: ["business"], ...over } as ErpSession;
 }
 const row = (id: string, over: Record<string, unknown> = {}) => ({ id, country_id: country, country_branch_id: main,
-  city_branch_id: city, status: "posted", final_cost: 100, purchase_currency: "AED", ...over });
+  city_branch_id: city, created_by: "u", status: "posted", final_cost: 100, purchase_currency: "AED", ...over });
 async function list(params = "") { const response = await GET(new NextRequest(`http://localhost/api/erp/purchases/local-purchase${params}`)); return { response, body: await response.json() }; }
 
 beforeEach(() => {
@@ -64,6 +64,12 @@ for (const usePg of [true, false]) describe(usePg ? "Postgres registry" : "Supab
   it("denies a session with no assignments", async () => {
     state.session = session({ countryIds: [], countryBranchIds: [], cityBranchIds: [] });
     expect((await list()).body.data.purchases).toEqual([]);
+  });
+  it("limits normal staff to their own saved bills within the assigned branch", async () => {
+    state.session = session({ roles: ["staff_user"] });
+    state.rows = [row("own"), row("colleague", { created_by: "someone-else" }), row("unattributed", { created_by: null }),
+      row("own-outside", { city_branch_id: otherCity })];
+    expect((await list(`?countryId=${country}`)).body.data.purchases.map((r: any) => r.id)).toEqual(["own"]);
   });
   it("rejects shipping-only purchase access", async () => {
     state.session = session({ roles: ["shipping_line_user"], permissions: ["purchases:read"], operationalDomains: ["shipping"] });
