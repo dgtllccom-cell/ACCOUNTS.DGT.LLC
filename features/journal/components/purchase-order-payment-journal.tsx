@@ -2827,6 +2827,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const selectOrder = (id: string, initialTab: "overview" | "goods" | "payments" | "transport" = "payments") => {
     // The next bill must never inherit the previous bill's selected container.
     setSelectedLoadingRecord(null);
+    setCalcAmount("");
+    setFinalPayment("");
     setSelectedOrderPayments([]);
     setPaymentError("");
     setSelectedId(id);
@@ -4025,6 +4027,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     pendingLoadingPick.current = null;
     const saved = registryLoadingRecords.find((item) => String(item.id) === String(chosen.id));
     setSelectedLoadingRecord(saved || { id: chosen.id, loading_record_no: chosen.loadingNo, loaded_quantity: chosen.quantity });
+    // Default to precisely what this saved loading still owes, not the full
+    // booking balance. User can type a smaller partial payment if needed.
+    const payable = Math.max(0, Number(chosen.outstanding || 0));
+    const rate = Number(selectedDueBill?.exchangeRate || selected.exchange_rate || 1);
+    setCalcAmount(payable.toFixed(4));
+    setFinalPayment((payable * rate).toFixed(2));
   }, [activeMode, selected?.id, isLocalSelected, registryDueReady, registryLoadingRecords, selectedDueBill, selectedLoadingDue]);
 
   const handleSelectLoadingRecord = (lr: any) => {
