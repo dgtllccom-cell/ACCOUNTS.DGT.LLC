@@ -1,6 +1,7 @@
 "use client";
 
 import { PaymentSummaryStrip } from "@/features/journal/components/payment-summary-strip";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { useEffect, useState } from "react";
 import {
   AlertTriangle,
@@ -81,6 +82,15 @@ export type PaymentEntryDocumentProps = {
   countryName: string;
   purchaseAccount: string;
   paymentDate: string;
+  /** Saved selected loading; absent for Advance or Local Purchase. */
+  batch?: {
+    loadingNo: string;
+    quantity: number;
+    netKg: number | null;
+    value: number;
+    advanceAllocated: number;
+    outstanding: number;
+  } | null;
   supplier: { accountNo: string; name: string; country: string; contact: string };
   contract: { no: string; date: string; goods: string; origin: string };
   payments: EntryPaymentRow[];
@@ -223,6 +233,19 @@ export function PurchasePaymentEntryDocument(p: PaymentEntryDocumentProps) {
           </button>
         </div>
       </div>
+
+      {p.mode === "remaining" && p.batch && (
+        <section data-testid="ppe-selected-loading-summary" className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 shadow-xs dark:border-blue-900 dark:bg-blue-950/30">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-800 dark:text-slate-100">
+            <span className="font-extrabold text-blue-800 dark:text-blue-200">{translateHeader(p.lang, "Loading No")}: <b dir="ltr">{p.batch.loadingNo}</b></span>
+            <span>{translateHeader(p.lang, "Total Quantity")}: <b dir="ltr">{fmt(p.batch.quantity, 0)}</b></span>
+            <span>{translateHeader(p.lang, "Net Weight")}: <b dir="ltr">{p.batch.netKg == null ? "—" : fmt(p.batch.netKg, 0)} KG</b></span>
+            <span>{translateHeader(p.lang, "Bill Total")}: <b dir="ltr">{fmt(p.batch.value)} {p.purchaseCurrency}</b></span>
+            <span>{translateHeader(p.lang, "Advance Amount")}: <b dir="ltr">{fmt(p.batch.advanceAllocated)} {p.purchaseCurrency}</b></span>
+            <span className="font-extrabold text-rose-700 dark:text-rose-300">{translateHeader(p.lang, "Remaining Balance")}: <b dir="ltr">{fmt(p.batch.outstanding)} {p.purchaseCurrency}</b></span>
+          </div>
+        </section>
+      )}
 
       {/* compact payment summary: calculated advance vs paid vs outstanding, from the saved payment records */}
       <PaymentSummaryStrip lang={p.lang} currency={p.purchaseCurrency} localCurrency={p.baseCurrency} figures={figures} loading={p.paymentsLoading} />
