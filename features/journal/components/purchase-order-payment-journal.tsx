@@ -4026,7 +4026,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   // URL loading IDs are hints only. Never trust query-string quantities/prices
   // and never create synthetic loading rows for a financial payment.
   useEffect(() => {
-    if (activeMode !== "remaining" || !selected || isLocalSelected || !registryDueReady) return;
+    if (activeMode !== "remaining" || !selected || isLocalSelected || !dueReady) return;
     if (selectedLoadingDue) return;
     const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
     const urlLoadingId = params.get("fromLoading") === "true" ? params.get("loadingRecordId") : null;
@@ -4043,7 +4043,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     const rate = Number(selectedDueBill?.exchangeRate || selected.exchange_rate || 1);
     setCalcAmount(payable.toFixed(4));
     setFinalPayment((payable * rate).toFixed(2));
-  }, [activeMode, selected?.id, isLocalSelected, registryDueReady, registryLoadingRecords, selectedDueBill, selectedLoadingDue]);
+  }, [activeMode, selected?.id, isLocalSelected, dueReady, registryLoadingRecords, selectedDueBill, selectedLoadingDue]);
 
   const handleSelectLoadingRecord = (lr: any) => {
     if (!selected) return;
@@ -4083,14 +4083,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   // a loading chosen on the "Bills waiting for Remaining Payment" list is selected here as soon as the bill's loadings and figures are in
   useEffect(() => {
     const want = pendingLoadingPick.current;
-    if (!want || !selected || activeMode !== "remaining" || !dueReady || !registryDueReady) return;
+    if (!want || !selected || activeMode !== "remaining" || !dueReady) return;
     const lr = loadingRecords.find((r: any) => String(r.id) === want);
     if (lr && payableLoadingChoices.some((entry) => String(entry.id) === want)) {
       pendingLoadingPick.current = null;
       handleSelectLoadingRecord(lr);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadingRecords, dueReady, selected, activeMode, registryDueReady, selectedDueBill]);
+  }, [loadingRecords, dueReady, selected, activeMode, selectedDueBill]);
 
   const displayRows = useMemo(() => {
     if (activeMode !== "remaining") return filtered;
