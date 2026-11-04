@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -155,13 +156,15 @@ export default async function LocalPurchaseTransferPaymentPage() {
   }
 
   return (
-    <LocalPurchaseTransferPaymentView
-      session={session}
-      goodsList={goodsList}
-      countryBranches={branches}
-      cityBranches={cities}
-      companies={companyList}
-      countries={countriesList}
-    />
+    <Suspense fallback={<div className="p-6 text-center text-sm text-slate-500">Loading Local Purchase Payment Transfer...</div>}>
+      <LocalPurchaseTransferPaymentView
+        session={session}
+        goodsList={goodsList}
+        countryBranches={branches}
+        cityBranches={cities}
+        companies={companyList}
+        countries={countriesList}
+      />
+    </Suspense>
   );
 }
