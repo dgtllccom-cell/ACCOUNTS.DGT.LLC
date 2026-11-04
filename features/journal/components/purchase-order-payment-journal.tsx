@@ -3092,6 +3092,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [showModalHistory, setShowModalHistory] = useState(false);
   const [remainingLoadingRecords, setRemainingLoadingRecords] = useState<any[]>([]);
   const [registryDueBills, setRegistryDueBills] = useState<RemainingDueBill[]>([]);
+  const [selectedDueDetail, setSelectedDueDetail] = useState<RemainingDueBill | null>(null);
   const [registryDueReady, setRegistryDueReady] = useState(false);
   const [registryLoadingRecords, setRegistryLoadingRecords] = useState<any[]>([]);
   useEffect(() => {
@@ -3774,7 +3775,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [loadingLoadingRecords, setLoadingLoadingRecords] = useState(false);
   const isLocalSelected = Boolean(selected && (selected as any).order_type === "local_purchase");
   const selectedDueBill = selected && !isLocalSelected
-    ? registryDueBills.find((bill) => String(bill.id) === String(selected.id))
+    ? (selectedDueDetail?.id === selected.id
+        ? selectedDueDetail
+        : registryDueBills.find((bill) => String(bill.id) === String(selected.id)))
     : undefined;
   const payableLoadingChoices = payableRemainingLoadings(selectedDueBill);
   const selectedLoadingDue = remainingLoadingEntry(selectedDueBill, selectedLoadingRecord?.id);
@@ -3975,20 +3978,27 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   useEffect(() => {
     setDueReady(false);
     setDueLoadings({});
-    if (!(selected && activeMode === "remaining")) return;
+    setSelectedDueDetail(null);
+    if (!(selected && activeMode === "remaining") || isLocalSelected) return;
     let cancelled = false;
     fetch(`/api/erp/purchases/remaining-due?orderNo=${encodeURIComponent(String(selected.purchase_order_no))}&includeSettled=1`, { credentials: "include", cache: "no-store" })
-      .then((res) => res.json())
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok || !body?.ok) throw new Error(body?.error?.message || "Unable to load verified Remaining Payment details.");
+        return body;
+      })
       .then((res) => {
         if (cancelled) return;
         const map: Record<string, { outstanding: number; value: number; advanceAllocated: number }> = {};
-        for (const b of res?.data?.bills ?? []) for (const l of b.loadings ?? []) map[String(l.id)] = { outstanding: Number(l.outstanding || 0), value: Number(l.value || 0), advanceAllocated: Number(l.advanceAllocated || 0) };
+        const bill = (res?.data?.bills ?? []).find((row: any) => String(row.id) === String(selected.id));
+        if (bill) setSelectedDueDetail(bill);
+        for (const l of bill?.loadings ?? []) map[String(l.id)] = { outstanding: Number(l.outstanding || 0), value: Number(l.value || 0), advanceAllocated: Number(l.advanceAllocated || 0) };
         setDueLoadings(map);
       })
-      .catch(() => undefined)
+      .catch((err) => { if (!cancelled) setPaymentError(err instanceof Error ? err.message : String(err)); })
       .finally(() => { if (!cancelled) setDueReady(true); });
     return () => { cancelled = true; };
-  }, [selected, activeMode]);
+  }, [selected?.id, selected?.purchase_order_no, activeMode, isLocalSelected, paymentsTick]);
 
   // Fetch loaded container records for Remaining Payment mode
   useEffect(() => {
