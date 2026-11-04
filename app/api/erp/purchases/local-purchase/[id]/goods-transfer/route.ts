@@ -88,7 +88,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       const readAll = () => Promise.all([
         getJournal(sql, id),
         sql`
-          select w.id, w.warehouse_code, w.warehouse_name, w.country_id, c.name as country_name
+          select w.id, w.warehouse_code, w.warehouse_name, w.warehouse_type, w.full_address, w.contact_number, w.owner_name, w.country_id, c.name as country_name
           from public.warehouses w left join public.countries c on c.id = w.country_id
           where w.deleted_at is null and coalesce(w.is_active, true) = true
             and (w.country_id = ${p.country_id}::uuid or ${session.isSuperAdmin}::boolean)
