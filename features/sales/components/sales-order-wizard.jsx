@@ -315,6 +315,12 @@ const DEFAULT_FORM = {
   lotCostCurrency: "",
   lotPurchaseId: "",
   saleMode: "local", // "local" | "export"
+  // Read-only audit context attached to a sale/export launched from the Local Purchase Goods Transfer Journal.
+  sourcePurchaseId: "",
+  stockHandlingMode: "",
+  stockHandlerName: "",
+  stockTransferDate: "",
+  stockTransferNote: "",
   warehouseId: "",
   warehouseName: "",
   isEndorseSale: false,
@@ -737,8 +743,21 @@ export function SalesOrderWizard({ session }) {
           setSaveMessage(t(lang, "gtj.err_lot_not_available", "This lot has no available quantity to sell."));
           return;
         }
+        // The linked lot is the source of truth; never carry the wizard's sample goods into a real sale.
+        setGoodsEntries([]);
         applySaleLot(lot);
-        setForm((prev) => ({ ...prev, saleMode: mode }));
+        setForm((prev) => ({
+          ...prev,
+          saleMode: mode,
+          sourcePurchaseId: searchParams.get("sourcePurchaseId") || lot.purchaseId || "",
+          stockHandlingMode: searchParams.get("handling") || "",
+          stockHandlerName: searchParams.get("handlerName") || "",
+          stockTransferDate: searchParams.get("transferDate") || "",
+          stockTransferNote: searchParams.get("transferNote") || "",
+          // The export destination and buyer remain deliberately unset until the operator verifies them.
+          customerAccountNo: "", customerAccountName: "", customerId: "", customerName: "",
+          customerCompanyName: "", customerAddress: "",
+        }));
         setIsFormOpen(true);
       })
       .catch(() => {});
@@ -3826,6 +3845,23 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </div>
               </div>
 
+              {form.managedLotId && (
+                <div className="mb-3 rounded-xl border border-indigo-300 bg-indigo-50 px-3 py-2 text-xs text-indigo-950 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-100">
+                  <div className="font-black">{form.saleMode === "export"
+                    ? t(lang, "gtj.wiz_link_export", "EXPORT SALES BILL — Stock selected from Local Purchase")
+                    : t(lang, "gtj.wiz_link_local", "LOCAL SALES BILL — Stock selected from Local Purchase")}</div>
+                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                    <span>{t(lang, "gtj.wiz_from_lot", "Source lot")}: <b>{form.lotRef}</b></span>
+                    <span>{t(lang, "gtj.source_purchase", "Purchase ID")}: <b>{form.sourcePurchaseId || form.lotPurchaseId || "—"}</b></span>
+                    <span>{t(lang, "gtj.sale_handler", "Handling")}: <b>{form.stockHandlingMode || "—"}{form.stockHandlerName ? ` · ${form.stockHandlerName}` : ""}</b></span>
+                    <span>{t(lang, "gtj.transfer_date", "Booking date")}: <b>{form.stockTransferDate || "—"}</b></span>
+                  </div>
+                  {form.stockTransferNote ? <p className="mt-1">{t(lang, "gtj.notes", "Transfer report")}: {form.stockTransferNote}</p> : null}
+                  <p className="mt-1 font-semibold">{form.saleMode === "export"
+                    ? t(lang, "gtj.export_destination_tip", "Select the customer and export destination country, loading port / gate / border, clearing party, shipping mode and payment terms before confirming this sales bill.")
+                    : t(lang, "gtj.local_sale_tip", "Select the customer, sale currency, quantity, price, and payment / delivery conditions. Only available lot quantity can be sold.")}</p>
+                </div>
+              )}
               {/* Step 1: Sales Booking / Bill Info */}
               {activeTab === "booking" && (
                 <SalesBookingStep1
