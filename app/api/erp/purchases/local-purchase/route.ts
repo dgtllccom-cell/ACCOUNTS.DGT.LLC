@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, recordInSessionScope } from "@/lib/api/scope-middleware";
 import { assertBusinessCityBranch } from "@/lib/api/branch-scope-guard";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -103,29 +103,17 @@ export async function GET(request: NextRequest) {
     });
 
     const matchesScope = (row: any) => {
-      if (params.cityBranchId) return String(row.city_branch_id || "") === params.cityBranchId;
-      if (params.countryBranchId) return String(row.country_branch_id || "") === params.countryBranchId;
-      if (params.countryId) return String(row.country_id || "") === params.countryId;
-
-      if (session.isSuperAdmin) return true;
-      const countryId = String(row.country_id || "");
-      const countryBranchId = String(row.country_branch_id || "");
-      const cityBranchId = String(row.city_branch_id || "");
-
-      if (session.cityBranchIds.length > 0) {
-        return (
-          (cityBranchId && session.cityBranchIds.includes(cityBranchId)) ||
-          (!cityBranchId && session.countryIds.includes(countryId)) ||
-          (!cityBranchId && !countryBranchId && session.countryIds.includes(countryId))
-        );
-      }
-      if (session.countryBranchIds.length > 0) {
-        return session.countryBranchIds.includes(countryBranchId);
-      }
-      if (session.countryIds.length > 0) {
-        return session.countryIds.includes(countryId);
-      }
-      return false;
+      // A requested filter narrows the session scope; it never replaces it.
+      // Country admins retain country-wide access even when their session also
+      // contains expanded city assignments. Branch users never inherit country access.
+      if (!recordInSessionScope(session, row)) return false;
+      const ownEntriesOnly = !session.isSuperAdmin && session.roles.length > 0 &&
+        session.roles.every(role => role === "staff_user");
+      if (ownEntriesOnly && row.created_by !== session.userId) return false;
+      if (params.countryId && String(row.country_id || "") !== params.countryId) return false;
+      if (params.countryBranchId && String(row.country_branch_id || "") !== params.countryBranchId) return false;
+      if (params.cityBranchId && String(row.city_branch_id || "") !== params.cityBranchId) return false;
+      return true;
     };
 
     const recordsViaPg = await withLocalPg(async (sql) => {
@@ -134,7 +122,7 @@ export async function GET(request: NextRequest) {
         rows = await sql`
           select lp.*,
                  c.name as country_name,
-                 c.iso_code as country_code,
+                 c.iso3 as country_code,
                  cb.name as branch_name,
                  cb.code as branch_code,
                  city.name as city_branch_name,
@@ -225,7 +213,7 @@ export async function GET(request: NextRequest) {
         rows = await sql`
           select lp.*,
                  c.name as country_name,
-                 c.iso_code as country_code,
+                 c.iso3 as country_code,
                  cb.name as branch_name,
                  cb.code as branch_code,
                  city.name as city_branch_name,
@@ -332,7 +320,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         ok: true,
         data: {
-          purchases: (fallbackRecords ?? []).map((row: any) => {
+          purchases: (fallbackRecords ?? []).filter(matchesScope).map((row: any) => {
             const postingState = deriveLocalPurchasePostingState(row);
             return {
               ...row,

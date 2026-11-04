@@ -375,6 +375,7 @@ export function LocalPurchaseView({
   const [goodsList, setGoodsList] = useState<any[]>(initialGoodsList);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [historyLoadError, setHistoryLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState("");
@@ -484,6 +485,7 @@ export function LocalPurchaseView({
   // could otherwise fire two POSTs before `saving` re-renders the button disabled).
   const submitLockRef = useRef(false);
   const globalScopeInitRef = useRef(false);
+  const historyRequestRef = useRef(0);
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
   const [activeStatusDropdownId, setActiveStatusDropdownId] = useState<string | null>(null);
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{ id: string; top: number; bottom: number; right: number } | null>(null);
@@ -940,24 +942,41 @@ export function LocalPurchaseView({
       }
       return;
     }
+    // Registry starts with every server-authorized bill. Form defaults must
+    // not silently turn a country-wide report into one branch/city report.
+    if (!isFormOpen || selectedBranchId) return;
     if (countryBranches.length > 0) {
       const userBranch = session.countryBranchIds?.[0] || session.country_branch_ids?.[0];
-      const match = countryBranches.find(b => b.id === userBranch) || countryBranches[0];
+      const userCityBranch = session.cityBranchIds?.[0] || session.city_branch_ids?.[0];
+      const assignedCity = userCityBranch
+        ? cityBranches.find(c => String(c.id) === String(userCityBranch))
+        : null;
+      const assignedCountryBranchId = assignedCity?.countryBranchId || assignedCity?.country_branch_id;
+      const match = countryBranches.find(b => String(b.id) === String(userBranch || assignedCountryBranchId || "")) ||
+        (session.countryIds?.length === 1
+          ? countryBranches.find(b => String(b.countryId || b.country_id) === String(session.countryIds[0]))
+          : null);
+      // Never silently default to the first global branch: it can hide all of
+      // the current user's purchases behind an unrelated branch filter.
       if (match) {
         setSelectedCountryId(match.countryId || match.country_id || "");
         setSelectedBranchId(match.id);
+        if (assignedCity && String(assignedCountryBranchId) === String(match.id)) {
+          setSelectedCityBranchId(String(assignedCity.id));
+        }
       }
     }
-  }, [countryBranches, session, isGlobalUser]);
+  }, [countryBranches, cityBranches, session, isGlobalUser, isFormOpen, selectedBranchId]);
 
   useEffect(() => {
-    if (isGlobalUser && !selectedCountryId && !selectedBranchId) return;
+    if (!isFormOpen || (isGlobalUser && !selectedCountryId && !selectedBranchId)) return;
     if (filteredCountryBranches.length > 0 && !filteredCountryBranches.some(b => b.id === selectedBranchId)) {
       setSelectedBranchId(filteredCountryBranches[0].id);
     }
-  }, [filteredCountryBranches, selectedBranchId, selectedCountryId, isGlobalUser]);
+  }, [filteredCountryBranches, selectedBranchId, selectedCountryId, isGlobalUser, isFormOpen]);
 
   useEffect(() => {
+    if (!isFormOpen) return;
     if (isGlobalUser && !selectedBranchId) {
       setSelectedCityBranchId("");
       return;
@@ -983,7 +1002,7 @@ export function LocalPurchaseView({
     } else {
       setSelectedCityBranchId("");
     }
-  }, [activeCityBranches, session, selectedBranchId, isGlobalUser, selectedCityBranchId]);
+  }, [activeCityBranches, session, selectedBranchId, isGlobalUser, selectedCityBranchId, isFormOpen]);
 
   // Origin Country
   const selectedOriginCountryName = useMemo(() => {
@@ -1099,7 +1118,9 @@ export function LocalPurchaseView({
 
   // Load registry logs
   const loadHistory = async () => {
+    const requestId = ++historyRequestRef.current;
     setLoadingHistory(true);
+    setHistoryLoadError(null);
     try {
       let query = "/api/erp/purchases/local-purchase";
       const params = new URLSearchParams();
@@ -1111,15 +1132,19 @@ export function LocalPurchaseView({
       }
       if (params.toString()) query += `?${params.toString()}`;
 
-      const res = await fetch(query);
+      const res = await fetch(query, { cache: "no-store" });
       const payload = await res.json();
-      if (payload.ok && payload.data?.purchases) {
-        setPurchases(payload.data.purchases);
+      if (!res.ok || !payload.ok || !Array.isArray(payload.data?.purchases)) {
+        throw new Error(payload.error?.message || payload.message || `Local Purchase API failed (${res.status})`);
       }
+      if (requestId === historyRequestRef.current) setPurchases(payload.data.purchases);
     } catch (err) {
+      if (requestId !== historyRequestRef.current) return;
       console.error("Failed to load local purchases:", err);
+      setHistoryLoadError(err instanceof Error ? err.message : t(lang, "purchase.pmw_err_load_failed", "Purchase records could not be loaded."));
+      setPurchases([]);
     } finally {
-      setLoadingHistory(false);
+      if (requestId === historyRequestRef.current) setLoadingHistory(false);
     }
   };
 
@@ -4590,6 +4615,12 @@ export function LocalPurchaseView({
     ) : (
         /* Dual Mode Table Views: 1. Country / Branch View vs 2. Super Admin USD View */
         <div className="space-y-6 w-full animate-in fade-in duration-200">
+          {historyLoadError && (
+            <div role="alert" className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+              {t(lang, "purchase.pmw_err_load_failed", "Purchase records could not be loaded.")} ({historyLoadError})
+              <button type="button" className="ms-3 font-bold underline" onClick={() => void loadHistory()}>{t(lang, "dash.cpd_retry", "Retry")}</button>
+            </div>
+          )}
           {isSuperAdminView ? (
             <div className="space-y-6">
 
