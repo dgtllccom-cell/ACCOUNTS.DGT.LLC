@@ -21,6 +21,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import {
   ArrowRightLeft,
   Check,
@@ -765,9 +766,9 @@ export function PurchaseTransitLaneView({
         />
       )}
 
-      {/* Load Details Drawer */}
+      {/* Centered Load Details */}
       {detail && (
-        <DetailDrawer
+        <DetailDialog
           T={T}
           s={s}
           stLabel={stLabel}
@@ -943,7 +944,7 @@ function CenterTransferConfirmationModal({
 
   const isMod = isModuleDestination(type);
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm overflow-y-auto"
       role="dialog"
@@ -1247,7 +1248,8 @@ function CenterTransferConfirmationModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -1277,7 +1279,7 @@ function TransferHistoryModal({
       .finally(() => setLoading(false));
   }, [load.id]);
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm overflow-y-auto"
       role="dialog"
@@ -1386,13 +1388,14 @@ function TransferHistoryModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
-// ───────────────────────────────── Detail Drawer ─────────────────────────────────
+// ───────────────────────────────── Centered Details Dialog ─────────────────────────────────
 
-function DetailDrawer({
+function DetailDialog({
   T,
   s,
   stLabel,
@@ -1529,7 +1532,7 @@ function DetailDrawer({
   const kv = (k: string, v: React.ReactNode) => (
     <div>
       <dt className="text-[11px] font-bold uppercase text-slate-400">{k}</dt>
-      <dd className="font-semibold" dir="auto">
+      <dd className="break-words font-semibold" dir="auto">
         {v ?? "—"}
       </dd>
     </div>
@@ -1544,18 +1547,19 @@ function DetailDrawer({
   };
   const exTypes = ["transport", "port", "customs", "clearing", "detention", "handling", "other"];
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[80] flex justify-end bg-slate-900/40"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm sm:p-6"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="lane-detail-title"
       dir={s.dir}
       data-testid="lane-detail"
     >
-      <div className="h-full w-full max-w-xl overflow-y-auto bg-white p-4 shadow-2xl dark:bg-slate-900">
-        <div className="mb-3 flex items-start justify-between gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
-          <div>
-            <h3 className="text-sm font-black">
+      <div className="flex max-h-[calc(100dvh_-_1.5rem)] w-full max-w-[1200px] min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:max-h-[calc(100dvh_-_3rem)]">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-800 sm:px-6 sm:py-4">
+          <div className="min-w-0">
+            <h3 id="lane-detail-title" className="break-words text-base font-black sm:text-lg">
               {l.purchase_ref_no} · <span dir="ltr">{l.container_number || l.bl_number || "—"}</span>
             </h3>
             <span
@@ -1567,371 +1571,374 @@ function DetailDrawer({
               {stLabel(l.lane_status)}
             </span>
           </div>
-          <button type="button" onClick={onClose} aria-label={T("close", "Close")}>
+          <button type="button" onClick={onClose} aria-label={T("close", "Close")} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:border-slate-700 dark:hover:bg-slate-800">
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-          {kv(T("col_supplier", "Supplier"), l.supplier_name)}
-          {kv(T("col_goods", "Goods"), l.goods_name)}
-          {kv(T("col_bl", "BL no."), <span dir="ltr">{l.bl_number}</span>)}
-          {kv(T("col_container", "Container"), <span dir="ltr">{l.container_number}</span>)}
-          {kv(
-            T("col_qty", "Loaded qty"),
-            `${Number(l.loaded_quantity || 0).toLocaleString()} ${l.unit || ""}`
-          )}
-          {kv(
-            T("col_remaining_qty", "Remaining qty"),
-            `${Number(l.remaining_quantity || 0).toLocaleString()} ${l.unit || ""}`
-          )}
-          {kv(
-            T("lane_stock_one", "Quantity in lane"),
-            Number(l.lane_stock_qty || 0).toLocaleString()
-          )}
-          {kv(
-            T("col_weight", "Gross / Net"),
-            `${l.gross_weight ?? "—"} / ${l.net_weight ?? "—"}`
-          )}
-          {kv(
-            T("route", "Origin → Destination"),
-            `${l.origin_text || "—"} → ${l.destination_text || "—"}`
-          )}
-          {kv(T("col_location", "Location"), l.current_location)}
-          {kv(T("expected_location", "Expected location"), l.expected_location)}
-          {kv(T("col_assigned", "Assigned to"), ownerLabel(l, T))}
-          {kv(T("responsibility", "Responsibility"), l.responsibility)}
-          {l.disposition &&
-            kv(T("final_disposition", "Final disposition"), dispLabel[l.disposition] ?? l.disposition)}
-        </dl>
-
-        {!detail.canAct && (
-          <p
-            className="mt-3 rounded-lg bg-slate-100 p-2 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-            data-testid="readonly-note"
-          >
-            {T("read_only", "You can view this load but you are not its current holder, so you cannot change it.")}
-          </p>
-        )}
-
-        {detail.canAct && l.lane_status !== "completed" && (
-          <div className="mt-4 flex flex-wrap gap-1.5" data-testid="detail-actions">
-            {l.lane_status === "transfer_pending" && (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void onAct(l.id, { action: "accept" }, T("done_accepted", "Transfer accepted."))}
-                className={`${btnCls} bg-emerald-600 text-white`}
-                data-testid="d-accept"
-              >
-                <Check className="h-3.5 w-3.5" />
-                {T("act_accept", "Accept transfer")}
-              </button>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
+          <dl className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm min-[400px]:grid-cols-2 lg:grid-cols-4 dark:border-slate-700 dark:bg-slate-800/40">
+            {kv(T("col_supplier", "Supplier"), l.supplier_name)}
+            {kv(T("col_goods", "Goods"), l.goods_name)}
+            {kv(T("col_bl", "BL no."), <span dir="ltr">{l.bl_number}</span>)}
+            {kv(T("col_container", "Container"), <span dir="ltr">{l.container_number}</span>)}
+            {kv(
+              T("col_qty", "Loaded qty"),
+              `${Number(l.loaded_quantity || 0).toLocaleString()} ${l.unit || ""}`
             )}
-            {allowedNextStatuses(l.lane_status).map((nx) => (
-              <button
-                key={nx}
-                type="button"
-                disabled={busy}
-                onClick={() => void onAct(l.id, { action: "status", to: nx }, T("done_status", "Status updated."))}
-                className={`${btnCls} bg-blue-600 text-white`}
-                data-testid={`d-to-${nx}`}
-              >
-                {T("act_mark", "Mark")} {stLabel(nx)}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={onTransfer}
-              className={`${btnCls} border border-indigo-300 text-indigo-700`}
-              data-testid="d-transfer"
-            >
-              <ArrowRightLeft className="h-3.5 w-3.5" />
-              {T("act_transfer_load", "Transfer Load")}
-            </button>
-          </div>
-        )}
+            {kv(
+              T("col_remaining_qty", "Remaining qty"),
+              `${Number(l.remaining_quantity || 0).toLocaleString()} ${l.unit || ""}`
+            )}
+            {kv(
+              T("lane_stock_one", "Quantity in lane"),
+              Number(l.lane_stock_qty || 0).toLocaleString()
+            )}
+            {kv(
+              T("col_weight", "Gross / Net"),
+              `${l.gross_weight ?? "—"} / ${l.net_weight ?? "—"}`
+            )}
+            {kv(
+              T("route", "Origin → Destination"),
+              `${l.origin_text || "—"} → ${l.destination_text || "—"}`
+            )}
+            {kv(T("col_location", "Location"), l.current_location)}
+            {kv(T("expected_location", "Expected location"), l.expected_location)}
+            {kv(T("col_assigned", "Assigned to"), ownerLabel(l, T))}
+            {kv(T("responsibility", "Responsibility"), l.responsibility)}
+            {l.disposition &&
+              kv(T("final_disposition", "Final disposition"), dispLabel[l.disposition] ?? l.disposition)}
+          </dl>
 
-        {canDispose && (
-          <div
-            className="mt-4 rounded-xl border border-rose-200 bg-rose-50/50 p-3 dark:border-rose-900 dark:bg-rose-950/20"
-            data-testid="disposition-panel"
-          >
-            <p className="mb-2 flex items-center gap-1.5 text-xs font-black">
-              <PackageCheck className="h-4 w-4 text-rose-600" />
-              {T("disp_title", "Customs cleared — what happens to this load?")}
+          {!detail.canAct && (
+            <p
+              className="mt-3 rounded-lg bg-slate-100 p-2 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+              data-testid="readonly-note"
+            >
+              {T("read_only", "You can view this load but you are not its current holder, so you cannot change it.")}
             </p>
-            <div className="space-y-1.5">
-              {(["warehouse", "re_export", "sale_delivery", "continue_transit", "hold"] as Disposition[]).map(
-                (d) => (
-                  <label key={d} className="flex items-center gap-2 text-xs font-semibold">
-                    <input
-                      type="radio"
-                      name="disp"
-                      checked={kind === d}
-                      onChange={() => setKind(d)}
-                      data-testid={`disp-${d}`}
-                    />
-                    {dispLabel[d]}
-                  </label>
-                )
-              )}
-            </div>
-            {kind === "warehouse" && (
-              <div className="mt-2 space-y-2">
-                <select
-                  value={warehouseId}
-                  onChange={(e) => setWarehouseId(e.target.value)}
-                  className={inputCls}
-                  data-testid="disp-warehouse-select"
+          )}
+
+          {detail.canAct && l.lane_status !== "completed" && (
+            <div className="mt-4 flex flex-wrap gap-1.5" data-testid="detail-actions">
+              {l.lane_status === "transfer_pending" && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void onAct(l.id, { action: "accept" }, T("done_accepted", "Transfer accepted."))}
+                  className={`${btnCls} bg-emerald-600 text-white`}
+                  data-testid="d-accept"
                 >
-                  <option value="">{T("pick_warehouse", "— Select warehouse —")}</option>
-                  {warehouses.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.name}
-                      {w.code ? ` (${w.code})` : ""}
-                    </option>
-                  ))}
-                </select>
-                {needGoods && (
+                  <Check className="h-3.5 w-3.5" />
+                  {T("act_accept", "Accept transfer")}
+                </button>
+              )}
+              {allowedNextStatuses(l.lane_status).map((nx) => (
+                <button
+                  key={nx}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void onAct(l.id, { action: "status", to: nx }, T("done_status", "Status updated."))}
+                  className={`${btnCls} bg-blue-600 text-white`}
+                  data-testid={`d-to-${nx}`}
+                >
+                  {T("act_mark", "Mark")} {stLabel(nx)}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={onTransfer}
+                className={`${btnCls} border border-indigo-300 text-indigo-700`}
+                data-testid="d-transfer"
+              >
+                <ArrowRightLeft className="h-3.5 w-3.5" />
+                {T("act_transfer_load", "Transfer Load")}
+              </button>
+            </div>
+          )}
+
+          {canDispose && (
+            <div
+              className="mt-4 rounded-xl border border-rose-200 bg-rose-50/50 p-3 dark:border-rose-900 dark:bg-rose-950/20"
+              data-testid="disposition-panel"
+            >
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-black">
+                <PackageCheck className="h-4 w-4 text-rose-600" />
+                {T("disp_title", "Customs cleared — what happens to this load?")}
+              </p>
+              <div className="space-y-1.5">
+                {(["warehouse", "re_export", "sale_delivery", "continue_transit", "hold"] as Disposition[]).map(
+                  (d) => (
+                    <label key={d} className="flex items-center gap-2 text-xs font-semibold">
+                      <input
+                        type="radio"
+                        name="disp"
+                        checked={kind === d}
+                        onChange={() => setKind(d)}
+                        data-testid={`disp-${d}`}
+                      />
+                      {dispLabel[d]}
+                    </label>
+                  )
+                )}
+              </div>
+              {kind === "warehouse" && (
+                <div className="mt-2 space-y-2">
                   <select
-                    value={goodsId}
-                    onChange={(e) => setGoodsId(e.target.value)}
+                    value={warehouseId}
+                    onChange={(e) => setWarehouseId(e.target.value)}
                     className={inputCls}
-                    data-testid="disp-goods-select"
+                    data-testid="disp-warehouse-select"
                   >
-                    <option value="">{T("pick_goods", "— Select the goods item —")}</option>
-                    {goods.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.goods_name ?? g.name}
+                    <option value="">{T("pick_warehouse", "— Select warehouse —")}</option>
+                    {warehouses.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name}
+                        {w.code ? ` (${w.code})` : ""}
                       </option>
                     ))}
                   </select>
-                )}
-                <p className="text-[11px] text-slate-500">
+                  {needGoods && (
+                    <select
+                      value={goodsId}
+                      onChange={(e) => setGoodsId(e.target.value)}
+                      className={inputCls}
+                      data-testid="disp-goods-select"
+                    >
+                      <option value="">{T("pick_goods", "— Select the goods item —")}</option>
+                      {goods.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.goods_name ?? g.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <p className="text-[11px] text-slate-500">
+                    {T(
+                      "disp_warehouse_hint",
+                      "Lane stock is reduced and the selected warehouse stock is increased — once."
+                    )}
+                  </p>
+                </div>
+              )}
+              {kind === "continue_transit" && (
+                <input
+                  value={nextDestination}
+                  onChange={(e) => setNextDestination(e.target.value)}
+                  placeholder={T("next_destination", "Next destination of the new route leg")}
+                  className={`${inputCls} mt-2`}
+                  data-testid="disp-next"
+                  dir="auto"
+                />
+              )}
+              {kind === "sale_delivery" && (
+                <p className="mt-2 text-[11px] text-slate-500">
                   {T(
-                    "disp_warehouse_hint",
-                    "Lane stock is reduced and the selected warehouse stock is increased — once."
+                    "disp_sale_hint",
+                    "The load leaves the lane. No revenue is created here — the sale completes in Sales / Delivery."
                   )}
                 </p>
-              </div>
-            )}
-            {kind === "continue_transit" && (
+              )}
               <input
-                value={nextDestination}
-                onChange={(e) => setNextDestination(e.target.value)}
-                placeholder={T("next_destination", "Next destination of the new route leg")}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder={T("note", "Note")}
                 className={`${inputCls} mt-2`}
-                data-testid="disp-next"
-                dir="auto"
-              />
-            )}
-            {kind === "sale_delivery" && (
-              <p className="mt-2 text-[11px] text-slate-500">
-                {T(
-                  "disp_sale_hint",
-                  "The load leaves the lane. No revenue is created here — the sale completes in Sales / Delivery."
-                )}
-              </p>
-            )}
-            <input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder={T("note", "Note")}
-              className={`${inputCls} mt-2`}
-            />
-            <button
-              type="button"
-              disabled={local || busy}
-              onClick={() => void dispose()}
-              className={`${btnCls} mt-2 bg-rose-600 text-white hover:bg-rose-700`}
-              data-testid="disp-confirm"
-            >
-              {local ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-              {T("disp_confirm", "Confirm final disposition")}
-            </button>
-          </div>
-        )}
-
-        {/* Expenses */}
-        <div className="mt-5" data-testid="expenses">
-          <p className="mb-2 flex items-center gap-1.5 text-xs font-black">
-            <ClipboardList className="h-4 w-4 text-blue-600" />
-            {T("expenses", "Expenses on this load")}
-          </p>
-          <p className="mb-2 text-[11px] text-slate-500">
-            {T(
-              "expenses_hint",
-              "Linked to Purchase → Loading → BL → Container → Lane → Agent/Branch. An internal branch is settled between branches (not a sale); an agent's payable bill line is created only after you review and confirm."
-            )}
-          </p>
-          {detail.expenses.length === 0 ? (
-            <p className="text-[11px] text-slate-400">{T("no_expenses", "No expenses yet.")}</p>
-          ) : (
-            <ul className="space-y-1.5">
-              {detail.expenses.map((e) => (
-                <li
-                  key={e.id}
-                  className="rounded-lg border border-slate-200 p-2 text-[11px] dark:border-slate-700"
-                  data-testid={`expense-${e.status}`}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-1">
-                    <span className="font-bold">
-                      {T("ex_" + e.expense_type, e.expense_type)} ·{" "}
-                      <span dir="ltr">
-                        {Number(e.amount).toLocaleString()} {e.currency}
-                      </span>
-                    </span>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">
-                      {T("exs_" + e.status, e.status)}
-                    </span>
-                  </div>
-                  <div className="text-slate-500" dir="auto">
-                    {e.payee_name || e.payee_type} ·{" "}
-                    {e.settlement === "inter_branch"
-                      ? T("settle_inter", "inter-branch settlement")
-                      : e.settlement === "agent_payable"
-                      ? T("settle_agent", "agent payable")
-                      : T("settle_none", "no settlement")}
-                    {e.bill_expense_line_id ? ` · ${T("bill_line", "bill line created (unposted)")}` : ""}
-                  </div>
-                  {detail.canAct && (
-                    <div className="mt-1 flex gap-1.5">
-                      {e.status === "draft" && (
-                        <button
-                          type="button"
-                          disabled={local}
-                          onClick={() => void advance(e.id, "review")}
-                          className={`${btnCls} border border-slate-300`}
-                          data-testid="ex-review"
-                        >
-                          {T("ex_review", "Review")}
-                        </button>
-                      )}
-                      {e.status === "reviewed" && (
-                        <button
-                          type="button"
-                          disabled={local}
-                          onClick={() => void advance(e.id, "confirm")}
-                          className={`${btnCls} bg-emerald-600 text-white`}
-                          data-testid="ex-confirm"
-                        >
-                          {T("ex_confirm", "Confirm")}
-                        </button>
-                      )}
-                      {(e.status === "draft" || e.status === "reviewed") && (
-                        <button
-                          type="button"
-                          disabled={local}
-                          onClick={() => void advance(e.id, "cancel")}
-                          className={`${btnCls} border border-rose-300 text-rose-700`}
-                        >
-                          {T("cancel", "Cancel")}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-          {detail.canAct && l.lane_status !== "completed" && (
-            <div
-              className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-dashed border-slate-300 p-2 dark:border-slate-700"
-              data-testid="expense-form"
-            >
-              <select
-                value={exType}
-                onChange={(e) => setExType(e.target.value)}
-                className={inputCls}
-                data-testid="ex-type"
-              >
-                {exTypes.map((t) => (
-                  <option key={t} value={t}>
-                    {T("ex_" + t, t)}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={exPayee}
-                onChange={(e) => setExPayee(e.target.value)}
-                className={inputCls}
-                data-testid="ex-payee"
-              >
-                <option value="external_agent">
-                  {T("tt_external_agent", "External clearing agent / logistics partner")}
-                </option>
-                <option value="internal_agent">{T("tt_internal_agent", "Internal clearing agent")}</option>
-                <option value="internal_branch">
-                  {T("payee_branch", "Internal branch (inter-branch settlement)")}
-                </option>
-                <option value="other">{T("payee_other", "Other")}</option>
-              </select>
-              <input
-                value={exAmount}
-                onChange={(e) => setExAmount(e.target.value)}
-                inputMode="decimal"
-                placeholder={T("amount", "Amount")}
-                className={inputCls}
-                data-testid="ex-amount"
-                dir="ltr"
-              />
-              <input
-                value={exCur}
-                onChange={(e) => setExCur(e.target.value.toUpperCase().slice(0, 3))}
-                placeholder="USD"
-                className={inputCls}
-                data-testid="ex-cur"
-                dir="ltr"
-              />
-              <input
-                value={exName}
-                onChange={(e) => setExName(e.target.value)}
-                placeholder={T("payee_name", "Payee name")}
-                className={inputCls}
-                data-testid="ex-name"
-                dir="auto"
-              />
-              <input
-                value={exDesc}
-                onChange={(e) => setExDesc(e.target.value)}
-                placeholder={T("description", "Description")}
-                className={inputCls}
-                dir="auto"
               />
               <button
                 type="button"
-                disabled={local || !exAmount}
-                onClick={() => void addExpense()}
-                className={`${btnCls} col-span-2 justify-center bg-blue-600 text-white`}
-                data-testid="ex-add"
+                disabled={local || busy}
+                onClick={() => void dispose()}
+                className={`${btnCls} mt-2 bg-rose-600 text-white hover:bg-rose-700`}
+                data-testid="disp-confirm"
               >
-                {T("add_expense", "Add expense (draft)")}
+                {local ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                {T("disp_confirm", "Confirm final disposition")}
               </button>
             </div>
           )}
-        </div>
 
-        {/* Audit History */}
-        <div className="mt-5" data-testid="history">
-          <p className="mb-2 text-xs font-black">{T("history", "Audit history")}</p>
-          <ol className="space-y-1.5 border-s border-slate-200 ps-3 dark:border-slate-700">
-            {detail.events.map((ev) => (
-              <li key={ev.id} className="text-[11px]" data-testid="history-item">
-                <b>{T("ev_" + ev.event_type, ev.event_type)}</b>
-                {ev.from_status || ev.to_status
-                  ? ` · ${ev.from_status ? stLabel(ev.from_status) : "—"} → ${
-                      ev.to_status ? stLabel(ev.to_status) : "—"
-                    }`
-                  : ""}
-                <div className="text-slate-400">
-                  <span dir="ltr">{new Date(ev.created_at).toLocaleString()}</span> · {ev.actor_name || "—"}
-                </div>
-              </li>
-            ))}
-          </ol>
+          {/* Expenses */}
+          <div className="mt-5" data-testid="expenses">
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-black">
+              <ClipboardList className="h-4 w-4 text-blue-600" />
+              {T("expenses", "Expenses on this load")}
+            </p>
+            <p className="mb-2 text-[11px] text-slate-500">
+              {T(
+                "expenses_hint",
+                "Linked to Purchase → Loading → BL → Container → Lane → Agent/Branch. An internal branch is settled between branches (not a sale); an agent's payable bill line is created only after you review and confirm."
+              )}
+            </p>
+            {detail.expenses.length === 0 ? (
+              <p className="text-[11px] text-slate-400">{T("no_expenses", "No expenses yet.")}</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {detail.expenses.map((e) => (
+                  <li
+                    key={e.id}
+                    className="rounded-lg border border-slate-200 p-2 text-[11px] dark:border-slate-700"
+                    data-testid={`expense-${e.status}`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-1">
+                      <span className="font-bold">
+                        {T("ex_" + e.expense_type, e.expense_type)} ·{" "}
+                        <span dir="ltr">
+                          {Number(e.amount).toLocaleString()} {e.currency}
+                        </span>
+                      </span>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">
+                        {T("exs_" + e.status, e.status)}
+                      </span>
+                    </div>
+                    <div className="text-slate-500" dir="auto">
+                      {e.payee_name || e.payee_type} ·{" "}
+                      {e.settlement === "inter_branch"
+                        ? T("settle_inter", "inter-branch settlement")
+                        : e.settlement === "agent_payable"
+                        ? T("settle_agent", "agent payable")
+                        : T("settle_none", "no settlement")}
+                      {e.bill_expense_line_id ? ` · ${T("bill_line", "bill line created (unposted)")}` : ""}
+                    </div>
+                    {detail.canAct && (
+                      <div className="mt-1 flex gap-1.5">
+                        {e.status === "draft" && (
+                          <button
+                            type="button"
+                            disabled={local}
+                            onClick={() => void advance(e.id, "review")}
+                            className={`${btnCls} border border-slate-300`}
+                            data-testid="ex-review"
+                          >
+                            {T("ex_review", "Review")}
+                          </button>
+                        )}
+                        {e.status === "reviewed" && (
+                          <button
+                            type="button"
+                            disabled={local}
+                            onClick={() => void advance(e.id, "confirm")}
+                            className={`${btnCls} bg-emerald-600 text-white`}
+                            data-testid="ex-confirm"
+                          >
+                            {T("ex_confirm", "Confirm")}
+                          </button>
+                        )}
+                        {(e.status === "draft" || e.status === "reviewed") && (
+                          <button
+                            type="button"
+                            disabled={local}
+                            onClick={() => void advance(e.id, "cancel")}
+                            className={`${btnCls} border border-rose-300 text-rose-700`}
+                          >
+                            {T("cancel", "Cancel")}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {detail.canAct && l.lane_status !== "completed" && (
+              <div
+                className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-dashed border-slate-300 p-2 dark:border-slate-700"
+                data-testid="expense-form"
+              >
+                <select
+                  value={exType}
+                  onChange={(e) => setExType(e.target.value)}
+                  className={inputCls}
+                  data-testid="ex-type"
+                >
+                  {exTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {T("ex_" + t, t)}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={exPayee}
+                  onChange={(e) => setExPayee(e.target.value)}
+                  className={inputCls}
+                  data-testid="ex-payee"
+                >
+                  <option value="external_agent">
+                    {T("tt_external_agent", "External clearing agent / logistics partner")}
+                  </option>
+                  <option value="internal_agent">{T("tt_internal_agent", "Internal clearing agent")}</option>
+                  <option value="internal_branch">
+                    {T("payee_branch", "Internal branch (inter-branch settlement)")}
+                  </option>
+                  <option value="other">{T("payee_other", "Other")}</option>
+                </select>
+                <input
+                  value={exAmount}
+                  onChange={(e) => setExAmount(e.target.value)}
+                  inputMode="decimal"
+                  placeholder={T("amount", "Amount")}
+                  className={inputCls}
+                  data-testid="ex-amount"
+                  dir="ltr"
+                />
+                <input
+                  value={exCur}
+                  onChange={(e) => setExCur(e.target.value.toUpperCase().slice(0, 3))}
+                  placeholder="USD"
+                  className={inputCls}
+                  data-testid="ex-cur"
+                  dir="ltr"
+                />
+                <input
+                  value={exName}
+                  onChange={(e) => setExName(e.target.value)}
+                  placeholder={T("payee_name", "Payee name")}
+                  className={inputCls}
+                  data-testid="ex-name"
+                  dir="auto"
+                />
+                <input
+                  value={exDesc}
+                  onChange={(e) => setExDesc(e.target.value)}
+                  placeholder={T("description", "Description")}
+                  className={inputCls}
+                  dir="auto"
+                />
+                <button
+                  type="button"
+                  disabled={local || !exAmount}
+                  onClick={() => void addExpense()}
+                  className={`${btnCls} col-span-2 justify-center bg-blue-600 text-white`}
+                  data-testid="ex-add"
+                >
+                  {T("add_expense", "Add expense (draft)")}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Audit History */}
+          <div className="mt-5" data-testid="history">
+            <p className="mb-2 text-xs font-black">{T("history", "Audit history")}</p>
+            <ol className="space-y-1.5 border-s border-slate-200 ps-3 dark:border-slate-700">
+              {detail.events.map((ev) => (
+                <li key={ev.id} className="text-[11px]" data-testid="history-item">
+                  <b>{T("ev_" + ev.event_type, ev.event_type)}</b>
+                  {ev.from_status || ev.to_status
+                    ? ` · ${ev.from_status ? stLabel(ev.from_status) : "—"} → ${
+                        ev.to_status ? stLabel(ev.to_status) : "—"
+                      }`
+                    : ""}
+                  <div className="text-slate-400">
+                    <span dir="ltr">{new Date(ev.created_at).toLocaleString()}</span> · {ev.actor_name || "—"}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
