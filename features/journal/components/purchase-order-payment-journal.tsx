@@ -1,6 +1,7 @@
 "use client";
 
 import { SourceFilteredTable } from "./source-filtered-table";
+import { payableRemainingLoadings, remainingLoadingEntry, type RemainingDueBill } from "@/lib/journal/remaining-loading-entry";
  
 import { pl } from "@/lib/reports/print-label";
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
@@ -2824,6 +2825,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [selectedId, setSelectedId] = useState("");
   const [modalTab, setModalTab] = useState<"overview" | "goods" | "payments" | "transport">("overview");
   const selectOrder = (id: string, initialTab: "overview" | "goods" | "payments" | "transport" = "payments") => {
+    // The next bill must never inherit the previous bill's selected container.
+    setSelectedLoadingRecord(null);
     setSelectedOrderPayments([]);
     setPaymentError("");
     setSelectedId(id);
@@ -3086,20 +3089,23 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [loadingViewingRowPayments, setLoadingViewingRowPayments] = useState(false);
   const [showModalHistory, setShowModalHistory] = useState(false);
   const [remainingLoadingRecords, setRemainingLoadingRecords] = useState<any[]>([]);
-  const [registryDueBills, setRegistryDueBills] = useState<any[]>([]);
+  const [registryDueBills, setRegistryDueBills] = useState<RemainingDueBill[]>([]);
+  const [registryDueReady, setRegistryDueReady] = useState(false);
   const [registryLoadingRecords, setRegistryLoadingRecords] = useState<any[]>([]);
   useEffect(() => {
     if (!paymentPage || activeMode !== "remaining") return;
     let cancelled = false;
     setRegistryLoadingRecords([]);
     setRegistryDueBills([]);
+    setRegistryDueReady(false);
     fetch(`/api/erp/purchases/remaining-due?includeSettled=1&lang=${currentLanguage}`, { credentials: "include", cache: "no-store" })
       .then(async response => {
         const body = await response.json();
         if (!response.ok || !body?.ok || !Array.isArray(body.data?.bills)) throw new Error(body?.error?.message || tGlobal(currentLanguage, "purchase.pmw_err_load_failed", "Purchase records could not be loaded."));
         if (!cancelled) setRegistryDueBills(body.data.bills);
       })
-      .catch(err => { if (!cancelled) setError(err instanceof Error ? err.message : String(err)); });
+      .catch(err => { if (!cancelled) setError(err instanceof Error ? err.message : String(err)); })
+      .finally(() => { if (!cancelled) setRegistryDueReady(true); });
     fetch(`/api/erp/purchases/loading-records?limit=10000&lang=${currentLanguage}`, { credentials: "include", cache: "no-store" })
       .then(async response => {
         const body = await response.json();
@@ -3764,6 +3770,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [selectedLoadingRecord, setSelectedLoadingRecord] = useState<any>(null);
   const [loadingRecords, setLoadingRecords] = useState<any[]>([]);
   const [loadingLoadingRecords, setLoadingLoadingRecords] = useState(false);
+  const isLocalSelected = Boolean(selected && (selected as any).order_type === "local_purchase");
+  const selectedDueBill = selected && !isLocalSelected
+    ? registryDueBills.find((bill) => String(bill.id) === String(selected.id))
+    : undefined;
+  const payableLoadingChoices = payableRemainingLoadings(selectedDueBill);
+  const selectedLoadingDue = remainingLoadingEntry(selectedDueBill, selectedLoadingRecord?.id);
 
   // Compute PO metrics at the component level to avoid ReferenceErrors in summary sidebar
   const orderDetails = useMemo(() => {
@@ -3789,6 +3801,32 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
     const form = selected.form_data?.form || {};
     const goods = selected.form_data?.goodsEntries || [];
+    // A Remaining Payment opened from the journal is payable for a SAVED loading,
+    // not the whole booking. Read the values from the API used by the posting gate.
+    if (activeMode === "remaining" && !isLocalSelected) {
+      const batch = selectedLoadingDue;
+      const batchValue = batch?.value ?? 0;
+      const batchPaid = (batch?.advanceAllocated ?? 0) + (batch?.remainingPaid ?? 0);
+      const outstanding = batch?.outstanding ?? 0;
+      const rate = batch?.exchangeRate || Number(selected.exchange_rate || form.exchangeRate || 1) || 1;
+      return {
+        fromLoading: Boolean(batch),
+        loadingPurchaseAmount: batchValue,
+        loadingRequiredAdvance: batch?.advanceAllocated ?? 0,
+        totalPaidSoFar: batchPaid,
+        outstandingBalance: outstanding,
+        poCurrency: batch?.currency || String(selected.currency_code || "USD"),
+        exRate: rate,
+        isAdvComplete: Boolean(batch),
+        isFullyPaid: Boolean(batch) && outstanding <= 0.01,
+        loadingAdvancePaid: batch?.advanceAllocated ?? 0,
+        loadingRemainingAdvance: 0,
+        finalPurchaseAmount: batchValue,
+        totalRemainingAmount: outstanding,
+        paidPercent: batchValue > 0 ? 100 * batchPaid / batchValue : 0,
+        advancePaidPercent: 100
+      };
+    }
     const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
     const isUrlLoading = searchParams.get("fromLoading") === "true";
     const fromLoading = isUrlLoading || Boolean(selectedLoadingRecord);
@@ -3900,7 +3938,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       paidPercent,
       advancePaidPercent
     };
-  }, [selected, selectedLoadingRecord, selectedOrderPayments]);
+  }, [selected, selectedLoadingRecord, selectedOrderPayments, selectedLoadingDue, activeMode, isLocalSelected]);
 
   const {
     fromLoading,
@@ -3973,35 +4011,33 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     }
   }, [selected, activeMode]);
 
-  // Sync selected container if URL has fromLoading parameters
+  // URL loading IDs are hints only. Never trust query-string quantities/prices
+  // and never create synthetic loading rows for a financial payment.
   useEffect(() => {
-    if (selected && activeMode === "remaining") {
-      const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-      const fromLoading = searchParams.get("fromLoading") === "true";
-      if (fromLoading) {
-        const cLoadingRecordId = searchParams.get("loadingRecordId") || "";
-        const cLoadedQty = Number(searchParams.get("loadedQty") || 0);
-        const cGrossWeight = Number(searchParams.get("grossWeight") || 0);
-        const cNetWeight = Number(searchParams.get("netWeight") || 0);
-        const cPriceRate = Number(searchParams.get("priceRate") || 0);
-        
-        setSelectedLoadingRecord({
-          id: cLoadingRecordId,
-          loading_record_no: searchParams.get("purchaseOrderNo") ? `Transferred Container (${searchParams.get("purchaseOrderNo")})` : "Transferred Container",
-          report_payload: {
-            loadedQuantity: cLoadedQty,
-            grossWeight: cGrossWeight,
-            netWeight: cNetWeight,
-            priceRateC1: cPriceRate
-          }
-        });
-      }
-    }
-  }, [selected, activeMode]);
+    if (activeMode !== "remaining" || !selected || isLocalSelected || !registryDueReady) return;
+    if (selectedLoadingDue) return;
+    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    const urlLoadingId = params.get("fromLoading") === "true" ? params.get("loadingRecordId") : null;
+    const requestedId = pendingLoadingPick.current || urlLoadingId;
+    const choice = payableLoadingChoices.find((loading) => String(loading.id) === String(requestedId));
+    const chosen = choice || (!requestedId && payableLoadingChoices.length === 1 ? payableLoadingChoices[0] : null);
+    if (!chosen) return;
+    pendingLoadingPick.current = null;
+    const saved = registryLoadingRecords.find((item) => String(item.id) === String(chosen.id));
+    setSelectedLoadingRecord(saved || { id: chosen.id, loading_record_no: chosen.loadingNo, loaded_quantity: chosen.quantity });
+  }, [activeMode, selected?.id, isLocalSelected, registryDueReady, registryLoadingRecords, selectedDueBill, selectedLoadingDue]);
 
   const handleSelectLoadingRecord = (lr: any) => {
-    setSelectedLoadingRecord(lr);
     if (!selected) return;
+    if (activeMode === "remaining" && !isLocalSelected) {
+      const saved = payableLoadingChoices.find((loading) => String(loading.id) === String(lr?.id));
+      if (!saved) return; // no payable quantity or settled batch: never open a full bill fallback
+      setSelectedLoadingRecord(lr);
+      setCalcAmount(Number(saved.outstanding || 0).toFixed(4));
+      setFinalPayment((Number(saved.outstanding || 0) * (Number(selectedDueBill?.exchangeRate || selected.exchange_rate || 1))).toFixed(2));
+      return;
+    }
+    setSelectedLoadingRecord(lr);
 
     const poRow = selected || {};
     const finance = calcLoadingFinance(lr, poRow, poRow.form_data?.form || {});
@@ -4029,14 +4065,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   // a loading chosen on the "Bills waiting for Remaining Payment" list is selected here as soon as the bill's loadings and figures are in
   useEffect(() => {
     const want = pendingLoadingPick.current;
-    if (!want || !selected || activeMode !== "remaining" || !dueReady) return;
+    if (!want || !selected || activeMode !== "remaining" || !dueReady || !registryDueReady) return;
     const lr = loadingRecords.find((r: any) => String(r.id) === want);
-    if (lr) {
+    if (lr && payableLoadingChoices.some((entry) => String(entry.id) === want)) {
       pendingLoadingPick.current = null;
       handleSelectLoadingRecord(lr);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadingRecords, dueReady, selected, activeMode]);
+  }, [loadingRecords, dueReady, selected, activeMode, registryDueReady, selectedDueBill]);
 
   const displayRows = useMemo(() => {
     if (activeMode !== "remaining") return filtered;
