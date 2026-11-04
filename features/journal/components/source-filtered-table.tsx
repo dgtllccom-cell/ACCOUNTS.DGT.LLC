@@ -161,7 +161,7 @@ export function SourceFilteredTable({
                 const booking = !isLocal && activeMode === "remaining" ? remainingBookingRow(r, loadingRecords, dueByOrderId.get(String(r.id))) : null;
                 const sourceLabel = isLocal ? "Local" : "Booking";
                 const date = booking?.date || r.order_date || form.orderDate || r.created_at?.slice(0, 10) || "—";
-                const countryBranch = `${form.countryCode || "AE"} / ${form.branchCode || "AE-001"}`;
+                const countryBranch = [form.countryCode || r.country_code || r.country_name, form.branchCode || r.branch_code || r.branch_name].filter(Boolean).join(" / ") || "—";
                 const supplier = booking?.supplier || r.supplier_name || form.supplierName || "—";
                 const goods = booking?.goods || r.goods_name || form.goodsName || "—";
                 const qty = booking ? booking.quantity : (r.total_quantity ?? form.totalQuantity ?? 0);
@@ -263,7 +263,7 @@ export function SourceFilteredTable({
                 const form = r.form_data?.form || {};
                 const billNo = r.purchase_order_no || r.bill_no || r.order_no || "—";
                 const date = r.order_date || form.orderDate || r.created_at?.slice(0, 10) || "—";
-                const countryBranch = `${form.countryCode || "AE"} / ${form.branchCode || "AE-001"}`;
+                const countryBranch = [form.countryCode || r.country_code || r.country_name, form.branchCode || r.branch_code || r.branch_name].filter(Boolean).join(" / ") || "—";
                 const supplier = r.supplier_name || form.supplierName || "—";
                 const goods = r.goods_name || form.goodsName || "—";
                 const qty = r.total_quantity || form.totalQuantity || 0;
@@ -277,18 +277,18 @@ export function SourceFilteredTable({
                 const exRate = Number(form.exchangeRate || 1).toFixed(4);
 
                 // Quantities from real loading records or form data
-                const loadedQty = Number(r.loaded_quantity || form.loadedQuantity || (r.loading_records?.[0]?.quantity ?? 100));
+                const loadedQty = Number(r.loaded_quantity ?? form.loadedQuantity ?? r.loading_records?.[0]?.quantity ?? 0);
                 const receivedQty = Number(r.received_quantity || form.receivedQuantity || 0);
                 const damageQty = Number(r.damage_quantity || 0);
                 const shortageQty = Number(r.shortage_quantity || 0);
                 const outstandingQty = Math.max(0, qty - receivedQty);
 
-                const loadCountry = form.loadingCountry || "CN";
-                const loadPort = form.loadingPort || "Shanghai";
-                const loadDate = form.loadingDate || "01 Nov 2026";
-                const rcvCountry = form.destinationCountry || "AE";
-                const rcvPort = form.destinationPort || "Jebel Ali";
-                const rcvDate = form.arrivalDate || "Pending";
+                const loadCountry = form.loadingCountry || "—";
+                const loadPort = form.loadingPort || "—";
+                const loadDate = form.loadingDate || "—";
+                const rcvCountry = form.receivedCountry || form.receivingCountry || form.destinationCountry || "—";
+                const rcvPort = form.receivedPort || form.receivingPort || form.destinationPort || "—";
+                const rcvDate = form.receivedDate || form.arrivalDate || "—";
 
                 return (
                   <tr key={r.id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
@@ -380,9 +380,9 @@ export function SourceFilteredTable({
                 <th className="py-3 px-2 text-center border-r border-amber-300">Unit</th>
                 <th className="py-3 px-2 text-right border-r border-amber-300">Gross kg</th>
                 <th className="py-3 px-2 text-right border-r border-amber-300">Net kg</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300">Total AED</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300">Paid AED</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300">Balance AED</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300">Bill Total</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300">Paid</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300">Balance</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300">Loaded?</th>
                 <th className="py-3 px-3 text-center">Journal</th>
               </tr>
@@ -392,7 +392,7 @@ export function SourceFilteredTable({
                 const form = r.form_data?.form || {};
                 const billNo = r.purchase_order_no || r.bill_no || r.order_no || "—";
                 const date = r.order_date || form.orderDate || r.created_at?.slice(0, 10) || "—";
-                const countryBranch = `${form.countryCode || "AE"} / ${form.branchCode || "AE-001"}`;
+                const countryBranch = [form.countryCode || r.country_code || r.country_name, form.branchCode || r.branch_code || r.branch_name].filter(Boolean).join(" / ") || "—";
                 const supplier = r.supplier_name || form.supplierName || "—";
                 const goods = r.goods_name || form.goodsName || "—";
                 const qty = r.total_quantity || form.totalQuantity || 0;
@@ -401,7 +401,8 @@ export function SourceFilteredTable({
                 const netKg = r.net_weight || form.netWeight || 0;
                 const total = Number(r.order_total || form.totalAmount || 0);
                 const paid = Number(r.advance_paid || 0) + Number(r.remaining_paid || 0);
-                const bal = Math.max(0, total - paid);
+                const bal = Math.max(0, Number(r.remaining_due ?? (total - paid)));
+                const ccy = r.currency_code || form.currency || "—";
                 const isLoaded = Boolean(r.is_loaded || r.loading_records?.length || form.loadedQuantity > 0);
 
                 return (
@@ -415,9 +416,9 @@ export function SourceFilteredTable({
                     <td className="py-3 px-2 text-center text-slate-500">{unit}</td>
                     <td className="py-3 px-2 text-right font-mono">{fmtQty(grossKg)}</td>
                     <td className="py-3 px-2 text-right font-mono">{fmtQty(netKg)}</td>
-                    <td className="py-3 px-3 text-right font-mono font-black">{fmt(total)}</td>
-                    <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-600">{fmt(paid)}</td>
-                    <td className="py-3 px-2.5 text-right font-mono font-bold text-rose-600">{fmt(bal)}</td>
+                    <td className="py-3 px-3 text-right font-mono font-black">{fmt(total)} {ccy}</td>
+                    <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-600">{fmt(paid)} {ccy}</td>
+                    <td className="py-3 px-2.5 text-right font-mono font-bold text-rose-600">{fmt(bal)} {ccy}</td>
                     <td className="py-3 px-2 text-center">
                       <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase", isLoaded ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600")}>
                         {isLoaded ? "Yes" : "No"}
