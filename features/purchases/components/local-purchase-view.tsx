@@ -1141,7 +1141,7 @@ export function LocalPurchaseView({
     } catch (err) {
       if (requestId !== historyRequestRef.current) return;
       console.error("Failed to load local purchases:", err);
-      setHistoryLoadError(err instanceof Error ? err.message : "Local Purchase data could not be loaded.");
+      setHistoryLoadError(err instanceof Error ? err.message : t(lang, "purchase.pmw_err_load_failed", "Purchase records could not be loaded."));
       setPurchases([]);
     } finally {
       if (requestId === historyRequestRef.current) setLoadingHistory(false);
