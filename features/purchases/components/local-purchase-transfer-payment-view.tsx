@@ -31,6 +31,7 @@ import {
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
+import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
 
 export interface LocalPurchaseTransferPaymentViewProps {
   session?: any;
@@ -138,7 +139,7 @@ function resolvePaymentMeta(row: any): ResolvedPaymentMeta {
   const modeLower = rawMode.toLowerCase();
   const latestKind = String(row.latest_payment_kind || "").toLowerCase();
   const statusLower = String(row.status || row.bill_status || "draft").toLowerCase();
-  const isPosted = ["posted", "accepted", "transferred", "completed", "paid"].includes(statusLower);
+  const isPosted = ["posted", "transferred", "completed", "paid"].includes(statusLower);
 
   // Determine actual posted paid amount (never treat a bill transfer or credit allocation as paid money)
   let actualPaid = 0;
@@ -246,7 +247,7 @@ export function LocalPurchaseTransferPaymentView({
   cityBranches = [],
   countries = [],
 }: LocalPurchaseTransferPaymentViewProps) {
-  const { lang, isRtl } = useErpScreen("lp_transfer");
+  const { lang, isRtl, tGlobal } = useErpScreen("lp_transfer");
   const tr = useCallback((label: string) => translateHeader(lang, label), [lang]);
   const searchParams = useSearchParams();
   const highlightBillId = searchParams?.get("billId") || searchParams?.get("highlight") || "";
@@ -311,6 +312,15 @@ export function LocalPurchaseTransferPaymentView({
   const [editingBill, setEditingBill] = useState<any | null>(null);
   const [printingBill, setPrintingBill] = useState<any | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
+  const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
+  const postingLock = useRef(false);
+
+  useEffect(() => {
+    setReviewConfirmed(false);
+    setPostError(null);
+  }, [viewingBill]);
 
   // Edit Form State
   const [editForm, setEditForm] = useState({
@@ -346,14 +356,17 @@ export function LocalPurchaseTransferPaymentView({
       if (!res.ok || !json.ok) {
         throw new Error(json?.error?.message || "Failed to load Local Purchase Transfer Register.");
       }
-      const list = Array.isArray(json.data) ? json.data : [];
-      setRows(list);
+      const list = json.data?.purchases;
+      if (!Array.isArray(list)) throw new Error(tGlobal("lp.queue_load_failed", "Could not load transferred bills."));
+      // Drafts stay in New Bill. Accepted bills are awaiting accounting review;
+      // retain historical posted bills in the same register.
+      setRows(list.filter((row: any) => ["accepted", "posted", "transferred", "paid", "completed"].includes(String(row.status || "").toLowerCase())));
     } catch (e: any) {
       setError(e?.message || "Failed to load records.");
     } finally {
       setLoading(false);
     }
-  }, [lang]);
+  }, [lang, tGlobal]);
 
   useEffect(() => {
     fetchBills();
@@ -377,10 +390,7 @@ export function LocalPurchaseTransferPaymentView({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Transferred / Posted bills for the Transfer Payment Register
-  // When a Local Purchase bill is transferred, it appears here automatically.
-  // If all rows in a dev environment are draft, we still include them if status filter is 'all' and no posted rows exist,
-  // or show all Local Purchase bills with their accurate Posting & Transfer status counts.
+  // Queued and posted bills share this register; drafts remain in New Bill.
   const enrichedRows = useMemo(() => {
     return rows.map((r, idx) => {
       const countryCode = deriveCountryCode(r.country_name, r.country_code);
@@ -412,6 +422,45 @@ export function LocalPurchaseTransferPaymentView({
     });
   }, [rows]);
 
+  const openedHighlight = useRef("");
+  useEffect(() => {
+    if (!highlightBillId || openedHighlight.current === highlightBillId) return;
+    const bill = enrichedRows.find((row) => String(row.id) === highlightBillId);
+    if (bill) {
+      openedHighlight.current = highlightBillId;
+      setViewingBill(bill);
+    }
+  }, [highlightBillId, enrichedRows]);
+
+  async function handlePostReviewedBill() {
+    if (!viewingBill || !reviewConfirmed || postingLock.current || viewingBill.status !== "accepted") return;
+    postingLock.current = true;
+    setPosting(true);
+    setPostError(null);
+    try {
+      const response = await fetch("/api/erp/purchases/local-purchase/transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ purchaseId: viewingBill.id, reviewed: true }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error?.message || tGlobal("lp.queue_post_failed", "Posting failed. Please review the bill and retry."));
+      }
+      const posted = result.data?.purchase;
+      if (!posted || !deriveLocalPurchasePostingState(posted).isComplete) {
+        throw new Error(tGlobal("lp.queue_post_failed", "Posting failed. Please review the bill and retry."));
+      }
+      setViewingBill((current: any) => current ? { ...current, ...posted } : current);
+      await fetchBills();
+    } catch (error: any) {
+      setPostError(error?.message || tGlobal("lp.queue_post_failed", "Posting failed. Please review the bill and retry."));
+    } finally {
+      postingLock.current = false;
+      setPosting(false);
+    }
+  }
+
   // Filtered rows
   const filteredRows = useMemo(() => {
     return enrichedRows.filter((r) => {
@@ -430,13 +479,13 @@ export function LocalPurchaseTransferPaymentView({
       }
       if (selectedStatus !== "all") {
         const st = String(r.status || "draft").toLowerCase();
-        if (selectedStatus === "posted" && !["posted", "accepted", "transferred", "paid"].includes(st)) {
+        if (selectedStatus === "posted" && !["posted", "transferred", "paid"].includes(st)) {
           return false;
         }
         if (selectedStatus === "draft" && st !== "draft") {
           return false;
         }
-        if (selectedStatus === "pending" && ["posted", "accepted", "transferred", "paid", "draft"].includes(st)) {
+        if (selectedStatus === "pending" && ["posted", "transferred", "paid", "draft"].includes(st)) {
           return false;
         }
       }
@@ -546,7 +595,7 @@ export function LocalPurchaseTransferPaymentView({
       balanceTotal += r._paymentMeta.balance;
 
       const st = String(r.status || "draft").toLowerCase();
-      if (["posted", "accepted", "transferred", "paid", "completed"].includes(st)) {
+      if (["posted", "transferred", "paid", "completed"].includes(st)) {
         postedAcceptedCount++;
       } else if (st === "draft") {
         draftCount++;
@@ -1315,7 +1364,7 @@ export function LocalPurchaseTransferPaymentView({
               >
                 <span className="flex items-center gap-1.5 truncate">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="truncate">{tr("Posted / Accepted")}</span>
+                  <span className="truncate">{tr("Posted")}</span>
                 </span>
                 <span className="font-mono font-black ml-1" dir="ltr">
                   {dashboardMetrics.postedAcceptedCount}
@@ -1323,28 +1372,28 @@ export function LocalPurchaseTransferPaymentView({
               </button>
               <button
                 type="button"
-                onClick={() => setSelectedStatus((s) => (s === "draft" ? "all" : "draft"))}
+                onClick={() => setSelectedStatus((s) => (s === "pending" ? "all" : "pending"))}
                 className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-amber-50/90 dark:bg-amber-950/40 text-[11px] font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition cursor-pointer"
               >
                 <span className="flex items-center gap-1.5 truncate">
                   <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
-                  <span className="truncate">{tr("Draft Bills")}</span>
+                  <span className="truncate">{tGlobal("lp.queue_pending", "Awaiting Review")}</span>
                 </span>
                 <span className="font-mono font-black ml-1" dir="ltr">
-                  {dashboardMetrics.draftCount}
+                  {dashboardMetrics.pendingCount}
                 </span>
               </button>
               <button
                 type="button"
-                onClick={() => setSelectedStatus((s) => (s === "pending" ? "all" : "pending"))}
+                onClick={() => setSelectedStatus("all")}
                 className="w-full flex items-center justify-between px-2 py-1 rounded-md bg-rose-50/90 dark:bg-rose-950/40 text-[11px] font-bold text-rose-800 dark:text-rose-300 hover:bg-rose-100 transition cursor-pointer"
               >
                 <span className="flex items-center gap-1.5 truncate">
                   <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
-                  <span className="truncate">{tr("Pending Bills")}</span>
+                  <span className="truncate">{tr("Total Bills")}</span>
                 </span>
                 <span className="font-mono font-black ml-1" dir="ltr">
-                  {dashboardMetrics.pendingCount}
+                  {filteredRows.length}
                 </span>
               </button>
             </div>
@@ -1741,6 +1790,9 @@ export function LocalPurchaseTransferPaymentView({
                       {/* 1. Bill / Entry No. */}
                       <td className="py-3 px-2 font-mono font-black text-blue-700 dark:text-blue-400 whitespace-nowrap">
                         {row._billNo}
+                        <div className="mt-1 text-[10px] font-semibold text-slate-500">
+                          {row.status === "accepted" ? tGlobal("lp.queue_pending", "Awaiting Review") : tr("Posted")}
+                        </div>
                       </td>
 
                       {/* 2. Country (compact code) */}
@@ -1981,9 +2033,9 @@ export function LocalPurchaseTransferPaymentView({
 
       {/* ── MODAL 1: View Complete Original Bill (Centered Modal with Print inside) ── */}
       {viewingBill && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
+        <div role="dialog" aria-modal="true" aria-label={tr("Original Local Purchase Bill")} className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap gap-3 items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
               <div>
                 <div className="text-[11px] font-black uppercase tracking-wider text-blue-600">
                   {tr("Original Local Purchase Bill")}
@@ -2007,6 +2059,7 @@ export function LocalPurchaseTransferPaymentView({
                 </button>
                 <button
                   type="button"
+                  disabled={posting}
                   onClick={() => setViewingBill(null)}
                   aria-label={tr("Close")}
                   className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
@@ -2129,6 +2182,28 @@ export function LocalPurchaseTransferPaymentView({
                     {formatMoneyAmount(viewingBill._currency, viewingBill._paymentMeta.balance)}
                   </div>
                 </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 space-y-3">
+                <p className="font-bold text-slate-800 dark:text-slate-100">
+                  {deriveLocalPurchasePostingState(viewingBill).isComplete
+                    ? tGlobal("lp.queue_posted", "Posted to Business Roznamcha and Ledgers")
+                    : tGlobal("lp.queue_pending", "Awaiting Review")}
+                </p>
+                {viewingBill.status === "accepted" && (
+                  <>
+                    <label className="flex items-start gap-2 text-slate-700 dark:text-slate-200">
+                      <input type="checkbox" checked={reviewConfirmed} disabled={posting}
+                        onChange={(event) => setReviewConfirmed(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span>{tGlobal("lp.queue_checked", "I have checked the goods, amounts, payment option and DR/CR accounts.")}</span>
+                    </label>
+                    <button type="button" disabled={!reviewConfirmed || posting} onClick={handlePostReviewedBill}
+                      className="min-h-11 w-full sm:w-auto px-4 rounded-lg bg-slate-900 text-white font-bold disabled:opacity-40">
+                      {posting ? tGlobal("lp.queue_posting", "Posting…") : tGlobal("lp.queue_post", "Transfer & Post")}
+                    </button>
+                  </>
+                )}
+                {postError && <p role="alert" className="text-red-700 dark:text-red-300">{postError}</p>}
               </div>
 
               {/* Payment History Entries (if any) */}

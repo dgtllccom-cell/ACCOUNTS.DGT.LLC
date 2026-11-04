@@ -12,6 +12,7 @@ import { ensureLotsForPurchase } from "@/lib/services/goods-transfer-service";
 
 const transferSchema = z.object({
   purchaseId: z.string().uuid(),
+  reviewed: z.literal(true),
 });
 
 type ResolvedLedger = {
@@ -241,6 +242,12 @@ export async function POST(request: NextRequest) {
         // must never be re-processed as if it were a fresh transfer.
         if (purchase.status === "posted" && purchase.roznamcha_entry_id) {
           throw new ApiClientError("This bill has already been transferred and posted to Roznamcha/GL. No further action is needed.", { status: 409, code: "ALREADY_POSTED" });
+        }
+
+        // The bill must first be transferred into the review queue. A direct
+        // POST of a new draft must not bypass Transfer Payment verification.
+        if (purchase.status !== "accepted") {
+          throw new ApiClientError("Transfer this bill for review before posting it from Transfer Payment.", { status: 409, code: "REVIEW_REQUIRED" });
         }
 
         // A destination-country purchase created by an Inter-Country Trade is posted only by an authorized

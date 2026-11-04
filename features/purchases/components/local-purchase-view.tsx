@@ -395,7 +395,7 @@ export function LocalPurchaseView({
   // Step 1: Booking (Bill, branch, accounts, supplier, broker)
   // Step 2: Goods Entry (Goods master, weights, tare, net, rate, tax, goods table)
   // Step 3: Payment & Loading (Payment mode, paying account, compact date, transport & loading details)
-  // Step 4: Verify & Post (Full A4 voucher, 4 canonical serials, DR/CR ledger table, GL & Roznamcha transfer)
+  // Step 4: Verify & Transfer (save and queue for review; no financial posting)
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   // Set by "Edit Draft" so handleSubmit updates this SAME row (PATCH by id)
@@ -1781,6 +1781,7 @@ export function LocalPurchaseView({
       if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to save purchase.");
 
       const newPurchase = data.data?.purchase || data.purchase;
+      if (newPurchase?.id) setEditingPurchaseId(newPurchase.id);
       if (!isEditingDraft && intake.draft && newPurchase?.id) await intake.consume(String(newPurchase.id)).catch(() => undefined);
 
       // Automatically accept the bill as per workflow (Draft -> Accepted transition) only if
@@ -1790,19 +1791,16 @@ export function LocalPurchaseView({
       const draftOnly = Boolean(options?.draftOnly);
 
       if (!isAlreadyProcessed && !draftOnly) {
-        try {
-          const acceptRes = await fetch("/api/erp/purchases/local-purchase/accept", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ purchaseId: newPurchase.id })
-          });
-          const acceptData = await acceptRes.json();
-          if (acceptRes.ok && acceptData.ok) {
-            acceptedRecord = acceptData.data?.purchase || acceptedRecord;
-          }
-        } catch (acceptErr) {
-          console.error("Auto accept failed:", acceptErr);
+        const acceptRes = await fetch("/api/erp/purchases/local-purchase/accept", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ purchaseId: newPurchase.id })
+        });
+        const acceptData = await acceptRes.json();
+        if (!acceptRes.ok || !acceptData.ok) {
+          throw new Error(acceptData.error?.message || t(lang, "lp.queue_failed", "Could not transfer this bill for review."));
         }
+        acceptedRecord = acceptData.data?.purchase || acceptedRecord;
       }
 
       if (draftOnly) {
@@ -1816,8 +1814,6 @@ export function LocalPurchaseView({
             ? "Local Purchase updated successfully! All transferred and linked records (Roznamcha, Journal, General Ledger) have been synchronized."
             : "Local Purchase updated successfully!"
         );
-      } else {
-        alert("Local Purchase Bill recorded and transitioned to Payment Module successfully!");
       }
 
       // Reset form
@@ -1879,8 +1875,7 @@ export function LocalPurchaseView({
         setActiveTab(targetTab as any);
         setSelectedRowForVoucher(newPurchase);
       } else {
-        setActiveTab("accepted"); // Go to Local Purchase Payment view tab
-        setSelectedRowForVoucher(acceptedRecord); // Open the verification view
+        router.push(`/dashboard/purchase/local-purchase-transfer-payment?billId=${acceptedRecord.id}`);
       }
     } catch (err: any) {
       alert(err.message || "An error occurred while saving.");
@@ -1923,7 +1918,7 @@ export function LocalPurchaseView({
     return true;
   }
 
-  async function handleSaveAndPostGL(e?: React.SyntheticEvent) {
+  async function handleSaveAndTransfer(e?: React.SyntheticEvent) {
     if (e && typeof e.preventDefault === "function") e.preventDefault();
     if (submitLockRef.current) return;
     if (!validateBookingStep()) { setCurrentStep(1); return; }
@@ -1953,29 +1948,17 @@ export function LocalPurchaseView({
       // click create a second purchase record (and a second payment/expense/journal chain).
       if (savedPurchase?.id) setEditingPurchaseId(savedPurchase.id);
 
-      // 2. Accept the bill
-      try {
-        await fetch("/api/erp/purchases/local-purchase/accept", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ purchaseId: savedPurchase.id })
-        });
-      } catch (errAccept) {
-        console.warn("Auto-accept notice:", errAccept);
-      }
-
-      // 3. Post to General Ledger & Roznamcha
-      const transferRes = await fetch("/api/erp/purchases/local-purchase/transfer", {
+      // First transfer only queues this saved bill for review. Accounting is
+      // posted exclusively from the Transfer Payment register after verification.
+      const acceptRes = await fetch("/api/erp/purchases/local-purchase/accept", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ purchaseId: savedPurchase.id })
       });
-      const transferData = await transferRes.json();
-      if (!transferRes.ok || !transferData.ok) {
-        throw new Error(transferData.error?.message || "Failed to post to Roznamcha and General Ledger.");
+      const acceptData = await acceptRes.json();
+      if (!acceptRes.ok || !acceptData.ok) {
+        throw new Error(acceptData.error?.message || t(lang, "lp.queue_failed", "Could not transfer this bill for review."));
       }
-
-      alert("Accounting Entries Posted Successfully to:\n- Cash Entry / Daily Payment\n- Business Roznamcha\n- General Ledger\n- Journal (Debit/Credit Serials generated)");
 
       setIsFormOpen(false);
       setEditingPurchaseId(null);
@@ -1983,10 +1966,10 @@ export function LocalPurchaseView({
       setExtraCharges([]);
       setCurrentStep(1);
       await loadHistory();
-      // Financial posting is done. Where the goods physically go is a separate decision in the Goods Transfer Journal.
+      // Open the same accepted bill in the review queue; nothing has been posted yet.
       if (savedPurchase?.id) router.push(`/dashboard/purchase/local-purchase-transfer-payment?billId=${savedPurchase.id}`);
     } catch (err: any) {
-      alert(err.message || "Failed to transfer and post to General Ledger.");
+      alert(err.message || t(lang, "lp.queue_failed", "Could not transfer this bill for review."));
     } finally {
       submitLockRef.current = false;
       setSaving(false);
@@ -2237,7 +2220,7 @@ export function LocalPurchaseView({
       totalUsdTax += convertToUsd(tax, curr, exRate);
       totalUsdFinal += convertToUsd(finalCost, curr, exRate);
 
-      if (["posted", "accepted", "transferred"].includes(st)) {
+      if (["posted", "transferred"].includes(st)) {
         posted += 1;
       } else if (st === "draft") {
         draft += 1;
@@ -2398,7 +2381,7 @@ export function LocalPurchaseView({
         targetCountry.totalAmountLocal += cost;
         targetCountry.totalAmountUsd += costUsd;
 
-        if (["posted", "accepted", "transferred"].includes(st)) {
+        if (["posted", "transferred"].includes(st)) {
           targetCountry.posted += 1;
           targetCountry.paidAmount += cost;
         } else if (st === "draft") {
@@ -2414,7 +2397,7 @@ export function LocalPurchaseView({
           const mbr = targetCountry.mainBranches.get(pBranchId);
           mbr.billsCount += 1;
           mbr.totalAmount += cost;
-          if (["posted", "accepted", "transferred"].includes(st)) {
+          if (["posted", "transferred"].includes(st)) {
             mbr.paidAmount += cost;
           } else {
             mbr.remainingAmount += cost;
@@ -2426,7 +2409,7 @@ export function LocalPurchaseView({
           const cbr = targetCountry.cityBranches.get(pCityBranchId);
           cbr.billsCount += 1;
           cbr.totalAmount += cost;
-          if (["posted", "accepted", "transferred"].includes(st)) {
+          if (["posted", "transferred"].includes(st)) {
             cbr.paidAmount += cost;
           } else {
             cbr.remainingAmount += cost;
@@ -2556,7 +2539,7 @@ export function LocalPurchaseView({
               }`}
             >
               <span className="opacity-80">4</span>
-              <span>{t(lang, "lp.step4_tab", "Verify & Post")}</span>
+              <span>{t(lang, "lp.queue_step", "4 Verify & Transfer")}</span>
             </button>
           </div>
 
@@ -3686,7 +3669,7 @@ export function LocalPurchaseView({
                       }}
                       className="h-9 bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-extrabold uppercase text-[11px] rounded-lg shadow-sm flex items-center justify-center gap-1.5"
                     >
-                      <span>{t(lang, "lp.step4_tab", "Next: Verify & Post")}</span>
+                      <span>{t(lang, "lp.queue_step", "4 Verify & Transfer")}</span>
                       <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                     </Button>
                   </div>
@@ -3764,7 +3747,7 @@ export function LocalPurchaseView({
                     </div>
                   </div>
 
-                  {/* Big Prominent Action: Transfer & Post to Roznamcha & GL */}
+                  {/* First transfer queues the bill for review without financial posting. */}
                   <Button
                     type="button"
                     disabled={saving}
@@ -3772,11 +3755,11 @@ export function LocalPurchaseView({
                     className="w-full h-11 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs uppercase rounded-xl shadow-md flex items-center justify-center gap-2 tracking-wider"
                   >
                     {saving ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" /> {t(lang, "common.saving", "Posting Entries…")}</>
+                      <><Loader2 className="h-4 w-4 animate-spin" /> {t(lang, "common.saving", "Saving…")}</>
                     ) : (
                       <>
                         <Send className="h-4 w-4" />
-                        <span>{t(lang, "lp.post_to_roznamcha_gl", "Transfer & Post to Roznamcha & GL")}</span>
+                        <span>{t(lang, "lp.queue_transfer", "Transfer for Review")}</span>
                       </>
                     )}
                   </Button>
@@ -5479,9 +5462,9 @@ export function LocalPurchaseView({
       {showPostConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-3">
-            <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">{t(lang, "lp.confirm_post_title", "Post this bill?")}</h3>
+            <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">{t(lang, "lp.queue_title", "Transfer this bill for review?")}</h3>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              {t(lang, "lp.confirm_post_body", "This transfers the bill to Roznamcha and the General Ledger. Check the goods, amounts and accounts first.")}
+              {t(lang, "lp.queue_body", "This sends the bill to Transfer Payment for verification. Roznamcha and ledger posting happens there after review.")}
             </p>
             <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-2.5 text-xs space-y-1">
               <div className="flex justify-between"><span className="text-slate-500">{t(lang, "lp.total_goods_lines", "Goods Items")}</span><strong>{draftItems.length}</strong></div>
@@ -5491,8 +5474,8 @@ export function LocalPurchaseView({
               <Button type="button" variant="outline" onClick={() => setShowPostConfirm(false)} className="h-9 text-xs font-bold">
                 {t(lang, "common.cancel", "Cancel")}
               </Button>
-              <Button type="button" disabled={saving} onClick={() => handleSaveAndPostGL()} className="h-9 text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white">
-                {t(lang, "lp.confirm_post_btn", "Confirm & Post")}
+              <Button type="button" disabled={saving} onClick={() => handleSaveAndTransfer()} className="h-9 text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white">
+                {t(lang, "lp.queue_confirm", "Confirm Transfer")}
               </Button>
             </div>
           </div>
@@ -5719,29 +5702,10 @@ export function LocalPurchaseView({
               <div className="flex gap-2">
                 {selectedRowForVoucher.status === "accepted" && (
                   <Button
-                    onClick={async () => {
-                      if (!confirm("Are you sure you want to transfer this verified bill to general ledger? This will post all accounting journal and roznamcha entries.")) return;
-                      try {
-                        const res = await fetch("/api/erp/purchases/local-purchase/transfer", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ purchaseId: selectedRowForVoucher.id })
-                        });
-                        const data = await res.json();
-                        if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to transfer.");
-                        alert("Accounting Entries Posted Successfully to:\n- Cash Entry / Daily Payment\n- Business Roznamcha\n- General Ledger\n- Journal (Debit/Credit Serials generated)");
-                        
-                        // Update local row status and reload registry
-                        setSelectedRowForVoucher((prev: any | null) => prev ? { ...prev, status: "posted" } : null);
-                        await loadHistory();
-                        router.push(`/dashboard/purchase/local-purchase-transfer-payment?billId=${selectedRowForVoucher.id}`);
-                      } catch (err: any) {
-                        alert(err.message || "An error occurred during transfer.");
-                      }
-                    }}
+                    onClick={() => router.push(`/dashboard/purchase/local-purchase-transfer-payment?billId=${selectedRowForVoucher.id}`)}
                     className="h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1 shadow-sm"
                   >
-                    <Send className="h-3.5 w-3.5" /> {th("Transfer & Post to GL")}
+                    <Send className="h-3.5 w-3.5" /> {t(lang, "lp.review_transfer", "Review Transfer")}
                   </Button>
                 )}
                 {selectedRowForVoucher.status !== "draft" && (

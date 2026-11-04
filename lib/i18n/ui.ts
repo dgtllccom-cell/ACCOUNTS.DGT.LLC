@@ -2,6 +2,20 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translateHeader, registerUiDictionaryFallback } from "@/lib/i18n/table-headers";
 
 export type UiKey =
+  | "lp.queue_transfer"
+  | "lp.review_transfer"
+  | "lp.queue_title"
+  | "lp.queue_body"
+  | "lp.queue_confirm"
+  | "lp.queue_step"
+  | "lp.queue_failed"
+  | "lp.queue_load_failed"
+  | "lp.queue_pending"
+  | "lp.queue_post"
+  | "lp.queue_posting"
+  | "lp.queue_posted"
+  | "lp.queue_checked"
+  | "lp.queue_post_failed"
   | "plane.payment_unverified"
   | "plane.preview_unavailable"
   | "plane.preview_detail"
@@ -13092,6 +13106,20 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "lp.queue_transfer": "Transfer for Review",
+  "lp.review_transfer": "Review Transfer",
+  "lp.queue_title": "Transfer this bill for review?",
+  "lp.queue_body": "This sends the bill to Transfer Payment for verification. Roznamcha and ledger posting happens there after review.",
+  "lp.queue_confirm": "Confirm Transfer",
+  "lp.queue_step": "4 Verify & Transfer",
+  "lp.queue_failed": "Could not transfer this bill for review.",
+  "lp.queue_load_failed": "Could not load transferred bills.",
+  "lp.queue_pending": "Awaiting Review",
+  "lp.queue_post": "Transfer & Post",
+  "lp.queue_posting": "Posting…",
+  "lp.queue_posted": "Posted to Business Roznamcha and Ledgers",
+  "lp.queue_checked": "I have checked the goods, amounts, payment option and DR/CR accounts.",
+  "lp.queue_post_failed": "Posting failed. Please review the bill and retry.",
   "plane.payment_unverified": "Paid amounts cannot be verified from cash/bank postings. The entered advance is not treated as a payment.",
   "plane.preview_unavailable": "The complete payment review is unavailable. Remaining transfer requires a verified bill, loading, country currency and exchange rate.",
   "plane.preview_detail": "Details",
@@ -39355,6 +39383,20 @@ const en: Dict = {
 const ur: Dict = {
 
 ...en,
+  "lp.queue_transfer": "جانچ کے لیے منتقل کریں",
+  "lp.review_transfer": "منتقلی کی جانچ",
+  "lp.queue_title": "یہ بل جانچ کے لیے منتقل کریں؟",
+  "lp.queue_body": "بل جانچ کے لیے ٹرانسفر پیمنٹ میں جائے گا۔ روزنامچے اور لیجر میں پوسٹنگ وہاں جانچ کے بعد ہوگی۔",
+  "lp.queue_confirm": "منتقلی کی تصدیق",
+  "lp.queue_step": "۴ جانچ اور منتقلی",
+  "lp.queue_failed": "بل جانچ کے لیے منتقل نہیں ہو سکا۔",
+  "lp.queue_load_failed": "منتقل شدہ بل لوڈ نہیں ہو سکے۔",
+  "lp.queue_pending": "جانچ کا منتظر",
+  "lp.queue_post": "منتقل اور پوسٹ کریں",
+  "lp.queue_posting": "پوسٹ ہو رہا ہے…",
+  "lp.queue_posted": "بزنس روزنامچے اور لیجر میں پوسٹ ہو گیا",
+  "lp.queue_checked": "میں نے مال، رقوم، ادائیگی کا آپشن اور ڈیبٹ/کریڈٹ اکاؤنٹس چیک کر لیے ہیں۔",
+  "lp.queue_post_failed": "پوسٹنگ نہیں ہوئی۔ بل چیک کرکے دوبارہ کوشش کریں۔",
   "plane.payment_unverified": "نقد یا بینک کی پوسٹنگ سے ادا شدہ رقم کی تصدیق نہیں ہو سکی۔ درج کردہ ایڈوانس کو ادائیگی نہیں گنا گیا۔",
   "plane.preview_unavailable": "مکمل ادائیگی کی رپورٹ دستیاب نہیں۔ بقایا میں منتقلی کے لیے تصدیق شدہ بل، لوڈنگ، ملک کی کرنسی اور شرح تبادلہ ضروری ہیں۔",
   "plane.preview_detail": "تفصیل",
@@ -65586,6 +65628,20 @@ const ur: Dict = {
 const ar: Dict = {
 
 ...en,
+  "lp.queue_transfer": "إرسال للمراجعة",
+  "lp.review_transfer": "مراجعة التحويل",
+  "lp.queue_title": "إرسال هذه الفاتورة للمراجعة؟",
+  "lp.queue_body": "سترسل الفاتورة إلى تحويل المدفوعات للتحقق. يتم الترحيل إلى اليومية ودفاتر الأستاذ هناك بعد المراجعة.",
+  "lp.queue_confirm": "تأكيد الإرسال",
+  "lp.queue_step": "٤ التحقق والإرسال",
+  "lp.queue_failed": "تعذر إرسال الفاتورة للمراجعة.",
+  "lp.queue_load_failed": "تعذر تحميل الفواتير المحولة.",
+  "lp.queue_pending": "بانتظار المراجعة",
+  "lp.queue_post": "تحويل وترحيل",
+  "lp.queue_posting": "جارٍ الترحيل…",
+  "lp.queue_posted": "تم الترحيل إلى يومية الأعمال ودفاتر الأستاذ",
+  "lp.queue_checked": "راجعت البضاعة والمبالغ وخيار الدفع وحسابات المدين والدائن.",
+  "lp.queue_post_failed": "فشل الترحيل. راجع الفاتورة وحاول مجددًا.",
   "plane.payment_unverified": "لا يمكن التحقق من المبالغ المدفوعة من القيود النقدية أو البنكية. لم تُحتسب الدفعة المقدمة المُدخلة كدفعة فعلية.",
   "plane.preview_unavailable": "مراجعة الدفع الكاملة غير متاحة. يتطلب تحويل المتبقي فاتورة وتحميلاً وعملة البلد وسعر صرف موثقة.",
   "plane.preview_detail": "التفاصيل",
@@ -91818,6 +91874,20 @@ const ar: Dict = {
 const fa: Dict = {
 
 ...en,
+  "lp.queue_transfer": "انتقال برای بررسی",
+  "lp.review_transfer": "بررسی انتقال",
+  "lp.queue_title": "این فاکتور برای بررسی منتقل شود؟",
+  "lp.queue_body": "فاکتور برای بررسی به انتقال پرداخت می‌رود. ثبت در روزنامچه و دفتر کل پس از بررسی در آنجا انجام می‌شود.",
+  "lp.queue_confirm": "تأیید انتقال",
+  "lp.queue_step": "۴ بررسی و انتقال",
+  "lp.queue_failed": "انتقال فاکتور برای بررسی انجام نشد.",
+  "lp.queue_load_failed": "بارگذاری فاکتورهای منتقل‌شده انجام نشد.",
+  "lp.queue_pending": "در انتظار بررسی",
+  "lp.queue_post": "انتقال و ثبت",
+  "lp.queue_posting": "در حال ثبت…",
+  "lp.queue_posted": "در روزنامچه تجاری و دفاتر کل ثبت شد",
+  "lp.queue_checked": "کالاها، مبالغ، گزینه پرداخت و حساب‌های بدهکار و بستانکار را بررسی کرده‌ام.",
+  "lp.queue_post_failed": "ثبت انجام نشد. فاکتور را بررسی و دوباره تلاش کنید.",
   "plane.payment_unverified": "مبالغ پرداخت‌شده از ثبت نقدی یا بانکی قابل تأیید نیست. پیش‌پرداخت واردشده به‌عنوان پرداخت محاسبه نشده است.",
   "plane.preview_unavailable": "بررسی کامل پرداخت در دسترس نیست. انتقال مانده به صورتحساب، بارگیری، ارز کشور و نرخ تبدیل تأییدشده نیاز دارد.",
   "plane.preview_detail": "جزئیات",
@@ -118049,6 +118119,20 @@ const fa: Dict = {
 const ps: Dict = {
 
 ...en,
+  "lp.queue_transfer": "د کتنې لپاره ولېږدئ",
+  "lp.review_transfer": "د لېږد کتنه",
+  "lp.queue_title": "دا بل د کتنې لپاره ولېږدوو؟",
+  "lp.queue_body": "بل د کتنې لپاره د تادیې لېږد ته ځي. روزنامچې او لیجر ته ثبت به هلته له کتنې وروسته کېږي.",
+  "lp.queue_confirm": "لېږد تایید کړئ",
+  "lp.queue_step": "۴ کتنه او لېږد",
+  "lp.queue_failed": "بل د کتنې لپاره ونه لېږل شو.",
+  "lp.queue_load_failed": "لېږل شوي بلونه پورته نه شول.",
+  "lp.queue_pending": "د کتنې په تمه",
+  "lp.queue_post": "ولېږدئ او ثبت کړئ",
+  "lp.queue_posting": "ثبت کېږي…",
+  "lp.queue_posted": "په سوداګریزې روزنامچې او لیجرونو کې ثبت شو",
+  "lp.queue_checked": "ما توکي، مبالغ، د تادیې اختیار او د ډیبیټ او کریډیټ حسابونه کتلي دي.",
+  "lp.queue_post_failed": "ثبت ونه شو. بل وګورئ او بیا هڅه وکړئ.",
   "plane.payment_unverified": "له نغدي یا بانکي ثبتونو څخه ورکړل شوې پیسې نه تاییدېږي. لیکل شوی مخکینی مبلغ تادیه نه ګڼل کېږي.",
   "plane.preview_unavailable": "د تادیې بشپړ راپور نشته. د پاتې پیسو لېږد تایید شوی بل، بار، د هېواد اسعارو او د تبادلې نرخ ته اړتیا لري.",
   "plane.preview_detail": "تفصیل",

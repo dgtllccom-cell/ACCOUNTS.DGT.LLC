@@ -162,7 +162,6 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
   const [showCountryDetails, setShowCountryDetails] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [selectedRowForVoucher, setSelectedRowForVoucher] = useState<LocalPurchaseRecord | null>(null);
-  const [transferringId, setTransferringId] = useState<string | null>(null);
 
   const countries = useMemo(() => Array.from(new Set(purchases.map(p => p.countryName || p.country_name).filter(Boolean))) as string[], [purchases]);
   const branches = useMemo(() => Array.from(new Set(purchases.map(p => p.branchName || p.branch_name).filter(Boolean))) as string[], [purchases]);
@@ -715,37 +714,10 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
               <div className="flex gap-2">
                 {selectedRowForVoucher.status === "accepted" && (
                   <Button
-                    disabled={transferringId === selectedRowForVoucher.id}
-                    onClick={async () => {
-                      if (!confirm("Are you sure you want to transfer this verified bill to general ledger? This will post all accounting journal and roznamcha entries.")) return;
-                      setTransferringId(selectedRowForVoucher.id);
-                      try {
-                        const res = await fetch("/api/erp/purchases/local-purchase/transfer", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ purchaseId: selectedRowForVoucher.id })
-                        });
-                        const data = await res.json();
-                        if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to transfer.");
-                        alert("Accounting Entries Posted Successfully to:\n- Cash Entry / Daily Payment\n- Business Roznamcha\n- General Ledger\n- Journal (Debit/Credit Serials generated)");
-
-                        setSelectedRowForVoucher(prev => prev ? { ...prev, status: "posted" } : null);
-                        await loadReports();
-                      } catch (err: any) {
-                        alert(err.message || "An error occurred during transfer.");
-                      } finally {
-                        setTransferringId(null);
-                      }
-                    }}
+                    onClick={() => router.push(`/dashboard/purchase/local-purchase-transfer-payment?billId=${selectedRowForVoucher.id}`)}
                     className="h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1 shadow-sm"
                   >
-                    {transferringId === selectedRowForVoucher.id ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <>
-                        <Send className="h-3.5 w-3.5" /> {th("Transfer & Post to GL")}
-                      </>
-                    )}
+                    <Send className="h-3.5 w-3.5" /> {tt("lp.review_transfer", "Review Transfer")}
                   </Button>
                 )}
                 <Button

@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { handleApiError } from "@/lib/api/response";
+import { ApiClientError, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -61,18 +61,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (fetchErr || !purchase) {
-      return NextResponse.json(
-        { ok: false, error: { message: "Purchase record not found." } },
-        { status: 404 }
-      );
-    }
-
-    // Verify status is 'draft'
-    if (purchase.status !== "draft") {
-      return NextResponse.json(
-        { ok: false, error: { message: `Cannot accept a bill with status '${purchase.status}'. Only draft bills can be accepted.` } },
-        { status: 400 }
-      );
+      throw new ApiClientError("Purchase record not found.", { status: 404 });
     }
 
     // Authorize scope
@@ -83,6 +72,19 @@ export async function POST(request: NextRequest) {
       countryBranchId: purchase.country_branch_id,
       cityBranchId: purchase.city_branch_id ?? null,
     });
+
+    // Retrying the first transfer must keep the same queued bill and serials.
+    // Acceptance never creates a Roznamcha entry or posts a ledger.
+    if (purchase.status === "accepted") {
+      const response = { ok: true, data: { purchase } };
+      if (idempotencyKey && tenantHash) {
+        await commitIdempotencySuccess(idempotencyKey, tenantHash, 200, response);
+      }
+      return NextResponse.json(response);
+    }
+    if (purchase.status !== "draft" || purchase.roznamcha_entry_id || purchase.journal_entry_id) {
+      throw new ApiClientError("Only an unposted draft can be transferred for review.", { status: 409 });
+    }
 
     // Generate serial numbers using RPC or fallback
     let journalSerialNo: string;
@@ -161,6 +163,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", purchaseId)
+      .eq("status", "draft")
       .select()
       .single();
 

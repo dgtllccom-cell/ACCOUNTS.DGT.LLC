@@ -239,7 +239,7 @@ export async function GET(request: NextRequest) {
           const rawMode = String(row.payment_mode || "Cash").trim();
           const modeLower = rawMode.toLowerCase();
           const statusLower = String(row.status || "").toLowerCase();
-          const isPostedStatus = statusLower === "posted" || statusLower === "accepted" || statusLower === "transferred" || statusLower === "paid";
+          const isPostedStatus = statusLower === "posted" || statusLower === "transferred" || statusLower === "paid";
 
           // Paid must represent actual posted payments. A bill transfer or credit
           // allocation must not automatically be counted as paid money.
