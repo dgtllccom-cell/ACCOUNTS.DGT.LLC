@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { RemainingBookingTable } from "./remaining-booking-table";
 import { cn } from "@/lib/utils";
 type LanguageCode = string;
 import { WalletCards, Eye, Printer, FileSpreadsheet, ChevronRight } from "lucide-react";
@@ -16,6 +17,7 @@ export interface SourceFilteredTableProps {
   onPrintStatement: (row: any) => void;
   tGlobal: (lang: LanguageCode, key: string, fallback: string) => string;
   activeMode: string;
+  loadingRecords?: any[];
 }
 
 export function SourceFilteredTable({
@@ -29,6 +31,7 @@ export function SourceFilteredTable({
   onPrintStatement,
   tGlobal,
   activeMode,
+  loadingRecords = [],
 }: SourceFilteredTableProps) {
   // Format numbers helper
   const fmt = (n: any, decimals = 2) => {
@@ -207,7 +210,10 @@ export function SourceFilteredTable({
         {/* ========================================================================= */}
         {/* VIEW 2: PURCHASE BOOKING (SAME-ROW LOADING & RECEIVING)                  */}
         {/* ========================================================================= */}
-        {sourceFilter === "purchase_booking" && (
+        {sourceFilter === "purchase_booking" && activeMode === "remaining" && (
+          <RemainingBookingTable rows={rows} loadingRecords={loadingRecords} lang={lang} onSelectOrder={onSelectOrder} />
+        )}
+        {sourceFilter === "purchase_booking" && activeMode !== "remaining" && (
           <table className="w-full min-w-[1700px] border-collapse text-left text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">

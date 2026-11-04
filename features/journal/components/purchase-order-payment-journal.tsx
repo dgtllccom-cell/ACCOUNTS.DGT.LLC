@@ -1119,6 +1119,7 @@ function NestedPaymentHistory({
   const [showFxFlow, setShowFxFlow] = useState(false);
 
   useEffect(() => {
+    setPayments([]);
     let cancelled = false;
     async function fetchPayments() {
       setLoading(true);
@@ -2823,6 +2824,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [selectedId, setSelectedId] = useState("");
   const [modalTab, setModalTab] = useState<"overview" | "goods" | "payments" | "transport">("overview");
   const selectOrder = (id: string, initialTab: "overview" | "goods" | "payments" | "transport" = "payments") => {
+    setSelectedOrderPayments([]);
+    setPaymentError("");
     setSelectedId(id);
     setModalTab(initialTab);
     setIsDoubleEntryExpanded(true);
@@ -3083,6 +3086,20 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [loadingViewingRowPayments, setLoadingViewingRowPayments] = useState(false);
   const [showModalHistory, setShowModalHistory] = useState(false);
   const [remainingLoadingRecords, setRemainingLoadingRecords] = useState<any[]>([]);
+  const [registryLoadingRecords, setRegistryLoadingRecords] = useState<any[]>([]);
+  useEffect(() => {
+    if (!paymentPage || activeMode !== "remaining") return;
+    let cancelled = false;
+    setRegistryLoadingRecords([]);
+    fetch(`/api/erp/purchases/loading-records?limit=10000&lang=${currentLanguage}`, { credentials: "include", cache: "no-store" })
+      .then(async response => {
+        const body = await response.json();
+        if (!response.ok || !body?.ok || !Array.isArray(body.data?.records)) throw new Error(body?.error?.message || tGlobal(currentLanguage, "purchase.pmw_err_load_failed", "Purchase records could not be loaded."));
+        if (!cancelled) setRegistryLoadingRecords(body.data.records);
+      })
+      .catch(err => { if (!cancelled) setError(err instanceof Error ? err.message : String(err)); });
+    return () => { cancelled = true; };
+  }, [paymentPage, activeMode, currentLanguage, paymentsTick]);
   const [loadingRemainingLoadingRecords, setLoadingRemainingLoadingRecords] = useState(false);
   // Stable per-payment-attempt key so a genuine double submission (double-click, network retry)
   // replays against the same server-side idempotency lock instead of posting twice. Regenerated
@@ -3104,11 +3121,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       try {
         const response = await fetch(`/api/erp/purchases/orders/${selectedId}/payments?lang=${currentLanguage}`, { credentials: "include" });
         const body = await response.json();
-        if (body?.ok && body.data?.payments && !cancelled) {
-          setSelectedOrderPayments(body.data.payments);
-        }
+        if (!response.ok || !body?.ok || !Array.isArray(body.data?.payments)) throw new Error(body?.error?.message || tGlobal(currentLanguage, "purchase.pmw_err_load_failed", "Purchase records could not be loaded."));
+        if (!cancelled) setSelectedOrderPayments(body.data.payments);
       } catch (err) {
         console.error("Failed to load payments for selected order:", err);
+        if (!cancelled) setPaymentError(err instanceof Error ? err.message : String(err));
       } finally {
         if (!cancelled) setLoadingPayments(false);
       }
@@ -5296,6 +5313,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         onPrintStatement={(row: any) => handleOpenA4PDF(row, true)}
         tGlobal={tGlobal}
         activeMode={activeMode}
+        loadingRecords={registryLoadingRecords}
       />
       </>
       )}

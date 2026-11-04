@@ -172,7 +172,7 @@ export function PurchasePaymentEntryDocument(p: PaymentEntryDocumentProps) {
 
   // the entries the current stage is about: endorsement/advance → advance-kind payments, remaining → remaining-kind payments
   const dateOf = (x: EntryPaymentRow) => String(x.entry_date || x.created_at || "");
-  const shown = [...p.payments].sort((a, b) => dateOf(a).localeCompare(dateOf(b)));
+  const shown = [...(p.mode === "remaining" ? p.payments.filter(payment => payment.kind === "remaining") : p.payments)].sort((a, b) => dateOf(a).localeCompare(dateOf(b)));
   const remainingAfter = new Map(m.breakdown.map((b) => [b.id, b.remainingAfter]));
   const figures = paymentSummaryFigures(m, p.percent, p.rate);
   const shownTotals = shown.reduce((a, x) => ({ po: a.po + x.amtUSD, local: a.local + x.amtAED }), { po: 0, local: 0 });
