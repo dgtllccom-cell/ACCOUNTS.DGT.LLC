@@ -91,9 +91,13 @@ export function resolveAgreedDueDate(record: any, preferredKind?: "advance" | "r
       record.remaining_payment_due_date ||
       form.agreedDueDate ||
       form.dueDate ||
-      form.paymentDueDate
+      form.paymentDueDate ||
+      record.agreed_due_date ||
+      record.due_date
     );
-    if (rem) return rem;
+    // Never show an Advance due date as a Remaining due date.
+    // A missing Remaining agreement is genuinely "Due Date Not Set".
+    return rem;
   }
 
   // General resolution: agreedDueDate > paymentDueDate > dueDate > advDueDate / remainingDueDate
