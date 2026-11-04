@@ -332,7 +332,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         ok: true,
         data: {
-          purchases: (fallbackRecords ?? []).map((row: any) => {
+          purchases: (fallbackRecords ?? []).filter(matchesScope).map((row: any) => {
             const postingState = deriveLocalPurchasePostingState(row);
             return {
               ...row,
