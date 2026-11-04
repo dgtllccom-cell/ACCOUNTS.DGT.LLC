@@ -943,13 +943,26 @@ export function LocalPurchaseView({
     }
     if (countryBranches.length > 0) {
       const userBranch = session.countryBranchIds?.[0] || session.country_branch_ids?.[0];
-      const match = countryBranches.find(b => b.id === userBranch) || countryBranches[0];
+      const userCityBranch = session.cityBranchIds?.[0] || session.city_branch_ids?.[0];
+      const assignedCity = userCityBranch
+        ? cityBranches.find(c => String(c.id) === String(userCityBranch))
+        : null;
+      const assignedCountryBranchId = assignedCity?.countryBranchId || assignedCity?.country_branch_id;
+      const match = countryBranches.find(b => String(b.id) === String(userBranch || assignedCountryBranchId || "")) ||
+        (session.countryIds?.length === 1
+          ? countryBranches.find(b => String(b.countryId || b.country_id) === String(session.countryIds[0]))
+          : null);
+      // Never silently default to the first global branch: it can hide all of
+      // the current user's purchases behind an unrelated branch filter.
       if (match) {
         setSelectedCountryId(match.countryId || match.country_id || "");
         setSelectedBranchId(match.id);
+        if (assignedCity && String(assignedCountryBranchId) === String(match.id)) {
+          setSelectedCityBranchId(String(assignedCity.id));
+        }
       }
     }
-  }, [countryBranches, session, isGlobalUser]);
+  }, [countryBranches, cityBranches, session, isGlobalUser]);
 
   useEffect(() => {
     if (isGlobalUser && !selectedCountryId && !selectedBranchId) return;
