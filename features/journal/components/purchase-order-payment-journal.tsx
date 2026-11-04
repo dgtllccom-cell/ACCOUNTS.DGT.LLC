@@ -5623,6 +5623,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   countryName={countryName}
                   purchaseAccount={[form.purchaseAccountNo, debitAccountName].filter((v) => v && v !== "—").join(" · ")}
                   paymentDate={paymentDate}
+                  batch={selectedLoadingDue ? {
+                    loadingNo: selectedLoadingDue.loadingNo,
+                    quantity: selectedLoadingDue.quantity,
+                    netKg: selectedLoadingDue.netWeightKg,
+                    value: selectedLoadingDue.value,
+                    advanceAllocated: selectedLoadingDue.advanceAllocated,
+                    outstanding: selectedLoadingDue.outstanding
+                  } : null}
                   supplier={{
                     accountNo: String(form.salesAccountNo || form.supplierAccountNo || (selected as any).sales_account_no || docSupplierLedgerCode || supplierCo?.company_code || ""),
                     name: String(supplierCo?.name || form.supplierName || (supplierHeader === "—" ? "" : supplierHeader)),
