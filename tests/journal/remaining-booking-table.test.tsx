@@ -60,7 +60,7 @@ describe("Remaining totals only eligible saved loading entries", () => {
 it("expands one bill to two loading entries and opens the selected loading", () => {
   const onSelectLoading = vi.fn();
   render(<RemainingBookingTable rows={[bill(), bill()]} loadingRecords={[]} dueBills={[due()]} lang="en" onSelectOrder={vi.fn()} onSelectLoading={onSelectLoading} />);
-  expect(screen.getAllByRole("cell", { name: "AE-001-0007" })).toHaveLength(1); // General is a summary table; Journal is the detail action.
+  expect(screen.getAllByRole("button", { name: "AE-001-0007" })).toHaveLength(1);
   fireEvent.click(screen.getByRole("button", { name: "AE-001-0007" }));
   const details = screen.getByTestId("remaining-loading-details");
   expect(within(details).getByText("LD-1")).toBeTruthy();
@@ -78,7 +78,7 @@ it("does not list unloaded or fully settled bills as collectible", () => {
 
 it("uses loaded totals in All Sources too and does not repeat the contract row", () => {
   render(<SourceFilteredTable sourceFilter="all" onSourceChange={vi.fn()} rows={[bill()]} counts={{ all: 1, booking: 1, local: 0 }} lang="en" onSelectOrder={vi.fn()} onOpenFullBill={vi.fn()} onPrintStatement={vi.fn()} tGlobal={(_lang, _key, fallback) => fallback} activeMode="remaining" loadingRecords={[]} dueBills={[due()]} />);
-  expect(screen.getAllByRole("button", { name: "AE-001-0007" })).toHaveLength(1);
+  expect(screen.getAllByRole("cell", { name: "AE-001-0007" })).toHaveLength(1); // General is a summary table.
   expect(screen.getAllByText("4,500")).toHaveLength(2); // Qty and net weight, but only one bill row.
   expect(screen.getAllByRole("button", { name: "Journal" })).toHaveLength(1);
   expect(screen.queryByRole("columnheader", { name: "Loading Country" })).toBeNull();
