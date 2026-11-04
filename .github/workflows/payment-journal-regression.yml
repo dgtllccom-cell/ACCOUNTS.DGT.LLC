@@ -7,9 +7,13 @@ on:
       - '.github/workflows/payment-journal-regression.yml'
       - 'features/journal/components/source-filtered-table.tsx'
       - 'features/journal/components/remaining-booking-table.tsx'
+      - 'features/journal/components/purchase-order-payment-journal.tsx'
+      - 'features/journal/components/purchase-payment-entry-document.tsx'
+      - 'lib/journal/remaining-loading-entry.ts'
       - 'lib/journal/remaining-booking-table.ts'
       - 'lib/services/payment-due-tracking.ts'
       - 'tests/journal/remaining-booking-table.test.tsx'
+      - 'tests/journal/remaining-loading-entry.test.ts'
   push:
     branches: [fix/remaining-payment-source-specific-journal-20261104]
 
@@ -33,4 +37,4 @@ jobs:
         env:
           CI: true
           NODE_OPTIONS: --max-old-space-size=4096
-        run: npm test -- tests/journal/remaining-booking-table.test.tsx
+        run: npm test -- tests/journal/remaining-booking-table.test.tsx tests/journal/remaining-loading-entry.test.ts
