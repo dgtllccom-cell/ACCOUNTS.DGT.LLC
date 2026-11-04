@@ -28,9 +28,11 @@ export function remainingBookingRow(row: Row, records: Row[] = [], dueBill?: Row
       id: text(record.id, row.id),
       loadingCountry: text(payload.loadingCountry, saved.loadingCountry, transport.loadingCountry, form.loadingCountry, form.originCountry),
       loadingPort: text(payload.loadingPort, record.loading_location, saved.loadingPort, transport.loadingPort, form.loadingPort, form.exitPort),
+      loadingGate: text(payload.loadingGate, payload.loadingBorder, payload.exitBorder, saved.loadingGate, saved.loadingBorder, transport.loadingGate, form.loadingGate, form.loadingBorder, form.exitBorder),
       loadingDate: text(record.loaded_at, payload.loadingDate, saved.loadingDate, transport.loadingDate, form.loadingDate),
       receivingCountry: text(payload.receivingCountry, payload.receivedCountry, saved.receivedCountry, transport.receivingCountry, form.receivedCountry, form.receivingCountry, form.destinationCountry),
       receivingPort: text(payload.receivingPort, payload.receivedPort, record.receiving_location, saved.receivedPort, transport.receivingPort, form.receivedPort, form.receivingPort, form.destinationPort),
+      receivingGate: text(payload.receivingGate, payload.receivedGate, payload.receivingBorder, payload.entryBorder, saved.receivingGate, saved.receivedGate, transport.receivingGate, form.receivingGate, form.receivedGate, form.receivingBorder, form.entryBorder),
       receivedDate: text(record.received_at, record.actual_arrival_date, payload.receivedDate, payload.receivingDate, transport.receivedDate, form.receivedDate, form.receivingDate),
     };
   });

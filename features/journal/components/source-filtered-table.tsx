@@ -2,6 +2,9 @@
 
 import React, { useMemo } from "react";
 import { RemainingBookingTable } from "./remaining-booking-table";
+import { remainingBookingRow } from "@/lib/journal/remaining-booking-table";
+import { resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
 type LanguageCode = string;
 import { WalletCards, Eye, Printer, FileSpreadsheet, ChevronRight } from "lucide-react";
@@ -47,6 +50,19 @@ export function SourceFilteredTable({
     const val = Number(n || 0);
     return isNaN(val) ? "0" : val.toLocaleString();
   };
+
+  const isLocalPurchase = (row: any) => row.is_local_purchase || row.order_type === "local_purchase" || row.source_type === "local_purchase" || Boolean(row.local_purchase_id);
+  // A loading can appear more than once in the incoming list. General shows one financial
+  // summary per saved bill; the Booking tab remains the per-loading movement register.
+  const uniqueRows = [...new Map(rows.map(row => [`${isLocalPurchase(row) ? "local" : "booking"}:${String(row.id)}`, row])).values()];
+  const dueByOrderId = new Map(dueBills.map(bill => [String(bill.id), bill]));
+  const generalRows = uniqueRows.filter(row => {
+    if (activeMode !== "remaining" || isLocalPurchase(row)) return true;
+    const due = dueByOrderId.get(String(row.id));
+    return Boolean(due?.loadings?.some((entry: any) => Number(entry.outstanding || 0) > 0.05));
+  });
+  const label = (value: string) => translateHeader(lang, value);
+  const displayDate = (value: string | null) => value ? value.slice(0, 10) : "—";
 
   return (
     <div className="mx-6 mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
@@ -109,19 +125,16 @@ export function SourceFilteredTable({
 
       {/* ── Table Container ── */}
       <div className="overflow-x-auto">
-        {sourceFilter === "all" && activeMode === "remaining" && (
-          <RemainingBookingTable rows={rows} loadingRecords={loadingRecords} dueBills={dueBills} lang={lang} onSelectOrder={onSelectOrder} onSelectLoading={onSelectLoading} />
-        )}
         {/* ========================================================================= */}
         {/* VIEW 1: ALL SOURCES (JOURNAL)                                             */}
         {/* ========================================================================= */}
-        {sourceFilter === "all" && (activeMode !== "remaining" || rows.some(r => r.is_local_purchase || r.order_type === "local_purchase" || r.source_type === "local_purchase" || Boolean(r.local_purchase_id))) && (
-          <table className="w-full min-w-[1600px] border-collapse text-left text-xs">
+        {sourceFilter === "all" && (
+          <table className="w-full min-w-[1350px] border-collapse text-left text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
                 <th className="py-3 px-3 border-r border-amber-300">Bill No</th>
                 <th className="py-3 px-2 border-r border-amber-300 text-center">Source</th>
-                <th className="py-3 px-2.5 border-r border-amber-300">Date</th>
+                <th className="py-3 px-2.5 border-r border-amber-300">{label("Date")}</th>
                 <th className="py-3 px-2.5 border-r border-amber-300">Country / Branch</th>
                 <th className="py-3 px-3 border-r border-amber-300">Supplier</th>
                 <th className="py-3 px-3 border-r border-amber-300">Goods Name</th>
@@ -135,36 +148,35 @@ export function SourceFilteredTable({
                 <th className="py-3 px-2 text-right border-r border-amber-300">Balance</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 font-mono">DR Account</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 font-mono">CR Account</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300">Due Date / Status</th>
+                <th className="py-3 px-2.5 text-center border-r border-amber-300">{activeMode === "remaining" ? label("REMAINING DUE DATE") : label("DUE DATE")} / {label("Status")}</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300">Exchange Rate</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300">Loading Country</th>
                 <th className="py-3 px-3 text-center">Journal</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-              {rows.filter(r => activeMode !== "remaining" || r.is_local_purchase || r.order_type === "local_purchase" || r.source_type === "local_purchase" || Boolean(r.local_purchase_id)).map((r, i) => {
+              {generalRows.map((r, i) => {
                 const form = r.form_data?.form || {};
                 const billNo = r.purchase_order_no || r.bill_no || r.order_no || "—";
-                const isLocal = r.is_local_purchase || r.order_type === "local_purchase" || r.source_type === "local_purchase" || Boolean(r.local_purchase_id);
+                const isLocal = isLocalPurchase(r);
+                const booking = !isLocal && activeMode === "remaining" ? remainingBookingRow(r, loadingRecords, dueByOrderId.get(String(r.id))) : null;
                 const sourceLabel = isLocal ? "Local" : "Booking";
-                const date = r.order_date || form.orderDate || r.created_at?.slice(0, 10) || "—";
-                const countryBranch = `${form.countryCode || "AE"} / ${form.branchCode || "AE-001"}`;
-                const supplier = r.supplier_name || form.supplierName || "—";
-                const goods = r.goods_name || form.goodsName || "—";
-                const qty = r.total_quantity || form.totalQuantity || 0;
-                const unit = form.quantityUnit || "Cartons";
-                const grossKg = r.gross_weight || form.grossWeight || 0;
-                const netKg = r.net_weight || form.netWeight || 0;
-                const ccy = r.currency_code || form.currency || "USD";
-                const total = Number(r.order_total || form.totalAmount || 0);
-                const paid = Number(r.advance_paid || 0) + Number(r.remaining_paid || 0);
-                const bal = Math.max(0, total - paid);
-                const dr = form.purchaseAccountNo || "140100";
-                const cr = form.salesAccountNo || form.supplierAccountNo || "200100";
-                const dueDate = form.advanceDueDate || form.dueDate || "—";
-                const status = bal <= 0 ? "Fully Paid" : paid > 0 ? "Partially Paid" : "Open";
-                const exRate = Number(form.exchangeRate || 1).toFixed(4);
-                const loadCnt = form.loadingCountry || "—";
+                const date = booking?.date || r.order_date || form.orderDate || r.created_at?.slice(0, 10) || "—";
+                const countryBranch = [form.countryCode || r.country_code || r.country_name, form.branchCode || r.branch_code || r.branch_name].filter(Boolean).join(" / ") || "—";
+                const supplier = booking?.supplier || r.supplier_name || form.supplierName || "—";
+                const goods = booking?.goods || r.goods_name || form.goodsName || "—";
+                const qty = booking ? booking.quantity : (r.total_quantity ?? form.totalQuantity ?? 0);
+                const unit = booking?.unit || form.quantityUnit || "—";
+                const grossKg = booking ? booking.grossKg : (r.gross_weight ?? form.grossWeight ?? 0);
+                const netKg = booking ? booking.netKg : (r.net_weight ?? form.netWeight ?? 0);
+                const ccy = booking?.currency || r.currency_code || form.currency || "—";
+                const total = booking ? booking.total : Number(r.order_total ?? form.totalAmount ?? 0);
+                const paid = booking ? booking.paid : Number(r.advance_paid || 0) + Number(r.remaining_paid || 0);
+                const bal = booking ? booking.balance : Math.max(0, Number(r.remaining_due ?? (total - paid)));
+                const dr = form.purchaseAccountNo || r.purchase_account_no || "—";
+                const cr = form.salesAccountNo || form.supplierAccountNo || r.sales_account_no || "—";
+                const dueDate = resolveAgreedDueDate(r, activeMode === "remaining" ? "remaining" : undefined);
+                const status = bal <= 0.05 ? "Fully Paid" : paid > 0 ? "Partially Paid" : "Open";
+                const exRate = Number(booking?.exchangeRate ?? r.exchange_rate ?? form.exchangeRate ?? 1).toFixed(4);
 
                 return (
                   <tr key={r.id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
@@ -180,8 +192,8 @@ export function SourceFilteredTable({
                     <td className="py-3 px-3 font-semibold">{goods}</td>
                     <td className="py-3 px-2 text-right font-mono font-bold">{fmtQty(qty)}</td>
                     <td className="py-3 px-2 text-center text-slate-500">{unit}</td>
-                    <td className="py-3 px-2 text-right font-mono">{fmtQty(grossKg)}</td>
-                    <td className="py-3 px-2 text-right font-mono">{fmtQty(netKg)}</td>
+                    <td className="py-3 px-2 text-right font-mono">{grossKg == null ? "—" : fmtQty(grossKg)}</td>
+                    <td className="py-3 px-2 text-right font-mono">{netKg == null ? "—" : fmtQty(netKg)}</td>
                     <td className="py-3 px-2 text-center font-bold text-indigo-600">{ccy}</td>
                     <td className="py-3 px-2.5 text-right font-mono font-black">{fmt(total)}</td>
                     <td className="py-3 px-2 text-right font-mono font-bold text-emerald-600">{fmt(paid)}</td>
@@ -190,14 +202,13 @@ export function SourceFilteredTable({
                     <td className="py-3 px-2 text-center font-mono text-slate-500">{cr}</td>
                     <td className="py-3 px-2.5 text-center">
                       <div className="flex flex-col items-center">
-                        <span className="font-mono text-[11px] text-slate-600">{dueDate}</span>
+                        <span className="font-mono text-[11px] text-slate-600">{displayDate(dueDate)}</span>
                         <span className={cn("px-1.5 py-0.2 rounded text-[10px] font-bold", bal <= 0 ? "bg-emerald-100 text-emerald-700" : paid > 0 ? "bg-amber-100 text-amber-700" : "bg-blue-50 text-blue-700")}>
                           {status}
                         </span>
                       </div>
                     </td>
                     <td className="py-3 px-2 text-center font-mono">{exRate}</td>
-                    <td className="py-3 px-2.5 text-center font-semibold text-slate-600">{loadCnt}</td>
                     <td className="py-3 px-3 text-center">
                       <button
                         type="button"
@@ -252,7 +263,7 @@ export function SourceFilteredTable({
                 const form = r.form_data?.form || {};
                 const billNo = r.purchase_order_no || r.bill_no || r.order_no || "—";
                 const date = r.order_date || form.orderDate || r.created_at?.slice(0, 10) || "—";
-                const countryBranch = `${form.countryCode || "AE"} / ${form.branchCode || "AE-001"}`;
+                const countryBranch = [form.countryCode || r.country_code || r.country_name, form.branchCode || r.branch_code || r.branch_name].filter(Boolean).join(" / ") || "—";
                 const supplier = r.supplier_name || form.supplierName || "—";
                 const goods = r.goods_name || form.goodsName || "—";
                 const qty = r.total_quantity || form.totalQuantity || 0;
@@ -266,18 +277,18 @@ export function SourceFilteredTable({
                 const exRate = Number(form.exchangeRate || 1).toFixed(4);
 
                 // Quantities from real loading records or form data
-                const loadedQty = Number(r.loaded_quantity || form.loadedQuantity || (r.loading_records?.[0]?.quantity ?? 100));
+                const loadedQty = Number(r.loaded_quantity ?? form.loadedQuantity ?? r.loading_records?.[0]?.quantity ?? 0);
                 const receivedQty = Number(r.received_quantity || form.receivedQuantity || 0);
                 const damageQty = Number(r.damage_quantity || 0);
                 const shortageQty = Number(r.shortage_quantity || 0);
                 const outstandingQty = Math.max(0, qty - receivedQty);
 
-                const loadCountry = form.loadingCountry || "CN";
-                const loadPort = form.loadingPort || "Shanghai";
-                const loadDate = form.loadingDate || "01 Nov 2026";
-                const rcvCountry = form.destinationCountry || "AE";
-                const rcvPort = form.destinationPort || "Jebel Ali";
-                const rcvDate = form.arrivalDate || "Pending";
+                const loadCountry = form.loadingCountry || "—";
+                const loadPort = form.loadingPort || "—";
+                const loadDate = form.loadingDate || "—";
+                const rcvCountry = form.receivedCountry || form.receivingCountry || form.destinationCountry || "—";
+                const rcvPort = form.receivedPort || form.receivingPort || form.destinationPort || "—";
+                const rcvDate = form.receivedDate || form.arrivalDate || "—";
 
                 return (
                   <tr key={r.id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
@@ -369,9 +380,9 @@ export function SourceFilteredTable({
                 <th className="py-3 px-2 text-center border-r border-amber-300">Unit</th>
                 <th className="py-3 px-2 text-right border-r border-amber-300">Gross kg</th>
                 <th className="py-3 px-2 text-right border-r border-amber-300">Net kg</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300">Total AED</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300">Paid AED</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300">Balance AED</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300">Bill Total</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300">Paid</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300">Balance</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300">Loaded?</th>
                 <th className="py-3 px-3 text-center">Journal</th>
               </tr>
@@ -381,7 +392,7 @@ export function SourceFilteredTable({
                 const form = r.form_data?.form || {};
                 const billNo = r.purchase_order_no || r.bill_no || r.order_no || "—";
                 const date = r.order_date || form.orderDate || r.created_at?.slice(0, 10) || "—";
-                const countryBranch = `${form.countryCode || "AE"} / ${form.branchCode || "AE-001"}`;
+                const countryBranch = [form.countryCode || r.country_code || r.country_name, form.branchCode || r.branch_code || r.branch_name].filter(Boolean).join(" / ") || "—";
                 const supplier = r.supplier_name || form.supplierName || "—";
                 const goods = r.goods_name || form.goodsName || "—";
                 const qty = r.total_quantity || form.totalQuantity || 0;
@@ -390,7 +401,8 @@ export function SourceFilteredTable({
                 const netKg = r.net_weight || form.netWeight || 0;
                 const total = Number(r.order_total || form.totalAmount || 0);
                 const paid = Number(r.advance_paid || 0) + Number(r.remaining_paid || 0);
-                const bal = Math.max(0, total - paid);
+                const bal = Math.max(0, Number(r.remaining_due ?? (total - paid)));
+                const ccy = r.currency_code || form.currency || "—";
                 const isLoaded = Boolean(r.is_loaded || r.loading_records?.length || form.loadedQuantity > 0);
 
                 return (
@@ -404,9 +416,9 @@ export function SourceFilteredTable({
                     <td className="py-3 px-2 text-center text-slate-500">{unit}</td>
                     <td className="py-3 px-2 text-right font-mono">{fmtQty(grossKg)}</td>
                     <td className="py-3 px-2 text-right font-mono">{fmtQty(netKg)}</td>
-                    <td className="py-3 px-3 text-right font-mono font-black">{fmt(total)}</td>
-                    <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-600">{fmt(paid)}</td>
-                    <td className="py-3 px-2.5 text-right font-mono font-bold text-rose-600">{fmt(bal)}</td>
+                    <td className="py-3 px-3 text-right font-mono font-black">{fmt(total)} {ccy}</td>
+                    <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-600">{fmt(paid)} {ccy}</td>
+                    <td className="py-3 px-2.5 text-right font-mono font-bold text-rose-600">{fmt(bal)} {ccy}</td>
                     <td className="py-3 px-2 text-center">
                       <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase", isLoaded ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600")}>
                         {isLoaded ? "Yes" : "No"}
@@ -429,7 +441,7 @@ export function SourceFilteredTable({
         )}
 
         {/* Empty State */}
-        {rows.length === 0 && (
+        {(sourceFilter === "all" ? generalRows.length === 0 : rows.length === 0) && (
           <div className="py-16 text-center text-slate-400">
             <FileSpreadsheet className="h-10 w-10 mx-auto opacity-30 mb-2" />
             <p className="text-sm font-semibold">No records found for this view.</p>

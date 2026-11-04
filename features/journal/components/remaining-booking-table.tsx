@@ -12,12 +12,12 @@ export function RemainingBookingTable({ rows, loadingRecords, dueBills = [], lan
   const label = (value: string) => translateHeader(lang, value);
   const format = (value: number | null, decimals = 2) => value == null ? "—" : value.toLocaleString(undefined, { maximumFractionDigits: decimals });
   const date = (value: string) => value ? value.split("T")[0] : "—";
-  const headers = ["Bill No", "Date", "Country / Branch", "Supplier", "Goods Name", "Total Quantity", "Unit", "Gross Weight", "Net Weight", "Loading Country", "Loading Port", "Loading Date", "Receiving Country", "Receiving Port", "Received Date", "Currency", "Exchange Rate", "Bill Total", "Paid", "Balance", "Journal"];
-  const routeKeys = ["loadingCountry", "loadingPort", "loadingDate", "receivingCountry", "receivingPort", "receivedDate"] as const;
+  const headers = ["Bill No", "Date", "Country / Branch", "Supplier", "Goods Name", "Total Quantity", "Unit", "Gross Weight", "Net Weight", "Loading Country", "Loading Port", "Loading Gate", "Loading Date", "Receiving Country", "Receiving Port", "Receiving Gate", "Received Date", "Currency", "Exchange Rate", "Bill Total", "Paid", "Balance", "Journal"];
+  const routeKeys = ["loadingCountry", "loadingPort", "loadingGate", "loadingDate", "receivingCountry", "receivingPort", "receivingGate", "receivedDate"] as const;
   const cell = "border-e border-slate-200 px-2 py-2 align-top dark:border-slate-800";
   const numeric = `${cell} text-end font-mono tabular-nums whitespace-nowrap`;
   return (
-    <table dir={["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr"} className="w-full min-w-[1900px] border-collapse text-start text-xs" data-testid="remaining-booking-table">
+    <table dir={["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr"} className="w-full min-w-[2100px] border-collapse text-start text-xs" data-testid="remaining-booking-table">
       <thead><tr className="border-b border-amber-300 bg-[#ffd257] text-[11px] font-black text-slate-900">
         {headers.map(header => <th key={header} scope="col" className="whitespace-nowrap border-e border-amber-300 px-2 py-3 text-start">{label(header)}{header === "Gross Weight" || header === "Net Weight" ? " (kg)" : ""}</th>)}
       </tr></thead>
