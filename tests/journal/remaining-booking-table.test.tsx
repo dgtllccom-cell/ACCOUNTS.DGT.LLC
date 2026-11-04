@@ -69,8 +69,36 @@ it("does not list unloaded or fully settled bills as collectible", () => {
 it("uses loaded totals in All Sources too and does not repeat the contract row", () => {
   render(<SourceFilteredTable sourceFilter="all" onSourceChange={vi.fn()} rows={[bill()]} counts={{ all: 1, booking: 1, local: 0 }} lang="en" onSelectOrder={vi.fn()} onOpenFullBill={vi.fn()} onPrintStatement={vi.fn()} tGlobal={(_lang, _key, fallback) => fallback} activeMode="remaining" loadingRecords={[]} dueBills={[due()]} />);
   expect(screen.getAllByRole("button", { name: "AE-001-0007" })).toHaveLength(1);
-  expect(screen.getAllByText("4,500")).toHaveLength(2);
+  expect(screen.getAllByText("4,500")).toHaveLength(1);
+  expect(screen.queryByRole("columnheader", { name: "Loading Country" })).toBeNull();
+  expect(screen.queryByRole("columnheader", { name: "Loading Port" })).toBeNull();
   expect(screen.queryByText("4,252,612.50")).toBeNull();
+});
+
+it("keeps transport details only in Purchase Booking and never duplicates All Sources", () => {
+  const props = {
+    sourceFilter: "all" as const, onSourceChange: vi.fn(), rows: [bill(), bill()], counts: { all: 1, booking: 1, local: 0 },
+    lang: "en", onSelectOrder: vi.fn(), onOpenFullBill: vi.fn(), onPrintStatement: vi.fn(),
+    tGlobal: (_lang: string, _key: string, fallback: string) => fallback, activeMode: "remaining",
+    loadingRecords: [], dueBills: [due()],
+  };
+  const { rerender } = render(<SourceFilteredTable {...props} />);
+  expect(screen.getAllByRole("button", { name: "Journal" })).toHaveLength(1);
+  expect(screen.queryByText("Tianjin")).toBeNull();
+  rerender(<SourceFilteredTable {...props} sourceFilter="purchase_booking" />);
+  expect(screen.getByRole("columnheader", { name: "Loading Country" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "Loading Gate" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "Receiving Gate" })).toBeTruthy();
+});
+
+it("shows the Remaining payment due date instead of the Advance date", () => {
+  render(<SourceFilteredTable sourceFilter="all" onSourceChange={vi.fn()} rows={[bill({
+    form_data: { form: { advanceDueDate: "2026-11-01", remainingDueDate: "2026-11-22", supplierName: "Supplier" } },
+  })]} counts={{ all: 1, booking: 1, local: 0 }} lang="en"
+    onSelectOrder={vi.fn()} onOpenFullBill={vi.fn()} onPrintStatement={vi.fn()}
+    tGlobal={(_lang, _key, fallback) => fallback} activeMode="remaining" loadingRecords={[]} dueBills={[due()]} />);
+  expect(screen.getByText("2026-11-22")).toBeTruthy();
+  expect(screen.queryByText("2026-11-01")).toBeNull();
 });
 
 it("shows the bill's Remaining entries while the running balance still accounts for its advance", () => {
