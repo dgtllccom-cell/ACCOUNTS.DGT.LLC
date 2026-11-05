@@ -402,7 +402,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
       salesAccountName: "Saudi Arabia",
       originCountryName: "Saudi Arabia (KSA)",
       countryName: "United Arab Emirates",
-      branchName: "UAE – Main Branch",
+      branchName: "UAE - Main Branch",
       shippingMode: "Road (Truck)",
       quantityName: "Bags",
       numbers: 3292,
@@ -449,7 +449,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
       { id: "wh-ware-001", warehouse_name: "Al Ras Warehouse", warehouse_code: "WARE-001" },
     ],
     branches: [
-      { id: "br-uae-main", name: "UAE – Main Branch" },
+      { id: "br-uae-main", name: "UAE - Main Branch" },
     ],
   }), []);
 
@@ -706,8 +706,8 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
 
   const selectedWarehouseObj = warehouses.find((w) => w.id === selectedDestId) || warehouses[0];
   const selectedDestDisplay = selectedWarehouseObj
-    ? `UAE – ${selectedWarehouseObj.warehouse_name} (${selectedWarehouseObj.warehouse_code})`
-    : "UAE – Al Ras Warehouse (WARE-001)";
+    ? `UAE - ${selectedWarehouseObj.warehouse_name} (${selectedWarehouseObj.warehouse_code})`
+    : "UAE - Al Ras Warehouse (WARE-001)";
 
   return (
     <div
@@ -876,7 +876,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
             <div className="min-w-0">
               <div className="text-[11px] font-semibold text-slate-500">{s.t("kpi_branch", "Branch")}</div>
               <div className="truncate text-sm font-black text-slate-900">
-                {purchase?.branchName || purchase?.countryName || "UAE – Main Branch"}
+                {purchase?.branchName || purchase?.countryName || "UAE - Main Branch"}
               </div>
             </div>
           </div>
@@ -930,11 +930,11 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
         ) : null}
 
         {/* Main 2-Column Content Grid */}
-        <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_370px]">
-          {/* LEFT COLUMN: Tabbed Voucher & Lot Details Card */}
-          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+        <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+          {/* LEFT COLUMN: Tab Navigation & Details */}
+          <div className="space-y-3.5">
             {/* 5-Tab Navigation Bar */}
-            <div className="grid grid-cols-2 border-b border-slate-200 bg-slate-50/80 sm:grid-cols-5">
+            <div className="flex flex-wrap items-center gap-2">
               {[
                 { id: "voucher", label: s.t("tab_voucher_details", "Voucher Details"), icon: FileText },
                 { id: "accounts", label: s.t("tab_accounts_payment", "Accounts & Payment"), icon: Layers },
@@ -949,22 +949,21 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                     key={tb.id}
                     type="button"
                     onClick={() => setActiveTab(tb.id as any)}
-                    className={`flex items-center justify-center gap-2 border-e border-slate-200/80 px-3 py-2.5 text-xs font-bold transition last:border-e-0 ${
+                    className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition shadow-2xs ${
                       active
-                        ? "bg-gradient-to-b from-[#1e4b8f] to-[#143566] text-white shadow-inner"
-                        : "text-slate-700 hover:bg-slate-100"
+                        ? "bg-[#1e4b8f] text-white shadow-xs"
+                        : "border border-slate-200/90 bg-white text-slate-700 hover:bg-slate-50"
                     }`}
                   >
                     <Icon className={`h-3.5 w-3.5 ${active ? "text-white" : "text-[#1e4b8f]"}`} />
-                    <span className="truncate">{tb.label}</span>
+                    <span>{tb.label}</span>
                   </button>
                 );
               })}
             </div>
 
-            <div className="space-y-3.5 p-3.5 sm:p-4">
-              {/* Row 1: 3 Account & Supplier Cards */}
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {/* Row 1: 3 Account & Supplier Cards */}
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
                 {/* Card 1: Purchase Account */}
                 <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-2xs">
                   <div className="flex items-center gap-2 border-b border-blue-100 bg-gradient-to-r from-[#dbeafe] via-[#eff6ff] to-white px-3 py-2">
@@ -1053,11 +1052,6 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                     <Boxes className="h-4 w-4 text-sky-200" />
                     <h3 className="text-xs font-black tracking-wide">{s.t("sec_goods_details", "Goods Details")}</h3>
                   </div>
-                  {lots.length > 0 ? (
-                    <span className="rounded bg-white/15 px-2 py-0.5 font-mono text-[10.5px] font-semibold text-sky-100">
-                      {lots[0].lot_ref}
-                    </span>
-                  ) : null}
                 </div>
 
                 <div className="overflow-x-auto">
@@ -1078,7 +1072,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                           {s.t("th_gross_wt_kg", "Gross Wt (Kg)")}
                         </th>
                         <th className="border-e border-amber-200/60 px-2 py-2 text-center font-black leading-tight">
-                          {s.t("th_waste_pct", "- Waste %")}
+                          {s.t("th_waste_pct", "▾ Waste % ▾")}
                         </th>
                         <th className="border-e border-amber-200/60 px-2 py-2 text-end font-black leading-tight">
                           {s.t("th_net_wt_kg", "Net Wt (Kg)")}
@@ -1372,7 +1366,6 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                   </div>
                 </div>
               ) : null}
-            </div>
           </div>
 
           {/* RIGHT COLUMN: "Transfer to" Verification & Action Panel */}
@@ -1385,15 +1378,6 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                 </div>
                 <h2 className="text-base font-black text-[#0f2942]">{s.t("panel_transfer_to", "Transfer to")}</h2>
               </div>
-              {lots[0]?.stock?.[0] ? (
-                <button
-                  type="button"
-                  onClick={() => setPick({ lot: lots[0], row: lots[0].stock[0] })}
-                  className="text-[11px] font-bold text-blue-700 hover:underline"
-                >
-                  {s.t("more_options", "More Options")}
-                </button>
-              ) : null}
             </div>
 
             <div className="space-y-4 p-4">
