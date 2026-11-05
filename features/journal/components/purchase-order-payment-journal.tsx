@@ -1,5 +1,6 @@
 "use client";
 
+import { EntryPortal } from "./payment-entry-portal";
 import { SourceFilteredTable } from "./source-filtered-table";
 import { payableRemainingLoadings, remainingLoadingEntry, type RemainingDueBill } from "@/lib/journal/remaining-loading-entry";
  
@@ -2785,30 +2786,8 @@ function getPurchaseOrderTableHeader(h: string, currentLanguage: LanguageCode): 
 
 /** In-page container for the Endorsement / Advance / Remaining payment document (used instead of the modal for those three modes). */
 function PaymentPanelShell({ docMode, children, ...modalProps }: { docMode: boolean; children?: React.ReactNode; title: string; onClose: () => void; maxWidth?: string; className?: string }) {
-  if (docMode) return <div data-testid="payment-entry-shell" className="w-full bg-slate-50 dark:bg-slate-950">{children}</div>;
+  if (docMode) return <div id="ledger-cash-entry-section" tabIndex={-1} data-testid="payment-entry-shell" className="w-full bg-slate-50 dark:bg-slate-950">{children}</div>;
   return <SimpleModal {...modalProps}>{children}</SimpleModal>;
-}
-
-/**
- * Renders its children where they are written, or — when `active` — inside the element with id `slotId` once that element exists. It lets the
- * existing entry form (which owns all the payment state) appear inside the new document without being copied or moved in the source.
- */
-function EntryPortal({ slotId, active, children }: { slotId: string; active: boolean; children: React.ReactNode }) {
-  const [target, setTarget] = useState<HTMLElement | null>(null);
-  useEffect(() => {
-    if (!active) { setTarget(null); return; }
-    let raf = 0;
-    let tries = 0;
-    const find = () => {
-      const el = document.getElementById(slotId);
-      if (el) setTarget(el);
-      else if (tries++ < 120) raf = requestAnimationFrame(find);
-    };
-    find();
-    return () => { if (raf) cancelAnimationFrame(raf); };
-  }, [active, slotId]);
-  if (active && target) return createPortal(children, target);
-  return <>{children}</>;
 }
 
 export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout = false, paymentPage = false }: { mode?: PaymentMode; approvedLayout?: boolean; paymentPage?: boolean }) {
@@ -2834,12 +2813,6 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     setSelectedId(id);
     setModalTab(initialTab);
     setIsDoubleEntryExpanded(true);
-    setTimeout(() => {
-      const el = document.getElementById("ledger-cash-entry-section");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }, 250);
   };
   const [sourceFilter, setSourceFilter] = useState<"all" | "purchase_booking" | "local_purchase">("all");
   const [settlementFilter, setSettlementFilter] = useState<"all" | "paid" | "remaining">("all");
@@ -3093,6 +3066,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [remainingLoadingRecords, setRemainingLoadingRecords] = useState<any[]>([]);
   const [registryDueBills, setRegistryDueBills] = useState<RemainingDueBill[]>([]);
   const [selectedDueDetail, setSelectedDueDetail] = useState<RemainingDueBill | null>(null);
+  const [selectedDueError, setSelectedDueError] = useState("");
+  const [selectedDueRetry, setSelectedDueRetry] = useState(0);
   const [registryDueReady, setRegistryDueReady] = useState(false);
   const [registryLoadingRecords, setRegistryLoadingRecords] = useState<any[]>([]);
   useEffect(() => {
@@ -3979,6 +3954,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     setDueReady(false);
     setDueLoadings({});
     setSelectedDueDetail(null);
+    setSelectedDueError("");
     if (!(selected && activeMode === "remaining") || isLocalSelected) return;
     let cancelled = false;
     fetch(`/api/erp/purchases/remaining-due?orderNo=${encodeURIComponent(String(selected.purchase_order_no))}&includeSettled=1`, { credentials: "include", cache: "no-store" })
@@ -3995,10 +3971,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         for (const l of bill?.loadings ?? []) map[String(l.id)] = { outstanding: Number(l.outstanding || 0), value: Number(l.value || 0), advanceAllocated: Number(l.advanceAllocated || 0) };
         setDueLoadings(map);
       })
-      .catch((err) => { if (!cancelled) setPaymentError(err instanceof Error ? err.message : String(err)); })
+      .catch((err) => { if (!cancelled) setSelectedDueError(err instanceof Error ? err.message : String(err)); })
       .finally(() => { if (!cancelled) setDueReady(true); });
     return () => { cancelled = true; };
-  }, [selected?.id, selected?.purchase_order_no, activeMode, isLocalSelected, paymentsTick]);
+  }, [selected?.id, selected?.purchase_order_no, activeMode, isLocalSelected, paymentsTick, selectedDueRetry]);
 
   // Fetch loaded container records for Remaining Payment mode
   useEffect(() => {
@@ -4552,6 +4528,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   // Endorsement / Advance / Remaining open as ONE in-page document instead of the 4-tab modal. `overLimit` is reported by that document
   // (the typed amount is more than the remaining balance); the payment API enforces the same rule, this only stops the click earlier.
   const docMode = Boolean(selected) && (activeMode === "endorsement" || activeMode === "advance" || activeMode === "remaining");
+  // The document replaces the register in place. Focus its real mount target
+  // after a bill/batch changes; a timer targeting a missing id left short batch
+  // selectors above the retained scroll position and made Journal look inert.
+  useEffect(() => {
+    if (!docMode) return;
+    const panel = document.getElementById("ledger-cash-entry-section");
+    panel?.focus({ preventScroll: true });
+    panel?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [docMode, selectedId, selectedLoadingDue?.id]);
   const [overLimit, setOverLimit] = useState(false);
   useEffect(() => {
     if (docMode) setModalTab("payments"); // the entry form lives in the payments tab
@@ -5715,7 +5700,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     </div>
                     <button type="button" onClick={() => { setSelectedLoadingRecord(null); setSelectedId(""); }} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white">Back to Register</button>
                   </div>
-                  {!dueReady ? (
+                  {selectedDueError ? (
+                    <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                      <p>{selectedDueError}</p>
+                      <button type="button" onClick={() => { setSelectedDueError(""); setSelectedDueRetry(value => value + 1); }} className="mt-3 min-h-11 rounded-lg border border-red-300 px-4 font-bold">
+                        {translateHeader(currentLanguage, "Retry")}
+                      </button>
+                    </div>
+                  ) : !dueReady ? (
                     <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">Loading saved remaining-payment records…</p>
                   ) : payableLoadingChoices.length > 0 ? (
                     <div className="grid gap-3 md:grid-cols-2">
