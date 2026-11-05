@@ -4,7 +4,11 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { t } from "@/lib/i18n/ui";
 
 const state = vi.hoisted(() => ({ highlight: "", lang: "en" as any }));
-vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(state.highlight ? `billId=${state.highlight}` : "") }));
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(state.highlight ? `billId=${state.highlight}` : ""),
+  // the view and the shared JournalPrintButton call useRouter(); the test only needs the hook to be defined
+  useRouter: () => ({ push: () => {}, replace: () => {}, back: () => {}, forward: () => {}, refresh: () => {}, prefetch: () => {} }),
+}));
 const translate = (key: string, fallback: string) => t(state.lang, key, fallback);
 vi.mock("@/lib/i18n/use-erp-screen", () => ({ useErpScreen: () => ({ lang: state.lang, isRtl: state.lang !== "en", tGlobal: translate }) }));
 import { LocalPurchaseTransferPaymentView } from "@/features/purchases/components/local-purchase-transfer-payment-view";

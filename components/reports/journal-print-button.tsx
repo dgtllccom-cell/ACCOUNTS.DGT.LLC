@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Printer, Loader2 } from "lucide-react";
+import React, { useState } from "react";
+import { Printer, Loader2, MoreVertical, FileText, Download, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { t } from "@/lib/i18n/ui";
 import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
-import { type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
+import { getRowValue, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import type { ERPCompanyInfo, ERPFilterPill } from "@/lib/reports/erp-report-template-builder";
 
 export type JournalPrintButtonProps = {
@@ -27,8 +27,12 @@ export type JournalPrintButtonProps = {
   cityBranchId?: string | null;
   orientation?: "portrait" | "landscape";
   className?: string;
-  variant?: "default" | "outline" | "secondary" | "ghost";
+  variant?: "default" | "outline" | "secondary" | "ghost" | "menu";
   size?: "default" | "sm" | "lg" | "icon";
+  /** menu variant: optional View Details callback (opens the caller's own detail flow, never a window). */
+  onView?: () => void;
+  /** menu variant: hide the Excel item (the engine's preview already offers CSV / Excel). Default: show it. */
+  hideExcel?: boolean;
 };
 
 export function JournalPrintButton({
@@ -47,13 +51,16 @@ export function JournalPrintButton({
   orientation,
   className = "",
   variant = "outline",
-  size = "sm"
+  size = "sm",
+  onView,
+  hideExcel = false,
 }: JournalPrintButtonProps) {
   const lang = useActiveLanguage();
   const scope = useErpScope();
   const [loading, setLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const handlePrint = async () => {
+  const buildAndOpen = async (overrideOrientation?: "portrait" | "landscape") => {
     try {
       setLoading(true);
       let dataset = rows || [];
@@ -76,7 +83,7 @@ export function JournalPrintButton({
         summary,
         totalsRow,
         filters: filters?.map((f) => ({ label: f.label, value: String(f.value ?? "") })),
-        orientation,
+        orientation: overrideOrientation ?? orientation,
         countryId: resolvedCountryId,
         countryBranchId: resolvedCountryBranchId,
         cityBranchId: resolvedCityBranchId,
@@ -91,6 +98,75 @@ export function JournalPrintButton({
       setLoading(false);
     }
   };
+
+  const handlePrint = () => buildAndOpen();
+
+  const exportCsv = async () => {
+    // same data the preview engine loads: pull via fetchFullData when present
+    const dataset = fetchFullData ? await fetchFullData() : rows ?? [];
+    const headers = columns.map((c) => c.label);
+    const csvRows = dataset.map((r) => columns.map((c) => `"${String(getRowValue(r, c.key) ?? "").replace(/"/g, '""')}"`).join(","));
+    const blob = new Blob(["﻿" + [headers.map((h) => `"${h.replace(/"/g, '""')}"`).join(","), ...csvRows].join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (variant === "menu") {
+    const run = async (fn: () => Promise<void> | void) => {
+      setMenuOpen(false);
+      await fn();
+    };
+    const itemCls =
+      "flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800";
+    return (
+      <div className={`relative inline-flex ${className}`}>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          data-testid="register-actions-menu"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          aria-label={t(lang, "report.print", "Print Report")}
+          onClick={() => setMenuOpen((v) => !v)}
+          disabled={loading}
+          className="h-8 w-8 rounded-lg"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
+        </Button>
+        {menuOpen ? (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setMenuOpen(false)} />
+            <div role="menu" className="absolute end-0 top-full z-40 mt-1.5 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+              {onView ? (
+                <button type="button" role="menuitem" data-testid="register-menu-view" onClick={() => run(onView)} className={itemCls}>
+                  <Eye className="h-3.5 w-3.5" /> {t(lang, "report.view_details", "View Details")}
+                </button>
+              ) : null}
+              <button type="button" role="menuitem" data-testid="register-menu-print" onClick={() => run(handlePrint)} className={itemCls}>
+                <Printer className="h-3.5 w-3.5" /> {t(lang, "report.print", "Print Report")}
+              </button>
+              <button type="button" role="menuitem" data-testid="register-menu-pdf-portrait" onClick={() => run(() => buildAndOpen("portrait"))} className={itemCls}>
+                <FileText className="h-3.5 w-3.5" /> {t(lang, "report.pdf_portrait", "Download PDF - Portrait")}
+              </button>
+              <button type="button" role="menuitem" data-testid="register-menu-pdf-landscape" onClick={() => run(() => buildAndOpen("landscape"))} className={itemCls}>
+                <FileText className="h-3.5 w-3.5 rotate-90" /> {t(lang, "report.pdf_landscape", "Download PDF - Landscape")}
+              </button>
+              {hideExcel ? null : (
+                <button type="button" role="menuitem" data-testid="register-menu-excel" onClick={() => run(exportCsv)} className={itemCls}>
+                  <Download className="h-3.5 w-3.5" /> {t(lang, "report.export_excel", "Export Excel")}
+                </button>
+              )}
+            </div>
+          </>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <Button

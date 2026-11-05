@@ -4699,6 +4699,7 @@ export type UiKey =
   | "report.download_html"
   | "report.export_excel"
   | "report.export_csv"
+  | "report.view_details" | "report.pdf_portrait" | "report.pdf_landscape"
   | "report.print"
   | "report.print_preview"
   | "report.share_whatsapp"
@@ -18715,6 +18716,9 @@ const en: Dict = {
   "pdfprev.export_csv_desc": "Raw spreadsheet table data",
   "pdfprev.preview_title": "PDF Preview",
   "report.print": "Print",
+  "report.view_details": "View Details",
+  "report.pdf_portrait": "Download PDF - Portrait",
+  "report.pdf_landscape": "Download PDF - Landscape",
   "report.print_preview": "Print Preview",
   "report.share_whatsapp": "Share via WhatsApp",
   "report.share_email": "Share via Email",
@@ -45341,6 +45345,9 @@ const ur: Dict = {
   "pdfprev.export_csv_desc": "خام اسپریڈ شیٹ ٹیبل ڈیٹا",
   "pdfprev.preview_title": "PDF پیش نظارہ",
   "report.print": "پرنٹ",
+  "report.view_details": "تفصیلات دیکھیں",
+  "report.pdf_portrait": "PDF ڈاؤن لوڈ - پورٹریٹ",
+  "report.pdf_landscape": "PDF ڈاؤن لوڈ - لینڈ اسکیپ",
   "report.print_preview": "پرنٹ پیش منظر",
   "report.share_whatsapp": "واٹس ایپ پر شیئر کریں",
   "report.share_email": "ای میل پر شیئر کریں",
@@ -71612,6 +71619,9 @@ const ar: Dict = {
   "pdfprev.export_csv_desc": "بيانات جدول بيانات خام",
   "pdfprev.preview_title": "معاينة PDF",
   "report.print": "طباعة",
+  "report.view_details": "عرض التفاصيل",
+  "report.pdf_portrait": "تحميل PDF - عمودي",
+  "report.pdf_landscape": "تحميل PDF - أفقي",
   "report.print_preview": "معاينة الطباعة",
   "report.share_whatsapp": "مشاركة عبر واتساب",
   "report.share_email": "مشاركة عبر البريد",
@@ -97897,6 +97907,9 @@ const fa: Dict = {
   "pdfprev.export_csv_desc": "داده‌های خام جدول صفحه‌گسترده",
   "pdfprev.preview_title": "پیش‌نمایش PDF",
   "report.print": "چاپ",
+  "report.view_details": "مشاهده جزئیات",
+  "report.pdf_portrait": "دانلود PDF - عمودی",
+  "report.pdf_landscape": "دانلود PDF - افقی",
   "report.print_preview": "پیش‌نمایش چاپ",
   "report.share_whatsapp": "اشتراک‌گذاری از طریق واتساپ",
   "report.share_email": "اشتراک‌گذاری از طریق ایمیل",
@@ -124199,6 +124212,9 @@ const ps: Dict = {
   "pdfprev.export_csv_desc": "خام سپریدشیټ جدول ډاټا",
   "pdfprev.preview_title": "د PDF مخکتنه",
   "report.print": "چاپ",
+  "report.view_details": "تفصیلات وګورئ",
+  "report.pdf_portrait": "PDF ډاونلوډ - عمودی",
+  "report.pdf_landscape": "PDF ډاونلوډ - افقي",
   "report.print_preview": "د چاپ مخکتنه",
   "report.share_whatsapp": "واټساپ له لارې شریکول",
   "report.share_email": "بریښنالیک له لارې شریکول",

@@ -34,6 +34,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 
 export interface LocalPurchaseTransferPaymentViewProps {
   session?: any;
@@ -1709,17 +1710,45 @@ export function LocalPurchaseTransferPaymentView({
             </h2>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setPrintingBill(null);
-              setTimeout(() => window.print(), 60);
-            }}
-            className="h-8 px-3.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer print:hidden"
-          >
-            <Printer className="h-3.5 w-3.5 text-blue-600" />
-            <span>{tr("Print")}</span>
-          </button>
+          {/* Mandatory ⋮ menu: View / Print / PDF Portrait / PDF Landscape / Excel - shared Purchase Booking-style PDF Preview engine */}
+          <JournalPrintButton
+            variant="menu"
+            title={tr("Local Purchase Transfer Payment Register")}
+            subtitle={tr("Advance / Remaining / Paid / Outstanding per bill")}
+            orientation="landscape"
+            columns={[
+              { key: "voucher_no", label: tr("Voucher No") },
+              { key: "date", label: tr("Date"), format: "date" },
+              { key: "supplier", label: tr("Supplier") },
+              { key: "goods", label: tr("Goods") },
+              { key: "quantity", label: tr("Qty"), align: "right", format: "number" },
+              { key: "unit", label: tr("Unit") },
+              { key: "currency", label: tr("Currency"), align: "center" },
+              { key: "exchange_rate", label: tr("Rate"), align: "right", format: "number" },
+              { key: "bill_total", label: tr("Bill Total"), align: "right", format: "number" },
+              { key: "advance_paid", label: tr("Advance Paid"), align: "right", format: "number" },
+              { key: "remaining_paid", label: tr("Remaining Paid"), align: "right", format: "number" },
+              { key: "total_paid", label: tr("Paid Amount"), align: "right", format: "number" },
+              { key: "outstanding", label: tr("Outstanding"), align: "right", format: "number" },
+              { key: "status", label: tr("Status"), align: "center" },
+            ]}
+            rows={filteredRows.map((r: any) => ({
+              voucher_no: String(r.voucher_no ?? r.local_purchase_no ?? r.systemBillNumber ?? ""),
+              date: String(r.purchase_date ?? r.date ?? ""),
+              supplier: String(r.supplier_name ?? r.supplier ?? ""),
+              goods: String(r.goods_name ?? ""),
+              quantity: Number(r.quantity ?? 0),
+              unit: String(r.quantity_name ?? r.unit ?? ""),
+              currency: String(r._currency ?? r.currency ?? ""),
+              exchange_rate: Number(r.exchange_rate ?? r.rate ?? 1),
+              bill_total: Number(r.final_cost ?? r.bill_total ?? r.total ?? 0),
+              advance_paid: Number(r.advance_paid ?? 0),
+              remaining_paid: Number(r.remaining_paid ?? 0),
+              total_paid: Number(r.total_paid ?? r.paid ?? 0),
+              outstanding: Number(r.outstanding ?? r.remaining ?? 0),
+              status: String(r.posting_status ?? r.status ?? "-"),
+            }))}
+          />
         </div>
 
         {/* 17-Column Register Table */}

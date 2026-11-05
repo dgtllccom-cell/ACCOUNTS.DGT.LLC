@@ -47,6 +47,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 
 type Json = any;
 
@@ -772,22 +773,37 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
               <ArrowLeft className={`h-3.5 w-3.5 ${s.isRtl ? "rotate-180" : ""}`} />
               {s.t("back_to_list", "Back to List")}
             </button>
-            <button
-              type="button"
-              onClick={() => typeof window !== "undefined" && window.print()}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50"
-            >
-              <Printer className="h-3.5 w-3.5 text-slate-600" />
-              {s.t("btn_print", "Print")}
-            </button>
-            <button
-              type="button"
-              onClick={() => typeof window !== "undefined" && window.print()}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50"
-            >
-              <FileDown className="h-3.5 w-3.5 text-slate-600" />
-              {s.t("btn_pdf", "PDF")}
-            </button>
+            {/* Mandatory ⋮ menu: View / Print / PDF Portrait / PDF Landscape / Excel - shared Purchase Booking-style PDF Preview engine */}
+            <JournalPrintButton
+              variant="menu"
+              title={s.t("gt_title", "Goods Transfer Journal")}
+              subtitle={purchase ? `${purchase?.contract_no ?? purchase?.local_purchase_no ?? ""} - ${purchase?.supplier_name ?? ""}` : undefined}
+              orientation="portrait"
+              columns={[
+                { key: "transfer_no", label: s.t("col_transfer_no", "Transfer No") },
+                { key: "transfer_date", label: s.t("col_transfer_date", "Transfer Date"), format: "date" },
+                { key: "source", label: s.t("col_source", "Source") },
+                { key: "destination", label: s.t("col_destination", "Destination") },
+                { key: "goods", label: s.t("col_goods", "Goods") },
+                { key: "quantity", label: s.t("col_quantity", "Quantity"), align: "right", format: "number" },
+                { key: "unit", label: s.t("col_unit", "Unit") },
+                { key: "transfer_type", label: s.t("col_transfer_type", "Transfer Type") },
+                { key: "responsible", label: s.t("col_responsible", "Responsible") },
+                { key: "remarks", label: s.t("col_remarks", "Remarks") },
+              ]}
+              rows={transfers.map((t: any) => ({
+                transfer_no: String(t.transfer_no ?? t.id ?? ""),
+                transfer_date: String(t.transfer_date ?? t.created_at ?? ""),
+                source: String(t.source_warehouse_name ?? t.source_branch_name ?? t.source ?? ""),
+                destination: String(t.destination_warehouse_name ?? t.destination_branch_name ?? t.destination ?? ""),
+                goods: String(t.goods_name ?? ""),
+                quantity: Number(t.quantity ?? 0),
+                unit: String(t.unit_name ?? t.unit ?? ""),
+                transfer_type: String(t.transfer_type ?? t.type ?? ""),
+                responsible: String(t.responsible_user_name ?? t.created_by_name ?? ""),
+                remarks: String(t.remarks ?? t.notes ?? ""),
+              }))}
+            />
             <button
               type="button"
               onClick={() => router.push(`/dashboard/purchase/local-purchase/${purchaseId}`)}

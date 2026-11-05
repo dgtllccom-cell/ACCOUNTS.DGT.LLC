@@ -4642,6 +4642,7 @@ export function LocalPurchaseView({
                   </div>
 
                   <JournalPrintButton
+                    variant="menu"
                     title={activeCountryObj ? `${activeCountryObj.name.toUpperCase()} LOCAL PURCHASE REGISTER` : t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
                     subtitle={t(lang, "lp.a4_print_title", "Official A4 ERP Journal Print Report — Local Purchase Register")}
                     columns={[
@@ -4666,7 +4667,6 @@ export function LocalPurchaseView({
                         status: (p.status || "DRAFT").toUpperCase()
                       };
                     })}
-                    variant="outline" size="sm" className="h-8"
                   />
                   {/* Table Actions Popover */}
                   <div className="relative">
@@ -5011,6 +5011,7 @@ export function LocalPurchaseView({
                 </div>
 
                 <JournalPrintButton
+                          variant="menu"
                           title={t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
                           subtitle={t(lang, "lp.a4_print_title", "Official A4 ERP Journal Print Report — Local Purchase Register")}
                           columns={[
@@ -5033,7 +5034,6 @@ export function LocalPurchaseView({
                             finalAmount: Number(p.final_cost || p.purchase_cost || 0),
                             status: (p.status || "DRAFT").toUpperCase()
                           }))}
-                          variant="outline" size="sm" className="h-8"
                         />
                   {/* Table Actions Popover */}
                 <div className="relative">

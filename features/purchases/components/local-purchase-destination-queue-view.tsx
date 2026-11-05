@@ -807,6 +807,7 @@ export function LocalPurchaseDestinationQueueView({
             </div>
             <div className="flex items-center gap-3">
               <JournalPrintButton
+                variant="menu"
                 title={tableTitle}
                 columns={[
                   { key: "super_sn", label: th("SUPER S/N"), align: "center" },

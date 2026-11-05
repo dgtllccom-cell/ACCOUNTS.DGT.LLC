@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Printer, FileText, Download, ChevronDown, Check, MoreVertical } from "lucide-react";
+import { Printer, FileText, Download, Eye, MoreVertical } from "lucide-react";
 import { openUniversalPrintReport, type UniversalPrintInput } from "@/lib/reports/universal-print-engine";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
@@ -12,10 +12,12 @@ export interface UniversalPrintActionButtonProps {
   className?: string;
   buttonLabel?: string;
   hideExcel?: boolean;
+  /** Optional "View Details" callback: when present, the ⋮ menu's first item opens the caller's detail view (never a window). */
+  onView?: () => void;
   /**
    * "buttons" (default, unchanged) renders Print / PDF / Excel side by side.
-   * "menu" renders ONE compact ⋮ button whose menu holds Print, Download PDF and Excel/CSV - used by every register that gets its Print / PDF from this
-   * shared engine, so the same action looks and behaves the same across the ERP.
+   * "menu" renders ONE compact ⋮ button whose menu holds View (optional), Print, Download PDF - Portrait, Download PDF - Landscape and Excel/CSV.
+   *   Used by every register that gets its Print / PDF from this shared engine, so the same action looks and behaves the same across the ERP.
    */
   variant?: "buttons" | "menu";
 }
@@ -25,6 +27,7 @@ export function UniversalPrintActionButton({
   className,
   buttonLabel,
   hideExcel = false,
+  onView,
   variant = "buttons"
 }: UniversalPrintActionButtonProps) {
   const lang = useActiveLanguage();
@@ -32,20 +35,21 @@ export function UniversalPrintActionButton({
 
   const tr = (text: string) => translateHeader(lang, text);
 
-  const handleAction = (type: "print" | "pdf" | "excel") => {
-    setIsOpen(false);
+  const openEngine = (orientation: "portrait" | "landscape" | undefined, autoPrint: boolean) => {
     const config = reportConfig();
     config.lang = lang;
+    if (orientation) config.orientation = orientation;
+    config.autoPrint = autoPrint;
+    openUniversalPrintReport(config);
+  };
 
-    if (type === "print") {
-      config.autoPrint = true;
-      openUniversalPrintReport(config);
-    } else if (type === "pdf") {
-      config.autoPrint = false;
-      openUniversalPrintReport(config);
-    } else if (type === "excel") {
-      exportToCsv(config);
-    }
+  const handleAction = (type: "print" | "pdf" | "pdf-portrait" | "pdf-landscape" | "excel") => {
+    setIsOpen(false);
+    if (type === "print") openEngine(undefined, true);
+    else if (type === "pdf") openEngine(undefined, false);
+    else if (type === "pdf-portrait") openEngine("portrait", false);
+    else if (type === "pdf-landscape") openEngine("landscape", false);
+    else if (type === "excel") exportToCsv(reportConfig());
   };
 
   const exportToCsv = (config: UniversalPrintInput) => {
@@ -58,7 +62,7 @@ export function UniversalPrintActionButton({
     });
 
     const csvContent = [headers.map(h => `"${h.replace(/"/g, '""')}"`).join(","), ...csvRows].join("\n");
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["﻿" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -73,10 +77,10 @@ export function UniversalPrintActionButton({
         <button
           type="button"
           data-testid="register-actions-menu"
-          aria-label={buttonLabel || tr("Print")}
+          aria-label={buttonLabel || tr("Actions")}
           aria-haspopup="menu"
           aria-expanded={isOpen}
-          title={buttonLabel || tr("Print")}
+          title={buttonLabel || tr("Actions")}
           onClick={() => setIsOpen((v) => !v)}
           className={cn(
             "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200",
@@ -88,16 +92,24 @@ export function UniversalPrintActionButton({
         {isOpen ? (
           <>
             <div className="fixed inset-0 z-30" onClick={() => setIsOpen(false)} />
-            <div role="menu" className="absolute end-0 top-full z-40 mt-1.5 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+            <div role="menu" className="absolute end-0 top-full z-40 mt-1.5 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+              {onView ? (
+                <button type="button" role="menuitem" data-testid="register-menu-view" onClick={() => { setIsOpen(false); onView(); }} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+                  <Eye className="h-3.5 w-3.5" /> {tr("View Details")}
+                </button>
+              ) : null}
               <button type="button" role="menuitem" data-testid="register-menu-print" onClick={() => handleAction("print")} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
                 <Printer className="h-3.5 w-3.5" /> {tr("Print")}
               </button>
-              <button type="button" role="menuitem" data-testid="register-menu-pdf" onClick={() => handleAction("pdf")} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
-                <FileText className="h-3.5 w-3.5" /> {tr("PDF")}
+              <button type="button" role="menuitem" data-testid="register-menu-pdf-portrait" onClick={() => handleAction("pdf-portrait")} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+                <FileText className="h-3.5 w-3.5" /> {tr("Download PDF - Portrait")}
+              </button>
+              <button type="button" role="menuitem" data-testid="register-menu-pdf-landscape" onClick={() => handleAction("pdf-landscape")} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+                <FileText className="h-3.5 w-3.5 rotate-90" /> {tr("Download PDF - Landscape")}
               </button>
               {!hideExcel ? (
                 <button type="button" role="menuitem" data-testid="register-menu-excel" onClick={() => handleAction("excel")} className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
-                  <Download className="h-3.5 w-3.5" /> {tr("Excel")}
+                  <Download className="h-3.5 w-3.5" /> {tr("Export Excel")}
                 </button>
               ) : null}
             </div>
