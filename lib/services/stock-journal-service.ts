@@ -145,7 +145,38 @@ export interface StockJournalRow {
   paymentHold: boolean;
   /** Local Purchase stock is confirmed in its own Goods Transfer Journal */
   goodsTransferHref: string | null;
+  /** loading / receipt facts of the row's loading record (Purchase Journal Booking register) - display only */
+  loadingDetail?: LoadingDetail | null;
+  /** the bill's invoice figures (Purchase Journal Booking register) - display only, never a payment */
+  invoice?: InvoiceDetail | null;
 }
+
+export type LoadingDetail = {
+  createdAt: string | null;
+  loadedAt: string | null;
+  transportMode: string;
+  loadingPlace: string;
+  departureDate: string | null;
+  receivingPlace: string;
+  arrivalDate: string | null;
+  arrivalExpected: boolean;
+  receivedAt: string | null;
+  /** gross / net kg recorded ON the loading record (null when the loading did not record them) */
+  grossWeight: number | null;
+  netWeight: number | null;
+  loadingStatus: string;
+};
+
+export type InvoiceDetail = {
+  invoiceNo: string;
+  currency: string;
+  exchangeRate: number | null;
+  /** purchase invoice amount in the purchase (original) currency */
+  purchaseAmount: number | null;
+  /** final invoice amount in the booking country's currency */
+  finalAmount: number | null;
+  finalCurrency: string;
+};
 
 export type RowPayment = {
   currency: string;
@@ -239,6 +270,26 @@ function customsFor(p: any, clearing: Map<string, CustomsStatus>): { status: Cus
   const b = clearing.get("b:" + String(p.bl_number || "").trim().toUpperCase());
   if (b) return { status: b, source: "clearing_order" };
   return { status: "not_recorded", source: "none" };
+}
+
+const positive = (v: unknown) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : null; };
+function toLoadingDetail(p: any): LoadingDetail {
+  const payload = parseJsonish(p.report_payload) || {};
+  const pick = (...vals: unknown[]) => String(vals.find((v) => v != null && String(v).trim() !== "") ?? "").trim();
+  return {
+    createdAt: iso(p.created_at),
+    loadedAt: iso(p.loaded_at),
+    transportMode: pick(p.transport_mode, payload.transportMode, payload.shipmentMode),
+    loadingPlace: pick(p.loading_location, p.origin_text, payload.loadingPort, payload.loadingPlace, payload.originCountry),
+    departureDate: iso(p.departure_date || p.loaded_at),
+    receivingPlace: pick(p.receiving_location, p.destination_text, payload.receivingPort, payload.destinationPort, payload.destinationCountry),
+    arrivalDate: iso(p.actual_arrival_date || p.expected_arrival_date),
+    arrivalExpected: !p.actual_arrival_date && !!p.expected_arrival_date,
+    receivedAt: iso(p.received_at),
+    grossWeight: positive(p.gross_weight),
+    netWeight: positive(p.net_weight),
+    loadingStatus: String(p.loading_status || ""),
+  };
 }
 
 function toLoadingFact(p: any, clearing: Map<string, CustomsStatus>): LoadingFact {
@@ -377,7 +428,9 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       ? await sql`
           select plr.id, plr.purchase_order_id, plr.loading_record_no, plr.container_number, plr.bl_number, plr.vehicle_no, plr.truck_id,
                  plr.loading_status, plr.loaded_at, plr.created_at, plr.loaded_quantity, plr.received_quantity, plr.damaged_quantity,
-                 plr.shortage_quantity, plr.customs_status, plr.receiving_warehouse_id, plr.receiving_goods_id, plr.report_payload
+                 plr.shortage_quantity, plr.customs_status, plr.receiving_warehouse_id, plr.receiving_goods_id, plr.report_payload,
+                 plr.transport_mode, plr.loading_location, plr.receiving_location, plr.origin_text, plr.destination_text, plr.departure_date,
+                 plr.expected_arrival_date, plr.actual_arrival_date, plr.received_at, plr.gross_weight, plr.net_weight
           from public.purchase_loading_records plr
           where plr.deleted_at is null and plr.purchase_order_id = any(${poIds}::uuid[])
           order by plr.created_at asc, plr.id asc`
@@ -475,6 +528,16 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
     const bookingNo = rawBookingNo ? (rawBookingNo.startsWith("#") ? rawBookingNo : `#${rawBookingNo}`) : "#PB-001";
     const rawInvNo = String(form.invoiceNo || form.invoiceNumber || form.supplierInvoiceNo || manualNo || "").trim();
     const invoiceNo = rawInvNo ? (rawInvNo.startsWith("#") ? rawInvNo : `#${rawInvNo}`) : "#PI-001";
+    // display only: original currency + rate, purchase amount (original currency) and the final amount in the country's currency
+    const invoice: InvoiceDetail = {
+      invoiceNo: rawInvNo || "",
+      currency: String(po.purchase_currency || form.purchaseCurrency || po.currency_code || "").toUpperCase(),
+      exchangeRate: positive(po.exchange_rate),
+      purchaseAmount: positive(po.total_goods_original),
+      finalAmount: positive(po.order_total),
+      finalCurrency: String(po.base_currency || po.currency_code || "").toUpperCase(),
+    };
+    const plrById = new Map<string, any>((plrByPo.get(po.id) ?? []).map((p: any) => [p.id, p]));
 
     const base = {
       sourceType: "purchase_booking" as const,
@@ -494,6 +557,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       bookingStatus: (bookingConfirmed ? "confirmed" : "draft") as "confirmed" | "draft",
       invoiceStatus: (String(po.ledger_posting_status || "").toLowerCase() === "posted" ? "posted" : "unposted") as "posted" | "unposted",
       paymentStatus: paymentFromPo(po.payment_status),
+      invoice,
     };
 
     for (const line of lines) {
@@ -578,6 +642,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
           warehouseId: lf.receivingWarehouseId,
           warehouseName: lf.receivingWarehouseId ? whName.get(lf.receivingWarehouseId) ?? null : null,
           payment: rowPayment(bill, lf.id),
+          loadingDetail: plrById.has(lf.id) ? toLoadingDetail(plrById.get(lf.id)) : null,
         };
         if (ch.inTransit > EPS) {
           rows.push(common({ ...chunkBase, id: `TR-${lf.id}-${line.lineKey}`, stage: "transit", quantity: ch.inTransit, payment: rowPayment(bill, lf.id) }));

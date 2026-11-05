@@ -5,6 +5,7 @@ import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { loadStockJournal } from "@/lib/services/stock-journal-service";
+import { buildBookingRegister } from "@/lib/stock-journal/booking-register";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,10 @@ const querySchema = z.object({
   stage: z.enum(STAGES).default("all"),
   destination: z.enum(DESTS).optional(),
   sourceType: z.enum(["all", "purchase_booking", "local_purchase"]).optional(),
-  view: z.enum(["rows", "available"]).default("rows"),
+  view: z.enum(["rows", "available", "bills"]).default("rows"),
+  /** view=bills: country / branch drill-down key "<countryId>|<branchId>" and bill status filter */
+  place: z.string().trim().max(80).optional(),
+  status: z.string().trim().max(40).optional(),
   search: z.string().trim().max(140).optional(),
   purchaseOrderNo: z.string().trim().max(140).optional(),
   goodsName: z.string().trim().max(140).optional(),
@@ -40,8 +44,31 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     const sp = request.nextUrl.searchParams;
     const q = querySchema.parse(Object.fromEntries([...sp.entries()].map(([k, v]) => [k, v === "" ? undefined : v])));
-    const { view, ...filters } = q;
+    const { view, place, status, ...filters } = q;
     const lang = await getRequestLanguage(sp.get("lang"));
+
+    if (view === "bills") {
+      // Purchase Journal Booking Stock (issue #38): the SAME scoped rows, regrouped one parent row per Purchase Booking bill.
+      // The text search is applied to whole bills after grouping (a row-level search would cut a bill's quantities in half).
+      const out = await loadStockJournal(session, { ...filters, search: undefined, sourceType: "purchase_booking", stage: "all", lang, page: 1, limit: 1 });
+      const reg = buildBookingRegister(out.allRows);
+      const needle = filters.search?.toLowerCase().trim();
+      const matching = reg.bills.filter((b) =>
+        (!needle || b.text.includes(needle)) &&
+        (!place || `${b.countryId ?? "-"}|${b.cityBranchId ?? b.countryBranchId ?? "-"}` === place) &&
+        (!status || b.status === status));
+      // Purchase Summary + Confirm Stock follow the active filters; the Country-wise panel always lists the whole scope (to drill into another place)
+      const filtered = needle || place || status;
+      const ids = new Set(matching.map((b) => b.sourceId));
+      const panels = filtered ? { ...buildBookingRegister(out.allRows.filter((r) => ids.has(r.sourceId))).panels, countries: reg.panels.countries } : reg.panels;
+      const offset = (q.page - 1) * q.limit;
+      return apiOk({
+        bills: matching.slice(offset, offset + q.limit).map(({ text: _text, ...b }) => b),
+        panels,
+        permissions: out.permissions,
+        pagination: { page: q.page, limit: q.limit, totalRecords: matching.length, totalPages: Math.max(1, Math.ceil(matching.length / q.limit)) },
+      });
+    }
     const out = await loadStockJournal(session, view === "available" ? { ...filters, lang, stage: "available", page: 1, limit: 2000 } : { ...filters, lang });
 
     if (view === "available") {
