@@ -269,6 +269,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: nt("Local Purchase Bills"), href: "/dashboard/purchase/local-purchase", icon: ShoppingCart },
           { label: nt("Local Purchase Payment Transfer"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft },
+          { label: nt("Local Purchase Loading"), href: "/dashboard/purchase/local-purchase-loading", icon: Truck },
           { label: nt("Local Purchase Journal Report"), href: "/dashboard/purchase/local-purchase-journal-report", icon: FileBarChart },
         ],
       },
