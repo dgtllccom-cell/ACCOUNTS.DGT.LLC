@@ -279,8 +279,10 @@ export function LocalPurchaseDestinationQueueView({
       if (payload.ok && payload.data?.purchases) {
         const raw = payload.data.purchases as LocalPurchaseDestinationRecord[];
         const filtered = raw.filter((p) => {
-          // Allow posted, accepted, completed records
-          if (p.status === "draft") return false;
+          // Operational loading/warehouse/export queues must never expose review-only
+          // purchases. The destination-stage API itself requires status = posted.
+          // Filtering here avoids presenting an action that would necessarily 409.
+          if (String(p.status || "").toLowerCase() !== "posted") return false;
           const mode = (p.shipping_mode || p.shippingMode || "").toLowerCase().trim();
           const target = config.shippingMode.toLowerCase().trim();
           // Match if shipping mode contains target (e.g. "loading" in "Loading" or "Truck Loading")
