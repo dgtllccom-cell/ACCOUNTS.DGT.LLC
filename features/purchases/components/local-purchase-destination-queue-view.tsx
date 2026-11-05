@@ -115,6 +115,8 @@ export interface LocalPurchaseDestinationRecord {
   quantity_kgs?: number;
   quantityName?: string;
   quantity_name?: string;
+  numbers?: number;
+  loading_details?: any;
   totalGrossWeight?: number;
   total_gross_weight?: number;
   emptyKgs?: number;
@@ -237,6 +239,109 @@ export function LocalPurchaseDestinationQueueView({
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [selectedRowForVoucher, setSelectedRowForVoucher] = useState<LocalPurchaseDestinationRecord | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
+
+  // Partial / Multiple Loading Modal State
+  const [loadingModalBill, setLoadingModalBill] = useState<LocalPurchaseDestinationRecord | null>(null);
+  const [loadingForm, setLoadingForm] = useState({
+    loadingDate: new Date().toISOString().slice(0, 10),
+    truckNo: "",
+    driverName: "",
+    blOrContainerNo: "",
+    transportDetails: "",
+    route: "",
+    loadedQuantity: "",
+    grossWeight: "",
+    netWeight: "",
+    remarks: "",
+  });
+  const [loadingSubmitting, setLoadingSubmitting] = useState(false);
+  const [loadingError, setLoadingError] = useState("");
+
+  function getLoadingStats(row: LocalPurchaseDestinationRecord) {
+    const booked = Number(row.numbers || row.quantity_kgs || 0);
+    const entries = Array.isArray((row as any).loading_details?.entries)
+      ? (row as any).loading_details.entries
+      : [];
+    let loaded = entries.reduce((s: number, e: any) => s + Number(e.loadedQuantity || 0), 0);
+    if (entries.length === 0 && (row as any).loading_status === "completed") {
+      loaded = booked;
+    }
+    const remaining = Math.max(0, Math.round((booked - loaded) * 10000) / 10000);
+    return { booked, loaded, remaining, entries };
+  }
+
+  function openLoadingModal(bill: LocalPurchaseDestinationRecord) {
+    const { booked, loaded, remaining } = getLoadingStats(bill);
+    const totalGross = Number(bill.totalGrossWeight || bill.quantity_kgs || 0);
+    const totalNet = Number(bill.netWeight || totalGross);
+    const propGross = booked > 0 ? (remaining / booked) * totalGross : 0;
+    const propNet = booked > 0 ? (remaining / booked) * totalNet : 0;
+
+    setLoadingModalBill(bill);
+    setLoadingForm({
+      loadingDate: new Date().toISOString().slice(0, 10),
+      truckNo: bill.truckNo || bill.truck_no || "",
+      driverName: bill.driverName || bill.driver_name || "",
+      blOrContainerNo: "",
+      transportDetails: bill.shippingMode || bill.shipping_mode || "Road Transport",
+      route: `${bill.originCountryName || bill.origin_country_name || "Local"} → ${bill.warehouseName || bill.warehouse_name || "Warehouse"}`,
+      loadedQuantity: String(remaining > 0 ? remaining : 0),
+      grossWeight: propGross > 0 ? propGross.toFixed(2) : "",
+      netWeight: propNet > 0 ? propNet.toFixed(2) : "",
+      remarks: "Partial loading entry",
+    });
+    setLoadingError("");
+  }
+
+  async function submitLoadingEntry(e: React.FormEvent) {
+    e.preventDefault();
+    if (!loadingModalBill) return;
+    const numQty = Number(loadingForm.loadedQuantity);
+    if (!numQty || numQty <= 0) {
+      setLoadingError("Please enter a valid loading quantity greater than zero.");
+      return;
+    }
+    const { remaining } = getLoadingStats(loadingModalBill);
+    if (numQty > remaining + 1e-8) {
+      setLoadingError(`Cannot load ${numQty}. Only ${remaining} remaining to load.`);
+      return;
+    }
+
+    setLoadingSubmitting(true);
+    setLoadingError("");
+    try {
+      const res = await fetch("/api/erp/purchases/local-purchase/destination-stage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          purchaseId: loadingModalBill.id,
+          stage: "loading",
+          loadingEntry: {
+            loadingDate: loadingForm.loadingDate,
+            truckNo: loadingForm.truckNo,
+            driverName: loadingForm.driverName,
+            blOrContainerNo: loadingForm.blOrContainerNo,
+            transportDetails: loadingForm.transportDetails,
+            route: loadingForm.route,
+            remarks: loadingForm.remarks,
+            loadedQuantity: numQty,
+            grossWeight: loadingForm.grossWeight ? Number(loadingForm.grossWeight) : undefined,
+            netWeight: loadingForm.netWeight ? Number(loadingForm.netWeight) : undefined,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data?.error?.message || "Failed to record loading entry.");
+      }
+      setLoadingModalBill(null);
+      await loadPurchases();
+    } catch (err: any) {
+      setLoadingError(err?.message || "Failed to record loading entry.");
+    } finally {
+      setLoadingSubmitting(false);
+    }
+  }
 
   const config = STAGE_CONFIG[stage];
 
@@ -972,7 +1077,18 @@ export function LocalPurchaseDestinationQueueView({
                                   "Local"}
                               </td>
                               <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">
-                                {pkgCount.toLocaleString()}
+                                {stage === "loading" ? (
+                                  <div>
+                                    <div>{pkgCount.toLocaleString()}</div>
+                                    {getLoadingStats(row).entries.length > 0 && (
+                                      <div className="text-[10px] font-normal text-slate-500 whitespace-nowrap">
+                                        L: {getLoadingStats(row).loaded.toLocaleString()} | R: {getLoadingStats(row).remaining.toLocaleString()}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  pkgCount.toLocaleString()
+                                )}
                               </td>
                               <td className="p-2 border-r border-slate-150 dark:border-slate-800">
                                 {row.quantityName || row.quantity_name || "—"}
@@ -1023,7 +1139,21 @@ export function LocalPurchaseDestinationQueueView({
 
                               {/* Status Badge */}
                               <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
-                                {isCompleted ? (
+                                {stage === "loading" ? (
+                                  getLoadingStats(row).remaining <= 0 || isCompleted ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
+                                      <CheckCircle2 className="h-2.5 w-2.5" /> {th("LOADED")}
+                                    </span>
+                                  ) : getLoadingStats(row).loaded > 0 ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-blue-300 bg-blue-50 px-2 py-0.5 text-[11px] font-black uppercase text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">
+                                      <Clock className="h-2.5 w-2.5" /> {th(`PARTIAL (${getLoadingStats(row).loaded}/${getLoadingStats(row).booked})`)}
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-black uppercase text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 whitespace-nowrap">
+                                      <Clock className="h-2.5 w-2.5" /> {th("PENDING LOADING")}
+                                    </span>
+                                  )
+                                ) : isCompleted ? (
                                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                                     <CheckCircle2 className="h-2.5 w-2.5" />{" "}
                                     {th(config.completedLabel.toUpperCase())}
@@ -1039,20 +1169,33 @@ export function LocalPurchaseDestinationQueueView({
                               {/* Actions */}
                               <td className="p-2 text-center">
                                 <div className="flex items-center justify-center gap-1.5">
-                                  {!isCompleted && (
-                                    <Button
-                                      size="sm"
-                                      disabled={actingId === row.id}
-                                      onClick={() => void markComplete(row.id)}
-                                      className="h-6 px-2 text-[11px] font-bold bg-slate-800 hover:bg-slate-900 text-white rounded-md flex items-center gap-1 shadow-xs whitespace-nowrap"
-                                    >
-                                      {actingId === row.id ? (
-                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                      ) : (
-                                        <Send className="h-3 w-3" />
-                                      )}
-                                      {th(config.actionLabel.toUpperCase())}
-                                    </Button>
+                                  {stage === "loading" ? (
+                                    getLoadingStats(row).remaining > 0 ? (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => openLoadingModal(row)}
+                                        className="h-6 px-2 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-md flex items-center gap-1 shadow-xs whitespace-nowrap"
+                                      >
+                                        <Truck className="h-3 w-3" />
+                                        {th("TRANSFER TO LOADING")}
+                                      </Button>
+                                    ) : null
+                                  ) : (
+                                    !isCompleted && (
+                                      <Button
+                                        size="sm"
+                                        disabled={actingId === row.id}
+                                        onClick={() => void markComplete(row.id)}
+                                        className="h-6 px-2 text-[11px] font-bold bg-slate-800 hover:bg-slate-900 text-white rounded-md flex items-center gap-1 shadow-xs whitespace-nowrap"
+                                      >
+                                        {actingId === row.id ? (
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <Send className="h-3 w-3" />
+                                        )}
+                                        {th(config.actionLabel.toUpperCase())}
+                                      </Button>
+                                    )
                                   )}
 
                                   {stage === "loading" && isCompleted && (
@@ -1132,6 +1275,83 @@ export function LocalPurchaseDestinationQueueView({
                                       </p>
                                     </div>
                                   </div>
+
+                                  {/* Loading Register Detail for stage === 'loading' */}
+                                  {stage === "loading" && (() => {
+                                    const { booked, loaded, remaining, entries } = getLoadingStats(row);
+                                    return (
+                                      <div className="mt-3 border-t border-slate-200 dark:border-slate-700 pt-3">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <div className="flex items-center gap-2">
+                                            <Truck className="h-4 w-4 text-indigo-600" />
+                                            <span className="font-bold text-slate-800 dark:text-slate-100 uppercase text-xs">
+                                              {th("PARTIAL LOADING ENTRIES & VEHICLE MOVEMENTS")}
+                                            </span>
+                                            <span className="rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5">
+                                              {entries.length} {entries.length === 1 ? "Entry" : "Entries"}
+                                            </span>
+                                          </div>
+                                          <div className="text-xs font-mono">
+                                            <span className="font-bold text-slate-600 dark:text-slate-300">Booked: </span>
+                                            <span className="font-black text-slate-900 dark:text-slate-100">{booked.toLocaleString()}</span>
+                                            <span className="mx-2 text-slate-300">|</span>
+                                            <span className="font-bold text-blue-600">Loaded: </span>
+                                            <span className="font-black text-blue-700">{loaded.toLocaleString()}</span>
+                                            <span className="mx-2 text-slate-300">|</span>
+                                            <span className="font-bold text-amber-600">Remaining: </span>
+                                            <span className="font-black text-amber-700">{remaining.toLocaleString()}</span>
+                                          </div>
+                                        </div>
+
+                                        {entries.length > 0 ? (
+                                          <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                                            <table className="w-full text-left text-xs">
+                                              <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10.5px] font-bold uppercase">
+                                                <tr>
+                                                  <th className="p-2 text-center w-8">#</th>
+                                                  <th className="p-2">Loading Number</th>
+                                                  <th className="p-2">Loading Date</th>
+                                                  <th className="p-2">Vehicle / Truck No</th>
+                                                  <th className="p-2">Driver Name</th>
+                                                  <th className="p-2">BL / Container</th>
+                                                  <th className="p-2 text-right">Loaded Qty</th>
+                                                  <th className="p-2 text-right">Remaining</th>
+                                                  <th className="p-2 text-right">Gross Wt (Kg)</th>
+                                                  <th className="p-2 text-right">Net Wt (Kg)</th>
+                                                  <th className="p-2">Route / Transport</th>
+                                                  <th className="p-2">Remarks</th>
+                                                  <th className="p-2">By</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900 font-mono text-[11px]">
+                                                {entries.map((ent: any, idx: number) => (
+                                                  <tr key={ent.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                                    <td className="p-2 text-center font-bold text-slate-500">{idx + 1}</td>
+                                                    <td className="p-2 font-bold text-indigo-600">{ent.loadingNumber || `LD-${idx + 1}`}</td>
+                                                    <td className="p-2 text-slate-700 dark:text-slate-300 font-sans">{ent.loadingDate || "—"}</td>
+                                                    <td className="p-2 font-bold text-slate-900 dark:text-slate-100">{ent.truckNo || "—"}</td>
+                                                    <td className="p-2 font-sans text-slate-700 dark:text-slate-300">{ent.driverName || "—"}</td>
+                                                    <td className="p-2 text-slate-600 dark:text-slate-400">{ent.blOrContainerNo || "—"}</td>
+                                                    <td className="p-2 text-right font-bold text-emerald-600">{Number(ent.loadedQuantity || 0).toLocaleString()}</td>
+                                                    <td className="p-2 text-right font-bold text-amber-600">{Number(ent.remainingQuantity ?? Math.max(0, booked - (idx + 1) * Number(ent.loadedQuantity || 0))).toLocaleString()}</td>
+                                                    <td className="p-2 text-right text-slate-700 dark:text-slate-300">{Number(ent.grossWeight || 0).toLocaleString()}</td>
+                                                    <td className="p-2 text-right text-slate-700 dark:text-slate-300">{Number(ent.netWeight || 0).toLocaleString()}</td>
+                                                    <td className="p-2 font-sans text-slate-600 dark:text-slate-400">{ent.route || ent.transportDetails || "—"}</td>
+                                                    <td className="p-2 font-sans text-slate-600 dark:text-slate-400">{ent.remarks || "—"}</td>
+                                                    <td className="p-2 font-sans text-slate-500 text-[10px]">{ent.responsibleUser || "Admin"}</td>
+                                                  </tr>
+                                                ))}
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        ) : (
+                                          <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-700 p-3 text-center text-slate-400 text-xs">
+                                            No partial loadings recorded yet. Click <span className="font-bold text-indigo-600">"Transfer to Loading"</span> to record the first loading entry.
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
                                 </td>
                               </tr>
                             )}
@@ -1148,6 +1368,234 @@ export function LocalPurchaseDestinationQueueView({
       </Card>
 
       {/* Printable A4 Voucher Modal (Identical to Local Purchase Journal Report) */}
+      {/* Loading Entry Modal Dialog */}
+      {loadingModalBill && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-150 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white">
+                  <Truck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase">
+                    Transfer to Loading — New Loading Entry
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Record partial or full vehicle loading against original purchase bill
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLoadingModalBill(null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Bill Summary Banner */}
+            <div className="rounded-xl border border-indigo-100 dark:border-indigo-950 bg-indigo-50/60 dark:bg-indigo-950/30 p-3 text-xs grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono">
+              <div>
+                <span className="text-[10px] font-sans text-slate-500 block">Voucher No</span>
+                <span className="font-bold text-indigo-700 dark:text-indigo-400">
+                  {loadingModalBill.serialNo || loadingModalBill.journal_serial_no || `LP-${loadingModalBill.id?.slice(0, 5).toUpperCase()}`}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-sans text-slate-500 block">Goods</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
+                  {loadingModalBill.goodsName || loadingModalBill.goods_name || "—"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-sans text-slate-500 block">Booked Qty</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  {Number(loadingModalBill.numbers || loadingModalBill.quantity_kgs || 0).toLocaleString()} {loadingModalBill.quantityName || "Bags"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-sans text-slate-500 block">Remaining to Load</span>
+                <span className="font-black text-emerald-600 dark:text-emerald-400">
+                  {getLoadingStats(loadingModalBill).remaining.toLocaleString()} {loadingModalBill.quantityName || "Bags"}
+                </span>
+              </div>
+            </div>
+
+            {loadingError && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300 font-medium">
+                {loadingError}
+              </div>
+            )}
+
+            <form onSubmit={submitLoadingEntry} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Loading Date *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={loadingForm.loadingDate}
+                    onChange={(e) => setLoadingForm({ ...loadingForm, loadingDate: e.target.value })}
+                    className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-indigo-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    New Loading Quantity * (Max: {getLoadingStats(loadingModalBill).remaining.toLocaleString()})
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    required
+                    min="0.0001"
+                    max={getLoadingStats(loadingModalBill).remaining}
+                    value={loadingForm.loadedQuantity}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const num = Number(val);
+                      const booked = Number(loadingModalBill.numbers || loadingModalBill.quantity_kgs || 0);
+                      const totalGross = Number(loadingModalBill.totalGrossWeight || loadingModalBill.quantity_kgs || 0);
+                      const totalNet = Number(loadingModalBill.netWeight || totalGross);
+                      const propGross = booked > 0 && num > 0 ? (num / booked) * totalGross : 0;
+                      const propNet = booked > 0 && num > 0 ? (num / booked) * totalNet : 0;
+                      setLoadingForm({
+                        ...loadingForm,
+                        loadedQuantity: val,
+                        grossWeight: propGross > 0 ? propGross.toFixed(2) : loadingForm.grossWeight,
+                        netWeight: propNet > 0 ? propNet.toFixed(2) : loadingForm.netWeight,
+                      });
+                    }}
+                    className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-indigo-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Vehicle / Truck Number *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. TRK-8812"
+                    value={loadingForm.truckNo}
+                    onChange={(e) => setLoadingForm({ ...loadingForm, truckNo: e.target.value })}
+                    className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-indigo-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Driver Name & Contact
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Tariq Khan (+971 50 123 4567)"
+                    value={loadingForm.driverName}
+                    onChange={(e) => setLoadingForm({ ...loadingForm, driverName: e.target.value })}
+                    className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-indigo-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Gross Weight (Kg)
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={loadingForm.grossWeight}
+                    onChange={(e) => setLoadingForm({ ...loadingForm, grossWeight: e.target.value })}
+                    className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-indigo-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Net Weight (Kg)
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={loadingForm.netWeight}
+                    onChange={(e) => setLoadingForm({ ...loadingForm, netWeight: e.target.value })}
+                    className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-indigo-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    BL / Container / Gate Pass No
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. BL-99214 / CONT-112"
+                    value={loadingForm.blOrContainerNo}
+                    onChange={(e) => setLoadingForm({ ...loadingForm, blOrContainerNo: e.target.value })}
+                    className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-indigo-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Route / Transport Details
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Dubai – Al Ras Warehouse"
+                    value={loadingForm.route}
+                    onChange={(e) => setLoadingForm({ ...loadingForm, route: e.target.value })}
+                    className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-indigo-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Loading Remarks / Audit Notes
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Partial loading dispatched as agreed"
+                  value={loadingForm.remarks}
+                  onChange={(e) => setLoadingForm({ ...loadingForm, remarks: e.target.value })}
+                  className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-indigo-600"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-150 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setLoadingModalBill(null)}
+                  className="h-9 px-4 text-xs font-bold"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loadingSubmitting}
+                  className="h-9 px-5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1.5 shadow-sm"
+                >
+                  {loadingSubmitting ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  )}
+                  Confirm & Record Loading
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {selectedRowForVoucher && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs overflow-y-auto animate-in fade-in">
           <div className="w-full max-w-5xl rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] overflow-y-auto relative">

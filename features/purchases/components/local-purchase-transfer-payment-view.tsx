@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   FileText,
   Search,
@@ -27,6 +27,8 @@ import {
   Layers,
   CreditCard,
   Wallet,
+  Truck,
+  Warehouse,
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { translateHeader } from "@/lib/i18n/table-headers";
@@ -250,6 +252,7 @@ export function LocalPurchaseTransferPaymentView({
   const { lang, isRtl, tGlobal } = useErpScreen("lp_transfer");
   const tr = useCallback((label: string) => translateHeader(lang, label), [lang]);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const highlightBillId = searchParams?.get("billId") || searchParams?.get("highlight") || "";
 
   // Role detection: each user sees only one set of three cards for their signed-in role and permitted scope.
@@ -1255,6 +1258,8 @@ export function LocalPurchaseTransferPaymentView({
                   <Printer className="h-3.5 w-3.5 text-blue-600" />
                   <span>{tr("Print Register")}</span>
                 </button>
+
+
                 <button
                   type="button"
                   onClick={() => {
@@ -1964,6 +1969,30 @@ export function LocalPurchaseTransferPaymentView({
                               <Printer className="h-3.5 w-3.5 text-blue-600" />
                               <span>{tr("Print A4")}</span>
                             </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenRowMenuId(null);
+                                router.push(`/dashboard/purchase/local-purchase-loading?billId=${row.id}`);
+                              }}
+                              className="w-full px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                            >
+                              <Truck className="h-3.5 w-3.5 text-emerald-600" />
+                              <span>{tr("Transfer to Loading")}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenRowMenuId(null);
+                                router.push(`/dashboard/purchase/local-purchase-destination?stage=warehouse&billId=${row.id}`);
+                              }}
+                              className="w-full px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                            >
+                              <Warehouse className="h-3.5 w-3.5 text-indigo-600" />
+                              <span>{tr("Transfer to Warehouse")}</span>
+                            </button>
                           </div>
                         )}
                       </td>
@@ -2204,6 +2233,41 @@ export function LocalPurchaseTransferPaymentView({
                   </>
                 )}
                 {postError && <p role="alert" className="text-red-700 dark:text-red-300">{postError}</p>}
+
+                {deriveLocalPurchasePostingState(viewingBill).isComplete && (
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        router.push(`/dashboard/purchase/local-purchase-loading?billId=${viewingBill.id}`);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs cursor-pointer"
+                    >
+                      <Truck className="h-3.5 w-3.5" />
+                      <span>{tr("Transfer to Loading")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        router.push(`/dashboard/purchase/local-purchase-destination?stage=warehouse&billId=${viewingBill.id}`);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs cursor-pointer"
+                    >
+                      <Warehouse className="h-3.5 w-3.5" />
+                      <span>{tr("Transfer to Warehouse")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        router.push(`/dashboard/purchase/local-purchase/${viewingBill.id}/goods-transfer`);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs hover:bg-slate-50 shadow-xs cursor-pointer"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
+                      <span>{tr("Goods Transfer & Verification")}</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Payment History Entries (if any) */}
