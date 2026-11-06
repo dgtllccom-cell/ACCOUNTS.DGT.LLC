@@ -24,6 +24,7 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { apiGet } from "@/lib/api/client";
 import { mapWithConcurrency } from "@/lib/utils/map-with-concurrency";
 import { voucherLegsFromLines } from "@/lib/roznamcha/voucher-legs";
+import { isEntryInDateRange } from "@/lib/roznamcha/entry-date-range";
 import { cn } from "@/lib/utils";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
@@ -600,8 +601,8 @@ function filterRows(
       // Legacy/unclassified entries (operational_domain IS NULL, posted before this column
       // existed) always pass through a domain filter so historical data never disappears.
       if (filters.domain !== "all" && row.operationalDomain && row.operationalDomain !== filters.domain) return false;
-      if (filters.fromDate && row.entryDate < filters.fromDate) return false;
-      if (filters.toDate && row.entryDate > filters.toDate) return false;
+      // Calendar-day comparison: the To date keeps its own last day (see lib/roznamcha/entry-date-range.ts).
+      if (!isEntryInDateRange(row.entryDate, filters.fromDate, filters.toDate)) return false;
       if (filters.currency && filters.currency !== "all" && (row.currency || "").toUpperCase() !== filters.currency.toUpperCase()) return false;
       if (q && !row.searchText.includes(q)) return false;
       return true;
