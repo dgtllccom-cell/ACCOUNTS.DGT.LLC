@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
+import { isTruckTrial } from "@/lib/permissions/truck-trial";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
@@ -69,6 +70,7 @@ export async function GET(req: Request) {
         left join public.country_branches crb on crb.id = t.country_branch_id
         left join public.countries country on country.id = t.country_id
         where t.deleted_at is null
+          and (${isTruckTrial(session) ? sqlScopeCondition(sql, sessionSqlScope(session), "t") : sql`true`})
           and (${selectable ? sql`t.status = 'active'` : status ? sql`t.status = ${status}` : sql`true`})
           and (${searchLike ? sql`(t.truck_number ilike ${searchLike} or t.registration_number ilike ${searchLike} or t.owner_name ilike ${searchLike} or t.driver_name ilike ${searchLike} or t.transport_company ilike ${searchLike})` : sql`true`})
         order by ${prefixLike ? sql`(lower(t.truck_number) like lower(${prefixLike})) desc,` : sql``} t.truck_number asc
@@ -123,7 +125,7 @@ export async function POST(req: Request) {
     });
     if (existing) {
       return NextResponse.json(
-        { error: "A truck with this number is already registered.", duplicate: true, truck: existing },
+        { error: "A truck with this number is already registered.", duplicate: true, ...(isTruckTrial(session) ? {} : { truck: existing }) },
         { status: 409 },
       );
     }
@@ -148,6 +150,10 @@ export async function POST(req: Request) {
     for (const f of TEXT) if (body[f] !== undefined) row[f] = body[f] === "" || body[f] === null ? null : String(body[f]).trim();
     for (const d of DATES) if (body[d] !== undefined) row[d] = body[d] || null;
     row.truck_number = truckNumber;
+    authorizeApiScope(session, { resource: "shipping_records", action: "create",
+      countryId: row.country_id as string | null, countryBranchId: row.country_branch_id as string | null,
+      cityBranchId: row.city_branch_id as string | null });
+    if (isTruckTrial(session) && !row.city_branch_id) return NextResponse.json({ error: "A trial user requires an assigned city branch." }, { status: 403 });
 
     // Four independent serials for the Truck Registration form.
     const serials = await allocateFormSerials("truck", {

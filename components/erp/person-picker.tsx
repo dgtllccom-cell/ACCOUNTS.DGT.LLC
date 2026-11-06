@@ -136,6 +136,8 @@ export function PersonPicker({
   lang: langProp,
   createLabel: createLabelProp,
   createButtonPlacement = "inside",
+  personRole,
+  allowEdit = true,
 }: {
   label: string;
   value: string;
@@ -152,6 +154,8 @@ export function PersonPicker({
    *  Customer/Person Management create flow. */
   createLabel?: string;
   createButtonPlacement?: "modal" | "trigger" | "both" | "below" | "inside";
+  personRole?: "Truck Owner / Transporter" | "Truck Driver";
+  allowEdit?: boolean;
 }) {
   const lang = useActiveLanguage(langProp || "en");
   const [filterByCountry, setFilterByCountry] = useState(defaultFilterByCountry);
@@ -437,12 +441,13 @@ export function PersonPicker({
           const found = people.find((p) => p.id === personId);
           if (found) setViewPerson(found);
         }}
-        onEditOption={(personId) => setEditPersonId(personId)}
+        onEditOption={allowEdit ? (personId) => setEditPersonId(personId) : undefined}
         onPrintOption={handlePrintPerson}
         createLabel={createLabelProp ?? t(lang, "hr.pp_add_new_person_master", "+ Add New Person Master")}
         createButtonPlacement={createButtonPlacement}
-        onCreateWithSearch={handleQuickCreatePerson}
+        onCreateWithSearch={personRole ? async (name) => { setPendingCreateName(name); setOpenCreate(true); } : handleQuickCreatePerson}
         onCreateNew={async () => {
+          setPendingCreateName(null);
           setOpenCreate(true);
         }}
       />
@@ -564,9 +569,13 @@ export function PersonPicker({
           <CustomerForm
             lang={lang}
             mode="embedded"
+            initialCustomerType={personRole}
+            initialName={pendingCreateName || undefined}
+            initialCountryId={countryId}
             onClose={() => setOpenCreate(false)}
             onSave={async (newPersonId) => {
               setOpenCreate(false);
+              setPendingCreateName(null);
               try {
                 const res = await apiGet<{ customer: PersonRow }>(`/api/erp/customers/${encodeURIComponent(newPersonId)}?lang=${encodeURIComponent(lang)}`);
                 if (res.customer) {

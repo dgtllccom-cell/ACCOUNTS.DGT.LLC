@@ -11,6 +11,7 @@ import { companiesService } from "@/lib/services/companies-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
+import { isTruckTrial } from "@/lib/permissions/truck-trial";
 
 export async function GET(request: NextRequest) {
   try {
@@ -94,6 +95,14 @@ export async function POST(request: NextRequest) {
 
     const raw = await request.json();
     const body = companyCreateSchema.parse(raw);
+    if (isTruckTrial(session)) {
+      if (body.companyType === "internal" || body.linkedCountryBranchIds?.length || body.linkedCityBranchIds?.length) {
+        throw new ApiClientError("Truck trial access cannot manage internal companies or branch links.", { status: 403 });
+      }
+      body.countryId = body.countryId || session.countryIds[0];
+      body.countryBranchId = body.countryBranchId || session.countryBranchIds[0];
+      body.cityBranchId = body.cityBranchId || session.cityBranchIds[0];
+    }
     assertCompanyTypeRules(body);
 
     authorizeApiScope(session, {

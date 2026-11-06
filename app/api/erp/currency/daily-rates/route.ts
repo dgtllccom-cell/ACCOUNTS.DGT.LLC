@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { hasRolePermission } from "@/lib/permissions/middleware";
+import { dailyRateEffectiveFrom } from "@/lib/currency/daily-rate-time";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -55,6 +58,7 @@ export async function GET(req: NextRequest) {
     const query = searchParams.get("query")?.toLowerCase().trim();
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
+    authorizeApiScope(session, { resource: hasRolePermission(session, "currency_rates", "read") ? "currency_rates" : "roznamcha", action: "read", countryId: countryId && countryId !== "all" ? countryId : null });
 
     const supabase = createSupabaseAdminClient() as any;
 
@@ -68,7 +72,7 @@ export async function GET(req: NextRequest) {
       .limit(1000);
 
     // Backend scope: non-super-admin only sees their assigned countries.
-    if (!session.isSuperAdmin && Array.isArray(session.countryIds) && session.countryIds.length > 0) {
+    if (!session.isSuperAdmin) {
       q = q.in("country_id", session.countryIds);
     }
     if (countryId && countryId !== "all") q = q.eq("country_id", countryId);
@@ -134,7 +138,7 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: false })
       .limit(200);
 
-    if (!session.isSuperAdmin && Array.isArray(session.countryIds) && session.countryIds.length > 0) {
+    if (!session.isSuperAdmin) {
       histQ = histQ.in("country_id", session.countryIds);
     }
     if (countryId && countryId !== "all") {
@@ -160,23 +164,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-function parseEffectiveFrom(rateDate: string, rateTime: string | undefined | null): string {
-  const date = rateDate || isoToday();
-  const raw = String(rateTime || "").trim();
-  const m = raw.match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$/);
-  if (m) {
-    let h = Number(m[1]);
-    const min = Number(m[2]);
-    const ap = m[3]?.toUpperCase();
-    if (ap === "PM" && h < 12) h += 12;
-    if (ap === "AM" && h === 12) h = 0;
-    const hh = String(h).padStart(2, "0");
-    const mm = String(min).padStart(2, "0");
-    return `${date}T${hh}:${mm}:00Z`;
-  }
-  return new Date().toISOString();
-}
-
 export async function POST(req: NextRequest) {
   try {
     const session = await requireErpSession();
@@ -193,6 +180,7 @@ export async function POST(req: NextRequest) {
       userName,
       reason,
       action, // 'create' | 'correct'
+      timeZoneOffsetMinutes,
     } = body;
 
     if (!countryId) {
@@ -210,8 +198,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Branch users cannot create or edit exchange rates
-    const isCountryAdminOrSuper = isSuperAdmin || session.roles?.includes("country_admin") || session.permissions?.includes("currency_rates:create");
+    // Branch users need an explicit rate-management grant; country scope remains mandatory.
+    const isCountryAdminOrSuper = isSuperAdmin || session.roles?.includes("country_admin") || hasRolePermission(session, "currency_rates", "create") || hasRolePermission(session, "currency_rates", "update");
     if (!isCountryAdminOrSuper) {
       return NextResponse.json(
         { ok: false, error: "Branch users are not authorized to create or edit country exchange rates. Rates are managed by the Country Admin." },
@@ -221,7 +209,7 @@ export async function POST(req: NextRequest) {
 
     const credit = Number(creditRate ?? sellingRate);
     const debit = Number(debitRate ?? buyingRate);
-    if (!(credit > 0) || !(debit > 0)) {
+    if (!Number.isFinite(credit) || !Number.isFinite(debit) || !(credit > 0) || !(debit > 0)) {
       return NextResponse.json(
         { ok: false, error: "Credit (Selling) and Debit (Buying) rates must both be greater than zero." },
         { status: 400 }
@@ -240,8 +228,8 @@ export async function POST(req: NextRequest) {
     }
 
     const targetDate = rateDate || isoToday();
-    const effectiveFrom = parseEffectiveFrom(targetDate, rateTime);
-    const operatorName = userName || session.fullName || session.email || "Country Admin";
+    const effectiveFrom = dailyRateEffectiveFrom(targetDate, rateTime, timeZoneOffsetMinutes);
+    const operatorName = session.fullName || session.email || "Country Admin";
 
     // Safely check if session.userId exists in profiles to satisfy FK constraint
     let validUserId: string | null = session.userId || null;
@@ -262,13 +250,14 @@ export async function POST(req: NextRequest) {
       .order("effective_from", { ascending: false });
 
     const existingRate = existingRates && existingRates.length > 0 ? existingRates[0] : null;
+    authorizeApiScope(session, { resource: "currency_rates", action: existingRate ? "update" : "create", countryId });
 
     // Case 1: Rate ALREADY exists for this date -> Controlled Edit/Correction Workflow
     if (existingRate) {
       const cleanReason = String(reason || "").trim();
 
       // If user did not provide a reason or did not explicitly choose correction mode
-      if (!cleanReason && action !== "correct") {
+      if (!cleanReason || action !== "correct") {
         return NextResponse.json(
           {
             ok: false,
@@ -283,7 +272,7 @@ export async function POST(req: NextRequest) {
 
       // Log the full audit history in exchange_rate_history:
       // Old Rate -> New Rate -> Changed By -> Date/Time -> Reason
-      await supabase.from("exchange_rate_history").insert({
+      const { error: auditError } = await supabase.from("exchange_rate_history").insert({
         country_id: countryId,
         from_currency: currency,
         to_currency: "USD",
@@ -296,9 +285,10 @@ export async function POST(req: NextRequest) {
         effective_date: targetDate,
         changed_by: validUserId,
         user_name: operatorName,
-        reason: cleanReason || "Authorized rate correction",
+        reason: cleanReason,
         created_at: new Date().toISOString(),
       });
+      if (auditError) throw new Error(auditError.message);
 
       // Update existing record with the corrected rates without duplicate-key errors
       const { data: updated, error: updateErr } = await supabase

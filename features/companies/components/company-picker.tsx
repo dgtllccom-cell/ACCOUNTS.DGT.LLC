@@ -69,7 +69,9 @@ export function CompanyPicker({
   onValueChange,
   disabled,
   placeholder,
-  createButtonPlacement = "below"
+  createButtonPlacement = "below",
+  transportContext = false,
+  allowEdit = true,
 }: {
   label: string;
   value: string;
@@ -77,6 +79,8 @@ export function CompanyPicker({
   disabled?: boolean;
   placeholder?: string;
   createButtonPlacement?: "modal" | "trigger" | "both" | "below" | "inside";
+  transportContext?: boolean;
+  allowEdit?: boolean;
 }) {
   const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
@@ -195,9 +199,9 @@ export function CompanyPicker({
           const found = companies.find((c) => c.id === companyId);
           if (found) setViewCompany(found);
         }}
-        onEditOption={(companyId) => {
+        onEditOption={allowEdit ? (companyId) => {
           setEditCompanyId(companyId);
-        }}
+        } : undefined}
         onPrintOption={handlePrintCompany}
       />
 
@@ -351,6 +355,7 @@ export function CompanyPicker({
         >
           <CompanyIncorporationForm
             mode="embedded"
+            showAccountLink={!transportContext}
             initialCompanyId={editCompanyId}
             onSave={(updatedCompany) => {
               loadList().catch(() => null);
@@ -372,6 +377,7 @@ export function CompanyPicker({
         >
           <CompanyIncorporationForm
             mode="embedded"
+            showAccountLink={!transportContext}
             onSave={(newCompany: any) => {
               loadList().catch(() => null);
               const compId = newCompany?.id || newCompany?.companyId;

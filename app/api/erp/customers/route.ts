@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
+import { apiCreated, apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
@@ -7,6 +7,7 @@ import { customerCreateSchema } from "@/lib/api/erp-validation";
 import { customersService } from "@/lib/services/customers-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
+import { isTruckTrial } from "@/lib/permissions/truck-trial";
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,6 +34,11 @@ export async function GET(request: NextRequest) {
     }
     if (allCountries || filterByCountry === "false") {
       countryId = null;
+    }
+    if (isTruckTrial(session)) {
+      countryId = countryId || session.countryIds[0] || null;
+      if (!countryId) return apiOk({ customers: [] });
+      authorizeApiScope(session, { resource: "customers", action: "read", countryId });
     }
 
     const result = await customersService.search({
@@ -93,6 +99,9 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const body = customerCreateSchema.parse(await request.json());
+    if (isTruckTrial(session) && !["Truck Owner / Transporter", "Truck Driver"].includes(body.gender || "")) {
+      throw new ApiClientError("Truck trial access may register truck owners and drivers only.", { status: 403 });
+    }
 
     authorizeApiScope(session, {
       resource: "customers",

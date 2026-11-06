@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { ERP_SESSION_COOKIE } from "@/lib/auth/session-cookie";
-import { readMobileProfileFromToken } from "@/lib/auth/edge-session";
+import { readMobileProfileFromToken, readTruckTrialFromToken } from "@/lib/auth/edge-session";
+import { truckTrialAllowsApi, truckTrialAllowsPath, TRUCK_TRIAL_HOME } from "@/lib/permissions/truck-trial";
 import { MOBILE_PROFILE_HOME, mobileProfileAllowsApi, mobileProfileAllowsPath } from "@/lib/permissions/mobile-profiles";
 
 function resolveRedirectUrl(targetPath: string, request: NextRequest): URL {
@@ -18,6 +19,7 @@ export async function middleware(request: NextRequest) {
   // The dashboard layout (server) needs the requested path to apply the route access policy (see lib/navigation/route-policy).
   // Always overwrite: a client-supplied value must never be trusted.
   request.headers.set("x-erp-pathname", pathname);
+  request.headers.set("x-erp-method", request.method);
 
   // Enforce authentication for all dashboard routes.
   // This is a fast cookie-presence check (not a full session validation).
@@ -28,6 +30,18 @@ export async function middleware(request: NextRequest) {
       const loginUrl = resolveRedirectUrl("/auth/login", request);
       loginUrl.searchParams.set("redirectTo", pathname);
       return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  if (await readTruckTrialFromToken(request.cookies.get(ERP_SESSION_COOKIE)?.value)) {
+    if (pathname.startsWith("/dashboard") && !["GET", "HEAD"].includes(request.method)) {
+      return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "Truck trial writes use the authorized master APIs." } }, { status: 403 });
+    }
+    if (pathname.startsWith("/api/") && !truckTrialAllowsApi(pathname, request.method)) {
+      return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "Outside Truck Registration trial access." } }, { status: 403 });
+    }
+    if (pathname.startsWith("/dashboard") && !truckTrialAllowsPath(pathname)) {
+      return NextResponse.redirect(resolveRedirectUrl(TRUCK_TRIAL_HOME, request));
     }
   }
 
