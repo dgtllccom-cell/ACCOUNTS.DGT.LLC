@@ -30,6 +30,8 @@ export type TempSessionPayloadV1 = {
     mobileProfile?: string;
   }>;
   createdAt: number;
+  truckTrial?: boolean;
+  clearingMenu?: boolean;
 };
 
 function base64UrlEncode(value: string) {
@@ -106,6 +108,8 @@ export async function setDirectUserSession(user: {
     mobileProfile?: string;
   }>;
   remember?: boolean;
+  truckTrial?: boolean;
+  clearingMenu?: boolean;
 }) {
   const cookieStore = await cookies();
   const payload: TempSessionPayloadV1 = {
@@ -116,6 +120,8 @@ export async function setDirectUserSession(user: {
     fullName: user.fullName,
     roles: user.roles,
     assignments: user.assignments,
+    truckTrial: Boolean(user.truckTrial),
+    clearingMenu: Boolean(user.clearingMenu),
     createdAt: Date.now()
   };
 
@@ -151,6 +157,8 @@ export async function readTempSession(): Promise<
     operationalDomain?: string;
     mobileProfile?: string;
       }>;
+      truckTrial?: boolean;
+  clearingMenu?: boolean;
       preferredLanguage: SupportedLanguage;
       /** epoch ms the token was issued — used for server-side absolute expiry. */
       createdAt: number;
@@ -200,6 +208,8 @@ export async function readTempSession(): Promise<
     fullName: payload.fullName,
     roles: payload.roles,
     assignments: payload.assignments ?? [],
+    truckTrial: payload.truckTrial === true,
+    clearingMenu: payload.clearingMenu === true,
     preferredLanguage,
     createdAt
   };

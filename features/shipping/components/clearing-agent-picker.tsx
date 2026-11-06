@@ -39,13 +39,15 @@ export function ClearingAgentPicker({
   value,
   onValueChange,
   disabled,
-  placeholder
+  placeholder,
+  allowCreate = true
 }: {
   label?: string;
   value: string;
   onValueChange: (clearingAgentId: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  allowCreate?: boolean;
 }) {
   const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
@@ -111,7 +113,7 @@ export function ClearingAgentPicker({
         createLabel={t(lang, "cla.new_clearing_agent", "New Clearing Agent")}
         createButtonPlacement="both"
         onCreateWithSearch={createClearingAgent}
-        onCreateNew={async () => setOpenCreate(true)}
+        onCreateNew={allowCreate ? async () => setOpenCreate(true) : undefined}
       />
 
       {openCreate ? (

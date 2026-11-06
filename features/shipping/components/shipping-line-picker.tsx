@@ -36,13 +36,15 @@ export function ShippingLinePicker({
   value,
   onValueChange,
   disabled,
-  placeholder
+  placeholder,
+  allowCreate = true
 }: {
   label?: string;
   value: string;
   onValueChange: (shippingLineId: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  allowCreate?: boolean;
 }) {
   const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
@@ -100,7 +102,7 @@ export function ShippingLinePicker({
         createLabel={t(lang, "shl.new_shipping_line", "New Shipping Line")}
         createButtonPlacement="both"
         onCreateWithSearch={createShippingLine}
-        onCreateNew={async () => setOpenCreate(true)}
+        onCreateNew={allowCreate ? async () => setOpenCreate(true) : undefined}
       />
 
       {openCreate ? (

@@ -1,3 +1,6 @@
+import { isClearingMenu, clearingRecordAllowed } from "@/lib/permissions/clearing-menu";
+import { withLocalPg } from "@/lib/db/local-postgres";
+import { ErpPermissionError } from "@/lib/permissions/middleware";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Main Transfer & Handover Center — Gmail-style unified inbox across every
 // non-financial handover type (shipping stage handoffs, truck tasks, goods
@@ -96,6 +99,19 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const body = createSchema.parse(await request.json());
+    if (isClearingMenu(session)) {
+      const tables = ["shipping_agent_entries", "clearing_agent_custom_entries", "clearing_payment_bills"];
+      if (body.transferType !== "clearing_bill" || !body.sourceTable || !tables.includes(body.sourceTable) || !body.sourceId) throw new ErpPermissionError("Only an assigned Clearing Agent form can be transferred.");
+      authorizeApiScope(session, { resource: "inter_branch_transfers", action: "create", countryId: body.sourceCountryId, countryBranchId: body.sourceCountryBranchId, cityBranchId: body.sourceCityBranchId });
+      const sourceTable = body.sourceTable;
+      const sourceId = body.sourceId;
+      const row = await withLocalPg(async (sql) => {
+        const rows = await sql`select * from ${sql.unsafe(`public.${sourceTable}`)} where id = ${sourceId}::uuid and deleted_at is null limit 1`;
+        return rows[0];
+      });
+      if (!row || !clearingRecordAllowed(session, row, body.sourceTable === "shipping_agent_entries" ? "clearing_agent_id" : "agent_id")) throw new ErpPermissionError("The transfer source is outside your Clearing Agent assignment.");
+    }
+
 
     const isSameBranch =
       body.sourceCountryId === body.destCountryId &&

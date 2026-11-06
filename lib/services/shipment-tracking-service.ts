@@ -1,3 +1,4 @@
+import { clearingAgentCondition, clearingRecordAllowed } from "@/lib/permissions/clearing-menu";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import type { ErpSession } from "@/lib/auth/session";
 import { ApiClientError } from "@/lib/api/response";
@@ -135,7 +136,7 @@ function whereClause(sql: any, session: ErpSession, f: TrackingListFilter) {
       : f.view === "trucks"
       ? sql`AND (coalesce(al.truck_number,'') <> '' OR coalesce(o.truck_number,'') <> '')`
       : sql``;
-  return sql`WHERE o.deleted_at IS NULL AND ${scope} ${mode} ${status} ${view} ${searchCondition(sql, f.query ?? "", f.field ?? "all")}`;
+  return sql`WHERE o.deleted_at IS NULL AND ${scope} AND ${clearingAgentCondition(sql, session, "o.clearing_agent_id")} ${mode} ${status} ${view} ${searchCondition(sql, f.query ?? "", f.field ?? "all")}`;
 }
 
 const DASH = "—";
@@ -191,7 +192,7 @@ export class ShipmentTrackingService {
       const order = orders[0];
 
       // Strict scope: the same rule as the list. Never reveal that an out-of-scope shipment exists.
-      if (!recordInSessionScope(session, order)) return null;
+      if (!recordInSessionScope(session, order) || !clearingRecordAllowed(session, order, "clearing_agent_id")) return null;
 
       const legs = (await sql`
         SELECT l.*, sl.name AS shipping_line_name, t.truck_number AS master_truck_number
@@ -330,7 +331,7 @@ export class ShipmentTrackingService {
         WHERE id = ${input.orderId} AND deleted_at IS NULL
       `) as any[];
       // out-of-scope and missing look the same
-      if (!orders.length || !recordInSessionScope(session, orders[0])) {
+      if (!orders.length || !recordInSessionScope(session, orders[0]) || !clearingRecordAllowed(session, orders[0], "clearing_agent_id")) {
         throw new ApiClientError("Shipment not found.", { status: 404, code: "TRACKING_NOT_FOUND" });
       }
       const order = orders[0];

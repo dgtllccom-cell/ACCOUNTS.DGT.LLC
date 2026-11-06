@@ -1,3 +1,4 @@
+import { isClearingMenu, CLEARING_MENU_HOME } from "@/lib/permissions/clearing-menu";
 import { cookies, headers } from "next/headers";
 import { forbidden, redirect } from "next/navigation";
 import { evaluateRouteAccess } from "@/lib/navigation/route-policy";
@@ -7,6 +8,7 @@ import { MOBILE_PROFILE_HOME } from "@/lib/permissions/mobile-profiles";
 import { appChannelFromUserAgent, channelAllowsSession } from "@/lib/mobile/app-channel";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { resolveSessionScopeDisplay } from "@/lib/permissions/scope-display";
+import { isTruckTrial, TRUCK_TRIAL_HOME } from "@/lib/permissions/truck-trial";
 
 function normalizeLanguage(value: string | undefined): SupportedLanguage | null {
   if (!value) return null;
@@ -40,6 +42,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // SERVER-side route gate: a pasted/typed URL the login may not open answers 403 (the client guard and the sidebar use the same policy).
   const requested = (await headers()).get("x-erp-pathname") ?? "";
+  if (isClearingMenu(session) && requested === "/dashboard") redirect(CLEARING_MENU_HOME);
+  if (isTruckTrial(session) && requested !== TRUCK_TRIAL_HOME) redirect(TRUCK_TRIAL_HOME);
   if (requested.startsWith("/dashboard")) {
     const decision = evaluateRouteAccess({
       pathname: requested,

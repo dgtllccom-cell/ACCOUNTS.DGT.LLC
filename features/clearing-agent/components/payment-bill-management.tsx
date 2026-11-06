@@ -66,7 +66,7 @@ const EMPTY_BILL: any = {
   remarks: "",
 };
 
-export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedLanguage }) {
+export function PaymentBillManagementView({ lang: langProp, clearingMenuOnly = false }: { lang: SupportedLanguage; clearingMenuOnly?: boolean }) {
   const lang = useActiveLanguage(langProp);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const dir = getLanguageDirection(lang);
@@ -359,7 +359,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.clearing_agent", "Clearing Agent / Company Name")} *</label>
-              <ClearingAgentPicker
+              <ClearingAgentPicker allowCreate={!clearingMenuOnly}
                 label=""
                 value={form.agent_id || ""}
                 onValueChange={async (agentId) => {
@@ -542,7 +542,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
         </form>
 
         {/* Customer Charges (revenue side) — only for an existing, saved bill */}
-        {isEditing && form.id ? (
+        {isEditing && form.id && !clearingMenuOnly ? (
           <CustomerChargesPanel billId={form.id} customerId={form.customer_id || null} orderId={form.order_id || null} lang={lang} />
         ) : null}
 
@@ -566,12 +566,13 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
             orderReference={form.bill_no || form.order_no || form.id}
             sourceTable="clearing_payment_bills"
             sourceId={form.id}
-            targetUrl={`/dashboard/clearing-agent/payment-bill?id=${form.id}`}
+            targetUrl={clearingMenuOnly ? `/dashboard/clearing-agent/payment-bill-entry?id=${form.id}` : `/dashboard/clearing-agent/payment-bill?id=${form.id}`}
             defaultTask={tt("tc.please_complete_work", "Please review and complete assigned work.")}
             sourceCountryId={form.country_id || null}
             sourceCountryBranchId={form.country_branch_id || null}
             sourceCityBranchId={form.city_branch_id || null}
-            domain="business"
+            domain={clearingMenuOnly ? "shipping" : "business"}
+            transferType={clearingMenuOnly ? "clearing_bill" : undefined}
             customerPartyName={form.customer_name || form.agent_name || null}
             onSuccess={() => setHandoffModalOpen(false)}
             lang={lang}
@@ -693,7 +694,7 @@ export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedL
                             <Pencil className="w-3.5 h-3.5" />
                             {tt("clbill.edit", "Edit")}
                           </button>
-                          <AddExpenseBillButton sourceId={r.id} lang={lang} size="sm" variant="outline" />
+                          {!clearingMenuOnly && <AddExpenseBillButton sourceId={r.id} lang={lang} size="sm" variant="outline" />}
                         </div>
                       </td>
                     </tr>

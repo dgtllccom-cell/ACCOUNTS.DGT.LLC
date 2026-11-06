@@ -1,4 +1,5 @@
 "use client";
+import { isClearingMenu, clearingMenuAllowsPath } from "@/lib/permissions/clearing-menu";
 
 /**
  * DigitalDockPremiumSidebar
@@ -836,6 +837,8 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     const rawHref = it.href;
     const cleanHref = rawHref.split("?")[0];
 
+    if (isClearingMenu({ permissions: [...userPermissions] }) && !clearingMenuAllowsPath(cleanHref)) return false;
+
     // Default home dashboard is always visible
     if (cleanHref === "/dashboard") return true;
 
@@ -879,6 +882,8 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
       .filter((c) => isPermitted(c))
       .map((c) => (c.children ? { ...c, children: filterTree(c.children) } : c))
       .filter((c) => !c.children || c.href || c.children.length > 0);
+
+  if (isClearingMenu({ permissions: [...userPermissions] })) return filterTree(items);
 
   if (isShippingOnly) {
     // Shipping Line ecosystem:

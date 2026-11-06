@@ -57,7 +57,7 @@ const EMPTY_ENTRY: any = {
   remarks: "",
 };
 
-export function AgentCustomEntryManagementView({ lang: langProp }: { lang: SupportedLanguage }) {
+export function AgentCustomEntryManagementView({ lang: langProp, clearingMenuOnly = false }: { lang: SupportedLanguage; clearingMenuOnly?: boolean }) {
   const router = useRouter();
   const lang = useActiveLanguage(langProp);
   const dir = getLanguageDirection(lang);
@@ -325,7 +325,7 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.agent_company", "Clearing Agent Company")} *</label>
-              <ClearingAgentPicker
+              <ClearingAgentPicker allowCreate={!clearingMenuOnly}
                 label=""
                 value={form.agent_id || ""}
                 onValueChange={async (agentId) => {

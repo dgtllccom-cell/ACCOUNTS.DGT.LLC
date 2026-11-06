@@ -1,3 +1,4 @@
+import { isClearingMenu, clearingAgentForWrite, clearingAgentCondition } from "@/lib/permissions/clearing-menu";
 import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
@@ -27,6 +28,8 @@ export async function GET(req: NextRequest) {
                currency_code, clearance_status, remarks, status, is_active, created_at, updated_at
         from public.clearing_agent_custom_entries
         where deleted_at is null
+          and ${clearingAgentCondition(sql, session, "agent_id")}
+          and (${isClearingMenu(session) ? sql`city_branch_id = any(${session.cityBranchIds}::uuid[])` : sql`true`})
           and (${status && status !== "all" ? sql`clearance_status = ${status}` : sql`true`})
           and (${session.isSuperAdmin ? sql`true` : sql`(country_id = any(${session.countryIds}) or country_id is null)`})
         order by created_at desc
@@ -36,7 +39,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: rows || [] });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message || "Failed to load custom entries" }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || "Failed to load custom entries" }, { status: error.status ?? 500 });
   }
 }
 
@@ -46,10 +49,12 @@ export async function POST(req: NextRequest) {
     { const __denied = shippingAccountingDenied(session); if (__denied) return __denied; }
     authorizeApiScope(session, { resource: "shipping_records", action: "create" });
     const body = await req.json();
+    body.agent_id = clearingAgentForWrite(session, body.agent_id);
 
     const countryId = body.country_id ?? (session.isSuperAdmin ? null : session.countryIds?.[0] ?? null);
     const countryBranchId = body.country_branch_id ?? session.countryBranchIds?.[0] ?? null;
     const cityBranchId = body.city_branch_id ?? session.cityBranchIds?.[0] ?? null;
+    if (isClearingMenu(session)) authorizeApiScope(session, { resource: "shipping_records", action: "create", countryId, countryBranchId, cityBranchId });
 
     const data = await withLocalPg(async (sql) => {
       const countRows = await sql`select count(*)::int as c from public.clearing_agent_custom_entries`;
@@ -95,6 +100,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: error.status ?? 500 });
   }
 }

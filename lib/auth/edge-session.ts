@@ -33,7 +33,9 @@ export type EdgeMobileProfile = "standard" | "mobile_cash_ledger" | "mobile_fiel
  * cookie is absent / unverifiable / not a temp session. A non-"standard" result
  * is only ever returned for a cookie whose HMAC checks out.
  */
-export async function readMobileProfileFromToken(token: string | undefined | null): Promise<EdgeMobileProfile | null> {
+type VerifiedPayload = { kind?: string; truckTrial?: boolean; clearingMenu?: boolean; assignments?: Array<{ mobileProfile?: string }> };
+
+async function readVerifiedPayload(token: string | undefined | null): Promise<VerifiedPayload | null> {
   if (!token || token.indexOf(".") === -1) return null;
   const secret = sessionSecret();
   if (!secret) return null; // no stable secret → cannot verify → don't gate here (server still enforces)
@@ -52,17 +54,27 @@ export async function readMobileProfileFromToken(token: string | undefined | nul
     const ok = await crypto.subtle.verify("HMAC", key, b64urlToBytes(sigB64) as BufferSource, new TextEncoder().encode(payloadB64));
     if (!ok) return null;
 
-    const payload = JSON.parse(new TextDecoder().decode(new Uint8Array(b64urlToBytes(payloadB64)))) as {
-      kind?: string;
-      assignments?: Array<{ mobileProfile?: string }>;
-    };
+    const payload = JSON.parse(new TextDecoder().decode(new Uint8Array(b64urlToBytes(payloadB64)))) as VerifiedPayload;
     if (payload?.kind !== "temp") return null;
 
-    const profiles = (payload.assignments ?? [])
-      .map((a) => a?.mobileProfile)
-      .filter((p): p is string => p === "mobile_cash_ledger" || p === "mobile_field");
-    return (profiles[0] as EdgeMobileProfile) ?? "standard";
+    return payload;
   } catch {
     return null;
   }
+}
+
+export async function readMobileProfileFromToken(token: string | undefined | null): Promise<EdgeMobileProfile | null> {
+  const payload = await readVerifiedPayload(token);
+  if (!payload) return null;
+  const profiles = (payload.assignments ?? []).map((a) => a?.mobileProfile)
+    .filter((p): p is string => p === "mobile_cash_ledger" || p === "mobile_field");
+  return (profiles[0] as EdgeMobileProfile) ?? "standard";
+}
+
+export async function readTruckTrialFromToken(token: string | undefined | null): Promise<boolean> {
+  return (await readVerifiedPayload(token))?.truckTrial === true;
+}
+
+export async function readClearingMenuFromToken(token: string | undefined | null): Promise<boolean> {
+  return (await readVerifiedPayload(token))?.clearingMenu === true;
 }

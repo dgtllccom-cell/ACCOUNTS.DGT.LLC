@@ -1,3 +1,5 @@
+import { isClearingMenu, clearingAgentForWrite, clearingRecordAllowed } from "@/lib/permissions/clearing-menu";
+import { ErpPermissionError } from "@/lib/permissions/middleware";
 import { shippingAccountingDenied } from "@/lib/permissions/shipping-explicit-gate";
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
@@ -19,10 +21,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     // country's customs declaration by id (the sibling bl-records route
     // already does this; this route didn't).
     const existing = await withLocalPg(async (sql) => {
-      const rows = await sql`select country_id, country_branch_id, city_branch_id from public.clearing_agent_custom_entries where id = ${id}::uuid and deleted_at is null limit 1`;
+      const rows = await sql`select country_id, country_branch_id, city_branch_id, agent_id from public.clearing_agent_custom_entries where id = ${id}::uuid and deleted_at is null limit 1`;
       return rows[0];
     });
     if (!existing) return NextResponse.json({ success: false, error: "Record not found." }, { status: 404 });
+    if (!clearingRecordAllowed(session, existing as any)) throw new ErpPermissionError("This record belongs to another branch or Clearing Agent.");
+    if (body.agent_id !== undefined) body.agent_id = clearingAgentForWrite(session, body.agent_id);
     authorizeApiScope(session, {
       resource: "shipping_records",
       action: "update",
@@ -71,7 +75,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: error.status ?? 500 });
   }
 }
 
@@ -82,7 +86,7 @@ export async function DELETE(_req: Request, context: { params: Promise<{ id: str
     const { id } = await context.params;
 
     const existing = await withLocalPg(async (sql) => {
-      const rows = await sql`select country_id, country_branch_id, city_branch_id from public.clearing_agent_custom_entries where id = ${id}::uuid and deleted_at is null limit 1`;
+      const rows = await sql`select country_id, country_branch_id, city_branch_id, agent_id from public.clearing_agent_custom_entries where id = ${id}::uuid and deleted_at is null limit 1`;
       return rows[0];
     });
     if (!existing) return NextResponse.json({ success: false, error: "Record not found." }, { status: 404 });
@@ -104,6 +108,6 @@ export async function DELETE(_req: Request, context: { params: Promise<{ id: str
     return NextResponse.json({ success: true });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: error.status ?? 500 });
   }
 }

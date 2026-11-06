@@ -1,3 +1,4 @@
+import { CLEARING_MENU_MARKER, CLEARING_MENU_HOME } from "@/lib/permissions/clearing-menu";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import type { Route } from "next";
@@ -5,6 +6,7 @@ import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { dashboardForRoles, deriveEffectiveRole, enterpriseRoles, type EnterpriseRole, type StoredEnterpriseRole } from "@/lib/permissions/enterprise-roles";
+import { TRUCK_TRIAL_MARKER, TRUCK_TRIAL_HOME } from "@/lib/permissions/truck-trial";
 import { MOBILE_PROFILE_HOME } from "@/lib/permissions/mobile-profiles";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { setTempSuperAdminSession, setDirectUserSession } from "@/lib/auth/temp-session";
@@ -576,6 +578,11 @@ export async function POST(request: NextRequest) {
   userRoles = accountState.roles;
   roleAssignments = accountState.assignments;
 
+  const trialPermission = await admin.from("user_permission_sets").select("permissions, source").eq("user_id", profileRecord.id).maybeSingle();
+  if (trialPermission.error) return respondError("Unable to verify access permissions. Please try again.", 503);
+  const clearingMenu = !userRoles.includes("super_admin") && trialPermission.data?.source !== "role_default" && Boolean(trialPermission.data?.permissions?.includes(CLEARING_MENU_MARKER));
+  const truckTrial = !userRoles.includes("super_admin") && trialPermission.data?.source !== "role_default" && Boolean(trialPermission.data?.permissions?.includes(TRUCK_TRIAL_MARKER));
+
   // 5. Establish Session Cookie
   await setDirectUserSession({
     userId: profileRecord.id,
@@ -583,6 +590,8 @@ export async function POST(request: NextRequest) {
     fullName: profileRecord.full_name || rawIdentifier,
     roles: userRoles,
     assignments: roleAssignments,
+    truckTrial,
+    clearingMenu,
     remember: rememberMe
   });
 
@@ -593,7 +602,7 @@ export async function POST(request: NextRequest) {
     | "mobile_cash_ledger"
     | "mobile_field"
     | undefined;
-  const redirectTo = mobileProfile
+  const redirectTo = clearingMenu ? CLEARING_MENU_HOME : truckTrial ? TRUCK_TRIAL_HOME : mobileProfile
     ? MOBILE_PROFILE_HOME[mobileProfile]
     : dashboardForRolesLocal(userRoles);
 

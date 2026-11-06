@@ -139,12 +139,14 @@ export function CompanyIncorporationForm({
   mode = "standalone",
   initialCompanyId,
   initialOwnerPersonId,
+  showAccountLink = true,
   onSave,
   onClose,
 }: {
   mode?: "standalone" | "embedded";
   initialCompanyId?: string;
   initialOwnerPersonId?: string;
+  showAccountLink?: boolean;
   onSave?: (data: CompanyIncorporationData) => void;
   onClose?: () => void;
 }) {
@@ -294,6 +296,7 @@ export function CompanyIncorporationForm({
   // from "+ New Account" to auto-select a newly-created account.
   const loadAccounts = useCallback(
     async (ownerId: string, selectNewest = false) => {
+      if (!showAccountLink) return;
       setAccountsLoading(true);
       try {
         const r = await apiGet<any>(`/api/erp/accounting/accounts?limit=500&lang=${s.lang}`);
@@ -324,7 +327,7 @@ export function CompanyIncorporationForm({
         setAccountsLoading(false);
       }
     },
-    [s.lang],
+    [s.lang, showAccountLink],
   );
 
   useEffect(() => {
@@ -723,12 +726,12 @@ export function CompanyIncorporationForm({
       <section className={card}>
         <h3 className="mb-3 text-sm font-bold text-slate-900 dark:text-white">{s.t("sec_type", "1. Company Type")}</h3>
         <div className="grid gap-3 sm:grid-cols-2">
-          {COMPANY_TYPES.map((opt) => (
+          {COMPANY_TYPES.filter((opt) => showAccountLink || opt.value === "customer").map((opt) => (
             <button
               key={opt.value}
               type="button"
               data-testid={`company-type-${opt.value}`}
-              onClick={() => setCompanyType(opt.value)}
+              onClick={() => { if (showAccountLink || opt.value === "customer") setCompanyType(opt.value); }}
               className={cn(
                 "rounded-xl border p-3 text-start transition-colors",
                 companyType === opt.value
@@ -755,6 +758,9 @@ export function CompanyIncorporationForm({
           </h3>
           <div data-testid="owner-picker" className="w-full">
             <CustomerPicker
+              personRole={showAccountLink ? undefined : "Truck Owner / Transporter"}
+              allowEdit={showAccountLink}
+              countryId={countryId || undefined}
               label=""
               value={owner?.id || ""}
               onValueChange={(personId) => {
@@ -777,7 +783,7 @@ export function CompanyIncorporationForm({
               <div className="text-slate-500">{[owner.code, owner.mobile, owner.email].filter(Boolean).join(" · ") || "—"}</div>
 
               {/* Account — pick the correct account when the customer has several. Accounts are opened in New Account. */}
-              <div className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
+              {showAccountLink && <div className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
                 <label className={label}>{s.t("account", "Account")}{accounts.length > 1 ? " *" : ""}</label>
                 {accountsLoading ? (
                   <div className="flex items-center gap-2 text-xs text-slate-500"><Loader2 className="h-3.5 w-3.5 animate-spin" /> {s.t("accounts_loading", "Loading accounts…")}</div>
@@ -817,7 +823,7 @@ export function CompanyIncorporationForm({
                     {s.t("linked_account_number", "Linked Account Number")}: <span className="font-mono">{accounts.find((a) => a.id === accountId)?.accountNumber || "—"}</span>
                   </div>
                 )}
-              </div>
+              </div>}
 
               <div className="mt-3 font-semibold text-slate-700 dark:text-slate-300">
                 {s.t("sister_companies", "Sister companies of this owner")} ({sisters.length})

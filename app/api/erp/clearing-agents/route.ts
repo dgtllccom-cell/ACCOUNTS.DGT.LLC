@@ -1,3 +1,4 @@
+import { isClearingMenu } from "@/lib/permissions/clearing-menu";
 import { NextRequest } from "next/server";
 import { apiCreated, apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -9,7 +10,7 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 
 export async function GET(request: NextRequest) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
 
     const query = request.nextUrl.searchParams.get("q");
     const limit = request.nextUrl.searchParams.get("limit");
@@ -21,11 +22,12 @@ export async function GET(request: NextRequest) {
     });
 
     let clearingAgents: any[] = (result as any).clearingAgents ?? [];
+    if (isClearingMenu(session)) clearingAgents = clearingAgents.filter((agent) => session.clearingAgentIds.includes(agent.id));
     if (Array.isArray(clearingAgents) && clearingAgents.length > 0) {
       clearingAgents = await localizeRecordNames<any>(clearingAgents, "clearing_agents", "name", lang);
     }
 
-    return apiOk({ ...(result as any), clearingAgents });
+    return apiOk({ ...(result as any), clearingAgents, ...(isClearingMenu(session) ? { total: clearingAgents.length } : {}) });
   } catch (error) {
     return handleApiError(error);
   }

@@ -1,3 +1,4 @@
+import { isClearingMenu } from "@/lib/permissions/clearing-menu";
 import { Metadata } from "next";
 import { requireErpSession } from "@/lib/auth/session";
 import { clearingAgentsRepository } from "@/lib/repositories/clearing-agents-repository";
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default async function ClearingAgentListPage() {
   const session = await requireErpSession();
   const res = await clearingAgentsRepository.search({ limit: 100 }).catch(() => ({ clearingAgents: [] }));
-  const agents = res.clearingAgents ?? [];
+  const agents = isClearingMenu(session) ? (res.clearingAgents ?? []).filter((agent) => session.clearingAgentIds.includes(agent.id)) : res.clearingAgents ?? [];
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 dark:bg-slate-950/50 sm:p-6 lg:p-8">
