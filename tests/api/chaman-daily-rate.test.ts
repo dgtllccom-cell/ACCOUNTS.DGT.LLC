@@ -2,11 +2,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 
-const countryId = "ace69ef9-8c3b-479c-bdb7-7953ddf8629d";
-const branchId = "fcc3aec9-1d4b-4830-8ea8-85afefd97139";
+const countryId = "11111111-1111-4111-8111-111111111111";
+const branchId = "22222222-2222-4222-8222-222222222222";
 const state = vi.hoisted(() => ({
   row: null as any,
-  session: { roles: ["city_branch_admin"], permissions: ["roznamcha:read"], countryIds: ["ace69ef9-8c3b-479c-bdb7-7953ddf8629d"], countryBranchIds: ["fcc3aec9-1d4b-4830-8ea8-85afefd97139"], cityBranchIds: ["0a2ad08c-63aa-4e86-9f19-c8bc0e08acad"], operationalDomains: ["shipping"], assignments: [], isSuperAdmin: false } as any,
+  session: { roles: ["city_branch_admin"], permissions: ["roznamcha:read"], countryIds: ["11111111-1111-4111-8111-111111111111"], countryBranchIds: ["22222222-2222-4222-8222-222222222222"], cityBranchIds: ["33333333-3333-4333-8333-333333333333"], operationalDomains: ["shipping"], assignments: [], isSuperAdmin: false } as any,
   rpc: vi.fn(),
   admin: vi.fn(),
 }));
@@ -22,7 +22,7 @@ import { GET } from "@/app/api/erp/currency/daily-rate/route";
 import { POST } from "@/app/api/erp/currency/daily-rates/route";
 const request = (country = countryId, branch = branchId) => new NextRequest(`http://localhost/api/erp/currency/daily-rate?countryId=${country}&countryBranchId=${branch}&date=2026-11-06`);
 beforeEach(() => {
-  state.row = { rate_date: "2026-11-06", buying_rate: 288, selling_rate: 287, credit_rate: 287, debit_rate: 288, currency_code: "PKR" };
+  state.row = { rate_date: "2026-11-06", buying_rate: 280, selling_rate: 282, credit_rate: 282, debit_rate: 280, currency_code: "PKR" };
   state.rpc.mockReset().mockImplementation(async () => ({ data: state.row ? [state.row] : [], error: null }));
   state.admin.mockReset();
 });
@@ -30,11 +30,11 @@ describe("Chaman Shipping exact-date rate lookup", () => {
   it("reads the assigned Pakistan branch rate with the normal scope checks", async () => {
     const response = await GET(request());
     expect(response.status).toBe(200);
-    expect((await response.json()).data).toMatchObject({ found: true, debitRate: 288, creditRate: 287 });
+    expect((await response.json()).data).toMatchObject({ found: true, debitRate: 280, creditRate: 282 });
     expect(state.rpc).toHaveBeenCalledWith("get_daily_rate", { p_country_id: countryId, p_country_branch_id: branchId, p_date: "2026-11-06" });
   });
-  it("blocks the stale October rate actually returned by Production for November 6", async () => {
-    state.row.rate_date = "2026-10-28";
+  it("keeps a previous-day rate from satisfying the selected date", async () => {
+    state.row.rate_date = "2026-11-05";
     expect((await (await GET(request())).json()).data).toMatchObject({ found: false, status: "PENDING_MISSING", debitRate: null, creditRate: null });
   });
   it("keeps missing rates pending", async () => {
@@ -46,16 +46,16 @@ describe("Chaman Shipping exact-date rate lookup", () => {
     expect((await (await GET(request())).json()).data.found).toBe(false);
   });
   it("rejects a different country before querying rates", async () => {
-    expect((await GET(request("11111111-1111-4111-8111-111111111111"))).status).toBe(403);
+    expect((await GET(request("99999999-9999-4999-8999-999999999999"))).status).toBe(403);
     expect(state.rpc).not.toHaveBeenCalled();
   });
   it("rejects a different main branch before querying rates", async () => {
-    expect((await GET(request(countryId, "11111111-1111-4111-8111-111111111111"))).status).toBe(403);
+    expect((await GET(request(countryId, "99999999-9999-4999-8999-999999999999"))).status).toBe(403);
     expect(state.rpc).not.toHaveBeenCalled();
   });
   it("does not give the Shipping branch admin permission to write country rates", async () => {
     const response = await POST(new NextRequest("http://localhost/api/erp/currency/daily-rates", {
-      method: "POST", body: JSON.stringify({ countryId, rateDate: "2026-11-06", debitRate: 288, creditRate: 287 }),
+      method: "POST", body: JSON.stringify({ countryId, rateDate: "2026-11-06", debitRate: 280, creditRate: 282 }),
     }));
     expect(response.status).toBe(403);
     expect(state.admin).not.toHaveBeenCalled();
