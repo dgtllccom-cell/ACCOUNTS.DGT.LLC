@@ -7,10 +7,12 @@ export type LoadingJournalRow = {
 };
 export function loadingJournalRows(rows: Record<string, any>[]): LoadingJournalRow[] {
   const batches = new Map<string, number>();
-  return [...rows].sort((a, b) => String(a.created_at || a.loaded_at || "").localeCompare(String(b.created_at || b.loaded_at || "")) || String(a.id).localeCompare(String(b.id)))
+  const dateText = (value: unknown): string | null => value instanceof Date ? value.toISOString() : value ? String(value) : null;
+  const timestamp = (row: Record<string, any>) => { const value = Date.parse(dateText(row.created_at || row.loaded_at) || ""); return Number.isFinite(value) ? value : 0; };
+  return [...rows].sort((a, b) => timestamp(a) - timestamp(b) || String(a.id).localeCompare(String(b.id)))
     .map((r) => { const key = r.loading_batch_id || r.loading_batch_no || r.id;
       if (!batches.has(key)) batches.set(key, batches.size + 1);
-      return ({ id: r.id, sequence: batches.get(key)!, batchId: r.loading_batch_id || null, batchNo: r.loading_batch_no || null, goodsName: r.report_payload?.goodsName || null, loadingNo: r.loading_record_no || null, loadedAt: r.loaded_at || r.created_at || null,
+      return ({ id: r.id, sequence: batches.get(key)!, batchId: r.loading_batch_id || null, batchNo: r.loading_batch_no || null, goodsName: r.report_payload?.goodsName || null, loadingNo: r.loading_record_no || null, loadedAt: dateText(r.loaded_at || r.created_at),
       blNumber: r.bl_number || null, containerNumber: r.container_number || null, quantity: Number(r.loaded_quantity || 0),
       grossWeight: Number(r.gross_weight ?? r.report_payload?.grossWeight ?? 0), netWeight: Number(r.net_weight ?? r.report_payload?.netWeight ?? 0),
       currency: r.local_currency || null, finalAmount: r.loaded_purchase_local == null ? null : Number(r.loaded_purchase_local),

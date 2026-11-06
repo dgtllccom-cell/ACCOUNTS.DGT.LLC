@@ -16,6 +16,11 @@ describe("one bill, successive loading batches", () => {
     const rows=loadingJournalRows([{id:"a",loading_batch_id:"batch-1",loading_batch_no:"B-001",created_at:"2026-11-01"},{id:"b",loading_batch_id:"batch-1",loading_batch_no:"B-001",created_at:"2026-11-01"},{id:"c",loading_batch_id:"batch-2",loading_batch_no:"B-002",created_at:"2026-11-11"}]);
     expect(rows.map(r=>[r.id,r.sequence,r.batchNo])).toEqual([["a",1,"B-001"],["b",1,"B-001"],["c",2,"B-002"]]);
   });
+  it("orders native Postgres Date values chronologically rather than by weekday name", () => {
+    const rows=loadingJournalRows([{id:"later",created_at:new Date("2026-11-06T12:00:00Z")},{id:"earlier",created_at:new Date("2026-11-04T12:00:00Z")}]);
+    expect(rows.map(r=>r.id)).toEqual(["earlier","later"]);
+    expect(rows[0].loadedAt).toBe("2026-11-04T12:00:00.000Z");
+  });
   it("does not collapse two real load records that happen to share a container number", () => {
     expect(loadingJournalRows([{ id: "a", container_number: "SAME" },{ id: "b", container_number: "SAME" }])).toHaveLength(2);
     expect(loadingJournalRows([{ id: "a" }])[0].finalAmount).toBeNull();
