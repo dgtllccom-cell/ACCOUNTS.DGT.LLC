@@ -156,14 +156,16 @@ export async function GET(request: NextRequest) {
               rl.entry_serial_number, rl.country_serial_number, rl.branch_serial_number,
               rl.usd_rate, rl.usd_amount,
               case when l.id is not null then jsonb_build_object(
-                'name', l.name,
+                'id', l.id, 'code', l.code, 'name', l.name,
                 'city_branches', case when lcb.id is not null then jsonb_build_object('name', lcb.name) else null end,
                 'country_branches', case when lcbr.id is not null then jsonb_build_object('name', lcbr.name) else null end
-              ) else null end as ledgers
+              ) else null end as ledgers,
+              case when acc.id is not null then jsonb_build_object('id', acc.id, 'code', acc.code, 'name', acc.name) else null end as accounts
             from public.roznamcha_lines rl
             left join public.ledgers l on l.id = rl.ledger_id
             left join public.city_branches lcb on lcb.id = l.city_branch_id
             left join public.country_branches lcbr on lcbr.id = l.country_branch_id
+            left join public.accounts acc on acc.id = rl.account_id
             where rl.roznamcha_entry_id = any(${entryIds})
           `
         : [];

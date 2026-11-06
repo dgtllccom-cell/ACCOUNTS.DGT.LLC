@@ -22,6 +22,8 @@ import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { apiGet } from "@/lib/api/client";
+import { mapWithConcurrency } from "@/lib/utils/map-with-concurrency";
+import { voucherLegsFromLines } from "@/lib/roznamcha/voucher-legs";
 import { cn } from "@/lib/utils";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
@@ -1312,21 +1314,25 @@ function SuperAdminRoznamchaReportViewContent({
         lang: effectiveLang
       });
 
-      const detailed = await Promise.all(
-        (response.entries ?? []).map(async (entry) => {
-          try {
-            const res = await getRoznamchaEntry(entry.id, effectiveLang);
-            if (!res.header) return [];
-            const entryLines = res.lines ?? [];
-            if (entryLines.length === 0) {
-              return [toBaseRow(res.header, [])];
-            }
-            return entryLines.map(line => lineToRow(res.header!, line, entryLines));
-          } catch {
-            return [toBaseRow(entry, [])];
-          }
-        })
-      );
+      // The list payload already carries each entry's lines (one batched server query), so rows are built
+      // from it directly. A per-entry detail call is only a fallback for an entry without embedded lines,
+      // and runs with a small concurrency limit so a long list never exhausts the database pool.
+      const detailed = await mapWithConcurrency(response.entries ?? [], 3, async (entry) => {
+        const embedded = (entry as RoznamchaEntryRow & { roznamcha_lines?: RoznamchaLineRow[] }).roznamcha_lines;
+        if (Array.isArray(embedded)) {
+          if (embedded.length === 0) return [toBaseRow(entry, [])];
+          return embedded.map((line) => lineToRow(entry, line, embedded));
+        }
+        try {
+          const res = await getRoznamchaEntry(entry.id, effectiveLang);
+          if (!res.header) return [];
+          const entryLines = res.lines ?? [];
+          if (entryLines.length === 0) return [toBaseRow(res.header, [])];
+          return entryLines.map((line) => lineToRow(res.header!, line, entryLines));
+        } catch {
+          return [toBaseRow(entry, [])];
+        }
+      });
 
       const cleanRows = detailed.flat();
       setRows(cleanRows);
@@ -1339,6 +1345,8 @@ function SuperAdminRoznamchaReportViewContent({
         setSelectedId((current) => cleanRows.some((row) => row.id === current) ? current : cleanRows[0]!.id);
       }
 
+    } catch (err) {
+      console.error("Roznamcha report failed to load", err);
     } finally {
       setRefreshing(false);
       setLoading(false);
@@ -1727,18 +1735,8 @@ function SuperAdminRoznamchaReportViewContent({
       // Preserve the entry's EXACT DR/CR split pattern: 1 DR vs many CR, 1 CR vs many DR, or flat journal - mirror the entry's own lines verbatim.
       const entry: any = (targetRow.sourceEntry as any) || {};
       const lines: any[] = (targetRow.lines || []) as any[];
-      const drLines = lines.filter((l) => Number(l.debit || 0) > 0).map((l) => ({
-        code: l.account_number || l.account_code || null,
-        name: l.accounts?.name || l.ledgers?.name || null,
-        amount: Number(l.debit || 0),
-        narration: l.description || null,
-      }));
-      const crLines = lines.filter((l) => Number(l.credit || 0) > 0).map((l) => ({
-        code: l.account_number || l.account_code || null,
-        name: l.accounts?.name || l.ledgers?.name || null,
-        amount: Number(l.credit || 0),
-        narration: l.description || null,
-      }));
+      // A cash entry is stored with one line, so its voucher prints one side; a posting with two stored legs prints both.
+      const { drLines, crLines } = voucherLegsFromLines(lines);
       const chequeType = String(entry.payment_methods?.name || entry.payment_method || entry.voucher_type || "").toLowerCase();
       const isCheque = /cheque|check/.test(chequeType) || Boolean(entry.cheque_no);
       openRoznamchaVoucherPrintReport({
