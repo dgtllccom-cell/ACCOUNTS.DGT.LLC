@@ -119,7 +119,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/settings/transfer-modes": ["settings:read", "route:/dashboard/settings/transfer-modes"],
   "/dashboard/roznamcha/reports/bank": ["banks:read", "roznamcha:read", "route:/dashboard/roznamcha/reports/bank"],
   "/dashboard/roznamcha/money-exchange": ["exchange_rates:read", "route:/dashboard/roznamcha/money-exchange"],
-  "/dashboard/reports/exchange-rate": ["exchange_rates:read", "route:/dashboard/reports/exchange-rate"],
+  "/dashboard/reports/exchange-rate": ["exchange_rates:read", "roznamcha:read", "route:/dashboard/reports/exchange-rate"],
   "/dashboard/super-admin/investments": ["super_admin", "route:/dashboard/super-admin/investments"],
   "/dashboard/settings/customers": ["customers:read", "route:/dashboard/settings/customers"],
   "/dashboard/general-office/employees": ["users:read", "employees:read", "route:/dashboard/general-office/employees"],
@@ -330,7 +330,8 @@ export const BUSINESS_ONLY_ROUTE_PREFIXES: readonly string[] = [
   "/dashboard/business-edit-invoice", "/dashboard/bill-cost-profit", "/dashboard/inventory",
   "/dashboard/tax-einvoicing", "/dashboard/tax",
   "/dashboard/general-office/payroll", "/dashboard/general-office/wps-sif", "/dashboard/general-office/gratuity",
-  "/dashboard/reports/payments", "/dashboard/reports/financial-statements", "/dashboard/reports/journal", "/dashboard/reports/exchange-rate"
+  // Daily exchange rates are shared by Business and Shipping Roznamcha.
+  "/dashboard/reports/payments", "/dashboard/reports/financial-statements", "/dashboard/reports/journal"
 ];
 
 export type RouteAccessInput = {

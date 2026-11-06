@@ -86,6 +86,12 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
+        // Legacy Daily Exchange Rate link used by Cash Entry warning.
+        source: "/dashboard/currency/daily-rates",
+        destination: "/dashboard/reports/exchange-rate",
+        permanent: false,
+      },
+      {
         source: "/dashboard/settings/daily-rates",
         destination: "/dashboard/reports/exchange-rate",
         permanent: false,
