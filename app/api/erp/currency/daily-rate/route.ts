@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         p_date: targetDate
       });
 
-      if (!error && data) {
+      // Supabase RPC failures are returned in `error`, not thrown.\n      // Treat them as failures so the exact-date fallback can run.\n      if (error) throw error;\n      if (data) {
         const rows = Array.isArray(data) ? data : [data];
         if (rows.length > 0 && rows[0]?.rate_date === targetDate) {
           row = rows[0];
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       }
     } catch {
       // Fallback: direct query on daily_usd_rates table
-      const { data: rows } = await supabase
+      const { data: rows, error: fallbackError } = await supabase
         .from("daily_usd_rates" as any)
         .select("rate_date, buying_rate, selling_rate, credit_rate, debit_rate, country_branch_id, currency_code")
         .eq("country_id", countryId)
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
         .order("effective_from", { ascending: false } as any)
         .limit(1);
 
-      if (Array.isArray(rows) && rows.length > 0) {
+      if (fallbackError) {\n        // Do not disguise a failed rate lookup as an absent approved rate.\n        throw fallbackError;\n      }\n\n      if (Array.isArray(rows) && rows.length > 0) {
         const match = rows[0] as any;
         row = {
           rate_date: match.rate_date,
