@@ -1,3 +1,4 @@
+import { readBillLoadingJournal } from "@/lib/purchases/loading-journal";
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -162,6 +163,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
             qty,
             unit: it.unit ?? it.qtyUnit ?? it.uom ?? null,
             weightKgs: num(it.netWeight ?? it.weightKgs ?? it.weight),
+            grossWeightKgs: num(it.grossWeight ?? it.grossWeightKgs ?? it.totalGrossWeight),
             rate,
             amount: num(it.amount ?? it.total ?? qty * rate)
           };
@@ -188,6 +190,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           };
           sourceBill = {
             kind: "purchase_orders",
+            purchaseAccountNo: po.form_data?.form?.purchaseAccountNo || null,
+            salesAccountNo: po.form_data?.form?.salesAccountNo || null,
             billNo: po.purchase_order_no,
             contractNo: po.purchase_contract_no,
             status: po.status,
@@ -199,8 +203,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         }
       } else if (be.source_table === "local_purchases") {
         const [lp] = await sql`
-          select id, manual_bill_no, journal_serial_no, supplier_name, goods_name, purchase_account_no,
-                 purchase_currency, local_currency, exchange_rate, final_cost, purchase_cost,
+          select id, manual_bill_no, journal_serial_no, supplier_name, goods_name, purchase_account_no, sales_account_no,
+                 purchase_currency, local_currency, exchange_rate, final_cost, purchase_cost, total_gross_weight,
                  quantity_kgs, numbers, net_weight, purchase_rate, rate_type, status, roznamcha_entry_id
           from public.local_purchases where id = ${be.source_id}::uuid limit 1`;
         if (lp) {
@@ -211,7 +215,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           goods = [{
             row: 1, name: lp.goods_name || "—", variation: lp.rate_type || null,
             qty, unit: lp.rate_type === "weight" ? "kg" : null,
-            weightKgs: num(lp.net_weight), rate: num(lp.purchase_rate), amount: num(lp.purchase_cost)
+            weightKgs: num(lp.net_weight), grossWeightKgs: num(lp.total_gross_weight), rate: num(lp.purchase_rate), amount: num(lp.purchase_cost)
           }];
           original = {
             label: "local_purchase",
@@ -220,6 +224,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           };
           sourceBill = {
             kind: "local_purchases",
+            purchaseAccountNo: lp.purchase_account_no || null,
+            salesAccountNo: lp.sales_account_no || null,
             billNo: lp.manual_bill_no || lp.journal_serial_no,
             supplierName: lp.supplier_name,
             status: lp.status,
@@ -471,7 +477,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         order by a.created_at desc
         limit 100`;
 
+      const loadingHistory = await readBillLoadingJournal(sql, { source_table: be.source_table, source_id: be.source_id, country_id: be.country_id, country_branch_id: be.country_branch_id, city_branch_id: be.city_branch_id });
       return {
+        loadingHistory,
         functionalCurrency: fc,
         bill: {
           id: be.id,

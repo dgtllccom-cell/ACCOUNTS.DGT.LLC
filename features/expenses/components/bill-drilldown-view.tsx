@@ -134,6 +134,7 @@ export function BillDrilldownView({ id, lang: langProp }: { id: string; lang?: s
 
   const fc = data.functionalCurrency;
   const b = data.bill;
+  const loadingHistory = data.loadingHistory || [];
   const pnl = data.profitAndLoss;
   const profitPositive = (pnl.profit ?? 0) >= 0;
 
@@ -209,13 +210,60 @@ export function BillDrilldownView({ id, lang: langProp }: { id: string; lang?: s
         <Row k={s.t("dd_bill_no", "Bill No.")} v={b.billNo || "—"} />
         <Row k={s.t("dd_manual_bill", "Manual Bill / Ref")} v={b.manualBillNo || "—"} />
         <Row k={s.t("dd_source", "Source Module")} v={s.t(`tab_${b.sourceModule}`, b.sourceModule)} />
-        <Row k={s.t("dd_date", "Bill Date")} v={dt(b.billDate)} />
-        <Row k={s.t("dd_party", "Party / Account")} v={b.party?.name || b.party?.accountNo || "—"} />
+        <Row k={s.t("dd_date", "Bill Date")} v={dt(b.billDate || b.transactionDate)} />
+        <Row k={s.t("dd_party", "Party / Account")} v={[b.party?.name, b.party?.accountNo].filter(Boolean).join(" · ") || "—"} />
         <Row k={s.t("dd_country", "Country")} v={b.country?.name || "—"} />
         <Row k={s.t("dd_branch", "Branch")} v={b.branchLabel} />
         <Row k={s.t("dd_currency", "Currency")} v={b.currency || fc} />
+        <Row k={s.tGlobal("purchase.purchase_account_short_title", "Purchase Account")} v={data.sourceBill?.purchaseAccountNo || b.party?.accountNo || "—"} />
+        <Row k={s.tGlobal("purchase.sales_account_short_title", "Sales Account")} v={data.sourceBill?.salesAccountNo || "—"} />
+        <Row k={s.t("dd_original_cost", "Original Bill (Functional)")} v={`${fc} ${fmt(data.cost.originalBillFunctional)}`} />
         <Row k={s.t("dd_eligibility", "Eligibility")} v={s.t(`elig_${b.eligibility}`, b.eligibility)} />
       </Section>
+
+      {loadingHistory.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="flex flex-wrap items-center justify-between gap-3 text-base">
+            <span>{s.tGlobal("plr.history_title", "Loading History")} · {b.billNo} [{new Set(loadingHistory.map((r: any) => r.sequence)).size}]</span>
+            <Button variant="outline" size="sm" onClick={() => void openScopedGenericReport({
+              title: s.tGlobal("plr.history_title", "Loading History"), subtitle: `${b.billNo} · ${b.branchLabel}`, lang: langProp,
+              columns: [
+                { key: "sequence", label: s.t("dd_col_sr", "Sr") },
+                { key: (r: any) => [r.batchNo, r.loadingNo].filter(Boolean).join(" · "), label: s.tGlobal("rdue.col_loading_no", "Loading No.") },
+                { key: (r: any) => dt(r.loadedAt), label: s.tGlobal("purchase.loading_date_label", "Loading Date") },
+                { key: "containerNumber", label: s.tGlobal("plane.col_container", "Container") },
+                { key: "blNumber", label: s.tGlobal("plane.col_bl", "BL no.") },
+                { key: (r: any) => r.goodsName || data.goods.map((g: any) => g.name).join(", "), label: s.t("dd_g_name", "Goods") },
+                { key: "quantity", label: s.t("dd_g_qty", "Qty") },
+                { key: "grossWeight", label: s.tGlobal("plr.col_gross_weight", "Gross Weight") },
+                { key: "netWeight", label: s.tGlobal("plr.col_net_weight", "Net Weight") },
+                { key: (r: any) => r.finalAmount == null ? "—" : `${r.currency || fc} ${fmt(r.finalAmount)}`, label: s.t("dd_col_grand", "Grand (Functional)") },
+                { key: "destination", label: s.tGlobal("plane.confirm_destination_select", "Select Applicable Destination") },
+              ], rows: loadingHistory, orientation: "landscape", countryId: scope.lockedCountryId ?? b.country?.id,
+              countryBranchId: scope.lockedCountryBranchId, cityBranchId: scope.lockedCityBranchId, branchName: b.branchLabel, printedBy: scope.userName,
+              filters: [ { label: s.tGlobal("purchase.purchase_account_short_title", "Purchase Account"), value: data.sourceBill?.purchaseAccountNo || b.party?.accountNo || "—" },
+                { label: s.tGlobal("purchase.sales_account_short_title", "Sales Account"), value: data.sourceBill?.salesAccountNo || "—" },
+                { label: s.t("dd_date", "Bill Date"), value: dt(b.billDate || b.transactionDate) } ],
+              summary: { [s.t("dd_original_cost", "Original Bill (Functional)")]: `${fc} ${fmt(data.cost.originalBillFunctional)}` },
+            })}><Printer className="me-1 h-4 w-4" />{s.t("dd_print", "Print A4")}</Button>
+          </CardTitle></CardHeader>
+          <CardContent className="overflow-x-auto">
+            <table className="w-full min-w-[1000px] text-start text-sm" data-testid="bill-loading-journal">
+              <thead><tr className="border-b bg-amber-50 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                {[s.tGlobal("rdue.col_loading_no", "Loading No."), s.tGlobal("purchase.loading_date_label", "Loading Date"), s.tGlobal("plane.col_container", "Container"), s.tGlobal("plane.col_bl", "BL no."), s.t("dd_g_name", "Goods"), s.t("dd_g_qty", "Qty"), s.tGlobal("plr.col_gross_weight", "Gross Weight"), s.tGlobal("plr.col_net_weight", "Net Weight"), s.t("dd_col_grand", "Grand (Functional)"), s.t("dd_col_posting", "Accounting"), s.t("col_actions", "Actions")].map((label, i) => <Th key={i} className="px-3 py-2 text-start">{label}</Th>)}
+              </tr></thead>
+              <tbody>{loadingHistory.map((r: any) => <tr key={r.id} className="border-b border-slate-100 dark:border-slate-800">
+                <td className="px-3 py-3 font-mono">{b.billNo} [{r.sequence}]<div className="text-xs text-slate-500">{[r.batchNo, r.loadingNo].filter(Boolean).join(" · ") || "—"}</div></td>
+                <td className="px-3 py-3">{dt(r.loadedAt)}</td><td className="px-3 py-3 font-mono">{r.containerNumber || "—"}</td><td className="px-3 py-3 font-mono">{r.blNumber || "—"}</td>
+                <td className="px-3 py-3">{r.goodsName || data.goods.map((g: any) => g.name).join(", ") || "—"}</td><td className="px-3 py-3">{qtyFmt(r.quantity)}</td><td className="px-3 py-3">{qtyFmt(r.grossWeight)}</td><td className="px-3 py-3">{qtyFmt(r.netWeight)}</td>
+                <td className="px-3 py-3 font-mono">{r.finalAmount == null ? "—" : `${r.currency || fc} ${fmt(r.finalAmount)}`}</td>
+                <td className="px-3 py-3">{r.destination ? s.tGlobal(`plane.dest_${r.destination === "remaining_payment" ? "payment" : r.destination === "general_purchase_expenses" ? "expenses_p" : ""}`, r.destination) : "—"}<div className="text-xs text-slate-500">{r.status ? s.tGlobal(`plane.st_${r.status}`, r.status) : "—"}</div></td>
+                <td className="px-3 py-3">{r.laneId && <Link className="text-blue-700 underline dark:text-blue-300" href={`/dashboard/tracking?purchaseLaneId=${encodeURIComponent(r.laneId)}`}>{s.tGlobal("log.seg_tracking", "Tracking")}</Link>}</td>
+              </tr>)}</tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
 
       <Section n={2} icon={Package} title={s.t("dd_s_goods", "Goods")}>
         {data.goods.length === 0 ? (
@@ -229,7 +277,8 @@ export function BillDrilldownView({ id, lang: langProp }: { id: string; lang?: s
                   <Th className={s.textStart}>{s.t("dd_g_name", "Goods")}</Th>
                   <Th className={s.textStart}>{s.t("dd_g_variation", "Variation")}</Th>
                   <Th className={s.textEnd}>{s.t("dd_g_qty", "Qty")}</Th>
-                  <Th className={s.textEnd}>{s.t("dd_g_weight", "Weight (kg)")}</Th>
+                  <Th className={s.textEnd}>{s.tGlobal("plr.col_gross_weight", "Gross Weight")}</Th>
+                  <Th className={s.textEnd}>{s.tGlobal("plr.col_net_weight", "Net Weight")}</Th>
                   <Th className={s.textEnd}>{s.t("dd_g_rate", "Rate")}</Th>
                   <Th className={s.textEnd}>{s.t("dd_g_amount", "Amount")}</Th>
                 </tr>
@@ -241,6 +290,7 @@ export function BillDrilldownView({ id, lang: langProp }: { id: string; lang?: s
                     <td>{g.name}</td>
                     <td>{g.variation || "—"}</td>
                     <td className={s.textEnd + " tabular-nums"}>{qtyFmt(g.qty)}</td>
+                    <td className={s.textEnd + " tabular-nums"}>{g.grossWeightKgs == null ? "—" : qtyFmt(g.grossWeightKgs)}</td>
                     <td className={s.textEnd + " tabular-nums"}>{qtyFmt(g.weightKgs)}</td>
                     <td className={s.textEnd + " tabular-nums"}>{fmt(g.rate)}</td>
                     <td className={s.textEnd + " tabular-nums"}>{fmt(g.amount)}</td>

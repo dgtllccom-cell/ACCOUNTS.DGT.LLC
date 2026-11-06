@@ -697,3 +697,21 @@ export async function purchaseLaneSummary(session: ErpSession, purchaseOrderId: 
 }
 
 export { isFinalDisposition };
+
+/** Read-only tracking projection. Never backfills loads, moves stock, or creates shipping/accounting records. */
+export async function listPurchaseLaneTracking(session: ErpSession, filter: { id?: string; q?: string } = {}) {
+  return withLocalPg(async (sql: Sql) => {
+    const term = filter.q?.trim();
+    return sql`
+      select l.id,l.purchase_ref_no,l.loading_record_no,l.container_number,l.bl_number,
+             l.loaded_quantity,l.unit,l.gross_weight,l.net_weight,l.lane_status,l.transfer_destination,l.created_at,
+             coalesce(lr.loaded_at,lr.created_at,l.created_at) as loaded_at,lr.loading_batch_no
+      from public.purchase_lane_loads l
+      left join public.purchase_loading_records lr on l.source_type='purchase_booking' and lr.id=l.source_id and lr.deleted_at is null
+      where l.deleted_at is null and l.source_type in ('purchase_booking','local_purchase')
+        and ${laneScopeSql(sql, session, "l")}
+        ${filter.id ? sql`and l.id=${filter.id}::uuid` : sql``}
+        ${term ? sql`and (l.purchase_ref_no ilike ${"%"+term+"%"} or l.container_number ilike ${"%"+term+"%"} or l.bl_number ilike ${"%"+term+"%"})` : sql``}
+      order by l.created_at desc,l.id limit 100`;
+  });
+}

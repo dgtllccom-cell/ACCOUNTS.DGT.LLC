@@ -83,6 +83,9 @@ export const PS_TRANSFER_DESTINATIONS = [
 ] as const;
 
 export const TRANSFER_TYPES = PS_TRANSFER_DESTINATIONS;
+
+export const defaultLaneTransferDestination = (sourceType: string): TransferType =>
+  sourceType === "sales_booking" || sourceType === "local_sales" ? "general_sales_expenses" : "remaining_payment";
 export type TransferType = (typeof TRANSFER_TYPES)[number];
 
 export const MODULE_DESTINATIONS = [
@@ -97,16 +100,20 @@ export type ModuleDestination = (typeof MODULE_DESTINATIONS)[number];
 export const isModuleDestination = (t: string): t is ModuleDestination =>
   (MODULE_DESTINATIONS as readonly string[]).includes(t as ModuleDestination);
 
-export function destinationRoute(dest: string, sourceType?: string, _refNo?: string): string {
+export function destinationRoute(dest: string, sourceType?: string, refNo?: string, loadingRecordId?: string): string {
   switch (dest) {
     case "general_purchase_expenses":
       return "/dashboard/expenses/purchase";
     case "general_sales_expenses":
       return "/dashboard/expenses/sales";
     case "remaining_payment":
-      return sourceType && (sourceType === "sales_booking" || sourceType === "local_sales")
-        ? "/dashboard/sales/sales-order"
-        : "/dashboard/journal/purchase-order-payment/remaining";
+      if (sourceType === "sales_booking" || sourceType === "local_sales") return "/dashboard/sales/sales-order";
+      {
+        const params = new URLSearchParams();
+        if (refNo) params.set("purchaseOrderNo", refNo);
+        if (loadingRecordId) { params.set("fromLoading", "true"); params.set("loadingRecordId", loadingRecordId); }
+        return "/dashboard/journal/purchase-order-payment/remaining" + (params.size ? `?${params}` : "");
+      }
     case "jc_journal_voucher":
       return "/dashboard/reports/journal";
     case "pc_petty_cash":
