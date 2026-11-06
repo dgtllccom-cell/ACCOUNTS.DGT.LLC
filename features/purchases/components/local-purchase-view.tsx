@@ -29,6 +29,7 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { BranchScopeDropdown } from "@/features/purchases/components/branch-scope-dropdown";
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
+import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { CustomerAccountCard } from "@/components/erp/customer-account-card";
@@ -641,6 +642,9 @@ export function LocalPurchaseView({
   const [submittingEditSize, setSubmittingEditSize] = useState(false);
   
   const [selectedRowForVoucher, setSelectedRowForVoucher] = useState<any | null>(null);
+  // Invoice Template Gallery — shared with Purchase Booking / Sales Booking (features/reports/components/trade-document-center.tsx).
+  // Opens the SAME 5 professional designs (Classic / Modern / Professional / Compact / Premium) for a single Local Purchase bill.
+  const [invoiceGalleryRow, setInvoiceGalleryRow] = useState<any | null>(null);
   
   // Weights (Inputs)
   const [quantityCount, setQuantityCount] = useState("");
@@ -5708,6 +5712,15 @@ export function LocalPurchaseView({
                     <Send className="h-3.5 w-3.5" /> {t(lang, "lp.review_transfer", "Review Transfer")}
                   </Button>
                 )}
+                {/* Invoice Template Gallery — opens the SAME shared modal used by Purchase Booking. */}
+                <Button
+                  type="button"
+                  onClick={() => setInvoiceGalleryRow(selectedRowForVoucher)}
+                  data-testid="lp-print-invoice"
+                  className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 shadow-sm"
+                >
+                  <FileText className="h-3.5 w-3.5" /> {t(lang, "lp.print_invoice", "Print Invoice")}
+                </Button>
                 {selectedRowForVoucher.status !== "draft" && (
                   <Button
                     type="button"
@@ -6046,6 +6059,23 @@ export function LocalPurchaseView({
             setHandoverTargetRow(null);
           }}
           lang={lang}
+        />
+      ) : null}
+
+      {/* Invoice Template Gallery — the same component wired into Purchase Booking + Sales Booking + New Sales Booking */}
+      {invoiceGalleryRow ? (
+        <TradeDocumentCenter
+          open
+          onClose={() => setInvoiceGalleryRow(null)}
+          txnKind="purchase"
+          source="local_purchase"
+          record={invoiceGalleryRow}
+          companyId={(invoiceGalleryRow.company_id || invoiceGalleryRow.companyId) ?? null}
+          scope={{
+            countryId: invoiceGalleryRow.country_id ?? invoiceGalleryRow.countryId ?? null,
+            countryBranchId: invoiceGalleryRow.country_branch_id ?? invoiceGalleryRow.countryBranchId ?? null,
+            cityBranchId: invoiceGalleryRow.city_branch_id ?? invoiceGalleryRow.cityBranchId ?? null,
+          }}
         />
       ) : null}
     </div>

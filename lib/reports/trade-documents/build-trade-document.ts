@@ -50,6 +50,10 @@ const DOC_TITLE_KEY: Record<Exclude<TradeDocumentInput["docType"], "contract">, 
   export_invoice: ["tdoc.t_export_invoice", "Export Invoice"],
   packing_list: ["tdoc.t_packing_list", "Packing List"],
   proforma_invoice: ["tdoc.t_proforma_invoice", "Proforma Invoice"],
+  purchase_invoice: ["tdoc.t_purchase_invoice", "Purchase Invoice"],
+  sales_invoice: ["tdoc.t_sales_invoice", "Sales Invoice"],
+  tax_invoice: ["tdoc.t_tax_invoice", "Tax Invoice"],
+  purchase_order: ["tdoc.t_purchase_order", "Purchase Order"],
 };
 
 export function docTitleKeyFor(input: TradeDocumentInput): [string, string] {

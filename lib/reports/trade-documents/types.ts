@@ -1,7 +1,17 @@
 import type { DocumentBranding } from "@/lib/reports/resolve-document-branding";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
-export type TradeDocType = "commercial_invoice" | "export_invoice" | "packing_list" | "proforma_invoice" | "contract";
+export type TradeDocType =
+  | "commercial_invoice"
+  | "export_invoice"
+  | "packing_list"
+  | "proforma_invoice"
+  | "contract"
+  // 2026-11 additions: Purchase / Sales / Tax invoices. Share the shared builder so every template renders them automatically.
+  | "purchase_invoice"
+  | "sales_invoice"
+  | "tax_invoice"
+  | "purchase_order";
 export type TradeTxnKind = "purchase" | "sales";
 export type TradeScope = "international" | "local";
 

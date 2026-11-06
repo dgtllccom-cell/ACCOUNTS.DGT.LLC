@@ -16,15 +16,40 @@ export type RoznamchaVoucherData = {
   branchName?: string;
   countryName?: string;
   createdByName?: string;
+  // 2026-11 additions (cheque / bank / DR+CR / party ID): shown only when present on the Roznamcha entry.
+  // Nothing is fabricated - a missing field is omitted entirely from the printed page.
+  chequeNo?: string | null;
+  chequeDate?: string | null;
+  bankName?: string | null;
+  bankBranchName?: string | null;
+  referenceNo?: string | null;
+  /** DR / CR accounting legs for this entry (double-entry display, read-only, derived directly from the entry's own `roznamcha_lines`).
+   *  The entry's own split pattern (1 DR → many CR, 1 CR → many DR, or a flat journal with many of each) is preserved verbatim.
+   *  Legacy single-leg fields are kept for compatibility with existing callers. */
+  drAccountCode?: string | null;
+  drAccountName?: string | null;
+  crAccountCode?: string | null;
+  crAccountName?: string | null;
+  /** full DR / CR line list from the entry (preferred - carries the entry's own split pattern). */
+  drLines?: Array<{ code?: string | null; name?: string | null; amount: number; narration?: string | null }>;
+  crLines?: Array<{ code?: string | null; name?: string | null; amount: number; narration?: string | null }>;
+  /** Party (payer / payee) ID fields - only shown when authorized (caller already resolved authorization). */
+  partyIdLabel?: string | null;
+  partyIdNumber?: string | null;
+  partyIdImageUrl?: string | null;
+  /** issued / received marker shown next to the cheque status badge */
+  chequeStatus?: "issued" | "received" | "cleared" | "pending" | null;
 };
 
-export function openRoznamchaVoucherPrintReport(input: {
+/**
+ * Pure builder: the complete A4 voucher document as an HTML string. No window access, so it is unit-testable.
+ * The on-screen / print behaviour lives in openRoznamchaVoucherPrintReport below.
+ */
+export function buildRoznamchaVoucherHtml(input: {
   data: RoznamchaVoucherData;
   companyInfo?: ERPCompanyInfo;
   lang?: string;
-}) {
-  if (typeof window === "undefined") return;
-
+}): string {
   const { data: d, companyInfo = {}, lang = "en" } = input;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 
@@ -86,6 +111,64 @@ export function openRoznamchaVoucherPrintReport(input: {
           <span class="meta-val">${escapeHtml(d.accountName || "Cash Account")}</span>
         </div>
       </div>
+
+      ${d.chequeNo || d.bankName ? `
+      <!-- Cheque / Bank block (shown only when the entry carries cheque / bank data) -->
+      <div class="cheque-block">
+        <div class="cheque-header">${d.chequeStatus === "issued" || d.type === "payment" || d.type === "expenses" ? "CHEQUE PAYMENT" : "CHEQUE RECEIPT"}</div>
+        <div class="cheque-grid">
+          ${d.chequeNo ? `<div class="cq-item"><span class="cq-lbl">Cheque No.</span><span class="cq-val font-mono">${escapeHtml(d.chequeNo)}</span></div>` : ""}
+          ${d.chequeDate ? `<div class="cq-item"><span class="cq-lbl">Cheque Date</span><span class="cq-val">${formatDate(d.chequeDate)}</span></div>` : ""}
+          ${d.bankName ? `<div class="cq-item"><span class="cq-lbl">Bank Name</span><span class="cq-val">${escapeHtml(d.bankName)}</span></div>` : ""}
+          ${d.bankBranchName ? `<div class="cq-item"><span class="cq-lbl">Branch</span><span class="cq-val">${escapeHtml(d.bankBranchName)}</span></div>` : ""}
+          ${d.chequeStatus ? `<div class="cq-item"><span class="cq-lbl">Status</span><span class="cq-val cq-status cq-${escapeHtml(d.chequeStatus)}">${escapeHtml(d.chequeStatus.toUpperCase())}</span></div>` : ""}
+          ${d.referenceNo ? `<div class="cq-item"><span class="cq-lbl">Reference</span><span class="cq-val font-mono">${escapeHtml(d.referenceNo)}</span></div>` : ""}
+        </div>
+      </div>
+      ` : ""}
+
+      ${(d.drLines?.length || d.crLines?.length || d.drAccountCode || d.drAccountName || d.crAccountCode || d.crAccountName) ? `
+      <!-- Accounting / Account Details (DR / CR legs read-only, preserves the entry's own split pattern:
+           1 DR vs many CR, 1 CR vs many DR, or a flat journal with many of each) -->
+      <div class="accounting-block">
+        <div class="acct-header">Accounting / Account Details</div>
+        <div class="acct-grid">
+          <div class="acct-col acct-dr">
+            <div class="acct-badge">DR</div>
+            <div class="acct-rows">
+              ${(d.drLines && d.drLines.length ? d.drLines : [{ code: d.drAccountCode, name: d.drAccountName, amount: 0, narration: null }]).map((l) => `
+                <div class="acct-leg">
+                  <div class="acct-leg-code font-mono">${escapeHtml(l.code || "-")}</div>
+                  <div class="acct-leg-name">${escapeHtml(l.name || "-")}</div>
+                  ${l.amount > 0 ? `<div class="acct-leg-amt">${formatMoney(l.amount)} ${escapeHtml(d.currency || "")}</div>` : ""}
+                </div>`).join("")}
+            </div>
+          </div>
+          <div class="acct-col acct-cr">
+            <div class="acct-badge">CR</div>
+            <div class="acct-rows">
+              ${(d.crLines && d.crLines.length ? d.crLines : [{ code: d.crAccountCode, name: d.crAccountName, amount: 0, narration: null }]).map((l) => `
+                <div class="acct-leg">
+                  <div class="acct-leg-code font-mono">${escapeHtml(l.code || "-")}</div>
+                  <div class="acct-leg-name">${escapeHtml(l.name || "-")}</div>
+                  ${l.amount > 0 ? `<div class="acct-leg-amt">${formatMoney(l.amount)} ${escapeHtml(d.currency || "")}</div>` : ""}
+                </div>`).join("")}
+            </div>
+          </div>
+        </div>
+      </div>
+      ` : ""}
+
+      ${d.partyIdNumber || d.partyIdImageUrl ? `
+      <!-- Party (payer / payee) identification - shown only when authorized -->
+      <div class="party-id-block">
+        <div class="party-id-header">${escapeHtml(d.partyIdLabel || "Party ID")}</div>
+        <div class="party-id-content">
+          ${d.partyIdImageUrl ? `<img src="${escapeHtml(d.partyIdImageUrl)}" alt="Party ID" class="party-id-img" />` : ""}
+          ${d.partyIdNumber ? `<div class="party-id-no font-mono">${escapeHtml(d.partyIdNumber)}</div>` : ""}
+        </div>
+      </div>
+      ` : ""}
 
       <!-- Main Body Info -->
       <div class="body-grid">
@@ -475,6 +558,67 @@ export function openRoznamchaVoucherPrintReport(input: {
       }
       @page { size: A4 portrait; margin: 4mm; }
     }
+
+    /* 2026-11 additions: cheque / bank block, accounting DR+CR block, party ID */
+    .cheque-block {
+      border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 6px; margin-top: 4px; background: #f8fafc;
+    }
+    .cheque-header {
+      font-weight: 800; font-size: 8px; letter-spacing: 0.4px; text-transform: uppercase;
+      color: #1e40af; padding-bottom: 2px; margin-bottom: 3px; border-bottom: 1px dotted #cbd5e1;
+    }
+    .cheque-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px 8px; font-size: 7.5px;
+    }
+    .cq-item { display: flex; justify-content: space-between; gap: 4px; }
+    .cq-lbl { color: #64748b; font-weight: 600; }
+    .cq-val { color: #0f172a; font-weight: 700; text-align: end; }
+    .cq-status { padding: 0 4px; border-radius: 3px; font-weight: 800; font-size: 7px; }
+    .cq-issued { background: #fee2e2; color: #991b1b; }
+    .cq-received { background: #d1fae5; color: #065f46; }
+    .cq-cleared { background: #dbeafe; color: #1e40af; }
+    .cq-pending { background: #fef3c7; color: #92400e; }
+
+    .accounting-block {
+      border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 6px; margin-top: 4px; background: #f1f5f9;
+    }
+    .acct-header {
+      font-weight: 800; font-size: 8px; letter-spacing: 0.4px; text-transform: uppercase;
+      color: #0f172a; padding-bottom: 2px; margin-bottom: 3px; border-bottom: 1px dotted #cbd5e1;
+    }
+    .acct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .acct-col {
+      display: flex; gap: 6px; padding: 3px 5px; background: #fff; border: 1px solid #e2e8f0; border-radius: 3px;
+    }
+    .acct-badge {
+      font-weight: 900; font-size: 9px; padding: 1px 6px; border-radius: 3px; min-width: 20px; text-align: center;
+    }
+    .acct-dr .acct-badge { background: #fecaca; color: #991b1b; }
+    .acct-cr .acct-badge { background: #bbf7d0; color: #166534; }
+    .acct-rows { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: 7.5px; }
+    .acct-lbl { color: #64748b; font-weight: 600; }
+    .acct-val { color: #0f172a; font-weight: 700; text-align: end; }
+    .acct-leg {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 4px 6px; padding: 1px 0;
+      border-bottom: 1px dotted #e2e8f0;
+    }
+    .acct-leg:last-child { border-bottom: none; }
+    .acct-leg-code { font-weight: 800; color: #0f172a; font-size: 7px; }
+    .acct-leg-name { color: #0f172a; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .acct-leg-amt { font-weight: 800; font-size: 7.5px; color: #0f172a; font-family: "Outfit", sans-serif; }
+
+    .party-id-block {
+      border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 6px; margin-top: 4px; background: #fffbeb;
+    }
+    .party-id-header {
+      font-weight: 800; font-size: 8px; letter-spacing: 0.4px; text-transform: uppercase;
+      color: #92400e; padding-bottom: 2px; margin-bottom: 3px; border-bottom: 1px dotted #fde68a;
+    }
+    .party-id-content { display: flex; gap: 6px; align-items: center; }
+    .party-id-img {
+      max-height: 28mm; max-width: 44mm; border: 1px solid #cbd5e1; border-radius: 3px; object-fit: contain; background: #fff;
+    }
+    .party-id-no { font-size: 8.5px; font-weight: 800; letter-spacing: 0.3px; color: #0f172a; }
   </style>
 </head>
 <body>
@@ -509,6 +653,16 @@ export function openRoznamchaVoucherPrintReport(input: {
 </body>
 </html>`;
 
+  return html;
+}
+
+export function openRoznamchaVoucherPrintReport(input: {
+  data: RoznamchaVoucherData;
+  companyInfo?: ERPCompanyInfo;
+  lang?: string;
+}) {
+  if (typeof window === "undefined") return;
+  const html = buildRoznamchaVoucherHtml(input);
   const printWindow = window.open("", "_blank");
   if (printWindow) {
     printWindow.document.open();
