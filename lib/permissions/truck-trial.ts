@@ -2,7 +2,7 @@
 export const TRUCK_TRIAL_MARKER = "truck_trial:restricted";
 export const TRUCK_TRIAL_HOME = "/dashboard/clearing-agent/truck-registration";
 export const TRUCK_TRIAL_PERMISSIONS = [
-  TRUCK_TRIAL_MARKER, "finance_amounts:deny", "dashboard:read",
+  TRUCK_TRIAL_MARKER, "finance_amounts:deny",
   "shipping_records:read", "shipping_records:create",
   "customers:read", "customers:create", "companies:read", "companies:create",
   "countries:read", "country_branches:read", "city_branches:read", "location_master:read",

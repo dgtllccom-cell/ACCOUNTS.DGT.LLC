@@ -4,7 +4,7 @@ This release extends the existing Truck Registration, Person Master, Company Mas
 
 ## Truck trial provisioning
 
-The supplied `superadmin@dgt.llc` was verified as the Global Super Admin. Do not modify it. The intended person's separate account and assigned country/main branch/city branch must be confirmed before provisioning. No trial account was created or modified by this release.
+The supplied `superadmin@dgt.llc` was verified as the Global Super Admin and was not modified. The owner subsequently confirmed the separate existing Salim staff account in Chaman Shipping. That account's existing assignment was retained and its custom permission set was replaced with the minimal truck trial bundle, with a before/after audit record. No new or duplicate user was created. Full live isolation still requires deploying this release and a fresh sign-in; configuration alone is not live acceptance proof.
 
 After identity confirmation, use the existing User Management flow to assign a branch-level staff account and a **manual/custom** permission set matching `TRUCK_TRIAL_PERMISSIONS` in `lib/permissions/truck-trial.ts`. Do not assign an admin role, a wildcard, or a global scope. A trial requires exactly one country, one main branch and one city branch. Require a fresh sign-in when applying this restriction to an existing account so its signed session contains the restriction.
 

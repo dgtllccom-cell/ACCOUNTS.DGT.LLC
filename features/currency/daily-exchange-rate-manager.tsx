@@ -600,7 +600,7 @@ export function DailyExchangeRateManager() {
 
             {existingSelectedRate && (
               <label className="block space-y-1 text-xs">
-                <span>{t(lang, "common.reason", "Reason")}</span>
+                <span>{t(lang, "report.reason", "Reason")}</span>
                 <Input required value={correctionReason} onChange={(event) => setCorrectionReason(event.target.value)} />
               </label>
             )}
