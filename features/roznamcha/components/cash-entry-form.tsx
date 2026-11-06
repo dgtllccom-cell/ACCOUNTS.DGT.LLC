@@ -4912,7 +4912,7 @@ export function CashEntryForm({
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => router.push("/dashboard/currency/daily-rates")}
+                            onClick={() => router.push("/dashboard/reports/exchange-rate")}
                             className="shrink-0 h-8 px-3 rounded-lg text-xs font-bold gap-1.5 border-amber-300 dark:border-amber-700 bg-white/80 dark:bg-slate-900 hover:bg-amber-100/50 text-amber-900 dark:text-amber-100 cursor-pointer"
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
