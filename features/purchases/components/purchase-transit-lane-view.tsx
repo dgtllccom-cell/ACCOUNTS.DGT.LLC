@@ -451,7 +451,7 @@ export function PurchaseTransitLaneView({
         )}
 
         {linkedLoads.length > 0 && <div className="grid gap-2 rounded-xl border bg-white p-3 text-sm sm:grid-cols-2 dark:bg-slate-900">
-          {linkedLoads.map((r) => { const links = loadingJournalLinks(r.id, r.purchase_order_id); return <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
+          {linkedLoads.map((r) => { const links = loadingJournalLinks(r.id, r.purchase_order_id, r.local_purchase_id); return <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
             <span className="font-mono font-bold">{r.purchase_ref_no} · {r.loading_record_no || r.container_number}</span>
             <Link className="text-blue-700 underline dark:text-blue-300" href={links.expenses}>{s.tGlobal("utask.mod_journal", "Journal")} · {s.tGlobal("expenses", "Expenses")}</Link>
             <Link className="text-blue-700 underline dark:text-blue-300" href={links.tracking}>{s.tGlobal("log.seg_tracking", "Tracking")}</Link>
@@ -862,7 +862,7 @@ function CenterTransferConfirmationModal({
     try {
       await apiPost("/api/erp/purchases/lane", { action: "transfer", ids, transfer: req });
       const commonPurchaseId = loads.every((l) => l.purchase_order_id === loads[0]?.purchase_order_id) ? loads[0]?.purchase_order_id : null;
-      const links = loadingJournalLinks(ids.length === 1 ? ids[0] : "", commonPurchaseId);
+      const links = loadingJournalLinks(ids.length === 1 ? ids[0] : "", commonPurchaseId, loads.length === 1 ? loads[0]?.local_purchase_id : null);
       const targetUrl = afterView === "expenses" ? links.expenses : afterView === "tracking" ? links.tracking : destinationRoute(type, primarySource, loads[0]?.purchase_ref_no);
       await onDone(`${T("done_transferred", "Transferred")} (${ids.length})`, targetUrl);
     } catch (e) {

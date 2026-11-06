@@ -100,7 +100,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
   const [viewGeneralBill, setViewGeneralBill] = useState<any | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in_progress" | "closed">("all");
   const [search, setSearch] = useState("");
-  const [linkedPurchaseOrderId] = useState(() => typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("purchaseOrderId") || "");
+  const [linkedSourceId] = useState(() => typeof window === "undefined" ? "" : (new URLSearchParams(window.location.search).get("purchaseOrderId") || new URLSearchParams(window.location.search).get("sourceId")) || "");
   const [linkedOpened, setLinkedOpened] = useState(false);
   const [summary, setSummary] = useState<{ originalTotal: number | null; expenseTotal: number | null; originalByCurrency?: CurrencyTotal[]; expenseByCurrency?: CurrencyTotal[]; mixedCurrency?: boolean; currency?: string | null; withExpenses: number; byModule: Record<string, number> } | null>(null);
   // Section filter (All Sections | Business | Shipping Line) — offered only to logins explicitly authorized for both sections
@@ -108,10 +108,10 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
   const [canChooseSection, setCanChooseSection] = useState(false);
 
   useEffect(() => {
-    if (!linkedPurchaseOrderId || linkedOpened) return;
-    const linked = rows.find((r) => r.sourceId === linkedPurchaseOrderId);
+    if (!linkedSourceId || linkedOpened) return;
+    const linked = rows.find((r) => r.sourceId === linkedSourceId);
     if (linked) { setReportBillId(linked.id); setLinkedOpened(true); }
-  }, [rows, linkedPurchaseOrderId, linkedOpened]);
+  }, [rows, linkedSourceId, linkedOpened]);
 
   const [openId, setOpenId] = useState<string | null>(null);
   const [openFocusForm, setOpenFocusForm] = useState(false);
@@ -128,7 +128,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     try {
       if (moduleTab !== "general_expenses") {
         const qs = new URLSearchParams();
-        if (linkedPurchaseOrderId) qs.set("sourceId", linkedPurchaseOrderId);
+        if (linkedSourceId) qs.set("sourceId", linkedSourceId);
         if (moduleTab !== "all") qs.set("module", moduleTab);
         else if (sectionModules) qs.set("modules", sectionModules.join(","));
         if (statusFilter !== "all") qs.set("status", statusFilter);
@@ -157,7 +157,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     } finally {
       setLoading(false);
     }
-  }, [moduleTab, statusFilter, search, section, sectionModules, sectionFilter, linkedPurchaseOrderId]);
+  }, [moduleTab, statusFilter, search, section, sectionModules, sectionFilter, linkedSourceId]);
 
   const handleViewGeneralBill = useCallback(async (b: any) => {
     try {

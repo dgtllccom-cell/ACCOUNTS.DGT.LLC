@@ -47,9 +47,10 @@ export async function readBillLoadingJournal(sql: any, bill: { source_table: str
     order by lr.created_at,lr.id`;
   return loadingJournalRows(rows);
 }
-export function loadingJournalLinks(laneId: string, purchaseOrderId?: string | null) {
+export function loadingJournalLinks(laneId: string, purchaseOrderId?: string | null, localPurchaseId?: string | null) {
   const params = new URLSearchParams();
   if (purchaseOrderId) params.set("purchaseOrderId", purchaseOrderId);
+  else if (localPurchaseId) params.set("sourceId", localPurchaseId);
   if (laneId) params.set("laneId", laneId);
   return { expenses: `/dashboard/expenses/purchase?${params}`, tracking: `/dashboard/tracking?purchaseLaneId=${encodeURIComponent(laneId)}` };
 }

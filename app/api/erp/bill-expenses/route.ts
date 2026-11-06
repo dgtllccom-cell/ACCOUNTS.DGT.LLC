@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         where be.deleted_at is null
           and be.source_module = any(${domainModules})
           ${eligibility === "all" ? sql`` : sql`and be.eligibility = ${eligibility}`}
-          ${sourceId ? sql`and be.source_table='purchase_orders' and be.source_id=${sourceId}::uuid` : sql``}
+          ${sourceId ? sql`and be.source_id=${sourceId}::uuid` : sql``}
           ${moduleFilter ? sql`and be.source_module = ${moduleFilter}` : sql``}
           ${modulesSet.length ? sql`and be.source_module = any(${modulesSet})` : sql``}
           ${statusFilter ? sql`and be.status = ${statusFilter}` : sql``}

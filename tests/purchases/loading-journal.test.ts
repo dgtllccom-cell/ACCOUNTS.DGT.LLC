@@ -22,6 +22,7 @@ describe("one bill, successive loading batches", () => {
     const links=loadingJournalLinks("lane-1","po-1");
     expect(new URL(links.expenses,"http://localhost").searchParams.get("purchaseOrderId")).toBe("po-1");
     expect(new URL(links.tracking,"http://localhost").searchParams.get("purchaseLaneId")).toBe("lane-1");
+    expect(new URL(loadingJournalLinks("local-lane",null,"local-1").expenses,"http://localhost").searchParams.get("sourceId")).toBe("local-1");
   });
   it("reads loading records only inside the already authorized bill's country and branch", async () => {
     const sql=vi.fn(async () => []);

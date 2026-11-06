@@ -230,7 +230,7 @@ export function BillDrilldownView({ id, lang: langProp }: { id: string; lang?: s
               columns: [
                 { key: "sequence", label: s.t("dd_col_sr", "Sr") },
                 { key: (r: any) => [r.batchNo, r.loadingNo].filter(Boolean).join(" · "), label: s.tGlobal("rdue.col_loading_no", "Loading No.") },
-                { key: (r: any) => dt(r.loadedAt), label: s.t("dd_date", "Bill Date") },
+                { key: (r: any) => dt(r.loadedAt), label: s.tGlobal("purchase.loading_date_label", "Loading Date") },
                 { key: "containerNumber", label: s.tGlobal("plane.col_container", "Container") },
                 { key: "blNumber", label: s.tGlobal("plane.col_bl", "BL no.") },
                 { key: (r: any) => r.goodsName || data.goods.map((g: any) => g.name).join(", "), label: s.t("dd_g_name", "Goods") },
