@@ -77,8 +77,6 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
-import { BankPicker } from "@/features/banks/components/bank-picker";
-import { getBankById, type BankRecord } from "@/features/banks/bank-api";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { LocationBackdrop } from "@/components/location-backdrop";
 import { VoiceFormFill } from "@/components/voice-form-fill";
@@ -182,7 +180,7 @@ const CURRENCY_FULL_NAMES: Record<string, string> = {
 };
 
 // NOTE: the free-text COUNTRY_BANKS list this used to hold was removed —
-// the Bank Details section now uses the real Bank Master via BankPicker
+// Bank details use the existing scoped Settings Bank and Transfer Mode masters.
 // (see "RULE: Always use BankPicker — never create a free-text bank input"
 // in features/banks/components/bank-picker.tsx).
 
@@ -509,7 +507,6 @@ export function CashEntryForm({
 
   // Payment-type details (clean initial state)
   const [typeDetails, setTypeDetails] = useState<Record<string, string>>({});
-  const [selectedBankRecord, setSelectedBankRecord] = useState<BankRecord | null>(null);
 
   // Financial snapshot state for Selected Account (live statement query)
   const [accountSnapshot, setAccountSnapshot] = useState<{
@@ -4503,129 +4500,18 @@ export function CashEntryForm({
                       </div>
 
                       {paymentType === "bank" ? (
-                        <div className="space-y-2.5">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            <div className="space-y-1">
-                              <BankPicker
-                                label={`${tr("cj.mBank", "Bank")} (${activeCountryIso || tr("cj.mBank", "Bank")})`}
-                                value={typeDetails.bankId || ""}
-                                countryId={selectedCountry?.id || session?.scopes?.countryIds?.[0] || undefined}
-                                onValueChange={async (bankId) => {
-                                  if (!bankId) {
-                                    setTypeDetails((p) => ({ ...p, bankId: "", bankName: "", bankAccount: "" }));
-                                    setSelectedBankRecord(null);
-                                    return;
-                                  }
-                                  try {
-                                    const b = await getBankById(bankId);
-                                    setSelectedBankRecord(b || null);
-                                    setTypeDetails((p) => ({
-                                      ...p,
-                                      bankId,
-                                      bankName: b?.bank_name || p.bankName || "",
-                                      bankAccount: b?.account_number || b?.iban_number || p.bankAccount || ""
-                                    }));
-                                  } catch (e) {
-                                    setTypeDetails((p) => ({ ...p, bankId }));
-                                  }
-                                }}
-                              />
-                            </div>
-
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.transfer_method", "Transfer Mode")}</Label>
-                              <select
-                                value={typeDetails.method || "Online Transfer"}
-                                onChange={(e) => setTypeDetails((p) => ({ ...p, method: e.target.value }))}
-                                className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
-                              >
-                                <option value="Online Transfer">{t(lang, "cef.opt_online_transfer", "Online Transfer")}</option>
-                                <option value="Cheque">{t(lang, "cef.opt_cheque", "Cheque")}</option>
-                                <option value="Wire Transfer / TT">{t(lang, "cef.opt_wire_transfer", "Wire Transfer / TT")}</option>
-                                <option value="Cash Deposit">{t(lang, "cef.opt_cash_deposit_slip", "Cash Deposit Slip")}</option>
-                                <option value="RTGS / NEFT">{t(lang, "cef.opt_rtgs_neft", "RTGS / NEFT")}</option>
-                                <option value="IBFT">IBFT</option>
-                                <option value="Other">{tr("cj.mOther", "Other")}</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          {/* Bank Master Coordinate Information (Replaces manual IBAN/Account field) */}
-                          {selectedBankRecord ? (
-                            <div className="p-3 rounded-xl border border-blue-200/80 bg-blue-50/50 dark:border-blue-900/60 dark:bg-blue-950/20 text-xs">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="font-extrabold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
-                                  <Building2 className="h-3.5 w-3.5 text-blue-600" />
-                                  <span>{selectedBankRecord.bank_name}</span>
-                                  {selectedBankRecord.branch_name && (
-                                    <span className="text-[11px] font-normal text-slate-500">({selectedBankRecord.branch_name})</span>
-                                  )}
-                                </span>
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">
-                                  {tr("cj.mBankVerified", "Bank Master Verified ✓")}
-                                </span>
-                              </div>
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                                <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mAccountTitle", "Account Title")}</span>
-                                  <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
-                                    {selectedBankRecord.account_title || "—"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mAccountNumber", "Account Number")}</span>
-                                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block">
-                                    {selectedBankRecord.account_number || "—"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mIban", "IBAN Number")}</span>
-                                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block" title={selectedBankRecord.iban_number || ""}>
-                                    {selectedBankRecord.iban_number || "—"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mCurrency", "Currency")}</span>
-                                  <span className="font-bold text-emerald-700 dark:text-emerald-400 block">
-                                    {selectedBankRecord.currency || currency || "AED"}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="p-2.5 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center">
-                              {tr("cj.mBankHint", "Select a bank above to automatically load account title, account number, and IBAN from Bank Master.")}
-                            </div>
-                          )}
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.cheque_ref_number", "Cheque / Ref Number")}</Label>
-                              <Input
-                                value={typeDetails.transferReferenceNumber || typeDetails.refNo || ""}
-                                onChange={(e) => setTypeDetails((p) => ({ ...p, transferReferenceNumber: e.target.value, refNo: e.target.value }))}
-                                placeholder={t(lang, "cef.cheque_ref_ph", "CHK-883492 or TXN-99482")}
-                                className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
-                              />
-                            </div>
-
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.bank_receipt_upload", "Bank Receipt / Slip Upload")}</Label>
-                              <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
-                                <Paperclip className="h-3.5 w-3.5" />
-                                <span>{attachmentFile ? attachmentFile.name.slice(0, 16) : tr("cj.mUploadSlip", "Upload Deposit / Cheque Slip")}</span>
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0] ?? null;
-                                    setAttachmentFile(file);
-                                  }}
-                                />
-                              </label>
-                            </div>
-                          </div>
-                        </div>
+                        <TransferDetailsSection
+                          bankName={typeDetails.bankName || ""}
+                          onBankNameChange={(bankName) => setTypeDetails(p => ({ ...p, bankName }))}
+                          onBankRecordChange={(bank) => setTypeDetails(p => ({ ...p, bankId: bank?.id || "", bankName: bank?.bank_name || p.bankName }))}
+                          transferMode={typeDetails.method || typeDetails.transferType || ""}
+                          onTransferModeChange={(method) => setTypeDetails(p => ({ ...p, method, transferType: method }))}
+                          transactionReference={typeDetails.transferReferenceNumber || typeDetails.refNo || typeDetails.chequeNo || ""}
+                          onTransactionReferenceChange={(refNo) => setTypeDetails(p => ({ ...p, refNo, ref: refNo, transferReferenceNumber: refNo, chequeNo: refNo }))}
+                          attachmentFile={attachmentFile} onAttachmentChange={setAttachmentFile}
+                          countryId={selectedCountry?.id || session?.scopes?.countryIds?.[0] || undefined}
+                          showAttachment={true} lang={lang as SupportedLanguage}
+                        />
                       ) : paymentType === "business" || paymentType === "invoice" ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                           <div className="space-y-1">
