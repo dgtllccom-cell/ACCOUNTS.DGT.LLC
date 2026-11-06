@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { t } from "@/lib/i18n/ui";
 import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
@@ -55,7 +56,8 @@ export async function GET(request: NextRequest) {
       row = currency === "USD" ? { rate_date: targetDate, currency_code: "USD", credit_rate: 1, debit_rate: 1 } :
         await loadExactDailyRate(supabase, { countryId, branchId: countryBranchId, date: targetDate, currency });
     } catch (error) {
-      throw new ApiClientError(error instanceof Error ? error.message : "Rate lookup failed.", { status: 503, code: "FX_LOOKUP_UNAVAILABLE" });
+      console.error("[daily-rate] lookup unavailable", error);
+      throw new ApiClientError(t(session.preferredLanguage, "common.error"), { status: 503, code: "FX_LOOKUP_UNAVAILABLE" });
     }
     const values = dailyRateValues(row);
     const found = Boolean(row && values.creditRate && values.debitRate);

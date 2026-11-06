@@ -4906,8 +4906,8 @@ export function CashEntryForm({
                       </div>
 
                       <div className="flex flex-wrap justify-between gap-2 text-[11px] font-mono">
-                        <span>{tr("cj.mDebitBtn", "Debit (Money Paid)")}: {dailyRate?.debitRate ?? "—"}</span>
-                        <span>{tr("cj.mCreditBtn", "Credit (Money Received)")}: {dailyRate?.creditRate ?? "—"}</span>
+                        <span>{tr("cj.drRate", "DR Rate (Buying)")}: {dailyRate?.debitRate ?? "—"}</span>
+                        <span>{tr("cj.crRate", "CR Rate (Selling)")}: {dailyRate?.creditRate ?? "—"}</span>
                         <span>{normalizedCurrency} {fmtAmount(Number(amount) || 0)} · USD {cashUsdEquivalent(Number(amount) || 0, normalizedCurrency, Number(exchangeRate)) == null ? "—" : fmtAmount(cashUsdEquivalent(Number(amount) || 0, normalizedCurrency, Number(exchangeRate))!)}</span>
                         {dailyRateError && <span className="text-red-600">{dailyRateError}</span>}
                       </div>
