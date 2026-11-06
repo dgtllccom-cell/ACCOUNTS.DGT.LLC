@@ -73,7 +73,11 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
   const orientation = input.orientation || "portrait";
 
   const b = input.branding;
-  const brandName = isReal(b.entityName) ? b.entityName! : tt("tdoc.brand_fallback", "Digital Dock ERP");
+  // The header brand is the company name — never the bare country name that branding falls back to.
+  const entityIsCountry = isReal(b.entityName) && isReal(b.countryName)
+    && String(b.entityName).trim().toLowerCase() === String(b.countryName).trim().toLowerCase();
+  const brandName = (isReal(b.entityName) && !entityIsCountry ? b.entityName : isReal(b.legalName) ? b.legalName : null)
+    || tt("tdoc.brand_fallback", "Digital Dock ERP");
   const brandLines = brandLinesFor(b);
   const isContract = input.docType === "contract";
   const isPacking = input.docType === "packing_list";
@@ -287,7 +291,7 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
   // Contract: page 1 = parties, delivery & payment terms, terms and bank; page 2 = packing list,
   // goods and values, then the two authorised signatures. Other documents keep their single flow.
   const bodyHtml = isContract
-    ? `${deliveryHtml}${notesHtml}${bankHtml}<div class="page-break"></div>${goodsHtml}${financialHtml}`
+    ? `${deliveryHtml}${notesHtml}${bankHtml}</div><div class="page page-2">${goodsHtml}${financialHtml}`
     : `${deliveryHtml}${goodsHtml}${financialHtml}${bankHtml}${notesHtml}`;
   const signHtml = isContract
     ? `<div class="sign-grid">
@@ -364,8 +368,8 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
   .sign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 24px; }
   .sign { border-top: 1px solid #475569; padding-top: 3px; font-size: 7.4pt; text-align: center; color: #64748b; font-weight: 700; }
   .foot { margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 6.8pt; color: #94a3b8; display: flex; justify-content: space-between; }
-  .page-break { height: 0; break-before: page; page-break-before: always; }
-  @media screen { .page-break { height: 22px; } }
+  .page + .page { margin-top: 22px; }
+  .page.page-2 { break-before: page; page-break-before: always; }
   @media print {
     body { background: #fff; }
     .wrap { padding: 0; }

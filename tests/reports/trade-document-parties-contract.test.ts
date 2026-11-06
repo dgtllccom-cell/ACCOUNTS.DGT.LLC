@@ -87,9 +87,9 @@ describe("Contract — two-page layout", () => {
     overrides: { notes: "Payment within 30 days of shipment." },
   })) as TradeDocumentInput;
 
-  it("breaks to a new page between the terms and the packing list / goods", () => {
+  it("starts a second sheet for the packing list / goods", () => {
     const html = buildTradeDocumentHtml({ ...base(), docType: "contract" });
-    const brk = html.indexOf('<div class="page-break"></div>');
+    const brk = html.indexOf('class="page page-2"');
     expect(brk).toBeGreaterThan(-1);
     expect(html.indexOf("Contract Terms &amp; Conditions")).toBeGreaterThan(-1);
     expect(html.indexOf("Contract Terms &amp; Conditions")).toBeLessThan(brk);
@@ -112,6 +112,6 @@ describe("Contract — two-page layout", () => {
 
   it("does not add a page break to other document types", () => {
     const html = buildTradeDocumentHtml({ ...base(), docType: "purchase_invoice" });
-    expect(html).not.toContain('<div class="page-break"></div>');
+    expect(html).not.toContain('class="page page-2"');
   });
 });
