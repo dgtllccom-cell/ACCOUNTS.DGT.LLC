@@ -8079,6 +8079,7 @@ export type UiKey =
   | "pjt.receipt_exchange_rate_applied"
   | "pjt.receipt_super_admin"
   | "tdoc.t_purchase_invoice" | "tdoc.t_sales_invoice" | "tdoc.t_tax_invoice" | "tdoc.t_purchase_order"
+  | "tdoc.sec_contract_goods" | "tdoc.sign_seller" | "tdoc.sign_buyer" | "tdoc.contract_terms"
   | "tdoc.t_contract"
   | "tdoc.t_sales_contract"
   | "tdoc.t_purchase_contract"
@@ -25147,6 +25148,10 @@ const en: Dict = {
   "tdoc.sec_bank": "Beneficiary Bank Details",
   "tdoc.sign_prepared": "Prepared By",
   "tdoc.sign_authorized": "Authorized Signature & Stamp",
+  "tdoc.sec_contract_goods": "Packing List & Goods Details",
+  "tdoc.sign_seller": "Seller — Authorized Signatory",
+  "tdoc.sign_buyer": "Buyer — Authorized Signatory",
+  "tdoc.contract_terms": "Contract Terms & Conditions",
   "tdoc.system_generated": "System-generated document",
   "tdoc.center_title": "Commercial Document Center",
   "tdoc.center_hint": "Generate a professional document from this transaction. The same source record is used — no duplicate transaction is created.",
@@ -51659,6 +51664,10 @@ const ur: Dict = {
   "tdoc.sec_bank": "بینک کی تفصیلات (فائدہ اٹھانے والا)",
   "tdoc.sign_prepared": "تیار کنندہ",
   "tdoc.sign_authorized": "مجاز دستخط و مہر",
+  "tdoc.sec_contract_goods": "پیکنگ لسٹ اور سامان کی تفصیلات",
+  "tdoc.sign_seller": "فروخت کنندہ — مجاز دستخط کنندہ",
+  "tdoc.sign_buyer": "خریدار — مجاز دستخط کنندہ",
+  "tdoc.contract_terms": "معاہدے کی شرائط و ضوابط",
   "tdoc.system_generated": "سسٹم سے تیار کردہ دستاویز",
   "tdoc.center_title": "کمرشل دستاویز مرکز",
   "tdoc.center_hint": "اس لین دین سے پیشہ ورانہ دستاویز بنائیں۔ وہی ماخذ ریکارڈ استعمال ہوتا ہے — کوئی نقلی لین دین نہیں بنتا۔",
@@ -77954,6 +77963,10 @@ const ar: Dict = {
   "tdoc.sec_bank": "تفاصيل بنك المستفيد",
   "tdoc.sign_prepared": "أعده",
   "tdoc.sign_authorized": "التوقيع المعتمد والختم",
+  "tdoc.sec_contract_goods": "قائمة التعبئة وتفاصيل البضائع",
+  "tdoc.sign_seller": "البائع — الموقّع المعتمد",
+  "tdoc.sign_buyer": "المشتري — الموقّع المعتمد",
+  "tdoc.contract_terms": "شروط العقد وأحكامه",
   "tdoc.system_generated": "مستند مُنشأ بواسطة النظام",
   "tdoc.center_title": "مركز المستندات التجارية",
   "tdoc.center_hint": "أنشئ مستنداً احترافياً من هذه المعاملة. يُستخدم نفس السجل المصدر — لا يتم إنشاء معاملة مكررة.",
@@ -104299,6 +104312,10 @@ const fa: Dict = {
   "tdoc.sec_bank": "مشخصات بانک ذی‌نفع",
   "tdoc.sign_prepared": "تهیه‌کننده",
   "tdoc.sign_authorized": "امضا و مهر مجاز",
+  "tdoc.sec_contract_goods": "فهرست بسته‌بندی و جزئیات کالا",
+  "tdoc.sign_seller": "فروشنده — امضاکننده مجاز",
+  "tdoc.sign_buyer": "خریدار — امضاکننده مجاز",
+  "tdoc.contract_terms": "شرایط و مقررات قرارداد",
   "tdoc.system_generated": "سند تولیدشده توسط سیستم",
   "tdoc.center_title": "مرکز اسناد تجاری",
   "tdoc.center_hint": "یک سند حرفه‌ای از این تراکنش بسازید. همان رکورد مبدأ استفاده می‌شود — تراکنش تکراری ایجاد نمی‌شود.",
@@ -130642,6 +130659,10 @@ const ps: Dict = {
   "tdoc.sec_bank": "د ګټه اخیستونکي بانک جزئیات",
   "tdoc.sign_prepared": "چمتو کوونکی",
   "tdoc.sign_authorized": "مجاز لاسلیک او مهر",
+  "tdoc.sec_contract_goods": "د بسته بندۍ لیست او د توکو توضیحات",
+  "tdoc.sign_seller": "پلورونکی — مجاز لاسلیک کوونکی",
+  "tdoc.sign_buyer": "پیرودونکی — مجاز لاسلیک کوونکی",
+  "tdoc.contract_terms": "د تړون شرایط او قواعد",
   "tdoc.system_generated": "د سیسټم لخوا جوړ شوی سند",
   "tdoc.center_title": "د سوداګریزو اسنادو مرکز",
   "tdoc.center_hint": "له دې معاملې څخه مسلکي سند جوړ کړئ. هماغه سرچینه ریکارډ کارول کیږي — کوم نقل معامله نه جوړیږي.",

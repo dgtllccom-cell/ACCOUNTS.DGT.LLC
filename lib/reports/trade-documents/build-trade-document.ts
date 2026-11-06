@@ -179,6 +179,11 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
   if (isPacking) {
     cols.push(["tdoc.col_packing", "Packing", "l"], ["tdoc.col_packages", "Packages", "r"],
       ["tdoc.col_qty", "Quantity", "r"], ["tdoc.col_net_wt", "Net Wt (KG)", "r"], ["tdoc.col_gross_wt", "Gross Wt (KG)", "r"]);
+  } else if (isContract) {
+    // A contract's second page carries the packing / weight detail AND the commercial values.
+    cols.push(["tdoc.col_packing", "Packing", "l"], ["tdoc.col_packages", "Packages", "r"],
+      ["tdoc.col_qty", "Quantity", "r"], ["tdoc.col_net_wt", "Net Wt (KG)", "r"], ["tdoc.col_gross_wt", "Gross Wt (KG)", "r"],
+      ["tdoc.col_unit_price", "Unit Price", "r"], ["tdoc.col_amount", "Amount", "r"]);
   } else {
     cols.push(["tdoc.col_qty", "Quantity", "r"], ["tdoc.col_net_wt", "Net Wt (KG)", "r"],
       ["tdoc.col_unit_price", "Unit Price", "r"], ["tdoc.col_amount", "Amount", "r"]);
@@ -223,7 +228,7 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
   }).join("");
 
   const goodsHtml = `<div class="section">
-    <div class="section-h">${esc(isPacking ? tt("tdoc.sec_packing", "Packing Details") : tt("tdoc.sec_goods", "Description & Value of Goods"))}</div>
+    <div class="section-h">${esc(isPacking ? tt("tdoc.sec_packing", "Packing Details") : isContract ? tt("tdoc.sec_contract_goods", "Packing List & Goods Details") : tt("tdoc.sec_goods", "Description & Value of Goods"))}</div>
     <table class="goods">
       <thead><tr>${cols.map(([key, fb, al]) => `<th class="a-${al}">${esc(tt(key, fb))}</th>`).join("")}</tr></thead>
       <tbody>${goodsRows}</tbody>
@@ -276,8 +281,23 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
     : "";
 
   const notesHtml = isReal(input.notes)
-    ? `<div class="section notes"><div class="section-h">${esc(tt("tdoc.notes", "Notes / Remarks"))}</div><div>${esc(input.notes)}</div></div>`
+    ? `<div class="section notes"><div class="section-h">${esc(isContract ? tt("tdoc.contract_terms", "Contract Terms & Conditions") : tt("tdoc.notes", "Notes / Remarks"))}</div><div>${esc(input.notes)}</div></div>`
     : "";
+
+  // Contract: page 1 = parties, delivery & payment terms, terms and bank; page 2 = packing list,
+  // goods and values, then the two authorised signatures. Other documents keep their single flow.
+  const bodyHtml = isContract
+    ? `${deliveryHtml}${notesHtml}${bankHtml}<div class="page-break"></div>${goodsHtml}${financialHtml}`
+    : `${deliveryHtml}${goodsHtml}${financialHtml}${bankHtml}${notesHtml}`;
+  const signHtml = isContract
+    ? `<div class="sign-grid">
+    <div class="sign">${esc(tt("tdoc.sign_seller", "Seller — Authorized Signatory"))}${isReal(input.signatureName) ? `<br/>${esc(input.signatureName)}` : ""}</div>
+    <div class="sign">${esc(tt("tdoc.sign_buyer", "Buyer — Authorized Signatory"))}</div>
+  </div>`
+    : `<div class="sign-grid">
+    <div class="sign">${esc(tt("tdoc.sign_prepared", "Prepared By"))}</div>
+    <div class="sign">${esc(input.signatureName || tt("tdoc.sign_authorized", "Authorized Signature & Stamp"))}</div>
+  </div>`;
 
   const now = new Date();
   const stamp = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
@@ -344,6 +364,8 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
   .sign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 24px; }
   .sign { border-top: 1px solid #475569; padding-top: 3px; font-size: 7.4pt; text-align: center; color: #64748b; font-weight: 700; }
   .foot { margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 6.8pt; color: #94a3b8; display: flex; justify-content: space-between; }
+  .page-break { height: 0; break-before: page; page-break-before: always; }
+  @media screen { .page-break { height: 22px; } }
   @media print {
     body { background: #fff; }
     .wrap { padding: 0; }
@@ -366,20 +388,14 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
     <div class="doc-title">
       <h1>${esc(docTitle)}</h1>
       <div class="scope">${esc(input.txnKind === "sales" ? tt("tdoc.kind_sales", "Sales") : tt("tdoc.kind_purchase", "Purchase"))} · ${esc(scopeLabel)}</div>
+      ${isContract && isReal(refs.contract || input.docNo) ? `<div class="scope">${esc(tt("tdoc.contract_no", "Contract No."))}: ${esc(refs.contract || input.docNo)}</div>` : ""}
     </div>
   </div>
   ${metaHtml}
   <div class="section"><div class="section-h">${esc(tt("tdoc.sec_parties", "Trade Parties"))}</div></div>
   ${partiesHtml}
-  ${deliveryHtml}
-  ${goodsHtml}
-  ${financialHtml}
-  ${bankHtml}
-  ${notesHtml}
-  <div class="sign-grid">
-    <div class="sign">${esc(tt("tdoc.sign_prepared", "Prepared By"))}</div>
-    <div class="sign">${esc(input.signatureName || tt("tdoc.sign_authorized", "Authorized Signature & Stamp"))}</div>
-  </div>
+  ${bodyHtml}
+  ${signHtml}
   <div class="foot">
     <span>${esc(brandName)} · ${esc(docTitle)} · ${esc(input.docNo)}</span>
     <span>${esc(tt("tdoc.system_generated", "System-generated document"))} · ${esc(stamp)}</span>
