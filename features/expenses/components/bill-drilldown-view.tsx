@@ -224,12 +224,12 @@ export function BillDrilldownView({ id, lang: langProp }: { id: string; lang?: s
       {loadingHistory.length > 0 && (
         <Card>
           <CardHeader><CardTitle className="flex flex-wrap items-center justify-between gap-3 text-base">
-            <span>{s.tGlobal("plr.history_title", "Loading History")} · {b.billNo} [{loadingHistory.length}]</span>
+            <span>{s.tGlobal("plr.history_title", "Loading History")} · {b.billNo} [{new Set(loadingHistory.map((r: any) => r.sequence)).size}]</span>
             <Button variant="outline" size="sm" onClick={() => void openScopedGenericReport({
               title: s.tGlobal("plr.history_title", "Loading History"), subtitle: `${b.billNo} · ${b.branchLabel}`, lang: langProp,
               columns: [
                 { key: "sequence", label: s.t("dd_col_sr", "Sr") },
-                { key: "loadingNo", label: s.tGlobal("rdue.col_loading_no", "Loading No.") },
+                { key: (r: any) => [r.batchNo, r.loadingNo].filter(Boolean).join(" · "), label: s.tGlobal("rdue.col_loading_no", "Loading No.") },
                 { key: (r: any) => dt(r.loadedAt), label: s.t("dd_date", "Bill Date") },
                 { key: "containerNumber", label: s.tGlobal("plane.col_container", "Container") },
                 { key: "blNumber", label: s.tGlobal("plane.col_bl", "BL no.") },
@@ -253,7 +253,7 @@ export function BillDrilldownView({ id, lang: langProp }: { id: string; lang?: s
                 {[s.tGlobal("rdue.col_loading_no", "Loading No."), s.tGlobal("purchase.loading_date_label", "Loading Date"), s.tGlobal("plane.col_container", "Container"), s.tGlobal("plane.col_bl", "BL no."), s.t("dd_g_name", "Goods"), s.t("dd_g_qty", "Qty"), s.tGlobal("plr.col_gross_weight", "Gross Weight"), s.tGlobal("plr.col_net_weight", "Net Weight"), s.t("dd_col_grand", "Grand (Functional)"), s.t("dd_col_posting", "Accounting"), s.t("col_actions", "Actions")].map((label, i) => <Th key={i} className="px-3 py-2 text-start">{label}</Th>)}
               </tr></thead>
               <tbody>{loadingHistory.map((r: any) => <tr key={r.id} className="border-b border-slate-100 dark:border-slate-800">
-                <td className="px-3 py-3 font-mono">{b.billNo} [{r.sequence}]<div className="text-xs text-slate-500">{r.loadingNo || "—"}</div></td>
+                <td className="px-3 py-3 font-mono">{b.billNo} [{r.sequence}]<div className="text-xs text-slate-500">{[r.batchNo, r.loadingNo].filter(Boolean).join(" · ") || "—"}</div></td>
                 <td className="px-3 py-3">{dt(r.loadedAt)}</td><td className="px-3 py-3 font-mono">{r.containerNumber || "—"}</td><td className="px-3 py-3 font-mono">{r.blNumber || "—"}</td>
                 <td className="px-3 py-3">{r.goodsName || data.goods.map((g: any) => g.name).join(", ") || "—"}</td><td className="px-3 py-3">{qtyFmt(r.quantity)}</td><td className="px-3 py-3">{qtyFmt(r.grossWeight)}</td><td className="px-3 py-3">{qtyFmt(r.netWeight)}</td>
                 <td className="px-3 py-3 font-mono">{r.finalAmount == null ? "—" : `${r.currency || fc} ${fmt(r.finalAmount)}`}</td>

@@ -203,7 +203,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         }
       } else if (be.source_table === "local_purchases") {
         const [lp] = await sql`
-          select id, manual_bill_no, journal_serial_no, supplier_name, goods_name, purchase_account_no,
+          select id, manual_bill_no, journal_serial_no, supplier_name, goods_name, purchase_account_no, sales_account_no,
                  purchase_currency, local_currency, exchange_rate, final_cost, purchase_cost, total_gross_weight,
                  quantity_kgs, numbers, net_weight, purchase_rate, rate_type, status, roznamcha_entry_id
           from public.local_purchases where id = ${be.source_id}::uuid limit 1`;
@@ -225,6 +225,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           sourceBill = {
             kind: "local_purchases",
             purchaseAccountNo: lp.purchase_account_no || null,
+            salesAccountNo: lp.sales_account_no || null,
             billNo: lp.manual_bill_no || lp.journal_serial_no,
             supplierName: lp.supplier_name,
             status: lp.status,

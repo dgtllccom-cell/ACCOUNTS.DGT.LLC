@@ -1,17 +1,20 @@
 /** Read-only loading journal. A bill keeps its identity; later loads remain separate source records. */
 export type LoadingJournalRow = {
-  id: string; sequence: number; goodsName: string | null; loadingNo: string | null; loadedAt: string | null;
+  id: string; sequence: number; batchId: string | null; batchNo: string | null; goodsName: string | null; loadingNo: string | null; loadedAt: string | null;
   blNumber: string | null; containerNumber: string | null; quantity: number;
   grossWeight: number; netWeight: number; currency: string | null; finalAmount: number | null;
   laneId: string | null; status: string | null; destination: string | null;
 };
 export function loadingJournalRows(rows: Record<string, any>[]): LoadingJournalRow[] {
+  const batches = new Map<string, number>();
   return [...rows].sort((a, b) => String(a.created_at || a.loaded_at || "").localeCompare(String(b.created_at || b.loaded_at || "")) || String(a.id).localeCompare(String(b.id)))
-    .map((r, i) => ({ id: r.id, sequence: i + 1, goodsName: r.report_payload?.goodsName || null, loadingNo: r.loading_record_no || null, loadedAt: r.loaded_at || r.created_at || null,
+    .map((r) => { const key = r.loading_batch_id || r.loading_batch_no || r.id;
+      if (!batches.has(key)) batches.set(key, batches.size + 1);
+      return ({ id: r.id, sequence: batches.get(key)!, batchId: r.loading_batch_id || null, batchNo: r.loading_batch_no || null, goodsName: r.report_payload?.goodsName || null, loadingNo: r.loading_record_no || null, loadedAt: r.loaded_at || r.created_at || null,
       blNumber: r.bl_number || null, containerNumber: r.container_number || null, quantity: Number(r.loaded_quantity || 0),
       grossWeight: Number(r.gross_weight ?? r.report_payload?.grossWeight ?? 0), netWeight: Number(r.net_weight ?? r.report_payload?.netWeight ?? 0),
       currency: r.local_currency || null, finalAmount: r.loaded_purchase_local == null ? null : Number(r.loaded_purchase_local),
-      laneId: r.lane_id || null, status: r.lane_status || r.loading_status || null, destination: r.transfer_destination || null }));
+      laneId: r.lane_id || null, status: r.lane_status || r.loading_status || null, destination: r.transfer_destination || null }); });
 }
 export async function readBillLoadingJournal(sql: any, bill: { source_table: string; source_id: string; country_id: string | null; country_branch_id: string | null; city_branch_id: string | null }) {
   if (bill.source_table === "local_purchases") {
@@ -27,7 +30,7 @@ export async function readBillLoadingJournal(sql: any, bill: { source_table: str
   }
   if (bill.source_table !== "purchase_orders") return [];
   const rows = await sql`
-    select lr.id, lr.loading_record_no, lr.loaded_at, lr.created_at, lr.bl_number, lr.container_number,
+    select lr.id, lr.loading_record_no, lr.loading_batch_id, lr.loading_batch_no, lr.loaded_at, lr.created_at, lr.bl_number, lr.container_number,
            lr.loaded_quantity, lr.gross_weight, lr.net_weight, lr.report_payload, lr.loading_status,
            lr.local_currency, lr.loaded_purchase_local,
            lane.id as lane_id, lane.lane_status, lane.transfer_destination

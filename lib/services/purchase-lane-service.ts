@@ -705,7 +705,7 @@ export async function listPurchaseLaneTracking(session: ErpSession, filter: { id
     return sql`
       select l.id,l.purchase_ref_no,l.loading_record_no,l.container_number,l.bl_number,
              l.loaded_quantity,l.unit,l.gross_weight,l.net_weight,l.lane_status,l.transfer_destination,l.created_at,
-             coalesce(lr.loaded_at,lr.created_at,l.created_at) as loaded_at
+             coalesce(lr.loaded_at,lr.created_at,l.created_at) as loaded_at,lr.loading_batch_no
       from public.purchase_lane_loads l
       left join public.purchase_loading_records lr on l.source_type='purchase_booking' and lr.id=l.source_id and lr.deleted_at is null
       where l.deleted_at is null and l.source_type in ('purchase_booking','local_purchase')

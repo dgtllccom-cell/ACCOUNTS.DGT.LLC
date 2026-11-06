@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         select
           be.id, be.source_module, be.source_id, be.source_table,
           be.bill_no, be.manual_bill_no, be.bill_date, be.transaction_date,
-          case when be.source_table = 'purchase_orders' then (select count(*)::int from public.purchase_loading_records lr where lr.purchase_order_id=be.source_id and lr.deleted_at is null and lr.loading_status <> 'cancelled' and lr.country_id is not distinct from be.country_id and (be.city_branch_id is null or lr.city_branch_id=be.city_branch_id)) else 0 end as loading_count,
+          case when be.source_table = 'purchase_orders' then (select count(distinct coalesce(lr.loading_batch_id::text,nullif(lr.loading_batch_no::text,''),lr.id::text))::int from public.purchase_loading_records lr where lr.purchase_order_id=be.source_id and lr.deleted_at is null and lr.loading_status <> 'cancelled' and lr.country_id is not distinct from be.country_id and (be.city_branch_id is null or lr.city_branch_id=be.city_branch_id)) else 0 end as loading_count,
           be.country_id, be.country_branch_id, be.city_branch_id,
           be.party_account_no, be.party_name, be.party_company_id,
           be.currency, be.original_bill_amount, be.expense_total, be.expense_count,
