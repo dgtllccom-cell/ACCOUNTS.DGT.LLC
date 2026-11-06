@@ -2,6 +2,7 @@
 
 import { EntryPortal } from "./payment-entry-portal";
 import { SourceFilteredTable } from "./source-filtered-table";
+import { afterPurchasePayment } from "@/lib/journal/after-purchase-payment";
 import { payableRemainingLoadings, remainingLoadingEntry, type RemainingDueBill } from "@/lib/journal/remaining-loading-entry";
  
 import { pl } from "@/lib/reports/print-label";
@@ -4781,19 +4782,25 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       setTypeDetails({});
       setAttachmentFile(null);
       
-      // Auto-redirect back to Purchase Loading Records if from loading or in advance/endorsement mode
-      if (fromLoading || (typeof window !== "undefined" && window.location.search.includes("fromLoading=true"))) {
-        setTimeout(() => {
-          router.push("/dashboard/purchase/purchase-loading-records");
-        }, 1200);
-      } else if (activeMode === "advance" && selected?.purchase_order_no) {
-        setTimeout(() => {
-          router.push("/dashboard/purchase/purchase-loading-records");
-        }, 1200);
-      } else {
-        await loadOrders();
-        setPaymentsTick((n) => n + 1); // show the just-posted payment in the history
-      }
+      await afterPurchasePayment({
+        mode: activeMode,
+        fromLoading: fromLoading || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("fromLoading") === "true"),
+        hasOrder: Boolean(selected.purchase_order_no),
+        navigate: (path) => router.push(path),
+        refresh: async () => {
+          if (activeMode === "remaining" && !isLocalSelected) {
+            // Block the previous payable snapshot while the same saved loading
+            // is reloaded. A paid batch cannot be offered for another payment.
+            setDueReady(false);
+            setSelectedDueDetail(null);
+            setDueLoadings({});
+            setRegistryDueReady(false);
+            setRegistryDueBills([]);
+          }
+          setPaymentsTick((n) => n + 1);
+          await loadOrders();
+        },
+      });
     } catch (err: any) {
       setPaymentError(err?.message || "Failed to process payment settlement. Please try again.");
     } finally {
