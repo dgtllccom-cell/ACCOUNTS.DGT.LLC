@@ -71,6 +71,10 @@ export function buildRoznamchaVoucherHtml(input: {
   const amountInWords = numberToWords(d.amount);
   const voucherTitle = d.type === "payment" ? "CASH PAYMENT VOUCHER" : d.type === "expenses" ? "EXPENSE PAYMENT VOUCHER" : d.type === "exchange" ? "MONEY EXCHANGE VOUCHER" : "CASH RECEIPT VOUCHER";
   const currencySymbol = d.currency === "USD" ? "$" : d.currency === "AED" ? "AED" : d.currency === "PKR" ? "Rs" : d.currency || "AED";
+  // Legs to print per side. A cash entry is stored one-sided (a CR payment or a DR receipt), so the empty
+  // side is hidden instead of being drawn as a blank counter-leg. Legacy single DR/CR fields still apply.
+  const drLegs = d.drLines && d.drLines.length ? d.drLines : (d.drAccountCode || d.drAccountName ? [{ code: d.drAccountCode, name: d.drAccountName, amount: 0, narration: null }] : []);
+  const crLegs = d.crLines && d.crLines.length ? d.crLines : (d.crAccountCode || d.crAccountName ? [{ code: d.crAccountCode, name: d.crAccountName, amount: 0, narration: null }] : []);
 
   function renderReceiptHalf(copyTitle: "OFFICE COPY" | "CUSTOMER COPY") {
     return `
@@ -132,11 +136,11 @@ export function buildRoznamchaVoucherHtml(input: {
            1 DR vs many CR, 1 CR vs many DR, or a flat journal with many of each) -->
       <div class="accounting-block">
         <div class="acct-header">Accounting / Account Details</div>
-        <div class="acct-grid">
-          <div class="acct-col acct-dr">
+        <div class="acct-grid${drLegs.length && crLegs.length ? "" : " acct-grid-one"}">
+          <div class="acct-col acct-dr${drLegs.length ? "" : " acct-empty"}">
             <div class="acct-badge">DR</div>
             <div class="acct-rows">
-              ${(d.drLines && d.drLines.length ? d.drLines : [{ code: d.drAccountCode, name: d.drAccountName, amount: 0, narration: null }]).map((l) => `
+              ${drLegs.map((l) => `
                 <div class="acct-leg">
                   <div class="acct-leg-code font-mono">${escapeHtml(l.code || "-")}</div>
                   <div class="acct-leg-name">${escapeHtml(l.name || "-")}</div>
@@ -144,10 +148,10 @@ export function buildRoznamchaVoucherHtml(input: {
                 </div>`).join("")}
             </div>
           </div>
-          <div class="acct-col acct-cr">
+          <div class="acct-col acct-cr${crLegs.length ? "" : " acct-empty"}">
             <div class="acct-badge">CR</div>
             <div class="acct-rows">
-              ${(d.crLines && d.crLines.length ? d.crLines : [{ code: d.crAccountCode, name: d.crAccountName, amount: 0, narration: null }]).map((l) => `
+              ${crLegs.map((l) => `
                 <div class="acct-leg">
                   <div class="acct-leg-code font-mono">${escapeHtml(l.code || "-")}</div>
                   <div class="acct-leg-name">${escapeHtml(l.name || "-")}</div>
@@ -587,6 +591,8 @@ export function buildRoznamchaVoucherHtml(input: {
       color: #0f172a; padding-bottom: 2px; margin-bottom: 3px; border-bottom: 1px dotted #cbd5e1;
     }
     .acct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .acct-grid-one { grid-template-columns: 1fr; }
+    .acct-col.acct-empty { display: none; }
     .acct-col {
       display: flex; gap: 6px; padding: 3px 5px; background: #fff; border: 1px solid #e2e8f0; border-radius: 3px;
     }
