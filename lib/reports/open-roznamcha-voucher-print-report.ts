@@ -1,5 +1,7 @@
 import { escapeHtml, formatMoney, formatDate, type ERPCompanyInfo } from "./erp-report-template-builder";
 import { numberToWords } from "@/lib/utils/number-to-words";
+import { t } from "@/lib/i18n/ui";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type RoznamchaVoucherData = {
   receiptNo: string;
@@ -16,34 +18,42 @@ export type RoznamchaVoucherData = {
   branchName?: string;
   countryName?: string;
   createdByName?: string;
-  // 2026-11 additions (cheque / bank / DR+CR / party ID): shown only when present on the Roznamcha entry.
-  // Nothing is fabricated - a missing field is omitted entirely from the printed page.
+  /** payment method name as recorded on the entry ("Cash", "Cheque", "Bank Transfer", ...). Unset = no box ticked. */
+  paymentMethodName?: string | null;
+  /** trade licence of the party, when the entry carries it. Shown as "—" when absent. */
+  tradeLicenseNo?: string | null;
+  // Shown only when the Roznamcha entry carries them. Nothing is fabricated.
   chequeNo?: string | null;
   chequeDate?: string | null;
   bankName?: string | null;
   bankBranchName?: string | null;
   referenceNo?: string | null;
-  /** DR / CR accounting legs for this entry (double-entry display, read-only, derived directly from the entry's own `roznamcha_lines`).
-   *  The entry's own split pattern (1 DR → many CR, 1 CR → many DR, or a flat journal with many of each) is preserved verbatim.
-   *  Legacy single-leg fields are kept for compatibility with existing callers. */
+  /**
+   * DR / CR legs of the entry, read directly from its stored lines. A one-sided cash entry has one side only;
+   * a two-leg posting has both. The voucher never adds a counter-leg the entry does not have.
+   * The legacy single-leg fields are kept for existing callers.
+   */
   drAccountCode?: string | null;
   drAccountName?: string | null;
   crAccountCode?: string | null;
   crAccountName?: string | null;
-  /** full DR / CR line list from the entry (preferred - carries the entry's own split pattern). */
   drLines?: Array<{ code?: string | null; name?: string | null; amount: number; narration?: string | null }>;
   crLines?: Array<{ code?: string | null; name?: string | null; amount: number; narration?: string | null }>;
-  /** Party (payer / payee) ID fields - only shown when authorized (caller already resolved authorization). */
+  /** Party identification - only shown when the caller has resolved authorization. */
   partyIdLabel?: string | null;
   partyIdNumber?: string | null;
   partyIdImageUrl?: string | null;
-  /** issued / received marker shown next to the cheque status badge */
+  /** cheque status shown next to the cheque number */
   chequeStatus?: "issued" | "received" | "cleared" | "pending" | null;
 };
 
+type Leg = { code?: string | null; name?: string | null; amount: number; narration?: string | null };
+
+const SAFE_IMAGE = /^(https?:\/\/|data:image\/|\/)/;
+
 /**
- * Pure builder: the complete A4 voucher document as an HTML string. No window access, so it is unit-testable.
- * The on-screen / print behaviour lives in openRoznamchaVoucherPrintReport below.
+ * Pure builder: the complete voucher as an HTML string (A4 landscape, two portrait copies side by side:
+ * Company Copy and Customer Copy, as on the reference receipt). No window access, so it is unit-testable.
  */
 export function buildRoznamchaVoucherHtml(input: {
   data: RoznamchaVoucherData;
@@ -52,610 +62,267 @@ export function buildRoznamchaVoucherHtml(input: {
 }): string {
   const { data: d, companyInfo = {}, lang = "en" } = input;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const dir = isRtl ? "rtl" : "ltr";
+  const tt = (key: string, fallback: string) => t(lang as SupportedLanguage, key as never, fallback);
 
   const compName = companyInfo.name || "DIGITAL DOCK ERP";
-  const compTagline = companyInfo.tagline || "";
-  const compAddress = companyInfo.address || "";
-  const compPhone = companyInfo.phone || "";
-  const compEmail = companyInfo.email || "";
-  const compWebsite = companyInfo.website || "";
-  const branchName = d.branchName || companyInfo.branch || "";
-  const createdBy = d.createdByName || companyInfo.printedBy || "";
-  const contactBits = [
-    compAddress ? `📍 ${escapeHtml(compAddress)}` : "",
-    compPhone ? `📞 ${escapeHtml(compPhone)}` : "",
-    compEmail ? `✉️ ${escapeHtml(compEmail)}` : "",
-    compWebsite ? `🌐 ${escapeHtml(compWebsite)}` : "",
-  ].filter(Boolean).join(" | ");
+  const branchLine = [companyInfo.tagline, d.branchName || companyInfo.branch].filter(Boolean).join(" • ");
+  const contactLine = [
+    companyInfo.phone ? `${escapeHtml(companyInfo.phone)}` : "",
+    companyInfo.email ? `${escapeHtml(companyInfo.email)}` : "",
+    companyInfo.website ? `${escapeHtml(companyInfo.website)}` : "",
+  ].filter(Boolean).join(" &nbsp;|&nbsp; ");
+  const logo = companyInfo.logoUrl && SAFE_IMAGE.test(companyInfo.logoUrl)
+    ? `<img class="logo" src="${escapeHtml(companyInfo.logoUrl)}" alt="" />`
+    : "";
 
-  const amountInWords = numberToWords(d.amount);
-  const voucherTitle = d.type === "payment" ? "CASH PAYMENT VOUCHER" : d.type === "expenses" ? "EXPENSE PAYMENT VOUCHER" : d.type === "exchange" ? "MONEY EXCHANGE VOUCHER" : "CASH RECEIPT VOUCHER";
+  const isPaymentLike = d.type === "payment" || d.type === "expenses";
+  const voucherTitle = d.type === "payment" ? tt("rvp.title_payment", "CASH PAYMENT")
+    : d.type === "expenses" ? tt("rvp.title_expense", "EXPENSE PAYMENT")
+    : d.type === "exchange" ? tt("rvp.title_exchange", "MONEY EXCHANGE")
+    : tt("rvp.title_receipt", "CASH RECEIPT");
   const currencySymbol = d.currency === "USD" ? "$" : d.currency === "AED" ? "AED" : d.currency === "PKR" ? "Rs" : d.currency || "AED";
-  // Legs to print per side. A cash entry is stored one-sided (a CR payment or a DR receipt), so the empty
-  // side is hidden instead of being drawn as a blank counter-leg. Legacy single DR/CR fields still apply.
-  const drLegs = d.drLines && d.drLines.length ? d.drLines : (d.drAccountCode || d.drAccountName ? [{ code: d.drAccountCode, name: d.drAccountName, amount: 0, narration: null }] : []);
-  const crLegs = d.crLines && d.crLines.length ? d.crLines : (d.crAccountCode || d.crAccountName ? [{ code: d.crAccountCode, name: d.crAccountName, amount: 0, narration: null }] : []);
+  const amountInWords = numberToWords(d.amount);
 
-  function renderReceiptHalf(copyTitle: "OFFICE COPY" | "CUSTOMER COPY") {
-    return `
-    <div class="voucher-half">
-      <!-- Letterhead Header Bar -->
-      <div class="lh-header">
-        <div class="lh-left">
-          <div class="lh-logo">⚓</div>
-          <div>
-            <div class="lh-company">${escapeHtml(compName)}</div>
-            ${(compTagline || branchName) ? `<div class="lh-tagline">${[escapeHtml(compTagline), escapeHtml(branchName)].filter(Boolean).join(" &bull; ")}</div>` : ""}
-            ${contactBits ? `<div class="lh-contact">${contactBits}</div>` : ""}
-          </div>
-        </div>
+  // Legs: the stored lines, one side per stored side. Legacy single DR/CR fields still apply.
+  const drLegs: Leg[] = d.drLines && d.drLines.length ? d.drLines
+    : (d.drAccountCode || d.drAccountName ? [{ code: d.drAccountCode, name: d.drAccountName, amount: 0, narration: null }] : []);
+  const crLegs: Leg[] = d.crLines && d.crLines.length ? d.crLines
+    : (d.crAccountCode || d.crAccountName ? [{ code: d.crAccountCode, name: d.crAccountName, amount: 0, narration: null }] : []);
 
-        <div class="lh-right">
-          <div class="voucher-badge">${escapeHtml(voucherTitle)}</div>
-          <div class="copy-badge">${copyTitle}</div>
+  // Payment method: ticked only from the entry's own method, never guessed.
+  const pm = (d.paymentMethodName || "").toLowerCase();
+  const isCheque = /cheque|check/.test(pm) || Boolean(d.chequeNo);
+  const isBank = !isCheque && (/bank|transfer|wire/.test(pm) || (!pm && Boolean(d.bankName)));
+  const isCash = !isCheque && !isBank && /cash/.test(pm);
+  const box = (on: boolean) => `<span class="box">${on ? "✓" : ""}</span>`;
+
+  const cell = (v: unknown) => (v !== undefined && v !== null && String(v).trim() !== "" ? escapeHtml(v) : "—");
+  const partyName = d.paidBy || d.accountName || "";
+  const createdBy = d.createdByName || "";
+  const photo = d.partyIdImageUrl && SAFE_IMAGE.test(d.partyIdImageUrl)
+    ? `<img class="id-photo" src="${escapeHtml(d.partyIdImageUrl)}" alt="" />`
+    : "";
+
+  const kvRows: Array<[string, string]> = [
+    [isPaymentLike ? tt("rvp.paid_to", "Paid To / Party") : tt("rvp.received_from", "Received From"), cell(partyName)],
+    [tt("rvp.account_code", "Account Code"), cell(d.accountNo)],
+    [tt("rvp.account_title", "Account Title"), cell(d.accountName)],
+    [tt("rvp.contact", "Contact / WhatsApp"), cell(d.mobileNumber)],
+    [tt("rvp.emirates_id", "UAE ID (Emirates ID)"), cell(d.partyIdNumber)],
+    [tt("rvp.trade_license", "Trade License No."), cell(d.tradeLicenseNo)],
+    [tt("rvp.reference", "Reference / Invoice No."), cell(d.referenceNo)],
+  ];
+  const kvHtml = kvRows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${value}</td></tr>`).join("");
+
+  const legRow = (side: "DR" | "CR", l: Leg) => `
+    <tr data-side="${side}">
+      <td><span class="side ${side === "DR" ? "side-dr" : "side-cr"}">${escapeHtml(side === "DR" ? tt("rvp.dr", "DR") : tt("rvp.cr", "CR"))}</span></td>
+      <td class="mono">${cell(l.code)}</td>
+      <td>${cell(l.name)}</td>
+      <td class="num">${l.amount > 0 ? `${escapeHtml(formatMoney(l.amount))} ${escapeHtml(d.currency || "")}` : "—"}</td>
+      <td>${cell(l.narration)}</td>
+    </tr>`;
+  const legRows = [...drLegs.map((l) => legRow("DR", l)), ...crLegs.map((l) => legRow("CR", l))].join("");
+
+  const copy = (copyKey: "rvp.company_copy" | "rvp.customer_copy", copyFallback: string) => `
+  <section class="copy">
+    <header class="hd">
+      <div class="brand">
+        ${logo}
+        <div>
+          <div class="co-name">${escapeHtml(compName)}</div>
+          ${branchLine ? `<div class="co-sub">${escapeHtml(branchLine)}</div>` : ""}
+          ${contactLine ? `<div class="co-sub">${contactLine}</div>` : ""}
         </div>
       </div>
-
-      <!-- Voucher Metadata Grid -->
-      <div class="meta-grid">
-        <div class="meta-item">
-          <span class="meta-lbl">Voucher / Receipt #:</span>
-          <span class="meta-val font-mono">${escapeHtml(d.receiptNo || d.voucherNo || "-")}</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-lbl">Date & Time:</span>
-          <span class="meta-val">${formatDate(d.date)}</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-lbl">Account Code:</span>
-          <span class="meta-val font-mono">${escapeHtml(d.accountNo || "-")}</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-lbl">Account Title:</span>
-          <span class="meta-val">${escapeHtml(d.accountName || "Cash Account")}</span>
-        </div>
+      <div class="rno">
+        <div class="rno-lbl">${escapeHtml(tt("rvp.receipt_no", "Receipt No."))}</div>
+        <div class="rno-val mono">${cell(d.receiptNo || d.voucherNo)}</div>
+        <div class="rno-lbl">${escapeHtml(tt("rvp.date", "Date"))}</div>
+        <div class="rno-val">${escapeHtml(formatDate(d.date, lang))}</div>
       </div>
+    </header>
 
-      ${d.chequeNo || d.bankName ? `
-      <!-- Cheque / Bank block (shown only when the entry carries cheque / bank data) -->
-      <div class="cheque-block">
-        <div class="cheque-header">${d.chequeStatus === "issued" || d.type === "payment" || d.type === "expenses" ? "CHEQUE PAYMENT" : "CHEQUE RECEIPT"}</div>
-        <div class="cheque-grid">
-          ${d.chequeNo ? `<div class="cq-item"><span class="cq-lbl">Cheque No.</span><span class="cq-val font-mono">${escapeHtml(d.chequeNo)}</span></div>` : ""}
-          ${d.chequeDate ? `<div class="cq-item"><span class="cq-lbl">Cheque Date</span><span class="cq-val">${formatDate(d.chequeDate)}</span></div>` : ""}
-          ${d.bankName ? `<div class="cq-item"><span class="cq-lbl">Bank Name</span><span class="cq-val">${escapeHtml(d.bankName)}</span></div>` : ""}
-          ${d.bankBranchName ? `<div class="cq-item"><span class="cq-lbl">Branch</span><span class="cq-val">${escapeHtml(d.bankBranchName)}</span></div>` : ""}
-          ${d.chequeStatus ? `<div class="cq-item"><span class="cq-lbl">Status</span><span class="cq-val cq-status cq-${escapeHtml(d.chequeStatus)}">${escapeHtml(d.chequeStatus.toUpperCase())}</span></div>` : ""}
-          ${d.referenceNo ? `<div class="cq-item"><span class="cq-lbl">Reference</span><span class="cq-val font-mono">${escapeHtml(d.referenceNo)}</span></div>` : ""}
-        </div>
+    <div class="title">${escapeHtml(voucherTitle)}</div>
+
+    <div class="sec-h">${escapeHtml(tt("rvp.party_details", "Party / Payee Details"))}</div>
+    <div class="party-wrap">
+      <table class="kv"><tbody>${kvHtml}</tbody></table>
+      ${photo}
+    </div>
+
+    <div class="sec-h">${escapeHtml(tt("rvp.payment_method", "Payment Method"))}</div>
+    <div class="pm-row">
+      <span class="pm">${box(isCash)} ${escapeHtml(tt("rvp.cash", "Cash"))}</span>
+      <span class="pm">${box(isCheque)} ${escapeHtml(tt("rvp.cheque", "Cheque"))}</span>
+      <span class="pm">${box(isBank)} ${escapeHtml(tt("rvp.bank_transfer", "Bank Transfer"))}</span>
+    </div>
+    <div class="pm-meta">
+      <span>${escapeHtml(tt("rvp.cheque_no", "Cheque No. (if any)"))}: <b class="mono">${cell(d.chequeNo)}</b></span>
+      <span>${escapeHtml(tt("rvp.bank_branch", "Bank / Branch"))}: <b>${cell([d.bankName, d.bankBranchName].filter(Boolean).join(" / "))}</b></span>
+    </div>
+
+    <div class="amt-row">
+      <div class="amt-box">
+        <div class="amt-lbl">${escapeHtml(tt("rvp.amount", "Amount"))} (${escapeHtml(currencySymbol)})</div>
+        <div class="amt-val">${escapeHtml(formatMoney(d.amount))}</div>
       </div>
-      ` : ""}
-
-      ${(d.drLines?.length || d.crLines?.length || d.drAccountCode || d.drAccountName || d.crAccountCode || d.crAccountName) ? `
-      <!-- Accounting / Account Details (DR / CR legs read-only, preserves the entry's own split pattern:
-           1 DR vs many CR, 1 CR vs many DR, or a flat journal with many of each) -->
-      <div class="accounting-block">
-        <div class="acct-header">Accounting / Account Details</div>
-        <div class="acct-grid${drLegs.length && crLegs.length ? "" : " acct-grid-one"}">
-          <div class="acct-col acct-dr${drLegs.length ? "" : " acct-empty"}">
-            <div class="acct-badge">DR</div>
-            <div class="acct-rows">
-              ${drLegs.map((l) => `
-                <div class="acct-leg">
-                  <div class="acct-leg-code font-mono">${escapeHtml(l.code || "-")}</div>
-                  <div class="acct-leg-name">${escapeHtml(l.name || "-")}</div>
-                  ${l.amount > 0 ? `<div class="acct-leg-amt">${formatMoney(l.amount)} ${escapeHtml(d.currency || "")}</div>` : ""}
-                </div>`).join("")}
-            </div>
-          </div>
-          <div class="acct-col acct-cr${crLegs.length ? "" : " acct-empty"}">
-            <div class="acct-badge">CR</div>
-            <div class="acct-rows">
-              ${crLegs.map((l) => `
-                <div class="acct-leg">
-                  <div class="acct-leg-code font-mono">${escapeHtml(l.code || "-")}</div>
-                  <div class="acct-leg-name">${escapeHtml(l.name || "-")}</div>
-                  ${l.amount > 0 ? `<div class="acct-leg-amt">${formatMoney(l.amount)} ${escapeHtml(d.currency || "")}</div>` : ""}
-                </div>`).join("")}
-            </div>
-          </div>
-        </div>
+      <div class="amt-words">
+        <div class="amt-lbl">${escapeHtml(tt("rvp.amount_words", "Amount in Words"))}</div>
+        <div>"${escapeHtml(amountInWords)} ${escapeHtml(d.currency || "")}"</div>
       </div>
-      ` : ""}
+    </div>
 
-      ${d.partyIdNumber || d.partyIdImageUrl ? `
-      <!-- Party (payer / payee) identification - shown only when authorized -->
-      <div class="party-id-block">
-        <div class="party-id-header">${escapeHtml(d.partyIdLabel || "Party ID")}</div>
-        <div class="party-id-content">
-          ${d.partyIdImageUrl ? `<img src="${escapeHtml(d.partyIdImageUrl)}" alt="Party ID" class="party-id-img" />` : ""}
-          ${d.partyIdNumber ? `<div class="party-id-no font-mono">${escapeHtml(d.partyIdNumber)}</div>` : ""}
-        </div>
-      </div>
-      ` : ""}
+    <div class="sec-h">${escapeHtml(tt("rvp.remarks", "Remarks"))}</div>
+    <div class="remarks">${cell(d.narration)}</div>
 
-      <!-- Main Body Info -->
-      <div class="body-grid">
-        <div class="fields-col">
-          <div class="field-row">
-            <span class="f-lbl">${d.type === "payment" || d.type === "expenses" ? "Paid To / Party:" : "Received From:"}</span>
-            <span class="f-val">${escapeHtml(d.paidBy || d.accountName || "N/A")}</span>
-          </div>
+    ${legRows ? `
+    <div class="sec-h">${escapeHtml(tt("rvp.account_details", "Account Details (DR / CR)"))}</div>
+    <table class="legs">
+      <thead><tr>
+        <th>${escapeHtml(tt("rvp.side", "Side"))}</th>
+        <th>${escapeHtml(tt("rvp.account_code", "Account Code"))}</th>
+        <th>${escapeHtml(tt("rvp.account_title", "Account Title"))}</th>
+        <th>${escapeHtml(tt("rvp.amount", "Amount"))}</th>
+        <th>${escapeHtml(tt("rvp.narration", "Narration"))}</th>
+      </tr></thead>
+      <tbody>${legRows}</tbody>
+    </table>` : ""}
 
-          <div class="field-row">
-            <span class="f-lbl">Amount in Words:</span>
-            <span class="f-val font-italic" style="color: #065f46;">"${escapeHtml(amountInWords)} ${escapeHtml(d.currency)} ONLY"</span>
-          </div>
+    <div class="sigs">
+      <div class="sig"><div class="sig-line"></div><div class="sig-lbl">${escapeHtml(tt("rvp.prepared_by", "Prepared By"))}${createdBy ? ` (${escapeHtml(createdBy)})` : ""}</div></div>
+      <div class="sig"><div class="sig-line"></div><div class="sig-lbl">${escapeHtml(tt("rvp.checked_by", "Checked By"))}</div></div>
+      <div class="sig"><div class="sig-line"></div><div class="sig-lbl">${escapeHtml(tt("rvp.authorized_by", "Authorized By"))}</div></div>
+    </div>
 
-          <div class="field-row">
-            <span class="f-lbl">Particulars / Narration:</span>
-            <span class="f-val">${escapeHtml(d.narration || "Roznamcha cash transaction posting.")}</span>
-          </div>
-
-          <div class="field-row">
-            <span class="f-lbl">Contact / Mobile:</span>
-            <span class="f-val">${escapeHtml(d.mobileNumber || "-")}</span>
-          </div>
-        </div>
-
-        <div class="amount-box">
-          <div class="amount-lbl">TOTAL AMOUNT</div>
-          <div class="amount-val">${formatMoney(d.amount)} <span class="curr-lbl">${escapeHtml(currencySymbol)}</span></div>
-        </div>
-      </div>
-
-      <!-- Signature Strip Footer -->
-      <div class="sign-strip">
-        <div class="sign-col">
-          <div class="sign-line"></div>
-          <div class="sign-lbl">${createdBy ? `Prepared By (${escapeHtml(createdBy)})` : "Prepared By"}</div>
-        </div>
-        <div class="sign-col">
-          <div class="sign-line"></div>
-          <div class="sign-lbl">Received / Receiver Signature</div>
-        </div>
-        <div class="sign-col">
-          <div class="sign-line"></div>
-          <div class="sign-lbl">Authorized Manager</div>
-        </div>
-      </div>
-    </div>`;
-  }
+    <footer class="ft">
+      <span class="mono">${cell(d.receiptNo || d.voucherNo)}</span>
+      <span class="copy-badge">${escapeHtml(tt(copyKey, copyFallback))}</span>
+    </footer>
+  </section>`;
 
   const html = `<!doctype html>
-<html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}">
+<html lang="${escapeHtml(lang)}" dir="${dir}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapeHtml(voucherTitle)} - ${escapeHtml(d.receiptNo || d.voucherNo || "")}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
-    
-    @page {
-      size: A4 portrait;
-      margin: 4mm;
-    }
-
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Noto+Naskh+Arabic:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap');
+    @page { size: A4 landscape; margin: 6mm; }
     * { box-sizing: border-box; }
-    
+    html, body { margin: 0; padding: 0; }
     body {
-      background: #e2e8f0;
-      color: #0f172a;
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 8px;
-      margin: 0;
-      padding: 0;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      background: #e5e7eb; color: #0f172a;
+      font-family: 'Outfit', 'Noto Naskh Arabic', Arial, sans-serif; font-size: 10px;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
+    html[lang="ur"] body { font-family: 'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif; }
+    html[lang="ar"] body, html[lang="fa"] body, html[lang="ps"] body { font-family: 'Noto Naskh Arabic', 'Outfit', sans-serif; }
+    .mono { font-family: 'Outfit', monospace; font-variant-numeric: tabular-nums; }
 
-    /* Screen Toolbar */
     .no-print-toolbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: #0f172a;
-      color: #ffffff;
-      padding: 8px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      font-size: 11px;
+      position: sticky; top: 0; z-index: 100; background: #0f172a; color: #fff;
+      padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 11px;
     }
-
-    .btn-action {
-      background: #1e293b;
-      color: #ffffff;
-      border: 1px solid #334155;
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-weight: 700;
-      font-size: 11px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn-action:hover { background: #334155; }
+    .btn-action { background: #1e293b; color: #fff; border: 1px solid #334155; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; margin-inline-start: 6px; }
     .btn-primary { background: #2563eb; border-color: #2563eb; }
-    .btn-success { background: #059669; border-color: #059669; }
 
-    /* Report Sheet Container - EXACT A4 PORTRAIT 210mm x 297mm */
-    .wrap {
-      padding: 12px;
-      display: flex;
-      justify-content: center;
-    }
-
+    .wrap { padding: 10px; display: flex; justify-content: center; }
+    /* Two portrait copies side by side on one A4 landscape sheet, with the cut line between them */
     .sheet {
-      width: 200mm;
-      max-width: 100%;
-      height: 287mm; /* Perfectly contained on 1 single page! */
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
-      padding: 6mm;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      position: relative;
-      box-sizing: border-box;
-      overflow: hidden;
+      width: 285mm; min-height: 198mm; background: #fff; border: 1px solid #cbd5e1; box-shadow: 0 8px 24px rgba(15,23,42,0.1);
+      display: grid; grid-template-columns: 1fr 6mm 1fr; padding: 4mm;
+    }
+    .copy {
+      display: flex; flex-direction: column; gap: 3px; padding: 3mm;
+      border: 1.5px solid #0f172a; border-radius: 3mm; min-height: 186mm;
+    }
+    .cut { position: relative; }
+    .cut::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; border-inline-start: 1px dashed #64748b; }
+    .cut span {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(90deg);
+      background: #fff; font-size: 7px; color: #475569; padding: 0 4px; white-space: nowrap;
     }
 
-    /* Half Voucher Card */
-    .voucher-half {
-      height: 136mm; /* Exactly half of A4 */
-      border: 1.5px solid #0f172a;
-      border-radius: 6px;
-      padding: 8px 12px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      background: #ffffff;
+    .hd { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; border-bottom: 2px solid #0f172a; padding-bottom: 4px; }
+    .brand { display: flex; gap: 6px; align-items: center; min-width: 0; }
+    .logo { height: 13mm; max-width: 30mm; object-fit: contain; }
+    .co-name { font-size: 14px; font-weight: 900; line-height: 1.1; }
+    .co-sub { font-size: 8px; color: #334155; margin-top: 1px; }
+    .rno { border: 1.5px solid #0f172a; border-radius: 3px; padding: 3px 6px; min-width: 38mm; text-align: center; }
+    .rno-lbl { font-size: 6.5px; font-weight: 800; text-transform: uppercase; color: #475569; }
+    .rno-val { font-size: 12px; font-weight: 900; }
+    .title {
+      margin-top: 2px; background: #e2e8f0; border-radius: 3px; text-align: center;
+      font-size: 17px; font-weight: 900; letter-spacing: 0.5px; padding: 6px;
     }
-
-    /* Letterhead Header */
-    .lh-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 1.5px solid #0f172a;
-      padding-bottom: 6px;
+    .sec-h {
+      margin-top: 3px; background: #0f172a; color: #fff; font-size: 8px; font-weight: 800;
+      padding: 3px 6px; text-transform: uppercase; border-radius: 2px; font-size: 9px;
     }
+    .party-wrap { display: flex; gap: 6px; align-items: stretch; }
+    table.kv { width: 100%; border-collapse: collapse; }
+    table.kv th, table.kv td { border: 1px solid #cbd5e1; padding: 3px 5px; font-size: 10px; vertical-align: top; text-align: start; }
+    table.kv th { width: 38%; background: #f8fafc; font-weight: 800; }
+    table.kv td { font-weight: 700; }
+    .id-photo { height: 24mm; width: 30mm; object-fit: cover; border: 1px solid #cbd5e1; border-radius: 2px; align-self: flex-start; }
 
-    .lh-left {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+    .pm-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border: 1px solid #cbd5e1; padding: 4px 6px; font-size: 10px; font-weight: 700; }
+    .pm { display: inline-flex; align-items: center; gap: 3px; }
+    .box { display: inline-block; width: 10px; height: 10px; border: 1px solid #0f172a; text-align: center; font-size: 9px; line-height: 9px; font-weight: 900; }
+    .pm-meta { display: flex; justify-content: space-between; gap: 6px; font-size: 9.5px; border: 1px solid #cbd5e1; border-top: none; padding: 3px 6px; }
 
-    .lh-logo {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ffffff;
-      font-weight: 900;
-      font-size: 14px;
-    }
+    .amt-row { display: flex; gap: 6px; margin-top: 3px; }
+    .amt-box { border: 2px solid #0f172a; padding: 3px 8px; min-width: 42mm; text-align: center; }
+    .amt-lbl { font-size: 8px; font-weight: 800; text-transform: uppercase; color: #475569; }
+    .amt-val { font-size: 19px; font-weight: 900; }
+    .amt-words { flex: 1; border: 1px solid #cbd5e1; padding: 5px 6px; font-size: 10px; font-style: italic; }
 
-    .lh-company {
-      font-size: 14px;
-      font-weight: 900;
-      color: #0f172a;
-      letter-spacing: 0.5px;
-      line-height: 1;
-    }
+    .remarks { border: 1px solid #cbd5e1; padding: 5px 6px; min-height: 9mm; font-size: 10px; font-weight: 700; }
 
-    .lh-tagline {
-      font-size: 7.5px;
-      font-weight: 700;
-      color: #475569;
-      text-transform: uppercase;
-      margin-top: 1px;
-    }
+    table.legs { width: 100%; border-collapse: collapse; }
+    table.legs th, table.legs td { border: 1px solid #cbd5e1; padding: 3px 4px; font-size: 9px; text-align: start; vertical-align: top; }
+    table.legs th { background: #f8fafc; font-weight: 800; }
+    .side { font-weight: 900; padding: 0 4px; border-radius: 2px; }
+    .side-dr { background: #fecaca; color: #991b1b; }
+    .side-cr { background: #bbf7d0; color: #166534; }
+    .num { text-align: end; font-weight: 700; }
 
-    .lh-contact {
-      font-size: 6.5px;
-      color: #64748b;
-      margin-top: 1px;
-    }
-
-    .lh-right {
-      text-align: right;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 3px;
-    }
-
-    .voucher-badge {
-      background: #0f172a;
-      color: #ffffff;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 9px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .copy-badge {
-      background: #e2e8f0;
-      color: #0f172a;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 7px;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-
-    /* Meta Grid */
-    .meta-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 4px;
-      padding: 4px 8px;
-
-    }
-
-    .meta-item {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .meta-lbl {
-      font-size: 6px;
-      font-weight: 800;
-      color: #64748b;
-      text-transform: uppercase;
-    }
-
-    .meta-val {
-      font-size: 8px;
-      font-weight: 800;
-      color: #0f172a;
-    }
-
-    /* Body Grid */
-    .body-grid {
-      display: grid;
-      grid-template-columns: 1fr 130px;
-      gap: 10px;
-      align-items: stretch;
-    }
-
-    .fields-col {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .field-row {
-      display: flex;
-      align-items: baseline;
-      border-bottom: 1px dashed #cbd5e1;
-      padding-bottom: 2px;
-    }
-
-    .f-lbl {
-      width: 105px;
-      font-size: 7.5px;
-      font-weight: 800;
-      color: #475569;
-      flex-shrink: 0;
-    }
-
-    .f-val {
-      font-size: 8px;
-      font-weight: 800;
-      color: #0f172a;
-      flex-grow: 1;
-    }
-
-    .amount-box {
-      border: 2px solid #059669;
-      border-radius: 6px;
-      background: #ecfdf5;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-
-    .amount-lbl {
-      font-size: 7px;
-      font-weight: 900;
-      color: #047857;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .amount-val {
-      font-size: 16px;
-      font-weight: 900;
-      color: #047857;
-      font-family: monospace;
-      margin-top: 2px;
-    }
-
-    .curr-lbl {
-      font-size: 9px;
-      font-weight: 800;
-    }
-
-    /* Cut Line Divider */
-    .cut-line-divider {
-      height: 12mm;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .cut-dashed {
-      width: 100%;
-      border-bottom: 1.5px dashed #94a3b8;
-    }
-
-    .cut-badge {
-      position: absolute;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      padding: 2px 10px;
-      border-radius: 12px;
-      font-size: 7px;
-      font-weight: 800;
-      color: #64748b;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    /* Signature Strip */
-    .sign-strip {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      border-top: 1px solid #e2e8f0;
-      padding-top: 4px;
-    }
-
-    .sign-col {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-    }
-
-    .sign-line {
-      width: 110px;
-      border-bottom: 1.5px solid #0f172a;
-    }
-
-    .sign-lbl {
-      font-size: 7px;
-      font-weight: 800;
-      color: #475569;
-    }
+    .sigs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4mm; margin-top: auto; padding-top: 8mm; }
+    .sig-line { border-top: 1px solid #0f172a; margin-bottom: 2px; }
+    .sig-lbl { text-align: center; font-size: 8.5px; font-weight: 800; color: #334155; }
+    .ft { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #cbd5e1; padding-top: 4px; font-size: 9px; }
+    .copy-badge { background: #0f172a; color: #fff; font-weight: 900; font-size: 8px; padding: 2px 8px; border-radius: 3px; }
 
     @media print {
-      body { background: #ffffff; }
+      body { background: #fff; }
       .no-print-toolbar { display: none !important; }
       .wrap { padding: 0; }
-      .sheet {
-        width: 100% !important;
-        height: 297mm !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-      }
-      @page { size: A4 portrait; margin: 4mm; }
+      .sheet { width: 100% !important; box-shadow: none; border: none; }
     }
-
-    /* 2026-11 additions: cheque / bank block, accounting DR+CR block, party ID */
-    .cheque-block {
-      border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 6px; margin-top: 4px; background: #f8fafc;
-    }
-    .cheque-header {
-      font-weight: 800; font-size: 8px; letter-spacing: 0.4px; text-transform: uppercase;
-      color: #1e40af; padding-bottom: 2px; margin-bottom: 3px; border-bottom: 1px dotted #cbd5e1;
-    }
-    .cheque-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px 8px; font-size: 7.5px;
-    }
-    .cq-item { display: flex; justify-content: space-between; gap: 4px; }
-    .cq-lbl { color: #64748b; font-weight: 600; }
-    .cq-val { color: #0f172a; font-weight: 700; text-align: end; }
-    .cq-status { padding: 0 4px; border-radius: 3px; font-weight: 800; font-size: 7px; }
-    .cq-issued { background: #fee2e2; color: #991b1b; }
-    .cq-received { background: #d1fae5; color: #065f46; }
-    .cq-cleared { background: #dbeafe; color: #1e40af; }
-    .cq-pending { background: #fef3c7; color: #92400e; }
-
-    .accounting-block {
-      border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 6px; margin-top: 4px; background: #f1f5f9;
-    }
-    .acct-header {
-      font-weight: 800; font-size: 8px; letter-spacing: 0.4px; text-transform: uppercase;
-      color: #0f172a; padding-bottom: 2px; margin-bottom: 3px; border-bottom: 1px dotted #cbd5e1;
-    }
-    .acct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-    .acct-grid-one { grid-template-columns: 1fr; }
-    .acct-col.acct-empty { display: none; }
-    .acct-col {
-      display: flex; gap: 6px; padding: 3px 5px; background: #fff; border: 1px solid #e2e8f0; border-radius: 3px;
-    }
-    .acct-badge {
-      font-weight: 900; font-size: 9px; padding: 1px 6px; border-radius: 3px; min-width: 20px; text-align: center;
-    }
-    .acct-dr .acct-badge { background: #fecaca; color: #991b1b; }
-    .acct-cr .acct-badge { background: #bbf7d0; color: #166534; }
-    .acct-rows { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: 7.5px; }
-    .acct-lbl { color: #64748b; font-weight: 600; }
-    .acct-val { color: #0f172a; font-weight: 700; text-align: end; }
-    .acct-leg {
-      display: grid; grid-template-columns: auto 1fr auto; gap: 4px 6px; padding: 1px 0;
-      border-bottom: 1px dotted #e2e8f0;
-    }
-    .acct-leg:last-child { border-bottom: none; }
-    .acct-leg-code { font-weight: 800; color: #0f172a; font-size: 7px; }
-    .acct-leg-name { color: #0f172a; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .acct-leg-amt { font-weight: 800; font-size: 7.5px; color: #0f172a; font-family: "Outfit", sans-serif; }
-
-    .party-id-block {
-      border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 6px; margin-top: 4px; background: #fffbeb;
-    }
-    .party-id-header {
-      font-weight: 800; font-size: 8px; letter-spacing: 0.4px; text-transform: uppercase;
-      color: #92400e; padding-bottom: 2px; margin-bottom: 3px; border-bottom: 1px dotted #fde68a;
-    }
-    .party-id-content { display: flex; gap: 6px; align-items: center; }
-    .party-id-img {
-      max-height: 28mm; max-width: 44mm; border: 1px solid #cbd5e1; border-radius: 3px; object-fit: contain; background: #fff;
-    }
-    .party-id-no { font-size: 8.5px; font-weight: 800; letter-spacing: 0.3px; color: #0f172a; }
   </style>
 </head>
 <body>
-
   <div class="no-print-toolbar">
     <div>
-      <strong>📄 ${escapeHtml(voucherTitle)} &bull; ${escapeHtml(d.receiptNo || d.voucherNo || "")}</strong> &mdash; 1-Page Official Voucher Sheet
+      <strong>📄 ${escapeHtml(voucherTitle)} &bull; ${escapeHtml(d.receiptNo || d.voucherNo || "")}</strong>
     </div>
     <div>
-      <button class="btn-action btn-primary" onclick="window.print()">🖨️ Print Voucher</button>
-      <button class="btn-action btn-primary" onclick="window.print()">📄 Save PDF</button>
-      <button class="btn-action" onclick="window.close()">❌ Close</button>
+      <button class="btn-action btn-primary" onclick="window.print()">🖨️ ${escapeHtml(tt("rvp.print_voucher", "Print Voucher"))}</button>
+      <button class="btn-action btn-primary" onclick="window.print()">📄 ${escapeHtml(tt("rvp.save_pdf", "Save PDF"))}</button>
+      <button class="btn-action" onclick="window.close()">✖ ${escapeHtml(tt("rvp.close", "Close"))}</button>
     </div>
   </div>
 
   <div class="wrap">
     <div class="sheet">
-      <!-- TOP HALF: OFFICE COPY -->
-      ${renderReceiptHalf("OFFICE COPY")}
-
-      <!-- CUT LINE DIVIDER -->
-      <div class="cut-line-divider">
-        <div class="cut-dashed"></div>
-        <div class="cut-badge">✂️ TEAR / CUT HERE (OFFICE COPY / CUSTOMER COPY)</div>
-      </div>
-
-      <!-- BOTTOM HALF: CUSTOMER COPY -->
-      ${renderReceiptHalf("CUSTOMER COPY")}
+      ${copy("rvp.company_copy", "Company Copy")}
+      <div class="cut"><span>✂ ${escapeHtml(tt("rvp.cut_here", "Cut here"))}</span></div>
+      ${copy("rvp.customer_copy", "Customer Copy")}
     </div>
   </div>
-
 </body>
 </html>`;
 

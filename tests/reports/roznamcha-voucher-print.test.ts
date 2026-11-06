@@ -2,31 +2,29 @@ import { describe, expect, it } from "vitest";
 import { buildRoznamchaVoucherHtml, type RoznamchaVoucherData } from "@/lib/reports/open-roznamcha-voucher-print-report";
 
 /**
- * The Roznamcha print template is read-only: it only DISPLAYS the entry it is given.
- * These tests pin that behaviour - every DR / CR leg of the entry is printed exactly as the entry carries it,
- * optional cheque / bank / party-ID blocks appear only when their data exists, and free text is escaped.
+ * The Roznamcha voucher is read-only: it DISPLAYS the entry it is given, copy for the company and the customer,
+ * on one A4 landscape sheet. Every DR / CR leg of the entry is printed exactly as stored; optional values are
+ * shown only when the entry carries them ("—" otherwise); free text is escaped.
  */
 
 const base: RoznamchaVoucherData = {
-  receiptNo: "BNK-00000370",
-  date: "2026-10-31",
-  accountNo: "1001",
-  accountName: "Cash in Hand",
+  receiptNo: "CP-000569",
+  date: "2026-10-15",
+  accountNo: "9101",
+  accountName: "Import Duty Deposit",
+  paidBy: "Al Noor Trading FZE",
   amount: 1000,
   currency: "AED",
-  narration: "Test narration",
+  narration: "Purchase Invoice – PI-3087",
   type: "payment",
 };
 
 const leg = (code: string, name: string, amount: number) => ({ code, name, amount, narration: null });
 
-describe("Roznamcha print template - each entry prints its own DR / CR legs", () => {
+describe("Roznamcha voucher - each entry prints its own DR / CR legs", () => {
   it("1 DR vs 10 CR: every CR leg and the single DR leg are printed", () => {
     const crLines = Array.from({ length: 10 }, (_, i) => leg(`CR-${i + 1}`, `Customer ${i + 1}`, 100 * (i + 1)));
-    const html = buildRoznamchaVoucherHtml({
-      data: { ...base, amount: 5500, drLines: [leg("DR-1", "Bank Main", 5500)], crLines },
-      lang: "en",
-    });
+    const html = buildRoznamchaVoucherHtml({ data: { ...base, amount: 5500, drLines: [leg("DR-1", "Bank Main", 5500)], crLines }, lang: "en" });
     expect(html).toContain("DR-1");
     expect(html).toContain("Bank Main");
     for (let i = 1; i <= 10; i++) {
@@ -37,10 +35,7 @@ describe("Roznamcha print template - each entry prints its own DR / CR legs", ()
 
   it("1 CR vs 3 DR: every DR leg is printed and the CR leg too", () => {
     const drLines = [leg("DR-A", "Expense A", 300), leg("DR-B", "Expense B", 200), leg("DR-C", "Expense C", 500)];
-    const html = buildRoznamchaVoucherHtml({
-      data: { ...base, amount: 1000, drLines, crLines: [leg("CR-X", "Cash Account", 1000)] },
-      lang: "en",
-    });
+    const html = buildRoznamchaVoucherHtml({ data: { ...base, amount: 1000, drLines, crLines: [leg("CR-X", "Cash Account", 1000)] }, lang: "en" });
     for (const code of ["DR-A", "DR-B", "DR-C", "CR-X"]) expect(html).toContain(code);
   });
 
@@ -54,68 +49,70 @@ describe("Roznamcha print template - each entry prints its own DR / CR legs", ()
   });
 });
 
-describe("Roznamcha print template - optional blocks appear only with real data", () => {
-  it("prints no cheque / accounting / party-ID blocks for a plain cash entry", () => {
+describe("Roznamcha voucher - optional values appear only when the entry carries them", () => {
+  it("a plain cash entry shows dashes, not invented cheque, bank or ID values", () => {
     const html = buildRoznamchaVoucherHtml({ data: base, lang: "en" });
-    expect(html).not.toContain('class="cheque-block"');
-    expect(html).not.toContain('class="accounting-block"');
-    expect(html).not.toContain('class="party-id-block"');
-    expect(html).not.toContain("Cheque No.");
+    expect(html).not.toContain('class="id-photo"');
+    expect(html).not.toContain("000201");
+    // the party's contact and trade licence are not on this entry, so they print as a dash
+    expect(html).toContain("Contact / WhatsApp");
+    expect(html).toContain("<td>—</td>");
   });
 
-  it("prints the cheque block with cheque number, date, bank and branch when present", () => {
+  it("prints the cheque number, bank and branch when the entry carries them", () => {
     const html = buildRoznamchaVoucherHtml({
-      data: {
-        ...base,
-        chequeNo: "000201",
-        chequeDate: "2026-10-15",
-        bankName: "Emirates NBD",
-        bankBranchName: "Deira",
-        chequeStatus: "received",
-      },
+      data: { ...base, chequeNo: "000201", chequeDate: "2026-10-15", bankName: "Emirates NBD", bankBranchName: "Deira", paymentMethodName: "Cheque" },
       lang: "en",
     });
-    expect(html).toContain('class="cheque-block"');
     expect(html).toContain("000201");
     expect(html).toContain("Emirates NBD");
     expect(html).toContain("Deira");
-    expect(html).toContain("RECEIVED");
   });
 
-  it("prints the party ID image and number only when they are supplied", () => {
+  it("prints the party ID number, and the photo only when one is supplied", () => {
     const withId = buildRoznamchaVoucherHtml({
       data: { ...base, partyIdLabel: "Emirates ID", partyIdNumber: "784-1990-1234567-8", partyIdImageUrl: "https://files.example.test/id.png" },
       lang: "en",
     });
-    expect(withId).toContain('class="party-id-block"');
     expect(withId).toContain("784-1990-1234567-8");
     expect(withId).toContain('src="https://files.example.test/id.png"');
+    expect(withId).toContain('class="id-photo"');
 
-    // assert on the rendered element, not the class name (the stylesheet always declares .party-id-img)
     const withoutId = buildRoznamchaVoucherHtml({ data: base, lang: "en" });
-    expect(withoutId).not.toContain('alt="Party ID"');
+    expect(withoutId).not.toContain('class="id-photo"');
+  });
+
+  it("ticks the payment method only from the entry's own method", () => {
+    const tickCount = (html: string) => html.split('class="box">✓').length - 1;
+    expect(tickCount(buildRoznamchaVoucherHtml({ data: { ...base, paymentMethodName: "Cash" }, lang: "en" }))).toBe(2);
+    expect(tickCount(buildRoznamchaVoucherHtml({ data: { ...base, paymentMethodName: "Cheque" }, lang: "en" }))).toBe(2);
+    expect(tickCount(buildRoznamchaVoucherHtml({ data: base, lang: "en" }))).toBe(0);
   });
 });
 
-describe("Roznamcha print template - safety and layout", () => {
+describe("Roznamcha voucher - layout and safety", () => {
   it("escapes free-text fields so a narration cannot inject markup", () => {
-    const html = buildRoznamchaVoucherHtml({
-      data: { ...base, narration: '<img src=x onerror="alert(1)">' },
-      lang: "en",
-    });
+    const html = buildRoznamchaVoucherHtml({ data: { ...base, narration: '<img src=x onerror="alert(1)">' }, lang: "en" });
     expect(html).not.toContain('<img src=x onerror="alert(1)">');
     expect(html).toContain("&lt;img");
   });
 
-  it("prints both the office copy and the customer copy on one A4 sheet", () => {
+  it("prints the company copy and the customer copy side by side on one A4 landscape sheet", () => {
     const html = buildRoznamchaVoucherHtml({ data: base, lang: "en" });
-    expect(html).toContain("OFFICE COPY");
-    expect(html).toContain("CUSTOMER COPY");
-    expect(html).toContain("size: A4 portrait");
+    expect(html).toContain("Company Copy");
+    expect(html).toContain("Customer Copy");
+    expect(html).toContain("size: A4 landscape");
+    expect((html.match(/<section class="copy">/g) || []).length).toBe(2);
   });
 
-  it("sets right-to-left direction for ur / ar / fa / ps", () => {
+  it("sets right-to-left direction for ur / ar / fa / ps and left-to-right for en", () => {
     expect(buildRoznamchaVoucherHtml({ data: base, lang: "ur" })).toContain('dir="rtl"');
     expect(buildRoznamchaVoucherHtml({ data: base, lang: "en" })).toContain('dir="ltr"');
+  });
+
+  it("prints the amount in words and the remarks", () => {
+    const html = buildRoznamchaVoucherHtml({ data: base, lang: "en" });
+    expect(html).toContain("Purchase Invoice – PI-3087");
+    expect(html).toContain("One Thousand");
   });
 });

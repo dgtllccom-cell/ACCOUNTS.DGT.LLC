@@ -1766,6 +1766,8 @@ function SuperAdminRoznamchaReportViewContent({
           bankName: entry.bank_name || entry.bank?.name || null,
           bankBranchName: entry.bank_branch_name || entry.bank?.branch_name || null,
           referenceNo: entry.reference_no || null,
+          // the entry's own payment method ticks its box on the voucher; nothing is guessed when it is absent
+          paymentMethodName: entry.payment_methods?.name || entry.payment_method || null,
           chequeStatus: isCheque ? (targetRow.debit > 0 ? "issued" : "received") : null,
         },
         companyInfo: {

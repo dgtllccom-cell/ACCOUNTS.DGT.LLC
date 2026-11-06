@@ -2,9 +2,8 @@ import { describe, expect, it } from "vitest";
 import { buildRoznamchaVoucherHtml, type RoznamchaVoucherData } from "@/lib/reports/open-roznamcha-voucher-print-report";
 
 /**
- * A Roznamcha cash entry is one-sided: a CR payment or a DR receipt. Its voucher prints only the side it
- * has; the empty side is hidden, never drawn as a blank counter-leg. A purchase / sales / expense posting
- * is stored with both legs and prints both.
+ * A Roznamcha cash entry is one-sided: a CR payment or a DR receipt. Its voucher lists only the leg it has, on
+ * both copies. A purchase / sales / expense posting is stored with both legs and lists both.
  */
 const base: RoznamchaVoucherData = {
   receiptNo: "V-20261012-4KWB",
@@ -17,29 +16,28 @@ const base: RoznamchaVoucherData = {
   type: "payment",
 };
 
+const legRowsOf = (html: string, side: "DR" | "CR") => (html.match(new RegExp(`<tr data-side="${side}">`, "g")) || []).length;
+
 describe("Roznamcha voucher - one side or both, exactly as stored", () => {
-  it("a one-sided CR cash entry hides the DR side", () => {
+  it("a one-sided CR cash entry lists the CR leg only, on both copies", () => {
     const html = buildRoznamchaVoucherHtml({
       data: { ...base, crLines: [{ code: "UAE-DUB-AC-0002", name: "Cash", amount: 1200000, narration: null }] },
       lang: "en",
     });
-    expect(html).toContain('class="acct-col acct-dr acct-empty"');
-    expect(html).not.toContain('class="acct-col acct-cr acct-empty"');
-    expect(html).toContain('class="accounting-block"');
-    expect(html).toContain('class="acct-grid acct-grid-one"');
+    expect(legRowsOf(html, "CR")).toBe(2);
+    expect(legRowsOf(html, "DR")).toBe(0);
   });
 
-  it("a one-sided DR cash entry hides the CR side", () => {
+  it("a one-sided DR cash entry lists the DR leg only, on both copies", () => {
     const html = buildRoznamchaVoucherHtml({
       data: { ...base, type: "receipt", drLines: [{ code: "9101", name: "Cash in Hand", amount: 100, narration: null }] },
       lang: "en",
     });
-    expect(html).toContain('class="acct-col acct-cr acct-empty"');
-    expect(html).not.toContain('class="acct-col acct-dr acct-empty"');
-    expect(html).toContain('class="acct-grid acct-grid-one"');
+    expect(legRowsOf(html, "DR")).toBe(2);
+    expect(legRowsOf(html, "CR")).toBe(0);
   });
 
-  it("a two-leg posting prints both sides with no hidden column", () => {
+  it("a two-leg posting lists both sides", () => {
     const html = buildRoznamchaVoucherHtml({
       data: {
         ...base,
@@ -48,19 +46,16 @@ describe("Roznamcha voucher - one side or both, exactly as stored", () => {
       },
       lang: "en",
     });
-    expect(html).toContain('class="acct-col acct-dr"');
-    expect(html).toContain('class="acct-col acct-cr"');
-    expect(html).not.toContain("acct-empty\"");
-    expect(html).toContain('class="acct-grid"');
+    expect(legRowsOf(html, "DR")).toBe(2);
+    expect(legRowsOf(html, "CR")).toBe(2);
   });
 
-  it("legacy single DR/CR fields still print their side", () => {
+  it("legacy single DR / CR fields still list their side", () => {
     const html = buildRoznamchaVoucherHtml({
       data: { ...base, drAccountCode: "DR-9", drAccountName: "Legacy Debit", crAccountCode: "CR-9", crAccountName: "Legacy Credit" },
       lang: "en",
     });
     expect(html).toContain("Legacy Debit");
     expect(html).toContain("Legacy Credit");
-    expect(html).not.toContain('class="acct-col acct-dr acct-empty"');
   });
 });
