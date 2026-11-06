@@ -83,6 +83,9 @@ export const PS_TRANSFER_DESTINATIONS = [
 ] as const;
 
 export const TRANSFER_TYPES = PS_TRANSFER_DESTINATIONS;
+
+export const defaultLaneTransferDestination = (sourceType: string): TransferType =>
+  sourceType === "sales_booking" || sourceType === "local_sales" ? "general_sales_expenses" : "remaining_payment";
 export type TransferType = (typeof TRANSFER_TYPES)[number];
 
 export const MODULE_DESTINATIONS = [

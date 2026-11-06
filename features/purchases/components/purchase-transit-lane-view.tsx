@@ -50,6 +50,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import {
   destinationRoute,
+  defaultLaneTransferDestination,
   isModuleDestination,
   LANE_STATUSES,
   LANE_STATUS_LABEL,
@@ -774,9 +775,7 @@ function CenterTransferConfirmationModal({
 }) {
   const ids = useMemo(() => loads.map((l) => l.id), [loads]);
   const primarySource = loads[0]?.source_type || "purchase_booking";
-  const defaultDest: TransferType = primarySource.startsWith("sales")
-    ? "general_sales_expenses"
-    : "remaining_payment";
+  const defaultDest = defaultLaneTransferDestination(primarySource);
 
   const [type, setType] = useState<TransferType>(defaultDest);
   const [afterView, setAfterView] = useState("destination");
