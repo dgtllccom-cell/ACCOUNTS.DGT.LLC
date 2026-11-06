@@ -1394,6 +1394,19 @@ export function CashEntryForm({
   const normalizedCurrency = currency.trim().toUpperCase();
 
   useEffect(() => {
+    const refresh = () => { void fetchDailyRate(); };
+    const visible = () => { if (document.visibilityState === "visible") refresh(); };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", visible);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", visible);
+    };
+    // Refresh the approved rate after returning from the existing Daily Exchange Rate page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countryId, countryBranchId, entryDate]);
+
+  useEffect(() => {
     if (normalizedCurrency === "USD") {
       setExchangeRate("1");
       return;

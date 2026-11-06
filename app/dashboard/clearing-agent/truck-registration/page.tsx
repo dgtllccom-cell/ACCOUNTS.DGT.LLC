@@ -5,6 +5,8 @@ import { TruckRecreationWizard } from "@/features/clearing-agent/components/truc
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeJoinedNames } from "@/lib/i18n/localize-records";
+import { authorizeApiScope, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
+import { isTruckTrial } from "@/lib/permissions/truck-trial";
 
 export const metadata: Metadata = {
   title: "Clearing Truck Registration — Clearing Agent ERP",
@@ -13,6 +15,7 @@ export const metadata: Metadata = {
 
 export default async function TruckRegistrationPage() {
   const session = await requireErpSession();
+  authorizeApiScope(session, { resource: "shipping_records", action: "read" });
   const cookieStore = await cookies();
   const lang = (cookieStore.get("erp_lang")?.value ?? session.preferredLanguage ?? "en") as SupportedLanguage;
 
@@ -60,6 +63,7 @@ export default async function TruckRegistrationPage() {
         left join public.country_branches crb on crb.id = t.country_branch_id
         left join public.countries country on country.id = t.country_id
         where t.deleted_at is null
+          and (${isTruckTrial(session) ? sqlScopeCondition(sql, sessionSqlScope(session), "t") : sql`true`})
         order by t.created_at desc
         limit 500
       `;
@@ -84,6 +88,7 @@ export default async function TruckRegistrationPage() {
       <div className="mx-auto w-full max-w-[1850px]">
         <TruckRecreationWizard
           initialTrucks={initialTrucks}
+          trialUser={isTruckTrial(session)}
           lang={lang}
           userName={session.fullName || session.email || null}
           isSuperAdmin={isSuperAdmin}

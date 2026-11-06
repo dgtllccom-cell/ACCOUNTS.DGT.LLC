@@ -50,13 +50,19 @@ export function CustomerForm({
   initialCustomerId,
   mode = "standalone",
   onSave,
-  onClose
+  onClose,
+  initialCustomerType,
+  initialName,
+  initialCountryId,
 }: {
   lang: SupportedLanguage;
   initialCustomerId?: string;
   mode?: "standalone" | "embedded";
   onSave?: (customerId: string) => void;
   onClose?: () => void;
+  initialCustomerType?: "Truck Owner / Transporter" | "Truck Driver";
+  initialName?: string;
+  initialCountryId?: string | null;
 }) {
   const router = useRouter();
   // The server-rendered `lang` prop is only correct at the moment of the initial page
@@ -83,15 +89,15 @@ export function CustomerForm({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Form states
-  const [customerType, setCustomerType] = useState("Country Owner / Main Head");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [customerType, setCustomerType] = useState(initialCustomerType || "Country Owner / Main Head");
+  const [firstName, setFirstName] = useState(initialName?.trim().split(/\s+/)[0] || "");
+  const [lastName, setLastName] = useState(initialName?.trim().split(/\s+/).slice(1).join(" ") || "");
   const [fatherName, setFatherName] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [passportPicture, setPassportPicture] = useState("");
 
   const [location, setLocation] = useState<LocationHierarchyValue>({
-    countryId: "",
+    countryId: initialCountryId || "",
     stateProvinceId: "",
     districtId: "",
     cityId: "",
@@ -599,6 +605,7 @@ export function CustomerForm({
                   </Label>
                   <select
                     value={customerType}
+                    disabled={Boolean(initialCustomerType)}
                     onChange={(e) => {
                       setCustomerType(e.target.value);
                       if (e.target.value !== "Corporate / Business Company") setBusinessName("");

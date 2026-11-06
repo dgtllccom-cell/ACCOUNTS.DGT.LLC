@@ -565,6 +565,7 @@ export function TruckRecreationWizard({
   isBranchUser = false,
   userCountryIds = [],
   userBranchIds = [],
+  trialUser = false,
 }: {
   initialTrucks?: TruckRow[];
   lang?: SupportedLanguage;
@@ -574,6 +575,7 @@ export function TruckRecreationWizard({
   isBranchUser?: boolean;
   userCountryIds?: string[];
   userBranchIds?: string[];
+  trialUser?: boolean;
 }) {
   const globalLang = useActiveLanguage(initialLang);
   const activeLang = (globalLang || initialLang) as SupportedLanguage;
@@ -1184,6 +1186,7 @@ export function TruckRecreationWizard({
   }
 
   function startEdit(row: TruckRow) {
+    if (trialUser) return;
     setEditingId(row.id);
     setActiveStep(1);
     setForm(formFromRow(row));
@@ -1210,7 +1213,7 @@ export function TruckRecreationWizard({
           setForm({ ...EMPTY_FORM, ...d.form });
           if (Array.isArray(d.contacts) && d.contacts.length) setContacts(d.contacts);
           setActiveStep(Number(d.activeStep) >= 1 && Number(d.activeStep) <= 5 ? Number(d.activeStep) : 1);
-          setEditingId(d.editingId || null);
+          setEditingId(trialUser ? null : d.editingId || null);
           setView("form");
         }
       }
@@ -1241,6 +1244,7 @@ export function TruckRecreationWizard({
   }
 
   async function handleDelete(id: string) {
+    if (trialUser) return;
     if (!window.confirm(tt("common.delete", "Delete") + "?")) return;
     try {
       const res = await fetch(`/api/erp/master-data/trucks/${id}`, { method: "DELETE" });
@@ -2775,8 +2779,8 @@ export function TruckRecreationWizard({
                         <td className="py-3.5 px-3 text-end">
                           <UnifiedActionMenu
                             onView={() => runRowReport(row, "view")}
-                            onEdit={() => startEdit(row)}
-                            onDelete={() => handleDelete(row.id)}
+                            onEdit={trialUser ? undefined : () => startEdit(row)}
+                            onDelete={trialUser ? undefined : () => handleDelete(row.id)}
                             onPrint={() => runRowReport(row, "print")}
                             onExportPdf={() => runRowReport(row, "pdf")}
                           />
@@ -2996,6 +3000,9 @@ export function TruckRecreationWizard({
                     <PersonPicker
                       label={(TRK_TEXT.truckOwnerNameLabel?.[activeLang] as string) || "Truck Owner Name *"}
                       value={form.ownerId}
+                      personRole="Truck Owner / Transporter"
+                      allowEdit={!trialUser}
+                      countryId={userCountryIds[0]}
                       onValueChange={(id) => setForm((p) => ({ ...p, ownerId: id, hasOwner: id ? "yes" : "no" }))}
                       placeholder={(TRK_TEXT.searchOwnerPlaceholder?.[activeLang] as string) || "Search truck owner..."}
                       lang={activeLang}
@@ -3368,6 +3375,9 @@ export function TruckRecreationWizard({
                     <div>
                       <PersonPicker
                         label={tt("trk.transporter_name_label", "Transporter Name") + " (Optional)"}
+                        personRole="Truck Owner / Transporter"
+                        allowEdit={!trialUser}
+                        countryId={userCountryIds[0]}
                         value={form.transporterId}
                         onValueChange={(id) => setForm((p) => ({ ...p, transporterId: id }))}
                         placeholder={tt("trk.search_transporter_ph", "Search transporter person...")}
@@ -3447,6 +3457,8 @@ export function TruckRecreationWizard({
                           <div>
                             <CompanyPicker
                               label={(form.companyType === "shippingLine" ? tt("trk.w_shipping_line_company", "Shipping Line Company") : tt("trk.w_transporter_company", "Transporter Company")) + " *"}
+                              transportContext
+                              allowEdit={!trialUser}
                               value={form.companyId}
                               onValueChange={(id) => setForm((p) => ({ ...p, companyId: id }))}
                               placeholder={tt("trk.search_company_ph", "Search company...")}
@@ -3597,6 +3609,9 @@ export function TruckRecreationWizard({
                             <PersonPicker
                               label={tt("trk.driver_name_label", "Driver Name *")}
                               value={form.driverId}
+                              personRole="Truck Driver"
+                              allowEdit={!trialUser}
+                              countryId={userCountryIds[0]}
                               onValueChange={(id) => setForm((p) => ({ ...p, driverId: id }))}
                               placeholder={tt("trk.search_driver_ph", "Search driver...")}
                               lang={activeLang}

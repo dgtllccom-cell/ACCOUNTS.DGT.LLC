@@ -113,6 +113,8 @@ export function DailyExchangeRateManager() {
   const [rateTime, setRateTime] = useState<string>(currentTimeString());
   const [creditPrice, setCreditPrice] = useState<string>("");
   const [debitPrice, setDebitPrice] = useState<string>("");
+  const [correctionReason, setCorrectionReason] = useState("");
+  const existingSelectedRate = rates.find((r) => r.country_id === selectedCountryId && r.rate_date === rateDate && !r.superseded_at);
   const [operatorUser, setOperatorUser] = useState<string>("");
   const [operatorBranch, setOperatorBranch] = useState<string>("");
 
@@ -191,7 +193,9 @@ export function DailyExchangeRateManager() {
               iso2: null
             }]
           : [];
-      setCountries(cleanCountries.length > 0 ? cleanCountries : fallbackCountry);
+      const visibleCountries = cleanCountries.length > 0 ? cleanCountries : fallbackCountry;
+      const allowedCountries = sessionRes?.scopes?.countryIds ?? [];
+      setCountries(sessionRes?.scopes?.isSuperAdmin ? visibleCountries : visibleCountries.filter((country) => allowedCountries.includes(country.id)));
       setSessionInfo(sessionRes);
 
       if (!operatorUser) {
@@ -248,13 +252,11 @@ export function DailyExchangeRateManager() {
 
   useEffect(() => {
     if (!selectedCountryId || !selectedCountry) return;
-    const existingRate = rates.find(r => r.country_id === selectedCountryId);
+    const existingRate = rates.find(r => r.country_id === selectedCountryId && r.rate_date === rateDate && !r.superseded_at);
     if (existingRate) {
       setCreditPrice(String(existingRate.credit_rate || existingRate.selling_rate));
       setDebitPrice(String(existingRate.debit_rate || existingRate.buying_rate));
-      if (existingRate.rate_date) setRateDate(existingRate.rate_date);
       if (existingRate.rate_time) setRateTime(existingRate.rate_time);
-      if (existingRate.user_name) setOperatorUser(existingRate.user_name);
       if (existingRate.branch_name) setOperatorBranch(existingRate.branch_name);
     } else {
       // No rate on file yet for this scope — the operator enters the real rate.
@@ -263,7 +265,7 @@ export function DailyExchangeRateManager() {
       setDebitPrice("");
       setRateTime(currentTimeString());
     }
-  }, [rates, selectedCountry, selectedCountryId]);
+  }, [rates, selectedCountry, selectedCountryId, rateDate]);
 
   async function handleSaveRate(e: React.FormEvent) {
     e.preventDefault();
@@ -287,41 +289,14 @@ export function DailyExchangeRateManager() {
     setSaving(true);
     setMessage(null);
 
-    const newRateEntry: CountryRate = {
-      id: `rate-${Date.now()}`,
-      country_id: selectedCountryId,
-      user_name: operatorUser || sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP USER",
-      branch_name: operatorBranch || sessionInfo?.scopes?.summary?.branchDisplayName || "",
-      rate_date: rateDate || isoToday(),
-      rate_time: rateTime || currentTimeString(),
-      buying_rate: debit,
-      selling_rate: credit,
-      credit_rate: credit,
-      debit_rate: debit,
-      updated_at: new Date().toISOString(),
-      countries: {
-        name: selectedCountry.name,
-        currency_code: selectedCountry.currency_code,
-        iso2: selectedCountry.iso2
-      }
-    };
-
-    // 1. Immediately show the new rate. Rates are APPENDED — an earlier same-day rate is
-    //    kept in the register (historical transactions were posted against it).
-    setRates(prev => [newRateEntry, ...prev]);
-    
-    // Clear search filters so nothing hides the new record
-    setFilterCountryId("all");
-    setFilterBranch("all");
-    setDateFrom("");
-    setDateTo("");
-    setSearchQuery("");
-
     try {
       await apiPost("/api/erp/currency/daily-rates", {
         countryId: selectedCountryId,
         rateDate: rateDate || isoToday(),
         rateTime: rateTime || currentTimeString(),
+        timeZoneOffsetMinutes: new Date(`${rateDate || isoToday()}T12:00:00`).getTimezoneOffset(),
+        action: existingSelectedRate ? "correct" : "create",
+        reason: existingSelectedRate ? correctionReason.trim() : undefined,
         buyingRate: debit,
         sellingRate: credit,
         creditRate: credit,
@@ -338,6 +313,7 @@ export function DailyExchangeRateManager() {
         text: `Exchange Rate Saved & Accepted! (${selectedCountry.name}: Credit ${credit} ${selectedCountry.currency_code}/$ | Debit ${debit} ${selectedCountry.currency_code}/$ by ${operatorUser || "User"})`
       });
 
+      setCorrectionReason("");
       await loadData();
     } catch (err: any) {
       setMessage({ type: "error", text: err?.message || "Failed to save exchange rate." });
@@ -352,7 +328,6 @@ export function DailyExchangeRateManager() {
     setDebitPrice(String(rate.debit_rate || rate.buying_rate));
     if (rate.rate_date) setRateDate(rate.rate_date);
     if (rate.rate_time) setRateTime(rate.rate_time);
-    if (rate.user_name) setOperatorUser(rate.user_name);
     if (rate.branch_name) setOperatorBranch(rate.branch_name);
   }
 
@@ -623,6 +598,12 @@ export function DailyExchangeRateManager() {
               )}
             </div>
 
+            {existingSelectedRate && (
+              <label className="block space-y-1 text-xs">
+                <span>{t(lang, "common.reason", "Reason")}</span>
+                <Input required value={correctionReason} onChange={(event) => setCorrectionReason(event.target.value)} />
+              </label>
+            )}
             {/* Save Button */}
             <Button
               type="submit"

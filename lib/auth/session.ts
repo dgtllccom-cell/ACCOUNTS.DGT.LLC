@@ -10,6 +10,8 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { readTempSession } from "@/lib/auth/temp-session";
 import { type MobileProfile, normalizeMobileProfile } from "@/lib/permissions/mobile-profiles";
+import { capTruckTrialPermissions, isTruckTrial, truckTrialAllowsApi, TRUCK_TRIAL_MARKER } from "@/lib/permissions/truck-trial";
+import { ErpPermissionError } from "@/lib/permissions/middleware";
 
 export { storedRoleScopeLevel };
 export type LedgerVisibility = "scoped" | "shipping_only" | "full";
@@ -598,6 +600,7 @@ async function resolveErpSessionFromDb(
     permissions = explicit && Array.isArray(explicit) ? explicit.filter((p) => typeof p === "string" && p.length > 0) : [];
   } catch { permissions = []; }
   const usedExplicitPermissionSet = permissions.length > 0;
+  const restrictedTruckTrial = permissions.includes(TRUCK_TRIAL_MARKER);
   if (!permissions.length) {
     permissions = [...new Set([...roleTemplatePermissions(roles, assignments), ...fieldLevelTokens])];
   }
@@ -671,6 +674,7 @@ async function resolveErpSessionFromDb(
   }
   // operations / shipping-line logins: financial resources and wildcards never survive (last step, after branch rules)
   permissions = capPermissionsForRoles(roles, permissions);
+  permissions = capTruckTrialPermissions(restrictedTruckTrial ? [...permissions, TRUCK_TRIAL_MARKER] : permissions, isSuperAdmin);
 
   return {
     userId: identity.userId,
@@ -702,6 +706,21 @@ async function resolveErpSessionFromDb(
 export async function getCurrentErpSession(): Promise<ErpSession | null> {
   const session = await getCurrentErpSessionUnchecked();
   if (!session) return session;
+  const signedSession = await readTempSession();
+  if (signedSession?.truckTrial && !session.isSuperAdmin) {
+    session.permissions = capTruckTrialPermissions([...session.permissions, TRUCK_TRIAL_MARKER], false);
+    session.canViewFinancials = false;
+  }
+  if (isTruckTrial(session)) {
+    if (session.isGlobalScope || session.countryIds.length !== 1 || session.countryBranchIds.length !== 1 || session.cityBranchIds.length !== 1) {
+      throw new ErpPermissionError("Truck Registration trial access requires one assigned country and city branch.");
+    }
+    const requestHeaders = await (await import("next/headers")).headers();
+    const path = requestHeaders.get("x-erp-pathname") || "";
+    if (path.startsWith("/api/") && !truckTrialAllowsApi(path, requestHeaders.get("x-erp-method") || "GET")) {
+      throw new ErpPermissionError("This endpoint is outside Truck Registration trial access.");
+    }
+  }
   let channel: import("@/lib/mobile/app-channel").AppChannel | null = null;
   let token: string | undefined;
   try {
@@ -765,6 +784,8 @@ async function getCurrentErpSessionUnchecked(): Promise<ErpSession | null> {
           }
         }
       }
+
+      if (temp.truckTrial && !isBootstrap) return null; // A restricted trial never falls back to wider role defaults.
 
       // Fallback (bootstrap super admin, a synthetic dev-session identity, or
       // no service-role key in local dev): trust the signed, non-forgeable
@@ -853,7 +874,7 @@ async function getCurrentErpSessionUnchecked(): Promise<ErpSession | null> {
         fullName: temp.fullName ?? null,
         preferredLanguage: temp.preferredLanguage,
         roles: temp.roles,
-        permissions: isSuperAdmin && !perms.includes("*:*") ? ["*:*", ...perms] : capPermissionsForRoles(temp.roles, perms),
+        permissions: isSuperAdmin && !perms.includes("*:*") ? ["*:*", ...perms] : capTruckTrialPermissions(capPermissionsForRoles(temp.roles, perms), isSuperAdmin),
         assignments: tempAssignments,
         countryIds: resolvedScopes.countryIds,
         countryBranchIds: resolvedScopes.countryBranchIds,

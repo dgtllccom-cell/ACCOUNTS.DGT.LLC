@@ -13,6 +13,7 @@
  *    pages (their data is still protected by the API permission + scope checks).
  */
 import { NON_FINANCIAL_ROLES } from "@/lib/permissions/enterprise-roles";
+import { isTruckTrial, truckTrialAllowsPath } from "@/lib/permissions/truck-trial";
 
 const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard": ["dashboard:read", "route:/dashboard"],
@@ -372,7 +373,9 @@ export function isDefaultDenyLogin(roles: readonly string[] | null | undefined):
 export function evaluateRouteAccess(input: RouteAccessInput): RouteDecision {
   const path = input.pathname.split("?")[0].replace(/\/+$/, "") || "/dashboard";
   const permSet = new Set<string>([...(input.permissions ?? []), ...(input.roles ?? [])]);
-  if (permSet.has("*:*") || permSet.has("super_admin")) return { allowed: true, reason: "super" };
+  if (permSet.has("super_admin")) return { allowed: true, reason: "super" };
+  if (isTruckTrial(input) && !truckTrialAllowsPath(path)) return { allowed: false, reason: "no_permission" };
+  if (permSet.has("*:*") && !isTruckTrial(input)) return { allowed: true, reason: "super" };
 
   // Pages whose only authority is Super Admin cannot be opened by a saved route
   // token on a lower role. Keep this in the shared policy, not a client blacklist.
