@@ -27,7 +27,7 @@ export async function assertRoznamchaCityBranch(session: ErpSession, cityBranchI
   if (!branch) throw new ApiClientError("The selected branch is unavailable.", { status: 403 });
 
   const domains = session.operationalDomains ?? ["business"];
-  const allowed = (domain: string) => session.isSuperAdmin || domains.includes("both") || domains.includes(domain);
+  const allowed = (domain: "business" | "shipping") => session.isSuperAdmin || domains.includes("both") || domains.includes(domain);
   if (branch.operational_domain === "shipping" && allowed("shipping")) return;
   if (branch.is_business_branch !== false && branch.operational_domain !== "shipping" && allowed("business")) return;
   throw new ApiClientError("The selected branch is outside your accounting domain.", { status: 403, code: "BRANCH_DOMAIN_FORBIDDEN" });
