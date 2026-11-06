@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -50,6 +51,7 @@ export async function GET(request: NextRequest) {
       .split(",")
       .map((m) => m.trim())
       .filter((m): m is (typeof MODULES)[number] => MODULES.includes(m as any));
+    const sourceId = sp.get("sourceId") ? z.string().uuid().parse(sp.get("sourceId")) : null;
     const statusFilter = sp.get("status") && sp.get("status") !== "all" ? sp.get("status") : null;
     const eligibility = sp.get("eligibility") || "active";
     const q = (sp.get("q") || "").trim();
@@ -60,6 +62,7 @@ export async function GET(request: NextRequest) {
         select
           be.id, be.source_module, be.source_id, be.source_table,
           be.bill_no, be.manual_bill_no, be.bill_date, be.transaction_date,
+          case when be.source_table = 'purchase_orders' then (select count(*)::int from public.purchase_loading_records lr where lr.purchase_order_id=be.source_id and lr.deleted_at is null and lr.loading_status <> 'cancelled' and lr.country_id is not distinct from be.country_id and (be.city_branch_id is null or lr.city_branch_id=be.city_branch_id)) else 0 end as loading_count,
           be.country_id, be.country_branch_id, be.city_branch_id,
           be.party_account_no, be.party_name, be.party_company_id,
           be.currency, be.original_bill_amount, be.expense_total, be.expense_count,
@@ -75,6 +78,7 @@ export async function GET(request: NextRequest) {
         where be.deleted_at is null
           and be.source_module = any(${domainModules})
           ${eligibility === "all" ? sql`` : sql`and be.eligibility = ${eligibility}`}
+          ${sourceId ? sql`and be.source_table='purchase_orders' and be.source_id=${sourceId}::uuid` : sql``}
           ${moduleFilter ? sql`and be.source_module = ${moduleFilter}` : sql``}
           ${modulesSet.length ? sql`and be.source_module = any(${modulesSet})` : sql``}
           ${statusFilter ? sql`and be.status = ${statusFilter}` : sql``}
@@ -107,6 +111,7 @@ export async function GET(request: NextRequest) {
       sourceId: r.source_id,
       sourceTable: r.source_table,
       billNo: r.bill_no,
+      loadingCount: Number(r.loading_count || 0),
       manualBillNo: r.manual_bill_no,
       billDate: r.bill_date,
       transactionDate: r.transaction_date,

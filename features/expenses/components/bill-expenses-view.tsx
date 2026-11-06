@@ -33,6 +33,8 @@ type BillRow = {
   id: string;
   sourceModule: SourceModule;
   billNo: string | null;
+  sourceId?: string;
+  loadingCount?: number;
   manualBillNo: string | null;
   transactionDate: string | null;
   countryName: string | null;
@@ -98,10 +100,18 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
   const [viewGeneralBill, setViewGeneralBill] = useState<any | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in_progress" | "closed">("all");
   const [search, setSearch] = useState("");
+  const [linkedPurchaseOrderId] = useState(() => typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("purchaseOrderId") || "");
+  const [linkedOpened, setLinkedOpened] = useState(false);
   const [summary, setSummary] = useState<{ originalTotal: number | null; expenseTotal: number | null; originalByCurrency?: CurrencyTotal[]; expenseByCurrency?: CurrencyTotal[]; mixedCurrency?: boolean; currency?: string | null; withExpenses: number; byModule: Record<string, number> } | null>(null);
   // Section filter (All Sections | Business | Shipping Line) — offered only to logins explicitly authorized for both sections
   const [sectionFilter, setSectionFilter] = useState<"all" | "business" | "shipping">("all");
   const [canChooseSection, setCanChooseSection] = useState(false);
+
+  useEffect(() => {
+    if (!linkedPurchaseOrderId || linkedOpened) return;
+    const linked = rows.find((r) => r.sourceId === linkedPurchaseOrderId);
+    if (linked) { setReportBillId(linked.id); setLinkedOpened(true); }
+  }, [rows, linkedPurchaseOrderId, linkedOpened]);
 
   const [openId, setOpenId] = useState<string | null>(null);
   const [openFocusForm, setOpenFocusForm] = useState(false);
@@ -118,6 +128,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     try {
       if (moduleTab !== "general_expenses") {
         const qs = new URLSearchParams();
+        if (linkedPurchaseOrderId) qs.set("sourceId", linkedPurchaseOrderId);
         if (moduleTab !== "all") qs.set("module", moduleTab);
         else if (sectionModules) qs.set("modules", sectionModules.join(","));
         if (statusFilter !== "all") qs.set("status", statusFilter);
@@ -146,7 +157,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
     } finally {
       setLoading(false);
     }
-  }, [moduleTab, statusFilter, search, section, sectionModules, sectionFilter]);
+  }, [moduleTab, statusFilter, search, section, sectionModules, sectionFilter, linkedPurchaseOrderId]);
 
   const handleViewGeneralBill = useCallback(async (b: any) => {
     try {
@@ -283,7 +294,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
 
   const pageTitle =
     section === "purchase"
-      ? s.t("title_purchase", "Purchase Expenses")
+      ? `${s.tGlobal("utask.mod_journal", "Journal")} — ${s.t("title_purchase", "Purchase Expenses")}`
       : section === "sales"
       ? s.t("title_sales", "Sales Expenses")
       : costProfit
@@ -639,7 +650,7 @@ export function BillExpensesView({ lang: langProp, section = "all", costProfit =
           isOpen={true}
           onClose={() => setReportBillId(null)}
           title={s.t("linked_report_modal_title", "Linked Expense & Cost Report")}
-          maxWidth="max-w-6xl"
+          maxWidth="max-w-[1600px]"
         >
           <div className="max-h-[85vh] overflow-y-auto">
             <BillDrilldownView id={reportBillId} lang={lang} />
@@ -706,7 +717,7 @@ function BillExpenseRow({
           {moduleLabel(r.sourceModule)}
         </span>
       </td>
-      <td className="px-4 py-3 font-semibold text-slate-800 dark:text-white">{r.billNo || "—"}</td>
+      <td className="px-4 py-3 font-semibold text-slate-800 dark:text-white"><button type="button" onClick={onViewReport} className="text-start text-blue-700 underline-offset-2 hover:underline dark:text-blue-300">{r.billNo || "—"}{Number(r.loadingCount) > 0 && <span className="ms-1 font-mono">[{r.loadingCount}]</span>}</button></td>
       <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.manualBillNo || "—"}</td>
       <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
         {r.transactionDate ? new Date(r.transactionDate).toLocaleDateString("en-GB") : "—"}

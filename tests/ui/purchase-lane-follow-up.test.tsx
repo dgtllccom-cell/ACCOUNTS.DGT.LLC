@@ -1,0 +1,33 @@
+import React, { useEffect } from "react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+const state=vi.hoisted(()=>({get:vi.fn(),post:vi.fn(),patch:vi.fn()}));
+vi.mock("@/lib/api/client",()=>({apiGet:state.get,apiPost:state.post,apiPatch:state.patch}));
+vi.mock("@/features/purchases/components/lane-payment-preview",()=>({LanePaymentPreview:({onReady}:any)=>{useEffect(()=>onReady(true),[onReady]);return <div>Reviewed original payment</div>;}}));
+const language={lang:"en",dir:"ltr",isRtl:false,textStart:"text-left",textEnd:"text-right",t:(_k:string,f:string)=>f,tGlobal:(_k:string,f:string)=>f};
+vi.mock("@/lib/i18n/use-erp-screen",()=>({useErpScreen:()=>language}));
+import { PurchaseTransitLaneView } from "@/features/purchases/components/purchase-transit-lane-view";
+const row={id:"11111111-1111-4111-8111-111111111111",source_type:"purchase_booking",source_id:"loading-1",purchase_order_id:"po-1",purchase_ref_no:"PO-1",loading_record_no:"LR-1",container_number:"C-1",loaded_quantity:200,remaining_quantity:0,lane_status:"loaded",lane_stock_qty:200};
+beforeEach(()=>{vi.stubGlobal("React",React);state.get.mockReset().mockImplementation(async(url:string)=>url.includes("/lane?")?{rows:[row],summary:{loaded:1},laneStockQty:200}:url.includes("/lane/")?{load:row,events:[],expenses:[],canAct:true}:{countries:[]});state.post.mockReset().mockResolvedValue({});state.patch.mockReset();});
+afterEach(()=>{cleanup();vi.unstubAllGlobals();});
+it("defaults a purchase loading to Remaining and offers independent expense/tracking views",async()=>{
+ render(<PurchaseTransitLaneView />);
+ const menus=await screen.findAllByTestId("lane-actions");
+ fireEvent.change(menus[0],{target:{value:"transfer"}});
+ const type=await screen.findByTestId("tr-type") as HTMLSelectElement;
+ expect(type.value).toBe("remaining_payment");
+ fireEvent.change(screen.getByTestId("tr-after-view"),{target:{value:"expenses"}});
+ await waitFor(()=>expect((screen.getByTestId("tr-submit") as HTMLButtonElement).disabled).toBe(false));
+ fireEvent.click(screen.getByTestId("tr-submit"));
+ await waitFor(()=>expect(state.post).toHaveBeenCalledTimes(1));
+ expect(state.post).toHaveBeenCalledWith("/api/erp/purchases/lane",expect.objectContaining({action:"transfer",ids:[row.id],transfer:expect.objectContaining({type:"remaining_payment"})}));
+ await waitFor(()=>expect(screen.getByRole("link",{name:"Tracking"}).getAttribute("href")).toContain(row.id));
+ expect(screen.getByRole("link",{name:"Journal · Expenses"}).getAttribute("href")).toContain("purchaseOrderId=po-1");
+ expect(state.patch).not.toHaveBeenCalled();
+});
+it("opens the original load detail from the single action menu without a write",async()=>{
+ render(<PurchaseTransitLaneView />);
+ fireEvent.change((await screen.findAllByTestId("lane-actions"))[0],{target:{value:"details"}});
+ expect(await screen.findByTestId("lane-detail")).toBeTruthy();
+ expect(state.post).not.toHaveBeenCalled(); expect(state.patch).not.toHaveBeenCalled();
+});
