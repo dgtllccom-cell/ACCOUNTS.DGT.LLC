@@ -412,6 +412,25 @@ export function RoznamchaReportView({
       const totalDr = selectedLines.reduce((sum, l) => sum + (Number(l.debit || 0)), 0);
       const totalCr = selectedLines.reduce((sum, l) => sum + (Number(l.credit || 0)), 0);
       const firstLine = (selectedLines[0] || {}) as any;
+      // Preserve the entry's EXACT split pattern: ALL DR legs and ALL CR legs - never collapsed, never recomputed.
+      // One entry may have 1 DR vs 10 CR (or the reverse, or a flat journal). The printed voucher mirrors whatever the entry carries.
+      const drLines = (selectedLines as any[]).filter((l) => Number(l.debit || 0) > 0).map((l) => ({
+        code: l.account_number || l.account_code || null,
+        name: l.accounts?.name || l.ledgers?.name || null,
+        amount: Number(l.debit || 0),
+        narration: l.description || null,
+      }));
+      const crLines = (selectedLines as any[]).filter((l) => Number(l.credit || 0) > 0).map((l) => ({
+        code: l.account_number || l.account_code || null,
+        name: l.accounts?.name || l.ledgers?.name || null,
+        amount: Number(l.credit || 0),
+        narration: l.description || null,
+      }));
+      const drLine = drLines[0] as any | undefined;
+      const crLine = crLines[0] as any | undefined;
+      const header: any = selectedHeader || {};
+      const chequeType = (header.payment_method || header.voucher_type || "").toLowerCase();
+      const isCheque = /cheque|check/.test(chequeType) || Boolean(header.cheque_no);
       openRoznamchaVoucherPrintReport({
         data: {
           receiptNo: selectedHeader.voucher_no || "-",
@@ -422,7 +441,21 @@ export function RoznamchaReportView({
           amount: Math.max(totalDr, totalCr, 0),
           currency: firstLine.currency || "",
           narration: firstLine.description || selectedHeader.narration || "",
-          type: totalDr > 0 ? "payment" : "receipt"
+          type: totalDr > 0 ? "payment" : "receipt",
+          // 2026-11: DR / CR, cheque / bank and reference carried through when present on the entry. All fields are optional:
+          // a missing field is omitted entirely from the printed voucher - nothing is fabricated or hard-coded.
+          drAccountCode: drLine?.code ?? null,
+          drAccountName: drLine?.name ?? null,
+          crAccountCode: crLine?.code ?? null,
+          crAccountName: crLine?.name ?? null,
+          drLines,
+          crLines,
+          chequeNo: header.cheque_no || header.cheque_number || null,
+          chequeDate: header.cheque_date || null,
+          bankName: header.bank_name || header.bank?.name || null,
+          bankBranchName: header.bank_branch_name || header.bank?.branch_name || null,
+          referenceNo: header.reference_no || firstLine.manual_reference_number || null,
+          chequeStatus: isCheque ? (totalDr > 0 ? "issued" : "received") : null,
         },
         companyInfo: {
           branch: entryBranchName(selectedHeader) || entryCountryName(selectedHeader) || "",

@@ -1724,25 +1724,54 @@ function SuperAdminRoznamchaReportViewContent({
     const targetRow = row || selectedRow;
     if (!targetRow) return;
     if (mode === "voucher") {
+      // Preserve the entry's EXACT DR/CR split pattern: 1 DR vs many CR, 1 CR vs many DR, or flat journal - mirror the entry's own lines verbatim.
+      const entry: any = (targetRow.sourceEntry as any) || {};
+      const lines: any[] = (targetRow.lines || []) as any[];
+      const drLines = lines.filter((l) => Number(l.debit || 0) > 0).map((l) => ({
+        code: l.account_number || l.account_code || null,
+        name: l.accounts?.name || l.ledgers?.name || null,
+        amount: Number(l.debit || 0),
+        narration: l.description || null,
+      }));
+      const crLines = lines.filter((l) => Number(l.credit || 0) > 0).map((l) => ({
+        code: l.account_number || l.account_code || null,
+        name: l.accounts?.name || l.ledgers?.name || null,
+        amount: Number(l.credit || 0),
+        narration: l.description || null,
+      }));
+      const chequeType = String(entry.payment_methods?.name || entry.payment_method || entry.voucher_type || "").toLowerCase();
+      const isCheque = /cheque|check/.test(chequeType) || Boolean(entry.cheque_no);
       openRoznamchaVoucherPrintReport({
         data: {
-          receiptNo: targetRow.voucherNo || "CE-1001",
+          receiptNo: targetRow.voucherNo || "-",
           date: targetRow.entryDate || new Date().toISOString(),
-          accountNo: targetRow.accountNo || "1010-CASH",
-          accountName: targetRow.partyName || targetRow.voucherNo || "Roznamcha Cash Account",
-          paidBy: targetRow.partyName || targetRow.voucherNo || "Cash Settlement",
+          accountNo: targetRow.accountNo || "-",
+          accountName: targetRow.partyName || targetRow.voucherNo || "-",
+          paidBy: targetRow.partyName || targetRow.voucherNo || "-",
           amount: targetRow.debit > 0 ? targetRow.debit : targetRow.credit > 0 ? targetRow.credit : 0,
-          currency: targetRow.countryCurrency || "AED",
-          narration: targetRow.narration || "Roznamcha transaction entry",
+          currency: targetRow.countryCurrency || "",
+          narration: targetRow.narration || "",
           type: targetRow.debit > 0 ? "payment" : "receipt",
-          branchName: targetRow.cityBranchName || targetRow.countryBranchName || "MAIN BRANCH",
-          countryName: targetRow.countryName || "UAE",
-          createdByName: (targetRow.sourceEntry as any)?.createdBy || "SUPER ADMIN"
+          branchName: targetRow.cityBranchName || targetRow.countryBranchName || "",
+          countryName: targetRow.countryName || "",
+          createdByName: (targetRow.sourceEntry as any)?.createdBy || "",
+          drLines,
+          crLines,
+          drAccountCode: drLines[0]?.code ?? null,
+          drAccountName: drLines[0]?.name ?? null,
+          crAccountCode: crLines[0]?.code ?? null,
+          crAccountName: crLines[0]?.name ?? null,
+          chequeNo: entry.cheque_no || entry.cheque_number || null,
+          chequeDate: entry.cheque_date || null,
+          // a payment METHOD ("Cash", "Bank Transfer") is not a bank: only a real bank name is printed as Bank Name
+          bankName: entry.bank_name || entry.bank?.name || null,
+          bankBranchName: entry.bank_branch_name || entry.bank?.branch_name || null,
+          referenceNo: entry.reference_no || null,
+          chequeStatus: isCheque ? (targetRow.debit > 0 ? "issued" : "received") : null,
         },
         companyInfo: {
-          name: "DIGITAL DOCK ERP",
-          branch: targetRow.cityBranchName || targetRow.countryBranchName || "MAIN BRANCH",
-          printedBy: "SUPER ADMIN"
+          branch: targetRow.cityBranchName || targetRow.countryBranchName || "",
+          printedBy: ""
         },
         lang
       });
