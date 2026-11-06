@@ -862,7 +862,7 @@ function CenterTransferConfirmationModal({
       await apiPost("/api/erp/purchases/lane", { action: "transfer", ids, transfer: req });
       const commonPurchaseId = loads.every((l) => l.purchase_order_id === loads[0]?.purchase_order_id) ? loads[0]?.purchase_order_id : null;
       const links = loadingJournalLinks(ids.length === 1 ? ids[0] : "", commonPurchaseId, loads.length === 1 ? loads[0]?.local_purchase_id : null);
-      const targetUrl = afterView === "expenses" ? links.expenses : afterView === "tracking" ? links.tracking : destinationRoute(type, primarySource, loads[0]?.purchase_ref_no);
+      const targetUrl = afterView === "expenses" ? links.expenses : afterView === "tracking" ? links.tracking : destinationRoute(type, primarySource, loads.every((l) => l.purchase_ref_no === loads[0]?.purchase_ref_no) ? loads[0]?.purchase_ref_no : undefined, loads.length === 1 && primarySource === "purchase_booking" ? loads[0]?.source_id : undefined);
       await onDone(`${T("done_transferred", "Transferred")} (${ids.length})`, targetUrl);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

@@ -1,4 +1,4 @@
-import { defaultLaneTransferDestination } from "@/lib/purchases/lane-rules";
+import { defaultLaneTransferDestination, destinationRoute } from "@/lib/purchases/lane-rules";
 import { describe, expect, it, vi } from "vitest";
 import { loadingJournalRows, loadingJournalLinks, readBillLoadingJournal } from "@/lib/purchases/loading-journal";
 describe("one bill, successive loading batches", () => {
@@ -19,6 +19,11 @@ describe("one bill, successive loading batches", () => {
   it("does not collapse two real load records that happen to share a container number", () => {
     expect(loadingJournalRows([{ id: "a", container_number: "SAME" },{ id: "b", container_number: "SAME" }])).toHaveLength(2);
     expect(loadingJournalRows([{ id: "a" }])[0].finalAmount).toBeNull();
+  });
+  it("opens Remaining on the saved bill/loading without putting financial amounts in the URL", () => {
+    const url=new URL(destinationRoute("remaining_payment","purchase_booking","PO-10","load-2"),"http://localhost");
+    expect(Object.fromEntries(url.searchParams)).toEqual({purchaseOrderNo:"PO-10",fromLoading:"true",loadingRecordId:"load-2"});
+    expect(destinationRoute("remaining_payment")).toBe("/dashboard/journal/purchase-order-payment/remaining");
   });
   it("links the same IDs to expenses and tracking without issuing a second transfer", () => {
     const links=loadingJournalLinks("lane-1","po-1");

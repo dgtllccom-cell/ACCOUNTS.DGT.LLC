@@ -31,3 +31,15 @@ it("opens the original load detail from the single action menu without a write",
  expect(await screen.findByTestId("lane-detail")).toBeTruthy();
  expect(state.post).not.toHaveBeenCalled(); expect(state.patch).not.toHaveBeenCalled();
 });
+
+it("opens Remaining on the selected original bill and loading after one successful transfer",async()=>{
+ render(<PurchaseTransitLaneView />);
+ fireEvent.change((await screen.findAllByTestId("lane-actions"))[0],{target:{value:"transfer"}});
+ await screen.findByTestId("tr-type");
+ await waitFor(()=>expect((screen.getByTestId("tr-submit") as HTMLButtonElement).disabled).toBe(false));
+ fireEvent.click(screen.getByTestId("tr-submit"));
+ const link=await screen.findByRole("link",{name:"Open in Destination Module"});
+ const url=new URL(link.getAttribute("href")!,"http://localhost");
+ expect(Object.fromEntries(url.searchParams)).toEqual({purchaseOrderNo:"PO-1",fromLoading:"true",loadingRecordId:"loading-1"});
+ expect(state.post).toHaveBeenCalledTimes(1);
+});
