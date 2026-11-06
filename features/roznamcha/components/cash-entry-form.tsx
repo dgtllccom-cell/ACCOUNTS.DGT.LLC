@@ -1,5 +1,6 @@
 "use client";
 
+import { cashDirectionRate, cashUsdEquivalent } from "@/lib/currency/exact-daily-rate";
 import { pl } from "@/lib/reports/print-label";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
@@ -642,6 +643,8 @@ export function CashEntryForm({
   };
   const [dailyRate, setDailyRate] = useState<DailyRate | null>(null);
   const [loadingDailyRate, setLoadingDailyRate] = useState(false);
+  const dailyRateRequest = useRef(0);
+  const [dailyRateError, setDailyRateError] = useState("");
 
   type SummaryOverviewBranch = {
     branchId: string;
@@ -1359,18 +1362,24 @@ export function CashEntryForm({
   };
 
   const fetchDailyRate = async () => {
+    const requestId = ++dailyRateRequest.current;
     if (!countryId) {
+      setLoadingDailyRate(false); setExchangeRate(""); setDailyRateError("");
       setDailyRate(null);
       setDailyUsdRates(null);
       return;
     }
     try {
       setLoadingDailyRate(true);
-      const params = new URLSearchParams({ countryId });
+      setDailyRate(null); setDailyUsdRates(null); setDailyRateError("");
+      setExchangeRate(currency.trim().toUpperCase() === "USD" ? "1" : "");
+      const params = new URLSearchParams({ countryId, currency: currency.trim().toUpperCase() });
+      if (cityBranchId) params.set("cityBranchId", cityBranchId);
       if (countryBranchId) params.set("countryBranchId", countryBranchId);
       const effectiveDate = entryDate || todayIso();
       if (effectiveDate) params.set("date", effectiveDate);
       const res = await apiGet<DailyRate>(`/api/erp/currency/daily-rate?${params.toString()}`);
+      if (requestId !== dailyRateRequest.current) return;
       setDailyRate(res);
       if (res && res.found) {
         setDailyUsdRates({
@@ -1383,11 +1392,13 @@ export function CashEntryForm({
         setDailyUsdRates(null);
       }
     } catch (err) {
+      if (requestId !== dailyRateRequest.current) return;
       console.error("Failed to fetch daily rate", err);
+      setDailyRateError(err instanceof Error ? err.message : "");
       setDailyRate(null);
       setDailyUsdRates(null);
     } finally {
-      setLoadingDailyRate(false);
+      if (requestId === dailyRateRequest.current) setLoadingDailyRate(false);
     }
   };
 
@@ -1404,7 +1415,7 @@ export function CashEntryForm({
     };
     // Refresh the approved rate after returning from the existing Daily Exchange Rate page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId, countryBranchId, entryDate]);
+  }, [countryId, countryBranchId, cityBranchId, entryDate, currency]);
 
   useEffect(() => {
     if (normalizedCurrency === "USD") {
@@ -1412,9 +1423,7 @@ export function CashEntryForm({
       return;
     }
     if (dailyRate && dailyRate.found) {
-      const activeRate = paymentMode === "DEBIT"
-        ? (dailyRate.debitRate || dailyRate.buyingRate)
-        : (dailyRate.creditRate || dailyRate.sellingRate);
+      const activeRate = cashDirectionRate(dailyRate, paymentMode);
       if (activeRate && activeRate > 0) {
         setExchangeRate(String(activeRate));
       } else {
@@ -1430,7 +1439,7 @@ export function CashEntryForm({
     fetchCashSummary();
     fetchDailyRate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId, countryBranchId, cityBranchId, topCountryFilter, topBranchFilter, isSuperAdmin, isCountryAdmin, tableDateMode, tableDate, tableFromDate, tableToDate, entryDate]);
+  }, [countryId, countryBranchId, cityBranchId, topCountryFilter, topBranchFilter, isSuperAdmin, isCountryAdmin, tableDateMode, tableDate, tableFromDate, tableToDate, entryDate, currency]);
 
   const ledgerRowsWithAccount = useMemo(
     () => ledgers.filter((row) => Boolean(row.accountId && row.ledgerId)),
@@ -2093,7 +2102,7 @@ export function CashEntryForm({
     }
   }, [countryId, countryBranchId, cityBranchId, branchCurrency]);
 
-  const isRatePending = !dailyRate || !dailyRate.found || Number(exchangeRate) <= 0;
+  const isRatePending = loadingDailyRate || !dailyRate || !dailyRate.found || Number(exchangeRate) <= 0;
 
   const canSave =
     Boolean(countryId && (countryBranchId || cityBranchId)) &&
@@ -4896,6 +4905,12 @@ export function CashEntryForm({
                         </div>
                       </div>
 
+                      <div className="flex flex-wrap justify-between gap-2 text-[11px] font-mono">
+                        <span>{tr("cj.drRate", "DR Rate (Buying)")}: {dailyRate?.debitRate ?? "—"}</span>
+                        <span>{tr("cj.crRate", "CR Rate (Selling)")}: {dailyRate?.creditRate ?? "—"}</span>
+                        <span>{normalizedCurrency} {fmtAmount(Number(amount) || 0)} · USD {cashUsdEquivalent(Number(amount) || 0, normalizedCurrency, Number(exchangeRate)) == null ? "—" : fmtAmount(cashUsdEquivalent(Number(amount) || 0, normalizedCurrency, Number(exchangeRate))!)}</span>
+                        {dailyRateError && <span className="text-red-600">{dailyRateError}</span>}
+                      </div>
                       {/* Remarks / Notes Textarea */}
                       <div className="space-y-1">
                         <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mRemarks", "Remarks / Notes")}</Label>

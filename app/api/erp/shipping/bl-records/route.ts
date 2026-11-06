@@ -1,3 +1,4 @@
+import { isClearingMenu } from "@/lib/permissions/clearing-menu";
 import { isShippingDomainOnly } from "@/lib/permissions/shipping-explicit-gate";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -258,7 +259,7 @@ export async function GET(request: NextRequest) {
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
-    if (session.isShippingScoped) {
+    if (session.isShippingScoped || isClearingMenu(session)) {
       // Shipping-only login: ONLY its own clearing agent's BL records (never country/branch-wide,
       // never untagged). Service-role bypasses RLS, so this API filter is the authoritative gate.
       const agentIds = session.clearingAgentIds.length
@@ -274,6 +275,7 @@ export async function GET(request: NextRequest) {
         cityBranchId: query.cityBranchId ?? undefined,
       });
     }
+    if (isClearingMenu(session)) recordsQuery = enforceScopeFilter(recordsQuery, session, { countryId: query.countryId, countryBranchId: query.countryBranchId, cityBranchId: query.cityBranchId });
     // a Shipping Line login sees only the shipping line(s) it is bound to
     if (!isGlobalSession(session) && session.shippingLineIds?.length) {
       recordsQuery = recordsQuery.in("shipping_line_id", session.shippingLineIds);

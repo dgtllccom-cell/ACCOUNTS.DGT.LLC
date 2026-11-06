@@ -1,3 +1,4 @@
+import { isClearingMenu, clearingAgentForWrite, clearingRecordAllowed, clearingAgentCondition } from "@/lib/permissions/clearing-menu";
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
     const viaPg = await withLocalPg(async (sql) => {
       return sql`
         SELECT * FROM public.shipping_agent_entries
-        WHERE deleted_at IS NULL
+        WHERE deleted_at IS NULL AND ${clearingAgentCondition(sql, session, "clearing_agent_id")}
         ORDER BY created_at DESC
       `;
     });
@@ -30,12 +31,12 @@ export async function GET(req: NextRequest) {
       .select("*")
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
-    if (error) return NextResponse.json({ success: false, error: error.message, data: [] }, { status: 500 });
+    if (error) return NextResponse.json({ success: false, error: error.message, data: [] }, { status: error.status ?? 500 });
 
-    return NextResponse.json({ success: true, data: data || [] });
+    return NextResponse.json({ success: true, data: (data || []).filter((row: any) => clearingRecordAllowed(session, row, "clearing_agent_id")) });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message, data: [] }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message, data: [] }, { status: error.status ?? 500 });
   }
 }
 
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     const payload = {
       agent_name: agent_name ? String(agent_name).trim() : "New Shipping Agent",
-      clearing_agent_id: clearing_agent_id || null,
+      clearing_agent_id: clearingAgentForWrite(session, clearing_agent_id),
       shipping_line_name: shipping_line_name ? String(shipping_line_name).trim() : null,
       shipping_line_id: shipping_line_id || null,
       contact_person: contact_person ? String(contact_person).trim() : null,
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status ?? 500 });
     }
 
     void syncRecordTranslations({
@@ -131,7 +132,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: error.status ?? 500 });
   }
 }
 
@@ -161,13 +162,13 @@ export async function PATCH(req: NextRequest) {
       if (body[key] !== undefined) patch[key] = body[key] === "" ? null : String(body[key]).trim();
     }
     if (body.email !== undefined && body.email) patch.email = String(body.email).trim().toLowerCase();
-    if (body.clearing_agent_id !== undefined) patch.clearing_agent_id = body.clearing_agent_id || null;
+    if (body.clearing_agent_id !== undefined) patch.clearing_agent_id = clearingAgentForWrite(session, body.clearing_agent_id);
     if (body.shipping_line_id !== undefined) patch.shipping_line_id = body.shipping_line_id || null;
 
     const viaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
         UPDATE public.shipping_agent_entries SET ${sql(patch as any)}
-        WHERE id = ${id}::uuid AND deleted_at IS NULL
+        WHERE id = ${id}::uuid AND deleted_at IS NULL AND ${clearingAgentCondition(sql, session, "clearing_agent_id")}
         RETURNING *
       `;
       return rows[0] ?? null;
@@ -176,15 +177,15 @@ export async function PATCH(req: NextRequest) {
     let data = viaPg;
     if (!data) {
       const supabase = createSupabaseAdminClient() as any;
-      const res = await supabase
+      let query = supabase
         .from("shipping_agent_entries")
         .update(patch)
         .eq("id", id)
-        .is("deleted_at", null)
-        .select("*")
-        .single();
+        .is("deleted_at", null);
+      if (isClearingMenu(session)) query = query.in("clearing_agent_id", session.clearingAgentIds);
+      const res = await query.select("*").maybeSingle();
       if (res.error) {
-        return NextResponse.json({ success: false, error: res.error.message }, { status: 500 });
+        return NextResponse.json({ success: false, error: res.error.message }, { status: res.error.status ?? 500 });
       }
       data = res.data;
     }
@@ -202,6 +203,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: error.status ?? 500 });
   }
 }

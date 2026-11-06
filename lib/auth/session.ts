@@ -1,3 +1,4 @@
+import { CLEARING_MENU_MARKER, isClearingMenu, capClearingMenuPermissions, clearingMenuAllowsApi } from "@/lib/permissions/clearing-menu";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -601,6 +602,7 @@ async function resolveErpSessionFromDb(
   } catch { permissions = []; }
   const usedExplicitPermissionSet = permissions.length > 0;
   const restrictedTruckTrial = permissions.includes(TRUCK_TRIAL_MARKER);
+  const restrictedClearingMenu = permissions.includes(CLEARING_MENU_MARKER);
   if (!permissions.length) {
     permissions = [...new Set([...roleTemplatePermissions(roles, assignments), ...fieldLevelTokens])];
   }
@@ -676,6 +678,8 @@ async function resolveErpSessionFromDb(
   permissions = capPermissionsForRoles(roles, permissions);
   permissions = capTruckTrialPermissions(restrictedTruckTrial ? [...permissions, TRUCK_TRIAL_MARKER] : permissions, isSuperAdmin);
 
+  permissions = capClearingMenuPermissions(restrictedClearingMenu ? [...permissions, CLEARING_MENU_MARKER] : permissions, isSuperAdmin);
+
   return {
     userId: identity.userId,
     email: identity.email,
@@ -710,6 +714,17 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
   if (signedSession?.truckTrial && !session.isSuperAdmin) {
     session.permissions = capTruckTrialPermissions([...session.permissions, TRUCK_TRIAL_MARKER], false);
     session.canViewFinancials = false;
+  }
+  if (signedSession?.clearingMenu && !session.isSuperAdmin) {
+    session.permissions = capClearingMenuPermissions([...session.permissions, CLEARING_MENU_MARKER], false);
+  }
+  if (isClearingMenu(session)) {
+    if (session.isGlobalScope || session.cityBranchIds.length !== 1 || !session.clearingAgentIds.length) throw new ErpPermissionError("Clearing menu requires an assigned branch and Clearing Agent.");
+    const h = await (await import("next/headers")).headers();
+    const path = h.get("x-erp-pathname") || "";
+    if (path.startsWith("/api/") && !clearingMenuAllowsApi(path, h.get("x-erp-method") || "GET")) throw new ErpPermissionError("Outside the assigned Clearing Agent forms.");
+    const masterId = path.match(/^\/api\/erp\/clearing-agents\/([0-9a-f-]{36})$/i)?.[1];
+    if (masterId && !session.clearingAgentIds.includes(masterId)) throw new ErpPermissionError("Clearing Agent is outside your assignment.");
   }
   if (isTruckTrial(session)) {
     if (session.isGlobalScope || session.countryIds.length !== 1 || session.countryBranchIds.length !== 1 || session.cityBranchIds.length !== 1) {
@@ -785,7 +800,7 @@ async function getCurrentErpSessionUnchecked(): Promise<ErpSession | null> {
         }
       }
 
-      if (temp.truckTrial && !isBootstrap) return null; // A restricted trial never falls back to wider role defaults.
+      if ((temp.truckTrial || temp.clearingMenu) && !isBootstrap) return null; // A restricted trial never falls back to wider role defaults.
 
       // Fallback (bootstrap super admin, a synthetic dev-session identity, or
       // no service-role key in local dev): trust the signed, non-forgeable

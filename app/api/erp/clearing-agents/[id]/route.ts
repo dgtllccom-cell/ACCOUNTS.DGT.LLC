@@ -56,6 +56,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 
 export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    await requireErpSession();
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
 

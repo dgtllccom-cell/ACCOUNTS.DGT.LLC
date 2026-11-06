@@ -11,7 +11,10 @@ const state = vi.hoisted(() => ({
   admin: vi.fn(),
 }));
 vi.mock("@/lib/auth/session", () => ({ requireErpSession: async () => state.session }));
-vi.mock("@/lib/api/supabase", () => ({ createApiSupabaseClient: async () => ({ rpc: state.rpc }) }));
+vi.mock("@/lib/api/supabase", () => ({ createApiSupabaseClient: async () => {
+  const q: any = { select: () => q, eq: () => q, is: () => q, lte: () => q, or: () => q, order: () => q, limit: async () => ({ data: [], error: null }) };
+  return { rpc: state.rpc, from: () => q };
+} }));
 vi.mock("@/lib/supabase/admin", () => ({ createSupabaseAdminClient: state.admin }));
 vi.mock("@/lib/api/response", () => ({
   ApiClientError: class extends Error {},
@@ -31,7 +34,7 @@ describe("Chaman Shipping exact-date rate lookup", () => {
     const response = await GET(request());
     expect(response.status).toBe(200);
     expect((await response.json()).data).toMatchObject({ found: true, debitRate: 280, creditRate: 282 });
-    expect(state.rpc).toHaveBeenCalledWith("get_daily_rate", { p_country_id: countryId, p_country_branch_id: branchId, p_date: "2026-11-06" });
+    expect(state.rpc).toHaveBeenCalledWith("get_daily_rate", expect.objectContaining({ p_country_id: countryId, p_country_branch_id: branchId, p_date: "2026-11-06", p_at: expect.any(String) }));
   });
   it("keeps a previous-day rate from satisfying the selected date", async () => {
     state.row.rate_date = "2026-11-05";

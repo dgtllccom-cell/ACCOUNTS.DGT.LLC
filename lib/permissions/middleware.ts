@@ -1,3 +1,4 @@
+import { isClearingMenu, CLEARING_MENU_PERMISSIONS } from "@/lib/permissions/clearing-menu";
 import type { ErpSession } from "@/lib/auth/session";
 import { mobileProfileAllows } from "@/lib/permissions/mobile-profiles";
 import { isTruckTrial, TRUCK_TRIAL_PERMISSIONS } from "@/lib/permissions/truck-trial";
@@ -27,6 +28,7 @@ export function hasRolePermission(session: ErpSession, resource: string, action:
   const normalizedResource = resource === "goods" ? "products" : resource;
 
   const required = `${normalizedResource}:${action}`;
+  if (isClearingMenu(session) && !(CLEARING_MENU_PERMISSIONS as readonly string[]).includes(required)) return false;
   if (isTruckTrial(session) && !(TRUCK_TRIAL_PERMISSIONS as readonly string[]).includes(required)) return false;
   const perms = session?.permissions || [];
   return perms.includes(required) || perms.includes(`${normalizedResource}:*`) || perms.includes("*:*");

@@ -1,3 +1,4 @@
+import { isClearingMenu, CLEARING_MENU_HOME } from "@/lib/permissions/clearing-menu";
 import { cookies, headers } from "next/headers";
 import { forbidden, redirect } from "next/navigation";
 import { evaluateRouteAccess } from "@/lib/navigation/route-policy";
@@ -41,6 +42,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // SERVER-side route gate: a pasted/typed URL the login may not open answers 403 (the client guard and the sidebar use the same policy).
   const requested = (await headers()).get("x-erp-pathname") ?? "";
+  if (isClearingMenu(session) && requested === "/dashboard") redirect(CLEARING_MENU_HOME);
   if (isTruckTrial(session) && requested !== TRUCK_TRIAL_HOME) redirect(TRUCK_TRIAL_HOME);
   if (requested.startsWith("/dashboard")) {
     const decision = evaluateRouteAccess({

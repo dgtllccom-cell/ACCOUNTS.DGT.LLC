@@ -46,7 +46,7 @@ const EMPTY_AGENT: any = {
   remarks: "",
 };
 
-export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLanguage }) {
+export function ShippingAgentEntryView({ lang: langProp, clearingMenuOnly = false }: { lang: SupportedLanguage; clearingMenuOnly?: boolean }) {
   const lang = useActiveLanguage(langProp);
   const dir = getLanguageDirection(lang);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
@@ -196,7 +196,7 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
 
             <div>
               <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("sag.agent_name", "Agent / Agency Name")} *</label>
-              <ClearingAgentPicker
+              <ClearingAgentPicker allowCreate={!clearingMenuOnly}
                 value={form.clearing_agent_id || ""}
                 onValueChange={async (clearingAgentId) => {
                   setForm((prev: any) => ({ ...prev, clearing_agent_id: clearingAgentId }));
@@ -220,7 +220,7 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
 
             <div>
               <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("sag.shipping_line", "Associated Shipping Line")}</label>
-              <ShippingLinePicker
+              <ShippingLinePicker allowCreate={!clearingMenuOnly}
                 value={form.shipping_line_id || ""}
                 onValueChange={async (shippingLineId) => {
                   setForm((prev: any) => ({ ...prev, shipping_line_id: shippingLineId }));

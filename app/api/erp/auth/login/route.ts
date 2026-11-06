@@ -1,3 +1,4 @@
+import { CLEARING_MENU_MARKER, CLEARING_MENU_HOME } from "@/lib/permissions/clearing-menu";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import type { Route } from "next";
@@ -579,6 +580,7 @@ export async function POST(request: NextRequest) {
 
   const trialPermission = await admin.from("user_permission_sets").select("permissions, source").eq("user_id", profileRecord.id).maybeSingle();
   if (trialPermission.error) return respondError("Unable to verify access permissions. Please try again.", 503);
+  const clearingMenu = !userRoles.includes("super_admin") && trialPermission.data?.source !== "role_default" && Boolean(trialPermission.data?.permissions?.includes(CLEARING_MENU_MARKER));
   const truckTrial = !userRoles.includes("super_admin") && trialPermission.data?.source !== "role_default" && Boolean(trialPermission.data?.permissions?.includes(TRUCK_TRIAL_MARKER));
 
   // 5. Establish Session Cookie
@@ -589,6 +591,7 @@ export async function POST(request: NextRequest) {
     roles: userRoles,
     assignments: roleAssignments,
     truckTrial,
+    clearingMenu,
     remember: rememberMe
   });
 
@@ -599,7 +602,7 @@ export async function POST(request: NextRequest) {
     | "mobile_cash_ledger"
     | "mobile_field"
     | undefined;
-  const redirectTo = truckTrial ? TRUCK_TRIAL_HOME : mobileProfile
+  const redirectTo = clearingMenu ? CLEARING_MENU_HOME : truckTrial ? TRUCK_TRIAL_HOME : mobileProfile
     ? MOBILE_PROFILE_HOME[mobileProfile]
     : dashboardForRolesLocal(userRoles);
 

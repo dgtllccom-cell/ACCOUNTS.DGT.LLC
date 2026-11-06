@@ -1,3 +1,4 @@
+import { clearingAgentCondition } from "@/lib/permissions/clearing-menu";
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { rethrowIfNextControlFlow, handleApiError } from "@/lib/api/response";
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
 
       // ── Build scope filter ─────────────────────────────────────────────
       // Same strict scope rule as the list and the detail (one rule, no widening).
-      const scopeFilter = sql`AND ${sqlScopeCondition(sql, sessionSqlScope(session), "o")}`;
+      const scopeFilter = sql`AND ${sqlScopeCondition(sql, sessionSqlScope(session), "o")} AND ${clearingAgentCondition(sql, session, "o.clearing_agent_id")}`;
 
       // ── Shipment & Container Summary ───────────────────────────────────
       const summaryRows = (await sql`

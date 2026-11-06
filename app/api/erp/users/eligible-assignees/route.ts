@@ -1,3 +1,4 @@
+import { isClearingMenu } from "@/lib/permissions/clearing-menu";
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
@@ -92,6 +93,8 @@ export async function GET(request: NextRequest) {
         return inCity || inCountryBranch || inCountry;
       });
     }
+
+    if (isClearingMenu(session)) assignees = assignees.filter((u) => Boolean(u.cityBranchId && session.cityBranchIds.includes(u.cityBranchId)) && ["shipping", "both"].includes(u.operationalDomain));
 
     // ── Operational Domain Separation ─────────────────────────────────────────
     if (domainFilter && domainFilter !== "all") {

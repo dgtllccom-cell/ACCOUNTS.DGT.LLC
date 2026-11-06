@@ -16,8 +16,7 @@ export const revalidate = 0;
  *
  * `rate` is the baseline conversion rate (buying, then selling as fallback); the forms then
  * pick the debit / credit rate per transaction direction (آمد / خرچ) — rate rules unchanged.
- * `currency` / `branchCurrency` are passed by the callers but do not affect the USD-denominated
- * daily lookup; they are used on the client side only.
+ * `date` and the selected currency are forwarded, so a historical request never silently becomes today's rate.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -31,6 +30,9 @@ export async function GET(req: NextRequest) {
     const forward = new URLSearchParams();
     if (countryId) forward.set("countryId", countryId);
     if (countryBranchId) forward.set("countryBranchId", countryBranchId);
+    for (const key of ["date", "currency", "cityBranchId"]) { const value = sp.get(key); if (value) forward.set(key, value); }
+
+    if (!forward.has("currency") && sp.get("branchCurrency")) forward.set("currency", sp.get("branchCurrency")!);
 
     const res = await fetch(
       new URL(`/api/erp/currency/daily-rate?${forward.toString()}`, req.url).toString(),
@@ -56,13 +58,15 @@ export async function GET(req: NextRequest) {
     const found = Boolean(d.found) && (buyRate != null || sellRate != null || creditRate != null || debitRate != null);
 
     return NextResponse.json({
-      rate: buyRate ?? sellRate ?? 1,
+      found,
+      status: d.status,
+      rate: found ? buyRate ?? sellRate ?? 0 : 0,
       buyRate,
       sellRate,
       creditRate,
       debitRate,
       effectiveDate: found ? (d.rateDate ?? null) : null,
-      source: found ? "daily_usd_rates" : "default"
+      source: found ? "daily_usd_rates" : "pending_missing"
     });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);

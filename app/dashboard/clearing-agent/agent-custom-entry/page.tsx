@@ -1,3 +1,4 @@
+import { isClearingMenu } from "@/lib/permissions/clearing-menu";
 import { Metadata } from "next";
 import { requireErpSession } from "@/lib/auth/session";
 import { AgentCustomEntryManagementView } from "@/features/clearing-agent/components/agent-custom-entry-management";
@@ -19,7 +20,7 @@ export default async function AgentCustomEntryPage() {
     <div className="min-h-screen bg-slate-50/50 p-4 dark:bg-slate-950/50 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-screen-2xl">
         <EntryMethodSelector targetModule="clearing_agent_custom_entries" domain="shipping" lang={lang} skipGate>
-          <AgentCustomEntryManagementView lang={lang} />
+          <AgentCustomEntryManagementView lang={lang} clearingMenuOnly={isClearingMenu(session)} />
         </EntryMethodSelector>
       </div>
     </div>

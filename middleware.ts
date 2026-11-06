@@ -1,7 +1,8 @@
+import { CLEARING_MENU_HOME, clearingMenuAllowsPath, clearingMenuAllowsApi } from "@/lib/permissions/clearing-menu";
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { ERP_SESSION_COOKIE } from "@/lib/auth/session-cookie";
-import { readMobileProfileFromToken, readTruckTrialFromToken } from "@/lib/auth/edge-session";
+import { readMobileProfileFromToken, readTruckTrialFromToken, readClearingMenuFromToken } from "@/lib/auth/edge-session";
 import { truckTrialAllowsApi, truckTrialAllowsPath, TRUCK_TRIAL_HOME } from "@/lib/permissions/truck-trial";
 import { MOBILE_PROFILE_HOME, mobileProfileAllowsApi, mobileProfileAllowsPath } from "@/lib/permissions/mobile-profiles";
 
@@ -43,6 +44,14 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith("/dashboard") && !truckTrialAllowsPath(pathname)) {
       return NextResponse.redirect(resolveRedirectUrl(TRUCK_TRIAL_HOME, request));
     }
+  }
+
+  if (await readClearingMenuFromToken(request.cookies.get(ERP_SESSION_COOKIE)?.value)) {
+    if ((pathname.startsWith("/api/") && !clearingMenuAllowsApi(pathname, request.method)) ||
+        (pathname.startsWith("/dashboard") && !["GET", "HEAD"].includes(request.method))) {
+      return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "Outside the assigned Clearing Agent forms." } }, { status: 403 });
+    }
+    if (pathname.startsWith("/dashboard") && !clearingMenuAllowsPath(pathname)) return NextResponse.redirect(resolveRedirectUrl(CLEARING_MENU_HOME, request));
   }
 
   // ── Mobile access-profile perimeter ──────────────────────────────────────

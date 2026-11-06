@@ -1,3 +1,4 @@
+import { isClearingMenu } from "@/lib/permissions/clearing-menu";
 import { Metadata } from "next";
 import { requireErpSession } from "@/lib/auth/session";
 import { PaymentBillManagementView } from "@/features/clearing-agent/components/payment-bill-management";
@@ -17,7 +18,7 @@ export default async function PaymentBillEntryPage() {
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 dark:bg-slate-950/50 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-screen-2xl">
-        <PaymentBillManagementView lang={lang} />
+        <PaymentBillManagementView lang={lang} clearingMenuOnly={isClearingMenu(session)} />
       </div>
     </div>
   );

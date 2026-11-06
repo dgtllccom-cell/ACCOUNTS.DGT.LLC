@@ -33,7 +33,7 @@ export type EdgeMobileProfile = "standard" | "mobile_cash_ledger" | "mobile_fiel
  * cookie is absent / unverifiable / not a temp session. A non-"standard" result
  * is only ever returned for a cookie whose HMAC checks out.
  */
-type VerifiedPayload = { kind?: string; truckTrial?: boolean; assignments?: Array<{ mobileProfile?: string }> };
+type VerifiedPayload = { kind?: string; truckTrial?: boolean; clearingMenu?: boolean; assignments?: Array<{ mobileProfile?: string }> };
 
 async function readVerifiedPayload(token: string | undefined | null): Promise<VerifiedPayload | null> {
   if (!token || token.indexOf(".") === -1) return null;
@@ -73,4 +73,8 @@ export async function readMobileProfileFromToken(token: string | undefined | nul
 
 export async function readTruckTrialFromToken(token: string | undefined | null): Promise<boolean> {
   return (await readVerifiedPayload(token))?.truckTrial === true;
+}
+
+export async function readClearingMenuFromToken(token: string | undefined | null): Promise<boolean> {
+  return (await readVerifiedPayload(token))?.clearingMenu === true;
 }
