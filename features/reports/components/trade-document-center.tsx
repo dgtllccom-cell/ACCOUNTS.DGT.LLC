@@ -59,6 +59,12 @@ const DOC_TYPES: Array<{ key: TradeDocType; labelKey: string; en: string; icon: 
   { key: "packing_list", labelKey: "tdoc.t_packing_list", en: "Packing List", icon: Package },
   { key: "proforma_invoice", labelKey: "tdoc.t_proforma_invoice", en: "Proforma Invoice", icon: FileSpreadsheet },
   { key: "contract", labelKey: "tdoc.t_contract", en: "Contract", icon: FileText },
+  // 2026-11: 4 new doc types × 5 templates = 20 new combinations the gallery can render.
+  { key: "purchase_invoice", labelKey: "tdoc.t_purchase_invoice", en: "Purchase Invoice", icon: FileText },
+  { key: "sales_invoice", labelKey: "tdoc.t_sales_invoice", en: "Sales Invoice", icon: FileText },
+  { key: "tax_invoice", labelKey: "tdoc.t_tax_invoice", en: "Tax Invoice", icon: FileSpreadsheet },
+  { key: "export_invoice", labelKey: "tdoc.t_export_invoice", en: "Export Invoice", icon: FileText },
+  { key: "purchase_order", labelKey: "tdoc.t_purchase_order", en: "Purchase Order", icon: FileText },
 ];
 
 // Each language option is shown in its OWN native script — this is not

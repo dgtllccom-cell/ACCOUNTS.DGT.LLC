@@ -3,6 +3,7 @@ import { translateHeader, registerUiDictionaryFallback } from "@/lib/i18n/table-
 
 export type UiKey =
   | "lp.queue_transfer"
+  | "lp.print_invoice"
   | "lp.review_transfer"
   | "lp.queue_title"
   | "lp.queue_body"
@@ -8077,6 +8078,8 @@ export type UiKey =
   | "pjt.receipt_system_generated_document"
   | "pjt.receipt_exchange_rate_applied"
   | "pjt.receipt_super_admin"
+  | "tdoc.t_purchase_invoice" | "tdoc.t_sales_invoice" | "tdoc.t_tax_invoice" | "tdoc.t_purchase_order"
+  | "tdoc.sec_contract_goods" | "tdoc.sign_seller" | "tdoc.sign_buyer" | "tdoc.contract_terms"
   | "tdoc.t_contract"
   | "tdoc.t_sales_contract"
   | "tdoc.t_purchase_contract"
@@ -13110,6 +13113,7 @@ type Dict = Record<string, string>;
 const en: Dict = {
   "lp.queue_transfer": "Transfer for Review",
   "lp.review_transfer": "Review Transfer",
+  "lp.print_invoice": "Print Invoice",
   "lp.queue_title": "Transfer this bill for review?",
   "lp.queue_body": "This sends the bill to Transfer Payment for verification. Roznamcha and ledger posting happens there after review.",
   "lp.queue_confirm": "Confirm Transfer",
@@ -25059,6 +25063,10 @@ const en: Dict = {
   "pdoc.employee_report_subtitle": "Employee Profile & Payroll Summary",
   "pdoc.employee_overview": "Employee Profile Overview",
   "tdoc.t_commercial_invoice": "Commercial Invoice",
+  "tdoc.t_purchase_invoice": "Purchase Invoice",
+  "tdoc.t_sales_invoice": "Sales Invoice",
+  "tdoc.t_tax_invoice": "Tax Invoice",
+  "tdoc.t_purchase_order": "Purchase Order",
   "tdoc.t_export_invoice": "Export Invoice",
   "tdoc.t_packing_list": "Packing List",
   "tdoc.t_proforma_invoice": "Proforma Invoice",
@@ -25140,6 +25148,10 @@ const en: Dict = {
   "tdoc.sec_bank": "Beneficiary Bank Details",
   "tdoc.sign_prepared": "Prepared By",
   "tdoc.sign_authorized": "Authorized Signature & Stamp",
+  "tdoc.sec_contract_goods": "Packing List & Goods Details",
+  "tdoc.sign_seller": "Seller — Authorized Signatory",
+  "tdoc.sign_buyer": "Buyer — Authorized Signatory",
+  "tdoc.contract_terms": "Contract Terms & Conditions",
   "tdoc.system_generated": "System-generated document",
   "tdoc.center_title": "Commercial Document Center",
   "tdoc.center_hint": "Generate a professional document from this transaction. The same source record is used — no duplicate transaction is created.",
@@ -39482,6 +39494,7 @@ const ur: Dict = {
 ...en,
   "lp.queue_transfer": "جانچ کے لیے منتقل کریں",
   "lp.review_transfer": "منتقلی کی جانچ",
+  "lp.print_invoice": "انوائس پرنٹ کریں",
   "lp.queue_title": "یہ بل جانچ کے لیے منتقل کریں؟",
   "lp.queue_body": "بل جانچ کے لیے ٹرانسفر پیمنٹ میں جائے گا۔ روزنامچے اور لیجر میں پوسٹنگ وہاں جانچ کے بعد ہوگی۔",
   "lp.queue_confirm": "منتقلی کی تصدیق",
@@ -51566,6 +51579,10 @@ const ur: Dict = {
   "pdoc.employee_report_subtitle": "ملازم پروفائل اور پے رول خلاصہ",
   "pdoc.employee_overview": "ملازم پروفائل کا جائزہ",
   "tdoc.t_commercial_invoice": "کمرشل انوائس",
+  "tdoc.t_purchase_invoice": "خریداری انوائس",
+  "tdoc.t_sales_invoice": "فروخت انوائس",
+  "tdoc.t_tax_invoice": "ٹیکس انوائس",
+  "tdoc.t_purchase_order": "خریداری آرڈر",
   "tdoc.t_export_invoice": "ایکسپورٹ انوائس",
   "tdoc.t_packing_list": "پیکنگ لسٹ",
   "tdoc.t_proforma_invoice": "پروفارما انوائس",
@@ -51647,6 +51664,10 @@ const ur: Dict = {
   "tdoc.sec_bank": "بینک کی تفصیلات (فائدہ اٹھانے والا)",
   "tdoc.sign_prepared": "تیار کنندہ",
   "tdoc.sign_authorized": "مجاز دستخط و مہر",
+  "tdoc.sec_contract_goods": "پیکنگ لسٹ اور سامان کی تفصیلات",
+  "tdoc.sign_seller": "فروخت کنندہ — مجاز دستخط کنندہ",
+  "tdoc.sign_buyer": "خریدار — مجاز دستخط کنندہ",
+  "tdoc.contract_terms": "معاہدے کی شرائط و ضوابط",
   "tdoc.system_generated": "سسٹم سے تیار کردہ دستاویز",
   "tdoc.center_title": "کمرشل دستاویز مرکز",
   "tdoc.center_hint": "اس لین دین سے پیشہ ورانہ دستاویز بنائیں۔ وہی ماخذ ریکارڈ استعمال ہوتا ہے — کوئی نقلی لین دین نہیں بنتا۔",
@@ -65822,6 +65843,7 @@ const ar: Dict = {
 ...en,
   "lp.queue_transfer": "إرسال للمراجعة",
   "lp.review_transfer": "مراجعة التحويل",
+  "lp.print_invoice": "طباعة الفاتورة",
   "lp.queue_title": "إرسال هذه الفاتورة للمراجعة؟",
   "lp.queue_body": "سترسل الفاتورة إلى تحويل المدفوعات للتحقق. يتم الترحيل إلى اليومية ودفاتر الأستاذ هناك بعد المراجعة.",
   "lp.queue_confirm": "تأكيد الإرسال",
@@ -77856,6 +77878,10 @@ const ar: Dict = {
   "pdoc.employee_report_subtitle": "ملخص ملف الموظف وكشوف المرتبات",
   "pdoc.employee_overview": "نظرة عامة على ملف الموظف",
   "tdoc.t_commercial_invoice": "فاتورة تجارية",
+  "tdoc.t_purchase_invoice": "فاتورة شراء",
+  "tdoc.t_sales_invoice": "فاتورة مبيعات",
+  "tdoc.t_tax_invoice": "فاتورة ضريبية",
+  "tdoc.t_purchase_order": "أمر شراء",
   "tdoc.t_export_invoice": "فاتورة تصدير",
   "tdoc.t_packing_list": "قائمة التعبئة",
   "tdoc.t_proforma_invoice": "فاتورة مبدئية",
@@ -77937,6 +77963,10 @@ const ar: Dict = {
   "tdoc.sec_bank": "تفاصيل بنك المستفيد",
   "tdoc.sign_prepared": "أعده",
   "tdoc.sign_authorized": "التوقيع المعتمد والختم",
+  "tdoc.sec_contract_goods": "قائمة التعبئة وتفاصيل البضائع",
+  "tdoc.sign_seller": "البائع — الموقّع المعتمد",
+  "tdoc.sign_buyer": "المشتري — الموقّع المعتمد",
+  "tdoc.contract_terms": "شروط العقد وأحكامه",
   "tdoc.system_generated": "مستند مُنشأ بواسطة النظام",
   "tdoc.center_title": "مركز المستندات التجارية",
   "tdoc.center_hint": "أنشئ مستنداً احترافياً من هذه المعاملة. يُستخدم نفس السجل المصدر — لا يتم إنشاء معاملة مكررة.",
@@ -92163,6 +92193,7 @@ const fa: Dict = {
 ...en,
   "lp.queue_transfer": "انتقال برای بررسی",
   "lp.review_transfer": "بررسی انتقال",
+  "lp.print_invoice": "چاپ فاکتور",
   "lp.queue_title": "این فاکتور برای بررسی منتقل شود؟",
   "lp.queue_body": "فاکتور برای بررسی به انتقال پرداخت می‌رود. ثبت در روزنامچه و دفتر کل پس از بررسی در آنجا انجام می‌شود.",
   "lp.queue_confirm": "تأیید انتقال",
@@ -104196,6 +104227,10 @@ const fa: Dict = {
   "pdoc.employee_report_subtitle": "خلاصه پروفایل و حقوق کارمند",
   "pdoc.employee_overview": "نمای کلی پروفایل کارمند",
   "tdoc.t_commercial_invoice": "فاکتور تجاری",
+  "tdoc.t_purchase_invoice": "فاکتور خرید",
+  "tdoc.t_sales_invoice": "فاکتور فروش",
+  "tdoc.t_tax_invoice": "فاکتور مالیاتی",
+  "tdoc.t_purchase_order": "سفارش خرید",
   "tdoc.t_export_invoice": "فاکتور صادرات",
   "tdoc.t_packing_list": "فهرست بسته‌بندی",
   "tdoc.t_proforma_invoice": "پیش‌فاکتور",
@@ -104277,6 +104312,10 @@ const fa: Dict = {
   "tdoc.sec_bank": "مشخصات بانک ذی‌نفع",
   "tdoc.sign_prepared": "تهیه‌کننده",
   "tdoc.sign_authorized": "امضا و مهر مجاز",
+  "tdoc.sec_contract_goods": "فهرست بسته‌بندی و جزئیات کالا",
+  "tdoc.sign_seller": "فروشنده — امضاکننده مجاز",
+  "tdoc.sign_buyer": "خریدار — امضاکننده مجاز",
+  "tdoc.contract_terms": "شرایط و مقررات قرارداد",
   "tdoc.system_generated": "سند تولیدشده توسط سیستم",
   "tdoc.center_title": "مرکز اسناد تجاری",
   "tdoc.center_hint": "یک سند حرفه‌ای از این تراکنش بسازید. همان رکورد مبدأ استفاده می‌شود — تراکنش تکراری ایجاد نمی‌شود.",
@@ -118503,6 +118542,7 @@ const ps: Dict = {
 ...en,
   "lp.queue_transfer": "د کتنې لپاره ولېږدئ",
   "lp.review_transfer": "د لېږد کتنه",
+  "lp.print_invoice": "د انوایس چاپ",
   "lp.queue_title": "دا بل د کتنې لپاره ولېږدوو؟",
   "lp.queue_body": "بل د کتنې لپاره د تادیې لېږد ته ځي. روزنامچې او لیجر ته ثبت به هلته له کتنې وروسته کېږي.",
   "lp.queue_confirm": "لېږد تایید کړئ",
@@ -130534,6 +130574,10 @@ const ps: Dict = {
   "pdoc.employee_report_subtitle": "د کارمند پروفایل او معاش لنډیز",
   "pdoc.employee_overview": "د کارمند پروفایل کتنه",
   "tdoc.t_commercial_invoice": "سوداګریز انوایس",
+  "tdoc.t_purchase_invoice": "د پېرود انوایس",
+  "tdoc.t_sales_invoice": "د پلور انوایس",
+  "tdoc.t_tax_invoice": "د مالیې انوایس",
+  "tdoc.t_purchase_order": "د پېرود امر",
   "tdoc.t_export_invoice": "د صادراتو انوایس",
   "tdoc.t_packing_list": "د بسته بندۍ لیست",
   "tdoc.t_proforma_invoice": "پروفارما انوائس",
@@ -130615,6 +130659,10 @@ const ps: Dict = {
   "tdoc.sec_bank": "د ګټه اخیستونکي بانک جزئیات",
   "tdoc.sign_prepared": "چمتو کوونکی",
   "tdoc.sign_authorized": "مجاز لاسلیک او مهر",
+  "tdoc.sec_contract_goods": "د بسته بندۍ لیست او د توکو توضیحات",
+  "tdoc.sign_seller": "پلورونکی — مجاز لاسلیک کوونکی",
+  "tdoc.sign_buyer": "پیرودونکی — مجاز لاسلیک کوونکی",
+  "tdoc.contract_terms": "د تړون شرایط او قواعد",
   "tdoc.system_generated": "د سیسټم لخوا جوړ شوی سند",
   "tdoc.center_title": "د سوداګریزو اسنادو مرکز",
   "tdoc.center_hint": "له دې معاملې څخه مسلکي سند جوړ کړئ. هماغه سرچینه ریکارډ کارول کیږي — کوم نقل معامله نه جوړیږي.",

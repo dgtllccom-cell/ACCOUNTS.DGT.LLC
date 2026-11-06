@@ -31,6 +31,19 @@ const n = (v: any): number | undefined => {
   return Number.isFinite(x) ? x : undefined;
 };
 
+/**
+ * A real company name for a party box. Branding falls back to the COUNTRY name when a scope has no
+ * company name configured; printing "Pakistan" as the buyer/consignee company would be wrong, so the
+ * country is never used here (the blank party is then listed in `missingFields`).
+ */
+function companyNameOrNull(b: Pick<DocumentBranding, "entityName" | "legalName" | "countryName">): string | null {
+  const legal = (b.legalName || "").trim();
+  const name = (b.entityName || "").trim();
+  if (!name) return legal || null;
+  if (b.countryName && name.toLowerCase() === b.countryName.trim().toLowerCase()) return legal || null;
+  return name;
+}
+
 function goodsFrom(entries: AnyRec[]): TradeLineItem[] {
   return (entries || []).map((g) => {
     const qty = n(pick(g, "qtyNo", "quantity", "totalQuantity", "qty", "numbers"));
@@ -52,7 +65,7 @@ function goodsFrom(entries: AnyRec[]): TradeLineItem[] {
       unit,
       unitPrice: rate,
       netWeight: netW,
-      grossWeight: grossW ?? (netW != null ? Math.round(netW * 1.03) : undefined),
+      grossWeight: grossW,
       amount: amount ?? (qty != null && rate != null ? qty * rate : undefined),
       discount,
       taxAmount,
@@ -99,7 +112,7 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   const customer = pick(form, "customerName", "customer_name", "buyerName") || pick(rec, "customer_name");
   const isSales = kind === "sales";
   const seller: TradeParty = {
-    name: (isSales ? opts.branding.entityName : supplier) || opts.branding.entityName,
+    name: (isSales ? companyNameOrNull(opts.branding) : supplier) || undefined,
     address: isSales ? opts.branding.address : pick(form, "supplierAddress"),
     phone: isSales ? opts.branding.phone : pick(form, "supplierMobile", "supplierContact", "purchaseContact"),
     email: isSales ? opts.branding.email : pick(form, "supplierEmail"),
@@ -107,7 +120,7 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
     country: isSales ? opts.branding.countryName : pick(form, "loadingCountry", "supplierCountry"),
   };
   const buyer: TradeParty = {
-    name: (isSales ? customer : opts.branding.entityName) || (isSales ? customer : opts.branding.entityName),
+    name: (isSales ? customer : companyNameOrNull(opts.branding)) || undefined,
     address: isSales ? pick(form, "customerAddress", "deliveryAddress") : opts.branding.address,
     phone: isSales ? pick(form, "customerContact", "customerMobile") : opts.branding.phone,
     email: isSales ? pick(form, "customerEmail") : opts.branding.email,
@@ -232,8 +245,8 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     docNo: `${opts.docType === "commercial_invoice" ? "CI" : opts.docType === "packing_list" ? "PL" : opts.docType === "contract" ? "CT" : "PFI"}-LP-${rec.id?.slice(0, 8) || "NEW"}`,
     docDate: rec.created_at || new Date().toISOString(),
     referenceNos: { invoice: rec.purchase_account_no, contract: rec.chassis_code },
-    seller: { name: rec.supplier_name || opts.branding.entityName, ...(opts.overrides?.seller || {}) },
-    buyer: { name: opts.branding.entityName, address: opts.branding.address, taxId: opts.branding.taxNumber, ...(opts.overrides?.buyer || {}) },
+    seller: { name: rec.supplier_name || undefined, ...(opts.overrides?.seller || {}) },
+    buyer: { name: companyNameOrNull(opts.branding) || undefined, address: opts.branding.address, taxId: opts.branding.taxNumber, ...(opts.overrides?.buyer || {}) },
     notifyParty: null,
     delivery: { ...(opts.overrides?.delivery || {}) },
     transport: null,
@@ -254,6 +267,7 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     signatureName: opts.overrides?.signatureName ?? null,
     missingFields: [
       ...(rec.supplier_name ? [] : ["Supplier"]),
+      ...(companyNameOrNull(opts.branding) ? [] : ["Buyer (company name not set in company profile)"]),
       ...(rec.goods_name ? [] : ["Goods"]),
     ],
     orientation: opts.orientation,
