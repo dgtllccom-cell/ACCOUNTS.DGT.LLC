@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { roznamchaPostingSchema } from "@/lib/api/erp-validation";
 import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
-import { assertBusinessCityBranch } from "@/lib/api/branch-scope-guard";
+import { assertRoznamchaCityBranch } from "@/lib/api/roznamcha-branch-guard";
 import { requireErpSession } from "@/lib/auth/session";
 import { roznamchaService } from "@/lib/services/roznamcha-service";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
@@ -404,8 +404,8 @@ export async function POST(request: NextRequest) {
       countryBranchId: body.countryBranchId,
       cityBranchId: body.cityBranchId
     });
-    // Roznamcha is a business ledger — reject shipping/clearing/agent branches.
-    await assertBusinessCityBranch(body.cityBranchId ?? null);
+    // Shared accounting: retain scope authorization and enforce the login's branch domain.
+    await assertRoznamchaCityBranch(session, body.cityBranchId ?? null);
 
     let postingPlan;
     try {
