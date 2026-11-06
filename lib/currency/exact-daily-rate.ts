@@ -24,7 +24,8 @@ export async function loadExactDailyRate(db: any, input: { countryId: string; br
   const cutoff = input.date < now.toISOString().slice(0, 10) ? `${input.date}T23:59:59.999Z` : now.toISOString();
   const applicable = (r: DailyRateRow) => String(r.rate_date || "").slice(0, 10) === input.date &&
     (!input.currency || String(r.currency_code || "").toUpperCase() === input.currency) &&
-    (!r.country_branch_id || r.country_branch_id === input.branchId);
+    (!r.country_branch_id || r.country_branch_id === input.branchId) &&
+    (!r.is_branch_specific || Boolean(input.branchId));
   let rpcError: unknown;
   try {
     const result = await db.rpc("get_daily_rate", {

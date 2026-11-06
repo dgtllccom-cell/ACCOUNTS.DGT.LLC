@@ -32,6 +32,11 @@ describe("authoritative exact-date cash FX", () => {
   ])("never accepts stale dates, other currencies or another branch", async (bad) => {
     expect(await loadExactDailyRate(db([bad], null, [bad]), input)).toBeNull();
   });
+  it("does not accept an unidentified branch quote for a country-wide request", async () => {
+    const client = db([{ ...row, is_branch_specific: true }], null, [row]);
+    expect(await loadExactDailyRate(client, { ...input, branchId: "" })).toEqual(row);
+    expect(client.q.is).toHaveBeenCalledWith("country_branch_id", null);
+  });
   it("distinguishes a lookup outage from an absent rate", async () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     await expect(loadExactDailyRate(db(null, { message: "RPC unavailable" }, [], { message: "RLS denied" }), input)).rejects.toThrow("unavailable");

@@ -16,10 +16,9 @@ export async function GET(request: NextRequest) {
     const limit = request.nextUrl.searchParams.get("limit");
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
-    const result = await clearingAgentsRepository.search({
-      query,
-      limit: limit ? Number(limit) : 100
-    });
+    const result = isClearingMenu(session)
+      ? { clearingAgents: (await Promise.all(session.clearingAgentIds.map((id) => clearingAgentsRepository.getById(id)))).filter(Boolean) }
+      : await clearingAgentsRepository.search({ query, limit: limit ? Number(limit) : 100 });
 
     let clearingAgents: any[] = (result as any).clearingAgents ?? [];
     if (isClearingMenu(session)) clearingAgents = clearingAgents.filter((agent) => session.clearingAgentIds.includes(agent.id));

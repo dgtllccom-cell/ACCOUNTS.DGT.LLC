@@ -13,7 +13,9 @@ export const metadata: Metadata = {
 
 export default async function ClearingAgentListPage() {
   const session = await requireErpSession();
-  const res = await clearingAgentsRepository.search({ limit: 100 }).catch(() => ({ clearingAgents: [] }));
+  const res = isClearingMenu(session)
+    ? { clearingAgents: (await Promise.all(session.clearingAgentIds.map((id) => clearingAgentsRepository.getById(id)))).filter((agent): agent is NonNullable<typeof agent> => Boolean(agent)) }
+    : await clearingAgentsRepository.search({ limit: 100 }).catch(() => ({ clearingAgents: [] }));
   const agents = isClearingMenu(session) ? (res.clearingAgents ?? []).filter((agent) => session.clearingAgentIds.includes(agent.id)) : res.clearingAgents ?? [];
 
   return (
