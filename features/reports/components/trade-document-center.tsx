@@ -12,7 +12,7 @@
  * WhatsApp already live there).
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileText, Package, FileSpreadsheet, Loader2, Star, CheckCircle2 } from "lucide-react";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { Button } from "@/components/ui/button";
@@ -75,12 +75,60 @@ const LANGS: Array<{ code: "en" | "ur" | "ps" | "fa" | "ar"; nativeName: string 
   { code: "fa", nativeName: "فارسی" }, { code: "ar", nativeName: "العربية" },
 ];
 
+/**
+ * Document types the default-template API can store. The route's zod enum and the invoice_template_defaults
+ * CHECK constraint both stop at these five, so a purchase / sales / tax invoice or purchase order cannot be
+ * saved as a default yet and the gallery does not offer "Set Default" for it.
+ */
+export const DEFAULT_SAVABLE_DOC_TYPES: ReadonlyArray<TradeDocType> = [
+  "commercial_invoice", "export_invoice", "packing_list", "proforma_invoice", "contract",
+];
+
+export function canSaveDefaultFor(docType: TradeDocType): boolean {
+  return DEFAULT_SAVABLE_DOC_TYPES.includes(docType);
+}
+
+/**
+ * Which mapper a record goes through. An explicit `source` always wins. Without one, a sale is a sales order,
+ * a flat local_purchases row (goods_name, no form_data) is a local purchase, and anything else is a purchase order.
+ */
+export function resolveTradeSource(input: {
+  source?: Source;
+  txnKind: TradeTxnKind;
+  record: Record<string, any> | null | undefined;
+}): Source {
+  if (input.source) return input.source;
+  if (input.txnKind === "sales") return "sales_order";
+  const rec = input.record ?? {};
+  return rec.goods_name && !rec.form_data ? "local_purchase" : "purchase_order";
+}
+
+/**
+ * The company whose bank accounts the picker lists. A caller's companyId always wins. When a caller leaves it
+ * out, the saved form's own company is used: salesCompanyId for a sale, purchaseCompanyId for a purchase, and
+ * company_id for a local purchase row.
+ */
+export function resolveBankCompanyId(input: {
+  companyId?: string | null;
+  source: Source;
+  record: Record<string, any> | null | undefined;
+}): string | null {
+  if (input.companyId) return input.companyId;
+  const rec = input.record ?? {};
+  const form = (rec.form_data?.form ?? rec.form_data ?? {}) as Record<string, any>;
+  if (input.source === "sales_order") return form.salesCompanyId || null;
+  if (input.source === "purchase_order") return form.purchaseCompanyId || null;
+  return rec.company_id || null;
+}
+
 export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
   const { open, onClose, txnKind, record, companyId } = props;
   const scopeKey = JSON.stringify(props.scope || {});
   const scope = props.scope;
   const activeLang = useActiveLanguage();
   const tt = (key: string, fallback: string) => t(activeLang, key as never, fallback);
+  const source: Source = resolveTradeSource({ source: props.source, txnKind, record });
+  const bankCompanyId = resolveBankCompanyId({ companyId, source, record });
 
   const [docType, setDocType] = useState<TradeDocType>(props.initialDocType ?? "commercial_invoice");
   useEffect(() => { if (open && props.initialDocType) setDocType(props.initialDocType); }, [open, props.initialDocType]);
@@ -99,34 +147,61 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
   const [matchedScope, setMatchedScope] = useState<string | null>(null);
   const [savingDefault, setSavingDefault] = useState(false);
   const [defaultSavedMsg, setDefaultSavedMsg] = useState<string | null>(null);
+  // Preview waits for the saved default: a click that lands before the lookup returns would otherwise print the
+  // placeholder template. A template the user chose is never replaced by a late default lookup.
+  const [resolvingDefault, setResolvingDefault] = useState(true);
+  const [defaultLoadFailed, setDefaultLoadFailed] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const templateChosenRef = useRef(false);
 
   useEffect(() => { setLang(activeLang as never); }, [activeLang, open]);
+
+  // Each opening starts without a user choice, so the saved default may apply.
+  useEffect(() => {
+    if (!open) return;
+    templateChosenRef.current = false;
+    setPreviewError(null);
+  }, [open]);
 
   // Resolve the default template + display flags for this transaction's scope
   // (Document Type → City Branch → Main Branch → Country → Company → global).
   useEffect(() => {
     if (!open) return;
     let alive = true;
+    setResolvingDefault(true);
     (async () => {
-      const resolved = await resolveInvoiceTemplateDefault({
-        documentType: docType,
-        companyId,
-        countryId: scope?.countryId,
-        countryBranchId: scope?.countryBranchId,
-        cityBranchId: scope?.cityBranchId,
-      });
-      if (!alive) return;
-      setTemplateId(resolved.templateId);
-      setShowLogo(resolved.showLogo);
-      setShowBankDetails(resolved.showBankDetails);
-      setShowTerms(resolved.showTerms);
-      setMatchedScope(resolved.matchedScope);
-      setDefaultSavedMsg(null);
+      try {
+        const resolved = await resolveInvoiceTemplateDefault({
+          documentType: docType,
+          companyId,
+          countryId: scope?.countryId,
+          countryBranchId: scope?.countryBranchId,
+          cityBranchId: scope?.cityBranchId,
+        });
+        if (!alive) return;
+        setDefaultLoadFailed(Boolean(resolved.loadFailed));
+        setDefaultSavedMsg(null);
+        if (templateChosenRef.current) return;
+        setTemplateId(resolved.templateId);
+        setShowLogo(resolved.showLogo);
+        setShowBankDetails(resolved.showBankDetails);
+        setShowTerms(resolved.showTerms);
+        setMatchedScope(resolved.matchedScope);
+      } finally {
+        if (alive) setResolvingDefault(false);
+      }
     })();
     return () => { alive = false; };
   }, [open, docType, companyId, scopeKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /** The user picked a template or display option: keep it, and stop claiming it is the saved default. */
+  function markTemplateChosen() {
+    templateChosenRef.current = true;
+    setMatchedScope(null);
+  }
+
   async function handleSetDefault() {
+    if (!canSaveDefaultFor(docType) || resolvingDefault || defaultLoadFailed) return;
     setSavingDefault(true);
     setDefaultSavedMsg(null);
     try {
@@ -162,9 +237,9 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
         const brand = await resolveDocumentBranding(scope || {}, activeLang);
         if (brand.bank) list.push(brand.bank);
       } catch { /* ignore */ }
-      if (companyId) {
+      if (bankCompanyId) {
         try {
-          const res = await apiGet<any>(`/api/erp/companies/${companyId}/bank-accounts`);
+          const res = await apiGet<any>(`/api/erp/companies/${bankCompanyId}/bank-accounts`);
           for (const b of (Array.isArray(res?.banks) ? res.banks : [])) {
             if (!list.some((x) => x.accountNumber && x.accountNumber === b.accountNumber)) list.push(b);
           }
@@ -176,13 +251,14 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
       setLoading(false);
     })();
     return () => { alive = false; };
-  }, [open, companyId, scopeKey, activeLang]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const source: Source = props.source
-    ?? (txnKind === "sales" ? "sales_order" : record?.goods_name ? "local_purchase" : "purchase_order");
+  }, [open, bankCompanyId, scopeKey, activeLang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handlePreview() {
+    // Never print while the saved default is still loading or the bank list is incomplete: the output would
+    // silently use the placeholder template or omit the bank.
+    if (busy || loading || resolvingDefault) return;
     setBusy(true);
+    setPreviewError(null);
     try {
       const branding = await resolveDocumentBranding(scope || {}, lang);
       const opts: MapOptions = {
@@ -199,6 +275,8 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
         : purchaseOrderToTradeInput(record, opts);
       openInvoiceDocument(input, templateId, { ...DEFAULT_TEMPLATE_FLAGS, showLogo, showBankDetails, showTerms });
       onClose();
+    } catch {
+      setPreviewError(tt("tdoc.preview_failed", "Could not build this document. Please try again."));
     } finally {
       setBusy(false);
     }
@@ -306,7 +384,7 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
                 <button
                   key={def.id}
                   type="button"
-                  onClick={() => setTemplateId(def.id)}
+                  onClick={() => { markTemplateChosen(); setTemplateId(def.id); }}
                   title={tt(def.descKey, def.descFallback)}
                   className={`relative flex flex-col items-center gap-1 rounded-lg border p-1.5 transition ${on ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-900" : "border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
                 >
@@ -322,24 +400,40 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
             <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5">{tt("invtpl.display_options", "Display Options")}</div>
             <div className="flex flex-wrap gap-3">
               <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                <input type="checkbox" checked={showLogo} onChange={(e) => setShowLogo(e.target.checked)} className="h-3.5 w-3.5" />
+                <input type="checkbox" checked={showLogo} onChange={(e) => { markTemplateChosen(); setShowLogo(e.target.checked); }} className="h-3.5 w-3.5" />
                 {tt("invtpl.show_logo", "Logo")}
               </label>
               {docType !== "packing_list" && (
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                  <input type="checkbox" checked={showBankDetails} onChange={(e) => setShowBankDetails(e.target.checked)} className="h-3.5 w-3.5" />
+                  <input type="checkbox" checked={showBankDetails} onChange={(e) => { markTemplateChosen(); setShowBankDetails(e.target.checked); }} className="h-3.5 w-3.5" />
                   {tt("invtpl.show_bank", "Bank Details")}
                 </label>
               )}
               <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                <input type="checkbox" checked={showTerms} onChange={(e) => setShowTerms(e.target.checked)} className="h-3.5 w-3.5" />
+                <input type="checkbox" checked={showTerms} onChange={(e) => { markTemplateChosen(); setShowTerms(e.target.checked); }} className="h-3.5 w-3.5" />
                 {tt("invtpl.show_terms", "Terms")}
               </label>
             </div>
           </div>
 
+          {defaultLoadFailed && (
+            <div className="mt-2 text-[11px] text-amber-700 dark:text-amber-400">
+              {tt("invtpl.default_load_failed", "The saved default could not be loaded, so Classic is shown. Reopen this window to try again.")}
+            </div>
+          )}
+          {!canSaveDefaultFor(docType) && (
+            <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+              {tt("invtpl.default_unsupported_doc", "Default templates are not available for this document type yet.")}
+            </div>
+          )}
           <div className="mt-2 flex items-center justify-between gap-2">
-            <Button variant="outline" size="sm" onClick={handleSetDefault} disabled={savingDefault} className="text-xs">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSetDefault}
+              disabled={savingDefault || resolvingDefault || defaultLoadFailed || !canSaveDefaultFor(docType)}
+              className="text-xs"
+            >
               {savingDefault ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Star className="h-3.5 w-3.5 mr-1.5" />}
               {tt("invtpl.set_default", "Set Default")}
             </Button>
@@ -347,11 +441,14 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
           </div>
         </div>
 
+        {previewError && (
+          <div role="alert" className="text-xs font-semibold text-red-600 dark:text-red-400">{previewError}</div>
+        )}
         <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
           <Button variant="outline" size="sm" onClick={onClose} className="text-xs">
             {tt("common.cancel", "Cancel")}
           </Button>
-          <Button size="sm" onClick={handlePreview} disabled={busy} className="text-xs bg-blue-600 hover:bg-blue-700 text-white">
+          <Button size="sm" onClick={handlePreview} disabled={busy || loading || resolvingDefault} className="text-xs bg-blue-600 hover:bg-blue-700 text-white">
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <FileText className="h-3.5 w-3.5 mr-1.5" />}
             {tt("tdoc.preview", "Preview Document")}
           </Button>
