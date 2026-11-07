@@ -6,6 +6,7 @@ import { remainingBookingRow } from "@/lib/journal/remaining-booking-table";
 import { resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
+import { LoadingReceivingCell } from "./loading-receiving-cell";
 type LanguageCode = string;
 import { WalletCards, Eye, Printer, FileSpreadsheet, ChevronRight } from "lucide-react";
 
@@ -246,8 +247,8 @@ export function SourceFilteredTable({
                 <th className="py-3 px-2 text-right border-r border-amber-300">Net kg</th>
                 
                 {/* ── Same-Row Grouped Loading & Receiving ── */}
-                <th className="py-3 px-4 border-r border-amber-300 bg-amber-200/90 text-center min-w-[380px]">
-                  Loading & Receiving
+                <th className="py-3 px-4 border-r border-amber-300 bg-amber-200/90 text-center min-w-[340px]">
+                  {label("Loading & Receiving")}
                 </th>
 
                 <th className="py-3 px-2 text-center border-r border-amber-300">Currency</th>
@@ -276,20 +277,6 @@ export function SourceFilteredTable({
                 const bal = Math.max(0, total - paid);
                 const exRate = Number(form.exchangeRate || 1).toFixed(4);
 
-                // Quantities from real loading records or form data
-                const loadedQty = Number(r.loaded_quantity ?? form.loadedQuantity ?? r.loading_records?.[0]?.quantity ?? 0);
-                const receivedQty = Number(r.received_quantity || form.receivedQuantity || 0);
-                const damageQty = Number(r.damage_quantity || 0);
-                const shortageQty = Number(r.shortage_quantity || 0);
-                const outstandingQty = Math.max(0, qty - receivedQty);
-
-                const loadCountry = form.loadingCountry || "—";
-                const loadPort = form.loadingPort || "—";
-                const loadDate = form.loadingDate || "—";
-                const rcvCountry = form.receivedCountry || form.receivingCountry || form.destinationCountry || "—";
-                const rcvPort = form.receivedPort || form.receivingPort || form.destinationPort || "—";
-                const rcvDate = form.receivedDate || form.arrivalDate || "—";
-
                 return (
                   <tr key={r.id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     <td className="py-3 px-3 font-mono font-bold text-blue-600 dark:text-blue-400">{billNo}</td>
@@ -303,44 +290,8 @@ export function SourceFilteredTable({
                     <td className="py-3 px-2 text-right font-mono">{fmtQty(netKg)}</td>
 
                     {/* ── Same-row Loading & Receiving Grouped Block ── */}
-                    <td className="py-2.5 px-3 bg-slate-50/70 dark:bg-slate-900/60 border-r border-slate-200 dark:border-slate-800">
-                      <div className="flex flex-col gap-1.5">
-                        {/* 5 Quantities Strip */}
-                        <div className="grid grid-cols-5 gap-1 text-center font-mono">
-                          <div className="bg-blue-100 dark:bg-blue-950 p-1 rounded">
-                            <span className="block text-[9px] uppercase font-bold text-slate-500">Loaded</span>
-                            <span className="font-black text-blue-700 dark:text-blue-400 text-xs">{fmtQty(loadedQty)}</span>
-                          </div>
-                          <div className="bg-emerald-100 dark:bg-emerald-950 p-1 rounded">
-                            <span className="block text-[9px] uppercase font-bold text-slate-500">Received</span>
-                            <span className="font-black text-emerald-700 dark:text-emerald-400 text-xs">{fmtQty(receivedQty)}</span>
-                          </div>
-                          <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded">
-                            <span className="block text-[9px] uppercase font-bold text-slate-500">Damage</span>
-                            <span className="font-black text-slate-700 dark:text-slate-300 text-xs">{damageQty}</span>
-                          </div>
-                          <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded">
-                            <span className="block text-[9px] uppercase font-bold text-slate-500">Shortage</span>
-                            <span className="font-black text-slate-700 dark:text-slate-300 text-xs">{shortageQty}</span>
-                          </div>
-                          <div className="bg-rose-100 dark:bg-rose-950 p-1 rounded">
-                            <span className="block text-[9px] uppercase font-bold text-slate-500">Outstanding</span>
-                            <span className="font-black text-rose-700 dark:text-rose-400 text-xs">{fmtQty(outstandingQty)}</span>
-                          </div>
-                        </div>
-
-                        {/* Ports & Dates Strip */}
-                        <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-200 dark:border-slate-800">
-                          <div>
-                            <span className="font-bold text-slate-700 dark:text-slate-300">Loading: </span>
-                            <span className="text-slate-600">{loadCountry} • {loadPort} ({loadDate})</span>
-                          </div>
-                          <div className="border-s border-slate-200 dark:border-slate-800 ps-2">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">Receiving: </span>
-                            <span className="text-slate-600">{rcvCountry} • {rcvPort} ({rcvDate})</span>
-                          </div>
-                        </div>
-                      </div>
+                    <td className="py-2.5 px-3 bg-slate-50/70 dark:bg-slate-900/60 border-r border-slate-200 dark:border-slate-800 align-top">
+                      <LoadingReceivingCell row={r} loadingRecords={loadingRecords} lang={lang} />
                     </td>
 
                     <td className="py-3 px-2 text-center font-bold text-indigo-600">{ccy}</td>
@@ -380,10 +331,10 @@ export function SourceFilteredTable({
                 <th className="py-3 px-2 text-center border-r border-amber-300">Unit</th>
                 <th className="py-3 px-2 text-right border-r border-amber-300">Gross kg</th>
                 <th className="py-3 px-2 text-right border-r border-amber-300">Net kg</th>
+                <th className="py-3 px-4 border-r border-amber-300 bg-amber-200/90 text-center min-w-[340px]">{label("Loading & Receiving")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300">Bill Total</th>
                 <th className="py-3 px-2.5 text-right border-r border-amber-300">Paid</th>
                 <th className="py-3 px-2.5 text-right border-r border-amber-300">Balance</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300">Loaded?</th>
                 <th className="py-3 px-3 text-center">Journal</th>
               </tr>
             </thead>
@@ -403,7 +354,6 @@ export function SourceFilteredTable({
                 const paid = Number(r.advance_paid || 0) + Number(r.remaining_paid || 0);
                 const bal = Math.max(0, Number(r.remaining_due ?? (total - paid)));
                 const ccy = r.currency_code || form.currency || "—";
-                const isLoaded = Boolean(r.is_loaded || r.loading_records?.length || form.loadedQuantity > 0);
 
                 return (
                   <tr key={r.id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
@@ -416,14 +366,12 @@ export function SourceFilteredTable({
                     <td className="py-3 px-2 text-center text-slate-500">{unit}</td>
                     <td className="py-3 px-2 text-right font-mono">{fmtQty(grossKg)}</td>
                     <td className="py-3 px-2 text-right font-mono">{fmtQty(netKg)}</td>
+                    <td className="py-2.5 px-3 bg-slate-50/70 dark:bg-slate-900/60 border-r border-slate-200 dark:border-slate-800 align-top">
+                      <LoadingReceivingCell row={r} loadingRecords={loadingRecords} lang={lang} />
+                    </td>
                     <td className="py-3 px-3 text-right font-mono font-black">{fmt(total)} {ccy}</td>
                     <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-600">{fmt(paid)} {ccy}</td>
                     <td className="py-3 px-2.5 text-right font-mono font-bold text-rose-600">{fmt(bal)} {ccy}</td>
-                    <td className="py-3 px-2 text-center">
-                      <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase", isLoaded ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600")}>
-                        {isLoaded ? "Yes" : "No"}
-                      </span>
-                    </td>
                     <td className="py-3 px-3 text-center">
                       <button
                         type="button"

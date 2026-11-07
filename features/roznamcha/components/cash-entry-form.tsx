@@ -715,13 +715,28 @@ export function CashEntryForm({
     }
   };
 
-  const fetchAllDailyExchangeRates = async () => {
+  const fetchAllDailyExchangeRates = async (overrideDate?: string) => {
     try {
       setLoadingExchangeModule(true);
-      const res = await apiGet<any>("/api/erp/currency/daily-rates");
+      const targetDate = overrideDate || (tableDateMode === "day" ? (tableDate || entryDate || todayIso()) : (entryDate || todayIso()));
+      const res = await apiGet<any>(`/api/erp/currency/daily-rates?date=${targetDate}`);
       if (res) {
-        setDailyExchangeModuleRates(Array.isArray(res.rates) ? res.rates : Array.isArray(res.data) ? res.data : []);
-        setDailyExchangeCountriesStatus(Array.isArray(res.countriesStatus) ? res.countriesStatus : []);
+        const ratesList = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.rates)
+          ? res.rates
+          : Array.isArray(res?.data?.rates)
+          ? res.data.rates
+          : Array.isArray(res?.data)
+          ? res.data
+          : [];
+        const statusList = Array.isArray(res?.countriesStatus)
+          ? res.countriesStatus
+          : Array.isArray(res?.data?.countriesStatus)
+          ? res.data.countriesStatus
+          : [];
+        setDailyExchangeModuleRates(ratesList);
+        setDailyExchangeCountriesStatus(statusList);
       }
     } catch (err) {
       console.error("Failed to fetch daily exchange rates from module", err);
@@ -985,80 +1000,69 @@ export function CashEntryForm({
   // Active countries & exchange rates connected to the Daily Exchange Rate module (/api/erp/currency/daily-rates)
   const activeExchangeRatesList = useMemo(() => {
     const targetDate = tableDateMode === "day" ? (tableDate || entryDate || todayIso()) : (entryDate || todayIso());
-    const map = new Map<string, {
-      countryId: string;
-      countryName: string;
-      iso2: string;
-      currencyCode: string;
-      currencyFullName: string;
-      rate: number | null;
-      status: "APPROVED" | "PENDING_MISSING";
-    }>();
+    const userCountryIds = session?.scopes?.countryIds || [];
 
-    // 1. Seed from countries master & summaryOverview
-    for (const c of countries) {
+    // Country Admin and Branch Admin only see their assigned countries; Super Admin sees all active countries
+    const scopedCountries = (isSuperAdmin || userCountryIds.length === 0)
+      ? countries
+      : countries.filter((c) => userCountryIds.includes(c.id));
+
+    const list = scopedCountries.map((c) => {
       const code = (c.currency_code || "AED").toUpperCase();
-      map.set(c.id, {
+      const isUsd = code === "USD";
+
+      // Base currency USD is always 1.0000 and Approved
+      if (isUsd) {
+        return {
+          countryId: c.id,
+          countryName: c.name,
+          iso2: (c as any).iso2 || c.name.slice(0, 2).toUpperCase(),
+          currencyCode: "USD",
+          currencyFullName: CURRENCY_FULL_NAMES["USD"] || "US Dollar",
+          rate: 1.0,
+          creditRate: 1.0,
+          debitRate: 1.0,
+          rateDate: targetDate,
+          status: "APPROVED" as const,
+          statusLabel: "Approved",
+          rateTime: null,
+          enteredBy: null,
+        };
+      }
+
+      // Check exact matching record for targetDate in dailyExchangeCountriesStatus
+      const statusEntry = dailyExchangeCountriesStatus.find(
+        (cs) => cs.countryId === c.id && cs.rateDate === targetDate && cs.status === "APPROVED"
+      );
+
+      // Check exact matching record for targetDate in dailyExchangeModuleRates
+      // STRICT: Must match targetDate, never silently substitute an older rate
+      const exactRow = dailyExchangeModuleRates.find(
+        (r) => r.country_id === c.id && r.rate_date === targetDate && !r.superseded_at
+      );
+
+      const creditRate = exactRow?.credit_rate ?? exactRow?.selling_rate ?? statusEntry?.creditRate ?? null;
+      const debitRate = exactRow?.debit_rate ?? exactRow?.buying_rate ?? statusEntry?.debitRate ?? null;
+      const rateVal = creditRate ?? debitRate ?? null;
+      const isApproved = rateVal != null && Number(rateVal) > 0;
+
+      return {
         countryId: c.id,
         countryName: c.name,
         iso2: (c as any).iso2 || c.name.slice(0, 2).toUpperCase(),
         currencyCode: code,
         currencyFullName: CURRENCY_FULL_NAMES[code] || code,
-        rate: null,
-        status: "PENDING_MISSING",
-      });
-    }
+        rate: isApproved ? Number(rateVal) : null,
+        creditRate: creditRate != null ? Number(creditRate) : null,
+        debitRate: debitRate != null ? Number(debitRate) : null,
+        rateDate: targetDate,
+        status: isApproved ? ("APPROVED" as const) : ("PENDING_MISSING" as const),
+        statusLabel: isApproved ? "Approved" : "Rate Not Entered",
+        rateTime: exactRow?.rate_time ?? statusEntry?.rateTime ?? null,
+        enteredBy: exactRow?.user_name ?? statusEntry?.enteredBy ?? null,
+      };
+    });
 
-    for (const sc of summaryOverview?.countries || []) {
-      const code = (sc.currencyCode || "AED").toUpperCase();
-      const existing = map.get(sc.countryId);
-      const ovRate = sc.rates?.creditRate ?? sc.rates?.debitRate ?? sc.rates?.buyingRate ?? sc.rates?.sellingRate ?? null;
-      map.set(sc.countryId, {
-        countryId: sc.countryId,
-        countryName: sc.countryName || existing?.countryName || "",
-        iso2: sc.iso2 || existing?.iso2 || "",
-        currencyCode: code,
-        currencyFullName: CURRENCY_FULL_NAMES[code] || code,
-        rate: ovRate != null && Number(ovRate) > 0 ? Number(ovRate) : (existing?.rate ?? null),
-        status: ovRate != null && Number(ovRate) > 0 ? "APPROVED" : (existing?.status ?? "PENDING_MISSING"),
-      });
-    }
-
-    // 2. Overlay from Daily Exchange Rate module countriesStatus
-    for (const cs of dailyExchangeCountriesStatus) {
-      if (!cs?.countryId) continue;
-      const code = (cs.currencyCode || "AED").toUpperCase();
-      const existing = map.get(cs.countryId);
-      const modRate = cs.creditRate ?? cs.debitRate ?? null;
-      map.set(cs.countryId, {
-        countryId: cs.countryId,
-        countryName: cs.countryName || existing?.countryName || "",
-        iso2: cs.iso2 || existing?.iso2 || "",
-        currencyCode: code,
-        currencyFullName: CURRENCY_FULL_NAMES[code] || code,
-        rate: modRate != null && Number(modRate) > 0 ? Number(modRate) : (existing?.rate ?? null),
-        status: modRate != null && Number(modRate) > 0 ? "APPROVED" : (existing?.status ?? "PENDING_MISSING"),
-      });
-    }
-
-    // 3. Overlay exact-date or latest non-superseded rate from daily_usd_rates table
-    for (const [cid, item] of map.entries()) {
-      const exactRow = dailyExchangeModuleRates.find(
-        (r) => r.country_id === cid && r.rate_date === targetDate && !r.superseded_at
-      );
-      const latestRow = exactRow || dailyExchangeModuleRates.find(
-        (r) => r.country_id === cid && !r.superseded_at
-      );
-      if (latestRow) {
-        const val = latestRow.credit_rate ?? latestRow.debit_rate ?? latestRow.selling_rate ?? latestRow.buying_rate ?? null;
-        if (val != null && Number(val) > 0) {
-          item.rate = Number(val);
-          item.status = "APPROVED";
-        }
-      }
-    }
-
-    const list = Array.from(map.values());
     const q = exchangeRateSearchQuery.trim().toLowerCase();
     if (!q) return list;
     return list.filter((it) =>
@@ -1067,7 +1071,7 @@ export function CashEntryForm({
       it.currencyCode.toLowerCase().includes(q) ||
       it.currencyFullName.toLowerCase().includes(q)
     );
-  }, [countries, summaryOverview, dailyExchangeCountriesStatus, dailyExchangeModuleRates, entryDate, tableDate, tableDateMode, exchangeRateSearchQuery]);
+  }, [countries, isSuperAdmin, session, dailyExchangeCountriesStatus, dailyExchangeModuleRates, entryDate, tableDate, tableDateMode, exchangeRateSearchQuery]);
 
   // Fast currency -> rate map from Daily Exchange Rate module
   const currencyRateLookup = useMemo(() => {
@@ -3819,7 +3823,7 @@ export function CashEntryForm({
               </div>
 
               {/* Active Country Rates List from Daily Exchange Rate Module */}
-              <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[148px] overflow-y-auto pr-0.5">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[160px] overflow-y-auto pr-0.5">
                 {activeExchangeRatesList.length > 0 ? (
                   activeExchangeRatesList.map((item) => (
                     <div
@@ -3828,22 +3832,48 @@ export function CashEntryForm({
                         setCountryId(item.countryId);
                         if (isSuperAdmin) setTopCountryFilter(item.countryId);
                       }}
-                      className="flex items-center justify-between py-1.5 px-1 hover:bg-emerald-50/40 dark:hover:bg-slate-800/40 rounded-md cursor-pointer transition-colors text-xs"
+                      className={cn(
+                        "flex items-center justify-between py-1.5 px-1.5 rounded-lg cursor-pointer transition-colors text-xs border border-transparent hover:border-emerald-200 hover:bg-emerald-50/50 dark:hover:bg-slate-800/60",
+                        countryId === item.countryId && "bg-emerald-50/80 border-emerald-300 dark:bg-slate-800/80 dark:border-emerald-600"
+                      )}
+                      title={`${item.countryName} (${item.currencyCode}): ${item.rate != null ? `1 USD = ${item.rate.toFixed(4)} ${item.currencyCode}` : 'Rate Not Entered'} ${item.creditRate ? `(Credit: ${item.creditRate.toFixed(4)}, Debit: ${item.debitRate?.toFixed(4) ?? '—'})` : ''}`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sm shrink-0">{getCountryFlag(item.countryName || item.iso2)}</span>
-                        <span className="font-extrabold text-slate-900 dark:text-white w-9 shrink-0">
-                          {item.currencyCode}
-                        </span>
-                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
-                          {item.currencyFullName}
-                        </span>
+                        <span className="text-base shrink-0">{getCountryFlag(item.countryName || item.iso2)}</span>
+                        <div className="min-w-0 flex flex-col">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-extrabold text-slate-900 dark:text-white">
+                              {item.currencyCode}
+                            </span>
+                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate max-w-[110px]" title={item.countryName}>
+                              {item.countryName}
+                            </span>
+                          </div>
+                          <span className="text-[9.5px] font-mono text-slate-400 dark:text-slate-500">
+                            {item.rateDate}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="font-mono text-xs font-black text-slate-900 dark:text-white" dir="ltr">
-                          {item.rate != null && item.rate > 0 ? Number(item.rate).toFixed(4) : "—"}
-                        </span>
-                        <TrendingUp className={cn("h-3.5 w-3.5", item.rate != null && item.rate > 0 ? "text-emerald-600" : "text-amber-500")} />
+                      <div className="flex flex-col items-end gap-0.5 shrink-0">
+                        {item.rate != null && item.rate > 0 ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs font-black text-slate-900 dark:text-white" dir="ltr">
+                              {item.rate.toFixed(4)}
+                            </span>
+                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9.5px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">
+                              Approved
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800">
+                            Rate Not Entered
+                          </span>
+                        )}
+                        {item.rate != null && (item.creditRate != null || item.debitRate != null) && (
+                          <span className="text-[9px] font-mono text-slate-400">
+                            CR {item.creditRate ? item.creditRate.toFixed(4) : "—"} / DR {item.debitRate ? item.debitRate.toFixed(4) : "—"}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))

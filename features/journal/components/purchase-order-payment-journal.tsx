@@ -3609,9 +3609,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           : hasTransferStatus || hasTransferAudit || hasLoadingRecord || isUrlLoadingScope || isInvoiceBill;
         if (!hasContainerMovement) return false; // Block: not yet transferred from loading
 
-        // Show remaining if not fully settled
-        const isFullyCleared = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
-        if (isFullyCleared && remainingDue <= 0.01 && !isUrlLoadingScope) return false;
+        // Keep all eligible remaining bills (both pending and cleared) in modeFilteredAll so
+        // summary card counts (Total, Paid, Remaining) reconcile accurately and users can filter
+        // by settlement status (all / paid / remaining).
       } else if (activeMode === "credit") {
         // Strict Business Rule: ONLY show Credit bills in Credit Payment Journal
         if (!isCreditBill) return false;
@@ -3670,17 +3670,27 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     return status === "paid" || status === "completed" || (total > 0 && due <= 0.01);
   };
 
+  const isLocalPurchaseRecord = (r: any) => Boolean(
+    r && (
+      r.is_local_purchase ||
+      r.order_type === "local_purchase" ||
+      r.source_type === "local_purchase" ||
+      r.source_type === "Local Purchase" ||
+      r.local_purchase_id
+    )
+  );
+
   const billSummaryCounts = useMemo(() => {
     const totalAll = modeFilteredAll.length;
     const paidAll = modeFilteredAll.filter(isSettledRow).length;
     const remainingAll = Math.max(0, totalAll - paidAll);
 
-    const bookingRows = modeFilteredAll.filter((o: any) => o.order_type !== "local_purchase");
+    const bookingRows = modeFilteredAll.filter((o: any) => !isLocalPurchaseRecord(o));
     const totalBooking = bookingRows.length;
     const paidBooking = bookingRows.filter(isSettledRow).length;
     const remainingBooking = Math.max(0, totalBooking - paidBooking);
 
-    const localRows = modeFilteredAll.filter((o: any) => o.order_type === "local_purchase");
+    const localRows = modeFilteredAll.filter(isLocalPurchaseRecord);
     const totalLocal = localRows.length;
     const paidLocal = localRows.filter(isSettledRow).length;
     const remainingLocal = Math.max(0, totalLocal - paidLocal);
@@ -3715,15 +3725,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
   const sourceCounts = useMemo(() => ({
     all: modeFilteredAll.length,
-    booking: modeFilteredAll.filter((o: any) => o.order_type !== "local_purchase").length,
-    local: modeFilteredAll.filter((o: any) => o.order_type === "local_purchase").length,
+    booking: modeFilteredAll.filter((o: any) => !isLocalPurchaseRecord(o)).length,
+    local: modeFilteredAll.filter(isLocalPurchaseRecord).length,
   }), [modeFilteredAll]);
 
   const filtered = useMemo(() => {
     let rows = modeFilteredAll;
     if (sourceFilter !== "all") {
       rows = rows.filter((row: any) => {
-        const rowSource = row.order_type === "local_purchase" ? "local_purchase" : "purchase_booking";
+        const rowSource = isLocalPurchaseRecord(row) ? "local_purchase" : "purchase_booking";
         return rowSource === sourceFilter;
       });
     }
