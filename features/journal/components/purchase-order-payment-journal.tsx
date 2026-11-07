@@ -2,7 +2,7 @@
 
 import { EntryPortal } from "./payment-entry-portal";
 import { SourceFilteredTable } from "./source-filtered-table";
-import { afterPurchasePayment } from "@/lib/journal/after-purchase-payment";
+import { afterPurchasePayment, purchasePaymentRegisterUrl } from "@/lib/journal/after-purchase-payment";
 import { payableRemainingLoadings, remainingLoadingEntry, type RemainingDueBill } from "@/lib/journal/remaining-loading-entry";
  
 import { pl } from "@/lib/reports/print-label";
@@ -2805,8 +2805,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   };
   const [orders, setOrders] = useState<PurchaseOrderRow[]>([]);
   const [selectedId, setSelectedId] = useState("");
+  const entryClosedRef = React.useRef(false);
   const [modalTab, setModalTab] = useState<"overview" | "goods" | "payments" | "transport">("overview");
   const selectOrder = (id: string, initialTab: "overview" | "goods" | "payments" | "transport" = "payments") => {
+    entryClosedRef.current = false;
     // The next bill must never inherit the previous bill's selected container.
     setSelectedLoadingRecord(null);
     setCalcAmount("");
@@ -3270,6 +3272,21 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     }
   }, []);
 
+  const returnToPaymentRegister = () => {
+    entryClosedRef.current = true;
+    pendingLoadingPick.current = null;
+    setUrlParamPurchaseOrderNo("");
+    setFromLoadingParam(false);
+    setSelectedLoadingRecord(null);
+    setSelectedId("");
+    setCalcAmount("");
+    setFinalPayment("");
+    setPaymentError("");
+    if (typeof window !== "undefined") {
+      window.history.replaceState(window.history.state, "", purchasePaymentRegisterUrl(window.location.href));
+    }
+  };
+
   async function loadOrders() {
     setLoading(true);
     setError("");
@@ -3393,7 +3410,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       setOrders(rows);
       // Auto-select by URL param
       const urlOrderNo = urlParamPurchaseOrderNo || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("purchaseOrderNo") || "" : "");
-      if (urlOrderNo) {
+      if (urlOrderNo && !entryClosedRef.current) {
         const match = rows.find((r) => r.purchase_order_no === urlOrderNo || r.id === urlOrderNo);
         if (match) setSelectedId(match.id);
       }
@@ -4787,6 +4804,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         fromLoading: fromLoading || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("fromLoading") === "true"),
         hasOrder: Boolean(selected.purchase_order_no),
         navigate: (path) => router.push(path),
+        returnToRegister: returnToPaymentRegister,
         refresh: async () => {
           if (activeMode === "remaining" && !isLocalSelected) {
             // Block the previous payable snapshot while the same saved loading
@@ -5390,6 +5408,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         </div>
       )}
 
+      {activeMode === "remaining" && paymentSuccess && !selected && (
+        <div role="status" className="mx-6 my-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          {paymentSuccess}
+          <a className="ms-3 underline" href="/dashboard/journal/purchase-order-payment/final">{translateHeader(currentLanguage, "Final Payment")}</a>
+        </div>
+      )}
+
       {/* ── 3-State Source Table Component (All Sources, Purchase Booking with Same-Row Loading/Receiving, Local Purchase) ── */}
       {activeMode === "final" ? (
         <FinalPaymentReconciliation
@@ -5457,7 +5482,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         <PaymentPanelShell
           docMode={docMode}
           title=""
-          onClose={() => setSelectedId("")}
+          onClose={returnToPaymentRegister}
           maxWidth="max-w-[1360px]"
           className="w-[96vw] max-w-[1360px] h-[92vh] max-h-[920px] p-0 overflow-hidden bg-slate-50 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
         >
@@ -5725,7 +5750,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   saving={processingPayment}
                   saveDisabled={Boolean(docLimit?.over) || (activeMode === "remaining" && !isLocalSelected && !selectedLoadingDue)}
                   paymentsLoading={loadingPayments}
-                  onBack={() => { setSelectedLoadingRecord(null); setSelectedId(""); }}
+                  onBack={returnToPaymentRegister}
                   onPrint={() => handleOpenA4PDF(selected, true)}
                   onSave={() => {
                     setIsDoubleEntryExpanded(true);
@@ -5750,7 +5775,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       <h2 className="text-lg font-extrabold text-slate-900">{translateHeader(currentLanguage, "Remaining Payment")} — {selected.purchase_order_no}</h2>
                       <p className="text-xs font-semibold text-slate-500">{translateHeader(currentLanguage, "Select Loaded Container / Batch")}</p>
                     </div>
-                    <button type="button" onClick={() => { setSelectedLoadingRecord(null); setSelectedId(""); }} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white">Back to Register</button>
+                    <button type="button" onClick={returnToPaymentRegister} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white">Back to Register</button>
                   </div>
                   {selectedDueError ? (
                     <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -5782,6 +5807,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                           </button>
                         );
                       })}
+                    </div>
+                  ) : selectedDueBill?.loadings?.some(entry => entry.complete && Number(entry.outstanding || 0) <= 0.05) ? (
+                    <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
+                      {tGlobal(currentLanguage, "plr.history_title", "Loading History")} · {tGlobal(currentLanguage, "rdue.status_paid", "Paid in full")}
+                      <a className="ms-3 underline" href="/dashboard/journal/purchase-order-payment/final">{translateHeader(currentLanguage, "Final Payment")}</a>
                     </div>
                   ) : (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
