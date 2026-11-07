@@ -332,7 +332,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
   ];
 
   return (
-    <div className="space-y-5" dir={isRtl ? "rtl" : "ltr"}>
+    <div data-erp-dashboard className="space-y-5" dir={isRtl ? "rtl" : "ltr"}>
 
 
       {/* ── 8 3D Glass KPI Cards Grid (4 cols × 2 rows) ───────────────────── */}

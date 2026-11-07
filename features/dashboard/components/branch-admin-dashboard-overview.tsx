@@ -190,7 +190,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
   ];
 
   return (
-    <div className="space-y-6 text-foreground p-4 lg:p-6 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
+    <div data-erp-dashboard className="space-y-6 text-foreground p-4 lg:p-6 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
       {/* 1. Header Bar: Branch Title + Switcher + Code */}
       <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 pb-4">
         <div className="flex items-center gap-3">
@@ -235,7 +235,7 @@ export function BranchAdminDashboardOverview({ data, financialsHidden = false }:
       </section>
 
       {/* 2. Warehouse & Commercial Operations Hero Banner */}
-      <section className="relative overflow-hidden rounded-3xl border border-amber-900/20 bg-gradient-to-r from-[#0a192f] via-[#102a4e] to-[#1e3a5f] p-6 text-white shadow-xl">
+      <section data-erp-dashboard-hero className="relative overflow-hidden rounded-3xl border border-amber-900/20 bg-gradient-to-r from-[#0a192f] via-[#102a4e] to-[#1e3a5f] p-6 text-white shadow-xl">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-overlay"
           style={{ backgroundImage: `url('/images/dubai_business_hero.jpg')` }}

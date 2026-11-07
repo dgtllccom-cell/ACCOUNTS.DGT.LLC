@@ -28,7 +28,7 @@ export function DashboardPageHeader({
 }) {
   const lang = useActiveLanguage();
   return (
-    <div>
+    <div data-erp-page-header>
       {eyebrowKey && eyebrowFallback ? (
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{t(lang, eyebrowKey as never, eyebrowFallback)}</p>
       ) : null}
