@@ -227,7 +227,7 @@ export function buildUaeTaxInvoiceHtml(input: TradeDocumentInput): string {
     </tr></tfoot>
   </table>
 
-  <div class="words"><strong>${esc(tt("tdoc.amount_in_words", "Amount in words"))}:</strong> ${esc(numberToWords(Math.round(grand)))} ${esc(currency)} ${esc(tt("uae.only", "Only"))}</div>
+  <div class="words"><strong>${esc(tt("tdoc.amount_in_words", "Amount in words"))}:</strong> ${esc(numberToWords(Math.round(grand)))} ${esc(currency)}</div>
 
   <div class="lower">
     <div>
