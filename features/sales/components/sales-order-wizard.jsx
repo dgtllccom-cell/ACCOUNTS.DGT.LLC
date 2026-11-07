@@ -696,6 +696,8 @@ export function SalesOrderWizard({ session }) {
   const [savedOrderId, setSavedOrderId] = useState("");
   const [tradeDocsOpen, setTradeDocsOpen] = useState(false);
   const [savedOrderNo, setSavedOrderNo] = useState("");
+  // The sale source as stored on the saved order (saved orders keep it at the top of form_data, not under form).
+  const [loadedSaleSource, setLoadedSaleSource] = useState("");
   const [registerRefreshKey, setRegisterRefreshKey] = useState(0);
   const [accountLookupMessage, setAccountLookupMessage] = useState("");
   const [accountLookupLoading, setAccountLookupLoading] = useState(null);
@@ -1692,6 +1694,7 @@ export function SalesOrderWizard({ session }) {
 
           setSavedOrderId(soData.id || orderId || "");
           setSavedOrderNo(soNumber);
+          setLoadedSaleSource(String(soData.form_data?.saleSource || rawFormData.saleSource || loadedForm.saleSource || "").toLowerCase());
 
           const mergedCountryId = loadedForm.countryId || soData.country_id || soData.countryId || "";
           const mergedCountryBranchId = loadedForm.countryBranchId || soData.country_branch_id || soData.countryBranchId || soData.branch_id || soData.branchId || "";
@@ -7035,7 +7038,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             city_branch_id: form.cityBranchId,
             customer_name: form.customerName,
             // a local sale (the wizard's own isLocalSale rule) takes the local tax layout in the document
-            form_data: { form: isLocalSale ? { ...form, saleSource: "local" } : form, goodsEntries },
+            form_data: { form: (isLocalSale || loadedSaleSource === "local") ? { ...form, saleSource: "local" } : form, goodsEntries },
           }}
           companyId={form.salesCompanyId || null}
           scope={{
