@@ -24,6 +24,7 @@ export const revalidate = 0;
 type CountryRow = { id: string; name: string; currency_code: string | null; is_active: boolean };
 type BranchRow = { id: string; country_id: string };
 type CountryUserRow = { country_id: string; users: number };
+type CountryCustomerRow = { country_id: string; customers: number };
 type OrderTotalRow = { country_id: string | null; order_total: number | string | null };
 type LedgerTotalRow = {
   country_id: string | null;
@@ -62,7 +63,8 @@ async function loadDashboard(): Promise<DashboardV20Data> {
         }
       };
 
-      const countriesCount = await count("countries");
+      const activeCountryRows = await sql`select count(*)::int as value from countries where deleted_at is null and is_active = true`.catch(() => [{ value: 0 }]);
+      const countriesCount = Number(activeCountryRows[0]?.value || 0);
       const countryBranchesCount = await count("country_branches");
       const cityBranchesCount = await count("city_branches");
       const usersCount = await count("profiles");
@@ -78,6 +80,7 @@ async function loadDashboard(): Promise<DashboardV20Data> {
       const mainBranches = await sql`select id, country_id from country_branches where deleted_at is null`.catch(() => []);
       const cityBranches = await sql`select id, country_id from city_branches where deleted_at is null`.catch(() => []);
       const countryUsers = await sql`select country_id, count(distinct user_id)::int as users from user_role_assignments where is_active=true and deleted_at is null and country_id is not null group by country_id`.catch(() => []);
+      const countryCustomers = await sql`select country_id, count(*)::int as customers from customers where deleted_at is null and country_id is not null group by country_id`.catch(() => []);
       const companiesList = (await sql`select id, name from companies where deleted_at is null order by name`.catch(() => [])) as unknown as { id: string; name: string }[];
       const monthly = await sql`
         with months as (
@@ -92,6 +95,7 @@ async function loadDashboard(): Promise<DashboardV20Data> {
       const mainBranchRows = mainBranches as unknown as BranchRow[];
       const cityBranchRows = cityBranches as unknown as BranchRow[];
       const countryUserData = countryUsers as unknown as CountryUserRow[];
+      const countryCustomerData = countryCustomers as unknown as CountryCustomerRow[];
       const purchases = purchaseRows as unknown as OrderTotalRow[];
       const sales = salesRows as unknown as OrderTotalRow[];
       const ledgers = ledgerRows as unknown as LedgerTotalRow[];
@@ -113,6 +117,7 @@ async function loadDashboard(): Promise<DashboardV20Data> {
             mainBranchRows.filter((branch) => branch.country_id === row.id).length +
             cityBranchRows.filter((branch) => branch.country_id === row.id).length,
           totalUsers: Number(countryUserData.find((entry) => entry.country_id === row.id)?.users || 0),
+          totalCustomers: Number(countryCustomerData.find((entry) => entry.country_id === row.id)?.customers || 0),
           isActive: row.is_active === true
         });
       }
