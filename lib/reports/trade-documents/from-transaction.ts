@@ -191,6 +191,9 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   return {
     docType: opts.docType,
     txnKind: kind,
+    // A local sale (sold from local purchase stock) uses the local tax layout; every other document keeps the standard layout.
+    layout: kind === "sales" && (String(pick(form, "saleSource") || "").toLowerCase() === "local" || Boolean(rec.purchase_order_id))
+      ? "uae_tax" : "standard",
     tradeScope: scope,
     lang: opts.lang,
     branding: opts.branding,

@@ -135,5 +135,10 @@ export type TradeDocumentInput = {
   missingFields?: string[];
 
   orientation?: "portrait" | "landscape";
+  /**
+   * Presentation only. "uae_tax" is the local-sales tax layout (proforma / tax invoice with VAT columns and a
+   * tax summary). It is set from the source record (a local sale), never guessed from the amounts.
+   */
+  layout?: "standard" | "uae_tax";
   autoPrint?: boolean;
 };

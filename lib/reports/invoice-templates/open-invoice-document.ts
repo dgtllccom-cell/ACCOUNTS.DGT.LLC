@@ -10,6 +10,7 @@ import { t } from "@/lib/i18n/ui";
 import { printStore } from "@/lib/store/print-store";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { docTitleKeyFor } from "@/lib/reports/trade-documents/build-trade-document";
+import { buildUaeTaxInvoiceHtml } from "@/lib/reports/trade-documents/uae-tax-invoice";
 import type { TradeDocumentInput } from "@/lib/reports/trade-documents/types";
 import { getInvoiceTemplate } from "./registry";
 import { DEFAULT_TEMPLATE_FLAGS, type InvoiceTemplateFlags, type InvoiceTemplateId } from "./types";
@@ -23,10 +24,15 @@ export function openInvoiceDocument(
   const tpl = getInvoiceTemplate(templateId);
   const [titleKey, titleFb] = docTitleKeyFor(input);
   const title = t((input.lang || "en") as SupportedLanguage, titleKey as never, titleFb);
-  printStore.openPrint(tpl.render(input, flags), `${title} — ${input.docNo}`, {
+  // A local sale's sales / tax invoice uses the local tax layout (proforma-style VAT table); other documents use the template.
+  const render = (src: TradeDocumentInput) =>
+    src.layout === "uae_tax" && (src.docType === "sales_invoice" || src.docType === "tax_invoice")
+      ? buildUaeTaxInvoiceHtml(src)
+      : tpl.render(src, flags);
+  printStore.openPrint(render(input), `${title} — ${input.docNo}`, {
     lang: input.lang || "en",
     // in-preview language / orientation switch rebuilds from the same source input + template
     rebuild: ({ lang, orientation }) =>
-      tpl.render({ ...input, lang: lang as SupportedLanguage, orientation }, flags),
+      render({ ...input, lang: lang as SupportedLanguage, orientation }),
   });
 }
