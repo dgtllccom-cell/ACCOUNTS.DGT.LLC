@@ -7034,7 +7034,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             country_branch_id: form.countryBranchId,
             city_branch_id: form.cityBranchId,
             customer_name: form.customerName,
-            form_data: { form, goodsEntries },
+            // a local sale (the wizard's own isLocalSale rule) takes the local tax layout in the document
+            form_data: { form: isLocalSale ? { ...form, saleSource: "local" } : form, goodsEntries },
           }}
           companyId={form.salesCompanyId || null}
           scope={{
