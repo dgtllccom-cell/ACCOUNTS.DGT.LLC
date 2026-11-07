@@ -13,6 +13,7 @@ import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { loadingWeightProfile, loadingWeights } from "@/lib/purchases/loading-weights";
 import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
@@ -186,7 +187,7 @@ function normalizeAdvanceToPurchaseCurrency(rawAdvance: number, contractPurchase
 }
 
 
-function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord; onClose: () => void; onSaved?: () => void }) {
+export function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord; onClose: () => void; onSaved?: () => void }) {
   const activeLang = useActiveLanguage();
   const tt = buildTt(activeLang);
   const poData = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders)?.form_data || {};
@@ -507,7 +508,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     setReceivingPortState(h.report_payload?.receivingPort || h.receiving_location || "");
     setReceivingDateState(h.report_payload?.receivingDate || "");
     setVesselName(h.report_payload?.vesselName || h.carrier_name || "");
-    setNewLoadingQuantity(String(h.report_payload?.loadedQuantity || h.loadedQuantity || ""));
+    setNewLoadingQuantity(String(h.report_payload?.loadedQuantity ?? h.loaded_quantity ?? h.loadedQuantity ?? ""));
     setNewLoadingNote(h.remarks || "");
     setOriginCountry(h.report_payload?.originCountry || "");
     setGoodsName(h.report_payload?.goodsName || "");
@@ -516,18 +517,18 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     setBrand(h.report_payload?.brand || "");
     setSizeSpec(h.report_payload?.sizeSpec || "");
     setQtyName(h.report_payload?.qtyName || "BAGS");
-    setQuantityNo(h.report_payload?.quantityNo || "");
-    setOneQtyKgs(h.report_payload?.oneQtyKgs || "");
-    setOneEmptyKgs(h.report_payload?.oneEmptyKgs || "");
+    setQuantityNo(String(h.report_payload?.quantityNo ?? h.loaded_quantity ?? h.loadedQuantity ?? ""));
+    setOneQtyKgs(String(h.report_payload?.oneQtyKgs ?? ""));
+    setOneEmptyKgs(String(h.report_payload?.oneEmptyKgs ?? ""));
     setDivideType(h.report_payload?.divideType || "D/KGs");
     setDivideWeightValue(h.report_payload?.divideWeightValue || "1");
     setQualityReportRef(h.report_payload?.qualityReportRef || "");
     setContainerTypeInput(h.container_type || record.container_type || "40 FT");
     setVoyageNo(h.voyage_no || "");
     setRailReference(h.rail_reference || "");
-    setGrossWeightInput(h.gross_weight != null ? String(h.gross_weight) : "");
-    setTareWeightInput(h.tare_weight != null ? String(h.tare_weight) : "");
-    setNetWeightInput(h.net_weight != null ? String(h.net_weight) : "");
+    setGrossWeightInput(h.gross_weight != null ? String(h.gross_weight) : h.report_payload?.grossWeight != null ? String(h.report_payload.grossWeight) : "");
+    setTareWeightInput(h.tare_weight != null ? String(h.tare_weight) : h.report_payload?.tareWeight != null ? String(h.report_payload.tareWeight) : "");
+    setNetWeightInput(h.net_weight != null ? String(h.net_weight) : h.report_payload?.netWeight != null ? String(h.report_payload.netWeight) : "");
     if (h.transport_mode) setTransportMode(h.transport_mode as TransportModeUi);
     setContainerNumberInput(h.container_number || h.report_payload?.containerNumber || "");
     setSealNumberInput(h.report_payload?.sealNumber || "");
@@ -695,11 +696,15 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   const remainingGrossWeight = Math.max(0, contractGrossWeight - loadedGrossWeight);
   const remainingNetWeight = Math.max(0, contractNetWeight - loadedNetWeight);
 
-  const currentInputQty = Number(quantityNo || 0);
-  const currentInputQtyKgs = Number(oneQtyKgs || 0);
-  const currentInputEmptyKgs = Number(oneEmptyKgs || 0);
-  const currentInputGrossKgs = currentInputQty > 0 && currentInputQtyKgs > 0 ? (currentInputQty * currentInputQtyKgs) : 0;
-  const currentInputNetKgs = currentInputQty > 0 && currentInputQtyKgs > 0 ? (currentInputQty * Math.max(0, currentInputQtyKgs - currentInputEmptyKgs)) : 0;
+  const selectedWeightProfile = loadingWeightProfile(goods, form, goodsName);
+  const automaticWeights = loadingWeights(quantityNo, selectedWeightProfile, oneQtyKgs, oneEmptyKgs);
+  const currentInputGrossKgs = automaticWeights.gross ?? 0;
+  const currentInputNetKgs = automaticWeights.net ?? 0;
+  const resetWeightOverrides = () => {
+    setGrossWeightInput("");
+    setTareWeightInput("");
+    setNetWeightInput("");
+  };
   async function downloadLoadDetails(kind: "json" | "pdf") {
     if (kind === "pdf") {
       const { printDomFragmentViaModal } = await import("@/lib/reports/print-dom-fragment");
@@ -781,9 +786,9 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
           transportRemarks: transportRemarksInput || null,
           // Operational cargo data only — never a currency, rate or amount.
           blNumber: blNumber || null,
-          grossWeight: grossWeightInput !== "" ? Number(grossWeightInput) : (currentInputGrossKgs > 0 ? currentInputGrossKgs : null),
-          tareWeight: tareWeightInput !== "" ? Number(tareWeightInput) : (currentInputGrossKgs > currentInputNetKgs && currentInputNetKgs > 0 ? currentInputGrossKgs - currentInputNetKgs : null),
-          netWeight: netWeightInput !== "" ? Number(netWeightInput) : (currentInputNetKgs > 0 ? currentInputNetKgs : null),
+          grossWeight: grossWeightInput !== "" ? Number(grossWeightInput) : automaticWeights.gross,
+          tareWeight: tareWeightInput !== "" ? Number(tareWeightInput) : automaticWeights.tare,
+          netWeight: netWeightInput !== "" ? Number(netWeightInput) : automaticWeights.net,
           sealNumber: sealNumberInput || null,
           vesselName: transportMode === "By Sea" ? (vesselName || null) : null,
           voyageNo: transportMode === "By Sea" ? (voyageNo || null) : null,
@@ -842,6 +847,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       const totalContainers = Math.max(1, Number(containerCount) || 1);
       setEditingLoadingId(null);
       if (currentContainerIndex < totalContainers) {
+        resetWeightOverrides();
         const nextIdx = currentContainerIndex + 1;
         setCurrentContainerIndex(nextIdx);
         setContainerNumberInput("");
@@ -865,6 +871,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
         setReceivingPortState(receivingPort !== "-" ? receivingPort : "");
         setReceivingDateState(form.receivedDate || form.arrivalDate || "");
         const defaultGood = goods?.[0] || {};
+        const defaultWeightProfile = loadingWeightProfile(goods, form, defaultGood.itemName || defaultGood.goodsName || defaultGood.item || form.goodsName || "");
         setVesselName(form.vesselName || poRow.carrier_name || "");
         setOriginCountry(defaultGood.originCountry || defaultGood.origin || form.originCountry || form.origin || "");
         setGoodsName(defaultGood.itemName || defaultGood.goodsName || defaultGood.item || form.goodsName || "");
@@ -874,8 +881,8 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
         setSizeSpec(defaultGood.sizeSpec || defaultGood.size || form.size || "");
         setQtyName(defaultGood.qtyName || defaultGood.unit || form.qtyName || "BAGS");
         setQuantityNo("");
-        setOneQtyKgs(defaultGood.qtyKgs ? String(defaultGood.qtyKgs) : (form.qtyKgs ? String(form.qtyKgs) : ""));
-        setOneEmptyKgs(defaultGood.emptyKgs ? String(defaultGood.emptyKgs) : (form.emptyKgs ? String(form.emptyKgs) : ""));
+        setOneQtyKgs(defaultWeightProfile.grossPerUnit == null ? "" : String(defaultWeightProfile.grossPerUnit));
+        setOneEmptyKgs(defaultWeightProfile.emptyPerUnit == null ? "" : String(defaultWeightProfile.emptyPerUnit));
         setDivideType(defaultGood.divideType || form.divideType || "D/KGs");
         setDivideWeightValue(defaultGood.divideWeightValue ? String(defaultGood.divideWeightValue) : (form.divideWeightValue ? String(form.divideWeightValue) : "1"));
         setQualityReportRef("");
@@ -910,14 +917,15 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                setEditingLoadingId(null);
                setFormStep(1);
                const defaultGood = goods?.[0] || {};
+        const defaultWeightProfile = loadingWeightProfile(goods, form, defaultGood.itemName || defaultGood.goodsName || defaultGood.item || form.goodsName || "");
                const dOrigin = defaultGood.originCountry || defaultGood.origin || form.originCountry || form.origin || (loadingCountry !== "-" ? loadingCountry : "");
                const dGoodsName = defaultGood.itemName || defaultGood.goodsName || defaultGood.item || form.goodsName || "";
                const dHsCode = defaultGood.hsCode || form.hsCode || "0000";
                const dBrand = defaultGood.brandName || defaultGood.brand || form.brand || "";
                const dSizeSpec = defaultGood.sizeSpec || defaultGood.size || form.size || "";
                const dQtyName = defaultGood.qtyName || defaultGood.unit || form.qtyName || "BAGS";
-               const dOneQtyKgs = defaultGood.qtyKgs ? String(defaultGood.qtyKgs) : (form.qtyKgs ? String(form.qtyKgs) : "");
-               const dOneEmptyKgs = defaultGood.emptyKgs ? String(defaultGood.emptyKgs) : (form.emptyKgs ? String(form.emptyKgs) : "");
+               const dOneQtyKgs = defaultWeightProfile.grossPerUnit == null ? "" : String(defaultWeightProfile.grossPerUnit);
+               const dOneEmptyKgs = defaultWeightProfile.emptyPerUnit == null ? "" : String(defaultWeightProfile.emptyPerUnit);
                const dDivideType = defaultGood.divideType || form.divideType || "D/KGs";
                const dDivideWeightValue = defaultGood.divideWeightValue ? String(defaultGood.divideWeightValue) : (form.divideWeightValue ? String(form.divideWeightValue) : "1");
                const dTransportMode = (form.shippingMode as TransportModeUi) || "By Sea";
@@ -1544,6 +1552,10 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             onChange={(e) => {
                               const selectedName = e.target.value;
                               setGoodsName(selectedName);
+                              resetWeightOverrides();
+                              const profile = loadingWeightProfile(goods, form, selectedName);
+                              setOneQtyKgs(profile.grossPerUnit == null ? "" : String(profile.grossPerUnit));
+                              setOneEmptyKgs(profile.emptyPerUnit == null ? "" : String(profile.emptyPerUnit));
                               const good = goods.find((g: any) => (g.itemName || g.goodsName || g.item) === selectedName);
                               if (good) {
                                 if (good.hsCode) setHsCode(good.hsCode);
@@ -1552,8 +1564,6 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 if (good.qtyName || good.unit) setQtyName(good.qtyName || good.unit);
                                 if (good.sizeSpec || good.size) setSizeSpec(good.sizeSpec || good.size);
                                 // Quantity No is explicitly left empty for manual user entry as requested
-                                if (good.qtyKgs) setOneQtyKgs(String(good.qtyKgs));
-                                if (good.emptyKgs) setOneEmptyKgs(String(good.emptyKgs));
                                 if (good.divideType) setDivideType(good.divideType);
                                 if (good.divideWeightValue) setDivideWeightValue(String(good.divideWeightValue));
                               }
@@ -1597,6 +1607,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.qty_number", "Quantity No")}
                           <input data-testid="ld-qty" value={quantityNo} onChange={(e) => {
+                            resetWeightOverrides();
                             setQuantityNo(e.target.value);
                             setNewLoadingQuantity(e.target.value);
                           }} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
@@ -1604,12 +1615,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
                         <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.gross_per_unit", "Gross Wt / Unit (KGS)")}
-                          <input value={oneQtyKgs} onChange={(e) => setOneQtyKgs(e.target.value)} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+                          <input value={oneQtyKgs} onChange={(e) => { resetWeightOverrides(); setOneQtyKgs(e.target.value); }} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
                         <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.empty_per_unit", "Empty Wt / Unit (KGS)")}
-                          <input value={oneEmptyKgs} onChange={(e) => setOneEmptyKgs(e.target.value)} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+                          <input value={oneEmptyKgs} onChange={(e) => { resetWeightOverrides(); setOneEmptyKgs(e.target.value); }} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
                         <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
@@ -1649,15 +1660,15 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           <div className="grid grid-cols-3 gap-2">
                             <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                               {tt("plr.gross_weight_kg", "Gross (kg)")}
-                              <input type="number" min="0" step="0.01" value={grossWeightInput} onChange={(e) => setGrossWeightInput(e.target.value)} data-testid="ld-gross" placeholder={currentInputGrossKgs > 0 ? String(currentInputGrossKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                              <input type="number" min="0" step="0.01" value={grossWeightInput !== "" ? grossWeightInput : automaticWeights.gross ?? ""} onChange={(e) => setGrossWeightInput(e.target.value)} data-testid="ld-gross" placeholder={currentInputGrossKgs > 0 ? String(currentInputGrossKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                             </label>
                             <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                               {tt("plr.tare_weight_kg", "Tare (kg)")}
-                              <input type="number" min="0" step="0.01" value={tareWeightInput} onChange={(e) => setTareWeightInput(e.target.value)} data-testid="ld-tare" placeholder={currentInputGrossKgs > currentInputNetKgs ? String(currentInputGrossKgs - currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                              <input type="number" min="0" step="0.01" value={tareWeightInput !== "" ? tareWeightInput : automaticWeights.tare ?? ""} onChange={(e) => setTareWeightInput(e.target.value)} data-testid="ld-tare" placeholder={currentInputGrossKgs > currentInputNetKgs ? String(currentInputGrossKgs - currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                             </label>
                             <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                               {tt("plr.net_weight_kg", "Net (kg)")}
-                              <input type="number" min="0" step="0.01" value={netWeightInput} onChange={(e) => setNetWeightInput(e.target.value)} data-testid="ld-net" placeholder={currentInputNetKgs > 0 ? String(currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                              <input type="number" min="0" step="0.01" value={netWeightInput !== "" ? netWeightInput : automaticWeights.net ?? ""} onChange={(e) => setNetWeightInput(e.target.value)} data-testid="ld-net" placeholder={currentInputNetKgs > 0 ? String(currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                             </label>
                           </div>
                           <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
@@ -1671,6 +1682,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           </div>
                         </div>
                       </div>
+
+                      {Number(quantityNo) > 0 && ((grossWeightInput === "" && automaticWeights.gross == null) || (netWeightInput === "" && automaticWeights.net == null)) && (
+                        <p role="status" className="mb-4 rounded border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                          {tt("pjb.weight_missing_note", "Some goods have no recorded weight; their kg are not estimated.")}
+                        </p>
+                      )}
 
                       {/* PO Items Status Summary Table */}
                       <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 mb-4 dark:border-slate-800 dark:bg-slate-900/30">
