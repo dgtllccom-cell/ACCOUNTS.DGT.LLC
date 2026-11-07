@@ -68,7 +68,9 @@ export function renderCompactInvoice(input: TradeDocumentInput, flags: InvoiceTe
     tr, .pblock { page-break-inside: avoid; }
   `;
 
-  const body = `<div class="wrap"><div class="page"><div class="col">
+  // A contract is two sheets (the Classic engine's split): sheet 1 = header, parties, delivery and terms, bank and
+  // notes; sheet 2 = goods, values, signatures. Every other document keeps one flow.
+  const topHtml = `
     <div class="head">
       <div class="brand">${d.logoUrl ? `<img src="${esc(d.logoUrl)}" alt="" />` : ""}<div class="brand-name">${esc(d.brandName)}</div></div>
       <div class="doc-title"><div class="t">${esc(d.docTitle)}</div><div class="n">${esc(d.docNo)}</div></div>
@@ -77,6 +79,8 @@ export function renderCompactInvoice(input: TradeDocumentInput, flags: InvoiceTe
     ${partyLine(d.seller)}
     ${partyLine(d.buyer)}
     ${infoLine(d.deliveryRows)}
+  `;
+  const goodsHtml = `
     <table class="goods">
       <thead><tr>${goodsHead}</tr></thead>
       <tbody>${goodsBody}</tbody>
@@ -87,11 +91,19 @@ export function renderCompactInvoice(input: TradeDocumentInput, flags: InvoiceTe
       <div class="grand"><span>${esc(d.grandTotalLabel)}</span><span>${esc(d.grandTotalValue)}</span></div>
       ${d.amountInWords ? `<div class="words">${esc(d.amountInWords)}</div>` : ""}
     </div>` : ""}
+  `;
+  const bottomHtml = `
     ${d.showBank && d.bankRows.length ? `<div class="mini-card"><div class="h">${esc(tt("tdoc.sec_bank", "Bank Details"))}</div>${d.bankRows.map((r) => `${esc(r.label)}: ${esc(r.value)}`).join(" · ")}</div>` : ""}
     ${d.notes ? `<div class="mini-card"><div class="h">${esc(tt("tdoc.notes", "Notes"))}</div>${esc(d.notes)}</div>` : ""}
+  `;
+  const closingHtml = `
     ${flags.showSignature ? `<div class="sign-row"><div class="sign">${esc(d.signLeft)}</div><div class="sign">${esc(d.signRight)}</div></div>` : ""}
     ${flags.showHeaderFooter ? `<div class="foot"><span>${esc(d.brandName)}</span><span>${esc(d.stamp)}</span></div>` : ""}
-  </div></div></div>`;
+  `;
+  const sheet = (inner: string, extra = "") => `<div class="page${extra}"><div class="col">${inner}</div></div>`;
+  const body = d.isContract
+    ? `<div class="wrap multi">${sheet(topHtml + bottomHtml)}${sheet(goodsHtml + closingHtml, " page-2")}</div>`
+    : `<div class="wrap">${sheet(topHtml + goodsHtml + bottomHtml + closingHtml)}</div>`;
 
   return documentShell({
     lang, dir: d.dir, title: d.docTitle, docNo: d.docNo, docTitle: d.docTitle, brandName: d.brandName, stamp: d.stamp,

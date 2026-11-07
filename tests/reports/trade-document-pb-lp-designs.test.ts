@@ -215,6 +215,53 @@ describe("contracts are signed by the seller and the buyer in every design", () 
   });
 });
 
+describe("a contract is two sheets in every design (the Classic split)", () => {
+  const contract = withDoc(purchaseOrderToTradeInput(pbRec, opts()), "contract");
+  const pageCount = (html: string) => (html.match(/<meta name="erp-page-count" content="(\d+)"/) || [])[1];
+
+  it.each([
+    ["Classic", (i: TradeDocumentInput) => buildTradeDocumentHtml(i)],
+    ["Modern", (i: TradeDocumentInput) => renderModernInvoice(i, DEFAULT_TEMPLATE_FLAGS)],
+    ["Professional", (i: TradeDocumentInput) => renderProfessionalInvoice(i, DEFAULT_TEMPLATE_FLAGS)],
+    ["Compact", (i: TradeDocumentInput) => renderCompactInvoice(i, DEFAULT_TEMPLATE_FLAGS)],
+    ["Premium", (i: TradeDocumentInput) => renderPremiumInvoice(i, DEFAULT_TEMPLATE_FLAGS)],
+  ])("%s declares two pages and breaks to sheet 2 before the goods", (_name, render) => {
+    const html = render(contract);
+    expect(pageCount(html)).toBe("2");
+    expect(html).toContain('<div class="page page-2">');
+    // the goods table is on sheet 2, after the page-2 break
+    expect(html.indexOf('class="page page-2"')).toBeLessThan(html.indexOf("Cashew Kernel"));
+  });
+
+  it.each([
+    ["Modern", renderModernInvoice],
+    ["Professional", renderProfessionalInvoice],
+    ["Compact", renderCompactInvoice],
+    ["Premium", renderPremiumInvoice],
+  ])("%s keeps a commercial invoice on one sheet", (_name, render) => {
+    const html = render(withDoc(purchaseOrderToTradeInput(pbRec, opts()), "commercial_invoice"), DEFAULT_TEMPLATE_FLAGS);
+    expect(pageCount(html)).toBe("1");
+    expect(html).not.toContain('class="page page-2"');
+  });
+});
+
+describe("brand lines are escaped in the designs that print them", () => {
+  const hostile = opts({
+    branding: brand({ entityName: "DGT Trading LLC", countryName: "Pakistan", address: "<b>Unsafe</b> & Co" }),
+  });
+
+  // Compact prints no address block, so the escape check covers the three designs that print the brand lines.
+  it.each([
+    ["Modern", renderModernInvoice],
+    ["Professional", renderProfessionalInvoice],
+    ["Premium", renderPremiumInvoice],
+  ])("%s prints the address as text, not markup", (_name, render) => {
+    const html = render(withDoc(purchaseOrderToTradeInput(pbRec, hostile), "commercial_invoice"), DEFAULT_TEMPLATE_FLAGS);
+    expect(html).not.toContain("<b>Unsafe</b>");
+    expect(html).toContain("&lt;b&gt;Unsafe&lt;/b&gt; &amp; Co");
+  });
+});
+
 describe("a Packing List never carries payment terms", () => {
   it("Classic and a shared design omit Payment Terms on a packing list, but keep them on the commercial invoice", () => {
     const packing = withDoc(purchaseOrderToTradeInput(pbRec, opts({ docType: "packing_list" })), "packing_list");

@@ -340,6 +340,10 @@ export function documentShell(opts: {
   html[lang="ur"] body { font-family: 'Noto Nastaliq Urdu', 'Noto Naskh Arabic', 'Inter', serif; }
   html[lang="ar"] body, html[lang="fa"] body, html[lang="ps"] body { font-family: 'Noto Naskh Arabic', 'Inter', sans-serif; }
   ${style}
+  /* A two-sheet document (contract): sheet 2 starts on a new page; on screen the sheets stack. */
+  .page.page-2 { break-before: page; page-break-before: always; }
+  .wrap.multi { flex-direction: column; align-items: center; }
+  @media screen { .page + .page { margin-top: 22px; } }
   @media print { body { background: #fff; } .wrap { padding: 0; } .page { border: none !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; width: 100% !important; } .no-print { display: none !important; } }
 </style>
 </head>
