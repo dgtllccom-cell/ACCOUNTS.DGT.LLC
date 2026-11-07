@@ -52,6 +52,7 @@ import { evaluateRouteAccess } from "@/lib/navigation/route-policy";
 import { DashboardContentGate } from "@/components/layout/dashboard-content-gate";
 import { dashboardForRoles } from "@/lib/permissions/enterprise-roles";
 import { isUserManager } from "@/lib/permissions/user-management-scope";
+import { DashboardTools } from "@/components/layout/dashboard-tools";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { ErpPageActions } from "@/components/layout/erp-page-actions";
 import { TableCardViewController, TOPBAR_VIEW_SLOT_ID } from "@/components/layout/table-card-view-controller";
@@ -134,6 +135,13 @@ export function DashboardFrame({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [drawerOpen, mobileOpen]);
+
+  useEffect(() => {
+    if (!drawerOpen && !mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
   }, [drawerOpen, mobileOpen]);
 
   const [searchOpen, setSearchOpen] = useState(false);
@@ -452,7 +460,7 @@ export function DashboardFrame({
       { title: t(lang, "cmd.settings_location" as any, "Settings - Location Nodes Setup"), titleKey: "cmd.settings_location", category: "Settings" as const, href: "/dashboard/settings/location", keywords: "settings location setup country state city area", icon: Compass, tone: "slate" as const },
       { title: t(lang, "cmd.settings_company" as any, "Settings - Enterprise Company Profile"), titleKey: "cmd.settings_company", category: "Settings" as const, href: "/dashboard/settings/company", keywords: "settings company setup legal profile tax registry", icon: Briefcase, tone: "slate" as const }
     ];
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -496,10 +504,10 @@ export function DashboardFrame({
 
   return (
     <ActiveRecordProvider>
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div data-erp-density="compact" className="min-h-screen bg-background text-foreground flex">
       {/* Desktop Persistent Sidebar (Collapsible via << Collapse Menu or Menu button) */}
       {!sidebarCollapsed && (
-        <aside className="hidden lg:flex h-screen w-[275px] shrink-0 border-e border-slate-200/80 bg-white sticky top-0 z-30 flex-col shadow-xs">
+        <aside className="erp-sidebar hidden lg:flex h-screen w-[238px] xl:w-[248px] shrink-0 border-e border-slate-200/80 bg-white sticky top-0 z-30 flex-col shadow-xs">
           <DigitalDockPremiumSidebar
             roles={roles ?? null}
             permissions={permissions ?? null}
@@ -515,7 +523,7 @@ export function DashboardFrame({
 
       {/* Mobile / Tablet Drawer */}
       {(drawerOpen || mobileOpen) && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
+        <div className="erp-drawer-overlay fixed inset-0 z-50 flex lg:hidden">
           <button
             type="button"
             className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in cursor-pointer border-none p-0 outline-none"
@@ -525,7 +533,7 @@ export function DashboardFrame({
               setMobileOpen(false);
             }}
           />
-          <aside className="relative z-50 h-full w-[275px] max-w-[85vw] border-e border-border bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-250">
+          <aside className={cn("erp-mobile-drawer relative z-50 h-full w-[260px] max-w-[85vw] border-e border-border bg-white shadow-2xl flex flex-col animate-in duration-250", lang === "en" ? "slide-in-from-left" : "slide-in-from-right")}>
             <button
               type="button"
               onClick={() => { setDrawerOpen(false); setMobileOpen(false); }}
@@ -578,7 +586,8 @@ export function DashboardFrame({
               <h2 className="text-base font-bold text-foreground hidden sm:block">{sectionTitle}</h2>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+            <div className="erp-topbar-actions flex items-center gap-1 sm:gap-2 lg:gap-3">
+              <DashboardTools>
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
@@ -608,7 +617,7 @@ export function DashboardFrame({
                 </button>
 
                 {notificationsOpen && (
-                  <div className="absolute top-full end-0 mt-2 w-80 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
+                  <div data-erp-notifications className="absolute top-full end-0 mt-2 w-80 max-w-[calc(100vw-1.5rem)] rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
                     <div className="p-3 border-b border-border flex items-center justify-between bg-muted/40">
                       <span className="font-bold text-xs">{t(lang, "dashboard.system_notifications", "System Notifications")}</span>
                       <span className="text-[11px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full whitespace-nowrap">{t(lang, "dashboard.live", "Live")}</span>
@@ -633,9 +642,10 @@ export function DashboardFrame({
                 )}
               </div>
 
+              </DashboardTools>
               <div className="h-8 w-px bg-border hidden sm:block" />
 
-              <div className="flex items-center gap-3 relative" ref={profileMenuRef}>
+              <div className="flex min-w-0 items-center gap-1 sm:gap-2 relative" ref={profileMenuRef}>
                 <PreferencesControls />
                 <button
                   type="button"
@@ -761,7 +771,7 @@ export function DashboardFrame({
 
         {/* Mobile bottom navigation (phones / tablets). Every entry passes the same route policy as the sidebar and the
             server gate, so it never offers a page the login would be refused; Dashboard goes to the login's OWN home. */}
-        <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/80 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] flex items-center justify-around lg:hidden shadow-lg">
+        <nav className="erp-bottom-nav fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/80 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] flex items-center justify-around lg:hidden shadow-lg">
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
             if (item.isDrawerTrigger) {

@@ -174,7 +174,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
   }, [data.branchWiseShipments, lang]);
 
   return (
-    <div className="space-y-6 text-foreground p-3 sm:p-5 lg:p-6 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
+    <div data-erp-dashboard className="space-y-6 text-foreground p-3 sm:p-5 lg:p-6 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
       {/* 1. Top Header Bar: Country Title + Badges + Switcher + Localized Date */}
       <section className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-border/80 pb-4">
         <div className="flex items-center gap-3">
@@ -234,7 +234,7 @@ export function CountryShippingDashboardView({ data }: { data: CountryShippingDa
       </section>
 
       {/* 2. Maritime National Logistics Hero Banner */}
-      <section className="relative overflow-hidden rounded-3xl border border-indigo-950/20 bg-gradient-to-r from-[#071d38] via-[#092952] to-[#0c3970] p-6 text-white shadow-xl">
+      <section data-erp-dashboard-hero className="relative overflow-hidden rounded-3xl border border-indigo-950/20 bg-gradient-to-r from-[#071d38] via-[#092952] to-[#0c3970] p-6 text-white shadow-xl">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-25 mix-blend-overlay"
           style={{ backgroundImage: `url('/images/cyber_earth_globe.jpg')` }}

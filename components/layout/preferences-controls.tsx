@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Languages } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { supportedLanguages, type SupportedLanguage, rtlLanguages, getHtmlLanguage } from "@/lib/i18n/languages";
 import { getLanguageKeyboardMap } from "@/lib/i18n/keyboard-layouts";
 import { useRouter } from "next/navigation";
@@ -16,19 +18,11 @@ function getInitialThemeMode(): ThemeMode {
   return normalizeThemeMode(dataMode || storedMode || legacyThemeMode(legacyMode));
 }
 
-function getInitialLanguage(): SupportedLanguage {
-  if (typeof document === "undefined") return "en";
-  const htmlLang = document.documentElement.lang || "en";
-  const lang = htmlLang.split("-")[0] as SupportedLanguage;
-  return supportedLanguages.some((l) => l.code === lang) ? lang : "en";
-}
-
-
 export function PreferencesControls() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [themeMode, setThemeMode] = useState<ThemeMode>("day");
-  const [language, setLanguage] = useState<SupportedLanguage>("en");
+  const language = useActiveLanguage();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [keyboardMapperActive, setKeyboardMapperActive] = useState(true);
 
@@ -90,10 +84,6 @@ export function PreferencesControls() {
   useEffect(() => {
     setMounted(true);
     setThemeMode(getInitialThemeMode());
-    const initialLang = getInitialLanguage();
-    setLanguage(initialLang);
-    document.documentElement.lang = getHtmlLanguage(initialLang);
-    document.documentElement.dir = rtlLanguages.includes(initialLang) ? "rtl" : "ltr";
 
     const onStorage = (event: StorageEvent) => {
       if (event.key === "erp_theme_mode") {
@@ -104,17 +94,6 @@ export function PreferencesControls() {
         const next = normalizeThemeMode(legacyThemeMode(event.newValue));
         applyThemeMode(next);
         setThemeMode(next);
-      }
-      if (event.key === "erp_lang" && event.newValue) {
-        const next = event.newValue as SupportedLanguage;
-        if (supportedLanguages.some((l) => l.code === next)) {
-          setLanguage((prev) => {
-            if (prev === next) return prev;
-            document.documentElement.lang = getHtmlLanguage(next);
-            document.documentElement.dir = rtlLanguages.includes(next) ? "rtl" : "ltr";
-            return next;
-          });
-        }
       }
     };
 
@@ -131,7 +110,6 @@ export function PreferencesControls() {
     // Clear legacy Google Translate cookies if present
     document.cookie = "googtrans=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
 
-    setLanguage(next);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("erp_language_changed"));
     }
@@ -161,7 +139,13 @@ export function PreferencesControls() {
   const isRtlLangActive = rtlLanguages.includes(language);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="erp-preferences flex items-center gap-1 sm:gap-2">
+      <label className="erp-language-select">
+        <Languages className="h-4 w-4 shrink-0" aria-hidden />
+        <select aria-label={t(language, "nav.language")} value={language} onChange={(event) => changeLanguage(event.target.value as SupportedLanguage)}>
+          {supportedLanguages.map((option) => <option key={option.code} value={option.code} lang={option.htmlLang} dir={option.direction}>{option.nativeName}</option>)}
+        </select>
+      </label>
 
       <QuickPreferencesPopover
         language={language}

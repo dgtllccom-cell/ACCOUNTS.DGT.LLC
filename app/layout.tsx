@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./design-system.css";
 import "./cash-entry-styles.css";
+import "./compact-erp.css";
 import { GoogleTranslateScript } from "@/components/layout/google-translate-script";
 import { PdfPreviewModal } from "@/components/ui/pdf-preview-modal";
 import { legacyThemeMode, themeModes } from "@/lib/ui/theme-modes";
