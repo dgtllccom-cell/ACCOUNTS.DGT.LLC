@@ -13,6 +13,7 @@ import {
   Landmark, Timer, ShieldCheck, Clock, UserCheck, Plus, Minus, ChevronDown, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SimpleModal } from "@/components/ui/simple-modal";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +28,10 @@ import { openPurchaseBookingOrderPrintReport } from "@/lib/reports/open-purchase
 import { openRoznamchaVoucherPrintReport } from "@/lib/reports/open-roznamcha-voucher-print-report";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-window";
-import { openTradeDocument } from "@/lib/reports/trade-documents/open-trade-document";
+import {
+  DEFAULT_INVOICE_TEMPLATE_ID, DEFAULT_TEMPLATE_FLAGS, listTemplatesForDocType,
+  openInvoiceDocument, type InvoiceTemplateId,
+} from "@/lib/reports/invoice-templates";
 import { purchaseOrderToTradeInput } from "@/lib/reports/trade-documents/from-transaction";
 import { resolveDocumentBranding } from "@/lib/reports/resolve-document-branding";
 import type { TradeDocType } from "@/lib/reports/trade-documents/types";
@@ -147,6 +151,10 @@ export default function PrintReportsHubPage() {
   const [accountsList, setAccountsList] = useState<any[]>([]);
   const [ledgersList, setLedgersList] = useState<any[]>([]);
   const [sessionInfo, setSessionInfo] = useState<any>(null);
+  // Trade document template picker (Proforma / Trade Contract): the doc type awaiting a template, the chosen template, busy flag
+  const [tradeDocPick, setTradeDocPick] = useState<TradeDocType | null>(null);
+  const [tradeDocTemplateId, setTradeDocTemplateId] = useState<InvoiceTemplateId>(DEFAULT_INVOICE_TEMPLATE_ID);
+  const [tradeDocBusy, setTradeDocBusy] = useState(false);
 
   useEffect(() => {
     fetch("/api/erp/auth/session", { credentials: "include" })
@@ -599,10 +607,16 @@ export default function PrintReportsHubPage() {
     });
   }, [accountsList, scopeCountry, scopeBranch]);
 
-  // 10. Proforma Invoice / 12. Trade Document — via the unified engine
-  const openTradeDoc = useCallback(async (docType: TradeDocType) => {
+  // 10. Proforma Invoice / 12. Trade Document — the user picks a template (default Classic), then the
+  // document opens through the template-aware engine (openInvoiceDocument). The data mapping is unchanged.
+  const openTradeDoc = useCallback((docType: TradeDocType) => {
+    if (!orders[0]) return noData("purchase order (trade document)");
+    setTradeDocTemplateId(DEFAULT_INVOICE_TEMPLATE_ID);
+    setTradeDocPick(docType);
+  }, [orders]);
+  const confirmTradeDoc = useCallback(async () => {
     const o = orders[0];
-    if (!o) return noData("purchase order (trade document)");
+    if (!o || !tradeDocPick) return;
     const scope = {
       countryId: o.country_id || o.countryId || null,
       countryBranchId: o.country_branch_id || null,
@@ -610,11 +624,17 @@ export default function PrintReportsHubPage() {
       countryName: o.countryName || null,
       branchName: o.branchName || null,
     };
-    const branding = await resolveDocumentBranding(scope, lang);
-    const input = purchaseOrderToTradeInput(o, { docType, lang, branding });
-    openTradeDocument(input);
-  }, [orders, lang]);
-  const handlePrintProformaInvoice = useCallback(() => { void openTradeDoc("proforma_invoice"); }, [openTradeDoc]);
+    setTradeDocBusy(true);
+    try {
+      const branding = await resolveDocumentBranding(scope, lang);
+      const input = purchaseOrderToTradeInput(o, { docType: tradeDocPick, lang, branding });
+      openInvoiceDocument(input, tradeDocTemplateId, DEFAULT_TEMPLATE_FLAGS);
+      setTradeDocPick(null);
+    } finally {
+      setTradeDocBusy(false);
+    }
+  }, [orders, lang, tradeDocPick, tradeDocTemplateId]);
+  const handlePrintProformaInvoice = useCallback(() => { openTradeDoc("proforma_invoice"); }, [openTradeDoc]);
 
   // 11. Expenses Bill
   const handlePrintExpenses = useCallback(() => {
@@ -622,7 +642,7 @@ export default function PrintReportsHubPage() {
   }, []);
 
   // 12. Trade Document (Purchase Contract)
-  const handlePrintTradeDocument = useCallback(() => { void openTradeDoc("contract"); }, [openTradeDoc]);
+  const handlePrintTradeDocument = useCallback(() => { openTradeDoc("contract"); }, [openTradeDoc]);
 
   // 13. Purchase A4 Full Report — from a real purchase order
   const handlePrintPurchaseA4 = useCallback(() => {
@@ -1431,6 +1451,50 @@ export default function PrintReportsHubPage() {
           </div>
         </div>
       </div>
+
+      {/* ═══════ TRADE DOCUMENT TEMPLATE PICKER (Proforma / Trade Contract) — default Classic ═══════ */}
+      {tradeDocPick && (
+        <SimpleModal
+          title={tradeDocPick === "contract"
+            ? tp("prep.trade_document_title", "Trade Contract Document")
+            : tp("prep.proforma_invoice_title", "Proforma Invoice")}
+          onClose={() => setTradeDocPick(null)}
+          className="max-w-2xl w-[95vw]"
+        >
+          <div className="space-y-4 text-sm">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5">{tp("invtpl.choose_template", "Choose Template")}</div>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {listTemplatesForDocType(tradeDocPick).map((def) => {
+                  const on = tradeDocTemplateId === def.id;
+                  return (
+                    <button
+                      key={def.id}
+                      type="button"
+                      onClick={() => setTradeDocTemplateId(def.id)}
+                      title={tp(def.descKey, def.descFallback)}
+                      className={`relative flex flex-col items-center gap-1 rounded-lg border p-1.5 transition ${on ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-900" : "border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
+                    >
+                      {on && <CheckCircle2 className="absolute -top-1.5 -right-1.5 h-4 w-4 text-blue-600 bg-white dark:bg-slate-900 rounded-full" />}
+                      <span className="w-full aspect-[3/4] rounded overflow-hidden border border-slate-100 dark:border-slate-800" dangerouslySetInnerHTML={{ __html: def.thumbnail }} />
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{tp(def.nameKey, def.nameFallback)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <Button variant="outline" size="sm" onClick={() => setTradeDocPick(null)} className="text-xs">
+                {tp("common.cancel", "Cancel")}
+              </Button>
+              <Button size="sm" onClick={() => void confirmTradeDoc()} disabled={tradeDocBusy} className="text-xs bg-blue-600 hover:bg-blue-700 text-white">
+                <Eye className="h-3.5 w-3.5 mr-1.5" />
+                {tp("tdoc.preview", "Preview Document")}
+              </Button>
+            </div>
+          </div>
+        </SimpleModal>
+      )}
     </div>
   );
 }
