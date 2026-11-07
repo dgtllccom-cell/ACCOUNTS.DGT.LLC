@@ -309,6 +309,7 @@ export function documentShell(opts: {
 <html lang="${esc(lang)}" dir="${dir}">
 <head>
 <meta charset="utf-8" />
+<meta name="erp-page-count" content="${(body.match(/class="page page-2"/g) || []).length + 1}" />
 <title>${esc(title)} — ${esc(docNo)}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&family=Georgia&family=Noto+Naskh+Arabic:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap');
